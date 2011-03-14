@@ -1,0 +1,36 @@
+@charset "utf-8";
+/* CSS Document */
+
+#wrap { background-color:#ffffff; overflow:hidden;}
+
+#header { background:url(../images/web_b_02.png) repeat-x; height:134px; width:940px;}
+
+#logo { height:121px; margin-left:0px; width:256px; }
+
+/*TOP NAV STYLES*/
+
+#navWrap { float:left; background:#ccc; margin-right:0; height:39px; width:664px; }
+
+/*ul#navlist { color:#f2f2f2; float:left; list-style-type:none; margin:0; padding:0; }
+ul#navlist li { display:inline; }
+ul#navlist li a { background-color:#242424; border-right: 1px solid #00477f; color:#fff; float:left;  margin-right:0; padding: 0.5em; width:8.0em; text-align:center; text-decoration:none; }
+ul#navlist li a:hover { background-color:#fad703; color:#00477f; }
+ul#navlist li#active a {background-color:#fad703; color:#00477f;}
+*/
+
+
+/*FEATURED STYLES*/
+
+#featured { background:#eee; height:390px; }
+
+/*MAIN*/
+
+#mainContent { background:#ccc; height:446px; }
+
+/*COL*/
+
+#col1 { background:blue; height:446px; margin-left:0px;}
+#col2 { background:blue; height:446px;}
+#col3 { background:blue; height:446px;}
+#col4 { background:blue; height:446px; margin-right:0px;}
+
