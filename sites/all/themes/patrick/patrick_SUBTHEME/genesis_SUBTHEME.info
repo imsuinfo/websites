@@ -1,7 +1,7 @@
 ; $Id: genesis_SUBTHEME.info,v 1.25 2011/01/14 03:12:40 jmburnz Exp $
 
 ; Change the name to match your new subthemes name and modify the description.	
-  name         = Genesis SUBTHEME
+  name         = Patrick - Genesis SUBTHEME
   description  = My Kickn' Sub-theme
   core         = 7.x
   engine       = phptemplate

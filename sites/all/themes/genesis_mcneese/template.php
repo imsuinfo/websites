@@ -13,7 +13,7 @@
 /**
  * Override or insert variables into all templates.
  */
-/* -- Delete this line if you want to use these functions
+
 function genesis_mcneese_preprocess(&$vars, $hook) {
 }
 function genesis_mcneese_process(&$vars, $hook) {
