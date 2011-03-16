@@ -14,6 +14,7 @@
  *   An object containing editor settings for all enabled editor themes.
  */
 Drupal.wysiwyg.editor.attach.none = function(context, params, settings) {
+  $.debug('attach.none');
   if (params.resizable) {
     var $wrapper = $('#' + params.field).parents('.form-textarea-wrapper:first');
     $wrapper.addClass('resizable');
