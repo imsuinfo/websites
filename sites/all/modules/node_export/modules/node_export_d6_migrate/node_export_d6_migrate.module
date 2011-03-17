@@ -27,9 +27,12 @@ function node_export_d6_migrate_node_export_node_import_alter(&$node, $original_
 function node_export_d6_migrate_process_node_body(&$node, $original_node) {
   $langcode = empty($original_node->language) ? LANGUAGE_NONE : $original_node->language;
 
+<<<<<<< HEAD
   $node->language = $langcode;
   $node->body = array();
 
+=======
+>>>>>>> 8be8d58bb4b14bad9cb3d899f3e1783f4bd4ae45
   if (!empty($original_node->teaser) && $original_node->teaser != text_summary($original_node->body)) {
     $node->body[$langcode][0]['summary'] = $original_node->teaser;
   }
@@ -40,7 +43,20 @@ function node_export_d6_migrate_process_node_body(&$node, $original_node) {
     $original_node->body = substr($original_node->body, strlen($break));
   }
   $node->body[$langcode][0]['value'] = $original_node->body;
+<<<<<<< HEAD
   $node->body[$langcode][0]['format'] = 'filtered_html'; // Force a filtered_format (this is line is a hack)
+=======
+
+  if (empty($original_node->body) && empty($original_node->format)) {
+    $node->body[$langcode][0]['format'] = NULL;
+  }
+  elseif (!in_array($original_node->format, $sandbox['existing_text_formats'])) {
+    $node->body[$langcode][0]['format'] = variable_get('filter_default_format', 1);
+  }
+  else {
+    $node->body[$langcode][0]['format'] = $original_node->format;
+  }
+>>>>>>> 8be8d58bb4b14bad9cb3d899f3e1783f4bd4ae45
 }
 
 /**
@@ -59,4 +75,8 @@ function node_export_d6_migrate_process_node_taxonomy(&$node, $original_node) {
   if (module_exists('taxonomy')) {
     // @todo
   }
+<<<<<<< HEAD
 }
+=======
+}
+>>>>>>> 8be8d58bb4b14bad9cb3d899f3e1783f4bd4ae45
