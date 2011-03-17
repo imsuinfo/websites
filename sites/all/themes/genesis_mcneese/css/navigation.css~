@@ -54,7 +54,7 @@ ul.menu li.last  {}
 /* Main Menu */
 
 /* FLOAT RIGHT */
-/* #main-menu-wrapper .main-menu-inner {float: right;} */
+ #main-menu-wrapper .main-menu-inner {float: right; position: relative; top: -22px;}
 
 /* ALIGN CENTER */
 /* #main-menu-wrapper .main-menu-inner {display: table; margin: 0 auto; text-align: center;} */

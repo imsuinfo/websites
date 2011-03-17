@@ -106,17 +106,17 @@
         <div id="header-blocks"><?php print render($page['header']); ?></div>
       <?php endif; ?>
 
-    </div> <!-- /header -->
-
     <?php if ($main_menu_links): ?>
       <div id="main-menu-wrapper" class="clearfix">
         <div class="main-menu-inner"><?php print $main_menu_links; ?></div>
       </div>
     <?php endif; ?>
 
+    </div> <!-- /header -->
+
   <?php endif; // end hide in overlay ?>
 
-  <?php print $breadcrumb; ?>
+ <?php // print $breadcrumb; ?>
   <?php print $messages; ?>
   <?php print render($page['help']); ?>
 

@@ -7,6 +7,11 @@
 body {
   padding: 0 10px;
   margin: 0;
+  	background-color: #F3F1E2;
+	margin:0;
+	background-image: url(../images/page_bkgrnd.gif);
+	background-repeat: repeat-y;
+	background-position: center center;
 }
 	
 /**********************************************************
@@ -27,7 +32,7 @@ body {
  * Fixed widths use pixels,       e.g. 960px
  */
 #container {
-  width: 85%;
+  width: 100%;
   min-width: 960px;
 }
 
@@ -41,14 +46,20 @@ body {
 
 /* Main content wrappers*/
 #main-content {}
-#content {}
+#content { 
+		background-color: #FFFFFF;
+}
 
 
 /**********************************************************
  *                 Header Elements
  **********************************************************/
 /* #header wraps #branding and #header-blocks. */
-#header {}
+#header {	
+	height: 74px;
+	background: #00477F;
+	border-bottom: 15px solid #FDD017;
+	}
 
 /* #branding wraps #logo, #site-name and #site-slogan. */
 #branding {
@@ -116,24 +127,12 @@ h1.logo-site-name  {}
 .region-header {}
 
 /* Banner */
-#msu-banner {
-	height: 74px;
-	background: #00477F;
-	border-bottom: 15px solid #FDD017;
-	}
-
-#msu-identity {
-	margin:0 auto;
-	width: 712px;;
-	}
 	
 #msu-ada {
-	position: absolute;
-	top: 18px; 
-	right: 50%;
-	width: 200px;
-	margin-right: -300px;
+	position: relative;
 	color: white;
+	top: -40px;
+	right: 80px;
 	}
 
 #msu-ada a {
@@ -169,6 +168,10 @@ h1.logo-site-name  {}
 #footer {}
 .region-footer {}
 
+/* Custom footer */
+#custom_footer {
+	text-align: center;
+	}
 
 /**********************************************************
  *                      Sidebars
@@ -178,12 +181,17 @@ h1.logo-site-name  {}
 .sidebar .region {}
 
 /* Target a specific sidebar. */
-#sidebar-first {}
+#sidebar-first {
+	background: url(../images/menu_bkgrnd.jpg);
+	background-repeat: repeat-y;
+  	color: white;
+	text-align: center;}
+	
+.sidebar a {color: #FFFFFF;}
 .sidebar .region-sidebar-first {}
 
 #sidebar-second {}
 .sidebar .region-sidebar-second {}
-
 
 /**********************************************************
  *          Search form, Search results

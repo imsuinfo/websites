@@ -1,6 +1,6 @@
 ; $Id: genesis.info,v 1.8 2011/01/14 02:57:57 jmburnz Exp $
 
-  name         = Genesis
+  name         = Patrick - Genesis
   description  = An elegant, flexible and powerful starter theme by <a href="http://adaptivethemes.com">Adaptivethemes</a>.
   core         = 7.x
   engine       = phptemplate
