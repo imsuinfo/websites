@@ -3,10 +3,10 @@
 }
 
 div#mcneese_drupal-page div#mcneese_drupal-title {
-  background-image: url(../images/msu_shield-small.png);
+  background-image: url(../images/msu_logo-small.png);
   background-repeat: no-repeat;
 
-  min-height: 80px;
+  min-height: 83px;
 }
 
 div#mcneese_drupal-page div.content p {
