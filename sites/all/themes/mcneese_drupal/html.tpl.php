@@ -10,7 +10,7 @@
   <!--(end_head)-->
 </head>
 <body id="mcneese_drupal-body" class="<?php print($classes); ?>" <?php print($attributes);?>>
-  <?php if (!$in_overlay){ ?><div id="mcneese_drupal-skip_nav" class="clearfix mcneese_drupal-text_shadow">
+  <?php if (!isset($in_overlay) || !$in_overlay){ ?><div id="mcneese_drupal-skip_nav" class="clearfix mcneese_drupal-text_shadow">
     <!--(begin_skipnav)-->
     <ul id="mcneese_drupal-skip_nav-list">
       <li id="mcneese_drupal-skip_nav-list-content"><a id="mcneese_drupal-skip_nav-list-content-link" class="mcneese_drupal-skipnav-link element-invisible element-focusable" href="#mcneese_drupal-content"><?php print t("Skip to main content"); ?></a></li>
