@@ -1,0 +1,376 @@
+body#mcneese_drupal-body {
+  position: absolute;
+
+  width: 100%;
+
+  top: 0px;
+  left: 0px;
+}
+
+div#mcneese_drupal-page a,
+div#mcneese_drupal-page a:visited,
+body#mcneese_drupal-body div#modalContent a,
+body#mcneese_drupal-body div#modalContent a:visited {
+  color: #0000ff;
+  text-decoration: none;
+}
+
+div#mcneese_drupal-page a:hover,
+div#mcneese_drupal-page a:active,
+body#mcneese_drupal-body div#modalContent a:hover,
+body#mcneese_drupal-body div#modalContent a:active {
+  text-decoration: underline;
+}
+
+div#mcneese_drupal-page span.cke_button a:hover,
+div#mcneese_drupal-page span.cke_button a:active,
+body#mcneese_drupal-body span.cke_button div#modalContent a:hover,
+body#mcneese_drupal-body span.cke_button div#modalContent a:active {
+  text-decoration: none;
+}
+
+div#mcneese_drupal-page hr,
+body#mcneese_drupal-body div#modalContent hr {
+  margin: 0;
+  padding: 0;
+  border: none;
+  height: 1px;
+  background: #cccccc;
+}
+
+div#mcneese_drupal-page .element-invisible,
+body#mcneese_drupal-body div#modalContent .element-invisible {
+  width: 0px;
+  height: 0px;
+  overflow: hidden;
+}
+
+div#mcneese_drupal-page dl,
+body#mcneese_drupal-body div#modalContent dl {
+  margin: 0 0 20px;
+}
+
+div#mcneese_drupal-page dl dd,
+div#mcneese_drupal-page dl dl,
+body#mcneese_drupal-body div#modalContent dl dd,
+body#mcneese_drupal-body div#modalContent dl dl {
+  margin-left: 20px;
+  margin-bottom: 10px;
+}
+
+div#mcneese_drupal-page blockquote,
+body#mcneese_drupal-body div#modalContent blockquote {
+  margin: 4px 40px;
+}
+
+div#mcneese_drupal-page address,
+body#mcneese_drupal-body div#modalContent address {
+  font-style: italic;
+}
+
+div#mcneese_drupal-page u,
+body#mcneese_drupal-body div#modalContent s,
+div#mcneese_drupal-page u,
+body#mcneese_drupal-body div#modalContent s {
+  text-decoration: underline;
+}
+
+div#mcneese_drupal-page s,
+div#mcneese_drupal-page strike,
+div#mcneese_drupal-page del,
+body#mcneese_drupal-body div#modalContent s,
+body#mcneese_drupal-body div#modalContent strike,
+body#mcneese_drupal-body div#modalContent del {
+  text-decoration: line-through;
+}
+
+div#mcneese_drupal-page big,
+body#mcneese_drupal-body div#modalContent big {
+  font-size: larger;
+}
+
+div#mcneese_drupal-page small,
+body#mcneese_drupal-body div#modalContent small {
+  font-size: smaller;
+}
+
+div#mcneese_drupal-page sub,
+body#mcneese_drupal-body div#modalContent sub {
+  vertical-align: sub;
+  font-size: smaller;
+  line-height: normal;
+}
+
+div#mcneese_drupal-page sup,
+body#mcneese_drupal-body div#modalContent sup {
+  vertical-align: super;
+  font-size: smaller;
+  line-height: normal;
+}
+
+div#mcneese_drupal-page nobr,
+body#mcneese_drupal-body div#modalContent nobr {
+  white-space: nowrap;
+}
+
+div#mcneese_drupal-page abbr,
+div#mcneese_drupal-page acronym,
+body#mcneese_drupal-body div#modalContent abbr,
+body#mcneese_drupal-body div#modalContent acronym {
+  border-bottom: dotted 1px;
+}
+
+div#mcneese_drupal-page input,
+div#mcneese_drupal-page select,
+div#mcneese_drupal-page textarea,
+body#mcneese_drupal-body div#modalContent input,
+body#mcneese_drupal-body div#modalContent select,
+body#mcneese_drupal-body div#modalContent textarea {
+  border: 1px solid #000000;
+}
+
+
+/* update page colors */
+div#mcneese_drupal-content_region div#block-system-main table.update tbody tr,
+body#mcneese_drupal-body div#modalContent div#block-system-main table.update tbody tr {
+  border-bottom: 1px solid #999999;
+}
+
+div#mcneese_drupal-content_region div#block-system-main table.update tbody tr.info,
+body#mcneese_drupal-body div#modalContent div#block-system-main table.update tbody tr.info  {
+  background: #e0e0ff;
+}
+
+div#mcneese_drupal-content_region div#block-system-main table.update tbody tr.ok,
+body#mcneese_drupal-body div#modalContent div#block-system-main table.update tbody tr.ok {
+  background: #d1f7cb;
+}
+
+div#mcneese_drupal-content_region div#block-system-main table.update tbody tr.warning,
+body#mcneese_drupal-body div#modalContent div#block-system-main table.update tbody tr.warning {
+  background: #ffffdd;
+}
+
+div#mcneese_drupal-content_region div#block-system-main table.update tbody tr.error,
+body#mcneese_drupal-body div#modalContent div#block-system-main table.update tbody tr.error {
+  background: #ffdddd;
+}
+
+div#mcneese_drupal-content_region div#block-system-main table.update tbody tr.unknown,
+body#mcneese_drupal-body div#modalContent div#block-system-main table.update tbody tr.unknown {
+  background: #eeeeee;
+}
+
+
+/** bugfixes **/
+#diff-inline-form select,
+div.filter-options select,
+body#mcneese_drupal-body div#modalContent #diff-inline-form select,
+body#mcneese_drupal-body div#modalContent div.filter-options select {
+  padding: 0;
+}
+
+div#mcneese_drupal-page div.region div#block-system-main div.content div.profile,
+body#mcneese_drupal-body div#modalContent div.region div#block-system-main div.content div.profile {
+  margin: 0px;
+}
+
+div#mcneese_drupal-page fieldset#views-tokens-help div.item-list li,
+body#mcneese_drupal-body div#modalContent fieldset#views-tokens-help div.item-list li {
+  margin-left: 20px;
+}
+
+div#mcneese_drupal-page div.rules-elements-table div.tabledrag-toggle-weight-wrapper,
+body#mcneese_drupal-body div#modalContent div.rules-elements-table div.tabledrag-toggle-weight-wrapper {
+  position: relative;
+  float: right;
+}
+
+div#mcneese_drupal-page div#overlay {
+  margin-bottom: 50px;
+}
+
+div#mcneese_drupal-page div#views-ajax-form div.form-item div.warning {
+  background-repeat: no-repeat;
+  min-height: 25px;
+  padding-left: 25px;
+}
+
+div#mcneese_drupal-page input#edit-cancel--15,
+div#mcneese_drupal-page input#edit-cancel--14,
+div#mcneese_drupal-page input#edit-cancel--13,
+div#mcneese_drupal-page input#edit-cancel--12,
+div#mcneese_drupal-page input#edit-cancel--11,
+div#mcneese_drupal-page input#edit-cancel--10,
+div#mcneese_drupal-page input#edit-cancel--9,
+div#mcneese_drupal-page input#edit-cancel--8,
+div#mcneese_drupal-page input#edit-cancel--7,
+div#mcneese_drupal-page input#edit-cancel--6,
+div#mcneese_drupal-page input#edit-cancel--5,
+div#mcneese_drupal-page input#edit-cancel--4,
+div#mcneese_drupal-page input#edit-cancel--3,
+div#mcneese_drupal-page input#edit-cancel--2,
+div#mcneese_drupal-page input#edit-cancel--1 {
+  background: url(../images/button-grey.png) no-repeat scroll center top transparent;
+}
+
+div#mcneese_drupal-page input#edit-remove--15,
+div#mcneese_drupal-page input#edit-remove--14,
+div#mcneese_drupal-page input#edit-remove--13,
+div#mcneese_drupal-page input#edit-remove--12,
+div#mcneese_drupal-page input#edit-remove--11,
+div#mcneese_drupal-page input#edit-remove--10,
+div#mcneese_drupal-page input#edit-remove--9,
+div#mcneese_drupal-page input#edit-remove--8,
+div#mcneese_drupal-page input#edit-remove--7,
+div#mcneese_drupal-page input#edit-remove--6,
+div#mcneese_drupal-page input#edit-remove--5,
+div#mcneese_drupal-page input#edit-remove--4,
+div#mcneese_drupal-page input#edit-remove--3,
+div#mcneese_drupal-page input#edit-remove--2,
+div#mcneese_drupal-page input#edit-remove--1 {
+  background: url(../images/button-red.png) no-repeat scroll center top transparent;
+}
+
+div#mcneese_drupal-page div.remove-display form.views-ajax-form div.remove-display input.form-submit {
+  background: url(../images/button-red.png) no-repeat scroll center top transparent;
+}
+
+div#mcneese_drupal-page div.remove-display form.views-ajax-form div.restore-display input.form-submit {
+  background: url(../images/button-blue.png) no-repeat scroll center top transparent;
+}
+
+div#mcneese_drupal-page input#edit-publish,
+div#mcneese_drupal-page input#edit-unpublish {
+  background: url(../images/button-blue.png) no-repeat scroll center top transparent;
+}
+
+div#mcneese_drupal-page form#views-ui-analyze-view-button div input#edit-submit.form-submit,
+div#mcneese_drupal-page div.views-override input#edit-button--15,
+div#mcneese_drupal-page div.views-override input#edit-button--14,
+div#mcneese_drupal-page div.views-override input#edit-button--13,
+div#mcneese_drupal-page div.views-override input#edit-button--12,
+div#mcneese_drupal-page div.views-override input#edit-button--11,
+div#mcneese_drupal-page div.views-override input#edit-button--10,
+div#mcneese_drupal-page div.views-override input#edit-button--9,
+div#mcneese_drupal-page div.views-override input#edit-button--8,
+div#mcneese_drupal-page div.views-override input#edit-button--7,
+div#mcneese_drupal-page div.views-override input#edit-button--6,
+div#mcneese_drupal-page div.views-override input#edit-button--5,
+div#mcneese_drupal-page div.views-override input#edit-button--4,
+div#mcneese_drupal-page div.views-override input#edit-button--3,
+div#mcneese_drupal-page div.views-override input#edit-button--2,
+div#mcneese_drupal-page div.views-override input#edit-button--1,
+div#mcneese_drupal-page div.views-override input#edit-button.form-submit {
+  background: url(../images/button-blue.png) no-repeat scroll center top transparent;
+}
+
+div#mcneese_drupal-page form#user-profile-form div#edit-actions input#edit-cancel {
+  background: url(../images/button-red.png) no-repeat scroll center top transparent;
+}
+
+div#mcneese_drupal-page div#mcneese_drupal-content div#ds-tabs {
+  margin-top: 2px;
+  margin-bottom: 4px;
+}
+
+div#mcneese_drupal-page div#mcneese_drupal-content div#ds-tabs a {
+  cursor: pointer;
+  padding: 2px 4px;
+  margin-bottom: 1px;
+  margin-right: 1px;
+  margin-left: 2px;
+  color: #000000;
+  text-align: center;
+  font-weight: normal;
+  font-size: 11px;
+  font-family: "Lucida Grande", Verdana, sans-serif;
+  font-weight: bold;
+  text-shadow: 0px 0px 2px #fefefe;
+  border: 1px outset #333333;
+  border-radius: 3px;
+  -moz-border-radius: 4px;
+  -moz-outline-radius: 4px;
+  -webkit-border-radius: 3px;
+
+  background: url(../images/button-green.png) no-repeat scroll center top transparent;
+}
+
+div#mcneese_drupal-page div.field-formatter-settings-edit-wrapper input.field-formatter-settings-edit {
+  background: url(../images/button-blue.png) no-repeat scroll center top transparent;
+  padding: 2px;
+}
+
+div#mcneese_drupal-page div.vertical-tabs {
+  position: static;
+
+  margin: 0px;
+}
+
+div#mcneese_drupal-page div.vertical-tabs ul.vertical-tabs-list {
+  display: inline-block;
+
+  vertical-align: top;
+  float: none;
+
+  margin: 0px;
+
+  width: 15%;
+}
+
+div#mcneese_drupal-page div.vertical-tabs div.vertical-tabs-panes {
+  display: inline-block;
+
+  vertical-align: top;
+
+  width: 85%;
+}
+
+div#mcneese_drupal-page .vertical-tabs ul.vertical-tabs-list li a {
+  padding: 10px;
+
+  word-wrap: break-word;
+}
+
+div#mcneese_drupal-page div#mcneese_drupal-skip_nav {
+  margin-top: 0;
+  position: absolute;
+  left: 50%;
+  margin-left: -5.25em;
+  width: auto;
+  z-index: 50;
+}
+
+div#mcneese_drupal-page div#mcneese_drupal-skip_nav a.mcneese_drupal-skipnav-link {
+  background-color: #e6f6ff;
+
+  padding: 3px;
+}
+
+div#mcneese_drupal-page div#mcneese_drupal-skip_nav a.mcneese_drupal-skipnav-link,
+div#mcneese_drupal-page div#mcneese_drupal-skip_nav a.mcneese_drupal-skipnav-link:link,
+div#mcneese_drupal-page div#mcneese_drupal-skip_nav a.mcneese_drupal-skipnav-link:visited,
+div#mcneese_drupal-page div#mcneese_drupal-skip_nav a.mcneese_drupal-skipnav-link:hover {
+  position: absolute;
+
+  top: -1000px;
+  left: 0;
+
+  overflow: hidden;
+}
+
+div#mcneese_drupal-page div#mcneese_drupal-skip_nav a.mcneese_drupal-skipnav-link:active,
+div#mcneese_drupal-page div#mcneese_drupal-skip_nav a.mcneese_drupal-skipnav-link:focus {
+  position: static;
+
+  margin-left: auto;
+  margin-right: auto;
+}
+
+div#mcneese_drupal-page div#mcneese_drupal-search {
+  float: right;
+  right: 0px;
+  vertical-align: top;
+}
+
+
