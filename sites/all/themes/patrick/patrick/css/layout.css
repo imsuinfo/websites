@@ -92,17 +92,17 @@ body {background:#f3f3f3;}
 
 /*TOP NAV STYLES*/
 
-#navlist { font-family:Arial, Helvetica, sans-serif;}
+#main-menu { font-family:Arial, Helvetica, sans-serif;}
 
-ul#navlist { font-size:13px; list-style:none; margin:0; padding:0; }
+ul#main-menu { font-size:13px; list-style:none; margin:0; padding:0; }
 
-ul#navlist li { display:block; float:left; margin:0; padding-right:1px; padding-top:84px; width:auto; }
+ul#main-menu li { display:block; float:left; margin:0; padding-right:1px; padding-top:84px; width:auto; }
 
-ul#navlist li a { background:#1e1e1e; color:#f2f2f2; display:block; height:15px; padding:12px; text-decoration:none; }
+ul#main-menu li a { background:#1e1e1e; color:#f2f2f2; display:block; height:15px; padding:12px; text-decoration:none; }
 
-ul#navlist li a:hover { color:#00477f; background:#fad703;}
+ul#main-menu li a:hover { color:#00477f; background:#fad703;}
 
-ul#navlist li#active a { color:#00477f; background:#fad703; } 
+ul#main-menu li#active a { color:#00477f; background:#fad703; } 
 
 /*END NAV STYLES*/
 
