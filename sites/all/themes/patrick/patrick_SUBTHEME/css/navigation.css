@@ -82,6 +82,7 @@ ul.menu li.last  {}
 #main-menu li a {
   text-decoration: none;
   white-space: nowrap;
+  list-style:none;
 }
 
 /* Set pseudo class styles. */
