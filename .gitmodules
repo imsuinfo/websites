@@ -1,0 +1,3 @@
+[submodule "sites/all/modules/views_jqfx"]
+	path = sites/all/modules/views_jqfx
+	url = http://git.drupal.org/sandbox/jamesbenison/1076606.git
