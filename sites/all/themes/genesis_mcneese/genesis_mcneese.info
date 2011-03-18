@@ -5,7 +5,7 @@
   description  = My Kickn' Sub-theme
   core         = 7.x
   engine       = phptemplate
-  screenshot   = genesis-subtheme.png
+  screenshot   = mcneese-subtheme.png
   base theme   = genesis
 
 ; Uncomment for a Dark style theme. @TODO - need to revamp dark css.
