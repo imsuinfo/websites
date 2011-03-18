@@ -1,5 +1,4 @@
 <?php
-// $Id: calendar.module,v 1.152 2011/01/20 14:00:50 karens Exp $
 define('CALENDAR_SHOW_ALL', 0);
 define('CALENDAR_HIDE_ALL', -1);
 
