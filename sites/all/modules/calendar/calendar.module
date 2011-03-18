@@ -595,7 +595,7 @@ function calendar_build_nodes(&$view, &$items) {
   if (!empty($view->argument['date_argument'])) {
     $date_filter = $view->argument['date_argument'];
     foreach ($view->argument['date_argument']->options['date_fields'] as $name) {
-      $datefields[] = $fields['name'][$name . '_value']['query_name'];
+      $datefields[] = $fields['name'][$name]['query_name'];
     }
   }
 
@@ -605,7 +605,7 @@ function calendar_build_nodes(&$view, &$items) {
   $i = 0;
   foreach ($date_filter->options['date_fields'] as $name) {
     
-    $field        = $fields['name'][$name. '_value'];
+    $field        = $fields['name'][$name];
     $field_type   = strstr($field['type'], 'string') ? 'string' : 'timestamp';
     $alias        = $field['query_name'];
     $field_name   = $field['field_name'];
@@ -749,9 +749,6 @@ function calendar_build_nodes(&$view, &$items) {
         // All three were limited by the min-max date range of the view.
         while ($now <= $to) {
           $node = clone($item);
-          $field_alias = $view->display_handler->handlers['field']['entity_id']->field_alias;
-          $entity = $node->_field_data[$field_alias]['entity'];
-          $node->nid = $entity->nid;  // Take nid from directly from the entity
           // Make sure the pseudo node has the same properties a
           // regular node would have.
           if (isset($node->node_title) && !isset($node->title)) {
@@ -759,9 +756,6 @@ function calendar_build_nodes(&$view, &$items) {
           }
           if (isset($node->node_type) && !isset($node->type)) {
             $node->type = $node->node_type;
-          }
-          else {
-            $node->type = $node->node_type = $entity->type;
           }
 
           $exceptions = array('format_interval', 'time ago');
@@ -831,7 +825,7 @@ function calendar_build_nodes(&$view, &$items) {
 
           if (substr($real_field, 0, 6) == 'field_') {
             $cck_field = field_info_field($real_field);
-            $instance = field_info_instance($view->base_table, preg_replace('/_value$/', '', $real_field), $node->type);
+            $instance = field_info_instance($view->base_table, $real_field, $node->type);
             $granularity = $cck_field['settings']['granularity'];
             $increment = $instance['widget']['settings']['increment'];
           }
