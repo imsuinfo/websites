@@ -1,5 +1,4 @@
 <?php
-//$Id: calendar.inc,v 1.10 2011/01/18 00:37:21 karens Exp $
 /**
  * @file
  * Calendar building functions for the Calendar module.
@@ -87,7 +86,7 @@ function calendar_build_month(&$curday, $view, $items) {
     $today = date_format(date_now(date_default_timezone()), DATE_FORMAT_DATE);
     $month = date_format($curday, 'n');
     $week = date_week($curday_date);
-    $first_day = variable_get('date_first_day', 0);
+    $first_day = variable_get('date_first_day', 1);
     $week_rows = calendar_build_week($curday, $view, $items, TRUE);
     $multiday_buckets = $week_rows['multiday_buckets'];
     $singleday_buckets = $week_rows['singleday_buckets'];
@@ -325,7 +324,7 @@ function calendar_build_mini_week(&$curday, $view, $items, $check_month = FALSE)
   $today = date_format(date_now(date_default_timezone()), DATE_FORMAT_DATE);
   $month = date_format($curday, 'n');
   $week = date_week($curday_date);
-  $first_day = variable_get('date_first_day', 0);
+  $first_day = variable_get('date_first_day', 1);
 
   // move backwards to the first day of the week
   $day_wday = date_format($curday, 'w');
@@ -389,7 +388,7 @@ function calendar_build_week(&$curday, $view, $items, $check_month = FALSE) {
   $curday_date = date_format($curday, DATE_FORMAT_DATE);
   $weekdays = calendar_untranslated_days($items, $view);
   $month = date_format($curday, 'n');
-  $first_day = variable_get('date_first_day', 0);
+  $first_day = variable_get('date_first_day', 1);
 
   // Set up buckets
   $total_rows = 0;
