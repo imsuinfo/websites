@@ -4,7 +4,7 @@
   description  = McNeese Theme.
   core         = 7.x
   engine       = phptemplate
-  screenshot   = genesis-base.png
+  screenshot   = patrick.png
 
 ; The regions defined in the page.tpl.php file. The name in brackets is the 
 ; name of the variable. The text after the = sign is the short description 
