@@ -54,7 +54,7 @@ ul.menu li.last  {}
 /* Main Menu */
 
 /* FLOAT RIGHT */
-#main-menu-wrapper .main-menu-inner {float: right;}
+/* #main-menu-wrapper .main-menu-inner {float: right;} */
 
 /* ALIGN CENTER */
 /* #main-menu-wrapper .main-menu-inner {display: table; margin: 0 auto; text-align: center;} */
@@ -72,7 +72,8 @@ ul.menu li.last  {}
 
 /* Modify the margin to set tab spacings. */
 #main-menu li {
-  display: inline;
+  display: block;
+  float:left;
   line-height: 2;
   list-style: none;
   margin: 0 1em;
