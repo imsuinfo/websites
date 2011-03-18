@@ -115,40 +115,6 @@ h1.logo-site-name  {}
 }
 .region-header {}
 
-/* Banner */
-#msu-banner {
-	height: 74px;
-	background: #00477F;
-	border-bottom: 15px solid #FDD017;
-	}
-
-#msu-identity {
-	margin:0 auto;
-	width: 712px;;
-	}
-	
-#msu-ada {
-	position: absolute;
-	top: 18px; 
-	right: 50%;
-	width: 200px;
-	margin-right: -300px;
-	color: white;
-	}
-
-#msu-ada a {
-	color: white;
-	text-decoration:none;
-	}
-
-#msu-ada img {
-	color: white;
-	text-decoration:none;
-	display:inline-block;
-	vertical-align:middle;
-	}
-
-
 /* Help */
 #help {}
 .region-help {}

@@ -3,7 +3,7 @@
 
 /**
  * Preprocess and Process Functions SEE: http://drupal.org/node/254940#variables-processor
- * 1. Rename each function to match your mcneeses name,
+ * 1. Rename each function to match your subthemes name,
  *    e.g. if you name your theme "themeName" then the function
  *    name will be "themeName_preprocess_hook". Tip - you can
  *    search/replace on "genesis_mcneese".
