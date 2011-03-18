@@ -53,6 +53,7 @@ body {
 /* #branding wraps #logo, #site-name and #site-slogan. */
 #branding {
   float: left; /* LTR */
+  margin-top:20px;
 }
 
 /* h1 is for the front page only, all others use the div. */
