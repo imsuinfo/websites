@@ -1,5 +1,4 @@
 <?php
-// $Id: calendar.module,v 1.152 2011/01/20 14:00:50 karens Exp $
 define('CALENDAR_SHOW_ALL', 0);
 define('CALENDAR_HIDE_ALL', -1);
 
@@ -824,9 +823,9 @@ function calendar_build_nodes(&$view, &$items) {
           $node->calendar_start = date_format($node->calendar_start_date, DATE_FORMAT_DATETIME);
           $node->calendar_end = date_format($node->calendar_end_date, DATE_FORMAT_DATETIME);
 
-          if (substr($real_field, 0, 6) == 'field_') {
+          if (isset($node->_field_data['entity'])) {
             $cck_field = field_info_field($real_field);
-            $instance = field_info_instance($view->base_table, $real_field, $node->type);
+            $instance = field_info_instance($view->base_table, $real_field, $node->_field_data['entity']->type);
             $granularity = $cck_field['settings']['granularity'];
             $increment = $instance['widget']['settings']['increment'];
           }

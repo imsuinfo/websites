@@ -1,0 +1,69 @@
+@page {
+  size: landscape;
+
+  margin: 0px;
+  /** 1.9cm ?? **/
+  /*margin-top: 1.2cm;
+  margin-left: 1.2cm;
+  margin-bottom: 1.2cm;
+  margin-right: 1.2cm;
+  */
+}
+
+div#mcneese_drupal-page div#mcneese_drupal-title {
+  background-image: url(../images/msu_shield-small-white.png) !important;
+}
+
+body#mcneese_drupal-body {
+  padding-top: 0px !important;
+}
+
+body#mcneese_drupal-body,
+div#mcneese_drupal-page {
+  overflow: visible;
+}
+
+div#mcneese_drupal-page_top div#toolbar,
+div#mcneese_drupal-primary_tabs,
+div#mcneese_drupal-messages,
+div#mcneese_drupal-undercontent {
+  display: none;
+}
+
+div#mcneese_drupal-title_region {
+  font-family: Arial;
+  font-size: 12px;
+  text-align: center;
+}
+
+div#mcneese_drupal-website_title {
+  font-size: 28px;
+  font-weight: bold;
+}
+
+h1#mcneese_drupal-page_title {
+  font-size: 20px;
+  font-weight: normal;
+}
+
+div#mcneese_drupal-page {
+  height: 100%;
+}
+
+div#mcneese_drupal-content_region {
+  min-height: 400px;
+
+  background-color: #ffffff;
+}
+
+div#mcneese_drupal-content {
+  padding: 2px;
+}
+
+div#mcneese_drupal-content div.node {
+  min-height: 400px;
+}
+
+div#mcneese_drupal-page #mcneese_drupal-skip_nav {
+  display: none;
+}
