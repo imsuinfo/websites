@@ -113,6 +113,9 @@ h1.logo-site-name  {}
 /* Header blocks */
 #header-blocks {
   float: right;
+  position:absolute;
+  margin-left:610px;
+  margin-top:28px;
 }
 .region-header {}
 
