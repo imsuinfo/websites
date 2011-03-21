@@ -41,13 +41,11 @@
 .region-sidebar-second .block-inner {}
 .region-sidebar-second .block .content {}
 
-
 /* Very high specifity selectors to style blocks in one sidebar. */
 #sidebar-first .block {}
 #sidebar-first .block-title {}
 #sidebar-first .block-inner {}
 #sidebar-first .block .content {}
-#block-menu-menu-secondary-menu li ul {color: #FFFFFF;}
 
 #sidebar-second .block {}
 #sidebar-second .block-title {}
@@ -70,7 +68,7 @@
 .region-leaderboard .block-inner {}
 .region-leaderboardt .block .content {}
 
-.region-header .block {	}
+.region-header .block {}
 .region-header .block-title {}
 .region-header .block-inner {}
 .region-header .block .content {}

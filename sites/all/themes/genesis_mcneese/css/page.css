@@ -7,11 +7,6 @@
 body {
   padding: 0 10px;
   margin: 0;
-  	background-color: #F3F1E2;
-	margin:0;
-	background-image: url(../images/page_bkgrnd.gif);
-	background-repeat: repeat-y;
-	background-position: center center;
 }
 	
 /**********************************************************
@@ -32,14 +27,9 @@ body {
  * Fixed widths use pixels,       e.g. 960px
  */
 #container {
-<<<<<<< HEAD
-  width: 100%;
-  min-width: 960px;
-=======
   width: 940px; 
   position:relative;
   margin:0 auto;  
->>>>>>> peustis
 }
 
 /* Column wrappers */
@@ -52,24 +42,14 @@ body {
 
 /* Main content wrappers*/
 #main-content {}
-#content { 
-		background-color: #FFFFFF;
-}
+#content {}
 
 
 /**********************************************************
  *                 Header Elements
  **********************************************************/
 /* #header wraps #branding and #header-blocks. */
-<<<<<<< HEAD
-#header {	
-	height: 74px;
-	background: #00477F;
-	border-bottom: 15px solid #FDD017;
-	}
-=======
 #header {background:url(../images/web_b_02.png) repeat-x; height:134px; }
->>>>>>> peustis
 
 /* #branding wraps #logo, #site-name and #site-slogan. */
 #branding {
@@ -136,31 +116,6 @@ h1.logo-site-name  {}
 }
 .region-header {}
 
-<<<<<<< HEAD
-/* Banner */
-	
-#msu-ada {
-	position: relative;
-	color: white;
-	top: -40px;
-	right: 80px;
-	}
-
-#msu-ada a {
-	color: white;
-	text-decoration:none;
-	}
-
-#msu-ada img {
-	color: white;
-	text-decoration:none;
-	display:inline-block;
-	vertical-align:middle;
-	}
-
-
-=======
->>>>>>> peustis
 /* Help */
 #help {}
 .region-help {}
@@ -181,10 +136,6 @@ h1.logo-site-name  {}
 #footer {}
 .region-footer {}
 
-/* Custom footer */
-#custom_footer {
-	text-align: center;
-	}
 
 /**********************************************************
  *                      Sidebars
@@ -194,17 +145,12 @@ h1.logo-site-name  {}
 .sidebar .region {}
 
 /* Target a specific sidebar. */
-#sidebar-first {
-	background: url(../images/menu_bkgrnd.jpg);
-	background-repeat: repeat-y;
-  	color: white;
-	text-align: center;}
-	
-.sidebar a {color: #FFFFFF;}
+#sidebar-first {}
 .sidebar .region-sidebar-first {}
 
 #sidebar-second {}
 .sidebar .region-sidebar-second {}
+
 
 /**********************************************************
  *          Search form, Search results

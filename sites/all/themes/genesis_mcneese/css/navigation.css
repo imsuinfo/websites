@@ -54,11 +54,7 @@ ul.menu li.last  {}
 /* Main Menu */
 
 /* FLOAT RIGHT */
-<<<<<<< HEAD
- #main-menu-wrapper .main-menu-inner {float: right; position: relative; top: -24px;}
-=======
 /* #main-menu-wrapper .main-menu-inner {float: right;} */
->>>>>>> peustis
 
 /* ALIGN CENTER */
 /* #main-menu-wrapper .main-menu-inner {display: table; margin: 0 auto; text-align: center;} */
