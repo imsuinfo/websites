@@ -1,0 +1,110 @@
+div#mcneese_drupal-title_region {
+  background-color: #feffe7;
+
+  min-height: 80px;
+
+  padding: 4px;
+  padding-bottom: 0px;
+
+  border-style: solid;
+  border: 1px solid;
+
+  margin-top: 4px;
+  margin-left: 20px;
+  margin-right: 20px;
+
+  font-family: Arial;
+  font-size: 12px;
+  text-align: center;
+}
+
+div#mcneese_drupal-website_title {
+  font-size: 28px;
+  font-weight: bold;
+}
+
+h1#mcneese_drupal-page_title {
+  font-size: 20px;
+  font-weight: normal;
+}
+
+body#mcneese_drupal-body,
+div#mcneese_drupal-page div#overlay-content {
+  background-color: #336699;
+}
+
+div#mcneese_drupal-page {
+  height: 100%;
+}
+
+div#mcneese_drupal-content_region {
+  min-height: 400px;
+
+  border-top: 0px;
+  border-left: 1px;
+  border-bottom: 1px;
+  border-right: 1px;
+
+  border-style: solid;
+
+
+  margin-left: 20px;
+  margin-right: 20px;
+
+  background-color: #ffffff;
+}
+
+div#mcneese_drupal-undercontent {
+  min-height: 16px;
+
+  padding: 0px;
+
+  margin-top:    0px;
+  margin-left:   20px;
+  margin-bottom: 0px;
+  margin-right:  20px;
+
+  border: 0px;
+
+  color: #ffffff;
+  text-shadow: 1px 1px 1px #000000;
+
+  font-size:   10px;
+  font-weight: bold;
+}
+
+div#mcneese_drupal-undercontent div#mcneese_drupal-MSU {
+  display: inline-block;
+
+  float: left;
+
+  text-align: left;
+}
+
+div#mcneese_drupal-undercontent div#mcneese_drupal-UCS {
+  display: inline-block;
+
+  float: right;
+
+  text-align: right;
+}
+
+div#mcneese_drupal-message_region {
+  margin-left: 20px;
+  margin-right: 20px;
+}
+
+div#mcneese_drupal-messages div.messages {
+  margin: 0px;
+
+  border-left: 1px solid #000000;
+  border-right: 1px solid #000000;
+}
+
+div#mcneese_drupal-content {
+  padding: 2px;
+}
+
+div#mcneese_drupal-content div.node {
+  min-height: 400px;
+}

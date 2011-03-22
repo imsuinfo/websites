@@ -1,5 +1,4 @@
 <?php
-// $Id: calendar_plugin_style_ical.inc,v 1.15 2011/01/19 15:41:29 karens Exp $
 
 /**
  * @file
