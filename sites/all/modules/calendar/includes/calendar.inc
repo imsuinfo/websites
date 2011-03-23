@@ -1,5 +1,4 @@
 <?php
-// $Id: calendar.inc,v 1.32 2011/01/18 00:37:21 karens Exp $
 
 /**
  * @file
@@ -89,7 +88,7 @@ function calendar_build_week(&$curday, $view, $items, $check_month = FALSE) {
   $today = date_format(date_now(date_default_timezone()), DATE_FORMAT_DATE);
   $month = date_format($curday, 'n');
   $week = date_week($curday_date);
-  $first_day = variable_get('date_first_day', 0);
+  $first_day = variable_get('date_first_day', 1);
 
   // move backwards to the first day of the week
   $day_wday = date_format($curday, 'w');
@@ -166,7 +165,12 @@ function calendar_build_day($curday, $view, $items) {
       foreach ($day as $time => $hour) {
         foreach ($hour as $key => $item) {
           $count++;
-          $types[$item->type] = $item;
+
+          // @TODO $node->type may or may not exist any more, or be relevant.
+          // Dig into the theme code to either remove it or get it working differently.
+          if (isset($item->type)) {
+            $types[$item->type] = $item;
+          }
           if (!$view->date_info->mini && (empty($max_events) || ($max_events > 0 && $count <= $max_events))) {
             // Theme the item here unless this is a 'Day' or 'Week' view.
             // Day and week views need to do more processing before rendering
