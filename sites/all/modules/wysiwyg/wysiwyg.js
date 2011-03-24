@@ -45,11 +45,11 @@ Drupal.behaviors.attachWysiwyg = {
     }
 
     $('.wysiwyg', context).once('wysiwyg', function() {
-      if (!this.id || typeof settings.wysiwyg.triggers[this.id] === 'undefined') {
+      if (!this.id || typeof Drupal.settings.wysiwyg.triggers[this.id] === 'undefined') {
         return;
       }
       var $this = $(this);
-      var params = settings.wysiwyg.triggers[this.id];
+      var params = Drupal.settings.wysiwyg.triggers[this.id];
       for (var format in params) {
         params[format].format = format;
         params[format].trigger = this.id;
@@ -59,7 +59,7 @@ Drupal.behaviors.attachWysiwyg = {
       // Directly attach this editor, if the input format is enabled or there is
       // only one input format at all.
       if ($this.is(':input')) {
-        Drupal.wysiwygAttach(context, params[format], settings);
+        Drupal.wysiwygAttach(context, params[format]);
       }
       // Attach onChange handlers to input format selector elements.
       if ($this.is('select')) {
@@ -67,49 +67,17 @@ Drupal.behaviors.attachWysiwyg = {
           // If not disabled, detach the current and attach a new editor.
           Drupal.wysiwygDetach(context, params[format]);
           format = 'format' + this.value;
-          Drupal.wysiwygAttach(context, params[format], settings);
+          Drupal.wysiwygAttach(context, params[format]);
         });
       }
-
-      var form_instance = $('#' + params.field).parents('form');
-      var ctools_close_instance = $('#' + params.field).parents('div.ctools-modal-content').find('a.close');
-      var event_sources = [ {"instance" : form_instance, "event" : 'submit'},
-                            {"instance" : ctools_close_instance, "event" : 'click'}];
-
-      for (index = 0; index < event_sources.length; index++) {
-        var instance_data = event_sources[index].instance.data();
-        var event_name = event_sources[index].event;
-        $.debug(event_sources[index].instance, 'binding events for object');
-        $.debug(instance_data, 'data for event ' + event_name);
-
-        // Copy original events from instance and remove the existing handlers.
-        var orig_events = Array();
-        if (instance_data && instance_data.events && instance_data.events[event_name]) {
-          orig_events = instance_data.events[event_name].slice(0);
-          event_sources[index].instance.unbind(event_name);
+      // Detach any editor when the containing form is submitted.
+      $('#' + params.field).parents('form').submit(function (event) {
+        // Do not detach if the event was cancelled.
+        if (event.isDefaultPrevented()) {
+          return;
         }
-        $.debug(orig_events, 'orig handlers for event ' + event_name);
-
-        // Add in the wysiwyg binding as the first handler
-        event_sources[index].instance.bind(event_name, function (event) {
-         // Do not detach if the event was cancelled.
-          if (event.isDefaultPrevented()) {
-            return;
-          }
-          Drupal.wysiwygDetach(context, params[format]);
-        });
-
-        // Append the original event handlers after the wysiwyg handler
-        for (index2 = 0; index2 < orig_events.length; index2++) {
-          // Have to re-add the original events this way,
-          // for some reason the following doesn't work:
-          // event_sources[index].instance.bind(event_name, orig_events[index2]);
-          var new_event = {};
-          new_event[event_name] = orig_events[index2];
-          event_sources[index].instance.bind(new_event);
-        }
-        $.debug(event_sources[index].instance, 'updated instance');
-      }
+        Drupal.wysiwygDetach(context, params[format]);
+      });
     });
   }
 };
@@ -127,9 +95,7 @@ Drupal.behaviors.attachWysiwyg = {
  * @param params
  *   An object containing input format parameters.
  */
-Drupal.wysiwygAttach = function(context, params, settings) {
-  $.debug(params, 'wysiwygAttach');
-  $.debug(Drupal.wysiwyg.editor.attach);
+Drupal.wysiwygAttach = function(context, params) {
   if (typeof Drupal.wysiwyg.editor.attach[params.editor] == 'function') {
     // (Re-)initialize field instance.
     Drupal.wysiwyg.instances[params.field] = {};
@@ -172,9 +138,6 @@ Drupal.wysiwygAttach = function(context, params, settings) {
  *   An object containing input format parameters.
  */
 Drupal.wysiwygDetach = function(context, params) {
-  if (typeof Drupal.wysiwyg.instances[params.field] == 'undefined') {
-    return;
-  }
   var editor = Drupal.wysiwyg.instances[params.field].editor;
   if (jQuery.isFunction(Drupal.wysiwyg.editor.detach[editor])) {
     Drupal.wysiwyg.editor.detach[editor](context, params);
