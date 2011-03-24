@@ -1,3 +1,4 @@
+// $Id: none.js,v 1.8 2010/03/20 14:54:29 sun Exp $
 (function($) {
 
 /**
@@ -14,7 +15,6 @@
  *   An object containing editor settings for all enabled editor themes.
  */
 Drupal.wysiwyg.editor.attach.none = function(context, params, settings) {
-  $.debug('attach.none');
   if (params.resizable) {
     var $wrapper = $('#' + params.field).parents('.form-textarea-wrapper:first');
     $wrapper.addClass('resizable');
