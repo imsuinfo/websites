@@ -1,5 +1,4 @@
 <?php
-// $Id: og_group.inc,v 1.1.2.1 2010/12/15 09:14:12 amitaibu Exp $
 
 /**
  * @file
@@ -59,7 +58,7 @@ function og_context_group_settings_form($form, &$form_state) {
 
   if (!empty($conf['gid'])) {
     $group = og_get_group('group', $conf['gid']);
-    $entity = og_load_entity_from_group($conf['gid']);
+    $entity = $group->getEntity();
     if ($entity) {
       $form['og_group']['#description'] = t('Currently set to !link', array('!link' => entity_uri($group->entity_type, $entity)));
     }

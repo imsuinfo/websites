@@ -1,15 +1,19 @@
-; $Id: og.info,v 1.7.2.3 2010/12/26 08:55:59 amitaibu Exp $
+; $Id:$
 name = Organic groups
 description = "API to allow associating content with groups."
 package = "Organic groups"
 dependencies[] = entity
+dependencies[] = list
+dependencies[] = options
 core = 7.x
 version = VERSION
 files[] = og.module
+files[] = og.admin.inc
 files[] = includes/og.views.inc
 
 ; Test files.
 files[] = og.test
+files[] = tests/upgrade/og.upgrade.test
 
 ; Views plugins
 files[] = includes/views/og_plugin_argument_default_group_context.inc
@@ -30,9 +34,18 @@ files[] = includes/views/og_handler_relationship.inc
 
 ; Views arguments
 files[] = includes/views/og_handler_argument_group_audience_gid.inc
-; Information added by drupal.org packaging script on 2011-01-05
-version = "7.x-1.0"
+
+; Rules integration.
+features[rules_config][] = "rules_member_subscribe"
+features[rules_config][] = "rules_member_subscribe_pending"
+features[rules_config][] = "rules_member_unsubscribe"
+
+; Entity API controllers.
+files[] = includes/og.admin.inc
+
+; Information added by drupal.org packaging script on 2011-03-24
+version = "7.x-1.x-dev"
 core = "7.x"
 project = "og"
-datestamp = "1294242066"
+datestamp = "1300925794"
 

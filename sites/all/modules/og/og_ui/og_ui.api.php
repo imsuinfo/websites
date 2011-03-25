@@ -1,5 +1,5 @@
 <?php
-// $Id: og_ui.api.php,v 1.1.2.6 2010/12/26 08:55:59 amitaibu Exp $
+
 
 /**
  * @file

@@ -1,5 +1,5 @@
 <?php
-// $Id: drupal-6.og.database.php,v 1.1.2.2 2011/01/05 15:25:24 amitaibu Exp $
+
 
 /**
  * @file
@@ -20,7 +20,7 @@
  *  - taxonomy
  *  - update
  *  - user
- *  - og
+ *  - og (disabled)
  */
 
 db_create_table('access', array(

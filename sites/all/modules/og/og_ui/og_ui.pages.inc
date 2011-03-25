@@ -1,5 +1,5 @@
 <?php
-// $Id: og_ui.pages.inc,v 1.1.2.5 2010/12/15 09:14:12 amitaibu Exp $
+
 
 /**
  * @file
@@ -84,14 +84,16 @@ function og_ui_confirm_subscribe($form, &$form_state, $group, $account) {
  * Submit handler; Confirm OG membership.
  */
 function og_ui_confirm_subscribe_submit($form, &$form_state) {
-  $request = !empty($form_state['values']['request']) ? $form_state['values']['request'] : '';
-
   $group = $form_state['values']['group'];
   $account = $form_state['values']['account'];
+
   $state = og_user_access($group->gid, 'subscribe without approval') ? OG_STATE_ACTIVE : OG_STATE_PENDING;
+  // Pass the user's request to the grouping action.
+  $form_state['values'] += array('request' => '');
+  $values = array('entity' => $account, 'state' => $state, 'user request' => $form_state['values']['request']);
+  og_group($group->gid, $values);
 
-  og_group($group->gid, 'user', $account, $state);
-
+  // Redirect.
   $form_state['redirect'] = "$group->entity_type/$group->etid";
 }
 
@@ -172,6 +174,7 @@ function og_ui_confirm_unsubscribe_submit($form, &$form_state) {
 
   og_ungroup($group->gid, 'user', $account);
 
-  // Determine where to go next - Group if accessible, or else site front page.
+  // TODO: Determine where to go next - Group if accessible, or else site front
+  // page.
   $form_state['redirect'] = "$group->entity_type/$group->etid";
 }
