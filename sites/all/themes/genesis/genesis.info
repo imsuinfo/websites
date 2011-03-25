@@ -11,6 +11,7 @@
 ; you see on the block configuration page.
   regions[sidebar_first]      = Sidebar first
   regions[sidebar_second]     = Sidebar second
+  regions[primary_links]      = Primary links
   regions[content]            = Main Content
   regions[highlighted]        = Highlighted
   regions[leaderboard]        = Leaderboard

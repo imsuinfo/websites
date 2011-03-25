@@ -83,11 +83,11 @@
     <?php endif; ?>
 
     <div id="header" class="clearfix">
-    <?php if ($main_menu_links): ?>
-      <div id="main-menu-wrapper" class="clearfix">
-        <div class="main-menu-inner"><?php print $main_menu_links; ?></div>
+    <?php if (isset($page['primary_links'])) { ?>
+      <div id='main-menu-wrapper' class='clearfix'>
+        <div class="main-menu-inner"><?php print(drupal_render($page['primary_links'])); ?></div>
       </div>
-    <?php endif; ?>
+    <?php } ?>
 
       <?php if ($site_logo || $site_name || $site_slogan): ?>
         <div id="branding">
