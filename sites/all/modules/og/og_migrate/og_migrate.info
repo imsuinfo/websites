@@ -1,11 +1,12 @@
-name = Organic groups UI
-description = "Organic groups UI."
+name = Organic groups migrate
+description = "Migrate Organic groups data."
 package = "Organic groups"
 dependencies[] = og
+dependencies[] = ctools
 core = 7.x
-version = VERSION
-files[] = og_ui.test
-configure = admin/config/group
+
+; Test files.
+files[] = og_migrate.test
 
 ; Information added by drupal.org packaging script on 2011-03-29
 version = "7.x-1.x-dev"
