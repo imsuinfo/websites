@@ -421,8 +421,8 @@ function calendar_get_node_link($node, $default = NULL) {
   if (isset($node->url)) {
     return url($node->url, array('absolute' => TRUE));
   }
-  elseif (empty($node->remote) && is_numeric($node->id)) {
-    return url("node/$node->id", array('absolute' => TRUE));
+  elseif (empty($node->remote) && is_numeric($node->nid)) {
+    return url("node/$node->nid", array('absolute' => TRUE));
   }
   elseif (!empty($default)) {
     return url($default, array('absolute' => TRUE));
