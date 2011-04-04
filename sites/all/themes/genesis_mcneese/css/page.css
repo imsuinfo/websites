@@ -72,7 +72,7 @@ h1.logo-site-name  {}
 }
 
 /* Logo. */
-#logo {margin-top:28px; }
+#logo {margin:28px 0 0 5px; }
 
 #site-name {
   font-weight: bold; /* Bold or else the line heights vary. */
