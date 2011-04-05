@@ -28,18 +28,18 @@
 ; The regions defined in the page.tpl.php file. The name in brackets is the 
 ; name of the variable. The text after the = sign is the short description 
 ; you see on the block configuration page.
-  regions[sidebar_first]      = Sidebar first
-  regions[sidebar_second]     = Sidebar second
-  regions[primary_links]      = Primary links
-  regions[content]            = Main Content
-  regions[highlighted]        = Highlighted
+  regions[page_top]           = Page top
   regions[leaderboard]        = Leaderboard
   regions[header]             = Header
+  regions[primary_links]      = Primary links
+  regions[help]               = Help
   regions[secondary_content]  = Secondary
+  regions[sidebar_first]      = Sidebar first
+  regions[highlighted]        = Highlighted
+  regions[content]            = Main Content
+  regions[sidebar_second]     = Sidebar second
   regions[tertiary_content]   = Tertiary
   regions[footer]             = Footer
-  regions[help]               = Help
-  regions[page_top]           = Page top
   regions[page_bottom]        = Page bottom
 
   ; Gpanel Regions - use in conjunction with the Gpanel snippets.

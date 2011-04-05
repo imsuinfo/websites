@@ -9,7 +9,7 @@
  */
 .block {
   clear: both;
-  margin: 0 0 1.5em;
+  margin: 0 0 10px 0;
 }
 
 .block-inner    {} /* Block inner div */
@@ -42,7 +42,7 @@
 .region-sidebar-second .block .content {}
 
 /* Very high specifity selectors to style blocks in one sidebar. */
-#sidebar-first .block {}
+#sidebar-first .block {padding:0; margin:0;}
 #sidebar-first .block-title {}
 #sidebar-first .block-inner {}
 #sidebar-first .block .content {}

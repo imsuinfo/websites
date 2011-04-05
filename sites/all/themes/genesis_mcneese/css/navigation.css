@@ -10,13 +10,15 @@ ul.menu,
 ul.menu ul, 
 ul.menu ul ul, 
 ul.menu ul ul ul {
-  margin: 0 0 0 0.75em; /* LTR */
+  margin: 0 0 0 0; /* LTR */
   padding: 0;
 }
 
 /* Menu li styles */
 ul.menu li {
-  padding: 0.35em 0 0 0; /* LTR */
+  padding: 0 0 0 0; /* LTR */
+  margin:0 0 0 0;
+  list-style:none;
 }
 
 ul.menu li.collapsed {}
@@ -69,51 +71,37 @@ ul.menu li.last  {}
 /* ALIGN CENTER */
 /* #main-menu-wrapper .main-menu-inner {display: table; margin: 0 auto; text-align: center;} */
 
-#main-menu-wrapper {
-  float: right;
-}
+#main-menu-wrapper { float: right; }
 
-div#block-system-main-menu  {
-  float:right;
-  font-family:Arial, Helvetica, sans-serif;
-  font-stretch:narrower;
-  height:34px; 
-  margin: 0px;
-  margin-top:75px;
-  visible: visible;
-}
+/*
+********SIDE NAVIGATION*******************************
+*/
 
-#block-system-main-menu div.block-inner div.content ul.menu {
-  font-size:12px;
-  list-style:none;
-  margin: 0;
-  padding: 0;
-  right: 0;
-}
+ul#block-system-navigation { float:left; font-family:Arial, Helvetica, sans-serif; float:left; height:276px; margin-top:10px; width:235px; }
+
+#block-system-navigation li { color:#fff; border-top:1px solid #525252; }
+
+#block-system-navigation li a { color:#f2f2f2; background:#454545; display:block; padding:0 0 0 9px; line-height:2.7; text-decoration:none;}
+
+#block-system-navigation li a:hover {color:#f2f2f2; background-color:#333; display:block; line-height:2.7; -webkit-transition-property:background-color; -webkit-transition-duration:.3s;transition-property:background-color;transition-duration:.3s;}
+
+/*
+*********TOP NAVIGATION******************************
+*/
+
+div#block-system-main-menu  {float:right;font-family:Arial, Helvetica, sans-serif;font-stretch:narrower;height:34px; margin: 0px;margin-top:75px;visible: visible;border:none;}
+
+#block-system-main-menu div.block-inner div.content ul.menu {font-size:12px;list-style:none;margin: 0;padding: 0;right: 0;}
 
 /* Modify the margin to set tab spacings. */
-#block-system-main-menu div.block-inner div.content ul.menu li {
-  display: block;
-  float:left;
-  list-style: none;
-  margin:0;
-  padding:8px 0 2px 1px;
-  width:auto;
-}
+#block-system-main-menu div.block-inner div.content ul.menu li {display:block;float:left;list-style:none;margin:0;padding:8px 0 2px 1px;width:auto;}
 
-#block-system-main-menu div.block-inner div.content ul.menu li a {
-  background:#1e1e1e; 
-  color:#f2f2f2; 
-  display:block; 
-  height:30px; 
-  padding:10px 9px 0 9px; 
-  text-decoration:none;	
-}
+#block-system-main-menu div.block-inner div.content ul.menu li a {background:#1e1e1e;color:#f2f2f2;display:block;height:30px;padding:10px 9px 0 9px;text-decoration:none;}
 
 /* Set pseudo class styles. */
 #block-system-main-menu div.block-inner div.content ul.menu li a:link {}
 #block-system-main-menu div.block-inner div.content ul.menu li a:visited {}
-#block-system-main-menu div.block-inner div.content ul.menu li a:hover { color:#00477f; background:#fad703;}
+#block-system-main-menu div.block-inner div.content ul.menu li a:hover {color:#00477f; background:#fad703;}
 #block-system-main-menu div.block-inner div.content ul.menu li a:focus {}
 #block-system-main-menu div.block-inner div.content ul.menu li a:active {}
 
