@@ -28,3 +28,8 @@ html body.admin-menu {
 a.nivo-nextNav { background-position:-30px 0; right:15px; }
 
 a.nivo-prevNav { left:15px; }
+
+/* Ensure that the front page press release photos are top-aligned */
+div#block-views-press_release_column-block div.view-press-release-column table.views-view-grid td {
+  vertical-align: top;
+}
