@@ -280,7 +280,9 @@ function killfile_node_undelete_submit($form, &$form_state) {
   if ($result){
     // redirect to if not already redirecting somewhere
     if (!isset($form_state['redirect'])){
-      $form_state['redirect'] = $form['#node']->uri['path'];
+      if (property_exists($form['#node'], 'uri')){
+        $form_state['redirect'] = $form['#node']->uri['path'];
+      }
     }
 
     drupal_set_message(t("This node has been undeleted."));
@@ -603,7 +605,9 @@ function killfile_node_delete_confirm_submit($form, &$form_state){
 
       // redirect to the front only if the user does not have view access on killfiled content
       if (user_access('access killfiled content')){
-        $redirect_to = $form['#node']->uri['path'];
+        if (property_exists($form['#node'], 'uri')){
+          $redirect_to = $form['#node']->uri['path'];
+        }
       }
     }
   }
