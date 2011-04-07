@@ -33,3 +33,11 @@ a.nivo-prevNav { left:15px; }
 div#block-views-press_release_column-block div.view-press-release-column table.views-view-grid td {
   vertical-align: top;
 }
+
+/*Press Release */
+.row-1 row-first row-last {padding:0; margin:0; }
+
+.col-1 col-first {float:left;}
+
+.col-1, .col-2, col-3 {width:235px;}
+

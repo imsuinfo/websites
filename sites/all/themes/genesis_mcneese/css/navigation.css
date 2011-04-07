@@ -18,7 +18,6 @@ ul.menu ul ul ul {
 ul.menu li {
   padding: 0 0 0 0; /* LTR */
   margin:0 0 0 0;
-  list-style:none;
 }
 
 ul.menu li.collapsed {}
@@ -97,6 +96,10 @@ div#block-system-main-menu  {float:right;font-family:Arial, Helvetica, sans-seri
 #block-system-main-menu div.block-inner div.content ul.menu li {display:block;float:left;list-style:none;margin:0;padding:8px 0 2px 1px;width:auto;}
 
 #block-system-main-menu div.block-inner div.content ul.menu li a {background:#1e1e1e;color:#f2f2f2;display:block;height:30px;padding:10px 9px 0 9px;text-decoration:none;}
+
+ul#block-menu autism {list-style-type:none;}
+
+#block-menu-menu-autism li {background:url(../images/menu_bullets.png); list-style-type:none;}
 
 /* Set pseudo class styles. */
 #block-system-main-menu div.block-inner div.content ul.menu li a:link {}

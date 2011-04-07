@@ -141,11 +141,7 @@
         <?php endif; ?>
 
         <div id="main-content">
-          <?php print render($title_prefix); ?>
-          <?php if ($title): ?>
-            <h1 id="page-title"><?php print $title; ?></h1>
-          <?php endif; ?>
-          <?php print render($title_suffix); ?>
+
 
           <?php if ($tabs): ?>
             <div class="local-tasks"><?php print render($tabs); ?></div>
