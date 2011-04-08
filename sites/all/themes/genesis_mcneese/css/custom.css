@@ -41,3 +41,9 @@ div.view-id-press_release table.views-view-grid tbody tr td {
 
 .col-1, .col-2, col-3 {width:235px;}
 
+div.view-id-press_release div.view-content div.views-row {
+	display: inline-block;
+ 	max-width: 190px; /* or something like that */
+    vertical-align: top;
+    margin: 5px;
+}
