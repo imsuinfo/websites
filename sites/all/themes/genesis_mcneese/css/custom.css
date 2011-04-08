@@ -29,7 +29,46 @@ a.nivo-nextNav { background-position:-30px 0; right:15px; }
 
 a.nivo-prevNav { left:15px; }
 
-/* Ensure that the front page press release photos are top-aligned */
-div.view-id-press_release table.views-view-grid tbody tr td {
-  vertical-align: top;
+a.nivo-prevNav { left:15px; }
+>>>>>>> 6005c624588c493dbfb6f3312538102cfa46201b
+
+div.view-id-press_release div.view-content{
+	display: inline-block;
+ 	max-width: 225px; /* or something like that */
+    vertical-align: top;
+    margin: 5px;
 }
+/*Press Release Typography*/
+
+.views-row {float:left; height:396px; width:225px; padding-right:10px;}
+
+.views-field-title {
+	font-family:Georgia, "Times New Roman", Times, serif;
+	color:#00477f;
+	font-size:13pt;
+}
+
+.views-field-body {
+	
+}
+.views-field-field-press-release-photo {
+}
+
+.field-content p {
+	font-family:Arial, Helvetica, sans-serif;
+	color:#363636;
+	font-size:10pt;
+	line-height:22px;
+}
+
+.views-field-view-node {
+	background:url(../images/readmore_03.png) no-repeat;
+	height:24px;
+	padding-bottom:10px;
+	vertical-align:
+}
+
+span.field-content a {
+	float:right;
+}
+
