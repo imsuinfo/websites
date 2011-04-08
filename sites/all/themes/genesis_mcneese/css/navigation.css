@@ -18,6 +18,8 @@ ul.menu ul ul ul {
 ul.menu li {
   padding: 0 0 0 0; /* LTR */
   margin:0 0 0 0;
+  list-style-type:none;
+  list-style:none;
 }
 
 ul.menu li.collapsed {}
