@@ -58,7 +58,7 @@ function _date_views_fields($base = 'node') {
 
     // For Field module fields, get the date type.
     $custom = array();
-    if (isset($handler->definition['group']) && $handler->definition['group'] == t('Fields')) {
+    if ($handler->definition['group'] == t('Fields')) {
       $field = field_info_field($handler->definition['field_name']);
       switch ($field['type']) {
        case 'date':
@@ -116,10 +116,7 @@ function _date_views_fields($base = 'node') {
     }
 
     // Allow custom modules to provide date fields.
-    // The instanceof function makes this work for any handler that was derived 
-    // from 'views_handler_filter_date' or 'views_handler_argument_date', 
-    // which includes core date fields like the node updated field.
-    elseif ($handler instanceof views_handler_filter_date || $handler instanceof views_handler_argument_date) {
+    elseif (date_views_handler_is_date($handler, 'filter')) {
       foreach (module_implements('date_views_fields') as $module) {
         $function = $module . '_date_views_fields';
         if ($custom = $function("$table_name.$field_name")) {

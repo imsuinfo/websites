@@ -61,7 +61,7 @@ function date_sql_pad($str, $size = 2, $pad = '0', $side = 'l') {
  * A class to manipulate date SQL.
  */
 class date_sql_handler {
-  var $db_type = NULL;
+  var $db_type = 'mysql';
   var $date_type = DATE_DATETIME;
   var $db_timezone = 'UTC'; // A string timezone name.
   var $local_timezone = NULL; // A string timezone name.
@@ -78,7 +78,7 @@ class date_sql_handler {
   }
 
   function get_db_type() {
-    return db_driver();
+    return $GLOBALS['databases']['default']['default']['driver'];
   }
   
   /**
@@ -729,7 +729,8 @@ class date_sql_handler {
     foreach ($fromto as $arg) {
       $parts = array();
       if ($arg == '@') {
-        $parts['date'] = date_array(date_now());
+        $date = date_now();
+        $parts['date'] = $date->toArray();
       }
       elseif (preg_match('/(\d{4})?-?(W)?(\d{1,2})?-?(\d{1,2})?[T\s]?(\d{1,2})?:?(\d{1,2})?:?(\d{1,2})?/', $arg, $matches)) {
         $date = array();

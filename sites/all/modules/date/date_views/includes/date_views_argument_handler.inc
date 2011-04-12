@@ -17,6 +17,10 @@ class date_views_argument_handler extends date_views_argument_handler_simple {
    */
   function init(&$view, &$options) {
     parent::init($view, $options);
+
+    if (empty($this->view->date_info)) {
+      $this->view->date_info = new stdClass();
+    }
     if (empty($this->view->date_info->date_fields)) {
       $this->view->date_info->date_fields = array();
     }
@@ -158,7 +162,7 @@ class date_views_argument_handler extends date_views_argument_handler_simple {
    *
    * The argument sent may be found at $this->argument.
    */
-  function query() {
+  function query($group_by = FALSE) {
     if ($this->date_forbid()) {
       return;
     }
@@ -189,6 +193,7 @@ class date_views_argument_handler extends date_views_argument_handler_simple {
         $i++;
       }
     }
+    $this->query->set_where_group($this->options['date_method'], $this->options['date_group']);
     $this->granularity = $this->date_handler->arg_granularity($this->argument);
     $format = $this->date_handler->views_formats($this->granularity, 'sql');
     if (!empty($this->query_fields)) {
@@ -208,7 +213,7 @@ class date_views_argument_handler extends date_views_argument_handler_simple {
           $this->table_alias = NULL;
         }
         $this->formula = $this->formula();
-        parent::query($this->options['date_group']);
+        parent::query($group_by);
       }
     }
   }
