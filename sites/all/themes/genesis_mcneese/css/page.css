@@ -42,7 +42,7 @@ body {
 
 /* Main content wrappers*/
 #main-content {}
-#content {margin:0 auto;width:480px;}
+#content {margin:0;width:480px;}
 
 
 /**********************************************************
