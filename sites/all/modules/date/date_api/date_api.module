@@ -729,7 +729,7 @@ class DateObject extends DateTime {
 }
 
 function date_db_type() {
-  return $GLOBALS['databases']['default']['default']['driver'];
+  return db_driver();
 }
 
 /**
@@ -1786,6 +1786,7 @@ function date_api_theme() {
 function date_api_set_db_timezone($offset = '+00:00') {
   module_load_include('inc', 'date_api', 'date_api_sql');
   $handler = new date_sql_handler();
+
   return $handler->set_db_timezone($offset);
 }
 

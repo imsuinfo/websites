@@ -61,7 +61,7 @@ function date_sql_pad($str, $size = 2, $pad = '0', $side = 'l') {
  * A class to manipulate date SQL.
  */
 class date_sql_handler {
-  var $db_type = 'mysql';
+  var $db_type = NULL;
   var $date_type = DATE_DATETIME;
   var $db_timezone = 'UTC'; // A string timezone name.
   var $local_timezone = NULL; // A string timezone name.
@@ -78,7 +78,7 @@ class date_sql_handler {
   }
 
   function get_db_type() {
-    return $GLOBALS['databases']['default']['default']['driver'];
+    return db_driver();
   }
   
   /**
