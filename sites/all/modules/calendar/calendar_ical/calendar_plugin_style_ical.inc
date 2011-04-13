@@ -217,27 +217,67 @@ class calendar_plugin_style_ical extends views_plugin_style_rss {
       $i++;
     }
 
-    // Render each field into an output array.
-    $items = array();
-    $calendar_fields = date_views_fields($this->view->base_table);
-    $calendar_fields = array_keys($calendar_fields['alias']);
-    foreach ($this->view->result as $num => $row) {
-      $items[$num] = $row;
-      // Store the raw date values before formatting the results.
-      foreach ($row as $key => $value) {
-        if (in_array($key, $calendar_fields)) {
-          $items[$num]->calendar_fields->$key = $value;
-        }
-      }
-      foreach ($this->view->field as $name => $field) {
-        // Some fields, like the node edit and delete links, have no alias.
-        $field_alias = $field->field_alias != 'unknown' ? $field->field_alias : $name;
-        if (!empty($field) && is_object($field)) {
-          $field_output = $field->theme($row);
-          $items[$num]->{$field_alias} = $field_output;
-        }
+  // Make sure we only run through this function one time.
+  if (!empty($this->view->date_info->calendar_processed)) {
+    return;
+  }
+
+  $result   = (array) $this->view->result;
+ 
+  $options  = $this->view->style_plugin->options;
+  $handler  = $this->view->style_plugin;
+
+  $fields   = $this->view->field;
+  // Render each field into an output array. We have to do the rendering
+  // here because we don't apppear to have full access to the view 
+  // handlers in the theme functions.
+  $items = array();
+  $calendar_fields = date_views_fields($this->view->base_table);
+  $calendar_fields = array_keys($calendar_fields['alias']);
+
+  // Try to figure out the 'id' for this collection of items.
+  // The id field is often not a field but instead an 'additional field',
+  // so this is cludgy.
+  foreach ($result as $num => $row) {
+    $keys = array_keys((array) $row);
+    foreach ($keys as $key) {
+      if (strlen($key) == 3 && substr($key, -2) == 'id' && !empty($row->$key)) {
+        $id = $key;
       }
     }
+  }
+
+  foreach ($result as $num => $row) {
+    $copy = clone($row);
+    $items[$num] = $row;
+    $items[$num]->raw = $copy;
+    $items[$num]->calendar_fields = new stdClass();
+
+    $items[$num]->id = !empty($row->$id) ? $row->$id : NULL;
+
+    foreach ($row as $key => $value) {
+      if (in_array($key, $calendar_fields)) {
+        $items[$num]->calendar_fields->$key = $value;
+      }
+    }
+    foreach ($fields as $name => $field) {
+      // Some fields, like the node edit and delete links, have no alias.
+      $field_alias = $field->field_alias != 'unknown' ? $field->field_alias : $name; 
+      if ($field->real_field == 'entity_id' || $field->real_field == 'revision_id') {
+        $items[$num]->id = $row->{$field_alias};
+        //$col = $field->definition['field_name'] . '_' . $field->options['group_column'];
+        //$field_alias = $field->aliases[$col];
+      }
+      if (!empty($field) && is_object($field)) {
+        // Theme the copy instead of the original row so duplicate date
+        // fields each get a fresh copy of the original data to theme.
+        $items[$num]->{$field_alias} = $field->theme($copy);
+      }
+      if (!empty($field->options['exclude'])) {
+        if (isset($items[$num]->{$field_alias})) unset($items[$num]->{$field_alias});
+      }
+    }
+  }
 
     // Massage the resulting items into formatted calendar items.
     $items = calendar_build_nodes($this->view, $items);
