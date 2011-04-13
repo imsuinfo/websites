@@ -47,6 +47,38 @@ class date_views_argument_handler_simple extends views_handler_argument_date {
   }
 
   /**
+   * Add a callback for the formula to wrap the field in the right SQL.
+   */
+  function placeholder_format($format, $argument) {
+    $placeholder_format = $format;
+
+    // FIXME: this is a proof of concept, it needs to be updated to support whatever time format is being used
+    if (preg_match('/\d\d\d\d-W(\d)+/i', $argument) > 0){
+      $placeholder_format = $this->date_handler->views_formats('week');
+    }
+    else if (preg_match('/\d\d\d\d-\d\d-\d\d \d\d:\d\d:\d\d/i', $argument) > 0){
+      $placeholder_format = $this->date_handler->views_formats('seconds');
+    }
+    else if (preg_match('/\d\d\d\d-\d\d-\d\d \d\d:\d\d/i', $argument) > 0){
+      $placeholder_format = $this->date_handler->views_formats('minutes');
+    }
+    else if (preg_match('/\d\d\d\d-\d\d-\d\d \d\d/i', $argument) > 0){
+      $placeholder_format = $this->date_handler->views_formats('hour');
+    }
+    else if (preg_match('/\d\d\d\d-\d\d-\d\d/i', $argument) > 0){
+      $placeholder_format = $this->date_handler->views_formats('day');
+    }
+    else if (preg_match('/\d\d\d\d-\d\d/i', $argument) > 0){
+      $placeholder_format = $this->date_handler->views_formats('month');
+    }
+    else if (preg_match('/\d\d\d\d/i', $argument) > 0){
+      $placeholder_format = $this->date_handler->views_formats('year');
+    }
+
+    return $placeholder_format;
+  }
+
+  /**
    * Override the parent get_formula() to use the date_handler formula.
    */
   function get_formula() {
@@ -197,6 +229,7 @@ class date_views_argument_handler_simple extends views_handler_argument_date {
     $this->granularity = $this->date_handler->arg_granularity($this->argument);
     $this->ensure_my_table();
     $group = !empty($this->options['date_group']) ? $this->options['date_group'] : $this->options['group'];
+    $this->sql_format = $this->placeholder_format($this->sql_format, $this->argument);
 
     // Now that our table is secure, get our formula.
     if ($this->granularity != 'week') {
