@@ -54,10 +54,8 @@
   <?php endif; ?>
 
   <?php print $page_top; ?>
-  <div id="containerOut">
   <div id="container" class="<?php print $classes; ?>">
     <?php print $page; ?>
-  </div>
   </div>
   <?php print $page_bottom; ?>
 

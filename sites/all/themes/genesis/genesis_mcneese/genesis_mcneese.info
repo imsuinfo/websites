@@ -1,6 +1,6 @@
 ; $Id: genesis_SUBTHEME.info,v 1.25 2011/01/14 03:12:40 jmburnz Exp $
 
-; Change the name to match your new subthemes name and modify the description.	
+; Change the name to match your new subthemes name and modify the description.
   name         = McNeese Theme
   description  = My Kickn' Sub-theme
   core         = 7.x
@@ -15,6 +15,7 @@
   ;stylesheets[all][] = css/gpanels/gpanels-fluid.css
 
 ; Subtheme modular stylsheets.
+  ;stylesheets[all][] = css/layout.css
   stylesheets[all][] = css/html-elements.css
   stylesheets[all][] = css/page.css
   stylesheets[all][] = css/fields.css
@@ -25,8 +26,8 @@
   stylesheets[all][] = css/views-styles.css
   stylesheets[all][] = css/custom.css
 
-; The regions defined in the page.tpl.php file. The name in brackets is the 
-; name of the variable. The text after the = sign is the short description 
+; The regions defined in the page.tpl.php file. The name in brackets is the
+; name of the variable. The text after the = sign is the short description
 ; you see on the block configuration page.
   regions[page_top]           = Page top
   regions[leaderboard]        = Leaderboard
@@ -67,7 +68,7 @@
   ;regions[three_25_25_50_first]  = GP 25% 25% 50% - First
   ;regions[three_25_25_50_second] = GP 25% 25% 50% - Second
   ;regions[three_25_25_50_third]  = GP 25% 25% 50% - Third
-  
+
   ; 3 col 50-25-25
   ;regions[three_50_25_25_first]  = GP 50% 25% 25% - First
   ;regions[three_50_25_25_second] = GP 50% 25% 25% - Second
@@ -94,7 +95,7 @@
   ;regions[six_fifth]  = GP 6 x 16% - Fifth
   ;regions[six_sixth]  = GP 6 x 16% - Sixth
 
-; Shorcuts link, set to 1 enable. Disabled by default since this 
+; Shorcuts link, set to 1 enable. Disabled by default since this
 ; will seldom make sense in a front end theme.
   settings[shortcut_module_link] = 0
 
