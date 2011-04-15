@@ -1,0 +1,190 @@
+/** DEBUG ONLY DONT FORGET TO DELETE THIS!!!!!!!!!! **
+div#toolbar {
+  display: none;
+}
+/** DEBUG ONLY DONT FORGET TO DELETE THIS!!!!!!!!!! **/
+
+/*** main ***/
+body {
+  background-color: #f8f8f8;
+}
+
+div#container {
+  width: 940px;
+
+  padding-left: 10px;
+  padding-right: 10px;
+
+  margin-left: auto;
+  margin-right: auto;
+
+  background-color: #ffffff;
+}
+
+
+/*** Header **/
+div#header {
+  height: 126px;
+  max-height: 126px;
+
+  /*background: url("../images/web_b_02.png") repeat-x scroll 0 0 #00477f;*/
+  background-color: #00477f;
+  overflow: hidden;
+}
+
+div#header div#branding {
+  margin-top: 20px;
+  margin-left: 20px;
+}
+
+div#header div#branding,
+div#header div#header-blocks {
+  display: inline-block;
+  vertical-align: top;
+
+  max-width: 670px;
+}
+
+div#header div#header-blocks div.region-header {
+  display: inline-block;
+  position: relative;
+
+  width: 683px;
+}
+
+div#header div#header-blocks div#block-system-main-menu {
+  display: inline-block;
+  position: absolute;
+
+  top: 71px;
+  right: 0;
+}
+
+div#header div#header-horizontal_ruler {
+  background-color: #fad703;
+
+  height: 12px;
+
+  margin-top: 10px;
+  z-index: 1;
+}
+
+
+/*** Header - search form ***/
+div#header div#header-blocks div#block-search-form {
+  display: inline-block;
+  position: absolute;
+
+  top: 25px;
+  right: 0;
+}
+
+div#block-search-form div.form-item-search-block-form input.form-text {
+  border: 2px inset #0f97ff;
+}
+
+div#block-search-form div.form-item-search-block-form input.form-text:hover {
+  border: 2px solid #fad703;
+}
+
+div#block-search-form h2.block-title {
+  display: none;
+}
+
+div#block-search-form form#search-block-form input#edit-submit {
+  background-color: #003e6d;
+  color: #ffffff;
+  text-shadow: 0 2px 2px #000000;
+
+  border: 1px solid #0f97ff;
+  margin: 0px 10px 0 5px;
+}
+
+div#block-search-form form#search-block-form input#edit-submit:hover {
+  color: #00477f;
+  background: #fad703;
+}
+
+
+/*** Header - main menu ***/
+div#block-system-main-menu  {
+  font-family: Arial, Helvetica, sans-serif;
+  float: right;
+
+  height: 34px;
+
+  margin: 0;
+  border: 0;
+}
+
+div#block-system-main-menu div.block-inner div.content ul.menu {
+  font-size: 12px;
+  list-style: none;
+
+  margin: 0;
+  padding: 0;
+
+  vertical-align: top;
+}
+
+div#block-system-main-menu div.block-inner div.content ul.menu li {
+ /*
+  display: block;
+  float: left;
+  */
+  display: inline-block;
+
+  width: auto;
+
+  list-style:none;
+
+  margin: 0;
+  padding: 6px 0 2px 1px;
+}
+
+div#block-system-main-menu div.block-inner div.content ul.menu li a {
+  display: block;
+
+  height: 28px;
+
+  color: #f2f2f2;
+  background-color: #1e1e1e;
+  text-decoration: none;
+
+  padding: 10px 9px 0px 9px;
+}
+
+div#block-system-main-menu div.block-inner div.content ul.menu li a:hover {
+  color: #00477f;
+  background: #fad703;
+}
+
+div#block-system-main-menu div.block-inner div.content ul.menu li.active-trail a {
+  color: #00477f;
+  background-color: #fad703;
+}
+
+
+/*** Header - home page slider **/
+
+div#block-views-Slider-slider_block {
+  position:relative;
+
+  height:383px;
+  width:940px;
+}
+
+div#block-views-Slider-slider_block img {
+  display:none;
+
+  position:absolute;
+  top:0px;
+  left:0px;
+}
+
+div#block-views-Slider-slider_block a {
+  display:block;
+
+  border:0;
+}
+
