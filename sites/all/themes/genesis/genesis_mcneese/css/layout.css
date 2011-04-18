@@ -36,15 +36,8 @@ div#header {
   overflow: hidden;
 }
 
-div#branding,
-div#header-blocks,
-div#header-horizontal_ruler {
+div#branding img {
   position: absolute;
-  vertical-align: top;
-  width: 100%;
-}
-
-div#branding {
   top: 13px;
   left: 20px;
 }
