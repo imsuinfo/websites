@@ -307,6 +307,7 @@ div#block-system-navigation ul.menu li a:active {
 /*** Content - main content **/
 div#content-column div.breadcrumb {
   background-color: #454545;
+  color: #ffffff;
 
   width: 100%;
 
