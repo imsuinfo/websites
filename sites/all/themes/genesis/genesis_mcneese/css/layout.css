@@ -7,6 +7,7 @@ div#toolbar {
 /*** main ***/
 body {
   background-color: #dadada;
+  font-family: Arial,Helvetica,Sans-Serif,Sans;
 }
 
 div#container {
@@ -309,6 +310,40 @@ div#block-system-navigation ul.menu li a:active {
   -webkit-transition-duration: 0.3s;
 }
 
+
+/*** Content - main content **/
+div#content-column div.breadcrumb {
+  background-color: #454545;
+
+  width: 100%;
+
+  font-family: Arial,Helvetica,Sans-Serif,Sans;
+  font-size: 0.75em;
+  line-height: 1.5;
+}
+
+div#content-column div.breadcrumb a,
+div#content-column div.breadcrumb a:visited {
+  color: #ffffff;
+  text-decoration: none;
+  text-shadow: 0 0.05em 0.05em #000000;
+
+  padding: 2px 6px;
+}
+
+div#content-column div.breadcrumb a:hover,
+div#content-column div.breadcrumb a:active {
+  background-color: #828282;
+
+  -webkit-transition-property: background-color;
+  -webkit-transition-duration: 0.3s;
+
+  padding: 2px 6px;
+}
+
+h1#page-title {
+  font-weight: normal;
+}
 
 /*** Footer **/
 div#footer {
