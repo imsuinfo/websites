@@ -162,18 +162,6 @@
         <ul class="action-links"><?php print render($action_links); ?></ul>
       <?php endif; ?>
 
-      <?php print render($title_prefix); ?>
-      <?php if ($title): ?>
-        <h1 id="page-title"><?php print $title; ?></h1>
-      <?php endif; ?>
-      <?php print render($title_suffix); ?>
-
-      <?php if ($page['subboard']): ?>
-        <div id="subboard"><?php print render($page['subboard']); ?></div>
-      <?php endif; ?>
-
-      <?php print $breadcrumb; ?>
-
       <div class="content-inner">
 
         <?php if ($page['highlighted']): ?>
@@ -181,6 +169,17 @@
         <?php endif; ?>
 
         <div id="main-content">
+          <?php print render($title_prefix); ?>
+          <?php if ($title): ?>
+            <h1 id="page-title"><?php print $title; ?></h1>
+          <?php endif; ?>
+          <?php print render($title_suffix); ?>
+
+          <?php if ($page['subboard']): ?>
+            <div id="subboard"><?php print render($page['subboard']); ?></div>
+          <?php endif; ?>
+
+          <?php print $breadcrumb; ?>
 
           <div id="content">
             <?php print render($page['content']); ?>
