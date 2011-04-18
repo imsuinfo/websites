@@ -198,6 +198,8 @@ div#sidebar-first,
 div#sidebar-second {
   width: 200px;
   max-width: 200px;
+
+  overflow: none;
 }
 
 div#columns.sidebar-none div#content-column {
@@ -214,4 +216,95 @@ div#columns.sidebar-right div#content-column {
 div#columns.sidebar-both div#content-column {
   width: 520px;
   max-width: 520px;
+}
+
+
+/*** Content - sidebar-left, all other menus menu **/
+div.block-menu.block-sidebar-first {
+  font-family: Arial,Helvetica,Sans-Serif,Sans;
+  font-size: 0.8em;
+}
+
+div.block-menu.block-sidebar-first ul.menu {
+  background-color: #c4c4c4;
+}
+
+div.block-menu.block-sidebar-first ul.menu li,
+div.block-menu.block-sidebar-first ul.menu li.padding,
+div.block-menu.block-sidebar-first ul.menu li.expanded,
+div.block-menu.block-sidebar-first ul.menu li.leaf,
+div.block-menu.block-sidebar-first ul.menu li.collapsed {
+  list-style: none outside none;
+  margin: 0;
+  padding: 0;
+}
+
+div.block-menu.block-sidebar-first ul.menu li.leaf {
+  border-top: 1px solid #dbdbdb;
+}
+
+div.block-menu.block-sidebar-first ul.menu li a,
+div.block-menu.block-sidebar-first ul.menu li a:visited {
+  display: block;
+  color: #393939;
+  text-decoration: none;
+  text-shadow: 0 0.05em 0.05em #eeeeee;
+  line-height: 1.7;
+
+  padding: 2px 2px 2px 8px;
+}
+
+div.block-menu.block-sidebar-first ul.menu li a:hover,
+div.block-menu.block-sidebar-first ul.menu li a:active {
+  display: block;
+  color: #ffffff;
+  background-color: #828282;
+  text-shadow: 0 0.05em 0.05em #000000;
+
+  -webkit-transition-property: background-color;
+  -webkit-transition-duration: 0.3s;
+}
+
+
+/*** Content - sidebar-left, navigation menu **/
+div#block-system-navigation {
+  font-family: Arial,Helvetica,Sans-Serif,Sans;
+  font-size: 0.8em;
+}
+
+div#block-system-navigation ul.menu {
+  background-color: #454545;
+}
+
+div#block-system-navigation ul.menu li,
+div#block-system-navigation ul.menu li.padding,
+div#block-system-navigation ul.menu li.expanded,
+div#block-system-navigation ul.menu li.leaf,
+div#block-system-navigation ul.menu li.collapsed {
+  list-style: none outside none;
+  margin: 0;
+  padding: 0;
+}
+
+div#block-system-navigation ul.menu li.leaf {
+  border-top: 1px solid #525252;
+}
+
+div#block-system-navigation ul.menu li a,
+div#block-system-navigation ul.menu li a:visited {
+  color: #ffffff;
+  text-decoration: none;
+  text-shadow: 0 0.05em 0.05em #000000;
+  line-height: 1.7;
+
+  padding: 2px 2px 2px 8px;
+}
+
+div#block-system-navigation ul.menu li a:hover,
+div#block-system-navigation ul.menu li a:active {
+  display: block;
+  background-color: #828282;
+
+  -webkit-transition-property: background-color;
+  -webkit-transition-duration: 0.3s;
 }
