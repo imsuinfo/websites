@@ -6,7 +6,7 @@ div#toolbar {
 
 /*** main ***/
 body {
-  background-color: #f8f8f8;
+  background-color: #dadada;
 }
 
 div#container {
@@ -307,4 +307,11 @@ div#block-system-navigation ul.menu li a:active {
 
   -webkit-transition-property: background-color;
   -webkit-transition-duration: 0.3s;
+}
+
+
+/*** Footer **/
+div#footer {
+  min-height: 10px;
+  height: 10px;
 }

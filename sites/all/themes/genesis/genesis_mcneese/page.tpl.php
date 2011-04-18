@@ -202,11 +202,11 @@
 
   <?php if (!$in_overlay): // hide in overlay ?>
 
-  <?php if ($page['footer'] || $feed_icons): ?>
-    <div id="footer">
+  <div id="footer">
+    <?php if ($page['footer'] || $feed_icons): ?>
       <?php print render($page['footer']); ?>
       <?php print $feed_icons; ?>
-    </div>
-  <?php endif; ?>
+    <?php endif; ?>
+  </div>
 
   <?php endif; // end hide in overlay ?>
