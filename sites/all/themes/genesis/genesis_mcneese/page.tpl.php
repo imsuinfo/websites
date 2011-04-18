@@ -139,10 +139,6 @@
 
   <?php endif; // end hide in overlay ?>
 
-  <?php print $breadcrumb; ?>
-  <?php print $messages; ?>
-  <?php print render($page['help']); ?>
-
   <?php if ($page['secondary_content'] && !$in_overlay): // hide in overlay ?>
     <div id="secondary-content">
       <?php print render($page['secondary_content']); ?>
@@ -155,6 +151,10 @@
     <?php endif; ?>
 
     <div id="content-column">
+      <?php print $breadcrumb; ?>
+      <?php print $messages; ?>
+      <?php print render($page['help']); ?>
+
       <div class="content-inner">
 
         <?php if ($page['highlighted']): ?>
