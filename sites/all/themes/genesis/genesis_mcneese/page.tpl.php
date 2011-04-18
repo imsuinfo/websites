@@ -67,6 +67,20 @@
  * @see template_preprocess_page()
  * @see template_process()
  */
+
+  $sidebar_left = isset($page['sidebar_first']) ? render($page['sidebar_first']) : '';
+  $sidebar_right = isset($page['sidebar_second']) ? render($page['sidebar_second']) : '';
+  $sidebar_css = 'sidebar-none';
+
+  if (!empty($sidebar_left) && !empty($sidebar_right)){
+    $sidebar_css = 'sidebar-both';
+  }
+  else if (!empty($sidebar_left)){
+    $sidebar_css = 'sidebar-left';
+  }
+  else if (!empty($sidebar_right)){
+    $sidebar_css = 'sidebar-right';
+  }
 ?>
   <div id="container" class="<?php print $classes; ?>">
   <?php if (!$in_overlay): // hide in overlay ?>
@@ -135,7 +149,11 @@
     </div>
   <?php endif; ?>
 
-  <div id="columns" class="clear clearfix">
+  <div id="columns" class="clear clearfix <?php print($sidebar_css); ?>">
+    <?php if (empty($sidebar_first)): ?>
+      <div id="sidebar-first" class="sidebar"><?php print render($page['sidebar_first']); ?></div>
+    <?php endif; ?>
+
     <div id="content-column">
       <div class="content-inner">
 
@@ -165,10 +183,6 @@
 
       </div>
     </div>
-
-    <?php if ($page['sidebar_first']): ?>
-      <div id="sidebar-first" class="sidebar"><?php print render($page['sidebar_first']); ?></div>
-    <?php endif; ?>
 
     <?php if ($page['sidebar_second']): ?>
       <div id="sidebar-second" class="sidebar"><?php print render($page['sidebar_second']); ?></div>

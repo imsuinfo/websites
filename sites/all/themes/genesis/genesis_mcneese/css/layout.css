@@ -185,3 +185,33 @@ div#block-views-Slider-slider_block a {
   border:0;
 }
 
+
+/*** Content - columns **/
+div#sidebar-first,
+div#sidebar-second,
+div#columns div#content-column {
+  display: inline-block;
+  vertical-align: top;
+}
+
+div#sidebar-first,
+div#sidebar-second {
+  width: 200px;
+  max-width: 200px;
+}
+
+div#columns.sidebar-none div#content-column {
+  width: 920px;
+  max-width: 920px;
+}
+
+div#columns.sidebar-left div#content-column,
+div#columns.sidebar-right div#content-column {
+  width: 720px;
+  max-width: 720px;
+}
+
+div#columns.sidebar-both div#content-column {
+  width: 520px;
+  max-width: 520px;
+}
