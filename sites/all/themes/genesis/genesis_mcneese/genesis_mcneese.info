@@ -13,6 +13,7 @@ stylesheets[screen][] = css/screen.css
 regions[page_top]           = Page Top
 regions[leaderboard]        = Leaderboard
 regions[header]             = Header
+regions[subboard]           = Subboard
 regions[help]               = Help
 regions[secondary_content]  = Secondary
 regions[sidebar_first]      = Sidebar Left
