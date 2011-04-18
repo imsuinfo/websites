@@ -68,6 +68,7 @@
  * @see template_process()
  */
 ?>
+  <div id="container" class="<?php print $classes; ?>">
   <?php if (!$in_overlay): // hide in overlay ?>
 
     <?php if ($page['leaderboard']): ?>
@@ -175,19 +176,23 @@
 
   </div> <!-- /columns -->
 
-  <?php if (!$in_overlay): // hide in overlay ?>
+  <?php if (!$in_overlay){ // hide in overlay ?>
 
     <?php if ($page['tertiary_content']): ?>
       <div id="tertiary-content">
         <?php print render($page['tertiary_content']); ?>
       </div>
     <?php endif; ?>
+  <?php } ?>
+  </div>
 
-    <?php if ($page['footer'] || $feed_icons): ?>
-      <div id="footer">
-        <?php print render($page['footer']); ?>
-        <?php print $feed_icons; ?>
-      </div>
-    <?php endif; ?>
+  <?php if (!$in_overlay): // hide in overlay ?>
+
+  <?php if ($page['footer'] || $feed_icons): ?>
+    <div id="footer">
+      <?php print render($page['footer']); ?>
+      <?php print $feed_icons; ?>
+    </div>
+  <?php endif; ?>
 
   <?php endif; // end hide in overlay ?>
