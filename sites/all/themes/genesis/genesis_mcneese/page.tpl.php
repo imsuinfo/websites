@@ -68,26 +68,39 @@
  * @see template_process()
  */
 
-  $sidebar_left = isset($page['sidebar_first']) ? render($page['sidebar_first']) : '';
-  $sidebar_right = isset($page['sidebar_second']) ? render($page['sidebar_second']) : '';
+  // FIXME: should these be placed in the template preprocess file?
+  $leaderboard = isset($page['leaderboard']) ? render($page['leaderboard']) : '';
+  $primary_links = isset($page['primary_links']) ? render($page['primary_links']) : '';
+  $header = isset($page['header']) ? render($page['header']) : '';
+  $subboard = isset($page['subboard']) ? render($page['subboard']) : '';
+  $help = isset($page['help']) ? render($page['help']) : '';
+  $secondary_content = isset($page['secondary_content']) ? render($page['secondary_content']) : '';
+  $sidebar_first = isset($page['sidebar_first']) ? render($page['sidebar_first']) : '';
+  $highlighted = isset($page['highlighted']) ? render($page['highlighted']) : '';
+  $content = isset($page['content']) ? render($page['content']) : '';
+  $sidebar_second = isset($page['sidebar_second']) ? render($page['sidebar_second']) : '';
+  $tertiary_content = isset($page['tertiary_content']) ? render($page['tertiary_content']) : '';
+  $footer = isset($page['footer']) ? render($page['footer']) : '';
+  $renderred_tabs = isset($tabs) ? render($tabs) : '';
+  $renderred_action_links = isset($action_links) ? render($action_links) : '';
   $sidebar_css = 'sidebar-none';
 
-  if (!empty($sidebar_left) && !empty($sidebar_right)){
+  if (!empty($sidebar_first) && !empty($sidebar_second)){
     $sidebar_css = 'sidebar-both';
   }
-  else if (!empty($sidebar_left)){
+  else if (!empty($sidebar_first)){
     $sidebar_css = 'sidebar-left';
   }
-  else if (!empty($sidebar_right)){
+  else if (!empty($sidebar_second)){
     $sidebar_css = 'sidebar-right';
   }
 ?>
   <div id="container" class="<?php print $classes; ?>">
   <?php if (!$in_overlay): // hide in overlay ?>
 
-    <?php if ($page['leaderboard']): ?>
+    <?php if (!empty($leaderboard)): ?>
       <div id="leaderboard" class="clearfix">
-        <?php print render($page['leaderboard']); ?>
+        <?php print($leaderboard); ?>
       </div>
     <?php endif; ?>
 
@@ -123,8 +136,8 @@
         </div> <!-- /branding -->
       <?php endif; ?>
 
-      <?php if ($page['header']): ?>
-        <div id="header-blocks"><?php print render($page['header']); ?></div>
+      <?php if (!empty($header)): ?>
+        <div id="header-blocks"><?php print($header); ?></div>
       <?php endif; ?>
 
       <div id="header-horizontal_ruler"></div>
@@ -139,33 +152,33 @@
 
   <?php endif; // end hide in overlay ?>
 
-  <?php if ($page['secondary_content'] && !$in_overlay): // hide in overlay ?>
+  <?php if (!empty($secondary_content) && !$in_overlay): // hide in overlay ?>
     <div id="secondary-content">
-      <?php print render($page['secondary_content']); ?>
+      <?php print($secondary_content); ?>
     </div>
   <?php endif; ?>
 
   <div id="columns" class="clear clearfix <?php print($sidebar_css); ?>">
-    <?php if (empty($sidebar_first)): ?>
-      <div id="sidebar-first" class="sidebar"><?php print render($page['sidebar_first']); ?></div>
+    <?php if (!empty($sidebar_first)): ?>
+      <div id="sidebar-first" class="sidebar"><?php print($sidebar_first); ?></div>
     <?php endif; ?>
 
     <div id="content-column">
       <?php print $messages; ?>
-      <?php print render($page['help']); ?>
+      <?php print($help); ?>
 
-      <?php if ($tabs): ?>
-        <div class="local-tasks"><?php print render($tabs); ?></div>
+      <?php if (!empty($renderred_tabs)): ?>
+        <div class="local-tasks"><?php print($renderred_tabs); ?></div>
       <?php endif; ?>
 
-      <?php if ($action_links): ?>
-        <ul class="action-links"><?php print render($action_links); ?></ul>
+      <?php if (!empty($renderred_action_links)): ?>
+        <ul class="action-links"><?php print($renderred_action_links); ?></ul>
       <?php endif; ?>
 
       <div class="content-inner">
 
-        <?php if ($page['highlighted']): ?>
-          <div id="highlighted"><?php print render($page['highlighted']); ?></div>
+        <?php if (!empty($highlighted)): ?>
+          <div id="highlighted"><?php print ($highlighted); ?></div>
         <?php endif; ?>
 
         <div id="main-content">
@@ -175,31 +188,31 @@
           <?php endif; ?>
           <?php print render($title_suffix); ?>
 
-          <?php if ($page['subboard']): ?>
-            <div id="subboard"><?php print render($page['subboard']); ?></div>
+          <?php if (!empty($subboard)): ?>
+            <div id="subboard"><?php print($subboard); ?></div>
           <?php endif; ?>
 
           <?php print $breadcrumb; ?>
 
           <div id="content">
-            <?php print render($page['content']); ?>
+            <?php print($content); ?>
           </div>
         </div>
 
       </div>
     </div>
 
-    <?php if ($page['sidebar_second']): ?>
-      <div id="sidebar-second" class="sidebar"><?php print render($page['sidebar_second']); ?></div>
+    <?php if (!empty($sidebar_second)): ?>
+      <div id="sidebar-second" class="sidebar"><?php print($sidebar_second); ?></div>
     <?php endif; ?>
 
   </div> <!-- /columns -->
 
   <?php if (!$in_overlay){ // hide in overlay ?>
 
-    <?php if ($page['tertiary_content']): ?>
+    <?php if (!empty($tertiary_content)): ?>
       <div id="tertiary-content">
-        <?php print render($page['tertiary_content']); ?>
+        <?php print($tertiary_content); ?>
       </div>
     <?php endif; ?>
   <?php } ?>
@@ -208,8 +221,8 @@
   <?php if (!$in_overlay): // hide in overlay ?>
 
   <div id="footer">
-    <?php if ($page['footer'] || $feed_icons): ?>
-      <?php print render($page['footer']); ?>
+    <?php if (!empty($footer) || $feed_icons): ?>
+      <?php print ($footer); ?>
       <?php print $feed_icons; ?>
     <?php endif; ?>
   </div>
