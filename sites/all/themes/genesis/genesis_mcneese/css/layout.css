@@ -175,6 +175,12 @@ div#block-views-Slider-slider_block a {
 }
 
 
+/*** Content - container & footer **/
+div#container.is_front div#columns {
+  margin-top: 10px;
+}
+
+
 /*** Content - columns **/
 div#sidebar-first,
 div#sidebar-second,

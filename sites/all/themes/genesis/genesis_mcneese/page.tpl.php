@@ -94,133 +94,139 @@
   else if (!empty($sidebar_second)){
     $sidebar_css = 'sidebar-right';
   }
+
+  $is_front_css = '';
+
+  if ($is_front === TRUE) {
+    $is_front_css = 'is_front';
+  }
 ?>
-  <div id="container" class="<?php print $classes; ?>">
-  <?php if (!$in_overlay): // hide in overlay ?>
+  <div id="container" class="<?php print $classes; ?> <?php print($is_front_css);?>">
+    <?php if (!$in_overlay): // hide in overlay ?>
 
-    <?php if (!empty($leaderboard)): ?>
-      <div id="leaderboard" class="clearfix">
-        <?php print($leaderboard); ?>
-      </div>
-    <?php endif; ?>
+      <?php if (!empty($leaderboard)): ?>
+        <div id="leaderboard" class="clearfix">
+          <?php print($leaderboard); ?>
+        </div>
+      <?php endif; ?>
 
-    <?php if ($secondary_menu_links): ?>
-      <div id="secondary-menu-wrapper" class="clearfix">
-        <div class="secondary-menu-inner"><?php print $secondary_menu_links; ?></div>
-      </div>
-    <?php endif; ?>
+      <?php if ($secondary_menu_links): ?>
+        <div id="secondary-menu-wrapper" class="clearfix">
+          <div class="secondary-menu-inner"><?php print $secondary_menu_links; ?></div>
+        </div>
+      <?php endif; ?>
 
-    <div id="header" class="clearfix">
+      <div id="header" class="clearfix">
 
-      <?php if ($site_logo || $site_name || $site_slogan): ?>
-        <div id="branding">
+        <?php if ($site_logo || $site_name || $site_slogan): ?>
+          <div id="branding">
 
-          <?php if ($site_logo or $site_name): ?>
-            <?php if ($title): ?>
-              <div class="logo-site-name"><strong>
-                <?php if ($site_logo): ?><span id="logo"><?php print $site_logo; ?></span><?php endif; ?>
-                <?php if ($site_name): ?><span id="site-name"><?php print $site_name; ?></span><?php endif; ?>
-              </strong></div>
-            <?php else: /* Use h1 when the content title is empty */ ?>
-              <h1 class="logo-site-name">
-                <?php if ($site_logo): ?><span id="logo"><?php print $site_logo; ?></span><?php endif; ?>
-                <?php if ($site_name): ?><span id="site-name"><?php print $site_name; ?></span><?php endif; ?>
-             </h1>
+            <?php if ($site_logo or $site_name): ?>
+              <?php if ($title): ?>
+                <div class="logo-site-name"><strong>
+                  <?php if ($site_logo): ?><span id="logo"><?php print $site_logo; ?></span><?php endif; ?>
+                  <?php if ($site_name): ?><span id="site-name"><?php print $site_name; ?></span><?php endif; ?>
+                </strong></div>
+              <?php else: /* Use h1 when the content title is empty */ ?>
+                <h1 class="logo-site-name">
+                  <?php if ($site_logo): ?><span id="logo"><?php print $site_logo; ?></span><?php endif; ?>
+                  <?php if ($site_name): ?><span id="site-name"><?php print $site_name; ?></span><?php endif; ?>
+               </h1>
+              <?php endif; ?>
             <?php endif; ?>
-          <?php endif; ?>
 
-          <?php if ($site_slogan): ?>
-            <div id="site-slogan"><?php print $site_slogan; ?></div>
-          <?php endif; ?>
+            <?php if ($site_slogan): ?>
+              <div id="site-slogan"><?php print $site_slogan; ?></div>
+            <?php endif; ?>
 
-        </div> <!-- /branding -->
-      <?php endif; ?>
-
-      <?php if (!empty($header)): ?>
-        <div id="header-blocks"><?php print($header); ?></div>
-      <?php endif; ?>
-
-      <div id="header-horizontal_ruler"></div>
-
-    </div> <!-- /header -->
-
-    <?php if ($main_menu_links): ?>
-      <div id="main-menu-wrapper" class="clearfix">
-        <div class="main-menu-inner"><?php print $main_menu_links; ?></div>
-      </div>
-    <?php endif; ?>
-
-  <?php endif; // end hide in overlay ?>
-
-  <?php if (!empty($secondary_content) && !$in_overlay): // hide in overlay ?>
-    <div id="secondary-content">
-      <?php print($secondary_content); ?>
-    </div>
-  <?php endif; ?>
-
-  <div id="columns" class="clear clearfix <?php print($sidebar_css); ?>">
-    <?php if (!empty($sidebar_first)): ?>
-      <div id="sidebar-first" class="sidebar"><?php print($sidebar_first); ?></div>
-    <?php endif; ?>
-
-    <div id="content-column">
-      <?php print $messages; ?>
-      <?php print($help); ?>
-
-      <?php if (!empty($renderred_tabs)): ?>
-        <div class="local-tasks"><?php print($renderred_tabs); ?></div>
-      <?php endif; ?>
-
-      <?php if (!empty($renderred_action_links)): ?>
-        <ul class="action-links"><?php print($renderred_action_links); ?></ul>
-      <?php endif; ?>
-
-      <div class="content-inner">
-
-        <?php if (!empty($highlighted)): ?>
-          <div id="highlighted"><?php print ($highlighted); ?></div>
+          </div> <!-- /branding -->
         <?php endif; ?>
 
-        <div id="main-content">
-          <?php print render($title_prefix); ?>
-          <?php if ($title): ?>
-            <h1 id="page-title"><?php print $title; ?></h1>
-          <?php endif; ?>
-          <?php print render($title_suffix); ?>
+        <?php if (!empty($header)): ?>
+          <div id="header-blocks"><?php print($header); ?></div>
+        <?php endif; ?>
 
-          <?php if (!empty($subboard)): ?>
-            <div id="subboard"><?php print($subboard); ?></div>
-          <?php endif; ?>
+        <div id="header-horizontal_ruler"></div>
 
-          <?php print $breadcrumb; ?>
+      </div> <!-- /header -->
 
-          <div id="content">
-            <?php print($content); ?>
-          </div>
+      <?php if ($main_menu_links): ?>
+        <div id="main-menu-wrapper" class="clearfix">
+          <div class="main-menu-inner"><?php print $main_menu_links; ?></div>
         </div>
+      <?php endif; ?>
 
-      </div>
-    </div>
+    <?php endif; // end hide in overlay ?>
 
-    <?php if (!empty($sidebar_second)): ?>
-      <div id="sidebar-second" class="sidebar"><?php print($sidebar_second); ?></div>
-    <?php endif; ?>
-
-  </div> <!-- /columns -->
-
-  <?php if (!$in_overlay){ // hide in overlay ?>
-
-    <?php if (!empty($tertiary_content)): ?>
-      <div id="tertiary-content">
-        <?php print($tertiary_content); ?>
+    <?php if (!empty($secondary_content) && !$in_overlay): // hide in overlay ?>
+      <div id="secondary-content">
+        <?php print($secondary_content); ?>
       </div>
     <?php endif; ?>
-  <?php } ?>
+
+    <div id="columns" class="clear clearfix <?php print($sidebar_css); ?>">
+      <?php if (!empty($sidebar_first)): ?>
+        <div id="sidebar-first" class="sidebar"><?php print($sidebar_first); ?></div>
+      <?php endif; ?>
+
+      <div id="content-column">
+        <?php print $messages; ?>
+        <?php print($help); ?>
+
+        <?php if (!empty($renderred_tabs)): ?>
+          <div class="local-tasks"><?php print($renderred_tabs); ?></div>
+        <?php endif; ?>
+
+        <?php if (!empty($renderred_action_links)): ?>
+          <ul class="action-links"><?php print($renderred_action_links); ?></ul>
+        <?php endif; ?>
+
+        <div class="content-inner">
+
+          <?php if (!empty($highlighted)): ?>
+            <div id="highlighted"><?php print ($highlighted); ?></div>
+          <?php endif; ?>
+
+          <div id="main-content">
+            <?php print render($title_prefix); ?>
+            <?php if ($title): ?>
+              <h1 id="page-title"><?php print $title; ?></h1>
+            <?php endif; ?>
+            <?php print render($title_suffix); ?>
+
+            <?php if (!empty($subboard)): ?>
+              <div id="subboard"><?php print($subboard); ?></div>
+            <?php endif; ?>
+
+            <?php print $breadcrumb; ?>
+
+            <div id="content">
+              <?php print($content); ?>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <?php if (!empty($sidebar_second)): ?>
+        <div id="sidebar-second" class="sidebar"><?php print($sidebar_second); ?></div>
+      <?php endif; ?>
+
+    </div> <!-- /columns -->
+
+    <?php if (!$in_overlay){ // hide in overlay ?>
+
+      <?php if (!empty($tertiary_content)): ?>
+        <div id="tertiary-content" style="<?php print($is_front_css);?>">
+          <?php print($tertiary_content); ?>
+        </div>
+      <?php endif; ?>
+    <?php } ?>
   </div>
 
   <?php if (!$in_overlay): // hide in overlay ?>
 
-  <div id="footer">
+  <div id="footer" style="<?php print($is_front_css);?>">
     <?php if (!empty($footer) || $feed_icons): ?>
       <?php print ($footer); ?>
       <?php print $feed_icons; ?>
