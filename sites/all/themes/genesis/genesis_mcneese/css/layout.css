@@ -413,6 +413,49 @@ div.view-id-press_release div.views-row div.views-field-view-node a:hover {
   right: 5px;
 }
 
+
+/*** Content - home master calendar links ***/
+div.view-id-master_calendar ul li.views-row {
+  font-family: Arial;
+
+  margin-bottom: 10px;
+}
+
+div.view-id-master_calendar ul li.views-row a,
+div.view-id-master_calendar ul li.views-row a:visited {
+  text-decoration: none;
+}
+
+div.view-id-master_calendar ul li.views-row a:hover,
+div.view-id-master_calendar ul li.views-row a:active {
+  text-decoration: underline;
+}
+
+div.view-id-master_calendar ul li div.views-field-title a {
+  display: block;
+
+  color: #393939;
+
+  text-transform: uppercase;
+  font-size: 14px;
+  font-weight: bold;
+  line-height: 16px;
+
+  max-height: 16px;
+  overflow: hidden;
+}
+
+div.view-id-master_calendar ul li div.views-field-field-event-date {
+  color: #00477f;
+
+  font-size: 12px;
+  line-height: 16px;
+
+  max-height: 16px;
+  overflow: hidden;
+}
+
+
 /*** Footer **/
 div#footer {
   min-height: 10px;
