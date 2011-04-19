@@ -1,4 +1,4 @@
-/** DEBUG ONLY DONT FORGET TO DELETE THIS!!!!!!!!!! **
+/** DEBUG ONLY DONT FORGET TO DELETE THIS!!!!!!!!!! **/
 div#toolbar {
   display: none;
 }
@@ -305,6 +305,58 @@ div#block-system-navigation ul.menu li a:active {
 }
 
 
+/*** Content - sidebar-left, additional content ***/
+div.block-sidebar-first {
+  position: relative;
+
+  border-bottom: 1px solid #525252;
+}
+
+div.block-sidebar-first div.block-inner div.content ul.menu {
+  border-bottom: #000000;
+}
+
+div.block-sidebar-first div.block-inner div.content ul.menu li.expanded {
+  background-color: #454545;
+  border-bottom: 1px solid #525252;
+}
+
+div.block-sidebar-first div.block-inner div.content ul.menu li.expanded a {
+  color: #ffffff;
+
+  text-shadow: 1px 1px 1px #000000;
+}
+
+div.block-sidebar-first div.block-inner div.content ul.menu li.expanded ul.menu,
+div.block-sidebar-first div.block-inner div.content ul.menu li.expanded ul.menu li.expanded {
+  background-color: #c4c4c4;
+  border-bottom: 0;
+}
+
+div.block-sidebar-first div.block-inner div.content ul.menu li.expanded ul.menu a,
+div.block-sidebar-first div.block-inner div.content ul.menu li.expanded ul.menu li.expanded a {
+  color: #000000;
+
+  text-shadow: none;
+}
+
+div.block-sidebar-first div.block-inner div.content ul.menu li.collapsed,
+div.block-sidebar-first div.block-inner div.content ul.menu li.expanded ul.menu li.leaf {
+  border: none;
+
+  padding-left: 5px;
+}
+
+div.block-sidebar-first div.block-inner div.content ul.menu li.collapsed a,
+div.block-sidebar-first div.block-inner div.content ul.menu li.expanded ul.menu li.leaf a {
+  color: #000000;
+  text-shadow: none;
+
+  line-height: 12px;
+  font: 12px;
+}
+
+
 /*** Content - main content **/
 div#content-column div.breadcrumb {
   background-color: #454545;
@@ -462,7 +514,7 @@ div.view-id-master_calendar ul li div.views-field-field-event-date {
 }
 
 
-/*** Footer **/
+/*** Footer ***/
 div#footer {
   min-height: 10px;
   height: 10px;
