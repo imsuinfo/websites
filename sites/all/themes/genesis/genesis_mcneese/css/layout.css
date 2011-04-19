@@ -334,6 +334,85 @@ h1#page-title {
   font-weight: normal;
 }
 
+/*** Content - home news content **/
+div.view-id-press_release div.views-row {
+  display:inline-block;
+
+  width: 168px;
+
+  max-width: 168px;
+
+  min-width: 168px;
+
+  margin-bottom: 15px;
+}
+
+div.view-id-press_release div.views-row div.views-field-field-press-release-photo img {
+  width: 168px;
+  height: 134px;
+
+  max-width: 168px;
+  max-height: 134px;
+
+  min-width: 168px;
+  min-height: 134px;
+}
+
+div.view-id-press_release div.views-row div.views-field-title {
+  background-color: #f8f8f8;
+  color: #00477f;
+
+  font-family: Georgia,"Times New Roman",Times,serif;
+  font-size: 13pt;
+  line-height: 20px;
+
+  max-width: 168px;
+  max-height: 40px;
+  min-height: 40px;
+  overflow: hidden;
+
+  padding-left: 4px;
+  padding-right: 4px;
+  padding-top: 5px;
+}
+
+div.view-id-press_release div.views-row div.views-field-body {
+  background-color: #f8f8f8;
+  color: #363636;
+
+  font-family: Arial,Helvetica,sans-serif;
+  font-size: 10pt;
+  line-height: 22px;
+
+  max-height: 112px;
+  min-height: 112px;
+  overflow: hidden;
+
+  padding-left: 4px;
+  padding-right: 4px;
+}
+
+div.view-id-press_release div.views-row div.views-field-view-node {
+  position: relative;
+
+  background: url("../images/readmore_03.png") no-repeat scroll 0 0 transparent;
+
+  height: 24px;
+
+  padding-bottom: 4px;
+  padding-top: 2px;
+}
+
+div.view-id-press_release div.views-row div.views-field-view-node a,
+div.view-id-press_release div.views-row div.views-field-view-node a:visited,
+div.view-id-press_release div.views-row div.views-field-view-node a:active,
+div.view-id-press_release div.views-row div.views-field-view-node a:hover {
+  position: absolute;
+
+  color: #ffffff;
+  right: 5px;
+}
+
 /*** Footer **/
 div#footer {
   min-height: 10px;
