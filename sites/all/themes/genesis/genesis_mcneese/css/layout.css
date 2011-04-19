@@ -175,7 +175,7 @@ div#block-views-Slider-slider_block a {
 }
 
 
-/*** Content - container & footer **/
+/*** Content - container **/
 div#container.is_front div#columns {
   margin-top: 10px;
 }
@@ -198,19 +198,19 @@ div#sidebar-second {
 }
 
 div#columns.sidebar-none div#content-column {
-  width: 920px;
-  max-width: 920px;
+  width: 935px;
+  max-width: 935px;
 }
 
 div#columns.sidebar-left div#content-column,
 div#columns.sidebar-right div#content-column {
-  width: 720px;
-  max-width: 720px;
+  width: 735px;
+  max-width: 735px;
 }
 
 div#columns.sidebar-both div#content-column {
-  width: 520px;
-  max-width: 520px;
+  width: 525px;
+  max-width: 525px;
 }
 
 
@@ -466,4 +466,6 @@ div.view-id-master_calendar ul li div.views-field-field-event-date {
 div#footer {
   min-height: 10px;
   height: 10px;
+
+  margin-top: 5px;
 }
