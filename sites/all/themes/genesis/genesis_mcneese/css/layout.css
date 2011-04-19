@@ -5,11 +5,6 @@ div#toolbar {
 /** DEBUG ONLY DONT FORGET TO DELETE THIS!!!!!!!!!! **/
 
 /*** main ***/
-body {
-  background-color: #dadada;
-  font-family: Arial,Helvetica,Sans-Serif,Sans;
-}
-
 div#container {
   position: relative;
   width: 940px;
