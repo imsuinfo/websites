@@ -312,6 +312,11 @@ div.block-sidebar-first {
   border-bottom: 1px solid #525252;
 }
 
+div.block-sidebar-first div.block-inner div.content ul.menu li:active,
+div.block-sidebar-first div.block-inner div.content ul.menu li:hover {
+  background-color: #00477f;
+}
+
 div.block-sidebar-first div.block-inner div.content ul.menu {
   border-bottom: #000000;
 }
