@@ -72,7 +72,6 @@ td.menu-disabled,
 ul.links,
 ul.links.inline,
 ul.links li,
-.block ul,
 /* Drupal: admin.css */
 div.admin,
 /* Drupal: system.css */
@@ -131,7 +130,6 @@ ul.secondary a.active,
 ul.links,
 ul.links.inline,
 ul.links li,
-.block ul,
 .item-list ul,
 .item-list ul li {
   list-style: none;
