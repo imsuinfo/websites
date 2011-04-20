@@ -86,7 +86,7 @@ div#block-search-form h2.block-title {
 div#block-search-form form#search-block-form input#edit-submit {
   background-color: #003e6d;
   color: #ffffff;
-  text-shadow: 0 2px 2px #000000;
+  text-shadow: 1px 1px 0 #2f2f2f;
 
   border: 1px solid #0f97ff;
   margin: 0px 10px 0 5px;
@@ -243,7 +243,7 @@ div.block-menu.block-sidebar-first ul.menu li a:visited {
   display: block;
   color: #393939;
   text-decoration: none;
-  text-shadow: 0 0.05em 0.05em #eeeeee;
+  text-shadow: 1px 1px 0 #2f2f2f;
   line-height: 1.7;
 
   padding: 2px 2px 2px 8px;
@@ -254,7 +254,7 @@ div.block-menu.block-sidebar-first ul.menu li a:active {
   display: block;
   color: #ffffff;
   background-color: #828282;
-  text-shadow: 0 0.05em 0.05em #000000;
+  text-shadow: 1px 1px 0 #2f2f2f;
 
   -webkit-transition-property: background-color;
   -webkit-transition-duration: 0.3s;
@@ -289,7 +289,7 @@ div#block-system-navigation ul.menu li a,
 div#block-system-navigation ul.menu li a:visited {
   color: #ffffff;
   text-decoration: none;
-  text-shadow: 0 0.05em 0.05em #000000;
+  text-shadow: 1px 1px 0 #2f2f2f;
   line-height: 1.7;
 
   padding: 2px 2px 2px 8px;
@@ -318,13 +318,12 @@ div.block-sidebar-first div.block-inner div.content ul.menu {
 
 div.block-sidebar-first div.block-inner div.content ul.menu li.expanded {
   background-color: #454545;
-  border-bottom: 1px solid #525252;
 }
 
 div.block-sidebar-first div.block-inner div.content ul.menu li.expanded a {
   color: #ffffff;
 
-  text-shadow: 1px 1px 1px #000000;
+  text-shadow: 1px 1px 0 #2f2f2f;
 }
 
 div.block-sidebar-first div.block-inner div.content ul.menu li.expanded ul.menu,
@@ -373,7 +372,7 @@ div#content-column div.breadcrumb a,
 div#content-column div.breadcrumb a:visited {
   color: #ffffff;
   text-decoration: none;
-  text-shadow: 0 0.05em 0.05em #000000;
+  text-shadow: 1px 1px 0 #2f2f2f;
 
   padding: 2px 6px;
 }
@@ -399,7 +398,6 @@ div.view-id-press_release div.views-row {
   width: 168px;
 
   max-width: 168px;
-
   min-width: 168px;
 
   margin-bottom: 15px;
@@ -470,7 +468,6 @@ div.view-id-press_release div.views-row div.views-field-view-node a:hover {
   color: #ffffff;
   right: 5px;
 }
-
 
 /*** Content - home master calendar links ***/
 div.view-id-master_calendar ul li.views-row {
