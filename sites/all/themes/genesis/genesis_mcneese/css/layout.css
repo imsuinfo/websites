@@ -305,6 +305,95 @@ div#block-system-navigation ul.menu li a:active {
 }
 
 
+/*** Content - home page menu ***/
+div#block-menu-menu-home-menu {
+  background-color: #535353;
+
+  font-family: Arial,Helvetica,Sans-serif,Serif;
+  font-size: 14px;
+
+  height: 25px;
+  min-height: 25px;
+  max-height: 25px;
+
+  border-top: 1px groove #505050;
+}
+
+div#block-menu-menu-home-menu ul.menu li.leaf {
+  display: inline-block;
+  padding: 0;
+  margin: 0;
+}
+
+div#block-menu-menu-home-menu ul.menu li.leaf a,
+div#block-menu-menu-home-menu ul.menu li.leaf a:visited {
+  display: block;
+
+  color: #ffffff;
+  text-shadow: 1px 1px 0 #2f2f2f;
+
+  text-decoration: none;
+
+  padding: 4px 8px;
+}
+
+div#block-menu-menu-home-menu ul.menu li.leaf a:hover,
+div#block-menu-menu-home-menu ul.menu li.leaf a:active {
+  display: block;
+  background-color: #828282;
+
+  -webkit-transition-property: background-color;
+  -webkit-transition-duration: 0.3s;
+}
+
+div#block-menu-menu-home-menu ul.menu li.id-menu-link-menu-home-menu-869,
+div#block-menu-menu-home-menu ul.menu li.id-menu-link-menu-home-menu-880 {
+  vertical-align: top;
+  display: block;
+  float: right;
+
+  padding: 0;
+  margin: 2px 0 0 0px;
+}
+
+div#block-menu-menu-home-menu ul.menu li.leaf.id-menu-link-menu-home-menu-869 a,
+div#block-menu-menu-home-menu ul.menu li.leaf.id-menu-link-menu-home-menu-869 a:visited,
+div#block-menu-menu-home-menu ul.menu li.leaf.id-menu-link-menu-home-menu-880 a,
+div#block-menu-menu-home-menu ul.menu li.leaf.id-menu-link-menu-home-menu-880 a:visited {
+  display: inline-block;
+
+  background-repeat: no-repeat;
+
+  font-size: 0px;
+
+  width: 20px;
+  min-width: 20px;
+  max-width: 20px;
+
+  height: 20px;
+  min-height: 20px;
+  max-height: 20px;
+  overflow: hidden;
+
+  padding: 0;
+  margin: 0;
+
+  margin-right: 5px;
+}
+
+div#block-menu-menu-home-menu ul.menu li.leaf.id-menu-link-menu-home-menu-869 a,
+div#block-menu-menu-home-menu ul.menu li.leaf.id-menu-link-menu-home-menu-869 a:visited {
+  background-color: #3b5b99;
+  background-image: url(../images/facebook_logo-mini.png);
+}
+
+div#block-menu-menu-home-menu ul.menu li.leaf.id-menu-link-menu-home-menu-880 a,
+div#block-menu-menu-home-menu ul.menu li.leaf.id-menu-link-menu-home-menu-880 a:visited {
+  background-color: #3b5b99;
+  background-image: url(../images/twitter_logo-mini.png);
+}
+
+
 /*** Content - sidebar-left, additional content ***/
 div.block-sidebar-first {
   position: relative;
