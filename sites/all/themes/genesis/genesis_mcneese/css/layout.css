@@ -485,6 +485,22 @@ h1#page-title {
   font-weight: normal;
 }
 
+
+/*** Content - home page 3-columns ***/
+div#block-system-main div.view-display-id-msu div.view-display-id-press_releases,
+div#block-system-main div.view-display-id-msu div.view-display-id-events,
+div#block-system-main div.view-display-id-msu div.view-display-id-spotlight,
+div#block-system-main div.view-display-id-msu div.view-display-id-press_releases_list,
+div#block-system-main div.view-display-id-msu div.view-display-id-events_list,
+div#block-system-main div.view-display-id-msu div.view-display-id-spotlight_list {
+  display: inline-block;
+
+  width: 255px;
+  max-width: 255px;
+  min-width: 255px;
+}
+
+
 /*** Content - home news content **/
 div.view-id-press_release div.views-row {
   display:inline-block;
