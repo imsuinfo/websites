@@ -45,3 +45,12 @@ textarea,
 textarea.form-textarea {
   border: 1px inset #888888;
 }
+
+div#content p {
+  margin: 0 0 15px;
+}
+
+ul.menu {
+  margin: 0;
+  padding: 0;
+}
