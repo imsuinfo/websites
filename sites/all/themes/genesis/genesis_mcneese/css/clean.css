@@ -38,3 +38,10 @@ div.node-content img {
   -webkit-box-shadow: 2px 2px 1px #888888;
   box-shadow: 2px 2px 1px #888888;
 }
+
+select,
+input,
+textarea,
+textarea.form-textarea {
+  border: 1px inset #888888;
+}
