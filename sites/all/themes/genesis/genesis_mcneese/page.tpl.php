@@ -67,46 +67,13 @@
  * @see template_preprocess_page()
  * @see template_process()
  */
-
-  // FIXME: should these be placed in the template preprocess file?
-  $leaderboard = isset($page['leaderboard']) ? render($page['leaderboard']) : '';
-  $primary_links = isset($page['primary_links']) ? render($page['primary_links']) : '';
-  $header = isset($page['header']) ? render($page['header']) : '';
-  $subboard = isset($page['subboard']) ? render($page['subboard']) : '';
-  $help = isset($page['help']) ? render($page['help']) : '';
-  $secondary_content = isset($page['secondary_content']) ? render($page['secondary_content']) : '';
-  $sidebar_first = isset($page['sidebar_first']) ? render($page['sidebar_first']) : '';
-  $highlighted = isset($page['highlighted']) ? render($page['highlighted']) : '';
-  $content = isset($page['content']) ? render($page['content']) : '';
-  $sidebar_second = isset($page['sidebar_second']) ? render($page['sidebar_second']) : '';
-  $tertiary_content = isset($page['tertiary_content']) ? render($page['tertiary_content']) : '';
-  $footer = isset($page['footer']) ? render($page['footer']) : '';
-  $renderred_tabs = isset($tabs) ? render($tabs) : '';
-  $renderred_action_links = isset($action_links) ? render($action_links) : '';
-  $sidebar_css = 'sidebar-none';
-
-  if (!empty($sidebar_first) && !empty($sidebar_second)){
-    $sidebar_css = 'sidebar-both';
-  }
-  else if (!empty($sidebar_first)){
-    $sidebar_css = 'sidebar-left';
-  }
-  else if (!empty($sidebar_second)){
-    $sidebar_css = 'sidebar-right';
-  }
-
-  $is_front_css = '';
-
-  if ($is_front === TRUE) {
-    $is_front_css = 'is_front';
-  }
 ?>
-  <div id="container" class="<?php print $classes; ?> <?php print($is_front_css);?>">
+  <div id="container" class="<?php print $classes; ?> <?php print($page['is_front_css']);?>">
     <?php if (!$in_overlay): // hide in overlay ?>
 
-      <?php if (!empty($leaderboard)): ?>
+      <?php if (!empty($page['leaderboard'])): ?>
         <div id="leaderboard" class="clearfix">
-          <?php print($leaderboard); ?>
+          <?php print($page['leaderboard']); ?>
         </div>
       <?php endif; ?>
 
@@ -142,8 +109,8 @@
           </div> <!-- /branding -->
         <?php endif; ?>
 
-        <?php if (!empty($header)): ?>
-          <div id="header-blocks"><?php print($header); ?></div>
+        <?php if (!empty($page['header'])): ?>
+          <div id="header-blocks"><?php print($page['header']); ?></div>
         <?php endif; ?>
 
         <div id="header-horizontal_ruler"></div>
@@ -158,33 +125,33 @@
 
     <?php endif; // end hide in overlay ?>
 
-    <?php if (!empty($secondary_content) && !$in_overlay): // hide in overlay ?>
+    <?php if (!empty($page['secondary_content']) && !$in_overlay): // hide in overlay ?>
       <div id="secondary-content">
-        <?php print($secondary_content); ?>
+        <?php print($page['secondary_content']); ?>
       </div>
     <?php endif; ?>
 
-    <div id="columns" class="clear clearfix <?php print($sidebar_css); ?>">
-      <?php if (!empty($sidebar_first)): ?>
-        <div id="sidebar-first" class="sidebar"><?php print($sidebar_first); ?></div>
+    <div id="columns" class="clear clearfix <?php print($page['sidebar_css']); ?>">
+      <?php if (!empty($page['sidebar_first'])): ?>
+        <div id="sidebar-first" class="sidebar"><?php print($page['sidebar_first']); ?></div>
       <?php endif; ?>
 
       <div id="content-column">
         <?php print $messages; ?>
-        <?php print($help); ?>
+        <?php print($page['help']); ?>
 
-        <?php if (!empty($renderred_tabs)): ?>
-          <div class="local-tasks"><?php print($renderred_tabs); ?></div>
+        <?php if (!empty($page['renderred_tabs'])): ?>
+          <div class="local-tasks"><?php print($page['renderred_tabs']); ?></div>
         <?php endif; ?>
 
-        <?php if (!empty($renderred_action_links)): ?>
-          <ul class="action-links"><?php print($renderred_action_links); ?></ul>
+        <?php if (!empty($page['renderred_action_links'])): ?>
+          <ul class="action-links"><?php print($page['renderred_action_links']); ?></ul>
         <?php endif; ?>
 
         <div class="content-inner">
 
-          <?php if (!empty($highlighted)): ?>
-            <div id="highlighted"><?php print ($highlighted); ?></div>
+          <?php if (!empty($page['highlighted'])): ?>
+            <div id="highlighted"><?php print ($page['highlighted']); ?></div>
           <?php endif; ?>
 
           <div id="main-content">
@@ -194,31 +161,31 @@
             <?php endif; ?>
             <?php print render($title_suffix); ?>
 
-            <?php if (!empty($subboard)): ?>
-              <div id="subboard"><?php print($subboard); ?></div>
+            <?php if (!empty($page['subboard'])): ?>
+              <div id="subboard"><?php print($page['subboard']); ?></div>
             <?php endif; ?>
 
             <?php print $breadcrumb; ?>
 
             <div id="content">
-              <?php print($content); ?>
+              <?php print($page['content']); ?>
             </div>
           </div>
 
         </div>
       </div>
 
-      <?php if (!empty($sidebar_second)): ?>
-        <div id="sidebar-second" class="sidebar"><?php print($sidebar_second); ?></div>
+      <?php if (!empty($page['sidebar_second'])): ?>
+        <div id="sidebar-second" class="sidebar"><?php print($page['sidebar_second']); ?></div>
       <?php endif; ?>
 
     </div> <!-- /columns -->
 
     <?php if (!$in_overlay){ // hide in overlay ?>
 
-      <?php if (!empty($tertiary_content)): ?>
-        <div id="tertiary-content" style="<?php print($is_front_css);?>">
-          <?php print($tertiary_content); ?>
+      <?php if (!empty($page['tertiary_content'])): ?>
+        <div id="tertiary-content" style="<?php print($page['is_front_css']);?>">
+          <?php print($page['tertiary_content']); ?>
         </div>
       <?php endif; ?>
     <?php } ?>
@@ -226,9 +193,9 @@
 
   <?php if (!$in_overlay): // hide in overlay ?>
 
-  <div id="footer" style="<?php print($is_front_css);?>">
-    <?php if (!empty($footer) || $feed_icons): ?>
-      <?php print ($footer); ?>
+  <div id="footer" style="<?php print($page['is_front_css']);?>">
+    <?php if (!empty($page['footer']) || $feed_icons): ?>
+      <?php print ($page['footer']); ?>
       <?php print $feed_icons; ?>
     <?php endif; ?>
   </div>
