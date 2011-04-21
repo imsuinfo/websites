@@ -1,12 +1,17 @@
 /*** main ***/
 div#container {
   position: relative;
+
   width: 960px;
 
   padding: 0 5px 10px 5px;
   margin: 0 auto;
 
   background-color: #ffffff;
+}
+
+div#content {
+  min-height: 500px;
 }
 
 
@@ -544,8 +549,8 @@ div#home_page_columns div#home_page_columns-news {
 }
 
 div#home_page_columns div#home_page_columns-events {
-  padding-left: 5px;
-  padding-right: 5px;
+  padding-left: 10px;
+  padding-right: 10px;
 }
 
 div#home_page_columns div#home_page_columns-spotlight {
@@ -572,7 +577,7 @@ div#home_page_columns div.views-field-title {
 
   padding: 10px 12px;
 
-  border-bottom: 1px solid #aaaaaa;
+  border-bottom: 1px solid #cacaca;
 
   overflow: hidden;
 }
