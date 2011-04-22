@@ -41,7 +41,9 @@ select,
 input,
 textarea,
 textarea.form-textarea {
-  border: 1px inset #888888;
+  border-width: 1px;
+  border-style: solid;
+  border-color: #cccccc #999999 #999999 #cccccc;
 }
 
 div#content p {
