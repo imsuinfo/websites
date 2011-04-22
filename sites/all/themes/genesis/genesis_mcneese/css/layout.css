@@ -12,6 +12,12 @@ div#container {
 
 div#content {
   min-height: 500px;
+
+  margin-top: 10px;
+}
+
+div#container.is_front div#content {
+  margin-top: 0;
 }
 
 
