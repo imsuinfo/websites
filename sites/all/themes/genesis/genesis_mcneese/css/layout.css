@@ -143,7 +143,9 @@ div#block-system-main-menu div.block-inner div.content ul.menu li a {
   padding: 10px 9px 0px 9px;
 }
 
-div#block-system-main-menu div.block-inner div.content ul.menu li a:hover {
+div#block-system-main-menu div.block-inner div.content ul.menu li a:focus,
+div#block-system-main-menu div.block-inner div.content ul.menu li a:hover,
+div#block-system-main-menu div.block-inner div.content ul.menu li a:active {
   color: #00477f;
   background: #fad703;
 }
@@ -258,6 +260,7 @@ div.block-menu.block-sidebar-first ul.menu li a:visited {
   padding: 2px 2px 2px 8px;
 }
 
+div.block-menu.block-sidebar-first ul.menu li a:focus,
 div.block-menu.block-sidebar-first ul.menu li a:hover,
 div.block-menu.block-sidebar-first ul.menu li a:active {
   display: block;
@@ -304,6 +307,7 @@ div#block-system-navigation ul.menu li a:visited {
   padding: 2px 2px 2px 8px;
 }
 
+div#block-system-navigation ul.menu li a:focus,
 div#block-system-navigation ul.menu li a:hover,
 div#block-system-navigation ul.menu li a:active {
   display: block;
@@ -346,6 +350,7 @@ div#block-menu-menu-home-menu ul.menu li.leaf a:visited {
   padding: 4px 8px;
 }
 
+div#block-menu-menu-home-menu ul.menu li.leaf a:focus,
 div#block-menu-menu-home-menu ul.menu li.leaf a:hover,
 div#block-menu-menu-home-menu ul.menu li.leaf a:active {
   display: block;
@@ -410,6 +415,7 @@ div.block-sidebar-first {
   border-bottom: 1px solid #525252;
 }
 
+div.block-sidebar-first div.block-inner div.content ul.menu li:focus,
 div.block-sidebar-first div.block-inner div.content ul.menu li:active,
 div.block-sidebar-first div.block-inner div.content ul.menu li:hover {
   background-color: #00477f;
@@ -480,6 +486,7 @@ div#content-column div.breadcrumb a:visited {
   padding: 2px 6px;
 }
 
+div#content-column div.breadcrumb a:focus,
 div#content-column div.breadcrumb a:hover,
 div#content-column div.breadcrumb a:active {
   background-color: #828282;
@@ -623,6 +630,9 @@ div#home_page_columns div#home_page_columns-spotlight-more_link a:visited {
   text-decoration: none;
 }
 
+div#home_page_columns div#home_page_columns-news-more_link a:focus,
+div#home_page_columns div#home_page_columns-events-more_link a:focus,
+div#home_page_columns div#home_page_columns-spotlight-more_link a:focus,
 div#home_page_columns div#home_page_columns-news-more_link a:hover,
 div#home_page_columns div#home_page_columns-events-more_link a:hover,
 div#home_page_columns div#home_page_columns-spotlight-more_link a:hover,
@@ -645,6 +655,7 @@ div.view-id-master_calendar ul li.views-row a:visited {
   text-decoration: none;
 }
 
+div.view-id-master_calendar ul li.views-row a:focus,
 div.view-id-master_calendar ul li.views-row a:hover,
 div.view-id-master_calendar ul li.views-row a:active {
   text-decoration: underline;

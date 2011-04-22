@@ -52,3 +52,18 @@ ul.menu {
   margin: 0;
   padding: 0;
 }
+
+a:focus {
+  border: 1px dotted #555555;
+}
+
+a,
+a:visited {
+  color: #00477f;
+}
+
+a:focus,
+a:active,
+a:hover {
+  color: #7f0000;
+}
