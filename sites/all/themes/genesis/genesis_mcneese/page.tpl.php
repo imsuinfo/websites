@@ -161,8 +161,13 @@
             <?php endif; ?>
             <?php print render($title_suffix); ?>
 
-            <?php if (!empty($page['subboard'])): ?>
-              <div id="subboard"><?php print($page['subboard']); ?></div>
+            <?php if (!empty($page['subboard']) || !empty($page['subboard_image'])): ?>
+              <div id="subboard">
+                <?php if (!empty($page['subboard_image'])) { ?>
+                <div id="subboard-image"><?php print($page['subboard_image']);?></div>
+                <?php } ?>
+                <?php print($page['subboard']); ?>
+              </div>
             <?php endif; ?>
 
             <?php print $breadcrumb; ?>
