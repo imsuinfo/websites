@@ -584,9 +584,9 @@ div#home_page_columns h3.home_page_columns-column_title {
 }
 
 div#home_page_columns div.views-field-title {
-  min-height: 20px;
-  max-height: 40px;
-  line-height: 20px;
+  min-height: 16px;
+  max-height: 32px;
+  line-height: 16px;
 
   padding: 10px 12px;
 
