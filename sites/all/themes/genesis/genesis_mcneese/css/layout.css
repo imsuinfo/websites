@@ -537,22 +537,26 @@ div#home_page_columns div#home_page_columns-spotlight-more_link {
   overflow: hidden;
 }
 
-div#home_page_columns div#home_page_columns-news a,
-div#home_page_columns div#home_page_columns-events a,
-div#home_page_columns div#home_page_columns-spotlight a,
-div#home_page_columns div#home_page_columns-news a:visited,
-div#home_page_columns div#home_page_columns-events a:visited,
-div#home_page_columns div#home_page_columns-spotlight a:visited {
+div#home_page_columns div#home_page_columns-news div.views-field-title span.field-content a,
+div#home_page_columns div#home_page_columns-events div.views-field-title span.field-content a,
+div#home_page_columns div#home_page_columns-spotlight div.views-field-title span.field-content a,
+div#home_page_columns div#home_page_columns-news div.views-field-title span.field-content a:visited,
+div#home_page_columns div#home_page_columns-events div.views-field-title span.field-content a:visited,
+div#home_page_columns div#home_page_columns-spotlight div.views-field-title span.field-content a:visited {
+  display: block;
   color: #00477f;
   text-decoration: none;
   font-family: Georgia,Times New Roman,Times,Serif;
   font-size: 16px;
-  line-height: 20px;
+  line-height: 17px;
+  min-height: 17px;
+  max-height: 34px;
+  overflow: hidden;
 }
 
-div#home_page_columns div#home_page_columns-news a:hover,
-div#home_page_columns div#home_page_columns-events a:hover,
-div#home_page_columns div#home_page_columns-spotlight a:hover {
+div#home_page_columns div#home_page_columns-news div.views-field-title span.field-content a:hover,
+div#home_page_columns div#home_page_columns-events div.views-field-title span.field-content a:hover,
+div#home_page_columns div#home_page_columns-spotlight div.views-field-title span.field-content a:hover {
   text-decoration: underline;
 }
 
@@ -584,9 +588,9 @@ div#home_page_columns h3.home_page_columns-column_title {
 }
 
 div#home_page_columns div.views-field-title {
-  min-height: 16px;
-  max-height: 32px;
-  line-height: 16px;
+  min-height: 17px;
+  max-height: 34px;
+  line-height: 17px;
 
   padding: 10px 12px;
 
