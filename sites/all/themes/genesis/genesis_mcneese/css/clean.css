@@ -31,9 +31,9 @@ a.nivo-prevNav {
   left: 15px;
 }
 
-img.box_shadow,
-div.field-content img,
-div.node-content img {
+div#content img.box_shadow,
+div#content div.field-content img,
+div#content div.node-content img {
   box-shadow: 2px 2px 1px #888888;
 }
 
