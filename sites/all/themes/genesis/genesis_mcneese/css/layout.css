@@ -264,18 +264,20 @@ div.block-menu.block-sidebar-first ul.menu li a:focus,
 div.block-menu.block-sidebar-first ul.menu li a:hover,
 div.block-menu.block-sidebar-first ul.menu li a:active {
   display: block;
-  color: #ffffff;
+  color: #f2f2f2;
   background-color: #828282;
   text-shadow: 1px 1px 0 #2f2f2f;
 
   -webkit-transition-property: background-color;
-  -webkit-transition-duration: 0.3s;
+  -webkit-transition-duration: .3s;
+  transition-property: background-color;
+  transition-duration: .3s;
 }
 
 
 /*** Content - sidebar-left, navigation menu **/
 div#block-system-navigation {
-  font-family: Arial,Helvetica,Sans-Serif,Sans;
+  font-family: Arial, Helvetica, sans-serif;
   font-size: 0.8em;
 }
 
@@ -299,7 +301,7 @@ div#block-system-navigation ul.menu li.leaf {
 
 div#block-system-navigation ul.menu li a,
 div#block-system-navigation ul.menu li a:visited {
-  color: #ffffff;
+  color: #f2f2f2; /*** changed from white to off white ***/
   text-decoration: none;
   text-shadow: 1px 1px 0 #2f2f2f;
   line-height: 1.7;
@@ -314,7 +316,9 @@ div#block-system-navigation ul.menu li a:active {
   background-color: #828282;
 
   -webkit-transition-property: background-color;
-  -webkit-transition-duration: 0.3s;
+  -webkit-transition-duration: .3s;
+  transition-property: background-color;
+  transition-duration: .3s;
 }
 
 
@@ -357,7 +361,9 @@ div#block-menu-menu-home-menu ul.menu li.leaf a:active {
   background-color: #828282;
 
   -webkit-transition-property: background-color;
-  -webkit-transition-duration: 0.3s;
+  -webkit-transition-duration: .3s;
+  transition-property: background-color;
+  transition-duration: .3s;
 }
 
 div#block-menu-menu-home-menu ul.menu li.id-menu-link-menu-home-menu-869,
@@ -421,6 +427,7 @@ div.block-sidebar-first div.block-inner div.content ul.menu li:hover {
   background-color: #00477f;
 }
 
+
 div.block-sidebar-first div.block-inner div.content ul.menu {
   border-bottom: #000000;
 }
@@ -460,8 +467,8 @@ div.block-sidebar-first div.block-inner div.content ul.menu li.expanded ul.menu 
   color: #000000;
   text-shadow: none;
 
-  line-height: 12px;
-  font: 12px;
+  line-height: 1.6;
+  font-size: 12px;
 }
 
 
@@ -692,8 +699,19 @@ div.view-id-master_calendar ul li div.views-field-field-event-date {
 
 /*** Footer ***/
 div#footer {
-  min-height: 10px;
-  height: 10px;
+  font-size: 11px;
+  line-height: 1.6;
+  text-align: center;
 
-  margin-top: 5px;
+  color: #393939;
+
+  max-height:90px;
+  min-height:90px;
+  height: 90px;
+
+  padding: 5px;
+  margin: 5px auto;
+
+
+  width: 960px;
 }
