@@ -23,14 +23,13 @@ function genesis_mcneese_process(&$vars, $hook) {
 /**
  * Override or insert variables into the html templates.
  */
-/* -- Delete this line if you want to use these functions
 function genesis_mcneese_preprocess_html(&$vars) {
-  // Uncomment the folowing line to add a conditional stylesheet for IE 7 or less.
-  // drupal_add_css(path_to_theme() . '/css/ie/ie-lte-7.css', array('weight' => CSS_THEME, 'browsers' => array('IE' => 'lte IE 7', '!IE' => FALSE), 'preprocess' => FALSE));
+  drupal_add_css(path_to_theme() . '/css/ie8.css', array('group' => CSS_THEME, 'browsers' => array('IE' => 'lte IE 8', '!IE' => FALSE), 'preprocess' => FALSE, 'weight' => 2));
 }
+/*
 function genesis_mcneese_process_html(&$vars) {
 }
-// */
+//*/
 
 /**
  * Override or insert variables into the page templates.
