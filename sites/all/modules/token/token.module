@@ -734,36 +734,38 @@ function _token_build_tree($token_type, array $options) {
   }
 
   $tree = array();
-  foreach ($info['tokens'][$token_type] as $token => $token_info) {
-    // Build the raw token string.
-    $token_parents = $options['parents'];
-    if (empty($token_parents)) {
-      // If the parents array is currently empty, assume the token type is its
-      // parent.
-      $token_parents[] = $token_type;
-    }
-    $token_parents[] = $token;
-    if (!empty($token_info['dynamic'])) {
-      $token_parents[] = '?';
-    }
-    $raw_token = '[' . implode(':', $token_parents) . ']';
-    $tree[$raw_token] = $token_info;
-    $tree[$raw_token]['raw token'] = $raw_token;
+  if (isset($info['tokens'][$token_type]) && is_array($info['tokens'][$token_type])){
+    foreach ($info['tokens'][$token_type] as $token => $token_info) {
+      // Build the raw token string.
+      $token_parents = $options['parents'];
+      if (empty($token_parents)) {
+        // If the parents array is currently empty, assume the token type is its
+        // parent.
+        $token_parents[] = $token_type;
+      }
+      $token_parents[] = $token;
+      if (!empty($token_info['dynamic'])) {
+        $token_parents[] = '?';
+      }
+      $raw_token = '[' . implode(':', $token_parents) . ']';
+      $tree[$raw_token] = $token_info;
+      $tree[$raw_token]['raw token'] = $raw_token;
 
-    // Add the token's real name (leave out the base token type).
-    $tree[$raw_token]['token'] = implode(':', array_slice($token_parents, 1));
+      // Add the token's real name (leave out the base token type).
+      $tree[$raw_token]['token'] = implode(':', array_slice($token_parents, 1));
 
-    // Add the token's parent as its raw token value.
-    if (!empty($options['parents'])) {
-      $tree[$raw_token]['parent'] = '[' . implode(':', $options['parents']) . ']';
-    }
+      // Add the token's parent as its raw token value.
+      if (!empty($options['parents'])) {
+        $tree[$raw_token]['parent'] = '[' . implode(':', $options['parents']) . ']';
+      }
 
-    // Fetch the child tokens.
-    if (!empty($token_info['type'])) {
-      $child_options = $options;
-      $child_options['depth']--;
-      $child_options['parents'] = $token_parents;
-      $tree[$raw_token]['children'] = _token_build_tree($token_info['type'], $child_options);
+      // Fetch the child tokens.
+      if (!empty($token_info['type'])) {
+        $child_options = $options;
+        $child_options['depth']--;
+        $child_options['parents'] = $token_parents;
+        $tree[$raw_token]['children'] = _token_build_tree($token_info['type'], $child_options);
+      }
     }
   }
 
