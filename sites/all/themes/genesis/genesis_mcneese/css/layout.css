@@ -837,11 +837,48 @@ div#block-system-main div.view-display-id-news div.view-content div.views-field-
 
 
 
-/*** Content - home page -> news pages ***/
-div#content-column div.local-tasks {
+/*** Content - local tasks ***/
+div#main-content div.local-tasks {
   position: relative;
 
+  font-family: Arial, Helvetica, sans-serif;
+  font-size: 14px;
+
   margin: 0;
+}
+
+div#main-content div.local-tasks ul.tabs {
+  margin: 0 4px;
+}
+
+div#main-content div.local-tasks ul.tabs li {
+  margin: 0 1px;
+}
+
+div#main-content div.local-tasks ul.tabs li a {
+  color: #f2f2f2;
+  text-shadow: 1px 1px 0 #2f2f2f;
+
+  padding: 2px 7px 0 7px;
+
+  -moz-border-radius-topleft: 5px;
+  -moz-border-radius-topright: 5px;
+}
+
+div#main-content div.local-tasks ul.tabs li a,
+div#main-content div.local-tasks ul.tabs li a:visited {
+  background-color: #454545;
+}
+
+div#main-content div.local-tasks ul.tabs li a.active,
+div#main-content div.local-tasks ul.tabs li a.active:visited {
+  color: #fad703;
+}
+
+div#main-content div.local-tasks ul.tabs li a:focus,
+div#main-content div.local-tasks ul.tabs li a:hover,
+div#main-content div.local-tasks ul.tabs li a:active {
+  background-color: #828282;
 }
 
 
