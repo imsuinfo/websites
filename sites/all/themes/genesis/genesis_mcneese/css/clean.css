@@ -20,6 +20,18 @@ div#footer {
   position: relative;
 }
 
+.element-invisible {
+  display: block;
+
+  font-size: 0;
+
+  width: 0;
+  max-width: 0;
+  height: 0;
+  max-height: 0;
+  overflow: hidden;
+}
+
 input.form-submit, a.button {
   border: 1px outset #333333;
   cursor: pointer;
