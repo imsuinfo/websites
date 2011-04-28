@@ -1,6 +1,23 @@
 body {
+  position: relative;
+
   background-color: #dadada;
   font-family: Arial, Helvetica, sans-serif;
+}
+
+div#container,
+div#leaderboard,
+div#secondary-menu-wrapper,
+div#header,
+div#main-menu-wrapper,
+div#secondary-content,
+div#columns,
+div#sidebar-first,
+div#content-column,
+div#sidebar-second,
+div#tertiary-content,
+div#footer {
+  position: relative;
 }
 
 input.form-submit, a.button {
