@@ -565,10 +565,14 @@ div#block-menu-menu-home-menu ul.menu li.leaf.id-menu-link-menu-home-menu-880 a:
 
 
 /*** Content - main content **/
+div#subboard-image div.view-display-id-group_image {
+  margin-bottom: 5px;
+}
+
 div#content-column div.breadcrumb {
   background-color: #00335b;
   color: #ffffff;
-  margin: 5px 0 0 0;
+  margin: 0 0 0 0;
   width: 100%;
 
   font-family: Arial,Helvetica,Sans-Serif,Sans;
