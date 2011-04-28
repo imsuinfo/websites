@@ -140,10 +140,6 @@
         <?php print $messages; ?>
         <?php print($page['help']); ?>
 
-        <?php if (!empty($page['renderred_tabs'])): ?>
-          <div class="local-tasks"><?php print($page['renderred_tabs']); ?></div>
-        <?php endif; ?>
-
         <?php if (!empty($page['renderred_action_links'])): ?>
           <ul class="action-links"><?php print($page['renderred_action_links']); ?></ul>
         <?php endif; ?>
@@ -168,6 +164,10 @@
                 <?php } ?>
                 <?php print($page['subboard']); ?>
               </div>
+            <?php endif; ?>
+
+            <?php if (!empty($page['renderred_tabs'])): ?>
+              <div class="local-tasks"><?php print($page['renderred_tabs']); ?></div>
             <?php endif; ?>
 
             <?php print $breadcrumb; ?>

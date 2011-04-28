@@ -832,6 +832,16 @@ div#block-system-main div.view-display-id-news div.view-content div.views-field-
 }
 
 
+
+/*** Content - home page -> news pages ***/
+div#content-column div.local-tasks {
+  position: relative;
+
+  margin: 0;
+}
+
+
+
 /*** Footer ***/
 div#footer {
   font-size: 11px;
