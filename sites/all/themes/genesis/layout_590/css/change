@@ -1,0 +1,213 @@
+--- layout.css	2011-04-29 16:55:48.000952659 -0500
++++ ../../layout_588/css/layout.css	2011-04-29 16:56:50.967699982 -0500
+@@ -650,31 +650,80 @@
+ div#home_page_columns-events {
+   display: inline-block;
+ 
+-  width: 541px;
+-  min-width: 541px;
+-  max-width: 541px;
+-
+   color: #ececec;
+   background-color: #ffffff;
+ }
+ 
+-img#home_page_columns-transparent {
++img#home_page_columns-transparent-image {
+   float: right;
+ 
+-  width: 133px;
++  width: 552px;
+   height: 180px;
+ 
+   padding-left: 15px;
+   padding-bottom: 15px;
+ 
++  margin-left: 15px;
++
++  box-shadow: none;
++  background-color: #ffffff;
++}
++
++img#home_page_columns-transparent-spotlight {
++  float: right;
++
++  width: 412px;
++  min-width: 412px;
++  max-width: 412px;
++  height: 528px;
++  min-height: 528px;
++  max-height: 528px;
++
++  margin-left: 15px;
++  margin-bottom: 15px;
++
+   box-shadow: none;
+   background-color: #ffffff;
+ }
++
+ div#home_page_columns-events div.view-display-id-events_listing,
+ div#home_page_columns-events div.view-display-id-events {
+   background-color: #25567d;
++}
+ 
+-  padding: 15px;
++div#home_page_columns-events div.view-display-id-events div.view-content {
++  height: 125px;
++  min-height: 125px;
++  max-height: 125px;
++
++  overflow: hidden;
++}
++
++div#home_page_columns-events div.view-display-id-events_listing div.views-field-title,
++div#home_page_columns-events div.view-display-id-events div.views-field-title {
++  height: 30px;
++  min-height: 30px;
++  max-height: 30px;
++  line-height: 30px;
++
++  overflow: hidden;
++}
++
++div#home_page_columns-events div.view-display-id-events_list div.views-field-body,
++div#home_page_columns-events div.view-display-id-events div.views-field-body {
++  height: 90px;
++  min-height: 90px;
++  max-height: 90px;
++
++  font-size: 14px;
++  line-height: 15px;
++  overflow: hidden;
++}
++
++div#home_page_columns-events div.view-display-id-events_list div.views-field-body p,
++div#home_page_columns-events div.view-display-id-events div.views-field-body p {
++  font-size: 14px;
++  line-height: 15px;
+ }
+ 
+ div#home_page_columns-events div.view-display-id-events div.views-field-field-featured-image {
+@@ -686,21 +735,23 @@
+ }
+ 
+ div#home_page_columns-events div.view-display-id-events_listing div.views-field-field-featured-image {
+-  position: absolute;
+-  left: 408px;
++  float: left;
++
++  padding: 15px 15px 15px 0;
++  margin-right: 15px;
+ 
+   background-color: #ffffff;
+ }
++
+ div#home_page_columns-events div.view-display-id-events_listing a,
+ div#home_page_columns-events div.view-display-id-events_listing a:visited,
+ div#home_page_columns-events div.view-display-id-events a,
+-div#home_page_columns-events div.view-display-id-events a:visited {
++div#home_page_columns-events div.view-display-id-events a:visited{
+   color: #fad703;
+ }
+ 
+ div#home_page_columns-events div.view-display-id-events_listing div.views-field-title a,
+ div#home_page_columns-events div.view-display-id-events_listing div.views-field-title a:visited,
+-
+ div#home_page_columns-events div.view-display-id-events div.views-field-title a,
+ div#home_page_columns-events div.view-display-id-events div.views-field-title a:visited {
+   font-size: 24px;
+@@ -708,6 +759,7 @@
+ 
+   text-decoration: none;
+ }
++
+ div#home_page_columns-events div.view-display-id-events_listing div.views-field-title a:focus,
+ div#home_page_columns-events div.view-display-id-events_listing div.views-field-title a:active,
+ div#home_page_columns-events div.view-display-id-events_listing div.views-field-title a:hover,
+@@ -715,21 +767,26 @@
+ div#home_page_columns-events div.view-display-id-events div.views-field-title a:active,
+ div#home_page_columns-events div.view-display-id-events div.views-field-title a:hover {
+   color: #a8c1eb;
++
+   text-decoration: underline;
+ }
+ 
+ div#home_page_columns-spotlight {
+   display: inline-block;
++  position: absolute;
+ 
+-  width: 404px;
+-  min-width: 404px;
+-  max-width: 404px;
+-  background-color:#fff;
+-  padding: 0 0 15px 15px;
++  top: 150px;
++  right: 0;
++
++  width: 412px;
++  min-width: 412px;
++  max-width: 412px;
++
++  padding: 0;
+   margin: 0;
+-  margin-top: 150px;
++  margin-left: 15px;
+   margin-bottom: 15px;
+-opacity: .99999999;
++
+   font-size: 12px;
+ }
+ 
+@@ -744,21 +801,27 @@
+   height: 20px;
+   min-height: 20px;
+   max-height: 20px;
+-  background-color:#FAD703;
++
+   line-height: 19px;
+-  margin:15px 0 0 0;
+-  padding: 0px 0 0 15px;
++
++  padding: 15px;
+   color: #00335b;
+-  opacity: .99999999;
++  background-color: #ffffff;
++  opacity: 0.85;
+ 
+   -ms-filter: "alpha(opacity=85)"; /* need to give opacity support in ie8 */
+ }
+ 
+ div#home_page_columns-spotlight div.view-display-id-spotlight {
+-  padding:15px;
+-  opacity: .99999999;
+-  background-color: #a8c1eb;
++  padding: 0 15px 15px 15px;
++
++  background-color: #ffffff;
++
++  width: 392px;
++  min-width: 392px;
++  max-width: 392px;
+ }
++
+ div#home_page_columns-spotlight div.view-display-id-spotlight div.views-field-body {
+   height: 152px;
+   min-height: 152px;
+@@ -771,7 +834,8 @@
+ 
+ div#home_page_columns-spotlight div.view-display-id-spotlight div.views-field-body p {
+   line-height: 15px;
+- }
++}
++
+ div#home_page_columns-spotlight div.view-display-id-spotlight div.views-field-title a,
+ div#home_page_columns-spotlight div.view-display-id-spotlight div.views-field-title a:visited {
+   font-size: 20px;
+@@ -792,6 +856,7 @@
+   float: right;
+ 
+   margin: 4px;
++  opacity: 1;
+ }
+ 
+ 

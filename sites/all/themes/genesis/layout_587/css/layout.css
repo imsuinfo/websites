@@ -675,7 +675,7 @@ div#home_page_columns-events div.view-display-id-events {
   padding: 15px;
 }
 
-div#home_page_columns-events div.views-field-field-featured-image {
+div#home_page_columns-events div.view-display-id-events div.views-field-field-featured-image {
   position: absolute;
   top: 0px;
   left: 408px;
