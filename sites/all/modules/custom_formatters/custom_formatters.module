@@ -259,6 +259,7 @@ function custom_formatters_field_formatter_info() {
  */
 function custom_formatters_field_formatter_view($obj_type, $object, $field, $instance, $langcode, $items, $display) {
   $formatter = custom_formatters_formatter_by_name($display['type']);
+  $element = array();
 
   // Format each item individually.
   if (!$formatter->multiple) {
