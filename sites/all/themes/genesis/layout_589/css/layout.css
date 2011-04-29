@@ -668,6 +668,7 @@ img#home_page_columns-transparent {
   background-color: #ffffff;
 }
 
+div#home_page_columns-events div.view-display-id-events_listing,
 div#home_page_columns-events div.view-display-id-events {
   background-color: #25567d;
 
@@ -684,6 +685,15 @@ div#home_page_columns-events div.views-field-field-featured-image {
   background-color: #ffffff;
 }
 
+div#home_page_columns-events div.view-display-id-events_listing a,
+div#home_page_columns-events div.view-display-id-events_listing a:visited,
+div#home_page_columns-events div.view-display-id-events a
+div#home_page_columns-events div.view-display-id-events a:visited{
+  color: #fad703;
+}
+
+div#home_page_columns-events div.view-display-id-events_listing div.views-field-title a,
+div#home_page_columns-events div.view-display-id-events_listing div.views-field-title a:visited,
 div#home_page_columns-events div.view-display-id-events div.views-field-title a,
 div#home_page_columns-events div.view-display-id-events div.views-field-title a:visited {
   font-size: 24px;
@@ -692,6 +702,9 @@ div#home_page_columns-events div.view-display-id-events div.views-field-title a:
   text-decoration: none;
 }
 
+div#home_page_columns-events div.view-display-id-events_listing div.views-field-title a:focus,
+div#home_page_columns-events div.view-display-id-events_listing div.views-field-title a:active,
+div#home_page_columns-events div.view-display-id-events_listing div.views-field-title a:hover,
 div#home_page_columns-events div.view-display-id-events div.views-field-title a:focus,
 div#home_page_columns-events div.view-display-id-events div.views-field-title a:active,
 div#home_page_columns-events div.view-display-id-events div.views-field-title a:hover {
