@@ -688,7 +688,7 @@ div#home_page_columns-events div.views-field-field-featured-image {
 
 div#home_page_columns-events div.view-display-id-events_listing a,
 div#home_page_columns-events div.view-display-id-events_listing a:visited,
-div#home_page_columns-events div.view-display-id-events a
+div#home_page_columns-events div.view-display-id-events a,
 div#home_page_columns-events div.view-display-id-events a:visited{
   color: #fad703;
 }
@@ -755,6 +755,20 @@ div#home_page_columns-spotlight div.view-display-id-spotlight {
   padding: 0 15px 15px 15px;
 
   background-color: #ffffff;
+}
+
+div#home_page_columns-spotlight div.view-display-id-spotlight div.views-field-body {
+  height: 152px;
+  min-height: 152px;
+  max-height: 152px;
+
+  overflow: hidden;
+
+  line-height: 15px;
+}
+
+div#home_page_columns-spotlight div.view-display-id-spotlight div.views-field-body p {
+  line-height: 15px;
 }
 
 div#home_page_columns-spotlight div.view-display-id-spotlight div.views-field-title a,
