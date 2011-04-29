@@ -623,7 +623,9 @@ div.view-display-id-home_page {
 
 div#home_page_columns {
   position: relative;
-  background-color: #ffffff;
+  background-color: #25567d;
+
+  font-size: 0px; /* Workaround inline-block \n bug*/
 }
 
 h3#home_page_columns-column_title-news {
@@ -637,15 +639,16 @@ h3#home_page_columns-column_title-news {
 
   line-height: 19px;
 
-  padding-left:5px;
+  font-size: 14px;
   color: #000000;
   background-color: #fad703;
 
+  padding-left:5px;
   margin-right: 15px;
 }
 
 div#home_page_columns-events {
-  float: left;
+  display: inline-block;
 
   width: 541px;
   min-width: 541px;
@@ -668,6 +671,7 @@ img#home_page_columns-transparent {
   background-color: #ffffff;
 }
 
+div#home_page_columns-events div.view-display-id-events_listing,
 div#home_page_columns-events div.view-display-id-events {
   background-color: #25567d;
 
@@ -679,11 +683,18 @@ div#home_page_columns-events div.views-field-field-featured-image {
   top: 0px;
   left: 408px;
 
-  padding-bottom: 15px;
-
   background-color: #ffffff;
 }
 
+div#home_page_columns-events div.view-display-id-events_listing a,
+div#home_page_columns-events div.view-display-id-events_listing a:visited,
+div#home_page_columns-events div.view-display-id-events a
+div#home_page_columns-events div.view-display-id-events a:visited{
+  color: #fad703;
+}
+
+div#home_page_columns-events div.view-display-id-events_listing div.views-field-title a,
+div#home_page_columns-events div.view-display-id-events_listing div.views-field-title a:visited,
 div#home_page_columns-events div.view-display-id-events div.views-field-title a,
 div#home_page_columns-events div.view-display-id-events div.views-field-title a:visited {
   font-size: 24px;
@@ -692,6 +703,9 @@ div#home_page_columns-events div.view-display-id-events div.views-field-title a:
   text-decoration: none;
 }
 
+div#home_page_columns-events div.view-display-id-events_listing div.views-field-title a:focus,
+div#home_page_columns-events div.view-display-id-events_listing div.views-field-title a:active,
+div#home_page_columns-events div.view-display-id-events_listing div.views-field-title a:hover,
 div#home_page_columns-events div.view-display-id-events div.views-field-title a:focus,
 div#home_page_columns-events div.view-display-id-events div.views-field-title a:active,
 div#home_page_columns-events div.view-display-id-events div.views-field-title a:hover {
@@ -701,17 +715,16 @@ div#home_page_columns-events div.view-display-id-events div.views-field-title a:
 }
 
 div#home_page_columns-spotlight {
-  clear: both;
-  position: absolute;
-  top: 150px;
-  left: 541px;
+  display: inline-block;
 
-  width: 422px;
-  min-width: 422px;
-  max-width: 422px;
+  width: 419px;
+  min-width: 419px;
+  max-width: 419px;
 
   padding: 0;
   margin: 0;
+  margin-top: 150px;
+  margin-bottom: 15px;
 
   font-size: 12px;
 }
