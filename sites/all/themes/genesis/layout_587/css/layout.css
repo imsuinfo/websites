@@ -762,6 +762,13 @@ div#home_page_columns-spotlight div.view-display-id-spotlight div.views-field-ti
   text-decoration: underline;
 }
 
+div#home_page_columns-spotlight div.view-display-id-spotlight div.views-field-field-featured-image {
+  float: right;
+
+  margin: 4px;
+  opacity: 1;
+}
+
 
 
 /*** Content - home master calendar links ***/
