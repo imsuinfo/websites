@@ -6,7 +6,7 @@
  * 1. Rename each function to match your subthemes name,
  *    e.g. if you name your theme "themeName" then the function
  *    name will be "themeName_preprocess_hook". Tip - you can
- *    search/replace on "magazine_layout_2".
+ *    search/replace on "layout_588".
  * 2. Uncomment the required function to use.
  */
 
@@ -14,29 +14,29 @@
  * Override or insert variables into all templates.
  */
 /* -- Delete this line if you want to use these functions
-function magazine_layout_2_preprocess(&$vars, $hook) {
+function layout_588_preprocess(&$vars, $hook) {
 }
-function magazine_layout_2_process(&$vars, $hook) {
+function layout_588_process(&$vars, $hook) {
 }
 // */
 
 /**
  * Override or insert variables into the html templates.
  */
-function magazine_layout_2_preprocess_html(&$vars) {
+function layout_588_preprocess_html(&$vars) {
   drupal_add_css(path_to_theme() . '/css/ie8.css', array('group' => CSS_THEME, 'browsers' => array('IE' => 'lte IE 8', '!IE' => FALSE), 'preprocess' => FALSE, 'weight' => 2));
 }
 /*
-function magazine_layout_2_process_html(&$vars) {
+function layout_588_process_html(&$vars) {
 }
 //*/
 
 /**
  * Override or insert variables into the page templates.
  */
-function magazine_layout_2_preprocess_page(&$vars) {
+function layout_588_preprocess_page(&$vars) {
 }
-function magazine_layout_2_process_page(&$vars) {
+function layout_588_process_page(&$vars) {
   $vars['page']['leaderboard'] = isset($vars['page']['leaderboard']) ? render($vars['page']['leaderboard']) : '';
   $vars['page']['primary_links'] = isset($vars['page']['primary_links']) ? render($vars['page']['primary_links']) : '';
   $vars['page']['header'] = isset($vars['page']['header']) ? render($vars['page']['header']) : '';
@@ -64,9 +64,9 @@ function magazine_layout_2_process_page(&$vars) {
  * Override or insert variables into the node templates.
  */
 /* -- Delete this line if you want to use these functions
-function magazine_layout_2_preprocess_node(&$vars) {
+function layout_588_preprocess_node(&$vars) {
 }
-function magazine_layout_2_process_node(&$vars) {
+function layout_588_process_node(&$vars) {
 }
 // */
 
@@ -74,9 +74,9 @@ function magazine_layout_2_process_node(&$vars) {
  * Override or insert variables into the comment templates.
  */
 /* -- Delete this line if you want to use these functions
-function magazine_layout_2_preprocess_comment(&$vars) {
+function layout_588_preprocess_comment(&$vars) {
 }
-function magazine_layout_2_process_comment(&$vars) {
+function layout_588_process_comment(&$vars) {
 }
 // */
 
@@ -84,8 +84,8 @@ function magazine_layout_2_process_comment(&$vars) {
  * Override or insert variables into the block templates.
  */
 /* -- Delete this line if you want to use these functions
-function magazine_layout_2_preprocess_block(&$vars) {
+function layout_588_preprocess_block(&$vars) {
 }
-function magazine_layout_2_process_block(&$vars) {
+function layout_588_process_block(&$vars) {
 }
 // */
