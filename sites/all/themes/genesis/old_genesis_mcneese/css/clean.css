@@ -1,0 +1,111 @@
+body {
+  position: relative;
+
+  background-color: #dadada;
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+div#container,
+div#leaderboard,
+div#secondary-menu-wrapper,
+div#header,
+div#main-menu-wrapper,
+div#secondary-content,
+div#columns,
+div#sidebar-first,
+div#content-column,
+div#sidebar-second,
+div#tertiary-content,
+div#footer {
+  position: relative;
+}
+
+.element-invisible {
+  display: block;
+
+  font-size: 0;
+
+  width: 0;
+  max-width: 0;
+  height: 0;
+  max-height: 0;
+  overflow: hidden;
+}
+
+input.form-submit, a.button {
+  border: 1px outset #333333;
+  cursor: pointer;
+  padding: 2px 4px;
+  margin: 0 1px 1px 2px;
+}
+
+.nivo-directionNav a {
+  display:block;
+
+  background: url(../images/arrows.png);
+  text-indent: -9999px;
+
+  width: 30px;
+  height: 30px;
+
+  border: 0;
+}
+
+a.nivo-nextNav {
+  background-position: -30px 0;
+  right: 15px;
+}
+
+a.nivo-prevNav {
+  left: 15px;
+}
+
+div#content img.box_shadow,
+div#content div.field-content img,
+div#content div.node-content img {
+  box-shadow: 2px 2px 1px #888888;
+}
+
+select,
+input,
+textarea,
+textarea.form-textarea {
+  border-width: 1px;
+  border-style: solid;
+  border-color: #cccccc #999999 #999999 #cccccc;
+}
+
+div#content {
+  font-size: 14px;
+}
+
+div#content p {
+  margin: 0 0 15px;
+  font-size: 14px;
+  line-height: 1.2;
+}
+
+div#content h2 {
+  font-weight: normal;
+  margin-bottom: 15px;
+}
+
+ul.menu {
+  margin: 0;
+  padding: 0;
+}
+
+a:focus {
+  border: 1px dotted #555555;
+}
+
+a,
+a:visited {
+  color: #00477f;
+}
+
+a:focus,
+a:active,
+a:hover {
+  color: #7f0000;
+}

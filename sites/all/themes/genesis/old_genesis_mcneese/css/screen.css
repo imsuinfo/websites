@@ -1,0 +1,14 @@
+div#skip-link a {
+  display: block;
+  height: 0;
+  width: 0;
+  overflow: hidden;
+}
+
+div#skip-link a:focus{
+  display: block;
+  height: auto;
+  width: auto;
+  border: 2px outset #000000;
+  overflow: visible;
+}

@@ -1,5 +1,5 @@
-name         = Magazine Layout - 1
-description  = ..
+name         = Old McNeese Theme
+description  = My Kickn' Sub-theme
 core         = 7.x
 engine       = phptemplate
 screenshot   = mcneese-subtheme.png

@@ -703,7 +703,7 @@ div#home_page_columns-events div.view-display-id-events div.views-field-title a:
 div#home_page_columns-spotlight {
   clear: both;
   position: absolute;
-  top: 150px;
+  top: 120px;
   left: 541px;
 
   width: 422px;
@@ -714,6 +714,11 @@ div#home_page_columns-spotlight {
   margin: 0;
 
   font-size: 12px;
+
+  background-color: #ffffff;
+  opacity: 0.85;
+
+  -ms-filter: "alpha(opacity=85)"; /* need to give opacity support in ie8 */
 }
 
 div#home_page_columns-spotlight div.field-content p {
@@ -730,18 +735,15 @@ h3#home_page_columns-column_title-spotlight {
 
   line-height: 19px;
 
-  padding: 15px;
+  padding-top: 15px;
+  padding-left :15px;
+  padding-right :15px;
   color: #00335b;
   background-color: #ffffff;
-  opacity: 0.85;
-
-  -ms-filter: "alpha(opacity=85)"; /* need to give opacity support in ie8 */
 }
 
 div#home_page_columns-spotlight div.view-display-id-spotlight {
-  padding: 0 15px 15px 15px;
-
-  background-color: #ffffff;
+  padding: 15px;
 }
 
 div#home_page_columns-spotlight div.view-display-id-spotlight div.views-field-title a,
