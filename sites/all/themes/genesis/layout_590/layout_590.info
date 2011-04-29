@@ -1,0 +1,25 @@
+name         = Layout - 590
+description  = ..
+core         = 7.x
+engine       = phptemplate
+screenshot   = mcneese-subtheme.png
+base theme   = genesis
+
+stylesheets[all][] = css/reset.css
+stylesheets[all][] = css/clean.css
+stylesheets[all][] = css/layout.css
+stylesheets[screen][] = css/screen.css
+
+regions[page_top]           = Page Top
+regions[leaderboard]        = Leaderboard
+regions[header]             = Header
+regions[subboard]           = Subboard
+regions[help]               = Help
+regions[secondary_content]  = Secondary
+regions[sidebar_first]      = Sidebar Left
+regions[highlighted]        = Highlighted
+regions[content]            = Main Content
+regions[sidebar_second]     = Sidebar Right
+regions[tertiary_content]   = Tertiary
+regions[footer]             = Footer
+regions[page_bottom]        = Page Bottom
