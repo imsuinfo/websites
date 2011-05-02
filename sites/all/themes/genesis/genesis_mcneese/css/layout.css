@@ -368,8 +368,6 @@ div.block-menu.block-sidebar-first ul.menu li.active-trail.leaf a.active-trail.a
 div.block-menu.block-sidebar-first ul.menu li.active-trail.leaf a.active-trail.active:visited {
   color: #000000;
   background-color: #cad3e4;
-
-  text-shadow: 0px 1px 1px #808c9f;
 }
 
 div.block-menu.block-sidebar-first ul.menu li.leaf a.active:focus,
