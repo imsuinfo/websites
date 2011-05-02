@@ -1,0 +1,146 @@
+<?php
+
+/*
+ *
+ * Array (
+ *  [0] => baseHref
+ *  [1] => width
+ *  [2] => resize_minWidth
+ *  [3] => height
+ *  [4] => theme
+ *  [5] => skin
+ *  [6] => entities_latin
+ *  [7] => entities_greek
+ *  [8] => global_basepath_var
+ *  [9] => format_tags
+ *  [10] => apply_source_formatting
+ *  [11] => contentsCss
+ *  [12] => language
+ *  [13] => resize_enabled
+ *  [14] => toolbarLocation
+ *  [15] => toolbar
+ *  [16] => filebrowserBrowseUrl
+ *  [17] => extraPlugins
+ *
+ */
+function ckeditor_wysiwyg_custom_wysiwyg_editor_settings_alter(&$settings, $context) {
+  if ($context['profile']->editor == 'ckeditor') {
+    //drupal_set_message("DEBUG: " . print_r(array_keys($context), TRUE));
+    //drupal_set_message("DEBUG: " . print_r(array_keys($settings), TRUE));
+
+    $full_toolbar = array();
+    $full_toolbar[] = array('Cut', 'Copy', 'Paste', 'PasteText', 'PasteFromWord', '-', 'SpellChecker', 'Scayt');
+    $full_toolbar[] = array('Undo', 'Redo', 'Find', 'Replace', '-', 'SelectAll', 'RemoveFormat');
+    $full_toolbar[] = array('Image', 'Flash', 'Table', 'HorizontalRule', 'Smiley', 'SpecialChar', 'CreateDiv');
+    $full_toolbar[] = '/';
+    $full_toolbar[] = array('Bold', 'Italic', 'Underline', 'Strike', '-', 'Subscript', 'Superscript');
+    $full_toolbar[] = array('NumberedList', 'BulletedList', '-', 'Outdent', 'Indent', 'Blockquote');
+    $full_toolbar[] = array('JustifyLeft', 'JustifyCenter', 'JustifyRight', 'JustifyBlock', '-', 'BidiRtl', 'BidiLtr');
+    $full_toolbar[] = array('Linkit', 'Unlink', 'Anchor');
+    $full_toolbar[] = '/';
+    $full_toolbar[] = array('Format', 'Font', 'FontSize', 'Styles');
+    $full_toolbar[] = array('TextColor', 'BGColor');
+    $full_toolbar[] = array('Maximize',  'ShowBlocks');
+    $full_toolbar[] = array('Preview', 'Source');
+
+    $settings['toolbar'] = $full_toolbar;
+
+    // http://docs.cksource.com/ckeditor_api/symbols/CKEDITOR.config.html#.fillEmptyBlocks
+    $settings['fillEmptyBlocks'] = FALSE;
+
+    // http://docs.cksource.com/ckeditor_api/symbols/CKEDITOR.config.html#.font_names
+    //$settings['font_names'] = 'Arial/Arial, Helvetica, sans-serif;
+    //$settings['font_names'] .= ' Times New Roman/Times New Roman, Times, serif;';
+    //$settings['font_names'] .= ' Verdana;';
+
+    // http://docs.cksource.com/ckeditor_api/symbols/CKEDITOR.config.html#.font_style
+    //$settings['font_style'] = array('element' => '', 'styles' => '', 'overrides' => '');
+
+    // http://docs.cksource.com/ckeditor_api/symbols/CKEDITOR.config.html#.fontSize_sizes
+    //$settings['fontSize_sizes'] = '';
+
+    // http://docs.cksource.com/ckeditor_api/symbols/CKEDITOR.config.html#.fontSize_style
+    //$settings['fontSize_style'] = '';
+
+    // http://docs.cksource.com/ckeditor_api/symbols/CKEDITOR.config.html#.format_div
+    //$settings['format_div'] = '';
+
+    // http://docs.cksource.com/ckeditor_api/symbols/CKEDITOR.config.html#.format_h1
+    //$settings['format_h1'] = '';
+
+    // http://docs.cksource.com/ckeditor_api/symbols/CKEDITOR.config.html#.format_h2
+    //$settings['format_h2'] = '';
+
+    // http://docs.cksource.com/ckeditor_api/symbols/CKEDITOR.config.html#.format_h3
+    //$settings['format_h3'] = '';
+
+    // http://docs.cksource.com/ckeditor_api/symbols/CKEDITOR.config.html#.format_h4
+    //$settings['format_h4'] = '';
+
+    // http://docs.cksource.com/ckeditor_api/symbols/CKEDITOR.config.html#.format_h5
+    //$settings['format_h5'] = '';
+
+    // http://docs.cksource.com/ckeditor_api/symbols/CKEDITOR.config.html#.format_h6
+    //$settings['format_h6'] = '';
+
+    // http://docs.cksource.com/ckeditor_api/symbols/CKEDITOR.config.html#.format_p
+    //$settings['format_p'] = '';
+
+    // http://docs.cksource.com/ckeditor_api/symbols/CKEDITOR.config.html#.format_pre
+    //$settings['format_pre'] = '';
+
+    // http://docs.cksource.com/ckeditor_api/symbols/CKEDITOR.config.html#.format_tags
+    //$settings['format_tags'] = 'p;h1;h2;h3;h4;h5;h6;pre;address;div';
+
+    // http://docs.cksource.com/ckeditor_api/symbols/CKEDITOR.config.html#.ignoreEmptyParagraph
+    //$settings['ignoreEmptyParagraph'] = TRUE;
+
+    // http://docs.cksource.com/ckeditor_api/symbols/CKEDITOR.config.html#.skin
+    $settings['skin'] = 'v2';
+
+    // http://docs.cksource.com/ckeditor_api/symbols/CKEDITOR.config.html#.stylesSet
+    //$settings['stylesSet'] = '';
+
+    // http://docs.cksource.com/ckeditor_api/symbols/CKEDITOR.config.html#.format_address
+    //$settings['format_address'] = '';
+
+    // http://docs.cksource.com/ckeditor_api/symbols/CKEDITOR.config.html#.format_div
+    //$settings['format_div'] = '';
+
+    // http://docs.cksource.com/ckeditor_api/symbols/CKEDITOR.config.html#.format_h1
+    //$settings['format_h1'] = '';
+
+    // http://docs.cksource.com/ckeditor_api/symbols/CKEDITOR.config.html#.format_h2
+    //$settings['format_h2'] = '';
+
+    // http://docs.cksource.com/ckeditor_api/symbols/CKEDITOR.config.html#.format_h3
+    //$settings['format_h3'] = '';
+
+    // http://docs.cksource.com/ckeditor_api/symbols/CKEDITOR.config.html#.format_h4
+    //$settings['format_h4'] = '';
+
+    // http://docs.cksource.com/ckeditor_api/symbols/CKEDITOR.config.html#.format_h5
+    //$settings['format_h5'] = '';
+
+    // http://docs.cksource.com/ckeditor_api/symbols/CKEDITOR.config.html#.format_h6
+    //$settings['format_h6'] = '';
+
+    // http://docs.cksource.com/ckeditor_api/symbols/CKEDITOR.config.html#.format_p
+    //$settings['format_p'] = '';
+
+    // http://docs.cksource.com/ckeditor_api/symbols/CKEDITOR.config.html#.format_pre
+    //$settings['format_pre'] = '';
+
+    // http://docs.cksource.com/ckeditor_api/symbols/CKEDITOR.config.html#.format_tags
+    //$settings['format_tags'] = '';
+
+    // http://docs.cksource.com/ckeditor_api/symbols/CKEDITOR.config.html#.bodyId
+    //$settings['bodyId'] = '';
+
+    // http://docs.cksource.com/ckeditor_api/symbols/CKEDITOR.config.html#.bodyClass
+    //$settings['bodyClass'] = '';
+
+    // http://docs.cksource.com/ckeditor_api/symbols/CKEDITOR.config.html#.baseHref
+    //$settings['baseHref'] = $base_url . $base_path;
+  }
+}

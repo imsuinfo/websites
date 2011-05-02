@@ -1,0 +1,7 @@
+name =  Ckeditor Wysywig - Custom
+description = "A temporary module that provides the ability to custom ckeditor with the wysiwyg module"
+core = 7.x
+package = Content
+dependencies[] = cf
+dependencies[] = node
+files[] = ckeditor_wysiwyg_custom.module
