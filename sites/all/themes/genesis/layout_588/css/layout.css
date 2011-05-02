@@ -629,22 +629,23 @@ div#home_page_columns {
 }
 
 h3#home_page_columns-column_title-news {
-  width: 393px;
-  min-width: 388px;
-  max-width: 388px;
+  width: 347px;
+  min-width: 347px;
+  max-width: 347px;
 
   height: 20px;
   min-height: 20px;
   max-height: 20px;
 
+  font-size: 11px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
   line-height: 19px;
 
-  font-size: 14px;
   color: #000000;
   background-color: #fad703;
 
-  padding-left:5px;
-  margin-right: 15px;
+  padding: 2px 8px 2px 8px;
 }
 
 div#home_page_columns-events {
@@ -657,8 +658,10 @@ div#home_page_columns-events {
 img#home_page_columns-transparent-image {
   float: right;
 
-  width: 552px;
-  height: 180px;
+  width: 582px;
+  height: 175px;
+  min-height: 175px;
+  max-height: 175px;
 
   padding-left: 15px;
   padding-bottom: 15px;
@@ -685,7 +688,6 @@ div#home_page_columns-events div.view-display-id-events_listing,
 div#home_page_columns-events div.view-display-id-events {
   background-color: #25567d;
 }
-
 div#home_page_columns-events div.view-display-id-events div.view-content {
   height: 195px;
   min-height: 195px;
@@ -695,28 +697,30 @@ div#home_page_columns-events div.view-display-id-events div.view-content {
 }
 
 div#home_page_columns-events div.view-display-id-events_listing div.view-content div.views-row {
-  height: 210px;
-  min-height: 210px;
-  max-height: 210px;
+  height: 225px;
+  min-height: 225px;
+  max-height: 225px;
 }
 
 div#home_page_columns-events div.view-display-id-events_listing div.views-field-title,
 div#home_page_columns-events div.view-display-id-events div.views-field-title {
+  display: inline-block;
+
   height: 30px;
   min-height: 30px;
   max-height: 30px;
   line-height: 30px;
 
-  padding: 15px 15px 0 15px;
+  padding: 0 10px 0 10px;
 
   overflow: hidden;
 }
 
 div#home_page_columns-events div.view-display-id-events_listing div.views-field-body,
 div#home_page_columns-events div.view-display-id-events div.views-field-body {
-  height: 165px;
-  min-height: 165px;
-  max-height: 165px;
+  height: 151px;
+  min-height: 151px;
+  max-height: 151px;
 
   font-size: 14px;
   line-height: 15px;
@@ -736,15 +740,24 @@ div#home_page_columns-events div.view-display-id-events div.views-field-body p {
 div#home_page_columns-events div.view-display-id-events div.views-field-field-featured-image {
   position: absolute;
   top: 0px;
-  left: 408px;
+  /*left: 408px;*/
+  left: 378px;
 
   background-color: #ffffff;
 }
 
-div#home_page_columns-events div.view-display-id-events_listing div.views-field-field-featured-image {
+div#home_page_columns-events div.view-display-id-events_listing div.views-row-even div.views-field-field-featured-image {
+  float: right;
+
+  padding: 15px 0px 15px 15px;
+
+  background-color: #ffffff;
+}
+
+div#home_page_columns-events div.view-display-id-events_listing div.views-row-odd div.views-field-field-featured-image {
   float: left;
 
-  padding: 15px 15px 15px 0;
+  padding: 15px 15px 15px 0px;
 
   background-color: #ffffff;
 }
@@ -808,17 +821,20 @@ h3#home_page_columns-column_title-spotlight {
   min-height: 20px;
   max-height: 20px;
 
+  font-size: 11px;
+  letter-spacing: 1px;
   line-height: 19px;
+  text-transform: uppercase;
 
   padding: 15px;
   color: #00335b;
   background-color: #ffffff;
-  opacity: 0.85;
+  opacity: 0.83;
 
-  -ms-filter: "alpha(opacity=85)"; /* need to give opacity support in ie8 */
+  -ms-filter: "alpha(opacity=83)"; /* need to give opacity support in ie8 */
 }
 
-div#home_page_columns-spotlight div.view-display-id-spotlight {
+div#home_page_columns-spotlight div.view-display-id-spotlight div.views-row {
   padding: 0 15px 15px 15px;
 
   background-color: #ffffff;
@@ -829,9 +845,9 @@ div#home_page_columns-spotlight div.view-display-id-spotlight {
 }
 
 div#home_page_columns-spotlight div.view-display-id-spotlight div.views-field-body {
-  height: 152px;
-  min-height: 152px;
-  max-height: 152px;
+  height: 60px;
+  min-height: 60px;
+  max-height: 60px;
 
   overflow: hidden;
 
@@ -842,9 +858,19 @@ div#home_page_columns-spotlight div.view-display-id-spotlight div.views-field-bo
   line-height: 15px;
 }
 
+div#home_page_columns-spotlight div.view-display-id-spotlight div.views-field-title {
+  display: inline-block;
+
+  font-size: 17px;
+  line-height: 20px;
+
+  width: 230px;
+  min-width: 230px;
+  max-width: 230px;
+}
+
 div#home_page_columns-spotlight div.view-display-id-spotlight div.views-field-title a,
 div#home_page_columns-spotlight div.view-display-id-spotlight div.views-field-title a:visited {
-  font-size: 20px;
   color: #00335b;
 
   text-decoration: none;
@@ -862,7 +888,6 @@ div#home_page_columns-spotlight div.view-display-id-spotlight div.views-field-fi
   float: right;
 
   margin: 4px;
-  opacity: 1;
 }
 
 
