@@ -3,3 +3,4 @@ sites/default/settings.php
 sites/private_files
 sites/public_files
 info.php
+*.swp
