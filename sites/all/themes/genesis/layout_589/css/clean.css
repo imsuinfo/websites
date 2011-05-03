@@ -107,3 +107,14 @@ a:active,
 a:hover {
   color: #7f0000;
 }
+
+div#edit-basic div.form-item-keys,
+div#edit-basic div.form-item-keys label,
+input#edit-name,
+input#edit-keys,
+input#edit-pass {
+  height: 23px;
+  min-height: 23px;
+  max-height: 23px;
+  line-height: 21px;
+}

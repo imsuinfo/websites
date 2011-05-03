@@ -79,30 +79,55 @@ div#block-search-form {
   right: 20px;
 }
 
-div#block-search-form div.form-item-search-block-form input.form-text {
-  border: 2px inset #0f97ff;
+
+div#block-search-form {
+  display: inline-block;
+
+  background-color: #ffffff;
+
+  height: 20px;
+  min-height: 20px;
+  max-height: 20px;
+  overflow: hidden;
+
+  border: 2px inset #0f5eff;
+  padding: 2px;
 }
 
-div#block-search-form div.form-item-search-block-form input.form-text:hover {
-  border: 2px solid #fad703;
+div#block-search-form div.form-item-search-block-form input.form-text {
+  vertical-align: baseline;
+
+  border: 0;
+  margin: 0;
+  padding: 0;
 }
 
 div#block-search-form h2.block-title {
   display: none;
 }
 
+div#block-search-form form#search-block-form input#edit-submit--1,
+div#block-search-form form#search-block-form input#edit-submit--2,
+div#block-search-form form#search-block-form input#edit-submit--3,
 div#block-search-form form#search-block-form input#edit-submit {
-  background-color: #003e6d;
-  color: #ffffff;
-  text-shadow: 1px 1px 0 #2f2f2f;
+  background-image: url(../images/search_button.png);
+  background-repeat: no-repeat;
+  background-color: #00477f;
 
-  border: 1px solid #0f97ff;
-  margin: 0px 10px 0 5px;
-}
+  font-size: 0px;
 
-div#block-search-form form#search-block-form input#edit-submit:hover {
-  color: #00477f;
-  background: #fad703;
+  width: 20px;
+  min-width: 20px;
+  max-width: 20px;
+
+  height: 20px;
+  min-height: 20px;
+  max-height: 20px;
+  overflow: hidden;
+
+  border: 0;
+  margin: 0;
+  padding: 0;
 }
 
 
@@ -437,7 +462,6 @@ div#block-system-navigation ul.menu li a:visited {
   color: #f2f2f2;
   background-color: #454545;
   text-decoration: none;
-  text-shadow: 1px 1px 0 #2f2f2f;
   line-height: 1.7;
 
   padding: 2px 2px 2px 8px;
@@ -623,43 +647,45 @@ div.view-display-id-home_page {
 
 div#home_page_columns {
   position: relative;
-  background-color: #ffffff;
+  background-color: #25567d;
+
+  font-size: 0px; /* Workaround inline-block \n bug*/
 }
 
 h3#home_page_columns-column_title-news {
-  width: 393px;
-  min-width: 388px;
-  max-width: 388px;
+  width: 347px;
+  min-width: 347px;
+  max-width: 347px;
 
   height: 20px;
   min-height: 20px;
   max-height: 20px;
 
+  font-size: 11px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
   line-height: 19px;
 
-  padding-left:5px;
   color: #000000;
   background-color: #fad703;
 
-  margin-right: 15px;
+  padding: 2px 8px 2px 8px;
 }
 
 div#home_page_columns-events {
-  float: left;
-
-  width: 541px;
-  min-width: 541px;
-  max-width: 541px;
+  display: inline-block;
 
   color: #ececec;
   background-color: #ffffff;
 }
 
-img#home_page_columns-transparent {
+img#home_page_columns-transparent-image {
   float: right;
 
-  width: 133px;
-  height: 180px;
+  width: 582px;
+  height: 175px;
+  min-height: 175px;
+  max-height: 175px;
 
   padding-left: 15px;
   padding-bottom: 15px;
@@ -668,19 +694,92 @@ img#home_page_columns-transparent {
   background-color: #ffffff;
 }
 
+img#home_page_columns-transparent-spotlight {
+  float: right;
+
+  width: 412px;
+  min-width: 412px;
+  max-width: 412px;
+  height: 528px;
+  min-height: 528px;
+  max-height: 528px;
+
+  box-shadow: none;
+  background-color: #ffffff;
+}
+
 div#home_page_columns-events div.view-display-id-events_listing,
 div#home_page_columns-events div.view-display-id-events {
   background-color: #25567d;
+}
+div#home_page_columns-events div.view-display-id-events div.view-content {
+  height: 195px;
+  min-height: 195px;
+  max-height: 195px;
 
-  padding: 15px;
+  overflow: hidden;
+}
+
+div#home_page_columns-events div.view-display-id-events_listing div.view-content div.views-row {
+  height: 225px;
+  min-height: 225px;
+  max-height: 225px;
+}
+
+div#home_page_columns-events div.view-display-id-events_listing div.views-field-title,
+div#home_page_columns-events div.view-display-id-events div.views-field-title {
+  height: 30px;
+  min-height: 30px;
+  max-height: 30px;
+  line-height: 30px;
+
+  padding: 0 10px 0 10px;
+
+  overflow: hidden;
+}
+
+div#home_page_columns-events div.view-display-id-events_listing div.views-field-body,
+div#home_page_columns-events div.view-display-id-events div.views-field-body {
+  height: 151px;
+  min-height: 151px;
+  max-height: 151px;
+
+  font-size: 14px;
+  line-height: 15px;
+
+  padding-left: 15px;
+  padding-right: 15px;
+
+  overflow: hidden;
+}
+
+div#home_page_columns-events div.view-display-id-events_listing div.views-field-body p,
+div#home_page_columns-events div.view-display-id-events div.views-field-body p {
+  font-size: 14px;
+  line-height: 15px;
 }
 
 div#home_page_columns-events div.view-display-id-events div.views-field-field-featured-image {
   position: absolute;
   top: 0px;
-  left: 408px;
+  /*left: 408px;*/
+  left: 378px;
 
-  padding-bottom: 15px;
+  background-color: #ffffff;
+}
+
+div#home_page_columns-events div.view-display-id-events_listing div.views-row-even div.views-field-field-featured-image {
+  float: right;
+
+  padding: 15px 0px 15px 15px;
+
+  background-color: #ffffff;
+}
+
+div#home_page_columns-events div.view-display-id-events_listing div.views-row-odd div.views-field-field-featured-image {
+  float: left;
+
+  padding: 15px 15px 15px 0px;
 
   background-color: #ffffff;
 }
@@ -714,24 +813,22 @@ div#home_page_columns-events div.view-display-id-events div.views-field-title a:
 }
 
 div#home_page_columns-spotlight {
-  clear: both;
+  display: inline-block;
   position: absolute;
-  top: 120px;
-  left: 541px;
 
-  width: 422px;
-  min-width: 422px;
-  max-width: 422px;
+  top: 150px;
+  right: 0;
+
+  width: 412px;
+  min-width: 412px;
+  max-width: 412px;
 
   padding: 0;
   margin: 0;
+  margin-left: 15px;
+  margin-bottom: 15px;
 
   font-size: 12px;
-
-  background-color: #ffffff;
-  opacity: 0.85;
-
-  -ms-filter: "alpha(opacity=85)"; /* need to give opacity support in ie8 */
 }
 
 div#home_page_columns-spotlight div.field-content p {
@@ -746,22 +843,56 @@ h3#home_page_columns-column_title-spotlight {
   min-height: 20px;
   max-height: 20px;
 
+  font-size: 11px;
+  letter-spacing: 1px;
   line-height: 19px;
+  text-transform: uppercase;
 
-  padding-top: 15px;
-  padding-left :15px;
-  padding-right :15px;
+  padding: 15px;
   color: #00335b;
   background-color: #ffffff;
+  opacity: 0.83;
+
+  -ms-filter: "alpha(opacity=83)"; /* need to give opacity support in ie8 */
 }
 
-div#home_page_columns-spotlight div.view-display-id-spotlight {
-  padding: 15px;
+div#home_page_columns-spotlight div.view-display-id-spotlight div.views-row {
+  padding: 0 15px 15px 15px;
+
+  background-color: #ffffff;
+
+  width: 392px;
+  min-width: 392px;
+  max-width: 392px;
+}
+
+div#home_page_columns-spotlight div.view-display-id-spotlight div.views-field-body {
+  height: 60px;
+  min-height: 60px;
+  max-height: 60px;
+
+  overflow: hidden;
+
+  line-height: 15px;
+}
+
+div#home_page_columns-spotlight div.view-display-id-spotlight div.views-field-body p {
+  line-height: 15px;
+}
+
+div#home_page_columns-spotlight div.view-display-id-spotlight div.views-field-title {
+  display: inline-block;
+
+  font-size: 17px;
+  line-height: 20px;
+
+  width: 230px;
+  min-width: 230px;
+  max-width: 230px;
 }
 
 div#home_page_columns-spotlight div.view-display-id-spotlight div.views-field-title a,
 div#home_page_columns-spotlight div.view-display-id-spotlight div.views-field-title a:visited {
-  font-size: 20px;
   color: #00335b;
 
   text-decoration: none;
@@ -779,7 +910,6 @@ div#home_page_columns-spotlight div.view-display-id-spotlight div.views-field-fi
   float: right;
 
   margin: 4px;
-  opacity: 1;
 }
 
 
@@ -880,7 +1010,6 @@ div#main-content div.local-tasks ul.tabs li {
 
 div#main-content div.local-tasks ul.tabs li a {
   color: #f2f2f2;
-  text-shadow: 1px 1px 0 #2f2f2f;
 
   padding: 2px 7px 0 7px;
 

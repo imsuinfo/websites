@@ -1,5 +1,5 @@
-name         = Old McNeese Theme
-description  = My Kickn' Sub-theme
+name         = Layout - 586
+description  = ..
 core         = 7.x
 engine       = phptemplate
 screenshot   = mcneese-subtheme.png
