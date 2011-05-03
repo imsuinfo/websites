@@ -103,6 +103,8 @@ div#block-search-form form#search-block-form input#edit-submit {
 div#block-search-form form#search-block-form input#edit-submit:hover {
   color: #00477f;
   background: #fad703;
+
+  text-shadow: none;
 }
 
 
