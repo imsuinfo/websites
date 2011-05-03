@@ -45,6 +45,9 @@ function ckeditor_wysiwyg_custom_wysiwyg_editor_settings_alter(&$settings, $cont
 
     $settings['toolbar'] = $full_toolbar;
 
+    // http://docs.cksource.com/ckeditor_api/symbols/CKEDITOR.config.html#.enterMode
+    $settings['enterMode'] = 2;
+
     // http://docs.cksource.com/ckeditor_api/symbols/CKEDITOR.config.html#.fillEmptyBlocks
     $settings['fillEmptyBlocks'] = FALSE;
 
