@@ -1,28 +1,5 @@
 <?php
 
-/*
- *
- * Array (
- *  [0] => baseHref
- *  [1] => width
- *  [2] => resize_minWidth
- *  [3] => height
- *  [4] => theme
- *  [5] => skin
- *  [6] => entities_latin
- *  [7] => entities_greek
- *  [8] => global_basepath_var
- *  [9] => format_tags
- *  [10] => apply_source_formatting
- *  [11] => contentsCss
- *  [12] => language
- *  [13] => resize_enabled
- *  [14] => toolbarLocation
- *  [15] => toolbar
- *  [16] => filebrowserBrowseUrl
- *  [17] => extraPlugins
- *
- */
 function ckeditor_wysiwyg_custom_wysiwyg_editor_settings_alter(&$settings, $context) {
   if ($context['profile']->editor == 'ckeditor') {
     $full_toolbar = array();
@@ -42,6 +19,16 @@ function ckeditor_wysiwyg_custom_wysiwyg_editor_settings_alter(&$settings, $cont
     $full_toolbar[] = array('TextColor', 'BGColor');
 
     $settings['toolbar'] = $full_toolbar;
+
+    $settings['resize_minWidth'] = 600;
+
+    // provide a hook for modules to add their own css
+    $settings['contentsCss'] = array();
+    // TODO: This is temporarily hard-coded to the genesis_mcneese theme, write a drupal_invoke_all(..) hook for themes to implement
+    $theme_path = drupal_get_path('theme', 'genesis_mcneese') . '/css/';
+    $settings['contentsCss'][] = $theme_path . 'reset.css';
+    $settings['contentsCss'][] = $theme_path . 'clean.css';
+    $settings['contentsCss'][] = $theme_path . 'layout.css';
 
     // http://docs.cksource.com/ckeditor_api/symbols/CKEDITOR.config.html#.enterMode
     $settings['enterMode'] = 2;
