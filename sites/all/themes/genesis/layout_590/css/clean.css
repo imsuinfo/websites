@@ -1,10 +1,15 @@
 body {
   position: relative;
-
-  background-color: #dadada;
   font-family: Arial, Helvetica, sans-serif;
+
+  background-color: #ffffff;
 }
 
+body#genesis_mcneese {
+  background-color: #dadada;
+}
+
+html#ckeditor-wysiwygarea,
 div#container,
 div#leaderboard,
 div#secondary-menu-wrapper,
@@ -60,7 +65,7 @@ a.nivo-prevNav {
   left: 15px;
 }
 
-div#content img.box_shadow {
+img.box_shadow {
   box-shadow: 2px 2px 1px #888888;
 }
 
@@ -73,16 +78,19 @@ textarea.form-textarea {
   border-color: #cccccc #999999 #999999 #cccccc;
 }
 
+html#ckeditor-wysiwygarea,
 div#content {
   font-size: 14px;
 }
 
+html#ckeditor-wysiwygarea p,
 div#content p {
   margin: 0 0 15px;
   font-size: 14px;
   line-height: 1.2;
 }
 
+html#ckeditor-wysiwygarea h2,
 div#content h2 {
   font-weight: normal;
   margin-bottom: 15px;
@@ -106,4 +114,15 @@ a:focus,
 a:active,
 a:hover {
   color: #7f0000;
+}
+
+div#edit-basic div.form-item-keys,
+div#edit-basic div.form-item-keys label,
+input#edit-name,
+input#edit-keys,
+input#edit-pass {
+  height: 23px;
+  min-height: 23px;
+  max-height: 23px;
+  line-height: 21px;
 }

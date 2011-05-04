@@ -54,10 +54,20 @@ function layout_590_process_page(&$vars) {
   $vars['page']['sidebar_css'] = 'sidebar-none';
   $vars['page']['is_front_css'] = '';
   $vars['page']['subboard_image'] = '';
+  $vars['page']['top_slider-content'] = layout_590_generate_top_slider_content();
+  $vars['page']['top_slider-button'] =  layout_590_generate_top_slider_button();
 
   if (drupal_is_front_page() === TRUE) {
     $vars['page']['is_front_css'] = 'is_front';
   }
+}
+
+function layout_590_generate_top_slider_content(){
+  return '<h2>test</h2>' . "\n" . '<p class="grey">To download this script go back to <a href="http://web-kreation.com/index.php/tutorials/nice-clean-sliding-login-panel-built-with-jquery" title="Download">article &raquo;</a></p>' . "\n";
+}
+
+function layout_590_generate_top_slider_button(){
+  return '<a id="open" class="open" href="#">Log In | Register</a>' . "\n";
 }
 
 /**

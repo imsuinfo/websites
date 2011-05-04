@@ -45,7 +45,29 @@
   <?php print $scripts; ?>
 </head>
 <?php // modify the layout by changing the id, see layout.css ?>
-<body id="genesis-1c" <?php print $attributes;?>>
+<body id="genesis_mcneese" <?php print $attributes;?>>
+<!-- Panel -->
+<div id="toppanel">
+	<div id="panel">
+		<div class="content clearfix">
+		<div class="left">
+		<h2>test H2</h2>
+		<p class="grey"><a href="http://banner/" title="Self Service">Banner Self Service</a></p>
+		</div>
+		</div>
+	</div> <!-- /login -->
+
+<!-- The tab on top -->
+	<div class="tab">
+		<ul class="login">
+    		<li id="toggle">
+    			<a id="open" class="open" href="#">Quick Links</a>
+    			<a id="close" style="display: none;" class="close" href="#">Close Panel</a>
+    		</li>
+    	</ul>
+    </div> <!-- / top -->
+
+</div> <!--panel -->
 
   <?php if (!$in_overlay): // Hide the skip-link in overlay ?>
     <div id="skip-link">
