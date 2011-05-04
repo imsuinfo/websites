@@ -25,10 +25,10 @@
  */
 function ckeditor_wysiwyg_custom_wysiwyg_editor_settings_alter(&$settings, $context) {
   if ($context['profile']->editor == 'ckeditor') {
-    //drupal_set_message("DEBUG: " . print_r(array_keys($context), TRUE));
-    //drupal_set_message("DEBUG: " . print_r(array_keys($settings), TRUE));
-
     $full_toolbar = array();
+    $full_toolbar[] = array('Source', 'Maximize',  'ShowBlocks');
+    $full_toolbar[] = array('Templates', 'Preview');
+    $full_toolbar[] = '/';
     $full_toolbar[] = array('Cut', 'Copy', 'Paste', 'PasteText', 'PasteFromWord', '-', 'SpellChecker', 'Scayt');
     $full_toolbar[] = array('Undo', 'Redo', 'Find', 'Replace', '-', 'SelectAll', 'RemoveFormat');
     $full_toolbar[] = array('Image', 'Flash', 'Table', 'HorizontalRule', 'Smiley', 'SpecialChar', 'CreateDiv');
@@ -40,8 +40,6 @@ function ckeditor_wysiwyg_custom_wysiwyg_editor_settings_alter(&$settings, $cont
     $full_toolbar[] = '/';
     $full_toolbar[] = array('Format', 'Font', 'FontSize', 'Styles');
     $full_toolbar[] = array('TextColor', 'BGColor');
-    $full_toolbar[] = array('Maximize',  'ShowBlocks');
-    $full_toolbar[] = array('Preview', 'Source');
 
     $settings['toolbar'] = $full_toolbar;
 
@@ -145,5 +143,10 @@ function ckeditor_wysiwyg_custom_wysiwyg_editor_settings_alter(&$settings, $cont
 
     // http://docs.cksource.com/ckeditor_api/symbols/CKEDITOR.config.html#.baseHref
     //$settings['baseHref'] = $base_url . $base_path;
+
+
+    // http://docs.cksource.com/CKEditor_3.x/Developers_Guide/Templates
+    // http://docs.cksource.com/CKEditor_3.x/Users_Guide/Document/Templates
+    // Add templates here
   }
 }
