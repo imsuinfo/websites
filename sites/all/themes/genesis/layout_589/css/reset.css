@@ -58,15 +58,6 @@ input,
 select,
 textarea,
 label,
-legend,
-table,
-caption,
-tbody,
-tfoot,
-thead,
-tr,
-th,
-td,
 /* Drupal: system-menus.css */
 td.menu-disabled,
 ul.links,
@@ -78,9 +69,6 @@ div.admin,
 tr.even,
 tr.odd,
 tr.drag,
-tbody,
-tbody th,
-thead th,
 .breadcrumb,
 .item-list .icon,
 .item-list .title,
@@ -152,12 +140,6 @@ ins {
 }
 del {
   text-decoration: line-through;
-}
-
-/* Tables still need 'cellspacing="0"' in the markup. */
-table {
-  border-collapse: collapse;
-  border-spacing: 0;
 }
 
 /**
