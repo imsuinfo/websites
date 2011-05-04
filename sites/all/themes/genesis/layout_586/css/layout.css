@@ -1,4 +1,8 @@
 /*** main ***/
+html#ckeditor-wysiwygarea body {
+  position: relative;
+}
+
 div#container {
   position: relative;
 
@@ -16,6 +20,7 @@ div#container {
   -webkit-border-bottom-left-radius: 10px;
 }
 
+html#ckeditor-wysiwygarea body,
 div#content {
   min-height: 500px;
 
@@ -247,6 +252,7 @@ div#columns.sidebar-none div#content-column {
   max-width: 960px;
 }
 
+html#ckeditor-wysiwygarea body,
 div#columns.sidebar-left div#content-column,
 div#columns.sidebar-right div#content-column {
   width: 755px;
