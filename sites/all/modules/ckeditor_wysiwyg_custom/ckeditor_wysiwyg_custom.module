@@ -24,6 +24,14 @@ function ckeditor_wysiwyg_custom_wysiwyg_editor_settings_alter(&$settings, $cont
 
     // provide a hook for modules to add their own css
     $settings['contentsCss'] = array();
+    
+    // load drupal cores system css
+    $system_theme_path = drupal_get_path('module', 'system') . '/';
+    $settings['contentsCss'][] = $system_theme_path . 'system.base.css';
+    $settings['contentsCss'][] = $system_theme_path . 'system.menus.css';
+    $settings['contentsCss'][] = $system_theme_path . 'system.messages.css';
+    $settings['contentsCss'][] = $system_theme_path . 'system.theme.css';
+
     // TODO: This is temporarily hard-coded to the genesis_mcneese theme, write a drupal_invoke_all(..) hook for themes to implement
     $theme_path = drupal_get_path('theme', 'genesis_mcneese') . '/css/';
     $settings['contentsCss'][] = $theme_path . 'reset.css';
