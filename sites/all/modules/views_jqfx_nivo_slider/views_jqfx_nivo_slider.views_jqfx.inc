@@ -60,12 +60,7 @@ function views_jqfx_nivo_slider_views_jqfx_option_definition() {
  */
 function views_jqfx_nivo_slider_views_jqfx_jqfx_type_form(&$form, &$form_state, &$view) {
   ctools_include('dependent');
-  // Alerts the user if the library is not installed
-  if (!file_exists('sites/all/libraries/nivo-slider/jquery.nivo.slider.pack.js')) {
-    $form['views_jqfx_nivo_slider']['no_nivo_slider_js'] = array(
-      '#markup' => '<div style="color: red">' . t('You need to download the Nivo Slider plugin and copy it to sites/all/libraries/nivo-slider. You can find the plugin at !url.', array('!url' => l(t('http://nivo.dev7studios.com/', array(), array('langcode' => 'en')), 'http://nivo.dev7studios.com/', array('attributes' => array('target' => '_blank')))), array('langcode' => 'en')) . '</div>',
-    );
-  }
+
   $style = array(
     FALSE => t('Custom (Enter the path below)'),
     'basic1' => t('Basic1'),
