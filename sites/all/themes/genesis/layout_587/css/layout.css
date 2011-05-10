@@ -220,10 +220,12 @@ div#block-views-Slider-slider_block a {
 }
 
 
+
 /*** Content - container **/
 div#container.is_front div#columns {
   margin-top: 5px;
 }
+
 
 
 /*** Content - columns **/
@@ -719,7 +721,6 @@ div#home_page_columns-events div.view-display-id-events_listing,
 div#home_page_columns-events div.view-display-id-events {
   background-color: #25567d;
 }
-
 div#home_page_columns-events div.view-display-id-events div.view-content {
   height: 195px;
   min-height: 195px;
