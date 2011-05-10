@@ -30,7 +30,7 @@ function template_preprocess_views_jqfx_nivo_slider(&$vars) {
       if ($url) {
         $image = '<a href="'. $url .'">'. $image .'</a>';
       }
-      
+
       // Add the image to our image array to display.
       $vars['images'][] = $image;
     }
@@ -39,31 +39,31 @@ function template_preprocess_views_jqfx_nivo_slider(&$vars) {
   $options = $vars['options']['views_jqfx_nivo_slider'];
 
   _views_jqfx_nivo_slider_add_js($options, 'views-jqfx-nivo-slider-images-' . $vars['id']);
-  
+
 }
 
 function _views_jqfx_nivo_slider_add_js($options, $id) {
-
-  // Find the path to our plugin.
-  $path = 'sites/all/libraries';
+  $libraries_path = 'sites/all/libraries';
 
   // Add the plugin JS and CSS.
-  drupal_add_js($path . '/nivo-slider/jquery.nivo.slider.js');
-  drupal_add_css($path . '/nivo-slider/nivo-slider.css');
+  drupal_add_js($libraries_path . '/' . $options['nivo_library'] . '/jquery.nivo.slider.js');
+  drupal_add_css($libraries_path . '/' . $options['nivo_library'] . '/nivo-slider.css');
 
   //Add the module JS
   $drupal_path = drupal_get_path('module', 'views_jqfx_nivo_slider');
   drupal_add_js($drupal_path . '/js/views_jqfx_nivo_slider.js');
-  
+
   // Load the theme CSS.
   if ($options['custom_style'] && !$options['style']) {
     $theme_url = check_plain($options['custom_style']);
     drupal_add_css($theme_url);
   }
   elseif ($options['style']) {
-    drupal_add_css(drupal_get_path('module', 'views_jqfx_nivo_slider') . "/theme/styles/" . $options['style'] . "/" . $options['style'] . "-nivo-slider.css");
+    drupal_add_css(drupal_get_path('module', 'views_jqfx_nivo_slider') . '/theme/styles/' . $options['style'] . '/' . $options['style'] . '-nivo-slider.css');
   }
-  else {$options['style'] = NULL;}
+  else {
+    $options['style'] = NULL;
+  }
 
   // Get the javascript settings.
   $settings = array(
@@ -80,14 +80,14 @@ function _views_jqfx_nivo_slider_add_js($options, $id) {
     'manualAdvance'       => $options['manual_advance'] ? TRUE : FALSE,
     'captionOpacity'      => (float)$options['caption_opacity'],
   );
-  
+
   // Since controlNav is boolean we need to tell controlNavThumbs about thumbnails.
   if ($options['control_nav'] == 'thumbnails') {
     $settings['controlNavThumbs'] = TRUE;
     $settings['controlNavThumbsSearch'] = $options['control_nav_thumbs_search'];
     $settings['controlNavThumbsReplace'] = $options['control_nav_thumbs_replace'];
   }
-  
+
   // These will break the Nivo Slider if they are passed empty. Make sure they are set first.
   if ($options['before_change']) {
     $settings['beforeChange'] = $options['before_change'];
@@ -104,7 +104,7 @@ function _views_jqfx_nivo_slider_add_js($options, $id) {
   if ($options['after_load']) {
     $settings['afterLoad'] = $options['after_load'];
   }
-  
+
   // Add the settings array.
   drupal_add_js(array('viewsJqfxNivoSlider' => array($id => $settings)), 'setting');
 }

@@ -26,6 +26,7 @@ function views_jqfx_nivo_slider_views_jqfx_option_definition() {
   // Set our default options.
   $options['views_jqfx_nivo_slider'] = array(
     'contains' => array(
+      'nivo_library'                => array('default' => 'nivo-slider'),
       'style'                       => array('default' => 'basic'),
       'custom_style'                => array('default' => NULL),
       'effect'                      => array('default' => 'random'),
@@ -71,6 +72,15 @@ function views_jqfx_nivo_slider_views_jqfx_jqfx_type_form(&$form, &$form_state, 
     'basic2' => t('Basic2'),
     'basic3' => t('Basic3'),
   );
+
+  $form['views_jqfx_nivo_slider']['nivo_library'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Nivo Library'),
+    '#description' => t('This should be the nivo-slider library to use, when in doubt just use: nivo-slider.'),
+    '#default_value' => $view->options['views_jqfx_nivo_slider']['nivo_library'],
+    '#process' => array('ctools_dependent_process'),
+  );
+
   $form['views_jqfx_nivo_slider']['style'] = array(
     '#type' => 'select',
     '#title' => t('Style'),
@@ -275,6 +285,17 @@ function views_jqfx_nivo_slider_views_jqfx_jqfx_type_form(&$form, &$form_state, 
 
 // Validate the form options.
 function views_jqfx_nivo_slider_views_jqfx_options_form_validate(&$form, &$form_state, &$view) {
+  if (empty($form_state['values']['style_options']['views_jqfx_nivo_slider']['nivo_library'])) {
+    form_error($form['views_jqfx_nivo_slider']['nivo_library'], t('!setting must not be empty!', array('!setting' => 'Nivo Library')));
+  }
+
+  $libraries_path = 'sites/all/libraries';
+  $path = $libraries_path = 'sites/all/libraries' . '/' . $form_state['values']['style_options']['views_jqfx_nivo_slider']['nivo_library'];
+
+  if (!file_exists($path . '/jquery.nivo.slider.js')){
+    form_error($form['views_jqfx_nivo_slider']['nivo_library'], t('There is no jquery.nivo.slider.js at !path', array('!path' => $path)));
+  }
+
   if (!is_numeric($form_state['values']['style_options']['views_jqfx_nivo_slider']['slices'])) {
     form_error($form['views_jqfx_nivo_slider']['slices'], t('!setting must be numeric!', array('Slices')));
   }
