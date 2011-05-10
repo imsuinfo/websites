@@ -1,0 +1,10 @@
+; $Id$
+name = Views jQFX: Msu Slider
+description = Integrates the Msu Slider plugin with Views jQFX.
+dependencies[] = views_jqfx
+package = Views
+core = 7.x
+files[] = views_jqfx_msu_slider.module
+files[] = views_jqfx_msu_slider.views_jqfx.inc
+files[] = theme/views_jqfx_msu_slider.theme.inc
+
