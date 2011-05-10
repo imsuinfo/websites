@@ -1,0 +1,21 @@
+<?php
+// $Id$
+
+/**
+ *  @file
+ *  Integrating Nivo-slider with Views jQFX.
+ */
+
+/**
+ * Implements hook_theme().
+ */
+function views_jqfx_nivo_slider_theme($existing, $type, $theme, $path) {
+  return array(
+    'views_jqfx_nivo_slider' => array(
+      'variables' => array('view' => NULL, 'options' => array(), 'rows' => array(), 'title' => ''),
+      'template' => 'views-jqfx-nivo-slider',
+      'file' => 'views_jqfx_nivo_slider.theme.inc',
+      'path' => $path . '/theme',
+    ),
+  );
+}
