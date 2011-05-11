@@ -58,7 +58,7 @@
             }
 		// HACK: webkit based browsers do not properly report the width and height, resulting in a width and height of 0x0
 		// this is a work-around.
-                slider.width(680);
+                slider.width(690);
                 slider.height(379);
             if(link != ''){
                 link.css('display','none');
