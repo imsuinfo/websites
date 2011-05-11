@@ -601,6 +601,14 @@ div#block-menu-menu-home-menu ul.menu li.leaf.id-menu-link-menu-home-menu-880 a:
 
 
 
+/*** Content - help region **/
+div#content-column div.region-help {
+  max-height: 400px;
+  overflow: auto;
+}
+
+
+
 /*** Content - main content **/
 div#subboard-image div.view-display-id-group_image {
   margin-bottom: 5px;
