@@ -21,15 +21,50 @@ div#container {
 }
 
 html#ckeditor-wysiwygarea body,
-div#content {
+div#columns {
   min-height: 500px;
 
   margin-top: 10px;
 }
 
-div#container.is_front div#content {
-  margin-top: 0;
+div.region-help {
+  margin-bottom: 10px;
 }
+
+div.region-help div.emergency {
+  background-color: #f6cbca;
+  border: 2px groove #ff7777;
+
+  min-height: 250px;
+
+  background-image: url(../images/emergency_background.png);
+  background-repeat: no-repeat;
+
+  font-size: 1.3em;
+}
+
+div.region-help div.emergency img.emergency-image {
+  float: left;
+
+  width: 280px;
+  height: 250px;
+}
+
+div.region-help div.emergency div.emergency-text {
+  padding-top: 10px;
+  padding-bottom: 10px;
+}
+
+div.region-help div.emergency h3.emergency-title {
+  color: #aa0000;
+
+  margin-left: 330px;
+}
+
+div.region-help div.emergency p.emergency-message {
+  margin-left: 330px;
+}
+
 
 
 /*** Header **/
@@ -75,6 +110,7 @@ div#block-system-main-menu.block-header {
 
   clear: both;
 }
+
 
 
 /*** Header - search form ***/
@@ -134,6 +170,7 @@ div#block-search-form form#search-block-form input#edit-submit {
   margin: 0;
   padding: 0;
 }
+
 
 
 /*** Header - main menu ***/
@@ -597,6 +634,15 @@ div#block-menu-menu-home-menu ul.menu li.leaf.id-menu-link-menu-home-menu-880 a:
 }
 
 
+
+/*** Content - help region **/
+div#content-column div.region-help {
+  max-height: 400px;
+  overflow: auto;
+}
+
+
+
 /*** Content - main content **/
 div#subboard-image div.view-display-id-group_image {
   margin-bottom: 5px;
@@ -647,6 +693,7 @@ h1#page-title {
   color:#00335b;
   padding: 8px 8px 8px 0;
 }
+
 
 
 /*** Content - home page XXXXXXXXXXXXXXXXXXX ***/
@@ -752,7 +799,7 @@ div#home_page_columns-events div.view-display-id-events div.views-field-title {
 
 div#home_page_columns-events div.views-field,
 div#home_page_columns-events div.views-field p {
-  font-size: 14px;
+  font-size: 12px;
   line-height: 15px;
 }
 
@@ -790,11 +837,11 @@ div#home_page_columns-events div.view-display-id-events div.views-field-nothing 
 }
 
 div#home_page_columns-events div.view-display-id-events_listing div.views-field-nothing {
-  height: 151px;
-  min-height: 151px;
-  max-height: 151px;
+  height: 150px;
+  min-height: 150px;
+  max-height: 150px;
 
-  font-size: 14px;
+  font-size: 12px;
   line-height: 15px;
 
   padding-left: 15px;
