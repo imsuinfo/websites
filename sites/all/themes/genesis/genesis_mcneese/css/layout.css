@@ -765,7 +765,7 @@ div#home_page_columns-events div.view-display-id-events div.views-field-title {
 
 div#home_page_columns-events div.views-field,
 div#home_page_columns-events div.views-field p {
-  font-size: 14px;
+  font-size: 12px;
   line-height: 15px;
 }
 
@@ -803,11 +803,11 @@ div#home_page_columns-events div.view-display-id-events div.views-field-nothing 
 }
 
 div#home_page_columns-events div.view-display-id-events_listing div.views-field-nothing {
-  height: 151px;
-  min-height: 151px;
-  max-height: 151px;
+  height: 150px;
+  min-height: 150px;
+  max-height: 150px;
 
-  font-size: 14px;
+  font-size: 12px;
   line-height: 15px;
 
   padding-left: 15px;
