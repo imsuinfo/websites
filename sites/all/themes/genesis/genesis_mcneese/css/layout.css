@@ -764,10 +764,15 @@ img#home_page_columns-transparent-spotlight {
   background-color: #ffffff;
 }
 
+div#home_page_columns-events div.view-display-id-events_listing {
+  padding-bottom: 10px;
+}
+
 div#home_page_columns-events div.view-display-id-events_listing,
 div#home_page_columns-events div.view-display-id-events {
   background-color: #25567d;
 }
+
 div#home_page_columns-events div.view-display-id-events div.view-content {
   height: 195px;
   min-height: 195px;
