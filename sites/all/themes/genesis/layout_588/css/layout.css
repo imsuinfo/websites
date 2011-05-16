@@ -837,9 +837,9 @@ div#home_page_columns-events div.view-display-id-events div.views-field-nothing 
 }
 
 div#home_page_columns-events div.view-display-id-events_listing div.views-field-nothing {
-  height: 150px;
-  min-height: 150px;
-  max-height: 150px;
+  height: 135px;
+  min-height: 135px;
+  max-height: 135px;
 
   font-size: 12px;
   line-height: 15px;
