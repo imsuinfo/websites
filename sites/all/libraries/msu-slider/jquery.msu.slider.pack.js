@@ -1,12 +1,16 @@
 /*
- * jQuery Msu Slider v2.5.1
+ * jQuery Msu Slider v2.4
  * http://msu.dev7studios.com
  *
  * Copyright 2011, Gilbert Pellegrom
  * Free to use and abuse under the MIT license.
  * http://www.opensource.org/licenses/mit-license.php
  * 
- * March 2010
+ * May 2010 - Pick random effect from specified set of effects by toronegro
+ * May 2010 - controlNavThumbsFromRel option added by nerd-sh
+ * May 2010 - Do not start msuRun timer if there is only 1 slide by msielski
+ * April 2010 - controlNavThumbs option added by Jamie Thompson (http://jamiethompson.co.uk)
+ * March 2010 - manualAdvance option added by HelloPablo (http://hellopablo.co.uk)
  */
 
 (function($) {
@@ -56,10 +60,6 @@
             if(childHeight > slider.height()){
                 slider.height(childHeight);
             }
-		// HACK: webkit based browsers do not properly report the width and height, resulting in a width and height of 0x0
-		// this is a work-around.
-                slider.width(690);
-                slider.height(379);
             if(link != ''){
                 link.css('display','none');
             }
@@ -87,48 +87,32 @@
         
         //Set first background
         slider.css('background','url("'+ vars.currentImage.attr('src') +'") no-repeat');
-
+        
+        //Add initial slices
+        for(var i = 0; i < settings.slices; i++){
+            var sliceWidth = Math.round(slider.width()/settings.slices);
+            if(i == settings.slices-1){
+                slider.append(
+                    $('<div class="msu-slice"></div>').css({ left:(sliceWidth*i)+'px', width:(slider.width()-(sliceWidth*i))+'px' })
+                );
+            } else {
+                slider.append(
+                    $('<div class="msu-slice"></div>').css({ left:(sliceWidth*i)+'px', width:sliceWidth+'px' })
+                );
+            }
+        }
+        
         //Create caption
         slider.append(
-            $('<div class="msu-caption"><p></p></div>').css({ display:'none', opacity:settings.captionOpacity })
+            $('<div class="msu-caption"><p>HELLO 3</p></div>').css({ display:'none', opacity:settings.captionOpacity })
         );			
-		
-		// Process caption function
-		var processCaption = function(settings){
-			var msuCaption = $('.msu-caption', slider);
-			if(vars.currentImage.attr('title') != ''){
-				var title = vars.currentImage.attr('title');
-				var subtitle = '';
-				var title_begin = '<div class="msu-caption-title">';
-				var title_end = '</div>';
-				var link_title = title;
-
-				if(vars.currentImage.attr('subtitle') != null){
-					subtitle = '<div class="msu-caption-subtitle">' + vars.currentImage.attr('subtitle') + '</div>';
-					link_title = title + ": " + vars.currentImage.attr('subtitle');
-				}
-				if(vars.currentImage.attr('titlelink') != null){
-					title_begin = '<a href="' + vars.currentImage.attr('titlelink') + '" class="msu-caption-title" title="' + link_title + '">';
-					title_end = '</a>';
-				}
-				if(title.substr(0,1) == '#') title = $(title).html();	
-
-				if(msuCaption.css('display') == 'block'){
-					msuCaption.find('p').fadeOut(settings.animSpeed, function(){
-						$(this).html(title_begin + title + title_end + subtitle);
-						$(this).fadeIn(settings.animSpeed);
-					});
-				} else {
-					msuCaption.find('p').html(title_begin + title + title_end + subtitle);
-				}					
-				msuCaption.fadeIn(settings.animSpeed);
-			} else {
-				msuCaption.fadeOut(settings.animSpeed);
-			}
-		}
-		
         //Process initial  caption
-        processCaption(settings);
+        if(vars.currentImage.attr('title') != ''){
+            var title = vars.currentImage.attr('title');
+            if(title.substr(0,1) == '#') title = $(title).html();
+            $('.msu-caption p', slider).html("HELLO 4");
+            $('.msu-caption', slider).fadeIn(settings.animSpeed);
+        }
         
         //In the words of Super Mario "let's a go!"
         var timer = 0;
@@ -138,7 +122,7 @@
 
         //Add Direction nav
         if(settings.directionNav){
-            slider.append('<div class="msu-directionNav"><a class="msu-prevNav">'+ settings.prevText +'</a><a class="msu-nextNav">'+ settings.nextText +'</a></div>');
+            slider.append('<div class="msu-directionNav"><a class="msu-prevNav">Prev</a><a class="msu-nextNav">Next</a></div>');
             
             //Hide Direction nav
             if(settings.directionNavHide){
@@ -154,7 +138,7 @@
                 if(vars.running) return false;
                 clearInterval(timer);
                 timer = '';
-                vars.currentSlide -= 2;
+                vars.currentSlide-=2;
                 msuRun(slider, kids, settings, 'prev');
             });
             
@@ -257,65 +241,21 @@
             settings.afterChange.call(this);
         });
         
-        // Add slices for slice animations
-        var createSlices = function(slider, settings, vars){
-            for(var i = 0; i < settings.slices; i++){
-				var sliceWidth = Math.round(slider.width()/settings.slices);
-				if(i == settings.slices-1){
-					slider.append(
-						$('<div class="msu-slice"></div>').css({ 
-							left:(sliceWidth*i)+'px', width:(slider.width()-(sliceWidth*i))+'px',
-							height:'0px', 
-							opacity:'0', 
-							background: 'url("'+ vars.currentImage.attr('src') +'") no-repeat -'+ ((sliceWidth + (i * sliceWidth)) - sliceWidth) +'px 0%'
-						})
-					);
-				} else {
-					slider.append(
-						$('<div class="msu-slice"></div>').css({ 
-							left:(sliceWidth*i)+'px', width:sliceWidth+'px',
-							height:'0px', 
-							opacity:'0', 
-							background: 'url("'+ vars.currentImage.attr('src') +'") no-repeat -'+ ((sliceWidth + (i * sliceWidth)) - sliceWidth) +'px 0%'
-						})
-					);
-				}
-			}
+        // Reset slice width before animations run
+        var resetSliceWidth = function(slider, settings){
+            var slices = $('.msu-slice', slider);
+            var i = 0;
+            slices.each(function(){
+                var slice = $(this);
+                var sliceWidth = Math.round(slider.width()/settings.slices);
+                if(i == settings.slices-1){
+                    slice.css('width', (slider.width()-(sliceWidth*i)) + 'px');
+                } else {
+                    slice.css('width', sliceWidth + 'px');
+                }
+                i++;
+            });
         }
-		
-		// Add boxes for box animations
-		var createBoxes = function(slider, settings, vars){
-			var boxWidth = Math.round(slider.width()/settings.boxCols);
-			var boxHeight = Math.round(slider.height()/settings.boxRows);
-			
-			for(var rows = 0; rows < settings.boxRows; rows++){
-				for(var cols = 0; cols < settings.boxCols; cols++){
-					if(cols == settings.boxCols-1){
-						slider.append(
-							$('<div class="msu-box"></div>').css({ 
-								opacity:0,
-								left:(boxWidth*cols)+'px', 
-								top:(boxHeight*rows)+'px',
-								width:(slider.width()-(boxWidth*cols))+'px',
-								height:boxHeight+'px',
-								background: 'url("'+ vars.currentImage.attr('src') +'") no-repeat -'+ ((boxWidth + (cols * boxWidth)) - boxWidth) +'px -'+ ((boxHeight + (rows * boxHeight)) - boxHeight) +'px'
-							})
-						);
-					} else {
-						slider.append(
-							$('<div class="msu-box"></div>').css({ 
-								opacity:0,
-								left:(boxWidth*cols)+'px', 
-								top:(boxHeight*rows)+'px',
-								width:boxWidth+'px',
-								height:boxHeight+'px',
-								background: 'url("'+ vars.currentImage.attr('src') +'") no-repeat -'+ ((boxWidth + (cols * boxWidth)) - boxWidth) +'px -'+ ((boxHeight + (rows * boxHeight)) - boxHeight) +'px'
-							})
-						);
-					}
-				}
-			}
-		}
 
         // Private run method
 		var msuRun = function(slider, kids, settings, nudge){
@@ -358,24 +298,41 @@
 				vars.currentImage = $(kids[vars.currentSlide]).find('img:first');
 			}
 			
-			//Set active links
+			//Set acitve links
 			if(settings.controlNav){
 				$('.msu-controlNav a', slider).removeClass('active');
 				$('.msu-controlNav a:eq('+ vars.currentSlide +')', slider).addClass('active');
 			}
 			
 			//Process caption
-			processCaption(settings);
+			if(vars.currentImage.attr('title') != ''){
+                var title = vars.currentImage.attr('title');
+                if(title.substr(0,1) == '#') title = $(title).html();	
+                    
+				if($('.msu-caption', slider).css('display') == 'block'){
+					$('.msu-caption p', slider).fadeOut(settings.animSpeed, function(){
+						$(this).html("HELLO 1");
+						$(this).fadeIn(settings.animSpeed);
+					});
+				} else {
+					$('.msu-caption p', slider).html("HELLO 2");
+				}					
+				$('.msu-caption', slider).fadeIn(settings.animSpeed);
+			} else {
+				$('.msu-caption', slider).fadeOut(settings.animSpeed);
+			}
 			
-			// Remove any slices from last transition
-			$('.msu-slice', slider).remove();
-			
-			// Remove any boxes from last transition
-			$('.msu-box', slider).remove();
+			//Set new slice backgrounds
+			var  i = 0;
+			$('.msu-slice', slider).each(function(){
+				var sliceWidth = Math.round(slider.width()/settings.slices);
+				$(this).css({ height:'0px', opacity:'0', 
+					background: 'url("'+ vars.currentImage.attr('src') +'") no-repeat -'+ ((sliceWidth + (i * sliceWidth)) - sliceWidth) +'px 0%' });
+				i++;
+			});
 			
 			if(settings.effect == 'random'){
-				var anims = new Array('sliceDownRight','sliceDownLeft','sliceUpRight','sliceUpLeft','sliceUpDown','sliceUpDownLeft','fold','fade',
-                'boxRandom','boxRain','boxRainReverse','boxRainGrow','boxRainGrowReverse');
+				var anims = new Array('sliceDownRight','sliceDownLeft','sliceUpRight','sliceUpLeft','sliceUpDown','sliceUpDownLeft','fold','fade','slideInRight','slideInLeft');
 				vars.randAnim = anims[Math.floor(Math.random()*(anims.length + 1))];
 				if(vars.randAnim == undefined) vars.randAnim = 'fade';
 			}
@@ -391,12 +348,11 @@
 			vars.running = true;
 			if(settings.effect == 'sliceDown' || settings.effect == 'sliceDownRight' || vars.randAnim == 'sliceDownRight' ||
 				settings.effect == 'sliceDownLeft' || vars.randAnim == 'sliceDownLeft'){
-				createSlices(slider, settings, vars);
 				var timeBuff = 0;
 				var i = 0;
+                resetSliceWidth(slider, settings);
 				var slices = $('.msu-slice', slider);
 				if(settings.effect == 'sliceDownLeft' || vars.randAnim == 'sliceDownLeft') slices = $('.msu-slice', slider)._reverse();
-				
 				slices.each(function(){
 					var slice = $(this);
 					slice.css({ 'top': '0px' });
@@ -415,12 +371,11 @@
 			} 
 			else if(settings.effect == 'sliceUp' || settings.effect == 'sliceUpRight' || vars.randAnim == 'sliceUpRight' ||
 					settings.effect == 'sliceUpLeft' || vars.randAnim == 'sliceUpLeft'){
-				createSlices(slider, settings, vars);
 				var timeBuff = 0;
 				var i = 0;
+                resetSliceWidth(slider, settings);
 				var slices = $('.msu-slice', slider);
 				if(settings.effect == 'sliceUpLeft' || vars.randAnim == 'sliceUpLeft') slices = $('.msu-slice', slider)._reverse();
-				
 				slices.each(function(){
 					var slice = $(this);
 					slice.css({ 'bottom': '0px' });
@@ -439,13 +394,12 @@
 			} 
 			else if(settings.effect == 'sliceUpDown' || settings.effect == 'sliceUpDownRight' || vars.randAnim == 'sliceUpDown' || 
 					settings.effect == 'sliceUpDownLeft' || vars.randAnim == 'sliceUpDownLeft'){
-				createSlices(slider, settings, vars);
 				var timeBuff = 0;
 				var i = 0;
 				var v = 0;
+                resetSliceWidth(slider, settings);
 				var slices = $('.msu-slice', slider);
 				if(settings.effect == 'sliceUpDownLeft' || vars.randAnim == 'sliceUpDownLeft') slices = $('.msu-slice', slider)._reverse();
-				
 				slices.each(function(){
 					var slice = $(this);
 					if(i == 0){
@@ -470,10 +424,9 @@
 				});
 			} 
 			else if(settings.effect == 'fold' || vars.randAnim == 'fold'){
-				createSlices(slider, settings, vars);
 				var timeBuff = 0;
 				var i = 0;
-				
+                resetSliceWidth(slider, settings);
 				$('.msu-slice', slider).each(function(){
 					var slice = $(this);
 					var origWidth = slice.width();
@@ -492,8 +445,6 @@
 				});
 			}  
 			else if(settings.effect == 'fade' || vars.randAnim == 'fade'){
-				createSlices(slider, settings, vars);
-				
 				var firstSlice = $('.msu-slice:first', slider);
                 firstSlice.css({
                     'height': '100%',
@@ -501,10 +452,8 @@
                 });
     
 				firstSlice.animate({ opacity:'1.0' }, (settings.animSpeed*2), '', function(){ slider.trigger('msu:animFinished'); });
-			}          
+			}    
             else if(settings.effect == 'slideInRight' || vars.randAnim == 'slideInRight'){
-				createSlices(slider, settings, vars);
-				
                 var firstSlice = $('.msu-slice:first', slider);
                 firstSlice.css({
                     'height': '100%',
@@ -515,8 +464,6 @@
                 firstSlice.animate({ width: slider.width() + 'px' }, (settings.animSpeed*2), '', function(){ slider.trigger('msu:animFinished'); });
             }
             else if(settings.effect == 'slideInLeft' || vars.randAnim == 'slideInLeft'){
-				createSlices(slider, settings, vars);
-				
                 var firstSlice = $('.msu-slice:first', slider);
                 firstSlice.css({
                     'height': '100%',
@@ -535,96 +482,6 @@
                     slider.trigger('msu:animFinished'); 
                 });
             }
-			else if(settings.effect == 'boxRandom' || vars.randAnim == 'boxRandom'){
-				createBoxes(slider, settings, vars);
-				
-				var totalBoxes = settings.boxCols * settings.boxRows;
-				var i = 0;
-				var timeBuff = 0;
-				
-				var boxes = shuffle($('.msu-box', slider));
-				boxes.each(function(){
-					var box = $(this);
-					if(i == totalBoxes-1){
-						setTimeout(function(){
-							box.animate({ opacity:'1' }, settings.animSpeed, '', function(){ slider.trigger('msu:animFinished'); });
-						}, (100 + timeBuff));
-					} else {
-						setTimeout(function(){
-							box.animate({ opacity:'1' }, settings.animSpeed);
-						}, (100 + timeBuff));
-					}
-					timeBuff += 20;
-					i++;
-				});
-			}
-			else if(settings.effect == 'boxRain' || vars.randAnim == 'boxRain' || settings.effect == 'boxRainReverse' || vars.randAnim == 'boxRainReverse' || 
-                    settings.effect == 'boxRainGrow' || vars.randAnim == 'boxRainGrow' || settings.effect == 'boxRainGrowReverse' || vars.randAnim == 'boxRainGrowReverse'){
-				createBoxes(slider, settings, vars);
-				
-				var totalBoxes = settings.boxCols * settings.boxRows;
-				var i = 0;
-				var timeBuff = 0;
-				
-				// Split boxes into 2D array
-				var rowIndex = 0;
-				var colIndex = 0;
-				var box2Darr = new Array();
-				box2Darr[rowIndex] = new Array();
-				var boxes = $('.msu-box', slider);
-				if(settings.effect == 'boxRainReverse' || vars.randAnim == 'boxRainReverse' ||
-                   settings.effect == 'boxRainGrowReverse' || vars.randAnim == 'boxRainGrowReverse'){
-					boxes = $('.msu-box', slider)._reverse();
-				}
-				boxes.each(function(){
-					box2Darr[rowIndex][colIndex] = $(this);
-					colIndex++;
-					if(colIndex == settings.boxCols){
-						rowIndex++;
-						colIndex = 0;
-						box2Darr[rowIndex] = new Array();
-					}
-				});
-				
-				// Run animation
-				for(var cols = 0; cols < (settings.boxCols * 2); cols++){
-					var prevCol = cols;
-					for(var rows = 0; rows < settings.boxRows; rows++){
-						if(prevCol >= 0 && prevCol < settings.boxCols){
-							/* Due to some weird JS bug with loop vars 
-							being used in setTimeout, this is wrapped
-							with an anonymous function call */
-							(function(row, col, time, i, totalBoxes) {
-								var box = $(box2Darr[row][col]);
-                                var w = box.width();
-                                var h = box.height();
-                                if(settings.effect == 'boxRainGrow' || vars.randAnim == 'boxRainGrow' ||
-                                   settings.effect == 'boxRainGrowReverse' || vars.randAnim == 'boxRainGrowReverse'){
-                                    box.width(0).height(0);
-                                }
-								if(i == totalBoxes-1){
-									setTimeout(function(){
-										box.animate({ opacity:'1', width:w, height:h }, settings.animSpeed/1.3, '', function(){ slider.trigger('msu:animFinished'); });
-									}, (100 + time));
-								} else {
-									setTimeout(function(){
-										box.animate({ opacity:'1', width:w, height:h }, settings.animSpeed/1.3);
-									}, (100 + time));
-								}
-							})(rows, prevCol, timeBuff, i, totalBoxes);
-							i++;
-						}
-						prevCol--;
-					}
-					timeBuff += 100;
-				}
-			}
-		}
-		
-		// Shuffle an array
-		var shuffle = function(arr){
-			for(var j, x, i = arr.length; i; j = parseInt(Math.random() * i), x = arr[--i], arr[i] = arr[j], arr[j] = x);
-			return arr;
 		}
         
         // For debugging
@@ -650,16 +507,14 @@
         
         //Trigger the afterLoad callback
         settings.afterLoad.call(this);
-		
-		return this;
     };
         
     $.fn.msuSlider = function(options) {
     
-        return this.each(function(key, value){
+        return this.each(function(){
             var element = $(this);
             // Return early if this element already has a plugin instance
-            if (element.data('msuslider')) return element.data('msuslider');
+            if (element.data('msuslider')) return;
             // Pass options to plugin constructor
             var msuslider = new MsuSlider(this, options);
             // Store plugin object in this element's data
@@ -672,24 +527,20 @@
 	$.fn.msuSlider.defaults = {
 		effect: 'random',
 		slices: 15,
-		boxCols: 8,
-		boxRows: 4,
 		animSpeed: 500,
 		pauseTime: 3000,
 		startSlide: 0,
-		directionNav: true,
+		directionNav: false,
 		directionNavHide: true,
 		controlNav: true,
 		controlNavThumbs: true,
-        controlNavThumbsFromRel: false,
+	        controlNavThumbsFromRel: false,
 		controlNavThumbsSearch: '.jpg',
 		controlNavThumbsReplace: '_thumb.jpg',
 		keyboardNav: true,
 		pauseOnHover: true,
 		manualAdvance: false,
 		captionOpacity: 0.8,
-		prevText: 'Prev',
-		nextText: 'Next',
 		beforeChange: function(){},
 		afterChange: function(){},
 		slideshowEnd: function(){},
