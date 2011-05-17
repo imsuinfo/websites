@@ -525,6 +525,7 @@ div#block-system-navigation ul.menu li a:active {
 }
 
 
+
 /*** Content - home page menu ***/
 div#block-menu-menu-home-menu {
   background-color: #00335b;
@@ -719,10 +720,6 @@ div#block-system-main {
 }
 
 h3#front_page_columns-column_title-news {
-  width: 347px;
-  min-width: 347px;
-  max-width: 347px;
-
   height: 20px;
   min-height: 20px;
   max-height: 20px;
@@ -746,28 +743,7 @@ div#front_page_columns-events {
 }
 
 div#front_page_columns-events div.view-display-id-front_page_highlight {
-  height: 205px;
-  min-height: 205px;
-  max-height: 205px;
-
   margin-bottom: 10px;
-}
-
-div#front_page_columns-events div.views-field p {
-  font-size: 12px;
-  line-height: 15px;
-
-  margin: 0;
-}
-
-div#front_page_columns-events div.views-field br,
-div#front_page_columns-spotlight div.views-field br {
-  font-size: 12px;
-  line-height: 15px;
-
-  height: 15px;
-  min-height: 15px;
-  max-height: 15px;
 }
 
 img#front_page_columns-transparent-image {
@@ -779,6 +755,7 @@ img#front_page_columns-transparent-image {
   max-height: 185px;
 
   padding: 15px 0 15px 15px;
+  margin-left: 10px;
 
   box-shadow: none;
   background-color: #ffffff;
@@ -790,6 +767,7 @@ img#front_page_columns-transparent-spotlight {
   width: 412px;
   min-width: 412px;
   max-width: 412px;
+
   height: 528px;
   min-height: 528px;
   max-height: 528px;
@@ -798,30 +776,17 @@ img#front_page_columns-transparent-spotlight {
   background-color: #ffffff;
 }
 
-
 div#front_page_columns-events div.views-field-nothing {
   background-color: #25567d;
 
-  min-height: 15px;
-  max-height: 205px;
-  line-height: 15px;
-
-  margin-bottom: 10px;
-
-  overflow: hidden;
+  margin-bottom: 25px;
 }
 
 div#front_page_columns-events div.views-field-nothing div.highlight-title,
 div#front_page_columns-events div.views-field-nothing div.event-title {
   font-size: 24px;
-  line-height: 30px;
-
-  min-height: 30px;
-  max-height: 60px;
 
   padding: 0 10px 0 10px;
-
-  overflow: hidden;
 }
 
 div#front_page_columns-events div.views-field-nothing div.highlight-title a,
@@ -830,6 +795,7 @@ div#front_page_columns-events div.views-field-nothing div.event-title a,
 div#front_page_columns-events div.views-field-nothing div.event-title a:visited {
   color: #ececec;
 
+  text-shadow: -1px 1px 2px #000000;
   text-decoration: none;
 }
 
@@ -841,37 +807,27 @@ div#front_page_columns-events div.views-field-nothing div.event-title a:active,
 div#front_page_columns-events div.views-field-nothing div.event-title a:hover {
   color: #a8c1eb;
 
+  text-shadow: -1px 1px 2px #000000;
   text-decoration: underline;
 }
 
 div#front_page_columns-events div.views-field-nothing div.highlight-event_date,
 div#front_page_columns-events div.views-field-nothing div.event-event_date {
-  overflow: hidden;
-
   color: #fad703;
   font-weight: bold;
   font-size: 12px;
-  line-height: 15px;
 
-  max-height: 15px;
-
-  padding-left: 15px;
-  padding-right: 15px;
+  padding: 0 10px 5px 10px;
 }
 
 div#front_page_columns-events div.views-field-nothing div.highlight-headline,
 div#front_page_columns-events div.views-field-nothing div.event-headline {
-  overflow: hidden;
-
   color: #7fbcec;
   font-size: 12px;
   font-weight: bold;
 
   letter-spacing: 2px;
   text-transform: uppercase;
-
-  max-height: 90px;
-  line-height: 15px;
 
   margin: 5px 15px 5px 15px;
 }
@@ -895,19 +851,25 @@ div#front_page_columns-events div.views-field-nothing div.highlight-body,
 div#front_page_columns-events div.views-field-nothing div.event-body {
   padding-left: 10px;
   padding-right: 10px;
+
+  font-size: 14px;
+  line-height: 21px;
+
+  font-family: Serif, Georgia, Times New Roman;
 }
 
 div#front_page_columns-events div.views-field-nothing div.highlight-body a,
 div#front_page_columns-events div.views-field-nothing div.highlight-body a:visited,
 div#front_page_columns-events div.views-field-nothing div.event-body a,
 div#front_page_columns-events div.views-field-nothing div.event-body a:visited {
-  color: #fad703;
+  color: #7fbcec;
 }
 
 div#front_page_columns-events div.view-display-id-front_page_events div.views-row-even div.views-field-field-event-image {
   float: right;
 
   padding: 15px 0px 15px 15px;
+  margin: 5px 0 0 10px;
 
   background-color: #ffffff;
 }
@@ -916,30 +878,35 @@ div#front_page_columns-events div.view-display-id-front_page_events div.views-ro
   float: left;
 
   padding: 15px 15px 15px 0px;
+  margin: 5px 10px 0 0;
 
   background-color: #ffffff;
 }
 
 div#front_page_columns-spotlight {
-  position: absolute;
-  top: 150px;
-  right: 0;
+  float: right;
 
   width: 397px;
   min-width: 397px;
   max-width: 397px;
 
-  height: 590px;
-  min-height: 590px;
-  max-height: 590px;
-
   padding-left: 15px;
   padding-right: 15px;
 
-  overflow: hidden;
+  color: #000000;
+  background-color: #ffffff;
+}
+
+div#front_page_columns-spotlight div.views-field-nothing {
+  color: #000000;
+  background-color: #ffffff;
 }
 
 h3#front_page_columns-column_title-spotlight {
+  position: absolute;
+  top: 150px;
+  right: 0;
+
   width: 397px;
   min-width: 397px;
   max-width: 397px;
@@ -961,28 +928,15 @@ h3#front_page_columns-column_title-spotlight {
   opacity: 0.83;
 
   -ms-filter: "alpha(opacity=83)";
-}
 
-div#front_page_columns-spotlight div.views-field p {
-  font-size: 12px;
-  line-height: 15px;
-
-  margin: 0;
-}
-
-div#front_page_columns-spotlight div.views-field-nothing {
-  height: 120px;
-  min-height: 120px;
-  max-height: 120px;
-
-  overflow: hidden;
-
-  padding-left: 15px;
+  z-index: 10;
 }
 
 div#front_page_columns-spotlight div.views-field-nothing div.spotlight-title {
-  font-size: 17px;
-  line-height: 20px;
+  font-size: 18px;
+  line-height: 21px;
+
+  font-family: Serif, Georgia, Times New Roman;
 }
 
 div#front_page_columns-spotlight div.views-field-nothing div.spotlight-title a,
@@ -1007,22 +961,14 @@ div#front_page_columns-spotlight div.views-field-field-spotlight-image {
 }
 
 div#front_page_columns-spotlight div.views-field-nothing div.spotlight-body {
-  max-height: 60px;
-  overflow: hidden;
+  font-size: 14px;
+  line-height: 21px;
 
-  font-size: 12px;
-  line-height: 15px;
+  font-family: Serif, Georgia, Times New Roman;
 }
 
 div#front_page_columns-spotlight div.views-field-nothing div.spotlight-event_date {
-  display: inline;
-  overflow: hidden;
-
   font-weight: bold;
-  font-size: 12px;
-  line-height: 15px;
-
-  max-height: 15px;
 }
 
 

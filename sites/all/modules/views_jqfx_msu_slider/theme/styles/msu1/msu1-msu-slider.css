@@ -56,6 +56,13 @@ a.msu-prevNav {
   display: inline; /* Unhide the thumbnails */
   position: relative;
   margin-right: 0px;
+
+  border: 1px outset #efefef;
+}
+
+.msu-controlNav img:active,
+.msu-controlNav img:hover {
+  border: 1px inset #efefef;
 }
 
 .msu-caption-title,
