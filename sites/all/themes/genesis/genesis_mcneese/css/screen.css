@@ -498,10 +498,9 @@ div#content-column div.breadcrumb {
   background-color: #00335b;
   color: #ffffff;
   margin: 0 0 0 0;
-  width: 100%;
 
   font-family: Arial,Helvetica,Sans-Serif,Sans;
-  font-size: 0.75em;
+  font-size: 12px;
   line-height: 2.0;
 }
 
