@@ -73,7 +73,7 @@ function genesis_mcneese_process_page(&$vars) {
   // If the page is part of a group content type, then display the group_image view.
   if (isset($vars['node']) && is_object($vars['node']) && isset($vars['node']->type)) {
     if (isset($vars['node']->nid) && !empty($vars['node']->nid) && isset($vars['node']->field_group_image_show)) {
-      if (is_array($vars['node']->field_group_image_show) && $vars['node']->field_group_image_show['und']['0']['value'] == 1){
+      if (is_array($vars['node']->field_group_image_show) && isset($vars['node']->field_group_image_show['und']['0']['value']) && $vars['node']->field_group_image_show['und']['0']['value'] == 1){
         $vars['page']['subboard_image'] = views_embed_view('group_image_page', 'default', $vars['node']->nid);
 
         if (empty($vars['page']['subboard_image'])){
