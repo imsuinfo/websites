@@ -1,0 +1,11 @@
+/*** Removal of unwanted elements ***/
+div#skip-link,
+div#toolbar,
+div#header,
+div#secondary-content,
+div#sidebar-first,
+div#main-content div.local-tasks,
+div#main-content div.breadcrumb,
+div#footer {
+  display: none;
+}
