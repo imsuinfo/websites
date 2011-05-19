@@ -55,15 +55,19 @@ function genesis_mcneese_process_page(&$vars) {
   $vars['page']['is_front_css'] = '';
   $vars['page']['subboard_image'] = '';
   $vars['page']['subboard_image_css'] = '';
+  $subboard_image_display = '_large';
 
   if (!empty($vars['page']['sidebar_first']) && !empty($vars['page']['sidebar_second'])){
     $vars['page']['sidebar_css'] = ' sidebar-both';
+    //$subboard_image_display = '_small';
   }
   else if (!empty($vars['page']['sidebar_first'])){
     $vars['page']['sidebar_css'] = ' sidebar-left';
+    $subboard_image_display = '';
   }
   else if (!empty($vars['page']['sidebar_second'])){
     $vars['page']['sidebar_css'] = ' sidebar-right';
+    $subboard_image_display = '';
   }
 
   if (drupal_is_front_page() === TRUE) {
@@ -74,7 +78,7 @@ function genesis_mcneese_process_page(&$vars) {
   if (isset($vars['node']) && is_object($vars['node']) && isset($vars['node']->type)) {
     if (isset($vars['node']->nid) && !empty($vars['node']->nid) && isset($vars['node']->field_group_image_show)) {
       if (is_array($vars['node']->field_group_image_show) && isset($vars['node']->field_group_image_show['und']['0']['value']) && $vars['node']->field_group_image_show['und']['0']['value'] == 1){
-        $vars['page']['subboard_image'] = views_embed_view('group_image_page', 'default', $vars['node']->nid);
+        $vars['page']['subboard_image'] = views_embed_view('group_image_page', 'group_image' . $subboard_image_display, $vars['node']->nid);
 
         if (empty($vars['page']['subboard_image']) || preg_match('/<img\b/i', $vars['page']['subboard_image']) == 0){
           if (isset($vars['node']->field_group)){
@@ -82,7 +86,7 @@ function genesis_mcneese_process_page(&$vars) {
               if (is_object($outer_value) || is_array($outer_value)){
                 foreach ($outer_value as $key => $value){
                   if (isset($value['tid']) && !empty($value['tid']) && is_numeric($value['tid'])){
-                    $vars['page']['subboard_image'] = views_embed_view('group_image', 'group_image', $value['tid']);
+                    $vars['page']['subboard_image'] = views_embed_view('group_image', 'group_image' . $subboard_image_display, $value['tid']);
 
                     if (!empty($vars['page']['subboard_image']) && preg_match('/<img\b/i', $vars['page']['subboard_image']) > 0){
                       $vars['page']['subboard_image_css'] = ' subboard-image';
