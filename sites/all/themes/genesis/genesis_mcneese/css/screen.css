@@ -271,9 +271,9 @@ div#columns.sidebar-none div#content-column {
 html#ckeditor-wysiwygarea body,
 div#columns.sidebar-left div#content-column,
 div#columns.sidebar-right div#content-column {
-  width: 740px;
-  min-width: 740px;
-  max-width: 740px;
+  width: 745px;
+  min-width: 745px;
+  max-width: 745px;
 
   padding-left: 15px;
 }
@@ -477,6 +477,7 @@ div#block-menu-menu-home-menu ul.menu li.leaf a:visited {
   text-decoration: none;
   text-transform: uppercase;
 
+  letter-spacing: 1px;
   font-size: 10px;
   line-height: 17px;
 
@@ -570,15 +571,14 @@ div#content-column div.breadcrumb a:visited {
   color: #ffffff;
   text-decoration: none;
 
-  margin: 2px 5px;
-  padding: 3px;
+  padding: 5px;
 }
 
 div#content-column div.breadcrumb a:focus,
 div#content-column div.breadcrumb a:hover,
 div#content-column div.breadcrumb a:active {
-  background-color: #809fc9;
-  margin:2px 5px;
+  color: #000000;
+  background-color: #fad703;
 
   -webkit-transition-property: background-color;
   -webkit-transition-duration: 0.3s;
