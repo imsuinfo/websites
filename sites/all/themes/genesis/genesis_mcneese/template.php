@@ -51,7 +51,7 @@ function genesis_mcneese_process_page(&$vars) {
   $vars['page']['footer'] = isset($vars['page']['footer']) ? render($vars['page']['footer']) : '';
   $vars['page']['renderred_tabs'] = isset($vars['tabs']) ? render($vars['tabs']) : '';
   $vars['page']['renderred_action_links'] = isset($vars['action_links']) ? render($vars['action_links']) : '';
-  $vars['page']['sidebar_css'] = 'sidebar-none';
+  $vars['page']['sidebar_css'] = ' sidebar-none';
   $vars['page']['is_front_css'] = '';
   $vars['page']['subboard_image'] = '';
   $vars['page']['subboard_image_css'] = '';
