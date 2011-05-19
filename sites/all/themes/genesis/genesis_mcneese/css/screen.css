@@ -252,6 +252,14 @@ div#columns div#content-column {
   overflow: hidden;
 }
 
+div#columns {
+  font-size: 0;
+}
+
+div#columns * {
+  font-size: 14px;
+}
+
 div#sidebar-first,
 div#sidebar-second {
   width: 200px;
@@ -303,6 +311,7 @@ div#sidebar-first div.block-menu {
 
 div#sidebar-first div.block-menu a,
 div#sidebar-first div.block-menu a:visited {
+  font-size: 12px;
   color: #00477f;
 
   text-decoration: none;
