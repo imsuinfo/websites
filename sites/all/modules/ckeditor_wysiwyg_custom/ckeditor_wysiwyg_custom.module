@@ -24,7 +24,7 @@ function ckeditor_wysiwyg_custom_wysiwyg_editor_settings_alter(&$settings, $cont
 
     // provide a hook for modules to add their own css
     $settings['contentsCss'] = array();
-    
+
     // load drupal cores system css
     $system_theme_path = drupal_get_path('module', 'system') . '/';
     $settings['contentsCss'][] = $system_theme_path . 'system.base.css';
@@ -35,8 +35,8 @@ function ckeditor_wysiwyg_custom_wysiwyg_editor_settings_alter(&$settings, $cont
     // TODO: This is temporarily hard-coded to the genesis_mcneese theme, write a drupal_invoke_all(..) hook for themes to implement
     $theme_path = drupal_get_path('theme', 'genesis_mcneese') . '/css/';
     $settings['contentsCss'][] = $theme_path . 'reset.css';
-    $settings['contentsCss'][] = $theme_path . 'clean.css';
-    $settings['contentsCss'][] = $theme_path . 'layout.css';
+    $settings['contentsCss'][] = $theme_path . 'common.css';
+    $settings['contentsCss'][] = $theme_path . 'screen.css';
 
     // http://docs.cksource.com/ckeditor_api/symbols/CKEDITOR.config.html#.enterMode
     $settings['enterMode'] = 2;
