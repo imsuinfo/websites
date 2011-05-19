@@ -68,7 +68,7 @@
  * @see template_process()
  */
 ?>
-  <div id="container" class="<?php print $classes; ?> <?php print($page['is_front_css']);?>">
+  <div id="container" class="<?php print $classes; ?><?php print($page['is_front_css']);?>">
     <?php if (!$in_overlay): // hide in overlay ?>
 
       <?php if (!empty($page['leaderboard'])): ?>
@@ -131,7 +131,7 @@
       </div>
     <?php endif; ?>
 
-    <div id="columns" class="clear clearfix <?php print($page['sidebar_css']); ?>">
+    <div id="columns" class="clear clearfix<?php print($page['sidebar_css']); ?><?php print($page['subboard_image_css']); ?>">
       <?php if (!empty($page['sidebar_first'])): ?>
         <div id="sidebar-first" class="sidebar"><?php print($page['sidebar_first']); ?></div>
       <?php endif; ?>

@@ -54,19 +54,20 @@ function genesis_mcneese_process_page(&$vars) {
   $vars['page']['sidebar_css'] = 'sidebar-none';
   $vars['page']['is_front_css'] = '';
   $vars['page']['subboard_image'] = '';
+  $vars['page']['subboard_image_css'] = '';
 
   if (!empty($vars['page']['sidebar_first']) && !empty($vars['page']['sidebar_second'])){
-    $vars['page']['sidebar_css'] = 'sidebar-both';
+    $vars['page']['sidebar_css'] = ' sidebar-both';
   }
   else if (!empty($vars['page']['sidebar_first'])){
-    $vars['page']['sidebar_css'] = 'sidebar-left';
+    $vars['page']['sidebar_css'] = ' sidebar-left';
   }
   else if (!empty($vars['page']['sidebar_second'])){
-    $vars['page']['sidebar_css'] = 'sidebar-right';
+    $vars['page']['sidebar_css'] = ' sidebar-right';
   }
 
   if (drupal_is_front_page() === TRUE) {
-    $vars['page']['is_front_css'] = 'is_front';
+    $vars['page']['is_front_css'] = ' is_front';
   }
 
   // If the page is part of a group content type, then display the group_image view.
@@ -79,6 +80,7 @@ function genesis_mcneese_process_page(&$vars) {
               foreach ($outer_value as $key => $value){
                 if (isset($value['tid']) && !empty($value['tid']) && is_numeric($value['tid'])){
                   $vars['page']['subboard_image'] = views_embed_view('group_image', 'group_image', $value['tid']);
+                  $vars['page']['subboard_image_css'] = ' subboard-image';
                 }
               }
             }
