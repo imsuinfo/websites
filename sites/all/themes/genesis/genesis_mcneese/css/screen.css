@@ -102,8 +102,8 @@ div#header-horizontal_ruler {
   background-color: #fad703;
 }
 
-div#block-system-main-menu,
-div#block-system-main-menu.block-header {
+div#block-menu-menu-primary-navigation,
+div#block-menu-menu-primary-navigation.block-header {
   position: absolute;
   top: 72px;
   right: 0;
@@ -173,8 +173,8 @@ div#block-search-form form#search-block-form input#edit-submit {
 
 
 
-/*** Header - main menu ***/
-div#block-system-main-menu  {
+/*** Menu - Primary Navigation ***/
+div#block-menu-menu-primary-navigation  {
   height: 35px;
 
   font-family: Arial, Helvetica, sans-serif;
@@ -183,7 +183,7 @@ div#block-system-main-menu  {
   border: 0;
 }
 
-div#block-system-main-menu div.block-inner div.content ul.menu {
+div#block-menu-menu-primary-navigation div.block-inner div.content ul.menu {
   font-size: 12px;
   list-style: none;
 
@@ -193,7 +193,7 @@ div#block-system-main-menu div.block-inner div.content ul.menu {
   vertical-align: top;
 }
 
-div#block-system-main-menu div.block-inner div.content ul.menu li {
+div#block-menu-menu-primary-navigation div.block-inner div.content ul.menu li {
   display: inline-block;
 
   width: auto;
@@ -204,7 +204,7 @@ div#block-system-main-menu div.block-inner div.content ul.menu li {
   padding: 6px 0 2px 0px;
 }
 
-div#block-system-main-menu div.block-inner div.content ul.menu li a {
+div#block-menu-menu-primary-navigation div.block-inner div.content ul.menu li a {
   display: block;
 
   height: 28px;
@@ -221,14 +221,14 @@ div#block-system-main-menu div.block-inner div.content ul.menu li a {
   -webkit-border-top-right-radius: 5px;
 }
 
-div#block-system-main-menu div.block-inner div.content ul.menu li a:focus,
-div#block-system-main-menu div.block-inner div.content ul.menu li a:hover,
-div#block-system-main-menu div.block-inner div.content ul.menu li a:active {
+div#block-menu-menu-primary-navigation div.block-inner div.content ul.menu li a:focus,
+div#block-menu-menu-primary-navigation div.block-inner div.content ul.menu li a:hover,
+div#block-menu-menu-primary-navigation div.block-inner div.content ul.menu li a:active {
   color: #00477f;
   background: #fad703;
 }
 
-div#block-system-main-menu div.block-inner div.content ul.menu li.active-trail a {
+div#block-menu-menu-primary-navigation div.block-inner div.content ul.menu li.active-trail a {
   color: #00477f;
   background-color: #fad703;
 }
@@ -294,7 +294,7 @@ div#columns.sidebar-both div#content-column {
 
 
 
-/*** Content - sidebar-left - menu **/
+/*** Menu - Sidebar **/
 div#sidebar-first div.region-sidebar-first {
   border-bottom: 1px solid #888888;
 }
@@ -375,78 +375,8 @@ div#sidebar-first div.block-menu div.content ul.menu li a:hover {
 
 
 
-/*** Content - sidebar-left, navigation menu **/
-div#block-system-navigation {
-  font-family: Arial, Helvetica, sans-serif;
-  font-size: 0.8em;
-}
-
-div#block-system-navigation ul.menu {
-  padding: 5px 0 0 0;
-}
-
-div#block-system-navigation ul.menu li,
-div#block-system-navigation ul.menu li.padding,
-div#block-system-navigation ul.menu li.expanded,
-div#block-system-navigation ul.menu li.leaf,
-div#block-system-navigation ul.menu li.collapsed {
-  list-style: none outside none;
-  margin: 0;
-  padding: 0;
-}
-
-div#block-system-navigation ul.menu li.leaf {
-  border-top: 1px solid #525252;
-}
-
-div#block-system-navigation ul.menu li.leaf.first {
-  border-top:0;
-}
-
-div#block-system-navigation ul.menu li.leaf.first a {
-  -moz-border-radius-topleft: 5px;
-  -moz-border-radius-topright: 5px;
-
-  -webkit-border-top-left-radius: 5px;
-  -webkit-border-top-right-radius: 5px;
-
-}
-
-div#block-system-navigation ul.menu li.leaf.last a {
-  -moz-border-radius-bottomleft: 5px;
-  -moz-border-radius-bottomright: 5px;
-
-  -webkit-border-bottom-left-radius: 5px;
-  -webkit-border-bottom-right-radius: 5px;
-
-}
-
-div#block-system-navigation ul.menu li a,
-div#block-system-navigation ul.menu li a:visited {
-  color: #f2f2f2;
-  background-color: #454545;
-  text-decoration: none;
-  line-height: 1.7;
-
-  padding: 2px 2px 2px 8px;
-}
-
-div#block-system-navigation ul.menu li a:focus,
-div#block-system-navigation ul.menu li a:hover,
-div#block-system-navigation ul.menu li a:active {
-  display: block;
-  background-color: #828282;
-
-  -webkit-transition-property: background-color;
-  -webkit-transition-duration: .3s;
-  transition-property: background-color;
-  transition-duration: .3s;
-}
-
-
-
-/*** Content - home page menu ***/
-div#block-menu-menu-home-menu {
+/*** Menu - Secondary Navigation ***/
+div#block-menu-menu-secondary-navigation {
   background-color: #00335b;
   font-family: Arial,Helvetica,Sans-serif,Serif;
   font-size: 14px;
@@ -464,22 +394,22 @@ div#block-menu-menu-home-menu {
   margin-bottom: 5px;
 }
 
-div#block-menu-menu-home-menu ul.menu li.leaf {
+div#block-menu-menu-secondary-navigation ul.menu li.leaf {
   display: inline-block;
   padding: 0;
   margin: 0;
 }
 
-div#block-menu-menu-home-menu ul.menu li.leaf.first {
+div#block-menu-menu-secondary-navigation ul.menu li.leaf.first {
   margin: 0 0 0 20px;
 }
 
-div#block-menu-menu-home-menu ul.menu li.leaf.last {
+div#block-menu-menu-secondary-navigation ul.menu li.leaf.last {
   margin: 0 20px 0 0;
 }
 
-div#block-menu-menu-home-menu ul.menu li.leaf a,
-div#block-menu-menu-home-menu ul.menu li.leaf a:visited {
+div#block-menu-menu-secondary-navigation ul.menu li.leaf a,
+div#block-menu-menu-secondary-navigation ul.menu li.leaf a:visited {
   display: block;
 
   color: #ffffff;
@@ -493,17 +423,17 @@ div#block-menu-menu-home-menu ul.menu li.leaf a:visited {
   padding: 4px 8px;
 }
 
-div#block-menu-menu-home-menu ul.menu li.leaf a:focus,
-div#block-menu-menu-home-menu ul.menu li.leaf a:hover,
-div#block-menu-menu-home-menu ul.menu li.leaf a:active {
+div#block-menu-menu-secondary-navigation ul.menu li.leaf a:focus,
+div#block-menu-menu-secondary-navigation ul.menu li.leaf a:hover,
+div#block-menu-menu-secondary-navigation ul.menu li.leaf a:active {
   display: block;
   color: #000000;
   background-color: #fad703;
   padding: 4px 8px;
 }
 
-div#block-menu-menu-home-menu ul.menu li.id-menu-link-menu-home-menu-869,
-div#block-menu-menu-home-menu ul.menu li.id-menu-link-menu-home-menu-880 {
+div#block-menu-menu-secondary-navigation ul.menu li.id-menu-link-menu-home-menu-869,
+div#block-menu-menu-secondary-navigation ul.menu li.id-menu-link-menu-home-menu-880 {
   vertical-align: top;
   display: block;
   float: right;
@@ -512,10 +442,10 @@ div#block-menu-menu-home-menu ul.menu li.id-menu-link-menu-home-menu-880 {
   margin: 2px 0 0 0px;
 }
 
-div#block-menu-menu-home-menu ul.menu li.leaf.id-menu-link-menu-home-menu-869 a,
-div#block-menu-menu-home-menu ul.menu li.leaf.id-menu-link-menu-home-menu-869 a:visited,
-div#block-menu-menu-home-menu ul.menu li.leaf.id-menu-link-menu-home-menu-880 a,
-div#block-menu-menu-home-menu ul.menu li.leaf.id-menu-link-menu-home-menu-880 a:visited {
+div#block-menu-menu-secondary-navigation ul.menu li.leaf.id-menu-link-menu-home-menu-869 a,
+div#block-menu-menu-secondary-navigation ul.menu li.leaf.id-menu-link-menu-home-menu-869 a:visited,
+div#block-menu-menu-secondary-navigation ul.menu li.leaf.id-menu-link-menu-home-menu-880 a,
+div#block-menu-menu-secondary-navigation ul.menu li.leaf.id-menu-link-menu-home-menu-880 a:visited {
   display: inline-block;
 
   background-repeat: no-repeat;
@@ -537,14 +467,14 @@ div#block-menu-menu-home-menu ul.menu li.leaf.id-menu-link-menu-home-menu-880 a:
   margin-right: 5px;
 }
 
-div#block-menu-menu-home-menu ul.menu li.leaf.id-menu-link-menu-home-menu-869 a,
-div#block-menu-menu-home-menu ul.menu li.leaf.id-menu-link-menu-home-menu-869 a:visited {
+div#block-menu-menu-secondary-navigation ul.menu li.leaf.id-menu-link-menu-home-menu-869 a,
+div#block-menu-menu-secondary-navigation ul.menu li.leaf.id-menu-link-menu-home-menu-869 a:visited {
   background-color: #3b5b99;
   background-image: url(../images/facebook_logo-mini.png);
 }
 
-div#block-menu-menu-home-menu ul.menu li.leaf.id-menu-link-menu-home-menu-880 a,
-div#block-menu-menu-home-menu ul.menu li.leaf.id-menu-link-menu-home-menu-880 a:visited {
+div#block-menu-menu-secondary-navigation ul.menu li.leaf.id-menu-link-menu-home-menu-880 a,
+div#block-menu-menu-secondary-navigation ul.menu li.leaf.id-menu-link-menu-home-menu-880 a:visited {
   background-color: #3b5b99;
   background-image: url(../images/twitter_logo-mini.png);
 }
@@ -980,6 +910,7 @@ div#main-content div.local-tasks {
   font-size: 14px;
 
   margin: 0;
+  margin-top: 5px;
 }
 
 div#main-content div.local-tasks ul.tabs {
