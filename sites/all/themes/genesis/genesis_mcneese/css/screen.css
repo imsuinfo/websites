@@ -534,17 +534,30 @@ h1#page-title {
 div#columns.subboard-image h1#page-title {
   position: absolute;
   top: 164px;
-  right: 0pt;
+  right: 0;
 
   font-size: 24px;
   color: #00335b;
   background-color: #ffffff;
   opacity: 0.8;
 
-  width: 100%;
-
   padding: 4px 0;
-  margin: 0pt;
+  margin: 0;
+}
+
+div#columns.sidebar-left.subboard-image h1#page-title,
+div#columns.sidebar-right.subboard-image h1#page-title {
+  width: 735px;
+
+  padding-left: 5px;
+  padding-right: 5px;
+}
+
+div#columns.sidebar-none.subboard-image h1#page-title {
+  width: 950px;
+
+  padding-left: 5px;
+  padding-right: 5px;
 }
 
 
