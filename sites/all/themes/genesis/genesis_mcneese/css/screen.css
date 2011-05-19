@@ -256,8 +256,8 @@ div#columns {
   font-size: 0;
 }
 
-div#columns * {
-  font-size: 14px;
+div#columns a {
+  font-size: 12px;
 }
 
 div#sidebar-first,
@@ -947,6 +947,7 @@ div#main-content div.local-tasks ul.tabs li a {
 
 div#main-content div.local-tasks ul.tabs li a,
 div#main-content div.local-tasks ul.tabs li a:visited {
+  font-size: 14px;
   background-color: #454545;
 }
 
