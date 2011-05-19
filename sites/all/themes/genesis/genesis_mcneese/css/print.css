@@ -6,6 +6,7 @@ div#secondary-content,
 div#sidebar-first,
 div#main-content div.local-tasks,
 div#main-content div.breadcrumb,
+div#subboard-image,
 div#footer {
   display: none;
 }
