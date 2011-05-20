@@ -406,18 +406,15 @@ div#block-menu-menu-secondary-navigation {
   margin-bottom: 5px;
 }
 
+div#block-menu-menu-secondary-navigation ul.menu {
+  padding-left: 3px;
+  padding-right: 3px;
+}
+
 div#block-menu-menu-secondary-navigation ul.menu li.leaf {
   display: inline-block;
   padding: 0;
   margin: 0;
-}
-
-div#block-menu-menu-secondary-navigation ul.menu li.leaf.first {
-  margin: 0 0 0 20px;
-}
-
-div#block-menu-menu-secondary-navigation ul.menu li.leaf.last {
-  margin: 0 20px 0 0;
 }
 
 div#block-menu-menu-secondary-navigation ul.menu li.leaf a,
@@ -444,8 +441,8 @@ div#block-menu-menu-secondary-navigation ul.menu li.leaf a:active {
   padding: 4px 8px;
 }
 
-div#block-menu-menu-secondary-navigation ul.menu li.id-menu-link-menu-home-menu-869,
-div#block-menu-menu-secondary-navigation ul.menu li.id-menu-link-menu-home-menu-880 {
+div#block-menu-menu-secondary-navigation ul.menu li.id-menu-link-menu-secondary-navigation-869,
+div#block-menu-menu-secondary-navigation ul.menu li.id-menu-link-menu-secondary-navigation-880 {
   vertical-align: top;
   display: block;
   float: right;
@@ -454,10 +451,10 @@ div#block-menu-menu-secondary-navigation ul.menu li.id-menu-link-menu-home-menu-
   margin: 2px 0 0 0px;
 }
 
-div#block-menu-menu-secondary-navigation ul.menu li.leaf.id-menu-link-menu-home-menu-869 a,
-div#block-menu-menu-secondary-navigation ul.menu li.leaf.id-menu-link-menu-home-menu-869 a:visited,
-div#block-menu-menu-secondary-navigation ul.menu li.leaf.id-menu-link-menu-home-menu-880 a,
-div#block-menu-menu-secondary-navigation ul.menu li.leaf.id-menu-link-menu-home-menu-880 a:visited {
+div#block-menu-menu-secondary-navigation ul.menu li.leaf.id-menu-link-menu-secondary-navigation-869 a,
+div#block-menu-menu-secondary-navigation ul.menu li.leaf.id-menu-link-menu-secondary-navigation-869 a:visited,
+div#block-menu-menu-secondary-navigation ul.menu li.leaf.id-menu-link-menu-secondary-navigation-880 a,
+div#block-menu-menu-secondary-navigation ul.menu li.leaf.id-menu-link-menu-secondary-navigation-880 a:visited {
   display: inline-block;
 
   background-repeat: no-repeat;
@@ -479,14 +476,14 @@ div#block-menu-menu-secondary-navigation ul.menu li.leaf.id-menu-link-menu-home-
   margin-right: 5px;
 }
 
-div#block-menu-menu-secondary-navigation ul.menu li.leaf.id-menu-link-menu-home-menu-869 a,
-div#block-menu-menu-secondary-navigation ul.menu li.leaf.id-menu-link-menu-home-menu-869 a:visited {
+div#block-menu-menu-secondary-navigation ul.menu li.leaf.id-menu-link-menu-secondary-navigation-869 a,
+div#block-menu-menu-secondary-navigation ul.menu li.leaf.id-menu-link-menu-secondary-navigation-869 a:visited {
   background-color: #3b5b99;
   background-image: url(../images/facebook_logo-mini.png);
 }
 
-div#block-menu-menu-secondary-navigation ul.menu li.leaf.id-menu-link-menu-home-menu-880 a,
-div#block-menu-menu-secondary-navigation ul.menu li.leaf.id-menu-link-menu-home-menu-880 a:visited {
+div#block-menu-menu-secondary-navigation ul.menu li.leaf.id-menu-link-menu-secondary-navigation-880 a,
+div#block-menu-menu-secondary-navigation ul.menu li.leaf.id-menu-link-menu-secondary-navigation-880 a:visited {
   background-color: #3b5b99;
   background-image: url(../images/twitter_logo-mini.png);
 }
