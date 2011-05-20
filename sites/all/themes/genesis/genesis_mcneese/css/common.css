@@ -249,6 +249,13 @@ div#content div.node-content .list-box .list-box-body2 {
   padding-right: 0;
 }
 
+html#ckeditor-wysiwygarea body .list-box .list-box-center,
+div#content div.node-content .list-box .list-box-center {
+  display: block;
+  margin-left: auto;
+  margin-right: auto;
+}
+
 
 
 /*** Content Specific Style: margin_height ***/
