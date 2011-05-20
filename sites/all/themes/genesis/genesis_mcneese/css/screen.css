@@ -252,12 +252,12 @@ div#columns div#content-column {
   overflow: hidden;
 }
 
-div#columns {
-  font-size: 0;
+div#sidebar-first {
+  float: left;
 }
 
-div#columns a {
-  font-size: 12px;
+div#sidebar-second {
+  float: right;
 }
 
 div#sidebar-first,
