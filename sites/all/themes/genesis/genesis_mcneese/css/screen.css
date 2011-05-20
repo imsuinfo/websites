@@ -317,6 +317,12 @@ div#sidebar-first div.block-menu a:visited {
   text-decoration: none;
 }
 
+div#sidebar-first div.block-menu a {
+  display: block;
+
+  padding: 2px 4px;
+}
+
 div#sidebar-first div.block-menu div.content ul.menu {
   padding-top: 15px;
   border-top: 1px solid #888888;
@@ -333,9 +339,6 @@ div#sidebar-first div.block-menu div.content ul.menu li {
   padding-left: 0;
   padding-right: 0;
   margin-left: 0;
-
-  padding-top: 4px;
-  padding-bottom: 4px;
 }
 
 div#sidebar-first div.block-menu div.content ul.menu li ul.menu li {
@@ -351,19 +354,19 @@ div#sidebar-first div.block-menu div.content ul.menu li ul.menu li.expanded {
   list-style-image: url(../images/singlearrow_down.png);
 }
 
-div#sidebar-first div.block-menu div.content ul.menu li ul.menu li.active-trail,
-div#sidebar-first div.block-menu div.content ul.menu li ul.menu li:focus,
-div#sidebar-first div.block-menu div.content ul.menu li ul.menu li:hover,
-div#sidebar-first div.block-menu div.content ul.menu li ul.menu li:active {
-  color: #ffffff;
+div#sidebar-first div.block-menu div.content ul.menu li ul.menu li a.active-trail.active {
+  color: #fad703;
   background-color: #00335b;
 }
 
-div#sidebar-first div.block-menu div.content ul.menu li ul.menu li.active-trail a,
-div#sidebar-first div.block-menu div.content ul.menu li ul.menu li:focus a,
-div#sidebar-first div.block-menu div.content ul.menu li ul.menu li:hover a,
-div#sidebar-first div.block-menu div.content ul.menu li ul.menu li:active a {
+div#sidebar-first div.block-menu div.content ul.menu li a:focus,
+div#sidebar-first div.block-menu div.content ul.menu li a:active,
+div#sidebar-first div.block-menu div.content ul.menu li a:hover,
+div#sidebar-first div.block-menu div.content ul.menu li ul.menu li a.active-trail.active:focus,
+div#sidebar-first div.block-menu div.content ul.menu li ul.menu li a.active-trail.active:active,
+div#sidebar-first div.block-menu div.content ul.menu li ul.menu li a.active-trail.active:hover {
   color: #ffffff;
+  background-color: #00335b;
 }
 
 div#sidebar-first div.block-menu div.content ul.menu li a,
@@ -380,12 +383,6 @@ div#sidebar-first div.block-menu div.content ul.menu li ul.menu li a:focus,
 div#sidebar-first div.block-menu div.content ul.menu li ul.menu li a:active,
 div#sidebar-first div.block-menu div.content ul.menu li ul.menu li a:hover {
   font-weight: normal;
-}
-
-div#sidebar-first div.block-menu div.content ul.menu li a:focus,
-div#sidebar-first div.block-menu div.content ul.menu li a:active,
-div#sidebar-first div.block-menu div.content ul.menu li a:hover {
-  color: #7f0000;
 }
 
 
