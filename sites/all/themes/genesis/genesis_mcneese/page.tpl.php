@@ -166,11 +166,18 @@
               </div>
             <?php endif; ?>
 
+            <?php if (!empty($breadcrumb)){ ?>
+              <div id="breadcrumb">
+                <?php print $breadcrumb; ?>
+                <?php if (!empty($page['subtitle'])){ ?>
+                  <div class="subtitle"><?php print($page['subtitle']);?></div>
+                <?php } ?>
+              </div>
+            <?php } ?>
+
             <?php if (!empty($page['renderred_tabs'])): ?>
               <div class="local-tasks"><?php print($page['renderred_tabs']); ?></div>
             <?php endif; ?>
-
-            <?php print $breadcrumb; ?>
 
             <div id="content">
               <?php print($page['content']); ?>

@@ -55,6 +55,7 @@ function genesis_mcneese_process_page(&$vars) {
   $vars['page']['is_front_css'] = '';
   $vars['page']['subboard_image'] = '';
   $vars['page']['subboard_image_css'] = '';
+  $vars['page']['subtitle'] = '';
   $subboard_image_display = '_large';
 
   if (!empty($vars['page']['sidebar_first']) && !empty($vars['page']['sidebar_second'])){
@@ -76,32 +77,40 @@ function genesis_mcneese_process_page(&$vars) {
 
   // If the page is part of a group content type, then display the group_image view.
   if (isset($vars['node']) && is_object($vars['node']) && isset($vars['node']->type)) {
-    if (isset($vars['node']->nid) && !empty($vars['node']->nid) && isset($vars['node']->field_group_image_show)) {
-      if (is_array($vars['node']->field_group_image_show) && isset($vars['node']->field_group_image_show['und']['0']['value']) && $vars['node']->field_group_image_show['und']['0']['value'] == 1){
-        $vars['page']['subboard_image'] = views_embed_view('group_image_page', 'group_image' . $subboard_image_display, $vars['node']->nid);
+    if (isset($vars['node']->nid) && !empty($vars['node']->nid)){
+      if (isset($vars['node']->field_group)){
+        if (in_array($vars['node']->type, array('campus_event', 'ie_policy', 'page', 'registrar_event'))){
+          $vars['page']['subtitle'] = views_embed_view('subtitle_information', 'default', $vars['node']->nid);
+        }
+      }
 
-        if (empty($vars['page']['subboard_image']) || preg_match('/<img\b/i', $vars['page']['subboard_image']) == 0){
-          if (isset($vars['node']->field_group)){
-            foreach ($vars['node']->field_group as $language_key => $outer_value){
-              if (is_object($outer_value) || is_array($outer_value)){
-                foreach ($outer_value as $key => $value){
-                  if (isset($value['tid']) && !empty($value['tid']) && is_numeric($value['tid'])){
-                    $vars['page']['subboard_image'] = views_embed_view('group_image', 'group_image' . $subboard_image_display, $value['tid']);
+      if (isset($vars['node']->field_group_image_show) && is_array($vars['node']->field_group_image_show)) {
+        if (isset($vars['node']->field_group_image_show['und']['0']['value']) && $vars['node']->field_group_image_show['und']['0']['value'] == 1){
+          $vars['page']['subboard_image'] = views_embed_view('group_image_page', 'group_image' . $subboard_image_display, $vars['node']->nid);
 
-                    if (!empty($vars['page']['subboard_image']) && preg_match('/<img\b/i', $vars['page']['subboard_image']) > 0){
-                      $vars['page']['subboard_image_css'] = ' subboard-image';
-                    }
-                    else {
-                      $vars['page']['subboard_image'] = '';
+          if (empty($vars['page']['subboard_image']) || preg_match('/<img\b/i', $vars['page']['subboard_image']) == 0){
+            if (isset($vars['node']->field_group)){
+              foreach ($vars['node']->field_group as $language_key => $outer_value){
+                if (is_object($outer_value) || is_array($outer_value)){
+                  foreach ($outer_value as $key => $value){
+                    if (isset($value['tid']) && !empty($value['tid']) && is_numeric($value['tid'])){
+                      $vars['page']['subboard_image'] = views_embed_view('group_image', 'group_image' . $subboard_image_display, $value['tid']);
+
+                      if (!empty($vars['page']['subboard_image']) && preg_match('/<img\b/i', $vars['page']['subboard_image']) > 0){
+                        $vars['page']['subboard_image_css'] = ' subboard-image';
+                      }
+                      else {
+                        $vars['page']['subboard_image'] = '';
+                      }
                     }
                   }
                 }
               }
             }
           }
-        }
-        else {
-          $vars['page']['subboard_image_css'] = ' subboard-image';
+          else {
+            $vars['page']['subboard_image_css'] = ' subboard-image';
+          }
         }
       }
     }
