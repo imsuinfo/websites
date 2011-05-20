@@ -89,7 +89,7 @@ div#content {
 
 html#ckeditor-wysiwygarea p,
 div#content p {
-  margin: 0 0 15px;
+  margin: 10px 0;
   font-size: 14px;
   line-height: 1.2;
 }
@@ -152,7 +152,7 @@ html#ckeditor-wysiwygarea body .list-box,
 div#content div.node-content .list-box {
   display: block;
 
-  background-color: #e0e0e0;
+  background-color: #eaeaea;
 
   border: 1px solid #d0d0d0;
 
@@ -161,15 +161,56 @@ div#content div.node-content .list-box {
   margin-bottom: 10px;
 }
 
-html#ckeditor-wysiwygarea body .list-box h2,
-div#content div.node-content .list-box h2 {
+html#ckeditor-wysiwygarea body .list-box a,
+html#ckeditor-wysiwygarea body .list-box a:visited,
+div#content div.node-content .list-box a,
+div#content div.node-content .list-box a:visited {
+  text-decoration: none;
+}
+
+html#ckeditor-wysiwygarea body .list-box a:focus,
+html#ckeditor-wysiwygarea body .list-box a:hover,
+html#ckeditor-wysiwygarea body .list-box a:active,
+div#content div.node-content .list-box a:focus,
+div#content div.node-content .list-box a:hover,
+div#content div.node-content .list-box a:active {
+  text-decoration: underline;
+}
+
+html#ckeditor-wysiwygarea body .list-box .list-box-title,
+div#content div.node-content .list-box .list-box-title {
   color: #ffffff;
   background-color: #00477f;
 
   padding: 4px;
   margin: 0;
 
-  border: 1px solid 00366e;
+  border: 1px solid #00366e;
+}
+
+html#ckeditor-wysiwygarea body .list-box .list-box-title a,
+div#content div.node-content .list-box .list-box-title a,
+html#ckeditor-wysiwygarea body .list-box .list-box-title a:visited,
+div#content div.node-content .list-box .list-box-titlea:visited {
+  color: #ffffff;
+  background-color: #00477f;
+}
+
+html#ckeditor-wysiwygarea body .list-box .list-box-title a,
+div#content div.node-content .list-box .list-box-title a,
+html#ckeditor-wysiwygarea body .list-box .list-box-title a:visited,
+div#content div.node-content .list-box .list-box-title a:visited {
+  text-decoration: none;
+}
+
+html#ckeditor-wysiwygarea body .list-box .list-box-title a:focus,
+div#content div.node-content .list-box .list-box-title a:focus,
+html#ckeditor-wysiwygarea body .list-box .list-box-title a:active,
+div#content div.node-content .list-box .list-box-title a:active,
+html#ckeditor-wysiwygarea body .list-box .list-box-title a:hover,
+div#content div.node-content .list-box .list-box-title a:hover {
+  color: #fad703;
+  text-decoration: underline;
 }
 
 html#ckeditor-wysiwygarea body .list-box ul,
@@ -188,6 +229,24 @@ div#content div.node-content .list-box ul li a,
 div#content div.node-content .list-box ol li a {
   display: block;
   padding: 2px 4px;
+}
+
+html#ckeditor-wysiwygarea body .list-box p,
+div#content div.node-content .list-box p {
+  margin-top: 10px;
+  margin-bottom: 10px;
+}
+
+html#ckeditor-wysiwygarea body .list-box .list-box-body,
+div#content div.node-content .list-box .list-box-body {
+  padding-left: 10px;
+  padding-right: 10px;
+}
+
+html#ckeditor-wysiwygarea body .list-box .list-box-body2,
+div#content div.node-content .list-box .list-box-body2 {
+  padding-left: 0;
+  padding-right: 0;
 }
 
 
