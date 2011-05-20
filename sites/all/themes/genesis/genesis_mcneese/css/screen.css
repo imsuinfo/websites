@@ -351,6 +351,21 @@ div#sidebar-first div.block-menu div.content ul.menu li ul.menu li.expanded {
   list-style-image: url(../images/singlearrow_down.png);
 }
 
+div#sidebar-first div.block-menu div.content ul.menu li ul.menu li.active-trail,
+div#sidebar-first div.block-menu div.content ul.menu li ul.menu li:focus,
+div#sidebar-first div.block-menu div.content ul.menu li ul.menu li:hover,
+div#sidebar-first div.block-menu div.content ul.menu li ul.menu li:active {
+  color: #ffffff;
+  background-color: #00335b;
+}
+
+div#sidebar-first div.block-menu div.content ul.menu li ul.menu li.active-trail a,
+div#sidebar-first div.block-menu div.content ul.menu li ul.menu li:focus a,
+div#sidebar-first div.block-menu div.content ul.menu li ul.menu li:hover a,
+div#sidebar-first div.block-menu div.content ul.menu li ul.menu li:active a {
+  color: #ffffff;
+}
+
 div#sidebar-first div.block-menu div.content ul.menu li a,
 div#sidebar-first div.block-menu div.content ul.menu li a:visited,
 div#sidebar-first div.block-menu div.content ul.menu li a:focus,
