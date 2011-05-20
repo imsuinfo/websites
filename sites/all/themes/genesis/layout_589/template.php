@@ -55,8 +55,37 @@ function layout_589_process_page(&$vars) {
   $vars['page']['is_front_css'] = '';
   $vars['page']['subboard_image'] = '';
 
+  if (!empty($vars['page']['sidebar_first']) && !empty($vars['page']['sidebar_second'])){
+    $vars['page']['sidebar_css'] = 'sidebar-both';
+  }
+  else if (!empty($vars['page']['sidebar_first'])){
+    $vars['page']['sidebar_css'] = 'sidebar-left';
+  }
+  else if (!empty($vars['page']['sidebar_second'])){
+    $vars['page']['sidebar_css'] = 'sidebar-right';
+  }
+
   if (drupal_is_front_page() === TRUE) {
     $vars['page']['is_front_css'] = 'is_front';
+  }
+
+  // If the page is part of a group content type, then display the group_image view.
+  if (isset($vars['node']) && is_object($vars['node'])) {
+    if (isset($vars['node']->type)) {
+      if ($vars['node']->type == 'group'){
+        if (isset($vars['node']->field_group)){
+          foreach ($vars['node']->field_group as $language_key => $outer_value){
+            if (is_object($outer_value) || is_array($outer_value)){
+              foreach ($outer_value as $key => $value){
+                if (isset($value['tid']) && !empty($value['tid']) && is_numeric($value['tid'])){
+                  $vars['page']['subboard_image'] = views_embed_view('group_image', 'group_image', $value['tid']);
+                }
+              }
+            }
+          }
+        }
+      }
+    }
   }
 }
 

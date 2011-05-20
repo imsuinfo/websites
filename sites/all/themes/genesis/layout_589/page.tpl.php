@@ -170,6 +170,8 @@
               <div class="local-tasks"><?php print($page['renderred_tabs']); ?></div>
             <?php endif; ?>
 
+            <?php print $breadcrumb; ?>
+
             <div id="content">
               <?php print($page['content']); ?>
             </div>
