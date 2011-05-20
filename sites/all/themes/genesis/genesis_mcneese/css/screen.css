@@ -968,12 +968,21 @@ div#main-content div.local-tasks ul.tabs li a:visited {
 div#main-content div.local-tasks ul.tabs li a.active,
 div#main-content div.local-tasks ul.tabs li a.active:visited {
   color: #fad703;
+  text-shadow: 0px 1px 0px #000000;
+}
+
+div#main-content div.local-tasks ul.tabs li a.active:focus,
+div#main-content div.local-tasks ul.tabs li a.active:hover,
+div#main-content div.local-tasks ul.tabs li a.active:active {
+  color: #000000;
+  text-shadow: none;
 }
 
 div#main-content div.local-tasks ul.tabs li a:focus,
 div#main-content div.local-tasks ul.tabs li a:hover,
 div#main-content div.local-tasks ul.tabs li a:active {
-  background-color: #828282;
+  color: #000000;
+  background-color: #c2c2c2;
 }
 
 
