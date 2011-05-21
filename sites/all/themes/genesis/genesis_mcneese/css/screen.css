@@ -633,6 +633,10 @@ div#front_page_columns-events {
   background-color: #25567d;
 }
 
+div#front_page_columns-events div.views-field-field-event-image div.event-image {
+  display: inline;
+}
+
 div#front_page_columns-events div.view-display-id-front_page_highlight {
   margin-bottom: 10px;
 }
@@ -791,6 +795,10 @@ div#front_page_columns-spotlight {
 div#front_page_columns-spotlight div.views-field-nothing {
   color: #000000;
   background-color: #ffffff;
+}
+
+div#front_page_columns-spotlight div.views-field-field-spotlight-image div.spotlight-image {
+  display: inline;
 }
 
 h3#front_page_columns-column_title-spotlight {
