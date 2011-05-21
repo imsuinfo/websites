@@ -49,7 +49,7 @@
 
   <?php if (!$in_overlay): // Hide the skip-link in overlay ?>
     <div id="skip-link">
-      <a href="#main-content"><?php print t('Skip to main content'); ?></a>
+      <a href="#content-column"><?php print t('Skip to main content'); ?></a>
     </div>
   <?php endif; ?>
 
