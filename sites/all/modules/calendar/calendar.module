@@ -594,8 +594,10 @@ function calendar_build_nodes(&$view, &$items) {
   foreach ($view->filter as $id => $handler) {
     if (date_views_handler_is_date($handler, 'filter')) {
       $date_filter = $handler;
-      foreach ($handler->options['date_fields'] as $name) {
-        $datefields[] = $fields['name'][$name]['query_name'];
+      if (isset($handler->options['date_fields']) && is_array($handler->options['date_fields'])){
+        foreach ($handler->options['date_fields'] as $name) {
+          $datefields[] = $fields['name'][$name]['query_name'];
+        }
       }
     }
   }
