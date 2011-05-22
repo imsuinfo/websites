@@ -3,3 +3,9 @@ div#block-menu-menu-primary-navigation div.block-inner div.content ul.menu li {
   min-width: 112px;
   text-align: center;
 }
+
+div#columns.subboard-image h1#page-title {
+  filter: alpha(opacity=80);
+  -ms-filter:"progid:DXImageTransform.Microsoft.Alpha(Opacity=80)";
+}
+
