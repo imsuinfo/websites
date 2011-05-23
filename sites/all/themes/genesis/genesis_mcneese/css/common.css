@@ -223,6 +223,10 @@ div#front_page_columns-events div.views-field-nothing {
   margin-bottom: 25px;
 }
 
+div#front_page_columns-events div.view-display-id-front_page_events div.views-field-nothing {
+  min-height: 180px;
+}
+
 div#front_page_columns-events div.views-field-nothing div.highlight-title,
 div#front_page_columns-events div.views-field-nothing div.event-title {
   font-size: 24px;
