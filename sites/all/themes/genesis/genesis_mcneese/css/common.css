@@ -445,37 +445,6 @@ h1#page-title {
   padding: 4px 0;
 }
 
-div#columns.subboard-image h1#page-title {
-  position: absolute;
-  top: 165px;
-  right: 0;
-
-  font-size: 24px;
-  color: #fad703;
-  background-color: #000000;
-  opacity: 0.8;
-
-  text-shadow: none;
-
-  padding: 4px 0;
-  margin: 0;
-}
-
-div#columns.sidebar-left.subboard-image h1#page-title,
-div#columns.sidebar-right.subboard-image h1#page-title {
-  width: 735px;
-
-  padding-left: 5px;
-  padding-right: 5px;
-}
-
-div#columns.sidebar-none.subboard-image h1#page-title {
-  width: 950px;
-
-  padding-left: 5px;
-  padding-right: 5px;
-}
-
 
 
 /*** Content Specific Style: more pages ***/
