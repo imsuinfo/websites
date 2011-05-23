@@ -497,7 +497,7 @@ div#breadcrumb {
   font-family: Arial,Helvetica,Sans-Serif,Sans;
   font-size: 12px;
 
-  min-height: 15px;
+  min-height: 14px;
 
   margin: 0 0 0 0;
   padding-top: 3px;
@@ -545,7 +545,7 @@ div#breadcrumb .views-field-field-event-date .field-content {
 
   font-weight: bold;
   letter-spacing: 1px;
-  min-height: 15px;
+  min-height: 14px;
 
   padding-left: 3px;
   padding-right: 3px;
