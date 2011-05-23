@@ -36,6 +36,7 @@ function ckeditor_wysiwyg_custom_wysiwyg_editor_settings_alter(&$settings, $cont
     $theme_path = drupal_get_path('theme', 'genesis_mcneese') . '/css/';
     $settings['contentsCss'][] = $theme_path . 'reset.css';
     $settings['contentsCss'][] = $theme_path . 'layout.css';
+    $settings['contentsCss'][] = $theme_path . 'workaround.css';
     $settings['contentsCss'][] = $theme_path . 'common.css';
     $settings['contentsCss'][] = $theme_path . 'screen.css';
 
