@@ -585,6 +585,45 @@ div#columns div.view-id-more_pages div.views-field-field-headline {
 
 
 
+/*** Content Specific Style: calendar pages ***/
+
+div.view-id-master_calendar.view-display-id-attachment_1 {
+  position: relative;
+
+  font-size: 14px;
+  line-height: 21px;
+  letter-spacing: 1px;
+
+  font-family: Serif, Georgia, Times New Roman;
+
+  margin-top: 10px;
+}
+
+div.view-id-master_calendar.view-display-id-attachment_1 div.view-content div.views-row {
+  margin-bottom: 15px;
+}
+
+div.view-id-master_calendar.view-display-id-attachment_1 div.view-content div.views-row-even {
+  background-color: #efefef;
+}
+
+div.view-id-master_calendar.view-display-id-attachment_1 div.view-content div.views-field-title a,
+div.view-id-master_calendar.view-display-id-attachment_1 div.view-content div.views-field-title a:visited {
+  font-weight: bold;
+  font-size: 14px;
+  text-decoration: none;
+}
+
+div.view-id-master_calendar.view-display-id-attachment_1 div.view-content div.views-field-title a:focus,
+div.view-id-master_calendar.view-display-id-attachment_1 div.view-content div.views-field-title a:hover,
+div.view-id-master_calendar.view-display-id-attachment_1 div.view-content div.views-field-title a:active {
+  color: #7f0000;
+
+  text-decoration: underline;
+}
+
+
+
 /*** Content Specific Style: list-box ***/
 html#ckeditor-wysiwygarea body .list-box,
 div#content div.node-content .list-box {
