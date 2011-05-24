@@ -140,14 +140,16 @@ function hs_taxonomy_field_settings_submit(&$form, &$form_state) {
 function hs_taxonomy_form_field_ui_field_edit_form_alter(&$form, &$form_state) {
   require_once DRUPAL_ROOT . '/' . drupal_get_path('module', 'hierarchical_select') . '/includes/common.inc';
 
-  $vocabulary = taxonomy_vocabulary_machine_name_load($form['#field']['settings']['allowed_values'][0]['vocabulary']);
+  if (isset($form['#field']['settings']['allowed_values'][0]['vocabulary'])){
+    $vocabulary = taxonomy_vocabulary_machine_name_load($form['#field']['settings']['allowed_values'][0]['vocabulary']);
 
-  if (is_object($vocabulary) && property_exists($vocabulary, 'vid')){
-    $config = hierarchical_select_common_config_get("taxonomy-$vocabulary->vid");
+    if (is_object($vocabulary) && property_exists($vocabulary, 'vid')){
+      $config = hierarchical_select_common_config_get("taxonomy-$vocabulary->vid");
 
-    if ($config['dropbox']['status'] || $config['save_lineage']) {
-      $form['field']['cardinality']['#disabled'] = TRUE;
-      $form['field']['cardinality']['#description'] .= ' <strong>' . t('This setting is now managed by the Hierarchical Select configuration.') . '</strong>';
+      if ($config['dropbox']['status'] || $config['save_lineage']) {
+        $form['field']['cardinality']['#disabled'] = TRUE;
+        $form['field']['cardinality']['#description'] .= ' <strong>' . t('This setting is now managed by the Hierarchical Select configuration.') . '</strong>';
+      }
     }
   }
 }
