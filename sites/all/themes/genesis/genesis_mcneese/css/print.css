@@ -19,3 +19,7 @@ h1#page-title {
 
   text-shadow: none;
 }
+
+div#breadcrumb {
+  display: none;
+}
