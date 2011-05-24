@@ -1,0 +1,62 @@
+<?php
+
+/**
+ * Implementation of hook_init().
+ */
+function content_easement_unpublished_message_init() {
+  drupal_add_css(drupal_get_path('module', 'content_easement_unpublished_message') . '/includes/message-unpublished.css');
+}
+
+/**
+ * Implements hook_help().
+ */
+function content_easement_unpublished_message_help($path, $arg = NULL) {
+  if (cf_is_empty_or_non_string(__FUNCTION__, 'path', $path, WATCHDOG_ERROR)){
+    return;
+  }
+
+  switch ($path) {
+    case 'admin/help#content_easement_unpublished_message':
+      $help = "Provides a simple message on the screen when a particular node the current user is viewing is unpublished.";
+      $help .= " This helps make it more obvious to the user that a particular node is unpublished in a theme independent way.";
+      $help .= " This is particular useful when combined with another module that allows users to view unpublished content that they do not own.";
+
+      return "<p>" . t($help) . "</p>";
+  }
+}
+
+/**
+ * Implements hook_node_view().
+ */
+function content_easement_unpublished_message_node_view($node, $view_mode, $langcode){
+    content_easement_unpublished_message_display_notice($node, array(__FUNCTION__));
+}
+
+/**
+ * Implements hook_node_prepare().
+ */
+function content_easement_unpublished_message_node_prepare($node) {
+  content_easement_unpublished_message_display_notice($node, array(__FUNCTION__));
+}
+
+
+/**
+ * If the given node is unpublished, then print a message to the screen.
+ *
+ * @param $node
+ *   A node object
+ * @param $function_history
+ *   (optional) array of function names, ie: array('0' => 'my_function_name')
+ */
+function content_easement_unpublished_message_display_notice($node, $function_name = array()){
+  if (!is_object($node)){
+    cf_error_invalid_object(__FUNCTION__, 'node', WATCHDOG_ERROR, $function_name);
+    return;
+  }
+
+  if ($node->status == NODE_NOT_PUBLISHED){
+    $node_type_name = node_type_get_name($node);
+
+    drupal_set_message(t("This @type is not published.", array('@type' => $node_type_name)), 'unpublished', FALSE);
+  }
+}

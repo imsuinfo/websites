@@ -1,0 +1,9 @@
+<?php
+
+/**
+ * Implements hook_install().
+ */
+function content_easement_field_ui_install() {
+  // make sure this module loads after most others, so that hook_*_alter() functions happen after other modules make their changes
+  db_query('UPDATE {system} SET weight = 100 WHERE name = :name', array(':name' => 'content_easement_field_ui'));
+}

@@ -1,0 +1,6 @@
+name = Content Easement - Publishing Button
+description = "Provides a publish and unpublish buttons for drupal content for non-admin users."
+core = 7.x
+package = Content
+dependencies[] = cf
+files[] = content_easement_publishing_button.module

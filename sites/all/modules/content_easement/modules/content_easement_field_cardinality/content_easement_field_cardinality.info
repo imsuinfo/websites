@@ -1,0 +1,7 @@
+name = Content Easement - Field Cardinality
+description = "Changes how the number of values options (aka: cardinality) of fields to allow more useful input."
+core = 7.x
+package = Fields
+dependencies[] = cf
+dependencies[] = field
+files[] = content_easement_field_cardinality.module

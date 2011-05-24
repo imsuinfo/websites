@@ -1,0 +1,133 @@
+<?php
+
+/**
+ * Implements hook_help().
+ */
+function content_easement_publishing_button_help($path, $arg = NULL) {
+  if (cf_is_empty_or_non_string(__FUNCTION__, 'path', $path, WATCHDOG_ERROR)){
+    return;
+  }
+
+  switch ($path) {
+    case 'admin/help#content_easement_publishing_button':
+      $help = t("Provides an unpublish/publish button for convenience and user-friendliness.");
+      $help .= "<br>\n";
+      $help .= t("Provides additional access control such that non-admins can see the publish and unpublished buttons.");
+
+      return "<p>" . $help . "</p>";
+  }
+}
+
+/**
+ * Implements hook_permission().
+ */
+function content_easement_publishing_button_permission() {
+  return array(
+    'use publish button' => array(
+      'title' => t("Use Publish Button"),
+      'description' => t("Specify whether or not a particular user or role can see and use the publish button for a given node."),
+    ),
+    'use unpublish button' => array(
+      'title' => t("Use Unpublish Button"),
+      'description' => t("Specify whether or not a particular user or role can see and use the unpublish button for a given node."),
+    ),
+  );
+}
+
+/**
+ * Implements hook_form_alter().
+ */
+function content_easement_publishing_button_form_alter(&$form, &$form_state, $form_id) {
+  if (!is_array($form)){
+    cf_error_invalid_array(__FUNCTION__, 'form', WATCHDOG_ERROR);
+    return;
+  }
+
+  if (cf_is_empty_or_non_string(__FUNCTION__, 'form_id', $form_id, WATCHDOG_ERROR)){
+    return;
+  }
+
+  if (array_key_exists('type', $form) && cf_has_array_key('#value', $form['type'])){
+    if (!array_key_exists('#node', $form) || !is_object($form['#node'])){
+      return;
+    }
+
+    // alter the node edit form
+    if ($form['type']['#value'] . '_node_form' == $form_id){
+      if ($form['#node']->status == NODE_NOT_PUBLISHED){
+        if (user_access('use publish button')) {
+          $form['actions']['publish'] = array(
+            '#type' => 'submit',
+            '#value' => t("Publish"),
+            '#weight' => 16,
+            '#submit' => array('content_easement_publishing_button_publish_submit'),
+          );
+        }
+      }
+      else {
+        if (user_access('use unpublish button')) {
+          $form['actions']['unpublish'] = array(
+            '#type' => 'submit',
+            '#value' => t("Unpublish"),
+            '#weight' => 16,
+            '#submit' => array('content_easement_publishing_button_unpublish_submit'),
+          );
+        }
+      }
+    }
+  }
+}
+
+/**
+ * Button submit function: handle the 'publish' button on the node form.
+ */
+function content_easement_publishing_button_publish_submit($form, &$form_state) {
+  if (!is_array($form)){
+    cf_error_invalid_array(__FUNCTION__, 'form', WATCHDOG_ERROR);
+    return;
+  }
+
+  if (!array_key_exists('#node', $form)){
+    cf_error_missing_array_key(__FUNCTION__, 'form', '#node', WATCHDOG_ERROR);
+    return;
+  }
+
+  if (!is_object($form['#node'])){
+    cf_error_invalid_object(__FUNCTION__, 'form[\'#node\']', WATCHDOG_ERROR);
+    return;
+  }
+
+  if (user_access('use publish button')) {
+    if ($form['#node']->status != NODE_PUBLISHED){
+      $form['#node']->status = NODE_PUBLISHED;
+      node_save($form['#node']);
+    }
+  }
+}
+
+/**
+ * Button submit function: handle the 'unpublish' button on the node form.
+ */
+function content_easement_publishing_button_unpublish_submit($form, &$form_state) {
+  if (!is_array($form)){
+    cf_error_invalid_array(__FUNCTION__, 'form', WATCHDOG_ERROR);
+    return;
+  }
+
+  if (!array_key_exists('#node', $form)){
+    cf_error_missing_array_key(__FUNCTION__, 'form', '#node', WATCHDOG_ERROR);
+    return;
+  }
+
+  if (!is_object($form['#node'])){
+    cf_error_invalid_object(__FUNCTION__, 'form[\'#node\']', WATCHDOG_ERROR);
+    return;
+  }
+
+  if (user_access('use unpublish button')) {
+    if ($form['#node']->status != NODE_NOT_PUBLISHED){
+      $form['#node']->status = NODE_NOT_PUBLISHED;
+      node_save($form['#node']);
+    }
+  }
+}
