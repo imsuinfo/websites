@@ -79,7 +79,7 @@ function genesis_mcneese_process_page(&$vars) {
   if (isset($vars['node']) && is_object($vars['node']) && isset($vars['node']->type)) {
     if (isset($vars['node']->nid) && !empty($vars['node']->nid)){
       if (isset($vars['node']->field_group)){
-        if (in_array($vars['node']->type, array('campus_event', 'ie_policy', 'page', 'registrar_event'))){
+        if (!empty($vars['node']->type) && $vars['node']->type != 'system_page'){
           $vars['page']['subtitle'] = views_embed_view('subtitle_information', 'default', $vars['node']->nid);
         }
       }
