@@ -14,16 +14,16 @@ function jammer_messages_schema() {
     'description' => '',
     'fields' => array(
       'mid' => array(
-        'description' => 'The primary identifier for suppression strings.', 
-        'type' => 'serial', 
-        'unsigned' => TRUE, 
+        'description' => 'The primary identifier for suppression strings.',
+        'type' => 'serial',
+        'unsigned' => TRUE,
         'not null' => TRUE,
-      ), 
+      ),
       'message_string' => array(
         'description' => 'Partial or full string to suppress.',
-        'type' => 'varchar', 
-        'length' => 255, 
-        'not null' => TRUE, 
+        'type' => 'varchar',
+        'length' => 255,
+        'not null' => TRUE,
         'default' => '',
       ),
     ),
