@@ -325,6 +325,17 @@ div#front_page_columns-events div.views-field-nothing div.event-body a:visited {
   color: #7fbcec;
 }
 
+div#front_page_columns-events div.views-field-nothing div.highlight-body a:focus,
+div#front_page_columns-events div.views-field-nothing div.highlight-body a:active,
+div#front_page_columns-events div.views-field-nothing div.highlight-body a:hover,
+div#front_page_columns-events div.views-field-nothing div.event-body a:focus,
+div#front_page_columns-events div.views-field-nothing div.event-body a:active,
+div#front_page_columns-events div.views-field-nothing div.event-body a:hover {
+  color: #fad703;
+
+  text-decoration: underline;
+}
+
 div#front_page_columns-events div.view-display-id-front_page_events div.views-row-even div.views-field-field-event-image {
   float: right;
 
