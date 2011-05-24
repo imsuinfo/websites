@@ -513,6 +513,11 @@ div#columns div.view-display-id-more_pages_news div.more_pages-field_group {
   overflow: wrap;
 }
 
+div#columns div.view-display-id-more_pages_news div.more_pages-field_event_date {
+  max-width: 120px;
+  overflow: wrap;
+}
+
 div#columns div.view-display-id-more_pages_highlights_attachment div.more_pages-field_group {
   max-width: 300px;
   overflow: wrap;
