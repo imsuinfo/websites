@@ -537,7 +537,7 @@ div#breadcrumb a:active {
   -webkit-transition-duration: 0.3s;
 }
 
-div#breadcrumb .views-field-field-event-date .field-content {
+div#breadcrumb .views-field-field-event-datetime .field-content {
   display: inline-block;
 
   color: #000000;
@@ -551,8 +551,8 @@ div#breadcrumb .views-field-field-event-date .field-content {
   padding-right: 3px;
   margin: 0px 2px;
 
-  -moz-border-radius: 5px 5px 5px 5px;
-  -webkit-border-radius: 5px 5px 5px 5px;
+  -moz-border-radius: 3px 3px 3px 3px;
+  -webkit-border-radius: 3px 3px 3px 3px;
 }
 
 
