@@ -172,6 +172,21 @@ h3#front_page_columns-column_title-news {
   margin-bottom: 5px;
 }
 
+h3#front_page_columns-column_title-news a,
+h3#front_page_columns-column_title-news a:visited {
+  color: #000000;
+
+  text-decoration: none;
+}
+
+h3#front_page_columns-column_title-news a:focus,
+h3#front_page_columns-column_title-news a:active,
+h3#front_page_columns-column_title-news a:hover {
+  color: #7f0000;
+
+  text-decoration: underline;
+}
+
 div#front_page_columns-events {
   position: relative;
 
