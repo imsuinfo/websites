@@ -1,95 +1,170 @@
-<?php?><!DOCTYPE html>
-<html lang="<?php print($language->language); ?>" dir="<?php print $language->dir; ?>">
-
-<head>
-  <!--(begin_head)-->
-  <?php print($head); ?>
-  <title><?php print($head_title); ?></title>
-  <?php print($styles); ?>
-  <?php print($scripts);?>
-  <!--(end_head)-->
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML+RDFa 1.0//EN" "http://www.w3.org/MarkUp/DTD/xhtml-rdfa-1.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="<?php print $language->language; ?>" version="XHTML+RDFa 1.0" dir="<?php print $language->dir; ?>"
+  <?php print $rdf_namespaces; ?>>
+<head profile="<?php print $grddl_profile; ?>">
+  <?php print $head; ?>
+  <title><?php print $head_title; ?></title>
+  <?php print $styles; ?>
+  <?php print $scripts; ?>
 </head>
-<body id="maintenance_mode-body" class="<?php print($classes); ?>" <?php print($attributes);?>>
-  <!--(begin_body)-->
-  <div id="maintenance_mode-page_top" class="maintenance_mode">
-    <!--(begin_page_top)-->
-    <?php print($page_top); ?>
-    <!--(end_page_top)-->
-  </div>
+<?php // modify the layout by changing the id, see layout.css ?>
+<body id="maintenance_mode-body" <?php print $attributes;?>>
 
-  <div id="maintenance_mode-page" class="maintenance_mode">
-    <!--(begin_page)-->
-    <div id='maintenance_mode-title_region' class='clearfix page-title' style='<?php if (isset($title_logo_style) && is_string($title_logo_style)) print($title_logo_style);?>'>
-      <div id='maintenance_mode-title'>
-        <!--(begin_title)-->
-        <?php print(render($title_prefix)); ?>
-        <?php if (isset($site_name) && is_string($site_name)){ ?>
-          <div id='maintenance_mode-website_title'>
-            <?php print($site_name); ?>
+  <?php if (!$in_overlay): // Hide the skip-link in overlay ?>
+    <div id="skip-link">
+      <a href="#content-column"><?php print t('Skip to main content'); ?></a>
+    </div>
+  <?php endif; ?>
+
+  <?php print $page_top; ?>
+
+  <div id="container" class="<?php print $classes; ?><?php print($page['is_front_css']);?>">
+    <?php if (!$in_overlay): // hide in overlay ?>
+
+      <?php if (!empty($page['leaderboard'])): ?>
+        <div id="leaderboard" class="clearfix">
+          <?php print($page['leaderboard']); ?>
+        </div>
+      <?php endif; ?>
+
+      <?php if ($secondary_menu_links): ?>
+        <div id="secondary-menu-wrapper" class="clearfix">
+          <div class="secondary-menu-inner"><?php print $secondary_menu_links; ?></div>
+        </div>
+      <?php endif; ?>
+
+      <div id="header" class="clearfix">
+
+        <?php if ($site_logo || $site_name || $site_slogan): ?>
+          <div id="branding">
+
+            <?php if ($site_logo or $site_name): ?>
+              <?php if ($title): ?>
+                <div class="logo-site-name"><strong>
+                  <?php if ($site_logo): ?><span id="logo"><?php print $site_logo; ?></span><?php endif; ?>
+                  <?php if ($site_name): ?><span id="site-name"><?php print $site_name; ?></span><?php endif; ?>
+                </strong></div>
+              <?php else: /* Use h1 when the content title is empty */ ?>
+                <h1 class="logo-site-name">
+                  <?php if ($site_logo): ?><span id="logo"><?php print $site_logo; ?></span><?php endif; ?>
+                  <?php if ($site_name): ?><span id="site-name"><?php print $site_name; ?></span><?php endif; ?>
+               </h1>
+              <?php endif; ?>
+            <?php endif; ?>
+
+            <?php if ($site_slogan): ?>
+              <div id="site-slogan"><?php print $site_slogan; ?></div>
+            <?php endif; ?>
+
+          </div> <!-- /branding -->
+        <?php endif; ?>
+
+        <?php if (!empty($page['header'])): ?>
+          <div id="header-blocks"><?php print($page['header']); ?></div>
+        <?php endif; ?>
+
+        <div id="header-horizontal_ruler"></div>
+
+      </div> <!-- /header -->
+
+      <?php if ($main_menu_links): ?>
+        <div id="main-menu-wrapper" class="clearfix">
+          <div class="main-menu-inner"><?php print $main_menu_links; ?></div>
+        </div>
+      <?php endif; ?>
+
+    <?php endif; // end hide in overlay ?>
+
+    <?php if (!empty($page['secondary_content']) && !$in_overlay): // hide in overlay ?>
+      <div id="secondary-content">
+        <?php print($page['secondary_content']); ?>
+      </div>
+    <?php endif; ?>
+
+    <div id="columns" class="clear clearfix<?php print($page['sidebar_css']); ?><?php print($page['subboard_image_css']); ?>">
+      <?php if (!empty($page['sidebar_first'])): ?>
+        <div id="sidebar-first" class="sidebar"><?php print($page['sidebar_first']); ?></div>
+      <?php endif; ?>
+
+      <div id="content-column">
+        <?php print $messages; ?>
+        <?php print($page['help']); ?>
+
+        <?php if (!empty($page['renderred_action_links'])): ?>
+          <ul class="action-links"><?php print($page['renderred_action_links']); ?></ul>
+        <?php endif; ?>
+
+        <div class="content-inner">
+
+          <?php if (!empty($page['highlighted'])): ?>
+            <div id="highlighted"><?php print ($page['highlighted']); ?></div>
+          <?php endif; ?>
+
+          <div id="main-content">
+            <?php if (!empty($page['subboard']) || !empty($page['subboard_image'])): ?>
+              <div id="subboard">
+                <?php if (!empty($page['subboard_image'])) { ?>
+                <div id="subboard-image"><?php print($page['subboard_image']);?></div>
+                <?php } ?>
+                <?php print($page['subboard']); ?>
+              </div>
+            <?php endif; ?>
+
+            <?php print render($title_prefix); ?>
+            <?php if ($title): ?>
+              <h1 id="page-title"><?php print $title; ?></h1>
+            <?php endif; ?>
+            <?php print render($title_suffix); ?>
+
+            <?php if (!empty($breadcrumb)){ ?>
+              <div id="breadcrumb">
+                <?php print $breadcrumb; ?>
+                <?php if (!empty($page['subtitle'])){ ?>
+                  <div class="subtitle"><?php print($page['subtitle']);?></div>
+                <?php } ?>
+              </div>
+            <?php } ?>
+
+            <?php if (!empty($page['renderred_tabs'])): ?>
+              <div class="local-tasks"><?php print($page['renderred_tabs']); ?></div>
+            <?php endif; ?>
+
+            <div id="content">
+              <?php print($page['content']); ?>
+            </div>
           </div>
-        <?php } ?>
-        <?php if (isset($title) && is_string($title)){ ?>
-          <h1 id='maintenance_mode-page_title'><?php print($title); ?></h1>
-        <?php } ?>
-        <?php print(render($title_suffix)); ?>
-        <!--(end_title)-->
+
+        </div>
       </div>
 
-      <?php if (isset($side_links) && is_string($side_links)) { ?>
-        <div id='maintenance_mode-side_links'>
-          <!--(begin_side_links)-->
-          <h2 class='element-invisible'><?php print t("Side Links"); ?></h2>
-          <ul class='links'><?php print($side_links); ?></ul>
-          <!--(end_side_links)-->
-        </div>
-      <?php } ?>
-    </div>
+      <?php if (!empty($page['sidebar_second'])): ?>
+        <div id="sidebar-second" class="sidebar"><?php print($page['sidebar_second']); ?></div>
+      <?php endif; ?>
 
-    <div id='maintenance_mode-message_region' class='clearfix'>
-      <?php if (isset($messages) && is_string($messages)){ ?>
-        <!--(begin_messages)-->
-        <div id='maintenance_mode-messages' class='clearfix'>
-          <h2 class='element-invisible'><?php print t('Messages'); ?></h2>
-          <?php print($messages); ?>
-        </div>
-        <!--(end_messages)-->
-      <?php } ?>
+    </div> <!-- /columns -->
 
-      <?php if ($help){ ?>
-        <!--(begin_help)-->
-        <div id='maintenance_mode-help' class='clearfix'>
-          <h2 class='element-invisible'><?php print t("Help"); ?></h2>
-          <?php print($help); ?>
-        </div>
-        <!--(end_help)-->
-      <?php } ?>
-    </div>
+    <?php if (!$in_overlay){ // hide in overlay ?>
 
-    <div id='maintenance_mode-content_region' class='page-title'>
-      <?php if ($content){ ?>
-        <div id='maintenance_mode-content' class='clearfix'>
-          <!--(begin_content)-->
-          <h2 class='element-invisible'><?php print(t("Primary Content")); ?></h2>
-          <?php print($content); ?>
-          <!--(end_content)-->
+      <?php if (!empty($page['tertiary_content'])): ?>
+        <div id="tertiary-content" style="<?php print($page['is_front_css']);?>">
+          <?php print($page['tertiary_content']); ?>
         </div>
-      <?php } ?>
-    </div>
-
-    <div id="maintenance_mode-undercontent">
-      <!--(begin_undercontent)-->
-      <div id="maintenance_mode-MSU" class="maintenance_mode-outline" title='McNeese State University'>McNeese State University</div>
-      <div id="maintenance_mode-UCS" class="maintenance_mode-outline" title='University Computing Services'>University Computing Services</div>
-      <!--(end_undercontent)-->
-    </div>
-    <!--(end_page)-->
+      <?php endif; ?>
+    <?php } ?>
   </div>
 
-  <div id="maintenance_mode-page_bottom" class="maintenance_mode">
-    <!--(begin_page_bottom)-->
-    <?php print($page_bottom); ?>
-    <!--(end_page_bottom)-->
+  <?php if (!$in_overlay): // hide in overlay ?>
+
+  <div id="footer" style="<?php print($page['is_front_css']);?>">
+    <?php if (!empty($page['footer']) || $feed_icons): ?>
+      <?php print ($page['footer']); ?>
+      <?php print $feed_icons; ?>
+    <?php endif; ?>
   </div>
-  <!--(end_body)-->
+
+  <?php endif; // end hide in overlay ?>
+
+  <?php print $page_bottom; ?>
+
 </body>
 </html>
