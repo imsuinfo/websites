@@ -11,6 +11,19 @@
  */
 
 /**
+ * Override or insert variables into the maintenance page template.
+ */
+function genesis_mcneese_preprocess_maintenance_page(&$vars) {
+  // While markup for normal pages is split into page.tpl.php and html.tpl.php,
+  // the markup for the maintenance page is all in the single
+  // maintenance-page.tpl.php template. So, to have what's done in
+  // mcneese_drupal_preprocess_html() also happen on the maintenance page, it has to be
+  // called here.
+  genesis_mcneese_preprocess_html($vars);
+  genesis_mcneese_preprocess_page($vars);
+}
+
+/**
  * Override or insert variables into all templates.
  */
 /* -- Delete this line if you want to use these functions

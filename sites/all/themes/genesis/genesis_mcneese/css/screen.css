@@ -692,3 +692,28 @@ div#skip-link a:focus {
   border: 2px outset #000000;
   overflow: visible;
 }
+
+
+
+/*** Node Information ***/
+div.view-id-node_information {
+  background-color: #f2f8ff;
+}
+
+div.view-id-node_information .basic_information-group-label {
+  display: block;
+
+  font-size: 18px;
+  font-weight: bold;
+  text-align: center;
+
+  background-color: #d1e7ff;
+}
+
+div.view-id-node_information .node_information-label {
+  font-weight: bold;
+}
+
+div.view-id-node_information .node_information-item {
+  padding: 3px 0;
+}

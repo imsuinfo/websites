@@ -1,7 +1,6 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML+RDFa 1.0//EN" "http://www.w3.org/MarkUp/DTD/xhtml-rdfa-1.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="<?php print $language->language; ?>" version="XHTML+RDFa 1.0" dir="<?php print $language->dir; ?>"
-  <?php print $rdf_namespaces; ?>>
-<head profile="<?php print $grddl_profile; ?>">
+<head>
   <?php print $head; ?>
   <title><?php print $head_title; ?></title>
   <?php print $styles; ?>
@@ -18,7 +17,7 @@
 
   <?php print $page_top; ?>
 
-  <div id="container" class="<?php print $classes; ?><?php print($page['is_front_css']);?>">
+  <div id="container" class="<?php print $classes; ?>">
     <?php if (!$in_overlay): // hide in overlay ?>
 
       <?php if (!empty($page['leaderboard'])): ?>
@@ -27,37 +26,12 @@
         </div>
       <?php endif; ?>
 
-      <?php if ($secondary_menu_links): ?>
-        <div id="secondary-menu-wrapper" class="clearfix">
-          <div class="secondary-menu-inner"><?php print $secondary_menu_links; ?></div>
-        </div>
-      <?php endif; ?>
-
       <div id="header" class="clearfix">
-
-        <?php if ($site_logo || $site_name || $site_slogan): ?>
-          <div id="branding">
-
-            <?php if ($site_logo or $site_name): ?>
-              <?php if ($title): ?>
-                <div class="logo-site-name"><strong>
-                  <?php if ($site_logo): ?><span id="logo"><?php print $site_logo; ?></span><?php endif; ?>
-                  <?php if ($site_name): ?><span id="site-name"><?php print $site_name; ?></span><?php endif; ?>
-                </strong></div>
-              <?php else: /* Use h1 when the content title is empty */ ?>
-                <h1 class="logo-site-name">
-                  <?php if ($site_logo): ?><span id="logo"><?php print $site_logo; ?></span><?php endif; ?>
-                  <?php if ($site_name): ?><span id="site-name"><?php print $site_name; ?></span><?php endif; ?>
-               </h1>
-              <?php endif; ?>
-            <?php endif; ?>
-
-            <?php if ($site_slogan): ?>
-              <div id="site-slogan"><?php print $site_slogan; ?></div>
-            <?php endif; ?>
-
-          </div> <!-- /branding -->
-        <?php endif; ?>
+        <div id="branding">
+          <h1 class="logo-site-name">
+            <span id="logo"><a rel="home" title="Home page" href="/"><img alt=" logo" src="<?php print(path_to_theme());?>/images/web_logo.png"></a></span>
+          </h1>
+        </div> <!-- /branding -->
 
         <?php if (!empty($page['header'])): ?>
           <div id="header-blocks"><?php print($page['header']); ?></div>
@@ -67,12 +41,6 @@
 
       </div> <!-- /header -->
 
-      <?php if ($main_menu_links): ?>
-        <div id="main-menu-wrapper" class="clearfix">
-          <div class="main-menu-inner"><?php print $main_menu_links; ?></div>
-        </div>
-      <?php endif; ?>
-
     <?php endif; // end hide in overlay ?>
 
     <?php if (!empty($page['secondary_content']) && !$in_overlay): // hide in overlay ?>
@@ -81,9 +49,9 @@
       </div>
     <?php endif; ?>
 
-    <div id="columns" class="clear clearfix<?php print($page['sidebar_css']); ?><?php print($page['subboard_image_css']); ?>">
-      <?php if (!empty($page['sidebar_first'])): ?>
-        <div id="sidebar-first" class="sidebar"><?php print($page['sidebar_first']); ?></div>
+    <div id="columns" class="clear clearfix sidebar-left<?php print($page['subboard_image_css']); ?>">
+      <?php if (!empty($sidebar_first)): ?>
+        <div id="sidebar-first" class="sidebar"><?php print($sidebar_first); ?></div>
       <?php endif; ?>
 
       <div id="content-column">
@@ -130,15 +98,15 @@
             <?php endif; ?>
 
             <div id="content">
-              <?php print($page['content']); ?>
+              <?php print($content); ?>
             </div>
           </div>
 
         </div>
       </div>
 
-      <?php if (!empty($page['sidebar_second'])): ?>
-        <div id="sidebar-second" class="sidebar"><?php print($page['sidebar_second']); ?></div>
+      <?php if (!empty($sidebar_second)): ?>
+        <div id="sidebar-second" class="sidebar"><?php print($sidebar_second); ?></div>
       <?php endif; ?>
 
     </div> <!-- /columns -->
