@@ -6,8 +6,8 @@
   <?php print $styles; ?>
   <?php print $scripts; ?>
 </head>
-<?php // modify the layout by changing the id, see layout.css ?>
-<body id="maintenance_mode-body" <?php print $attributes;?>>
+
+<body id="maintenance_mode-body" class="<?php print($emergency['css']); ?>">
 
   <?php if (!$in_overlay): // Hide the skip-link in overlay ?>
     <div id="skip-link">
@@ -78,11 +78,15 @@
               </div>
             <?php endif; ?>
 
-            <?php print render($title_prefix); ?>
-            <?php if ($title): ?>
-              <h1 id="page-title"><?php print $title; ?></h1>
-            <?php endif; ?>
-            <?php print render($title_suffix); ?>
+            <?php if (!empty($emergency['content'])){ ?>
+              <h1 id="page-title"><?php print $emergency['content']['title']; ?></h1>
+            <?php } else { ?>
+              <?php print render($title_prefix); ?>
+              <?php if ($title): ?>
+                <h1 id="page-title"><?php print $title; ?></h1>
+              <?php endif; ?>
+              <?php print render($title_suffix); ?>
+            <?php } ?>
 
             <?php if (!empty($breadcrumb)){ ?>
               <div id="breadcrumb">
@@ -98,7 +102,11 @@
             <?php endif; ?>
 
             <div id="content">
-              <?php print($content); ?>
+              <?php if (!empty($emergency['content'])){ ?>
+                <div class="emergency-content"><?php print(check_markup($emergency['content']['body']['value'], $emergency['content']['body']['format'])); ?></div>
+              <?php } else { ?>
+                <?php print($content); ?>
+              <?php } ?>
             </div>
           </div>
 

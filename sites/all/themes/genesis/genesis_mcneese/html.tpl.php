@@ -45,7 +45,7 @@
   <?php print $scripts; ?>
 </head>
 <?php // modify the layout by changing the id, see layout.css ?>
-<body id="genesis_mcneese" <?php print $attributes;?>>
+<body id="genesis_mcneese" <?php print $attributes;?> class="<?php print($emergency['css']); ?>"
 
   <?php if (!$in_overlay): // Hide the skip-link in overlay ?>
     <div id="skip-link">

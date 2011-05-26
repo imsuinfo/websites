@@ -21,6 +21,10 @@ function genesis_mcneese_preprocess_maintenance_page(&$vars) {
   // called here.
   genesis_mcneese_preprocess_html($vars);
   genesis_mcneese_preprocess_page($vars);
+
+  if (isset($vars['emergency']['css'])){
+    $vars['emergency']['css'] = ' emergency_mode-maintenance_page';
+  }
 }
 
 /**
@@ -38,6 +42,8 @@ function genesis_mcneese_process(&$vars, $hook) {
  */
 function genesis_mcneese_preprocess_html(&$vars) {
   drupal_add_css(path_to_theme() . '/css/ie8.css', array('group' => CSS_THEME, 'browsers' => array('IE' => 'lte IE 8', '!IE' => FALSE), 'preprocess' => FALSE, 'weight' => 2));
+
+  $vars['emergency'] = genesis_mcneese_generate_emergency_array();
 }
 /*
 function genesis_mcneese_process_html(&$vars) {
@@ -67,7 +73,9 @@ function genesis_mcneese_preprocess_page(&$vars) {
   $vars['page']['subboard_image'] = '';
   $vars['page']['subboard_image_css'] = '';
   $vars['page']['subtitle'] = '';
+  $vars['emergency'] = genesis_mcneese_generate_emergency_array();
   $subboard_image_display = '_large';
+
 
   if (!empty($vars['page']['sidebar_first']) && !empty($vars['page']['sidebar_second'])){
     $vars['page']['sidebar_css'] = ' sidebar-both';
@@ -161,3 +169,26 @@ function genesis_mcneese_preprocess_block(&$vars) {
 function genesis_mcneese_process_block(&$vars) {
 }
 // */
+
+
+/**
+ * Generates an array containing emergency information
+ *
+ * FIXME: this is currently hard-coded, but should be properly implement later on in the future.
+ */
+function genesis_mcneese_generate_emergency_array($additional_css = '') {
+  $emergency = array();
+  $emergency['content'] = '';
+  $emergency['css'] = '';
+
+  $loaded_node = node_load(914);
+
+  if (is_object($loaded_node)){
+    if (isset($loaded_node->status) && $loaded_node->status == NODE_PUBLISHED){
+      $emergency['content'] = array('title' => $loaded_node->title, 'body' => $loaded_node->body['und']['0']);
+      $emergency['css'] = ' emergency_mode';
+    }
+  }
+
+  return $emergency;
+}

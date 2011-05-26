@@ -7,7 +7,8 @@ body {
   background-color: #ffffff;
 }
 
-body#genesis_mcneese {
+body#genesis_mcneese,
+body#maintenance_mode-body {
   background-color: #dadada;
 }
 
@@ -618,7 +619,7 @@ div#columns div.view-id-more_pages div.views-field-field-headline {
 
 /*** Content Specific Style: calendar pages ***/
 
-div.view-id-master_calendar.view-display-id-current_events {
+div.view-id-master_calendar.view-display-id-event_listing {
   position: relative;
 
   font-size: 14px;
@@ -630,24 +631,24 @@ div.view-id-master_calendar.view-display-id-current_events {
   margin-top: 10px;
 }
 
-div.view-id-master_calendar.view-display-id-current_events div.view-content div.views-row {
+div.view-id-master_calendar.view-display-id-event_listing div.view-content div.views-row {
   margin-bottom: 15px;
 }
 
-div.view-id-master_calendar.view-display-id-current_events div.view-content div.views-row-even {
+div.view-id-master_calendar.view-display-id-event_listing div.view-content div.views-row-even {
   background-color: #efefef;
 }
 
-div.view-id-master_calendar.view-display-id-current_events div.view-content div.views-field-title a,
-div.view-id-master_calendar.view-display-id-current_events div.view-content div.views-field-title a:visited {
+div.view-id-master_calendar.view-display-id-event_listing div.view-content div.views-field-title a,
+div.view-id-master_calendar.view-display-id-event_listing div.view-content div.views-field-title a:visited {
   font-weight: bold;
   font-size: 14px;
   text-decoration: none;
 }
 
-div.view-id-master_calendar.view-display-id-current_events div.view-content div.views-field-title a:focus,
-div.view-id-master_calendar.view-display-id-current_events div.view-content div.views-field-title a:hover,
-div.view-id-master_calendar.view-display-id-current_events div.view-content div.views-field-title a:active {
+div.view-id-master_calendar.view-display-id-event_listing div.view-content div.views-field-title a:focus,
+div.view-id-master_calendar.view-display-id-event_listing div.view-content div.views-field-title a:hover,
+div.view-id-master_calendar.view-display-id-event_listing div.view-content div.views-field-title a:active {
   color: #7f0000;
 
   text-decoration: underline;

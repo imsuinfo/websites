@@ -717,3 +717,27 @@ div.view-id-node_information .node_information-label {
 div.view-id-node_information .node_information-item {
   padding: 3px 0;
 }
+
+
+
+/*** Emergency Mode ***/
+body.emergency_mode {
+  background-color: #e90000 !important;
+}
+
+div.emergency_mode-notice {
+  color: #6d0000;
+  background-color: #fff0f0;
+
+  border: 1px solid #ff0000;
+  padding: 3px;
+}
+
+div.emergency_mode-notice .emergency_mode-notice-emergency_mode {
+  font-weight: bold;
+
+  text-transform: uppercase;
+
+  font-size: 14px;
+  line-height: 20px;
+}
