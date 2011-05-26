@@ -1,0 +1,74 @@
+/*
+ * Note: Include the msu-slider.css file that comes
+ * with the main download before including this file.
+ */
+
+.msu-controlNav {
+  width: 280px;
+  height: 379px;
+
+  float: right;
+
+  right: -283px;
+  position: absolute;
+
+  overflow: hidden;
+}
+
+.msu-controlNav a {
+  display: inline-block;
+
+  width: 130px;
+  height: 123px;
+  border: 0;
+  margin-left: 2px;
+  margin-right: 3px;
+  margin-bottom: 5px;
+}
+
+.msu-control a.active {
+  display: block;
+  width: 0;
+  height: 0;
+  font-size: 0;
+  border: 0;
+}
+
+.msu-directionNav a {
+  display: block;
+  width: 32px;
+  height: 34px;
+  background: url(arrows.png) no-repeat;
+  text-indent: -9999px;
+  border:0;
+}
+
+a.msu-nextNav {
+  background-position: -32px 0;
+  right: 10px;
+}
+
+a.msu-prevNav {
+  left: 10px;
+}
+
+.msu-controlNav img {
+  display: inline; /* Unhide the thumbnails */
+  position: relative;
+  margin-right: 0px;
+}
+
+.msu-caption-title,
+.msu-caption-title:visited {
+  font-size: 18px;
+  font-weight: bold;
+
+  color: #fad703;
+}
+
+.msu-caption .msu-caption-subtitle {
+  font-size: 12px;
+  font-weight: bold;
+
+  color: #ffffff;
+}

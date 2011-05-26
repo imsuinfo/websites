@@ -1,0 +1,10 @@
+; $Id$
+name = MSU Slider
+description = Integrates the Nivo Slider plugin with Views jQFX (MSU-Specific).
+dependencies[] = views_jqfx
+package = Views
+core = 7.x
+files[] = msu_slider.module
+files[] = msu_slider.views_jqfx.inc
+files[] = theme/msu_slider.theme.inc
+
