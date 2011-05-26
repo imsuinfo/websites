@@ -35,8 +35,6 @@ function genesis_mcneese_process_html(&$vars) {
  * Override or insert variables into the page templates.
  */
 function genesis_mcneese_preprocess_page(&$vars) {
-}
-function genesis_mcneese_process_page(&$vars) {
   $vars['page']['leaderboard'] = isset($vars['page']['leaderboard']) ? render($vars['page']['leaderboard']) : '';
   $vars['page']['primary_links'] = isset($vars['page']['primary_links']) ? render($vars['page']['primary_links']) : '';
   $vars['page']['header'] = isset($vars['page']['header']) ? render($vars['page']['header']) : '';
@@ -116,6 +114,10 @@ function genesis_mcneese_process_page(&$vars) {
     }
   }
 }
+/*
+function genesis_mcneese_process_page(&$vars) {
+}
+*/
 
 /**
  * Override or insert variables into the node templates.
