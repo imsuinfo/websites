@@ -160,6 +160,22 @@ div#block-search-form form#search-block-form input#edit-submit {
   padding: 0;
 }
 
+div#block-search-form {
+  min-width: 180px;
+}
+
+div#block-search-form div.form-item-search-block-form,
+div#block-search-form input#edit-search-block-form--1,
+div#block-search-form input#edit-search-block-form--2,
+div#block-search-form input#edit-search-block-form--3 {
+  min-width: 155px;
+}
+
+div#block-search-form div#edit-actions {
+  display: inline-block;
+  float: right;
+}
+
 
 
 /*** Menu - Primary Navigation ***/
