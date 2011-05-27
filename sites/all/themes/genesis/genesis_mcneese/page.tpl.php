@@ -67,6 +67,7 @@
  * @see template_preprocess_page()
  * @see template_process()
  */
+  global $base_url;
 ?>
   <div id="container" class="<?php print $classes; ?><?php print($page['is_front_css']);?><?php print($emergency['css']); ?>">
     <?php if (!$in_overlay): // hide in overlay ?>
@@ -140,7 +141,7 @@
         <?php if (!empty($emergency['content'])){ ?>
           <div class="emergency_mode-notice">
             This website is operating in <span class="emergency_mode-notice-emergency_mode">Emergency Mode</span>.<br>
-            To exit <span class="emergency_mode-notice-emergency_mode">Emergency Mode</span>, you must <a href="/emergency_page">Unpublish the Emergency Page</a>
+            To exit <span class="emergency_mode-notice-emergency_mode">Emergency Mode</span>, you must <a href="<?php print($base_url);?>/emergency_page">Unpublish the Emergency Page</a>
           </div>
         <?php } ?>
         <?php print $messages; ?>
