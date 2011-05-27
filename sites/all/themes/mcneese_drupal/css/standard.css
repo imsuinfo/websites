@@ -105,17 +105,6 @@ input#edit-pass {
   line-height: 21px;
 }
 
-a,
-a:visited {
-  color: #0000ff;
-  text-decoration: none;
-}
-
-a:hover,
-a:active{
-  text-decoration: underline;
-}
-
 span.cke_button a:hover,
 span.cke_button a:active {
   text-decoration: none;

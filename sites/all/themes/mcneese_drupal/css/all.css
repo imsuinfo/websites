@@ -239,12 +239,17 @@ div#mcneese_drupal-content div.region-content .list-box a,
 div#mcneese_drupal-content div.region-content .list-box a:visited {
   text-decoration: none;
 }
-div#mcneese_drupal-content div.region-content th{
+div#mcneese_drupal-content div.region-content th {
   color: #ffffff;
   background-color: #00477f;
   margin 5px;
   border-bottom:1px;
   text-align: center;
+}
+
+div#mcneese_drupal-content div.region-content th a,
+div#mcneese_drupal-content div.region-content th a:visited {
+  color: #fad70f;
 }
 
 div#mcneese_drupal-content div.region-content td {
