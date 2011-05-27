@@ -11,15 +11,15 @@
  * Implements hook_install().
  */
 function ldap_servers_install() {
-  variable_set('ldap_servers_encryption', 'none');
+  variable_set('ldap_servers_encryption', LDAP_SERVERS_ENC_TYPE_CLEARTEXT);
   variable_set('ldap_servers_require_ssl_for_credentails', 0);
-  
+
   if (! ($key = variable_get('ldap_servers_encrypt_key', NULL))) {
     require_once('ldap_servers.encryption.inc');
     $key = ldap_servers_random_salt(10);
     variable_set('ldap_servers_encrypt_key', $key);
   }
-  
+
 }
 
 /**
@@ -40,13 +40,13 @@ function ldap_servers_requirements($phase) {
   if (extension_loaded('ldap')) {
     $requirements['ldap_extension_loaded']['value'] = t('Passed');
     $requirements['ldap_extension_loaded']['severity'] = REQUIREMENT_OK;
-  } 
+  }
   else {
     $requirements['ldap_extension_loaded']['value'] = t('Failed');
     $requirements['ldap_extension_loaded']['severity'] = REQUIREMENT_ERROR;
     $requirements['ldap_extension_loaded']['description'] = t('No LDAP Extension is loaded for PHP, so LDAP will not work properly.');
   }
-  
+
   // check that ldapauth not installed.
   return $requirements;
 }
@@ -112,19 +112,29 @@ function ldap_servers_schema() {
         'not null' => TRUE,
         'default' => 0,
       ),
+      'bind_method' => array(
+        'type' => 'int',
+        'size' => 'tiny',
+        'not null' => TRUE,
+        'default' => 0,
+      ),
       'basedn' => array(
         'type' => 'text',
       ),
       'binddn' => array(
         'type' => 'varchar',
-        'length' => 255,
+        'length' => 511,
       ),
       'bindpw' => array(
         'type' => 'varchar',
         'length' => 255,
         'no export' => TRUE,
-      ),        
-        
+      ),
+      'user_dn_expression' => array(
+        'type' => 'varchar',
+        'length' => 255,
+        'not null' => FALSE,
+      ),
       'user_attr' => array(
         'type' => 'varchar',
         'length' => 255,
@@ -161,4 +171,3 @@ function ldap_servers_schema() {
   return $schema;
 
 }
-
