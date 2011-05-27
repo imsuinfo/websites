@@ -12,10 +12,10 @@
 <body id="mcneese_drupal-body" class="<?php print($classes); ?>" <?php print($attributes);?>>
   <?php if (!isset($in_overlay) || !$in_overlay){ ?><div id="mcneese_drupal-skip_nav" class="clearfix mcneese_drupal-text_shadow">
     <!--(begin_skipnav)-->
-    <ul id="mcneese_drupal-skip_nav-list">
-      <li id="mcneese_drupal-skip_nav-list-content"><a id="mcneese_drupal-skip_nav-list-content-link" class="mcneese_drupal-skipnav-link element-invisible element-focusable" href="#mcneese_drupal-content"><?php print t("Skip to main content"); ?></a></li>
-      <?php if (isset($search)){ ?><li id="mcneese_drupal-skip_nav-list-search"><a id="mcneese_drupal-skip_nav-list-search-link" class="mcneese_drupal-skipnav-link element-invisible element-focusable" href="#mcneese_drupal-search"><?php print t("Skip to search"); ?></a></li><?php } ?>
-    </ul>
+    <div id="mcneese_drupal-skip_nav-list">
+      <div id="mcneese_drupal-skip_nav-list-content"><a id="mcneese_drupal-skip_nav-list-content-link" class="mcneese_drupal-skipnav-link element-invisible element-focusable" href="#mcneese_drupal-content"><?php print t("Skip to main content"); ?></a></div>
+      <?php if (isset($search)){ ?><div id="mcneese_drupal-skip_nav-list-search"><a id="mcneese_drupal-skip_nav-list-search-link" class="mcneese_drupal-skipnav-link element-invisible element-focusable" href="#mcneese_drupal-search"><?php print t("Skip to search"); ?></a></div><?php } ?>
+    </div>
     <!--(end_skipnav)-->
   </div><?php } ?>
 

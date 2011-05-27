@@ -1,3 +1,238 @@
+/*** Cleanup ***/
+{
+  position: absolute;
+
+  width: 100%;
+
+  top: 0px;
+  left: 0px;
+}
+
+body {
+  font-family: Arial, Helvetica, sans-serif;
+
+  background-color: #ffffff;
+}
+
+body#mcneese_drupal-body,
+body#maintenance_mode-body {
+  background-color: #dadada;
+}
+
+html#ckeditor-wysiwygarea,
+div#container,
+div#main-content,
+div#columns,
+div#content,
+div#footer {
+  position: relative;
+}
+
+.element-invisible {
+  display: block;
+
+  font-size: 0;
+
+  width: 0;
+  max-width: 0;
+  height: 0;
+  max-height: 0;
+  overflow: hidden;
+}
+
+input.form-submit, a.button {
+  border: 1px outset #333333;
+  cursor: pointer;
+  padding: 2px 4px;
+  margin: 0 1px 1px 2px;
+}
+
+select,
+input,
+textarea,
+textarea.form-textarea {
+  border-width: 1px;
+  border-style: solid;
+  border-color: #cccccc #999999 #999999 #cccccc;
+}
+
+html#ckeditor-wysiwygarea,
+div#content {
+  font-size: 14px;
+}
+
+html#ckeditor-wysiwygarea p,
+div#content p {
+  margin: 10px 0;
+  font-size: 14px;
+  line-height: 1.2;
+}
+
+html#ckeditor-wysiwygarea h2,
+div#content h2 {
+  font-weight: normal;
+  margin-bottom: 15px;
+}
+
+ul.menu {
+  margin: 0;
+  padding: 0;
+}
+
+a:focus {
+  border: 1px dotted #555555;
+}
+
+a,
+a:visited {
+  color: #00477f;
+}
+
+a:focus,
+a:active,
+a:hover {
+  color: #7f0000;
+}
+
+div#edit-basic div.form-item-keys,
+div#edit-basic div.form-item-keys label,
+input#edit-name,
+input#edit-keys,
+input#edit-pass {
+  height: 23px;
+  min-height: 23px;
+  max-height: 23px;
+  line-height: 21px;
+}
+
+a,
+a:visited,
+div#modalContent a,
+div#modalContent a:visited {
+  color: #0000ff;
+  text-decoration: none;
+}
+
+a:hover,
+a:active,
+div#modalContent a:hover,
+div#modalContent a:active {
+  text-decoration: underline;
+}
+
+span.cke_button a:hover,
+span.cke_button a:active,
+span.cke_button div#modalContent a:hover,
+span.cke_button div#modalContent a:active {
+  text-decoration: none;
+}
+
+hr,
+div#modalContent hr {
+  margin: 0;
+  padding: 0;
+  border: none;
+  height: 1px;
+  background: #cccccc;
+}
+
+.element-invisible,
+div#modalContent .element-invisible {
+  width: 0px;
+  height: 0px;
+  overflow: hidden;
+}
+
+dl,
+div#modalContent dl {
+  margin: 0 0 20px;
+}
+
+dl dd,
+dl dl,
+div#modalContent dl dd,
+div#modalContent dl dl {
+  margin-left: 20px;
+  margin-bottom: 10px;
+}
+
+blockquote,
+div#modalContent blockquote {
+  margin: 4px 40px;
+}
+
+address,
+div#modalContent address {
+  font-style: italic;
+}
+
+u,
+div#modalContent s,
+u,
+div#modalContent s {
+  text-decoration: underline;
+}
+
+s,
+strike,
+del,
+div#modalContent s,
+div#modalContent strike,
+div#modalContent del {
+  text-decoration: line-through;
+}
+
+big,
+div#modalContent big {
+  font-size: larger;
+}
+
+small,
+div#modalContent small {
+  font-size: smaller;
+}
+
+sub,
+div#modalContent sub {
+  vertical-align: sub;
+  font-size: smaller;
+  line-height: normal;
+}
+
+sup,
+div#modalContent sup {
+  vertical-align: super;
+  font-size: smaller;
+  line-height: normal;
+}
+
+nobr,
+div#modalContent nobr {
+  white-space: nowrap;
+}
+
+abbr,
+acronym,
+div#modalContent abbr,
+div#modalContent acronym {
+  border-bottom: dotted 1px;
+}
+
+input,
+select,
+textarea,
+div#modalContent input,
+div#modalContent select,
+div#modalContent textarea {
+  border: 1px solid #000000;
+}
+
+
+ul, ol {
+  margin-top: 0px;
+  margin-bottom: 0px;
+}
+
 div.content p {
   margin-top: 3px;
   margin-bottom: 3px;
@@ -67,6 +302,7 @@ div.error {
 }
 
 
+
 /*** ELEMENTS ***/
 .form-item {
   padding: 6px 0;
@@ -118,7 +354,6 @@ div.teaser-checkbox .form-item,
 
 /*** TABS ***/
 div#mcneese_drupal-primary_tabs ul.primary {
-  float: right;
   border-bottom: none;
   padding: 2px 0 3px 8px;
   text-transform: uppercase;
@@ -302,6 +537,7 @@ div#mcneese_drupal-primary_tabs ul.secondary li.active a.active {
 #mcneese_drupal-page table.system-status-report tr.error {
   background-color: #ffdddd;
 }
+
 
 
 /*** FILTERS ***/
@@ -572,4 +808,37 @@ ul.action-links a {
   padding-left: 15px;
   background: transparent url(../images/add.png) no-repeat 0 center;
   line-height: 30px;
+}
+
+
+
+/*** update page colors ***/
+div#mcneese_drupal-content_region div#block-system-main table.update tbody tr,
+div#modalContent div#block-system-main table.update tbody tr {
+  border-bottom: 1px solid #999999;
+}
+
+div#mcneese_drupal-content_region div#block-system-main table.update tbody tr.info,
+div#modalContent div#block-system-main table.update tbody tr.info  {
+  background: #e0e0ff;
+}
+
+div#mcneese_drupal-content_region div#block-system-main table.update tbody tr.ok,
+div#modalContent div#block-system-main table.update tbody tr.ok {
+  background: #d1f7cb;
+}
+
+div#mcneese_drupal-content_region div#block-system-main table.update tbody tr.warning,
+div#modalContent div#block-system-main table.update tbody tr.warning {
+  background: #ffffdd;
+}
+
+div#mcneese_drupal-content_region div#block-system-main table.update tbody tr.error,
+div#modalContent div#block-system-main table.update tbody tr.error {
+  background: #ffdddd;
+}
+
+div#mcneese_drupal-content_region div#block-system-main table.update tbody tr.unknown,
+div#modalContent div#block-system-main table.update tbody tr.unknown {
+  background: #eeeeee;
 }
