@@ -173,6 +173,10 @@
             <?php endif; ?>
             <?php print render($title_suffix); ?>
 
+            <?php if (!empty($page['renderred_tabs'])): ?>
+              <div class="local-tasks"><?php print($page['renderred_tabs']); ?></div>
+            <?php endif; ?>
+
             <?php if (!empty($breadcrumb)){ ?>
               <div id="breadcrumb">
                 <?php print $breadcrumb; ?>
@@ -181,10 +185,6 @@
                 <?php } ?>
               </div>
             <?php } ?>
-
-            <?php if (!empty($page['renderred_tabs'])): ?>
-              <div class="local-tasks"><?php print($page['renderred_tabs']); ?></div>
-            <?php endif; ?>
 
             <div id="content">
               <?php print($page['content']); ?>

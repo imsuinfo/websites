@@ -618,57 +618,91 @@ div.view-id-master_calendar ul li div.views-field-field-event-date {
 
 /*** Content - local tasks ***/
 div#main-content div.local-tasks {
-  position: relative;
-
-  font-family: Arial, Helvetica, sans-serif;
-  font-size: 14px;
-
-  margin: 2px 0 5px 0;
+  margin: 0;
 }
 
-div#main-content div.local-tasks ul.tabs {
-  margin: 0 4px;
+div#main-content div.local-tasks ul.primary {
+  border-bottom: none;
+  padding: 2px 0 3px 8px;
+  text-transform: uppercase;
+  font-size: 12px;
 }
 
-div#main-content div.local-tasks ul.tabs li {
-  margin: 0 1px;
+div#main-content div.local-tasks ul.primary li {
+  display: inline;
+  list-style: none;
 }
 
-div#main-content div.local-tasks ul.tabs li a {
-  color: #f2f2f2;
-
-  padding: 2px 7px 0 7px;
-
-  -moz-border-radius-bottomleft: 5px;
-  -moz-border-radius-bottomright: 5px;
-  -webkit-border-bottom-left-radius: 5px;
-  -webkit-border-bottom-right-radius: 5px;
+div#main-content div.local-tasks ul.primary li a,
+div#main-content div.local-tasks ul.primary li a.active,
+div#main-content div.local-tasks ul.primary li a:active,
+div#main-content div.local-tasks ul.primary li a:visited,
+div#main-content div.local-tasks ul.primary li a:hover,
+div#main-content div.local-tasks ul.primary li.active a {
+  background-color: ##cbccc6;
+  color: #000;
+  font-weight: bold;
+  padding: 3px 10px;
+  border-width: 1px 1px 0 1px;
+  border-style: solid;
+  border-color: #a6a7a2;
+  border-radius: 8px 8px 0 0;
+  -moz-border-radius: 8px 8px 0 0;
+  -webkit-border-top-left-radius: 8px;
+  -webkit-border-top-right-radius: 8px;
 }
 
-div#main-content div.local-tasks ul.tabs li a,
-div#main-content div.local-tasks ul.tabs li a:visited {
-  font-size: 14px;
-  background-color: #454545;
+div#main-content div.local-tasks ul.primary li.active a,
+div#main-content div.local-tasks ul.primary li.active a.active,
+div#main-content div.local-tasks ul.primary li.active a:active,
+div#main-content div.local-tasks ul.primary li.active a:visited {
+  background-color: #fff;
+  border-color: #c9cac4;
 }
 
-div#main-content div.local-tasks ul.tabs li a.active,
-div#main-content div.local-tasks ul.tabs li a.active:visited {
-  color: #fad703;
-  text-shadow: 0px 1px 0px #000000;
+div#main-content div.local-tasks ul.primary li a:hover {
+  color: #0000ff;
 }
 
-div#main-content div.local-tasks ul.tabs li a.active:focus,
-div#main-content div.local-tasks ul.tabs li a.active:hover,
-div#main-content div.local-tasks ul.tabs li a.active:active {
+div#main-content div.local-tasks ul.primary li.active a:hover {
+  color: #0000ff;
+}
+
+div#main-content div.local-tasks ul.secondary {
+  float: none;
+  clear: both;
+  font-size: 0.923em;
+  text-align: right;
+  padding: 4px 10px 10px;
+  line-height: 1.385em;
+  overflow: hidden;
+  background-color: #fff;
+}
+
+div#main-content div.local-tasks ul.secondary li {
+  padding-left: 10px;
+}
+
+div#main-content div.local-tasks ul.secondary li a {
+  background-color: #dddddd;
   color: #000000;
-  text-shadow: none;
 }
 
-div#main-content div.local-tasks ul.tabs li a:focus,
-div#main-content div.local-tasks ul.tabs li a:hover,
-div#main-content div.local-tasks ul.tabs li a:active {
-  color: #000000;
-  background-color: #c2c2c2;
+div#main-content div.local-tasks ul.secondary li a,
+div#main-content div.local-tasks ul.secondary li a:hover,
+div#main-content div.local-tasks ul.secondary li.active a,
+div#main-content div.local-tasks ul.secondary li.active a.active {
+  padding: 2px 10px;
+  border-radius: 7px;
+  -moz-border-radius: 7px;
+  -webkit-border-radius: 7px;
+}
+
+div#main-content div.local-tasks ul.secondary li a:hover,
+div#main-content div.local-tasks ul.secondary li.active a,
+div#main-content div.local-tasks ul.secondary li.active a.active {
+  color: #fff;
+  background: #666;
 }
 
 
