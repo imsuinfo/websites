@@ -106,29 +106,22 @@ input#edit-pass {
 }
 
 a,
-a:visited,
-div#modalContent a,
-div#modalContent a:visited {
+a:visited {
   color: #0000ff;
   text-decoration: none;
 }
 
 a:hover,
-a:active,
-div#modalContent a:hover,
-div#modalContent a:active {
+a:active{
   text-decoration: underline;
 }
 
 span.cke_button a:hover,
-span.cke_button a:active,
-span.cke_button div#modalContent a:hover,
-span.cke_button div#modalContent a:active {
+span.cke_button a:active {
   text-decoration: none;
 }
 
-hr,
-div#modalContent hr {
+hr {
   margin: 0;
   padding: 0;
   border: none;
@@ -136,94 +129,72 @@ div#modalContent hr {
   background: #cccccc;
 }
 
-.element-invisible,
-div#modalContent .element-invisible {
+.element-invisible {
   width: 0px;
   height: 0px;
   overflow: hidden;
 }
 
-dl,
-div#modalContent dl {
+dl {
   margin: 0 0 20px;
 }
 
 dl dd,
-dl dl,
-div#modalContent dl dd,
-div#modalContent dl dl {
+dl dl {
   margin-left: 20px;
   margin-bottom: 10px;
 }
 
-blockquote,
-div#modalContent blockquote {
+blockquote {
   margin: 4px 40px;
 }
 
-address,
-div#modalContent address {
+address {
   font-style: italic;
 }
 
-u,
-div#modalContent s,
-u,
-div#modalContent s {
+u {
   text-decoration: underline;
 }
 
 s,
 strike,
-del,
-div#modalContent s,
-div#modalContent strike,
-div#modalContent del {
+del {
   text-decoration: line-through;
 }
 
-big,
-div#modalContent big {
+big {
   font-size: larger;
 }
 
-small,
-div#modalContent small {
+small {
   font-size: smaller;
 }
 
-sub,
-div#modalContent sub {
+sub {
   vertical-align: sub;
   font-size: smaller;
   line-height: normal;
 }
 
-sup,
-div#modalContent sup {
+sup {
   vertical-align: super;
   font-size: smaller;
   line-height: normal;
 }
 
-nobr,
-div#modalContent nobr {
+nobr {
   white-space: nowrap;
 }
 
 abbr,
-acronym,
-div#modalContent abbr,
-div#modalContent acronym {
+acronym {
   border-bottom: dotted 1px;
 }
 
 input,
 select,
-textarea,
-div#modalContent input,
-div#modalContent select,
-div#modalContent textarea {
+textarea {
   border: 1px solid #000000;
 }
 
@@ -814,32 +785,26 @@ ul.action-links a {
 
 
 /*** update page colors ***/
-div#mcneese_drupal-content_region div#block-system-main table.update tbody tr,
-div#modalContent div#block-system-main table.update tbody tr {
+div#mcneese_drupal-content_region div#block-system-main table.update tbody tr {
   border-bottom: 1px solid #999999;
 }
 
-div#mcneese_drupal-content_region div#block-system-main table.update tbody tr.info,
-div#modalContent div#block-system-main table.update tbody tr.info  {
+div#mcneese_drupal-content_region div#block-system-main table.update tbody tr.info  {
   background: #e0e0ff;
 }
 
-div#mcneese_drupal-content_region div#block-system-main table.update tbody tr.ok,
-div#modalContent div#block-system-main table.update tbody tr.ok {
+div#mcneese_drupal-content_region div#block-system-main table.update tbody tr.ok {
   background: #d1f7cb;
 }
 
-div#mcneese_drupal-content_region div#block-system-main table.update tbody tr.warning,
-div#modalContent div#block-system-main table.update tbody tr.warning {
+div#mcneese_drupal-content_region div#block-system-main table.update tbody tr.warning {
   background: #ffffdd;
 }
 
-div#mcneese_drupal-content_region div#block-system-main table.update tbody tr.error,
-div#modalContent div#block-system-main table.update tbody tr.error {
+div#mcneese_drupal-content_region div#block-system-main table.update tbody tr.error {
   background: #ffdddd;
 }
 
-div#mcneese_drupal-content_region div#block-system-main table.update tbody tr.unknown,
-div#modalContent div#block-system-main table.update tbody tr.unknown {
+div#mcneese_drupal-content_region div#block-system-main table.update tbody tr.unknown {
   background: #eeeeee;
 }

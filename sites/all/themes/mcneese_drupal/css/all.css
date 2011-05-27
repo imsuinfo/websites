@@ -491,24 +491,19 @@ div#mcneese_drupal-content div.region-content .layout-column_5 {
 
 /*** bugfixes ***/
 #diff-inline-form select,
-div.filter-options select,
-div#modalContent #diff-inline-form select,
-div#modalContent div.filter-options select {
+div.filter-options select {
   padding: 0;
 }
 
-div.region div#block-system-main div.content div.profile,
-div#modalContent div.region div#block-system-main div.content div.profile {
+div.region div#block-system-main div.content div.profile {
   margin: 0px;
 }
 
-fieldset#views-tokens-help div.item-list li,
-div#modalContent fieldset#views-tokens-help div.item-list li {
+fieldset#views-tokens-help div.item-list li {
   margin-left: 20px;
 }
 
-div.rules-elements-table div.tabledrag-toggle-weight-wrapper,
-div#modalContent div.rules-elements-table div.tabledrag-toggle-weight-wrapper {
+div.rules-elements-table div.tabledrag-toggle-weight-wrapper {
   position: relative;
   float: right;
 }
