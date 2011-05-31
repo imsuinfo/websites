@@ -1,6 +1,0 @@
-[submodule "sites/all/modules/views_jqfx"]
-	path = sites/all/modules/views_jqfx
-	url = http://git.drupal.org/sandbox/jamesbenison/1076606.git
-[submodule "sites/all/modules/views_jqfx_nivo_slider"]
-	path = sites/all/modules/views_jqfx_nivo_slider
-	url = http://git.drupal.org/sandbox/jamesbenison/1076760.git
