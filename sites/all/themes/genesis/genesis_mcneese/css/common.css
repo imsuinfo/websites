@@ -109,6 +109,138 @@ input#edit-pass {
 
 
 
+/*** Cleanup - Tables ***/
+table {
+  width: 100%;
+
+  font-size: 14px;
+  background-color: #eaeaea;
+
+  border: 1px solid #a9a9a9;
+
+  margin:  5px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+table td {
+  padding: 2px 5px;
+
+  border-top: 1px solid #a9a9a9;
+  border-right: 1px solid #a9a9a9;
+}
+
+table th {
+  padding: 4px 5px;
+
+  color: #000000;
+}
+
+table caption {
+  font-size: 18px;
+  font-weight: bold;
+}
+
+tr.even,
+tr.odd {
+  border-width: 0 1px 0 1px;
+  border-style: solid;
+  border-color: #bebfb9;
+  background: #f3f4ee;
+}
+
+tr.odd {
+  background: #ffffff;
+}
+
+tr.drag {
+  background: #fe7fe7;
+}
+
+tr.drag-previous {
+  background: #ffbffb;
+}
+
+table th {
+  color: #ffffff;
+  background-color: #00477f;
+
+  text-align: center;
+  text-transform: uppercase;
+
+  font-weight: normal;
+  padding: 3px 10px;
+
+  margin: 5px;
+
+  border: 1px solid #bebfb9;
+}
+
+table th.active {
+  background: #235e8a;
+}
+
+table th.active a,
+table th.active a:visited {
+  padding: 0 20px 0 0;
+}
+
+table th a,
+table th a:visited {
+  display: block;
+  position: relative;
+
+  color: #fad70f;
+}
+
+table th a:focus,
+table th a:active,
+table th a:hover {
+  color: #ffffff;
+}
+
+table th.active img {
+  position: absolute;
+  top: 3px;
+  right: 3px;
+}
+
+table td.active {
+  background: #e9e9dd;
+}
+
+table tr.odd td.active {
+  background: #f3f4ee;
+}
+
+table tr.selected td.active,
+table tr.selected td {
+  background: #ffc;
+  border-color: #eeb;
+}
+
+table.system-status-report tr {
+  border-bottom: 1px solid #999999;
+}
+
+table.system-status-report tr.ok {
+  background-color: #d1f7cb;
+}
+
+table.system-status-report tr.info {
+  background-color: #e0e0ff;
+}
+
+table.system-status-report tr.warning {
+  background-color: #ffffdd;
+}
+
+table.system-status-report tr.error {
+  background-color: #ffdddd;
+}
+
+
+
 /*** Content - home page ***/
 a.msu-caption-title {
   text-decoration: none;
