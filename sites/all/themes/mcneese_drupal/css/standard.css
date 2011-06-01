@@ -712,6 +712,19 @@ input#preview-submit:visited {
   -webkit-border-radius: 3px;
 }
 
+ul#views-display-menu-tabs a.active,
+ul#views-display-menu-tabs a.active:visited,
+ul.tabs.secondary li a.active,
+ul.tabs.secondary li a.active:visited {
+  color: #cccccc;
+  text-shadow: 0px 0px 3px #000000;
+
+  background-image: none;
+  background-color: #666666;
+
+  border: 1px inset #333333;
+}
+
 a.button:active,
 input.form-submit:active,
 input.form-delete:active,
@@ -724,6 +737,9 @@ input#edit-remove:active,
 a#edit-cancel:active,
 input#preview-submit:active,
 ul#views-display-menu-tabs a:active,
+ul#views-display-menu-tabs a.active:active,
+ul.tabs.secondary li a:active,
+ul.tabs.secondary li a.active:active,
 a.button:focus,
 input.form-submit:focus,
 input.form-delete:focus,
@@ -736,6 +752,9 @@ input#edit-remove:focus,
 a#edit-cancel:focus,
 input#preview-submit:focus,
 ul#views-display-menu-tabs a:focus,
+ul#views-display-menu-tabs a.active:focus,
+ul.tabs.secondary li a:focus,
+ul.tabs.secondary li a.active:focus,
 a.button:hover,
 input.form-submit:hover,
 input.form-delete:hover,
@@ -747,7 +766,10 @@ input#edit-cancel:hover,
 input#edit-remove:hover,
 a#edit-cancel:hover,
 input#preview-submit:hover,
-ul#views-display-menu-tabs a:hover {
+ul#views-display-menu-tabs a:hover,
+ul#views-display-menu-tabs a.active:hover,
+ul.tabs.secondary li a.active:hover,
+ul.tabs.secondary li a:hover {
   text-decoration: underline;
 
   color: #ffffff;
@@ -755,6 +777,8 @@ ul#views-display-menu-tabs a:hover {
 
   background-image: none;
   background-color: #666666;
+
+  border: 1px outset #333333;
 }
 
 a.button:active,
@@ -766,7 +790,10 @@ input#edit-delete:active,
 input#edit-unpublish:active,
 a#edit-cancel:active,
 input#preview-submit:active,
-ul#views-display-menu-tabs a:active {
+ul#views-display-menu-tabs a:active,
+ul#views-display-menu-tabs a.active:active,
+ul.tabs.secondary li a:active,
+ul.tabs.secondary li a.active:active {
   border: 1px inset #333333;
 }
 
