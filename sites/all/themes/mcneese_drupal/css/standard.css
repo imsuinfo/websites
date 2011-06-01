@@ -691,9 +691,13 @@ input#edit-delete:hover {
 }
 
 ul.tabs.secondary li a,
+ul.tabs.secondary li a:active,
 input.form-submit,
 a.button,
+a.button:active,
 a#edit-cancel {
+  vertical-align: baseline;
+  text-decoration: none;
   cursor: pointer;
   padding: 2px 4px;
   margin-bottom: 1px;
