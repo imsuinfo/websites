@@ -681,21 +681,14 @@ input#edit-delete {
   background: url(../images/button-red.png) no-repeat scroll center top transparent;
 }
 
-
-a.button:hover,
-input.form-submit:hover,
-input.form-delete:hover,
-input#edit-submit:hover,
-input#edit-delete:hover {
-  text-decoration: underline;
-}
-
 ul.tabs.secondary li a,
-ul.tabs.secondary li a:active,
+ul.tabs.secondary li a:visited,
 input.form-submit,
 a.button,
-a.button:active,
-a#edit-cancel {
+a.button:visited,
+a#edit-cancel,
+a#edit-cancel:visited {
+  display: inline-block;
   vertical-align: baseline;
   text-decoration: none;
   cursor: pointer;
@@ -715,6 +708,42 @@ a#edit-cancel {
   -moz-border-radius: 4px;
   -moz-outline-radius: 4px;
   -webkit-border-radius: 3px;
+}
+
+a.button:active,
+input.form-submit:active,
+input.form-delete:active,
+input#edit-submit:active,
+input#edit-delete:active,
+a#edit-cancel:active,
+a.button:focus,
+input.form-submit:focus,
+input.form-delete:focus,
+input#edit-submit:focus,
+input#edit-delete:focus,
+a#edit-cancel:focus,
+a.button:hover,
+input.form-submit:hover,
+input.form-delete:hover,
+input#edit-submit:hover,
+input#edit-delete:hover,
+a#edit-cancel:hover {
+  text-decoration: underline;
+
+  color: #ffffff;
+  text-shadow: 0px 0px 3px #000000;
+
+  background-image: none;
+  background-color: #666666;
+}
+
+a.button:active,
+input.form-submit:active,
+input.form-delete:active,
+input#edit-submit:active,
+input#edit-delete:active,
+a#edit-cancel:active {
+  border: 1px inset #333333;
 }
 
 div.node-form input#edit-submit,
