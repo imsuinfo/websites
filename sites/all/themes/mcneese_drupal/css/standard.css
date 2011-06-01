@@ -687,7 +687,9 @@ input.form-submit,
 a.button,
 a.button:visited,
 a#edit-cancel,
-a#edit-cancel:visited {
+a#edit-cancel:visited,
+input#preview-submit,
+input#preview-submit:visited {
   display: inline-block;
   vertical-align: baseline;
   text-decoration: none;
@@ -716,18 +718,24 @@ input.form-delete:active,
 input#edit-submit:active,
 input#edit-delete:active,
 a#edit-cancel:active,
+input#preview-submit:active,
+ul#views-display-menu-tabs a:active,
 a.button:focus,
 input.form-submit:focus,
 input.form-delete:focus,
 input#edit-submit:focus,
 input#edit-delete:focus,
 a#edit-cancel:focus,
+input#preview-submit:focus,
+ul#views-display-menu-tabs a:focus,
 a.button:hover,
 input.form-submit:hover,
 input.form-delete:hover,
 input#edit-submit:hover,
 input#edit-delete:hover,
-a#edit-cancel:hover {
+a#edit-cancel:hover,
+input#preview-submit:hover,
+ul#views-display-menu-tabs a:hover {
   text-decoration: underline;
 
   color: #ffffff;
@@ -742,7 +750,9 @@ input.form-submit:active,
 input.form-delete:active,
 input#edit-submit:active,
 input#edit-delete:active,
-a#edit-cancel:active {
+a#edit-cancel:active,
+input#preview-submit:active,
+ul#views-display-menu-tabs a:active {
   border: 1px inset #333333;
 }
 
