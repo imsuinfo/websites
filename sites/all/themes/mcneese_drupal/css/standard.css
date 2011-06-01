@@ -861,21 +861,40 @@ div#mcneese_drupal-content_region div#block-system-main table.update tbody tr {
 }
 
 div#mcneese_drupal-content_region div#block-system-main table.update tbody tr.info  {
-  background: #e0e0ff;
+  background-color: #e0e0ff;
 }
 
 div#mcneese_drupal-content_region div#block-system-main table.update tbody tr.ok {
-  background: #d1f7cb;
+  background-color: #d1f7cb;
 }
 
 div#mcneese_drupal-content_region div#block-system-main table.update tbody tr.warning {
-  background: #ffffdd;
+  background-color: #ffffdd;
 }
 
 div#mcneese_drupal-content_region div#block-system-main table.update tbody tr.error {
-  background: #ffdddd;
+  background-color: #ffdddd;
 }
 
 div#mcneese_drupal-content_region div#block-system-main table.update tbody tr.unknown {
-  background: #eeeeee;
+  background-color: #eeeeee;
+}
+
+div#mcneese_drupal-content_region div#block-system-main table.update tbody tr table.version-also-available {
+  color: #000000;
+  background-color: #f3e6ff;
+}
+
+div#mcneese_drupal-content_region div#block-system-main table.update tbody tr table.version-recommended {
+  color: #000000;
+  background-color: #e6eaff;
+}
+
+div#mcneese_drupal-content_region div#block-system-main table.update tbody tr table.version-recommended-strong {
+  font-weight: bold;
+}
+
+div#mcneese_drupal-content_region div#block-system-main table.update tbody tr table.version-latest {
+  color: #000000;
+  background-color: #ffebeb;
 }
