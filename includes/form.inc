@@ -1951,7 +1951,7 @@ function _form_builder_handle_input_element($form_id, &$element, &$form_state) {
       // Avoid image buttons (which come with garbage value), so we only get value
       // for the button actually clicked.
       if (!isset($element['#value']) && empty($element['#has_garbage_value'])) {
-        $element['#value'] = isset($element['#default_value']) ? $element['#default_value'] : NULL;
+        $element['#value'] = isset($element['#default_value']) ? $element['#default_value'] : '';
       }
     }
   }
