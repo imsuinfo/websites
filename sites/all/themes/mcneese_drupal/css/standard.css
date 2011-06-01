@@ -748,12 +748,12 @@ a#edit-cancel:active {
 
 div.node-form input#edit-submit,
 div.node-form input#edit-submit-1 {
-  border: 1px solid #8eB7cd;
-  border-left-color: #8eB7cd;
-  border-right-color: #8eB7cd;
+  border: 1px solid #8eb7cd;
+  border-left-color: #8eb7cd;
+  border-right-color: #8eb7cd;
   border-bottom-color: #7691a2;
   background: url(../images/buttons.png) 0px -40px repeat-x;
-  color: #133B54;
+  color: #133b54;
 }
 
 input.form-submit:active,
