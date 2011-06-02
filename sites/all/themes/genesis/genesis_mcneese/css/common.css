@@ -556,6 +556,12 @@ div#front_page_columns-spotlight div.views-field-nothing div.spotlight-event_dat
 }
 
 
+/*** Login Form ***/
+form#user-login-form {
+  text-align: center;
+}
+
+
 
 /*** Content Specific Customization ***/
 html#ckeditor-wysiwygarea body {
