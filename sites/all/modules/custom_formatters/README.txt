@@ -1,4 +1,3 @@
-
 The Custom Formatters module allows users to easily create custom CCK Formatters
 without the need to write a custom module.
 
@@ -6,27 +5,30 @@ Custom Formatters was written and is maintained by Stuart Clark (deciphered).
 - http://stuar.tc/lark
 
 
-Features
-----------------
-
-* Clone an existing custom formatter.
-* Export custom formatters.
-
-
 Required Modules
-----------------
+--------------------------------------------------------------------------------
 
-* Content Construction Kit (CCK) - http://drupal.org/project/cck
+* Chaos tool suite - http://drupal.org/project/ctools
 
 
-Usage
-----------------
+Recommended Modules
+--------------------------------------------------------------------------------
 
-Custom Formatters can be added, edited or deleted on the 'Custom Formatters'
-overview page: 'Administer > Configuration and modules > Content authoring >
-Custom Formatters'.
-http://[www.yoursite.com/path/to/drupal]/admin/config/content/formatters
+* Devel - http://drupal.org/project/devel
 
-More information on usage, including tips & tricks, can be found in help:
-http://[www.yoursite.com/path/to/drupal]/admin/help/custom_formatters
 
+TODO
+--------------------------------------------------------------------------------
+
+- Add Devel generate integraton for Preview (?).
+- Add Drupal API export mode.
+- Add documentation.
+- Add extra exmaple formatters.
+- Add upgrade path (?).
+- Add engine based Drupal API export renderers.
+- Add Content Multigroup/Fieldgroup integration (?).
+- Add Display Suite integration.
+- Add Insert integration
+    - Started
+- Add configuration options for Label prefix.
+- Fix 'Save & Edit' on new Formatter.

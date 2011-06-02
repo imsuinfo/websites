@@ -1,6 +1,11 @@
+Custom Formatters 7.x-2.0-beta2, 2011-06-02
+--------------------------------------------------------------------------------
 
-Custom Formatters 7.x-1.x-dev, xxxx-xx-xx (development release)
--------------------------------------
+- Fixed critical install issue.
+- Removed support for non-fieldable entities.
+
+
+Custom Formatters 7.x-2.0-beta1, 2011-06-01
+--------------------------------------------------------------------------------
 
 - Initial 7.x release.
-
