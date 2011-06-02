@@ -254,6 +254,7 @@ class views_handler extends views_object {
 
     // If grouping, check to see if the aggregation method needs to modify the field.
     if ($this->view->display_handler->use_group_by()) {
+      $this->view->init_query();
       $info = $this->query->get_aggregation_info();
       if (!empty($info[$this->options['group_type']]['method']) && function_exists($info[$this->options['group_type']]['method'])) {
         return $info[$this->options['group_type']]['method']($this->options['group_type'], $field);
@@ -341,6 +342,7 @@ class views_handler extends views_object {
 
     $form['#section'] = $display_id . '-' . $type . '-' . $id;
 
+    $view->init_query();
     $info = $view->query->get_aggregation_info();
     foreach ($info as $id => $aggregate) {
       $group_types[$id] = $aggregate['title'];
@@ -775,7 +777,8 @@ class views_many_to_one_helper {
    */
   function ensure_my_table() {
     if (!isset($this->handler->table_alias)) {
-      // For 'or' if we're not reducing duplicates, we get the absolute simplest:
+      // Case 1: Operator is an 'or' and we're not reducing duplicates.
+      // We hence get the absolute simplest:
       $field = $this->handler->table . '.' . $this->handler->field;
       if ($this->handler->operator == 'or' && empty($this->handler->options['reduce_duplicates'])) {
         if (empty($this->handler->options['add_table']) && empty($this->handler->view->many_to_one_tables[$field])) {
@@ -808,8 +811,9 @@ class views_many_to_one_helper {
         return $this->handler->table_alias;
       }
 
+      // Case 2: it's an 'and' or an 'or'.
+      // We do one join per selected value.
       if ($this->handler->operator != 'not') {
-        // If it's an and or an or, we do one join per selected value.
         // Clone the join for each table:
         $this->handler->table_aliases = array();
         foreach ($this->handler->value as $value) {
@@ -841,9 +845,10 @@ class views_many_to_one_helper {
           }
         }
       }
+      // Case 3: it's a 'not'.
+      // We just do one join. We'll add a where clause during
+      // the query phase to ensure that $table.$field IS NULL.
       else {
-        // For not, we just do one join. We'll add a where clause during
-        // the query phase to ensure that $table.$field IS NULL.
         $join = $this->get_join();
         $join->type = 'LEFT';
         $join->extra = array();
@@ -937,17 +942,20 @@ class views_many_to_one_helper {
 }
 
 /*
- * Break x,y,z and x+y+z into an array. Numeric only.
+ * Break x,y,z and x+y+z into an array. Works for strings.
  *
  * @param $str
  *   The string to parse.
- * @param $handler
- *   The handler object to use as a base.
+ * @param $object
+ *   The object to use as a base. If not specified one will
+ *   be created.
  *
- * @return $handler
- *   The new handler object.
+ * @return $object
+ *   An object containing
+ *   - operator: Either 'and' or 'or'
+ *   - value: An array of numeric values.
  */
-function views_break_phrase_string($str, &$handler) {
+function views_break_phrase_string($str, &$handler = NULL) {
   if (!$handler) {
     $handler = new stdClass();
   }
@@ -993,14 +1001,14 @@ function views_break_phrase_string($str, &$handler) {
  *
  * @param $str
  *   The string to parse.
- * @param $filter
- *   The filter object to use as a base. If not specified one will
+ * @param $handler
+ *   The handler object to use as a base. If not specified one will
  *   be created.
  *
- * @return $filter
- *   The new filter object.
+ * @return $handler
+ *   The new handler object.
  */
-function views_break_phrase($str, $handler = NULL) {
+function views_break_phrase($str, &$handler = NULL) {
   if (!$handler) {
     $handler = new stdClass();
   }
@@ -1396,22 +1404,37 @@ class views_join {
             $join_table = $info['table'] . '.';
           }
 
-          $placeholder = ':views_join_condition_' . $select_query->nextPlaceholder();
+          // Convert a single-valued array of values to the single-value case,
+          // and transform from IN() notation to = notation
+          if (is_array($info['value']) && count($info['value']) == 1) {
+            if (empty($info['operator'])) {
+              $operator = '=';
+            }
+            else {
+              $operator = $info['operator'] == 'NOT IN' ? '!=' : '=';
+            }
+            $info['value'] = array_shift($info['value']);
+          }
 
           if (is_array($info['value'])) {
-            $operator = !empty($info['operator']) ? $info['operator'] : 'IN';
-            // Transform from IN() notation to = notation if just one value.
-            if (count($info['value']) == 1) {
-              $info['value'] = array_shift($info['value']);
-              $operator = $operator == 'NOT IN' ? '!=' : '=';
+            // With an array of values, we need multiple placeholders and the
+            // 'IN' operator is implicit.
+            foreach ($info['value'] as $value) {
+              $placeholder_i = ':views_join_condition_' . $select_query->nextPlaceholder();
+              $arguments[$placeholder_i] = $value;
             }
+
+            $operator = !empty($info['operator']) ? $info['operator'] : 'IN';
+            $placeholder = '( ' . implode(', ', array_keys($arguments)) . ' )';
           }
           else {
+            // With a single value, the '=' operator is implicit.
             $operator = !empty($info['operator']) ? $info['operator'] : '=';
+            $placeholder = ':views_join_condition_' . $select_query->nextPlaceholder();
+            $arguments[$placeholder] = $info['value'];
           }
 
           $extras[] = "$join_table$info[field] $operator $placeholder";
-          $arguments[$placeholder] = $info['value'];
         }
 
         if ($extras) {

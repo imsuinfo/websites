@@ -53,6 +53,19 @@ class view extends views_db_object {
   // To avoid recursion in views embebed into areas
   var $parent_views = array();
 
+  // Stores the next steps of form items to handle.
+  // It's an array of stack items, which contain the form id, the type of form,
+  // the view, the display and some additional arguments.
+  // @see views_ui_add_form_to_stack().
+  // var $stack;
+
+  /**
+   * Identifier of the current display.
+   *
+   * @var string
+   */
+  var $current_display;
+  
   /**
    * Where the $query object will reside:
    *
@@ -954,7 +967,7 @@ class view extends views_db_object {
       // Let the theme play too, because pre render is a very themey thing.
       $function = $GLOBALS['theme'] . '_views_pre_render';
       if (function_exists($function)) {
-        $function($this, $this->display_handler->output, $cache);
+        $function($this);
       }
 
       // Give field handlers the opportunity to perform additional queries
@@ -1768,6 +1781,7 @@ class view extends views_db_object {
 
     $errors = array();
 
+    $current_display = $this->current_display;
     foreach ($this->display as $id => $display) {
       if ($display->handler) {
         if (!empty($display->deleted)) {
@@ -1781,6 +1795,7 @@ class view extends views_db_object {
       }
     }
 
+    $this->set_display($current_display);
     return $errors ? $errors : TRUE;
   }
 
@@ -2257,6 +2272,13 @@ class views_db_object {
  * to the behavior of the display at all.
  */
 class views_display extends views_db_object {
+  /**
+   * The display handler itself, which has all the methods.
+   *
+   * @var views_plugin_display
+   */
+  var $handler;
+
   var $db_table = 'views_display';
   function views_display($init = TRUE) {
     parent::init($init);
