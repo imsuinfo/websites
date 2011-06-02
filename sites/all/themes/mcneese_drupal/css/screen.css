@@ -14,8 +14,8 @@ div#mcneese_drupal-header_region {
 div#mcneese_drupal-header {
   position: relative;
 
-  height: 122px;
-  max-height: 122px;
+  height: 118px;
+  max-height: 118px;
 
   background-color: #00477f;
   overflow: hidden;
@@ -183,7 +183,7 @@ div#mcneese_drupal-header-blocks div#block-menu-menu-primary-navigation div.cont
 div#mcneese_drupal-header-blocks div#block-menu-menu-primary-navigation div.content ul.menu li a {
   display: block;
 
-  height: 28px;
+  height: 24px;
 
   color: #f2f2f2;
   background-color: #1e1e1e;
