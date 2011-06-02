@@ -757,7 +757,7 @@ class views_handler_field_field extends views_handler_field {
 
     foreach (element_children($render_array) as $count) {
       $items[$count]['rendered'] = $render_array[$count];
-      $items[$count]['raw'] = $render_array['#items'][$count];
+      $items[$count]['raw'] = isset($render_array['#items'][$count]) ? $render_array['#items'][$count] : '';
     }
     return $items;
   }
