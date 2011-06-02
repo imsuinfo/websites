@@ -76,6 +76,11 @@ div#mcneese_drupal-header-blocks div#block-search-form div.form-item-search-bloc
   padding: 0;
 }
 
+div#block-search-form form#search-block-form div.form-item-search-block-form {
+  padding: 0;
+  margin: 0;
+}
+
 div#mcneese_drupal-header-blocks div#block-search-form h2.block-title {
   display: none;
 }
