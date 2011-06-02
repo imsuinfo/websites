@@ -161,7 +161,7 @@ function node_export_settings() {
     '#title' => t('Omitted content types'),
     '#default_value' => variable_get('node_export_omitted', array()),
     '#options' => $types,
-    '#description' => t('Select any types which should never be exported. Typically you may want to select content types for which importing fails.'),
+    '#description' => t('Select any types which should never be exported or imported. Typically you may want to select content types for which importing fails.'),
   );
 
   $form['publishing'] = array(
@@ -313,11 +313,11 @@ function node_export_form($form, &$form_state, $nids, $code_string) {
   $form = array();
   if (variable_get('node_export_code', 'all') == 'all') {
     $form['nids'] = array(
-      '#type' => 'value',
+      '#type' => 'hidden',
       '#value' => $nids,
     );
     $form['code_string'] = array(
-      '#type' => 'value',
+      '#type' => 'hidden',
       '#value' => $code_string,
     );
     $form['download_file'] = array(
