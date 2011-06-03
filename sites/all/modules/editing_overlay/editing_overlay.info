@@ -1,0 +1,6 @@
+name = Editing Overlay
+description = "Provides an overlay page for node edits"
+package = Content
+core = 7.x
+dependencies[] = overlay
+files[] = editing_overlay.module
