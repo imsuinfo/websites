@@ -191,6 +191,7 @@ class date_views_argument_handler_simple extends views_handler_argument_date {
     if ($this->date_forbid()) {
       return;
     }
+    
     $this->formula = $this->formula($this->real_field);
     $this->date_handler->granularity = $this->date_handler->arg_granularity($this->argument);
     $this->format = $this->date_handler->views_formats($this->date_handler->granularity, 'display');
@@ -215,8 +216,7 @@ class date_views_argument_handler_simple extends views_handler_argument_date {
       $field = $this->date_handler->sql_format(DATE_FORMAT_DATETIME, $field);
       $placeholder_min = $this->placeholder();
       $placeholder_max = $this->placeholder();
-      $this->query->add_where_expression($group, "$field >= $placeholder_min", array($placeholder_min => $min_value));
-      $this->query->add_where_expression($group, "$field <= $placeholder_max", array($placeholder_max => $max_value));
+      $this->query->add_where_expression($group, "$field >= $placeholder_min AND $field <= $placeholder_max", array($placeholder_min => $min_value, $placeholder_max => $max_value));
     }
 
   }

@@ -87,29 +87,32 @@ class date_views_filter_handler_simple extends views_handler_filter_date {
    * to swap in our default value logic.
    */
   function get_filter_value($prefix, $input) {
-    if (empty($input)) {
-      if (empty($this->options['exposed'])) {
-        return $this->date_default_value($prefix);
-      }
-      elseif (isset($this->options['expose']['identifier']) && !isset($_GET[$this->options['expose']['identifier']])) {
-        return $this->date_default_value($prefix);
-      }
-    }
     // All our date widgets provide datetime values but we use ISO in our SQL
     // for consistency between the way filters and arguments work (arguments
     // cannot contain spaces).
+    if (empty($input)) {
+      if (empty($this->options['exposed'])) {
+        return str_replace(' ', 'T', $this->date_default_value($prefix));
+      }
+      elseif (isset($this->options['expose']['identifier']) && !isset($_GET[$this->options['expose']['identifier']])) {
+        return str_replace(' ', 'T', $this->date_default_value($prefix));
+      }
+    }
+    
     return str_replace(' ', 'T', $input);
   }
 
   function accept_exposed_input($input) {
-    $element_input = $input[$this->options['expose']['identifier']];
-    $element_input['value'] = $this->get_filter_value('value', !empty($element_input['value']) ? $element_input['value'] : '');
-    $element_input['min'] = $this->get_filter_value('min', !empty($element_input['min']) ? $element_input['min'] : '');
-    $element_input['max'] = $this->get_filter_value('max', !empty($element_input['max']) ? $element_input['max'] : '');
-    unset($element_input['default_date']);
-    unset($element_input['default_to_date']);
-
-    $input[$this->options['expose']['identifier']] = $element_input;
+    if (!empty($this->options['exposed'])) {
+      $element_input = $input[$this->options['expose']['identifier']];
+      $element_input['value'] = $this->get_filter_value('value', !empty($element_input['value']) ? $element_input['value'] : '');
+      $element_input['min'] = $this->get_filter_value('min', !empty($element_input['min']) ? $element_input['min'] : '');
+      $element_input['max'] = $this->get_filter_value('max', !empty($element_input['max']) ? $element_input['max'] : '');
+      unset($element_input['default_date']);
+      unset($element_input['default_to_date']);
+  
+      $input[$this->options['expose']['identifier']] = $element_input;
+    }
     return parent::accept_exposed_input($input);
 
   }
@@ -123,8 +126,7 @@ class date_views_filter_handler_simple extends views_handler_filter_date {
     $placeholder_max = $this->placeholder();
     $group = !empty($this->options['date_group']) ? $this->options['date_group'] : $this->options['group'];
     if ($this->operator == 'between') {
-      $this->query->add_where_expression($group, "$field >= $placeholder_min", array($placeholder_min => $min_value));
-      $this->query->add_where_expression($group, "$field <= $placeholder_max", array($placeholder_max => $max_value));
+      $this->query->add_where_expression($group, "$field >= $placeholder_min AND $field <= $placeholder_max", array($placeholder_min => $min_value, $placeholder_max => $max_value));
     }
     else {
       $this->query->add_where_expression($group, "$field <= $placeholder_min OR $field >= $placeholder_max", array($placeholder_min => $min_value, $placeholder_max => $max_value));
