@@ -1,6 +1,6 @@
 <?php
   global $base_dir;
-?><?php  if (!isset($in_overlay) || !$in_overlay){ ?>    <div id='mcneese_drupal-header_region' class='clearfix page-header mcneese_drupal-text_shadow'>
+?><?php  if (!isset($in_overlay) || $in_overlay != 'child'){ ?>    <div id='mcneese_drupal-header_region' class='clearfix page-header mcneese_drupal-text_shadow'>
       <div id='mcneese_drupal-header'>
         <!--(begin_header)-->
         <?php if (isset($logo) && !empty($logo)){ ?>
