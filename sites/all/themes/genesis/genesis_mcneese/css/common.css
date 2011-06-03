@@ -107,6 +107,10 @@ input#edit-pass {
   line-height: 21px;
 }
 
+.container-inline div {
+  display: block;
+}
+
 
 
 /*** Cleanup - Tables ***/

@@ -81,6 +81,15 @@ div#block-search-form form#search-block-form div.form-item-search-block-form {
   margin: 0;
 }
 
+form#search-block-form div.container-inline .form-item-search-block-form,
+form#search-block-form div.container-inline .form-actions {
+  display: inline-block;
+}
+
+form#search-block-form div.container-inline .form-actions {
+  line-height: 10px;
+}
+
 div#mcneese_drupal-header-blocks div#block-search-form h2.block-title {
   display: none;
 }
