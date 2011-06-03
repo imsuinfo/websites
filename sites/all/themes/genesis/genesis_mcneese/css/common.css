@@ -596,8 +596,6 @@ div.view-id-more_pages {
   letter-spacing: 1px;
 
   font-family: Serif, Georgia, Times New Roman;
-
-  margin-top: 10px;
 }
 
 div.view-display-id-more_pages_highlights_attachment {
@@ -661,6 +659,11 @@ div#columns div.view-id-more_pages div.more_pages-field_group a:active {
 div#columns div.view-id-more_pages div.view-content div.views-field-nothing,
 div#columns div.view-id-more_pages div.view-content div.views-field-body {
   clear: both;
+}
+
+div#columns div.view-id-more_pages div.view-content div.views-field-title,
+div#columns div.view-id-more_pages div.view-content div.views-field-nothing-1 {
+  margin-bottom: 5px;
 }
 
 div#columns div.view-id-more_pages div.view-content div.views-field-title a,

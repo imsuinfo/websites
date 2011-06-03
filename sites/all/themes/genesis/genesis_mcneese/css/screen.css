@@ -124,6 +124,10 @@ div#block-search-form {
   padding: 2px;
 }
 
+div.form-item-search-block-form {
+  display: inline-block;
+}
+
 div#block-search-form div.form-item-search-block-form input.form-text {
   vertical-align: baseline;
 
