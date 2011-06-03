@@ -508,7 +508,7 @@ div#content-column div.region-help {
 
 
 
-/*** Content - main content **/
+/*** Content - breadcrumb **/
 div#breadcrumb {
   position: relative;
 
@@ -520,7 +520,7 @@ div#breadcrumb {
 
   min-height: 14px;
 
-  margin: 0 0 0 0;
+  margin: 0 0 5px 0;
   padding-top: 3px;
   padding-bottom: 3px;
 }
