@@ -11,7 +11,7 @@
  * @param unknown_type $items
  * @return themed table
  */
-function calendar_build_calendar($view, $items) {
+function calendar_multiday_build_calendar($view, $items) {
   // Remove nodes outside the selected date range.
   $values = array();
   foreach ($items as $delta => $item) {
@@ -36,18 +36,18 @@ function calendar_build_calendar($view, $items) {
       $rows = array();
       $view->date_info->mini = TRUE;
       for ($i = 1; $i <= 12; $i++) {
-        $rows[$i] = calendar_build_mini_month($curday, $view, $items);
+        $rows[$i] = calendar_multiday_build_mini_month($curday, $view, $items);
       }
       $view->date_info->mini = FALSE;
       break;
     case 'month':
-      $rows = ($view->date_info->mini) ? calendar_build_mini_month($curday, $view, $items) : calendar_build_month($curday, $view, $items);
+      $rows = ($view->date_info->mini) ? calendar_multiday_build_mini_month($curday, $view, $items) : calendar_multiday_build_month($curday, $view, $items);
       break;
     case 'day':
-      $rows = calendar_build_day($curday, $view, $items);
+      $rows = calendar_multiday_build_day($curday, $view, $items);
       break;
     case 'week':
-      $rows = calendar_build_week($curday, $view, $items);
+      $rows = calendar_multiday_build_week($curday, $view, $items);
       // Merge the day names in as the first row.
       $rows = array_merge(array(calendar_week_header($view)), $rows);
       break;
@@ -59,12 +59,12 @@ function calendar_build_calendar($view, $items) {
 /**
  * Build one month.
  */
-function calendar_build_mini_month(&$curday, $view, $items) {
+function calendar_multiday_build_mini_month(&$curday, $view, $items) {
   $month = date_format($curday, 'n');
   date_modify($curday, '-' . strval(date_format($curday, 'j')-1) . ' days');
   $rows = array();
   do {
-    $rows = array_merge($rows, calendar_build_mini_week($curday, $view, $items, TRUE));
+    $rows = array_merge($rows, calendar_multiday_build_mini_week($curday, $view, $items, TRUE));
     $curday_date = date_format($curday, DATE_FORMAT_DATE);
     $curday_month = date_format($curday, 'n');
   } while ($curday_month == $month && $curday_date <= $view->date_info->max_date_date);
@@ -75,7 +75,7 @@ function calendar_build_mini_month(&$curday, $view, $items) {
 /**
  * Build one month.
  */
-function calendar_build_month(&$curday, $view, $items) {
+function calendar_multiday_build_month(&$curday, $view, $items) {
   $month = date_format($curday, 'n');
   $curday_date = date_format($curday, DATE_FORMAT_DATE);
   $weekdays = calendar_untranslated_days($items, $view);
@@ -87,7 +87,7 @@ function calendar_build_month(&$curday, $view, $items) {
     $month = date_format($curday, 'n');
     $week = date_week($curday_date);
     $first_day = variable_get('date_first_day', 1);
-    $week_rows = calendar_build_week($curday, $view, $items, TRUE);
+    $week_rows = calendar_multiday_build_week($curday, $view, $items, TRUE);
     $multiday_buckets = $week_rows['multiday_buckets'];
     $singleday_buckets = $week_rows['singleday_buckets'];
     $total_rows = $week_rows['total_rows'];
@@ -318,7 +318,7 @@ function calendar_build_month(&$curday, $view, $items) {
 /**
  * Build one week row.
  */
-function calendar_build_mini_week(&$curday, $view, $items, $check_month = FALSE) {
+function calendar_multiday_build_mini_week(&$curday, $view, $items, $check_month = FALSE) {
   $curday_date = date_format($curday, DATE_FORMAT_DATE);
   $weekdays = calendar_untranslated_days($items, $view);
   $today = date_format(date_now(date_default_timezone()), DATE_FORMAT_DATE);
@@ -367,7 +367,7 @@ function calendar_build_mini_week(&$curday, $view, $items, $check_month = FALSE)
         );
     }
     else {
-      $content = calendar_build_day($curday, $view, $items);
+      $content = calendar_multiday_build_day($curday, $view, $items);
       $class .= ($curday_date == $today ? ' today' : '') .
         ($curday_date < $today ? ' past' : '') .
         ($curday_date > $today ? ' future' : '') .
@@ -384,7 +384,7 @@ function calendar_build_mini_week(&$curday, $view, $items, $check_month = FALSE)
 /**
  * Build one week row.
  */
-function calendar_build_week(&$curday, $view, $items, $check_month = FALSE) {
+function calendar_multiday_build_week(&$curday, $view, $items, $check_month = FALSE) {
   $curday_date = date_format($curday, DATE_FORMAT_DATE);
   $weekdays = calendar_untranslated_days($items, $view);
   $month = date_format($curday, 'n');
@@ -412,7 +412,7 @@ function calendar_build_week(&$curday, $view, $items, $check_month = FALSE) {
       );
     }
     else {
-      calendar_build_week_day($curday, $view, $items, $i, $multiday_buckets, $singleday_buckets);
+      calendar_multiday_build_week_day($curday, $view, $items, $i, $multiday_buckets, $singleday_buckets);
     }
     $total_rows = max(count($multiday_buckets[$i]) + 1, $total_rows);
     date_modify($curday, '+1 day');
@@ -428,7 +428,7 @@ function calendar_build_week(&$curday, $view, $items, $check_month = FALSE) {
 /**
  * Build the contents of a single day for the $rows results.
  */
-function calendar_build_week_day($curday, $view, $items, $wday, &$multiday_buckets, &$singleday_buckets) {
+function calendar_multiday_build_week_day($curday, $view, $items, $wday, &$multiday_buckets, &$singleday_buckets) {
   $curday_date = date_format($curday, DATE_FORMAT_DATE);
   $max_events = !empty($view->date_info->style_max_items) ? $view->date_info->style_max_items : 0;
   $hide = !empty($view->date_info->style_max_items_behavior) ? ($view->date_info->style_max_items_behavior == 'hide') : FALSE;
@@ -595,7 +595,7 @@ function calendar_build_week_day($curday, $view, $items, $wday, &$multiday_bucke
 /**
  * Build the contents of a single day for the $rows results.
  */
-function calendar_build_day($curday, $view, $items) {
+function calendar_multiday_build_day($curday, $view, $items) {
   $curday_date = date_format($curday, DATE_FORMAT_DATE);
   $selected = FALSE;
   $max_events = !empty($view->date_info->style_max_items) ? $view->date_info->style_max_items : 0;

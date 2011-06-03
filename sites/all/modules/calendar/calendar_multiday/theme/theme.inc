@@ -130,7 +130,7 @@ function template_preprocess_calendar(&$vars) {
   $view->date_info->mini = isset($view->date_info->mini) ? $view->date_info->mini : $view->date_info->granularity == 'year';
 
   // Create the calendar day names and rows.
-  $rows = calendar_build_calendar($view, $items);
+  $rows = calendar_multiday_build_calendar($view, $items);
 
   $vars['items'] = $items;
   $vars['rows'] = $rows;
