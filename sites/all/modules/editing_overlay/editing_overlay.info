@@ -3,4 +3,5 @@ description = "Provides an overlay page for node edits"
 package = Content
 core = 7.x
 dependencies[] = overlay
+dependencies[] = cf
 files[] = editing_overlay.module
