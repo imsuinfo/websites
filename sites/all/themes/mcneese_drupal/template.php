@@ -10,6 +10,7 @@ function mcneese_drupal_preprocess_maintenance_page(&$vars) {
   // mcneese_drupal_preprocess_html() also happen on the maintenance page, it has to be
   // called here.
   mcneese_drupal_preprocess_html($vars);
+  mcneese_drupal_preprocess_page($vars);
 }
 
 /**

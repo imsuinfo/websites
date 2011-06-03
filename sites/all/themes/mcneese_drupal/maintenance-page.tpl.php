@@ -1,7 +1,7 @@
 <?php global $base_dir; ?><!DOCTYPE html PUBLIC "-//W3C//DTD HTML+RDFa 1.1//EN">
-<html lang="<?php print($language->language); ?>" dir="<?php print $language->dir; ?>" version="HTML+RDFa 1.1" <?php print $rdf_namespaces; ?>>
+<html lang="<?php print($language->language); ?>" dir="<?php print $language->dir; ?>" version="HTML+RDFa 1.1"
 
-<head profile="<?php print $grddl_profile; ?>">
+<head>
   <!--(begin_head)-->
   <?php print($head); ?>
   <title><?php print($head_title); ?></title>
@@ -83,15 +83,6 @@
         </div>
       <?php } ?>
 
-      <?php if (is_array($primary_local_tasks)){ ?>
-        <div id='mcneese_drupal-primary_tabs'>
-          <!--(begin_primary_tabs)-->
-          <h2 class='element-invisible'><?php print t("Primary Tabs"); ?></h2>
-          <ul class='tabs primary mcneese_drupal-text_shadow'><?php print render($primary_local_tasks); ?></ul>
-          <!--(end_primary_tabs)-->
-        </div>
-      <?php } ?>
-
       <?php if (!empty($breadcrumb)){ ?>
         <div id="mcneese_drupal-breadcrumb">
           <?php print $breadcrumb; ?>
@@ -100,25 +91,15 @@
     </div>
 
     <div id='mcneese_drupal-content_region' class='page-title mcneese_drupal-text_shadow'>
-      <?php if ($secondary_local_tasks){ ?>
-        <div id='mcneese_drupal-secondary_tabs'>
-          <!--(begin_secondary_tabs)-->
-          <h2 class='element-invisible'><?php print(t("Secondary Tabs")); ?></h2>
-          <ul class='tabs secondary'><?php print(render($secondary_local_tasks)); ?></ul>
-          <!--(end_secondary_tabs)-->
-        </div>
-      <?php } ?>
-
-      <?php if ($action_links){ ?>
-        <div id='mcneese_drupal-action_links'>
-          <!--(begin_action_links)-->
-          <h2 class='element-invisible'><?php print(t("Action Links")); ?></h2>
-          <ul class="action-links"><?php print render($action_links); ?></ul>
-          <!--(end_action_links)-->
-        </div>
-      <?php } ?>
-
       <div id='mcneese_drupal-content' class='clearfix'>
+        <?php if (!empty($sidebar_first)): ?>
+          <div id="mcneese_drupal-sidebar_first" class="page-sidebar_first mcneese_drupal-text_shadow clearfix">
+            <!--(begin_sidebar_first)-->
+            <?php print($sidebar_first); ?>
+            <!--(end_sidebar_first)-->
+          </div>
+        <?php endif; ?>
+
         <!--(begin_content)-->
         <h2 class='element-invisible'><?php print(t("Primary Content")); ?></h2>
         <?php print($content); ?>
