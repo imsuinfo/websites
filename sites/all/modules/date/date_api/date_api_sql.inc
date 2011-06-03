@@ -785,6 +785,10 @@ class date_sql_handler {
         $formats['display'] = 'F j Y (W)';
         $formats['sql'] = 'Y-\WW';
         break;
+     default:
+        $formats['display'] = 'Y-m-d';
+        $formats['sql'] = 'Y-m-d';
+        break;
     }
     return $formats[$type];
   }
