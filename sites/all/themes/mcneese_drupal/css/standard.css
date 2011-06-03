@@ -198,15 +198,18 @@ div.content p {
   margin-bottom: 3px;
 }
 
+div.region-help {
+  background-color: #ffffff;
+}
+
 div.region-help div#block-system-help {
   background-color: #cceaff;
 
   font-size: 14px;
 
-  border-left: 1px solid #000000;
-  border-right: 1px solid #000000;
-  border-bottom: 1px solid #000000;
+  border: 1px solid #000000;
   padding: 8px;
+  margin: 0 5px;
 }
 
 div.region-help div#block-system-help div.content p {
