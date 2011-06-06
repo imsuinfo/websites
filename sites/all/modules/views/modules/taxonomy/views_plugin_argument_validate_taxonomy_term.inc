@@ -27,6 +27,7 @@ class views_plugin_argument_validate_taxonomy_term extends views_plugin_argument
     $options['vocabularies'] = array('default' => array());
     $options['type'] = array('default' => 'tid');
     $options['transform'] = array('default' => FALSE);
+    $options['case_insensitive'] = array('default' => FALSE);
 
     return $options;
   }
@@ -65,6 +66,13 @@ class views_plugin_argument_validate_taxonomy_term extends views_plugin_argument
       '#type' => 'checkbox',
       '#title' => t('Transform dashes in URL to spaces in term name filter values'),
       '#default_value' => $this->options['transform'],
+    );
+
+    $form['case_insensitive'] = array(
+      '#type' => 'checkbox',
+      '#title' => t('Case Insensitive'),
+      '#description' => t('Allows for doing database searches without case sensitivity. MySQL already works in lower-case mode, so MySQL users should leave this unchecked to improve performance.'),
+      '#default_value' => $this->options['case_insensitive'],
     );
   }
 
@@ -166,12 +174,29 @@ class views_plugin_argument_validate_taxonomy_term extends views_plugin_argument
         if (!empty($vocabularies)) {
           $query->condition('tv.machine_name', $vocabularies);
         }
+
+        $case_insensitive = FALSE;
+        if (!empty($this->options['case_insensitive']) && $this->options['case_insensitive']){
+          $case_insensitive = TRUE;
+        }
+
         if ($transform) {
-          $query->where("replace(td.name, ' ', '-') = :name", array(':name' => $argument));
+          if ($case_insensitive){
+            $query->where("LOWER(replace(td.name, ' ', '-')) = LOWER(:name)", array(':name' => $argument));
+          }
+          else {
+            $query->where("replace(td.name, ' ', '-') = :name", array(':name' => $argument));
+          }
         }
         else {
-          $query->condition('td.name', $argument);
+          if ($case_insensitive){
+            $query->where('LOWER(td.name) = LOWER(:name)', array(':name' => $argument));
+          }
+          else {
+            $query->condition('td.name', $argument);
+          }
         }
+
         $term = $query->execute()->fetchObject();
 
         if ($term && (empty($vocabularies) || !empty($vocabularies[$term->machine_name]))) {
