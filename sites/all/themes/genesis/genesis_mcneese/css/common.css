@@ -1042,3 +1042,38 @@ div#content div.node-content .layout-column_5 {
 
   width: 19%;
 }
+
+
+
+/*** Content Specific Style: list-even-odd ***/
+html#ckeditor-wysiwygarea body .list-even_odd .list-even_odd-row,
+div#content div.node-content .list-even_odd .list-even_odd-row,
+html#ckeditor-wysiwygarea body .list-even_odd .list-even-odd-row,
+div#content div.node-content .list-even_odd .list-even-odd-row {
+  font-family: Serif,Georgia,Times New Roman;
+  letter-spacing: 1px;
+
+  padding: 5px;
+  margin-bottom: 10px;
+}
+
+html#ckeditor-wysiwygarea body .list-even_odd .list-even_odd-row_even,
+div#content div.node-content .list-even_odd .list-even_odd-row_even,
+html#ckeditor-wysiwygarea body .list-even_odd .list-even-odd-row.views-row-even,
+div#content div.node-content .list-even_odd .list-even-odd-row.views-row-even {
+  background-color: #efefef;
+}
+
+
+html#ckeditor-wysiwygarea body .list-even_odd .list-even_odd-row-title,
+div#content div.node-content .list-even_odd .list-even_odd-row-title,
+html#ckeditor-wysiwygarea body .list-even_odd .list-even_odd-row-title:visited,
+div#content div.node-content .list-even_odd .list-even_odd-row-title:visited,
+html#ckeditor-wysiwygarea body .list-even_odd .list-even-odd-row.views-row-title,
+div#content div.node-content .list-even_odd .list-even-odd-row.views-row-title
+html#ckeditor-wysiwygarea body .list-even_odd .list-even-odd-row.views-row-title:visited,
+div#content div.node-content .list-even_odd .list-even-odd-row.views-row-title:visited {
+  font-size: 14px;
+  font-weight: bold;
+  text-decoration: none;
+}
