@@ -70,7 +70,7 @@ class views_plugin_argument_validate_taxonomy_term extends views_plugin_argument
 
     $form['case_insensitive'] = array(
       '#type' => 'checkbox',
-      '#title' => t('Case Insensitive'),
+      '#title' => t('Case Insensitive Searches'),
       '#description' => t('Allows for doing database searches without case sensitivity. MySQL already works in lower-case mode, so MySQL users should leave this unchecked to improve performance.'),
       '#default_value' => $this->options['case_insensitive'],
     );
