@@ -45,6 +45,26 @@ body#mcneese_drupal-body.maintenance-page div#mcneese_drupal-page div#mcneese_dr
   border: 1px outset;
 }
 
+body#mcneese_drupal-body div#mcneese_drupal-page div#mcneese_drupal-sidebar_left,
+body#mcneese_drupal-body div#mcneese_drupal-page div#mcneese_drupal-sidebar_right {
+  background-color: #efefef;
+
+  padding: 15px;
+  border: 1px outset;
+}
+
+body#mcneese_drupal-body div#mcneese_drupal-page div#mcneese_drupal-sidebar_left {
+  float: left;
+
+  margin: 0 25px 25px 0;
+}
+
+body#mcneese_drupal-body div#mcneese_drupal-page div#mcneese_drupal-sidebar_right {
+  float: right;
+
+  margin: 0 0 25px 25px;
+}
+
 
 
 /*** Content Specific Style: more pages ***/

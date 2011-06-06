@@ -116,6 +116,24 @@
       </div>
     <?php } ?>
 
+    <?php if (!empty($page['sidebar_left'])): ?>
+      <div id="mcneese_drupal-sidebar_left" class="page-sidebar_left mcneese_drupal-text_shadow clearfix">
+        <!--(begin_sidebar_left)-->
+        <h2 class='element-invisible'><?php print(t("Sidebar Left")); ?></h2>
+        <?php print(render($page['sidebar_left'])); ?>
+        <!--(end_sidebar_left)-->
+      </div>
+    <?php endif; ?>
+
+    <?php if (!empty($page['sidebar_right'])): ?>
+      <div id="mcneese_drupal-sidebar_right" class="page-sidebar_right mcneese_drupal-text_shadow clearfix">
+        <!--(begin_sidebar_right)-->
+        <h2 class='element-invisible'><?php print(t("Sidebar Right")); ?></h2>
+        <?php print(render($page['sidebar_right'])); ?>
+        <!--(end_sidebar_right)-->
+      </div>
+    <?php endif; ?>
+
     <?php if (is_array($page) && array_key_exists('content', $page)){ ?>
       <div id='mcneese_drupal-content' class='clearfix'>
         <!--(begin_content)-->
