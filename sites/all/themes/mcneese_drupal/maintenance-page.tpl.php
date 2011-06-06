@@ -10,7 +10,7 @@
   <!--(end_head)-->
 </head>
 <body id="mcneese_drupal-body" class="<?php print($classes); print($in_overlay_css); ?>" <?php print($attributes);?>>
-<?php  if (!isset($in_overlay) || $in_overlay != 'child'){ ?><div id="mcneese_drupal-skip_nav" class="clearfix mcneese_drupal-text_shadow">
+<?php  if (!isset($in_overlay) || $in_overlay != 'child'){ ?><div id="mcneese_drupal-skip_nav" class="clearfix">
     <!--(begin_skipnav)-->
     <div id="mcneese_drupal-skip_nav-list">
       <div id="mcneese_drupal-skip_nav-list-content"><a id="mcneese_drupal-skip_nav-list-content-link" class="mcneese_drupal-skipnav-link element-invisible element-focusable" href="#mcneese_drupal-content"><?php print t("Skip to main content"); ?></a></div>
@@ -28,11 +28,11 @@
 
   <div id="mcneese_drupal-page" class="mcneese_drupal">
     <!--(begin_page)-->
-    <div id='mcneese_drupal-header_region' class='clearfix page-header mcneese_drupal-text_shadow'>
+    <div id='mcneese_drupal-header_region' class='clearfix page-header'>
       <div id='mcneese_drupal-header'>
         <!--(begin_header)-->
         <?php if (isset($logo) && !empty($logo)){ ?>
-          <div id='mcneese_drupal-website_logo' class='mcneese_drupal-text_shadow'>
+          <div id='mcneese_drupal-website_logo'>
             <!--(begin_website_logo)-->
             <a id="mcneese_drupal-website_logo-link" href="<?php print($base_dir . '/'); ?>" title="Home Page">
               <img id="mcneese_drupal-website_logo-image" src="<?php print($logo); ?>" alt="<?php if (isset($site_name) && !empty($site_name)) print($site_name); ?>">
@@ -45,11 +45,11 @@
 
       <div id="mcneese_drupal-header-horizontal_ruler"></div>
     </div>
-    <div id='mcneese_drupal-message_region' class='clearfix mcneese_drupal-text_shadow'>
+    <div id='mcneese_drupal-message_region' class='clearfix'>
       <?php if (isset($messages) && is_string($messages)){ ?>
         <!--(begin_messages)-->
         <div id='mcneese_drupal-messages' class='clearfix'>
-          <h2 class='element-invisible mcneese_drupal-text_shadow'><?php print t("Messages"); ?></h2>
+          <h2 class='element-invisible'><?php print t("Messages"); ?></h2>
           <?php print($messages); ?>
         </div>
         <!--(end_messages)-->
@@ -57,7 +57,7 @@
 
       <?php if (!empty($help)){ ?>
         <!--(begin_help)-->
-        <div id='mcneese_drupal-help' class='clearfix mcneese_drupal-text_shadow'>
+        <div id='mcneese_drupal-help' class='clearfix'>
           <h2 class='element-invisible'><?php print t("Help"); ?></h2>
           <?php print($help); ?>
         </div>
@@ -65,11 +65,11 @@
       <?php } ?>
     </div>
 
-    <div id='mcneese_drupal-title_region' class='clearfix page-title mcneese_drupal-text_shadow'>
+    <div id='mcneese_drupal-title_region' class='clearfix page-title'>
       <div id='mcneese_drupal-title'>
         <!--(begin_title)-->
         <?php if (isset($title) && is_string($title)){ ?>
-          <h1 id='mcneese_drupal-page_title' class='mcneese_drupal-text_shadow'><?php print($title); ?></h1>
+          <h1 id='mcneese_drupal-page_title'><?php print($title); ?></h1>
         <?php } ?>
         <!--(end_title)-->
       </div>
@@ -78,7 +78,7 @@
         <div id='mcneese_drupal-side_links'>
           <!--(begin_side_links)-->
           <h2 class='element-invisible'><?php print t("Side Links"); ?></h2>
-          <ul class='links mcneese_drupal-text_shadow'><?php print($side_links); ?></ul>
+          <ul class='links'><?php print($side_links); ?></ul>
           <!--(end_side_links)-->
         </div>
       <?php } ?>
@@ -90,10 +90,10 @@
       <?php } ?>
     </div>
 
-    <div id='mcneese_drupal-content_region' class='page-title mcneese_drupal-text_shadow'>
+    <div id='mcneese_drupal-content_region' class='page-title'>
       <div id='mcneese_drupal-content' class='clearfix'>
         <?php if (!empty($sidebar_first)): ?>
-          <div id="mcneese_drupal-sidebar_first" class="page-sidebar_first mcneese_drupal-text_shadow clearfix">
+          <div id="mcneese_drupal-sidebar_first" class="page-sidebar_first clearfix">
             <!--(begin_sidebar_first)-->
             <?php print($sidebar_first); ?>
             <!--(end_sidebar_first)-->
