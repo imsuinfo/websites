@@ -890,6 +890,17 @@ ul.action-links a {
 
 
 
+/*** views interface ***/
+.views-ui-display-tab-bucket .even {
+  background-color: #f2f2f2;
+}
+
+.views-ui-display-tab-bucket {
+  border: 1px solid: #e0e0e0;
+}
+
+
+
 /*** update page colors ***/
 div#mcneese_drupal-content_region div#block-system-main table.update tbody tr {
   border-bottom: 1px solid #999999;
