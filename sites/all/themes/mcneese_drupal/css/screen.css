@@ -516,6 +516,14 @@ div#mcneese_drupal-undercontent div#mcneese_drupal-UCS {
   text-align: right;
 }
 
+div#mcneese_drupal-messages,
+div#mcneese_drupal-help {
+  background-color: #ffffff;
+
+  padding-left: 5px;
+  padding-right: 5px;
+}
+
 div#mcneese_drupal-message_region {
   margin-left: 20px;
   margin-right: 20px;
@@ -523,9 +531,6 @@ div#mcneese_drupal-message_region {
 
 div#mcneese_drupal-messages div.messages {
   margin: 0px;
-
-  border-left: 1px solid #000000;
-  border-right: 1px solid #000000;
 }
 
 div#mcneese_drupal-content {
