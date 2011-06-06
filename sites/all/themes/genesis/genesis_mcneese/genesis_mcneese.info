@@ -1,5 +1,6 @@
 name         = McNeese Theme
-description  = My Kickn' Sub-theme
+description  = "The McNeese State University website theme."
+version      = "7.x-1.0"
 core         = 7.x
 engine       = phptemplate
 screenshot   = mcneese-subtheme.png
