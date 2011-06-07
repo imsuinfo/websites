@@ -6,8 +6,8 @@ engine      = phptemplate
 screenshot  = screenshot.png
 
 stylesheets[all][]     = css/reset.css
-stylesheets[all][]     = css/all.css
 stylesheets[all][]     = css/standard.css
+stylesheets[all][]     = css/common.css
 stylesheets[all][]     = css/workaround.css
 stylesheets[screen][]  = css/screen.css
 stylesheets[print][]   = css/print.css
