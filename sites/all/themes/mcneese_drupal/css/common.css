@@ -11,6 +11,11 @@ div.drupal_content {
   position: relative;
 }
 
+html#ckeditor-wysiwygarea body {
+  margin-left: auto;
+  margin-right: auto;
+}
+
 h1#page-title {
   font-size: 24px;
   font-weight: normal;
