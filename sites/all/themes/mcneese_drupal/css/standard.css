@@ -1151,7 +1151,7 @@ div.vertical-tabs ul.vertical-tabs-list {
 
   margin: 0px;
 
-  width: 15%;
+  width: 20%;
 }
 
 div.vertical-tabs div.vertical-tabs-panes {
@@ -1159,11 +1159,11 @@ div.vertical-tabs div.vertical-tabs-panes {
 
   vertical-align: top;
 
-  width: 85%;
+  width: 80%;
 }
 
 .vertical-tabs ul.vertical-tabs-list li a {
-  padding: 10px;
+  padding: 5px;
 
   word-wrap: break-word;
 }
