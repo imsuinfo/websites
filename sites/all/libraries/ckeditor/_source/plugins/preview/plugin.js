@@ -44,7 +44,7 @@ For licensing, see LICENSE.html or http://ckeditor.com/license
 
 				sHTML =
 					editor.config.docType +
-					'<html dir="' + editor.config.contentsLangDirection + '">' +
+					'<html id="ckeditor-wysiwygarea" dir="' + editor.config.contentsLangDirection + '">' +
 					'<head>' +
 					baseTag +
 					'<title>' + editor.lang.preview + '</title>' +
