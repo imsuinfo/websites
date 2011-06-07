@@ -1,211 +1,42 @@
+/*** Login Form ***/
+form#user-login-form {
+  text-align: center;
+}
+
+
+
 /*** Content Specific Customization ***/
-html#ckeditor-wysiwygarea body {
-  position: relative;
-}
-
 html#ckeditor-wysiwygarea body,
-div#columns {
-  min-height: 500px;
-
-  margin-top: 10px;
-}
-
-div#mcneese_drupal-title_region {
+div.drupal_content {
   position: relative;
-
-  background-color: #ffffff;
-
-  margin-left: 20px;
-  margin-right: 20px;
 }
 
-div#mcneese_drupal-title h1#mcneese_drupal-page_title {
-  display: inline-block;
-
+h1#page-title {
   font-size: 24px;
   font-weight: normal;
   color: #00335b;
 
   text-shadow: -1px 1px 3px #aaaaaa;
 
-  padding: 4px 5px;
+  padding: 4px 0;
 }
 
-div#mcneese_drupal-title div.add-or-remove-shortcuts {
-  display: inline-block;
-}
-
-body#mcneese_drupal-body.maintenance-page div#mcneese_drupal-page div#mcneese_drupal-sidebar_first {
-  float: left;
-
-  background-color: #efefef;
-
-  padding: 15px 15px 15px 0;
-  margin: 0 25px 25px 0;
-  border: 1px outset;
-}
-
-body#mcneese_drupal-body div#mcneese_drupal-page div#mcneese_drupal-sidebar_left,
-body#mcneese_drupal-body div#mcneese_drupal-page div#mcneese_drupal-sidebar_right {
-  background-color: #efefef;
-
-  padding: 15px;
-  border: 1px outset;
-}
-
-body#mcneese_drupal-body div#mcneese_drupal-page div#mcneese_drupal-sidebar_left {
-  float: left;
-
-  margin: 0 25px 25px 0;
-}
-
-body#mcneese_drupal-body div#mcneese_drupal-page div#mcneese_drupal-sidebar_right {
-  float: right;
-
-  margin: 0 0 25px 25px;
-}
-
-
-
-/*** Content Specific Style: more pages ***/
-div.view-id-more_pages {
-  position: relative;
-
+html#ckeditor-wysiwygarea,
+div.drupal_content {
   font-size: 14px;
-  line-height: 21px;
-  letter-spacing: 1px;
-
-  font-family: Serif, Georgia, Times New Roman;
-
-  margin-top: 10px;
 }
 
-div.view-display-id-more_pages_highlights_attachment {
-  margin-top: 0;
+html#ckeditor-wysiwygarea p,
+div.drupal_content p {
+  margin: 10px 0;
+  font-size: 14px;
+  line-height: 1.2;
 }
 
-div.view-id-more_pages div.attachment,
-div.view-id-more_pages div.view-content {
-  display: inline-block;
-}
-
-div#columns div.view-display-id-more_pages_news div.view-content {
-  width: 290px;
-  padding-left: 5px;
-  padding-right: 5px;
-}
-
-div#columns div.view-id-more_pages div.view-content div.more_pages-field_group,
-div#columns div.view-id-more_pages div.view-content div.more_pages-field_event_date{
-  display: inline-block;
-
-  font-size: 12px;
-}
-
-div#columns div.view-display-id-more_pages_news div.more_pages-field_group {
-  max-width: 160px;
-  overflow: wrap;
-}
-
-div#columns div.view-display-id-more_pages_news div.more_pages-field_event_date {
-  max-width: 120px;
-  overflow: wrap;
-}
-
-div#columns div.view-display-id-more_pages_highlights_attachment div.more_pages-field_group {
-  max-width: 300px;
-  overflow: wrap;
-}
-
-div#columns div.view-id-more_pages div.view-content div.more_pages-field_group {
-  padding-right: 2px;
-}
-
-div#columns div.view-id-more_pages div.view-content div.more_pages-field_event_date {
-  float: right;
-
-  padding-left: 2px;
-}
-
-div#columns div.view-id-more_pages div.more_pages-field_group a
-div#columns div.view-id-more_pages div.more_pages-field_group a:visited {
-  text-decoration: none;
-}
-
-div#columns div.view-id-more_pages div.more_pages-field_group a:focus,
-div#columns div.view-id-more_pages div.more_pages-field_group a:hover,
-div#columns div.view-id-more_pages div.more_pages-field_group a:active {
-  text-decoration: underline;
-}
-
-div#columns div.view-id-more_pages div.view-content div.views-field-nothing,
-div#columns div.view-id-more_pages div.view-content div.views-field-body {
-  clear: both;
-}
-
-div#columns div.view-id-more_pages div.view-content div.views-field-title a,
-div#columns div.view-id-more_pages div.view-content div.views-field-title a:visited {
-  font-weight: bold;
-  font-size: 18px;
-  text-decoration: none;
-}
-
-div#columns div.view-id-more_pages div.view-content div.views-field-title a:focus,
-div#columns div.view-id-more_pages div.view-content div.views-field-title a:hover,
-div#columns div.view-id-more_pages div.view-content div.views-field-title a:active {
-  color: #7f0000;
-
-  text-decoration: underline;
-}
-
-div#columns div.view-id-more_pages div.view-content div.views-field-nothing {
-  margin: 20px 0;
-}
-
-div#columns div.view-display-id-more_pages_news div.attachment {
-  width: 440px;
-}
-
-div#columns div.view-display-id-more_pages_news div.attachment div.view-content {
-  width: auto;
-}
-
-div#columns div.view-display-id-more_pages_highlights_attachment div.view-content {
-  padding-left: 5px;
-  padding-right: 5px;
-}
-
-div#columns div.view-display-id-more_pages_highlights_attachment div.views-field-title a,
-div#columns div.view-display-id-more_pages_highlights_attachment div.views-field-title a:visited {
-  color: #00477f;
-
-  font-size: 20px;
-
-  text-decoration: none;
-}
-
-div#columns div.view-display-id-more_pages_highlights_attachment div.views-field-title a:focus
-div#columns div.view-display-id-more_pages_highlights_attachment div.views-field-title a:hover
-div#columns div.view-display-id-more_pages_highlights_attachment div.views-field-title a:active {
-  color: #7f0000;
-
-  text-decoration: underline;
-}
-
-div#columns div.view-display-id-more_pages_highlights_attachment div.views-field-field-hightlight-image {
-  margin-bottom: 10px;
-  margin-left: auto;
-  margin-right: auto;
-}
-
-div#columns div.view-id-more_pages div.views-field-field-headline {
-  font-size: 12px;
-  font-weight: bold;
-
-  letter-spacing: 2px;
-  text-transform: uppercase;
-
-  margin: 5px 15px 5px 15px;
+html#ckeditor-wysiwygarea h2,
+div.drupal_content h2 {
+  font-weight: normal;
+  margin-bottom: 15px;
 }
 
 
@@ -250,7 +81,7 @@ div.view-id-master_calendar.view-display-id-event_listing div.view-content div.v
 
 /*** Content Specific Style: list-box ***/
 html#ckeditor-wysiwygarea body .list-box,
-div#mcneese_drupal-content div.region-content .list-box {
+div.drupal_content div.node-content .list-box {
   display: block;
 
   background-color: #eaeaea;
@@ -264,22 +95,53 @@ div#mcneese_drupal-content div.region-content .list-box {
 
 html#ckeditor-wysiwygarea body .list-box a,
 html#ckeditor-wysiwygarea body .list-box a:visited,
-div#mcneese_drupal-content div.region-content .list-box a,
-div#mcneese_drupal-content div.region-content .list-box a:visited {
+div.drupal_content div.node-content .list-box a,
+div.drupal_content div.node-content .list-box a:visited {
   text-decoration: none;
+}
+
+div.drupal_content div.node-content th {
+  color: #ffffff;
+  background-color: #00477f;
+  margin: 5px;
+  border-bottom: 1px;
+  text-align: center;
+}
+
+div.drupal_content div.node-content td {
+  padding-left: 5px;
+  padding-right: 5px;
+  padding-top: 2px;
+  padding-bottom:2px;
+  border-top: 1px solid #A9A9A9;
+  border-right: 1px solid #A9A9A9;
+}
+
+div.drupal_content div.node-content table caption {
+  font-size:18px;
+  font-weight: bold;
+}
+
+div.drupal_content div.node-content table {
+  background-color: #eaeaea;
+  border: 1px solid #A9A9A9;
+  margin:  5px;
+  margin-left: auto;
+  margin-right: auto;
+  width:100%;
 }
 
 html#ckeditor-wysiwygarea body .list-box a:focus,
 html#ckeditor-wysiwygarea body .list-box a:hover,
 html#ckeditor-wysiwygarea body .list-box a:active,
-div#mcneese_drupal-content div.region-content .list-box a:focus,
-div#mcneese_drupal-content div.region-content .list-box a:hover,
-div#mcneese_drupal-content div.region-content .list-box a:active {
+div.drupal_content div.node-content .list-box a:focus,
+div.drupal_content div.node-content .list-box a:hover,
+div.drupal_content div.node-content .list-box a:active {
   text-decoration: underline;
 }
 
 html#ckeditor-wysiwygarea body .list-box .list-box-title,
-div#mcneese_drupal-content div.region-content .list-box .list-box-title {
+div.drupal_content div.node-content .list-box .list-box-title {
   color: #ffffff;
   background-color: #00477f;
 
@@ -291,35 +153,39 @@ div#mcneese_drupal-content div.region-content .list-box .list-box-title {
   border: 1px solid #00366e;
 }
 
-html#ckeditor-wysiwygarea body .list-box .list-box-title a,
-div#mcneese_drupal-content div.region-content .list-box .list-box-title a,
-html#ckeditor-wysiwygarea body .list-box .list-box-title a:visited,
-div#mcneese_drupal-content div.region-content .list-box .list-box-titlea:visited {
+div.drupal_content div.node-content .list-box .list-box-title a,
+div.drupal_content div.node-content .list-box .list-box-title a:visited {
   color: #ffffff;
   background-color: #00477f;
 }
 
 html#ckeditor-wysiwygarea body .list-box .list-box-title a,
-div#mcneese_drupal-content div.region-content .list-box .list-box-title a,
+html#ckeditor-wysiwygarea body .list-box .list-box-title a:visited {
+  color: #ffffff !important;
+  background-color: #00477f;
+}
+
+html#ckeditor-wysiwygarea body .list-box .list-box-title a,
+div.drupal_content div.node-content .list-box .list-box-title a,
 html#ckeditor-wysiwygarea body .list-box .list-box-title a:visited,
-div#mcneese_drupal-content div.region-content .list-box .list-box-title a:visited {
+div.drupal_content div.node-content .list-box .list-box-title a:visited {
   text-decoration: none;
 }
 
 html#ckeditor-wysiwygarea body .list-box .list-box-title a:focus,
-div#mcneese_drupal-content div.region-content .list-box .list-box-title a:focus,
+div.drupal_content div.node-content .list-box .list-box-title a:focus,
 html#ckeditor-wysiwygarea body .list-box .list-box-title a:active,
-div#mcneese_drupal-content div.region-content .list-box .list-box-title a:active,
+div.drupal_content div.node-content .list-box .list-box-title a:active,
 html#ckeditor-wysiwygarea body .list-box .list-box-title a:hover,
-div#mcneese_drupal-content div.region-content .list-box .list-box-title a:hover {
+div.drupal_content div.node-content .list-box .list-box-title a:hover {
   color: #fad703;
   text-decoration: underline;
 }
 
 html#ckeditor-wysiwygarea body .list-box ul,
 html#ckeditor-wysiwygarea body .list-box ol,
-div#mcneese_drupal-content div.region-content .list-box ul,
-div#mcneese_drupal-content div.region-content .list-box ol {
+div.drupal_content div.node-content .list-box ul,
+div.drupal_content div.node-content .list-box ol {
   padding-left: 25px;
 
   margin-top: 5px;
@@ -328,32 +194,32 @@ div#mcneese_drupal-content div.region-content .list-box ol {
 
 html#ckeditor-wysiwygarea body .list-box ul li a,
 html#ckeditor-wysiwygarea body .list-box ol li a,
-div#mcneese_drupal-content div.region-content .list-box ul li a,
-div#mcneese_drupal-content div.region-content .list-box ol li a {
+div.drupal_content div.node-content .list-box ul li a,
+div.drupal_content div.node-content .list-box ol li a {
   display: block;
   padding: 2px 4px;
 }
 
 html#ckeditor-wysiwygarea body .list-box p,
-div#mcneese_drupal-content div.region-content .list-box p {
+div.drupal_content div.node-content .list-box p {
   margin-top: 10px;
   margin-bottom: 10px;
 }
 
 html#ckeditor-wysiwygarea body .list-box .list-box-body,
-div#mcneese_drupal-content div.region-content .list-box .list-box-body {
+div.drupal_content div.node-content .list-box .list-box-body {
   padding-left: 10px;
   padding-right: 10px;
 }
 
 html#ckeditor-wysiwygarea body .list-box .list-box-body2,
-div#mcneese_drupal-content div.region-content .list-box .list-box-body2 {
+div.drupal_content div.node-content .list-box .list-box-body2 {
   padding-left: 0;
   padding-right: 0;
 }
 
 html#ckeditor-wysiwygarea body .list-box .list-box-center,
-div#mcneese_drupal-content div.region-content .list-box .list-box-center {
+div.drupal_content div.node-content .list-box .list-box-center {
   display: block;
   margin-left: auto;
   margin-right: auto;
@@ -363,37 +229,37 @@ div#mcneese_drupal-content div.region-content .list-box .list-box-center {
 
 /*** Content Specific Style: margin_height ***/
 html#ckeditor-wysiwygarea body .margin_height-huge,
-div#mcneese_drupal-content div.region-content .margin_height-huge {
+div.drupal_content div.node-content .margin_height-huge {
   margin-top: 60px;
   margin-bottom: 60px;
 }
 
 html#ckeditor-wysiwygarea body .margin_height-large,
-div#mcneese_drupal-content div.region-content .margin_height-large {
+div.drupal_content div.node-content .margin_height-large {
   margin-top: 30px;
   margin-bottom: 30px;
 }
 
 html#ckeditor-wysiwygarea body .margin_height-middle,
-div#mcneese_drupal-content div.region-content .margin_height-middle {
+div.drupal_content div.node-content .margin_height-middle {
   margin-top: 15px;
   margin-bottom: 15px;
 }
 
 html#ckeditor-wysiwygarea body .margin_height-small,
-div#mcneese_drupal-content div.region-content .margin_height-small {
+div.drupal_content div.node-content .margin_height-small {
   margin-top: 5px;
   margin-bottom: 5px;
 }
 
 html#ckeditor-wysiwygarea body .margin_height-tiny,
-div#mcneese_drupal-content div.region-content .margin_height-tiny {
+div.drupal_content div.node-content .margin_height-tiny {
   margin-top: 1px;
   margin-bottom: 1px;
 }
 
 html#ckeditor-wysiwygarea body .margin_height-none,
-div#mcneese_drupal-content div.region-content .margin_height-none {
+div.drupal_content div.node-content .margin_height-none {
   margin-top: 0;
   margin-bottom: 0;
 }
@@ -402,37 +268,37 @@ div#mcneese_drupal-content div.region-content .margin_height-none {
 
 /*** Content Specific Style: margin_width ***/
 html#ckeditor-wysiwygarea body .margin_width-huge,
-div#mcneese_drupal-content div.region-content .margin_width-huge {
+div.drupal_content div.node-content .margin_width-huge {
   margin-left: 60px;
   margin-right: 60px;
 }
 
 html#ckeditor-wysiwygarea body .margin_width-large,
-div#mcneese_drupal-content div.region-content .margin_width-large {
+div.drupal_content div.node-content .margin_width-large {
   margin-left: 30px;
   margin-right: 30px;
 }
 
 html#ckeditor-wysiwygarea body .margin_width-middle,
-div#mcneese_drupal-content div.region-content .margin_width-middle {
+div.drupal_content div.node-content .margin_width-middle {
   margin-left: 15px;
   margin-right: 15px;
 }
 
 html#ckeditor-wysiwygarea body .margin_width-small,
-div#mcneese_drupal-content div.region-content .margin_width-small {
+div.drupal_content div.node-content .margin_width-small {
   margin-left: 5px;
   margin-right: 5px;
 }
 
 html#ckeditor-wysiwygarea body .margin_width-tiny,
-div#mcneese_drupal-content div.region-content .margin_width-tiny {
+div.drupal_content div.node-content .margin_width-tiny {
   margin-left: 1px;
   margin-right: 1px;
 }
 
 html#ckeditor-wysiwygarea body .margin_width-none,
-div#mcneese_drupal-content div.region-content .margin_width-none {
+div.drupal_content div.node-content .margin_width-none {
   margin-left: 0;
   margin-right: 0;
 }
@@ -441,7 +307,7 @@ div#mcneese_drupal-content div.region-content .margin_width-none {
 
 /*** Content Specific Style: layout-column_1 ***/
 html#ckeditor-wysiwygarea body .layout-column_1,
-div#mcneese_drupal-content div.region-content .layout-column_1 {
+div.drupal_content div.node-content .layout-column_1 {
   display: block;
 
   width: 99%;
@@ -451,7 +317,7 @@ div#mcneese_drupal-content div.region-content .layout-column_1 {
 
 /*** Content Specific Style: layout-column_2 ***/
 html#ckeditor-wysiwygarea body .layout-column_2,
-div#mcneese_drupal-content div.region-content .layout-column_2 {
+div.drupal_content div.node-content .layout-column_2 {
   display: inline-block;
 
   width: 49%;
@@ -461,7 +327,7 @@ div#mcneese_drupal-content div.region-content .layout-column_2 {
 
 /*** Content Specific Style: layout-column_3 ***/
 html#ckeditor-wysiwygarea body .layout-column_3,
-div#mcneese_drupal-content div.region-content .layout-column_3 {
+div.drupal_content div.node-content .layout-column_3 {
   display: inline-block;
 
   width: 32%;
@@ -471,7 +337,7 @@ div#mcneese_drupal-content div.region-content .layout-column_3 {
 
 /*** Content Specific Style: layout-column_4 ***/
 html#ckeditor-wysiwygarea body .layout-column_4,
-div#mcneese_drupal-content div.region-content .layout-column_4 {
+div.drupal_content div.node-content .layout-column_4 {
   display: inline-block;
 
   width: 24%;
@@ -481,7 +347,7 @@ div#mcneese_drupal-content div.region-content .layout-column_4 {
 
 /*** Content Specific Style: layout-column_5 ***/
 html#ckeditor-wysiwygarea body .layout-column_5,
-div#mcneese_drupal-content div.region-content .layout-column_5 {
+div.drupal_content div.node-content .layout-column_5 {
   display: inline-block;
 
   width: 19%;
@@ -491,9 +357,9 @@ div#mcneese_drupal-content div.region-content .layout-column_5 {
 
 /*** Content Specific Style: list-even-odd ***/
 html#ckeditor-wysiwygarea body .list-even_odd .list-even_odd-row,
-div#content div.node-content .list-even_odd .list-even_odd-row,
+div.drupal_content div.node-content .list-even_odd .list-even_odd-row,
 html#ckeditor-wysiwygarea body .list-even_odd .list-even-odd-row,
-div#content div.node-content .list-even_odd .list-even-odd-row {
+div.drupal_content div.node-content .list-even_odd .list-even-odd-row {
   font-family: Serif,Georgia,Times New Roman;
   letter-spacing: 1px;
 
@@ -502,235 +368,22 @@ div#content div.node-content .list-even_odd .list-even-odd-row {
 }
 
 html#ckeditor-wysiwygarea body .list-even_odd .list-even_odd-row_even,
-div#content div.node-content .list-even_odd .list-even_odd-row_even,
+div.drupal_content div.node-content .list-even_odd .list-even_odd-row_even,
 html#ckeditor-wysiwygarea body .list-even_odd .list-even-odd-row.views-row-even,
-div#content div.node-content .list-even_odd .list-even-odd-row.views-row-even {
+div.drupal_content div.node-content .list-even_odd .list-even-odd-row.views-row-even {
   background-color: #efefef;
 }
 
 
 html#ckeditor-wysiwygarea body .list-even_odd .list-even_odd-row-title,
-div#content div.node-content .list-even_odd .list-even_odd-row-title,
+div.drupal_content div.node-content .list-even_odd .list-even_odd-row-title,
 html#ckeditor-wysiwygarea body .list-even_odd .list-even_odd-row-title:visited,
-div#content div.node-content .list-even_odd .list-even_odd-row-title:visited,
+div.drupal_content div.node-content .list-even_odd .list-even_odd-row-title:visited,
 html#ckeditor-wysiwygarea body .list-even_odd .list-even-odd-row.views-row-title,
-div#content div.node-content .list-even_odd .list-even-odd-row.views-row-title
+div.drupal_content div.node-content .list-even_odd .list-even-odd-row.views-row-title
 html#ckeditor-wysiwygarea body .list-even_odd .list-even-odd-row.views-row-title:visited,
-div#content div.node-content .list-even_odd .list-even-odd-row.views-row-title:visited {
+div.drupal_content div.node-content .list-even_odd .list-even-odd-row.views-row-title:visited {
   font-size: 14px;
   font-weight: bold;
   text-decoration: none;
-}
-
-
-
-/*** bugfixes ***/
-#diff-inline-form select,
-div.filter-options select {
-  padding: 0;
-}
-
-div.region div#block-system-main div.content div.profile {
-  margin: 0px;
-}
-
-fieldset#views-tokens-help div.item-list li {
-  margin-left: 20px;
-}
-
-div.rules-elements-table div.tabledrag-toggle-weight-wrapper {
-  position: relative;
-  float: right;
-}
-
-div#overlay {
-  margin-bottom: 50px;
-}
-
-div#views-ajax-form div.form-item div.warning {
-  background-repeat: no-repeat;
-  min-height: 25px;
-  padding-left: 25px;
-}
-
-input#edit-cancel--15,
-input#edit-cancel--14,
-input#edit-cancel--13,
-input#edit-cancel--12,
-input#edit-cancel--11,
-input#edit-cancel--10,
-input#edit-cancel--9,
-input#edit-cancel--8,
-input#edit-cancel--7,
-input#edit-cancel--6,
-input#edit-cancel--5,
-input#edit-cancel--4,
-input#edit-cancel--3,
-input#edit-cancel--2,
-input#edit-cancel--1 {
-  background: url(../images/button-grey.png) no-repeat scroll center top transparent;
-}
-
-input#edit-remove--15,
-input#edit-remove--14,
-input#edit-remove--13,
-input#edit-remove--12,
-input#edit-remove--11,
-input#edit-remove--10,
-input#edit-remove--9,
-input#edit-remove--8,
-input#edit-remove--7,
-input#edit-remove--6,
-input#edit-remove--5,
-input#edit-remove--4,
-input#edit-remove--3,
-input#edit-remove--2,
-input#edit-remove--1 {
-  background: url(../images/button-red.png) no-repeat scroll center top transparent;
-}
-
-div.remove-display form.views-ajax-form div.remove-display input.form-submit {
-  background: url(../images/button-red.png) no-repeat scroll center top transparent;
-}
-
-div.remove-display form.views-ajax-form div.restore-display input.form-submit {
-  background: url(../images/button-blue.png) no-repeat scroll center top transparent;
-}
-
-input#edit-publish,
-input#edit-unpublish {
-  background: url(../images/button-blue.png) no-repeat scroll center top transparent;
-}
-
-form#views-ui-analyze-view-button div input#edit-submit.form-submit,
-div.views-override input#edit-button--15,
-div.views-override input#edit-button--14,
-div.views-override input#edit-button--13,
-div.views-override input#edit-button--12,
-div.views-override input#edit-button--11,
-div.views-override input#edit-button--10,
-div.views-override input#edit-button--9,
-div.views-override input#edit-button--8,
-div.views-override input#edit-button--7,
-div.views-override input#edit-button--6,
-div.views-override input#edit-button--5,
-div.views-override input#edit-button--4,
-div.views-override input#edit-button--3,
-div.views-override input#edit-button--2,
-div.views-override input#edit-button--1,
-div.views-override input#edit-button.form-submit {
-  background: url(../images/button-blue.png) no-repeat scroll center top transparent;
-}
-
-form#user-profile-form div#edit-actions input#edit-cancel {
-  background: url(../images/button-red.png) no-repeat scroll center top transparent;
-}
-
-div#mcneese_drupal-content div#ds-tabs {
-  margin-top: 2px;
-  margin-bottom: 4px;
-}
-
-div#mcneese_drupal-content div#ds-tabs a {
-  cursor: pointer;
-  padding: 2px 4px;
-  margin-bottom: 1px;
-  margin-right: 1px;
-  margin-left: 2px;
-  color: #000000;
-  text-align: center;
-  font-weight: normal;
-  font-size: 11px;
-  font-family: "Lucida Grande", Verdana, sans-serif;
-  font-weight: bold;
-  text-shadow: 0px 0px 2px #fefefe;
-  border: 1px outset #333333;
-  border-radius: 3px;
-  -moz-border-radius: 4px;
-  -moz-outline-radius: 4px;
-  -webkit-border-radius: 3px;
-
-  background: url(../images/button-green.png) no-repeat scroll center top transparent;
-}
-
-div.field-formatter-settings-edit-wrapper input.field-formatter-settings-edit {
-  background: url(../images/button-blue.png) no-repeat scroll center top transparent;
-  padding: 2px;
-}
-
-div.vertical-tabs {
-  position: static;
-
-  margin: 0px;
-}
-
-div.vertical-tabs ul.vertical-tabs-list {
-  display: inline-block;
-
-  vertical-align: top;
-  float: none;
-
-  margin: 0px;
-
-  width: 15%;
-}
-
-div.vertical-tabs div.vertical-tabs-panes {
-  display: inline-block;
-
-  vertical-align: top;
-
-  width: 85%;
-}
-
-.vertical-tabs ul.vertical-tabs-list li a {
-  padding: 10px;
-
-  word-wrap: break-word;
-}
-
-div#mcneese_drupal-skip_nav {
-  margin-top: 0;
-  position: absolute;
-  left: 50%;
-  margin-left: -5.25em;
-  width: auto;
-  z-index: 50;
-}
-
-div#mcneese_drupal-skip_nav a.mcneese_drupal-skipnav-link {
-  background-color: #e6f6ff;
-
-  padding: 3px;
-}
-
-div#mcneese_drupal-skip_nav a.mcneese_drupal-skipnav-link,
-div#mcneese_drupal-skip_nav a.mcneese_drupal-skipnav-link:link,
-div#mcneese_drupal-skip_nav a.mcneese_drupal-skipnav-link:visited,
-div#mcneese_drupal-skip_nav a.mcneese_drupal-skipnav-link:hover {
-  position: absolute;
-
-  top: -1000px;
-  left: 0;
-
-  overflow: hidden;
-}
-
-div#mcneese_drupal-skip_nav a.mcneese_drupal-skipnav-link:active,
-div#mcneese_drupal-skip_nav a.mcneese_drupal-skipnav-link:focus {
-  position: static;
-
-  margin-left: auto;
-  margin-right: auto;
-}
-
-div#mcneese_drupal-title {
-}
-
-ul.tabs.secondary li.active a {
-  border-style: inset;
-}
-
-ul.tabs.secondary.views-ui-render-add-view-button-processed-processed li.active a {
-  color: #000000;
 }

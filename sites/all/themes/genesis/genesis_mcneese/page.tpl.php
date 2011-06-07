@@ -186,7 +186,7 @@
               </div>
             <?php } ?>
 
-            <div id="content">
+            <div id="content" class="drupal_content">
               <?php print($page['content']); ?>
             </div>
           </div>

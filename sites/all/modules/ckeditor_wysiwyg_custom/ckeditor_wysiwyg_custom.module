@@ -35,9 +35,9 @@ function ckeditor_wysiwyg_custom_wysiwyg_editor_settings_alter(&$settings, $cont
     // TODO: This is temporarily hard-coded to the genesis_mcneese theme, write a drupal_invoke_all(..) hook for themes to implement
     $theme_path = drupal_get_path('theme', 'genesis_mcneese') . '/css/';
     $settings['contentsCss'][] = $theme_path . 'reset.css';
-    $settings['contentsCss'][] = $theme_path . 'layout.css';
-    $settings['contentsCss'][] = $theme_path . 'workaround.css';
+    $settings['contentsCss'][] = $theme_path . 'standard.css';
     $settings['contentsCss'][] = $theme_path . 'common.css';
+    $settings['contentsCss'][] = $theme_path . 'workaround.css';
     $settings['contentsCss'][] = $theme_path . 'screen.css';
 
     // http://docs.cksource.com/ckeditor_api/symbols/CKEDITOR.config.html#.enterMode
