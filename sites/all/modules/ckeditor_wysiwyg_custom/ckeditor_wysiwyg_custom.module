@@ -20,7 +20,7 @@ function ckeditor_wysiwyg_custom_wysiwyg_editor_settings_alter(&$settings, $cont
 
     $settings['toolbar'] = $full_toolbar;
 
-    $settings['resize_minWidth'] = 600;
+    $settings['resize_minWidth'] = 800;
 
     // provide a hook for modules to add their own css
     $settings['contentsCss'] = array();
