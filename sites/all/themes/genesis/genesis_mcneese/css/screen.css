@@ -309,6 +309,7 @@ html#ckeditor-wysiwygarea body {
   max-width: 745px;
 
   padding: 10px;
+  margin-bottom: 10px;
 }
 
 div#columns.sidebar-left div#content-column,
