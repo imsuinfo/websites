@@ -13,6 +13,7 @@ For licensing, see LICENSE.html or http://ckeditor.com/license
 	{
 		modes : { wysiwyg:1, source:1 },
 		canUndo : false,
+		readOnly : 1,
 		exec : function( editor )
 		{
 			var sHTML,
@@ -43,7 +44,7 @@ For licensing, see LICENSE.html or http://ckeditor.com/license
 
 				sHTML =
 					editor.config.docType +
-					'<html id="ckeditor-wysiwygarea" dir="' + editor.config.contentsLangDirection + '">' +
+					'<html dir="' + editor.config.contentsLangDirection + '">' +
 					'<head>' +
 					baseTag +
 					'<title>' + editor.lang.preview + '</title>' +
