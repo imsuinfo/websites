@@ -315,6 +315,20 @@ div#columns.sidebar-both div#content-column {
   max-width: 555px;
 }
 
+html#ckeditor-wysiwygarea body.cke_show_blocks p,
+html#ckeditor-wysiwygarea body.cke_show_blocks div,
+html#ckeditor-wysiwygarea body.cke_show_blocks pre,
+html#ckeditor-wysiwygarea body.cke_show_blocks address,
+html#ckeditor-wysiwygarea body.cke_show_blocks blockquote,
+html#ckeditor-wysiwygarea body.cke_show_blocks h1,
+html#ckeditor-wysiwygarea body.cke_show_blocks h2,
+html#ckeditor-wysiwygarea body.cke_show_blocks h3,
+html#ckeditor-wysiwygarea body.cke_show_blocks h4,
+html#ckeditor-wysiwygarea body.cke_show_blocks h5,
+html#ckeditor-wysiwygarea body.cke_show_blocks h6 {
+  padding-left: 4px;
+  padding-top: 12px;
+}
 
 
 /*** Menu - Sidebar **/
