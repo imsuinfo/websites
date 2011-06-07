@@ -299,7 +299,18 @@ div#columns.sidebar-none div#content-column {
   max-width: 960px;
 }
 
-html#ckeditor-wysiwygarea body,
+html#ckeditor-wysiwygarea {
+  background-color: #dadada;
+}
+
+html#ckeditor-wysiwygarea body {
+  width: 745px;
+  min-width: 745px;
+  max-width: 745px;
+
+  padding: 10px;
+}
+
 div#columns.sidebar-left div#content-column,
 div#columns.sidebar-right div#content-column {
   width: 745px;
