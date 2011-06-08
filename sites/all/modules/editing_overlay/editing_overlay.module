@@ -85,7 +85,7 @@ function editing_overlay_form_user_profile_form_alter(&$form, &$form_state) {
       $form['editing_overlay_control'] = array(
         '#type' => 'fieldset',
         '#title' => t("Editing overlay"),
-        '#weight' => 5,
+        '#weight' => 4,
         '#collapsible' => TRUE,
       );
 
