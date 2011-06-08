@@ -1,7 +1,7 @@
 /* Reset CSS derived from "w3c Appendix D. Default style sheet for HTML 4" here: http://www.w3.org/TR/2011/REC-CSS2-20110607/sample.html */
 html, address,
 blockquote,
-body, dd, div,
+body, dd, /* div, Removed due to IE8 Bug */
 dl, dt, fieldset, form,
 frame, frameset,
 h1, h2, h3, h4,

@@ -567,6 +567,8 @@ div#breadcrumb {
 div#breadcrumb div.breadcrumb,
 div#breadcrumb div.subtitle {
   display: inline-block;
+
+  padding-bottom: 0;
 }
 
 div#breadcrumb div.breadcrumb {
@@ -759,9 +761,7 @@ div#footer {
 
   color: #393939;
 
-  max-height:90px;
-  min-height:90px;
-  height: 90px;
+  min-height: 50px;
 
   padding: 5px;
   margin: 5px auto;

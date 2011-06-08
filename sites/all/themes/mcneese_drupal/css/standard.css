@@ -5,7 +5,7 @@
  * Consider adding your own selectors to this instead of finding ways
  * to sneak the clearfix class into Drupal's markup.
  * From http://perishablepress.com/press/2009/12/06/new-clearfix-hack
- */
+ *
 ul.links:after,
 div.admin-panel .body:after,
 .clearfix:after {
@@ -16,14 +16,14 @@ div.admin-panel .body:after,
   visibility: hidden;
 }
 
-/* Exclude inline links from clearfix behavior */
+/* Exclude inline links from clearfix behavior *
 ul.inline:after {
   content: "";
   display: none;
   clear: none;
 }
 
-/* IE6 */
+/* IE6 *
 * html .form-item,
 * html ul.links,
 * html div.admin-panel .body,
@@ -31,7 +31,7 @@ ul.inline:after {
   height: 1%;
 }
 
-/* IE7 */
+/* IE7 *
 *:first-child + html .form-item,
 *:first-child + html ul.links,
 *:first-child + html div.admin-panel .body,
@@ -42,6 +42,10 @@ ul.inline:after {
 
 
 /*** Cleanup ***/
+* {
+  vertical-align: top;
+}
+
 {
   position: absolute;
 
@@ -70,8 +74,6 @@ div#content,
 div#footer {
   position: relative;
 }
-
-
 
 div#mcneese_drupal-title_region {
   position: relative;
@@ -129,15 +131,19 @@ body#mcneese_drupal-body div#mcneese_drupal-page div#mcneese_drupal-sidebar_righ
 }
 
 .element-invisible {
-  display: block;
+  display: inline-block;
 
   font-size: 0;
+  line-height: 0;
 
   width: 0;
   max-width: 0;
   height: 0;
   max-height: 0;
   overflow: hidden;
+
+  margin: 0;
+  padding: 0;
 }
 
 input.form-submit, a.button {
@@ -179,6 +185,10 @@ ul.menu {
   padding: 0;
 }
 
+ul.tabs.primary {
+  margin: 0;
+}
+
 a:focus {
   border: 1px dotted #555555;
 }
@@ -216,12 +226,6 @@ hr {
   border: none;
   height: 1px;
   background: #cccccc;
-}
-
-.element-invisible {
-  width: 0px;
-  height: 0px;
-  overflow: hidden;
 }
 
 dl {
@@ -287,10 +291,13 @@ textarea {
   border: 1px solid #000000;
 }
 
-
-ul, ol {
-  margin-top: 0px;
-  margin-bottom: 0px;
+ul,
+ol,
+dir,
+menu,
+dd {
+  margin: 0 0 0 25px;
+  padding: 0;
 }
 
 div.content p {
@@ -359,11 +366,20 @@ div.error {
   background-color: #ffdddd;
 }
 
-/*
-.container-inline div {
-  display: block;
+div.local-tasks ul.tabs {
+  margin: 0;
 }
-*/
+
+form#user-login-form ul li {
+  list-style: none;
+
+  margin: 0;
+  padding: 2px 0;
+}
+
+fieldset.vertical-tabs-pane {
+  padding: 0 !important;
+}
 
 
 
@@ -500,6 +516,8 @@ div#mcneese_drupal-primary_tabs ul.secondary li.active a.active {
   color: #fff;
   background: #666;
 }
+
+
 
 
 

@@ -5,7 +5,7 @@
  * Consider adding your own selectors to this instead of finding ways
  * to sneak the clearfix class into Drupal's markup.
  * From http://perishablepress.com/press/2009/12/06/new-clearfix-hack
- */
+ *
 ul.links:after,
 div.admin-panel .body:after,
 .clearfix:after {
@@ -16,14 +16,14 @@ div.admin-panel .body:after,
   visibility: hidden;
 }
 
-/* Exclude inline links from clearfix behavior */
+/* Exclude inline links from clearfix behavior *
 ul.inline:after {
   content: "";
   display: none;
   clear: none;
 }
 
-/* IE6 */
+/* IE6 *
 * html .form-item,
 * html ul.links,
 * html div.admin-panel .body,
@@ -31,7 +31,7 @@ ul.inline:after {
   height: 1%;
 }
 
-/* IE7 */
+/* IE7 *
 *:first-child + html .form-item,
 *:first-child + html ul.links,
 *:first-child + html div.admin-panel .body,
@@ -42,6 +42,10 @@ ul.inline:after {
 
 
 /*** Cleanup ***/
+* {
+  vertical-align: top;
+}
+
 body {
   position: relative;
   font-family: Arial, Helvetica, sans-serif;
@@ -75,8 +79,6 @@ div#footer {
 html#ckeditor-wysiwygarea body,
 div#columns {
   min-height: 500px;
-
-  margin-top: 10px;
 }
 
 .element-invisible {
@@ -139,8 +141,28 @@ input#edit-pass {
   line-height: 21px;
 }
 
-.container-inline div {
-  display: block;
+ul,
+ol,
+dir,
+menu,
+dd {
+  margin: 0 0 0 25px;
+  padding: 0;
+}
+
+div.local-tasks ul.tabs {
+  margin: 0;
+}
+
+form#user-login-form ul li {
+  list-style: none;
+
+  margin: 0;
+  padding: 2px 0;
+}
+
+fieldset.vertical-tabs-pane {
+  padding: 0 !important;
 }
 
 

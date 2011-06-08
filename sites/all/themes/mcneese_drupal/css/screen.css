@@ -360,6 +360,8 @@ div#mcneese_drupal-breadcrumb {
 div#mcneese_drupal-breadcrumb div.breadcrumb,
 div#mcneese_drupal-breadcrumb div.subtitle {
   display: inline-block;
+
+  padding-bottom: 0;
 }
 
 div#mcneese_drupal-breadcrumb div.breadcrumb {

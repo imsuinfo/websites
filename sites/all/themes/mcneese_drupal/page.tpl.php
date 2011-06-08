@@ -63,7 +63,7 @@
       <!--(begin_title)-->
       <?php if (isset($title_prefix) && !empty($title_prefix)) print(render($title_prefix)); ?>
       <?php if (isset($title) && is_string($title)){ ?>
-        <h1 id='mcneese_drupal-page_title'><?php print($title); ?></h1>
+        <h1 id='mcneese_drupal-page_title' class="drupal_page_title"><?php print($title); ?></h1>
       <?php } ?>
       <?php if (isset($title_suffix) && !empty($title_suffix)) print(render($title_suffix)); ?>
       <!--(end_title)-->
