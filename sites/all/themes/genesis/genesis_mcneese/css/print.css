@@ -28,6 +28,8 @@ div.view-master-calendar div.feed-icon {
 /*** Content ***/
 body#genesis_mcneese {
   background-color: #ffffff;
+
+  padding-top: 0 !important;
 }
 
 h1#page-title {
