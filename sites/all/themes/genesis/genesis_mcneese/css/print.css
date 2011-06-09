@@ -26,7 +26,7 @@ div.view-master-calendar div.feed-icon {
 
 
 /*** Content ***/
-body.genesis_mcneese {
+body#genesis_mcneese {
   background-color: #ffffff;
 }
 
