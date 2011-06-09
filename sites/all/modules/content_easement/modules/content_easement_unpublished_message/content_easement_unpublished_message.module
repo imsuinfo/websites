@@ -66,7 +66,8 @@ function content_easement_unpublished_message_display_notice($node, $function_na
 
   if ($node->status == NODE_NOT_PUBLISHED && user_access('view unpublished message')){
     $node_type_name = node_type_get_name($node);
+    $node_title = isset($node->title) ? $node->title : '';
 
-    drupal_set_message(t("This @type is not published.", array('@type' => $node_type_name)), 'unpublished', FALSE);
+    drupal_set_message(t("The @type '@title' is not published.", array('@type' => $node_type_name, '@title' => $node_title)), 'unpublished', FALSE);
   }
 }
