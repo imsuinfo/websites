@@ -472,6 +472,7 @@ div#mcneese_drupal-page {
 }
 
 div#mcneese_drupal-content_region {
+  display: inline-block;
   min-height: 400px;
 
   padding-left: 5px;

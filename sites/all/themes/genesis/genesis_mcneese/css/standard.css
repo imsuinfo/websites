@@ -101,10 +101,10 @@ input.form-submit, a.button {
 }
 
 select,
-input,
 textarea,
 textarea.form-textarea,
-input.form-item {
+input.form-item,
+input.form-text {
   border-width: 1px;
   border-style: solid;
   border-color: #cccccc #999999 #999999 #cccccc;

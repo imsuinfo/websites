@@ -153,8 +153,9 @@ input.form-submit, a.button {
   margin: 0 1px 1px 2px;
 }
 
+input.form-item,
+input.form-text,
 select,
-input,
 textarea,
 textarea.form-textarea {
   border-width: 1px;
@@ -284,13 +285,6 @@ abbr,
 acronym {
   border-bottom: dotted 1px;
 }
-
-input,
-select,
-textarea {
-  border: 1px solid #000000;
-}
-
 ul,
 ol,
 dir,
