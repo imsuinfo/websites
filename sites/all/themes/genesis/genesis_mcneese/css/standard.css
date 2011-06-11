@@ -300,6 +300,11 @@ table.system-status-report tr.error {
 
 
 /*** Content - home page ***/
+div.view-display-id-front_page_featured {
+  max-height: 379px;
+  overflow: hidden;
+}
+
 a.msu-caption-title {
   text-decoration: none;
 }
