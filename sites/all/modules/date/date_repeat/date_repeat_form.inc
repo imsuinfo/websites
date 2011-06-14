@@ -261,11 +261,17 @@ function date_repeat_add_addition_callback($form, &$form_state) {
 }
 
 function date_repeat_add_exception($form, &$form_state) {
+  if (!isset($form_state['num_exceptions']) || !is_numeric($form_state['num_exceptions'])){
+    $form_state['num_exceptions'] = 0;
+  }
   $form_state['num_exceptions']++;
   $form_state['rebuild'] = TRUE;
 }
 
 function date_repeat_add_addition($form, &$form_state) {
+  if (!isset($form_state['num_additions']) || !is_numeric($form_state['num_additions'])){
+    $form_state['num_additions'] = 0;
+  }
   $form_state['num_additions']++;
   $form_state['rebuild'] = TRUE;
 }
