@@ -40,3 +40,90 @@ div#block-search-form form#search-block-form div#edit-actions {
   -moz-outline-radius: 0;
   -webkit-border-radius: 0;
 }
+
+/* Workaround qforms bug where a single background-image is used for multiple images */
+#qforms-form-actions .qforms-form-close {
+  background-position: 64px 0px !important;
+  background-repeat: repeat !important;
+}
+.qforms-element .qforms-action-delete
+#qforms-form-actions .qforms-form-close:hover {
+  background-position: 64px 80px !important;
+  background-repeat: repeat !important;
+}
+
+#qforms-form-actions .qforms-form-open {
+  background-position: 80px 0px !important;
+  background-repeat: repeat !important;
+}
+
+#qforms-form-actions .qforms-form-open:hover {
+  background-position: 80px 80px !important;
+  background-repeat: repeat !important;
+}
+
+.qforms-element .qforms-action-move {
+  background-position: 0px 0px !important;
+  background-repeat: repeat !important;
+  cursor: move;
+}
+
+.qforms-element .qforms-action-move:hover {
+  background-position: 0px 80px !important;
+  background-repeat: repeat !important;
+}
+
+.qforms-element .qforms-form-close {
+  background-position: 80px 0px !important;
+  background-repeat: repeat !important;
+}
+
+.qforms-element .qforms-form-close:hover {
+  background-position: 80px 80px !important;
+  background-repeat: repeat !important;
+}
+
+.qforms-element .qforms-form-open {
+  background-position: 64px 0px !important;
+  background-repeat: repeat !important;
+}
+
+.qforms-element .qforms-form-open:hover {
+  background-position: 64px 80px !important;
+  background-repeat: repeat !important;
+}
+
+.qforms-element .qforms-action-delete {
+  background-position: 48px 0px !important;
+  background-repeat: repeat !important;
+}
+
+.qforms-element .qforms-action-delete:hover,
+.qforms-element .qforms-action-delete:focus {
+  background-position: 48px -16px !important;
+  background-repeat: repeat !important;
+}
+
+.qforms-element .qforms-action-add-option {
+  background-position: 32px 0px !important;
+  background-repeat: repeat !important;
+  float: none;
+}
+
+.qforms-element .qforms-action-add-option:hover,
+.qforms-element .qforms-action-add-option:focus {
+  background-position: 32px -16px !important;
+  background-repeat: repeat !important;
+}
+
+.qforms-element .qforms-action-delete-option {
+  background-position: 16px 0px !important;
+  background-repeat: repeat !important;
+  float: none;
+}
+
+.qforms-element .qforms-action-delete-option:hover,
+.qforms-element .qforms-action-delete-option:focus {
+  background-position: 16px -16px !important;
+  background-repeat: repeat !important;
+}
