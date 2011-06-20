@@ -513,10 +513,22 @@ class quailTableTest extends quailTest {
 		if($table->tagName != 'table') 
 			return false;
 		foreach($table->childNodes as $child) {
-			if(property_exists($child, 'tagName') && $child->tagName == 'tr') {
-				foreach($child->childNodes as $row_child) {
-					if(property_exists($row_child, 'tagName') && $row_child->tagName == 'th')
-						return true;
+			if(property_exists($child, 'tagName')){
+				if ($child->tagName == 'tr') {
+					foreach($child->childNodes as $row_child) {
+						if(property_exists($row_child, 'tagName') && $row_child->tagName == 'th')
+							return true;
+					}
+				}
+				else if ($child->tagName == 'tbody') {
+					foreach($child->childNodes as $tbody_child) {
+						if ($tbody_child->tagName == 'tr') {
+							foreach($tbody_child->childNodes as $row_child) {
+								if(property_exists($row_child, 'tagName') && $row_child->tagName == 'th')
+									return true;
+							}
+						}
+					}
 				}
 			}
 			if(property_exists($child, 'tagName') && $child->tagName == 'thead')

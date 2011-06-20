@@ -5266,6 +5266,18 @@ class tableHeaderLabelMustBeTerse extends quailTableTest {
 						}
 					}
 				}
+				else if($this->propertyIsEqual($child, 'tagName', 'tbody')) {
+					foreach ($child->childNodes as $tbody_child){
+						if($this->propertyIsEqual($tbody_child, 'tagName', 'tr')) {
+							foreach($tbody_child->childNodes as $td) {
+								if($this->propertyIsEqual($td, 'tagName', 'th')) {
+									if(strlen($td->getAttribute('abbr')) > 20)
+										$this->addReport($td);
+								}
+							}
+						}
+					}
+				}
 			}
 			
 		}
@@ -5387,6 +5399,15 @@ class tableLayoutHasNoSummary extends quailTableTest {
 						if(!$this->elementHasChild($child, 'th'))
 							$this->addReport($table);
 						$first_row = false;
+					}
+					else if($this->propertyIsEqual($child, 'tagName', 'tbody') && $first_row) {
+						foreach($child->childNodes as $tbody_child) {
+							if($this->propertyIsEqual($tbody_child, 'tagName', 'tr') && $first_row) {
+								if(!$this->elementHasChild($tbody_child, 'th'))
+									$this->addReport($table);
+								$first_row = false;
+							}
+						}
 					}
 				}
 			}
@@ -5644,6 +5665,22 @@ class tableWithBothHeadersUseScope extends quailTest {
 						}
 					}
 				}
+				else if($this->propertyIsEqual($child, 'tagName', 'tbody')) {
+					foreach($child->childNodes as $tbody_child) {
+						if($this->propertyIsEqual($tbody_child, 'tagName', 'tr')) {
+							if($this->propertyIsEqual($tbody_child->firstChild, 'tagName', 'td')) {
+								if(!$tbody_child->firstChild->hasAttribute('scope'))
+									$fail = true;
+							}
+								foreach($tbody_child->childNodes as $td) {
+									if(property_exists($td, 'tagName')){
+										if($td->tagName == 'th' && !$td->hasAttribute('scope'))
+											$fail = true;
+								}
+							}
+						}
+					}
+				}
 			}
 			if($fail)
 				$this->addReport($table);
@@ -5681,7 +5718,20 @@ class tableWithMoreHeadersUseID extends quailTableTest {
 								if($row > 1) 
 									$multi_headers = true;	
 							}
-								
+						}
+					}
+					else if($this->propertyIsEqual($child, 'tagName', 'tbody')) {
+						foreach($child->childNodes as $tbody_child) {
+							if($this->propertyIsEqual($tbody_child, 'tagName', 'tr')) {
+								$row ++;
+								foreach($tbody_child->childNodes as $cell) {
+									if($this->propertyIsEqual($cell, 'tagName', 'th')) {
+										$th[] = $cell;
+										if($row > 1) 
+											$multi_headers = true;	
+									}
+								}
+							}
 						}
 					}
 				}
