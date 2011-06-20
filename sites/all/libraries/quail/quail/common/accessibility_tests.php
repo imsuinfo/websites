@@ -4543,8 +4543,8 @@ class pNotUsedAsHeader extends quailTest {
 	*/
 	function check() {
 		foreach($this->getAllElements('p') as $p) {
-			if(($p->nodeValue == $p->firstChild->nodeValue) &&
-				is_object($p->firstChild) &&
+			if (is_object($p->firstChild) &&
+				($p->nodeValue == $p->firstChild->nodeValue) &&
 			 	property_exists($p->firstChild, 'tagName') && 
 				in_array($p->firstChild->tagName, $this->head_tags)) {
 					$this->addReport($p);
