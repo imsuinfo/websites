@@ -264,6 +264,7 @@ class quailCSS {
 			$inline_styles = explode(';', $element->getAttribute('style'));
 			foreach($inline_styles as $inline_style) {
 				$s = explode(':', $inline_style);
+				if (!isset($s[1])) continue;
 				$style[$s[0]] = trim(strtolower($s[1]));
 			}
 		}

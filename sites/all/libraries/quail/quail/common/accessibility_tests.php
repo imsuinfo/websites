@@ -4552,7 +4552,7 @@ class pNotUsedAsHeader extends quailTest {
 			}
 			else {
 				$style = $this->css->getStyle($p);
-				if($style['font-weight'] == 'bold') {
+				if(isset($style['font-weight']) && $style['font-weight'] == 'bold') {
 					$this->addReport($p);
 				}
 			}
