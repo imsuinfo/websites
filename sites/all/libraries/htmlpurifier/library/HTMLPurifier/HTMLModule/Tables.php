@@ -37,6 +37,7 @@ class HTMLPurifier_HTMLModule_Tables extends HTMLPurifier_HTMLModule
                 'abbr'    => 'Text',
                 'colspan' => 'Number',
                 'rowspan' => 'Number',
+                'scope'   => 'Text',
             ),
             $cell_align
         );
