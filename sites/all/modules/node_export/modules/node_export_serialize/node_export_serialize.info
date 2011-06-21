@@ -3,9 +3,9 @@ description = "Adds serialize format to Node export"
 dependencies[] = node_export
 core = 7.x
 package = "Node export"
-; Information added by drupal.org packaging script on 2011-06-01
+; Information added by drupal.org packaging script on 2011-06-21
 version = "7.x-3.x-dev"
 core = "7.x"
 project = "node_export"
-datestamp = "1306930985"
+datestamp = "1308658554"
 
