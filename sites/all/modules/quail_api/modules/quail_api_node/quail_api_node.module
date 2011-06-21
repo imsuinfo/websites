@@ -1,0 +1,478 @@
+<?php
+
+/**
+ * Implements hook_help().
+ */
+function quail_api_node_help($path, $arg) {
+  $output = '';
+
+  switch ($path) {
+    case "admin/help#quail_api_node":
+      $output .= '<p>' . t("This module provides accessibilty validation support on node entities.") . '</p>';
+      return $output;
+  }
+}
+
+/**
+ * Implements hook_quail_api_permission_alter().
+ */
+function quail_api_node_quail_api_permission_alter(&$permissions) {
+  $permissions = array();
+
+  $permissions['access node accessibility tab'] = array(
+    'title' => t("Access Node Accessibility Tab"),
+    'description' => t("Grants permissions to access the accessibility tab on node pages."),
+  );
+
+  $permissions['perform node accessibility validation'] = array(
+    'title' => t("Perform node accessibility validation"),
+    'description' => t("Grants permissions to use the perform a manual validation of any given node."),
+  );
+
+  $permissions['view node accessibility validation messages'] = array(
+    'title' => t("View node Accessiblity Validation Messages"),
+    'description' => t("Grants permissions to view accessibility validation failure messages while viewing the node."),
+  );
+
+  // @todo: add node-specific validation permissions or at the very least node_type-specific
+
+  return $permissions;
+}
+
+/**
+ * Implements hook_menu().
+ */
+function quail_api_node_menu() {
+  $items = array();
+
+  $items['node/%node/accessibility'] = array(
+    'title' => "Accessibility",
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('quail_api_node_accessibility_tab_page', 1),
+    'access callback' => 'quail_api_node_access_accessibility_tab',
+    'access arguments' => array(1),
+    'file' => 'pages.inc',
+    'file path' => drupal_get_path('module', 'quail_api_node') . '/includes',
+    'weight' => 8,
+    'type' => MENU_LOCAL_TASK,
+    'context' => MENU_CONTEXT_PAGE | MENU_CONTEXT_INLINE,
+  );
+
+  return $items;
+}
+
+/**
+ * Checks if user can access the
+ *
+ * @param $node
+ *   A node object whose access is to be returned.
+ *
+ * @return
+ *   TRUE if user can make conversions using this type, FALSE otherwise.
+ */
+function quail_api_node_access_accessibility_tab($node) {
+  $access = FALSE;
+
+  if (!is_object($node)){
+    cf_error_invalid_object(__FUNCTION__, 'node', WATCHDOG_ERROR);
+    return $access;
+  }
+
+  if (node_access('view', $node)){
+    $access = user_access('access node accessibility tab');
+
+    if ($access && accessible_content_is_enabled($node->type)){
+      $access = TRUE;
+    }
+    else {
+      $access = FALSE;
+    }
+  }
+
+  return $access;
+}
+
+/**
+ * Implements hook_form_FORM_ID_alter() for the node type form.
+ */
+function quail_api_node_form_node_type_form_alter(&$form, &$form_state, $form_id) {
+  $node_type_settings_object = FALSE;
+  $node_type_settings_array  = array('type' => NULL, 'required' => NULL, 'standards' => NULL, 'messages' => NULL);
+
+  $standards = quail_api_get_standards_list();
+  $display_levels = quail_api_get_display_levels_list();
+  $options = array();
+
+  $default_enabled = 'disabled';
+  $default_standards = array();
+  $default_display_levels = array();
+
+  if (!empty($form['#node_type']->type)){
+    $node_type_settings_objects = quail_api_node_get_node_type_settings(array($form['#node_type']));
+
+    if (!empty($node_type_settings_objects)){
+      $node_type_settings_object = $node_type_settings_objects['0'];
+
+      $default_enabled = ($node_type_settings_object->required ? 'required' : 'optional');
+      $default_standards = unserialize($node_type_settings_object->standards);
+      $default_display_levels = unserialize($node_type_settings_object->messages);
+    }
+  }
+
+  $form['node_accessibility_validation'] = array(
+    '#type' => 'fieldset',
+    '#title' => t("Accessiblity Validation"),
+    '#description' => t("Provides options for enabled and disabled accessibility validation on text stored in this field."),
+    '#collapsible' => TRUE,
+    '#collapsed' => TRUE,
+    '#tree' => TRUE,
+    '#group' => 'additional_settings',
+  );
+
+  $form['node_accessibility_validation']['quail_enabled'] = array(
+    '#type' => 'select',
+    '#title' => t("Accessibility Validation"),
+    '#default_value' => $default_enabled,
+    '#options' => array(
+      'disabled' => t("Disabled"),
+      'optional' => t("Enabled (optional)"),
+      'required' => t("Enabled (required)"),
+    ),
+    '#description' => t("Choose if accessibility validation should be enabled for this field and if the field is required to pass accessibility validation."),
+  );
+
+  $form['node_accessibility_validation']['standards'] = array(
+    '#type' => 'checkboxes',
+    '#title' => t("Accessibility Standards"),
+    '#default_value' => $default_standards,
+    '#options' => $standards,
+    '#description' => t("Choose which accessiblity standards to validate against. It is strongly suggested that only 1 standard should be used because many of the validation tests are performed by more than one standard."),
+  );
+
+  $form['node_accessibility_validation']['messages'] = array(
+    '#type' => 'checkboxes',
+    '#title' => t("Accessibility Message Display Level"),
+    '#default_value' => $default_display_levels,
+    '#options' => $display_levels,
+    '#description' => t("Choose which messages should be immediately shown on a particular node if that node fails any accessibility validation test of the chosen display level."),
+  );
+
+  $form['#submit'][] = 'quail_api_node_node_type_form_submit';
+}
+
+
+
+/**
+ * Handles submitting the accessible content specific node type settings into the database.
+ *
+ * @param $form
+ *   A form array
+ * @param $form_state
+ *   A form state
+ */
+function quail_api_node_node_type_form_submit($form, &$form_state) {
+  $node_type_settings_objects = quail_api_node_get_node_type_settings(array($form_state['values']['type']), array(__FUNCTION__));
+  $node_type_settings_object = FALSE;
+
+  if (!empty($node_type_settings_objects)){
+    $node_type_settings_object = $node_type_settings_objects['0'];
+  }
+
+  $columns = array('enabled', 'required', 'standards', 'messages');
+  $record = array();
+  $record['type'] = $form_state['values']['type'];
+
+  if (isset($form_state['values']['node_accessibility_validation']['required'])){
+    $record['required'] = $form_state['values']['node_accessibility_validation']['required'] === 'disabled';
+  }
+  else {
+    $record['required'] = FALSE;
+  }
+
+  if (isset($form_state['values']['node_accessibility_validation']['standards'])){
+    foreach($form_state['values']['node_accessibility_validation']['standards'] as $key => $value){
+      if ($value == '0'){
+        unset($form_state['values']['node_accessibility_validation']['standards'][$key]);
+      }
+    }
+    $record['standards'] = $form_state['values']['node_accessibility_validation']['standards'];
+  }
+  else {
+    $record['standards'] = array();
+  }
+
+  if (isset($form_state['values']['node_accessibility_validation']['messages'])){
+    foreach($form_state['values']['node_accessibility_validation']['messages'] as $key => $value){
+      if ($value == '0'){
+        unset($form_state['values']['node_accessibility_validation']['messages'][$key]);
+      }
+    }
+    $record['messages'] = $form_state['values']['node_accessibility_validation']['messages'];
+  }
+  else {
+    $record['messages'] = array();
+  }
+
+  if (is_object($node_type_settings_object)){
+    $primary_keys = array('type');
+    $results = drupal_write_record('quail_api_node_types', $record, $primary_keys);
+  }
+  else {
+    $results = drupal_write_record('quail_api_node_types', $record);
+  }
+}
+
+/**
+ * Implements hook_node_operations().
+ */
+function quail_api_node_node_operations() {
+  $operations = array(
+    'quail_api_node_operation_validate' => array(
+      'label' => t("Perform accessibility validation on selected content"),
+      'callback' => 'quail_api_node_operation_validate',
+    ),
+  );
+
+  return $operations;
+}
+
+/**
+ * Change any number of nodes.
+ *
+ * @param $nids
+ *   An array of node ids
+ */
+function quail_api_node_operation_validate($nids){
+  $nodes = node_load_multiple($nids);
+  $node_type_settings_objects = quail_api_node_get_node_type_settings($nodes, array(__FUNCTION__));
+  $node_type_settings_types = array();
+
+  foreach ($node_type_settings_objects as $node_type_settings_object){
+    if (is_object($node_type_settings_object)){
+      $node_type_settings_types[] = $node_type_settings_object->type;
+    }
+  }
+
+  foreach ($nodes as $key => $node){
+    if (is_object($node)){
+      if (!in_array($node->type, $node_type_settings_types)){
+        unset($nodes[$key]);
+      }
+    }
+  }
+
+  $result = FALSE;
+
+  // @todo: perform validation here
+
+  if ($result){
+    drupal_set_message(t("The validation has been performed."));
+  }
+  else {
+    drupal_set_message(t("The validation has failed."), 'error');
+  }
+}
+
+
+/**
+ * Performs validation on the given nodes and stores the results in the database.
+ *
+ * @param $nodes_or_nids
+ *   An array of node objects or node ids
+ * @param $language (optional)
+ *   The language to use during validation
+ * @param $display_level (optional)
+ *   An array of booleans representing the qual test display levels (defaults to quail_api_create_quail_display_level_array()).
+ *
+ * @return
+ *   An array of all test failures, if any.
+ */
+function quail_api_node_validate($nodes_or_nids, $language = NULL, $display_level = NULL){
+  $results = array();
+  if (count($nodes_or_nids) == 0){
+    return $results;
+  }
+
+  $standards = quail_api_get_standards();
+
+  foreach ($nodes_or_nids as $node_or_nid){
+    if (is_object($node_or_nid)){
+      $node = $node_or_nid;
+    } else {
+      $node = node_load($node_or_nid);
+
+      if (!is_object($node)){
+        cf_error_invalid_variable(__FUNCTION__, $node, "Unable to load the node with the following node id: :nid.", array(':nid' => $node_or_nid), WATCHDOG_ERROR);
+        continue;
+      }
+    }
+
+    $results[$node->nid] = array();
+
+    if (is_array($node->accessibility)){
+      $rendered_node = drupal_render(node_view($node, 'full', $language));
+
+      if (!empty($node->accessibility['standards'])){
+        foreach ($node->accessibility['standards'] as $standard_name){
+          $results[$node->nid] = array_merge($results[$node->nid], quail_api_validate_markup($rendered_node, $standards[$standard_name], $display_level));
+        }
+
+        if (module_exists('rules')){
+          // @todo: also consider passing all of the validation data
+          //rules_invoke_event('quail_api_node_after_validating', array($node, $results[$node->nid]));
+        }
+      }
+    }
+  }
+
+  return $results;
+}
+
+/**
+ * Implements hook_node_load().
+ */
+function quail_api_node_node_load($nodes, $types) {
+  $all_nodes = array();
+
+  // @todo: review this code, should it contain the node type specific accessiblity settings (and why?)
+  foreach($nodes as &$node){
+    $all_nodes[$node->nid] = $node;
+    $all_nodes[$node->nid]->accessibility = FALSE;
+  }
+
+  $results = quail_api_node_get_node_type_settings($all_nodes, array(__FUNCTION__));
+
+  foreach ($results as $result){
+    $all_nodes[$node->nid]->accessibility = array();
+
+    foreach ($result as $key => $value){
+      if ($key == 'messages' || $key == 'standards'){
+        $all_nodes[$node->nid]->accessibility[$key] = unserialize($value);
+      }
+      else {
+        $all_nodes[$node->nid]->accessibility[$key] = $value;
+      }
+    }
+  }
+
+  return $all_nodes;
+}
+
+/**
+ * Loads the node type settings table data for the given node type.
+ * @todo add caching support to the results of this check.
+ *
+ * @param $node_types
+ *   An array of node type strings or node objects
+ *
+ * @return
+ *   A prepared statement object, already executed.
+ */
+function quail_api_node_get_node_type_settings($node_types){
+  if (count($node_types) == 0){
+    return array();
+  }
+
+  $query = db_select('quail_api_node_types', 'qant');
+
+  $query->fields('qant');
+  $query->orderBy('qant.type', 'ASC');
+
+  $and = db_and();
+
+  foreach ($node_types as $node_type){
+    if (is_object($node_type)){
+      $and->condition('type', $node_type->type, '=');
+    }
+    else {
+      $and->condition('type', $node_type, '=');
+    }
+  }
+
+  $query->condition($and);
+
+  return $query->execute()->fetchAll();
+}
+
+/**
+ * Loads the accessible content node settings table data for the given node ids or nodes.
+ * @todo add support for loading revision-specific settings
+ * @todo add caching support to the results of this check.
+ *
+ * @param $nodes_or_nids
+ *   An array of node objects or node ids
+ *
+ * @return
+ *   A prepared statement object, already executed.
+ */
+function quail_api_node_get_node_settings($nodes_or_nids){
+  if (count($nodes_or_nids) == 0){
+    return array();
+  }
+
+  $query = db_select('quail_api_node_errors', 'qane');
+
+  $query->fields('qane');
+  $query->orderBy('qane.nid', 'ASC');
+
+  $and = db_and();
+
+  foreach ($nodes_or_nids as $node_or_nid){
+    if (is_object($node_or_nid)){
+      $and->condition('nid', $node_or_nid->nid, '=');
+    }
+    else {
+      $and->condition('nid', $node_or_nid, '=');
+    }
+  }
+
+  $query->condition($and);
+
+  return $query->execute()->fetchAll();
+}
+
+/**
+ * Returns TRUE if accessibility validation functionality is enabled for the given node type.
+ * @todo add caching support to the results of this check.
+ *
+ * @param $node_type
+ *   A node type string
+ *
+ * @return
+ *   TRUE or FALSE depending on whether or not accessibility validation functionality is enabled for the given node type.
+ */
+function accessible_content_is_enabled($node_type){
+  $node_type_settings_objects = quail_api_node_get_node_type_settings(array($node_type));
+
+  if (!empty($node_type_settings_objects) && is_object($node_type_settings_objects['0'])){
+    return TRUE;
+  }
+
+  return FALSE;
+}
+
+/**
+ * Returns TRUE if accessibility validation functionality is required for the given node type.
+ * @todo add caching support to the results of this check.
+ *
+ * @param $node_type
+ *   A node type string
+ *
+ * @return
+ *   TRUE or FALSE depending on whether or not accessibility validation functionality is required for the given node type.
+ *   NULL is returned if accessibility validation functionality is not enabled.
+ */
+function accessible_content_is_required($node_type){
+  $node_type_settings_objects = quail_api_node_get_node_type_settings(array($node_type));
+
+  if (empty($node_type_settings_objects) || !is_object($node_type_settings_objects['0'])){
+    return NULL;
+  }
+
+  // @fixme: Is this the propery way? I did this off the top of my mind and I could be doing something wrong here.
+  if ($node_type_settings_objects['0']->required == TRUE){
+    return TRUE;
+  }
+
+  return FALSE;
+}

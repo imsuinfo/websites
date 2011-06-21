@@ -1,0 +1,23 @@
+.quail_api_results_list-description {
+  margin-bottom: 10px;
+}
+
+.quail_api_results_list-report-description {
+  padding: 10px;
+  margin: 5px;
+
+  background-color: #fff3c6;
+  border: 1px dotted;
+}
+
+.quail_api_results_list-report-problem-line {
+  margin-top: 10px;
+}
+
+.quail_api_results_list-report-problem-markup {
+  padding: 10px;
+  margin: 5px;
+
+  background-color: #ffe1e6;
+  border: 1px dotted;
+}

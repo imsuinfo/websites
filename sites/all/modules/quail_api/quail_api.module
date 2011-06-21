@@ -1,0 +1,406 @@
+<?php
+
+/**
+ * Implements hook_permission().
+ */
+function quail_api_permission() {
+  $permissions = array();
+
+  // normally other modules can implement their own hook_permission
+  // however, in order to help improve organization of the permission page, this hook is provided so that all sub-modules may have their permissions appear under the parent group
+  drupal_alter('quail_api_permission', $permissions);
+
+  return $permissions;
+}
+
+/**
+ * Implements hook_theme().
+ */
+function quail_api_theme($existing, $type, $theme, $path) {
+  $themes = array();
+
+  $themes['quail_api_results_list'] = array(
+    'template' => 'quail_api_results_list',
+    'variables' => array(
+      'severity_id' => NULL,
+      'severity_array' => NULL,
+      'severity_results' => array(),
+      'markup_format' => NULL,
+      'title_block' => 'h3',
+      'display_title' => TRUE,
+      'display_description' => TRUE,
+    ),
+    'path' => drupal_get_path('module', 'quail_api') . '/includes',
+  );
+
+  return $themes;
+}
+
+/**
+ * Template preprocess function for quail_api_results_list.tpl.php
+ */
+function template_preprocess_quail_api_results_list(&$variables){
+  drupal_add_css(drupal_get_path('module', 'quail_api') . '/includes/quail_api-results.css');
+
+  $root_class_name = 'quail_api_results_list';
+
+  $variables['severity_id'] = NULL;
+  $variables['severity_machine_name'] = '';
+  $variables['severity_human_name'] = '';
+  $variables['severity_description'] = '';
+  $variables['base_class'] = $root_class_name;
+
+  if (is_numeric($variables['id'])){
+    if (empty($variables['severity_array'])){
+      $severity_level = quail_api_get_display_levels($variables['id']);
+    }
+    else {
+      $severity_level = $variables['severity_array'];
+    }
+
+    $variables['severity_id'] = $severity_level['id'];
+    $variables['severity_machine_name'] = $severity_level['machine_name'];
+    $variables['severity_human_name'] = $severity_level['human_name'];
+    $variables['severity_description'] = $severity_level['description'];
+    $variables['specific_class'] = $root_class_name . '-' . $severity_level['machine_name'];
+  }
+
+  unset($variables['severity_array']);
+
+  // limit title_block to a specific list of html tags
+  if (!in_array($variables['title_block'], array('h2', 'h3', 'h4', 'h5', 'h6', 'div', 'span'))){
+    $variables['title_block'] = 'h3';
+  }
+}
+
+/**
+ * Returns the expected path to the quail library.
+ */
+function quail_api_library_path(){
+  $library_path = libraries_get_path('quail');
+
+  return $library_path . '/quail/quail.php';
+}
+
+/**
+ * Loads the quail library.
+ */
+function quail_api_include_library() {
+  static $loaded_quail_api_library_includes = FALSE;
+
+  if ($loaded_quail_api_library_includes) return TRUE;
+  $loaded_quail_api_library_includes = TRUE;
+
+  $module_path = drupal_get_path('module', 'quail_api');
+  $library_path = libraries_get_path('quail');
+
+  module_load_include('inc', 'quail', 'includes/quail_api_guidelines');
+  module_load_include('inc', 'quail', 'includes/quail_api_reporters');
+
+  $result = require_once quail_api_library_path();
+
+  if (!$result) {
+    $log_message = "Unable to load the Quail php library. You can download the Quail php library from <a href='@quail_url'>http://quail-lib.org/</a>";
+    $log_message_array = array('@qual_url' => "http://quail-lib.org/");
+    drupal_set_message(t($log_message, $log_message_array), 'error', FALSE);
+    watchdog('error', $log_message, $log_message_array, WATCHDOG_ERROR);
+  }
+
+  return $result;
+}
+
+/**
+ * Returns an array of standards that are supported by this module or extending modules.
+ *
+ * @param standard (optional)
+ *   Providing a valid standard name will cause the return value to only contain the standard that matches this string.
+ *
+ * @return
+ *  An array of standards that are supported by this module or extending modules.
+ *  The array keys are the machine names for each standard.
+ */
+function quail_api_get_standards($standard = NULL){
+  $standards = array();
+
+  $standards['all'] = array(
+    'name' => t("All Tests"),
+    'module' => 'quail_api',
+    'description' => t(
+      "Validate using all known tests. This is more efficient than validating against each individual standard because identical tests are not run multiple times."
+    ),
+    'guideline' => 'quail_api_all',
+    'reporter' => 'quail_api',
+  );
+
+  $standards['section_508'] = array(
+    'name' => t("Section 508"),
+    'module' => 'quail_api',
+    'description' => t(
+      "Validate using the <a href='@section_508'>Section 508</a> standard.",
+      array('@section_508' => 'http://www.section508.gov/index.cfm?fuseAction=stdsdoc#Web')
+    ),
+    'guideline' => 'quail_api_section508',
+    'reporter' => 'quail_api',
+  );
+
+  $standards['wcag_1_0_a'] = array(
+    'name' => t("WCAG 1.0 a"),
+    'module' => 'quail_api',
+    'description' => t(
+      "Validate using the <a href='@wcag_1_0'>WCAG 1.0</a> (<a href='@wcag_1_0_a'>A</a>) standard.",
+      array('@wcag_1_0' => 'http://www.w3.org/TR/WCAG10/', '@wcag_1_0_a' => 'http://www.w3.org/WAI/WCAG1A-Conformance')
+    ),
+    'guideline' => 'quail_api_wcag1a',
+    'reporter' => 'quail_api',
+  );
+
+  $standards['wcag_1_0_aa'] = array(
+    'name' => t("WCAG 1.0 aa"),
+    'module' => 'quail_api',
+    'description' => t(
+      "Validate using the <a href='@wcag_1_0'>WCAG 1.0</a> (<a href='@wcag_1_0_aa'>AA</a>) standard.",
+      array('@wcag_1_0' => 'http://www.w3.org/TR/WCAG10/', '@wcag_1_0_a' => 'http://www.w3.org/WAI/WCAG1AA-Conformance')
+    ),
+    'guideline' => 'quail_api_wcag1aa',
+    'reporter' => 'quail_api',
+  );
+
+  $standards['wcag_1_0_aaa'] = array(
+    'name' => t("WCAG 1.0 aaa"),
+    'module' => 'quail_api',
+    'description' => t(
+      "Validate using the <a href='@wcag_1_0'>WCAG 1.0</a> (<a href='@wcag_1_0_aaa'>AAA</a>) standard.",
+      array('@wcag_1_0' => 'http://www.w3.org/TR/WCAG10/', '@wcag_1_0_a' => 'http://www.w3.org/WAI/WCAG1AAA-Conformance')
+    ),
+    'guideline' => 'quail_api_wcag1aaa',
+    'reporter' => 'quail_api',
+  );
+
+  $standards['wcag_2_0_a'] = array(
+    'name' => t("WCAG 2.0 a"),
+    'module' => 'quail_api',
+    'description' => t(
+      "Validate using the <a href='@wcag_2_0'>WCAG 2.0</a> (<a href='@wcag_2_0_a'>A</a>) standard.",
+      array('@wcag_2_0' => 'http://www.w3.org/TR/WCAG20/', '@wcag_1_0_a' => 'http://www.w3.org/WAI/WCAG2A-Conformance')
+    ),
+    'guideline' => 'quail_api_wcag2a',
+    'reporter' => 'quail_api',
+  );
+
+  $standards['wcag_2_0_aa'] = array(
+    'name' => t("WCAG 2.0 aa"),
+    'module' => 'quail_api',
+    'description' => t(
+      "Validate using the <a href='@wcag_2_0'>WCAG 2.0</a> (<a href='@wcag_2_0_aa'>AA</a>) standard.",
+      array('@wcag_2_0' => 'http://www.w3.org/TR/WCAG20/', '@wcag_1_0_a' => 'http://www.w3.org/WAI/WCAG2AA-Conformance')
+    ),
+    'guideline' => 'quail_api_wcag2aa',
+    'reporter' => 'quail_api',
+  );
+
+  $standards['wcag_2_0_aaa'] = array(
+    'name' => t("WCAG 2.0 aaa"),
+    'module' => 'quail_api',
+    'description' => t(
+      "Validate using the <a href='@wcag_2_0'>WCAG 2.0</a> (<a href='@wcag_2_0_aaa'>AAA</a>) standard.",
+      array('@wcag_2_0' => 'http://www.w3.org/TR/WCAG20/', '@wcag_1_0_a' => 'http://www.w3.org/WAI/WCAG2AAA-Conformance')
+    ),
+    'guideline' => 'quail_api_wcag2aaa',
+    'reporter' => 'quail_api',
+  );
+
+  drupal_alter('quail_api_get_standards', $standards, $standard);
+
+  if (!is_null($standard)){
+    if (isset($standards[$standard])){
+      return $standards[$standard];
+    }
+
+    return array();
+  }
+
+  return $standards;
+}
+
+/**
+ * Returns a list of standards.
+ * This is only a list of the machine_name and human_name of the select lists.
+ * Use this for populating select lists, radio buttons, and check boxes.
+ *
+ * @param standards (optional)
+ *   Providing a valid array of standards as returned by quail_api_get_standards() and it will be properly converted into a standards list.
+ *
+ * @return
+ *  An array of standards that are supported by this module or extending modules.
+ *  The array keys are the standard machine name and the array value is the human name.
+ */
+function quail_api_get_standards_list($standards = NULL){
+  if (is_null($standards)){
+    $standards = quail_api_get_standards();
+  }
+
+  $standards_list = array();
+
+  foreach ($standards as $machine_name => $value){
+    if (isset($value['name'])){
+      $standards_list[$machine_name] = $value['name'];
+    }
+  }
+
+  return $standards_list;
+}
+
+/**
+ * Returns an array of display_levels that are supported by this module or extending modules.
+ *
+ * @param display_level (optional)
+ *   Providing a valid display level id name will cause the return value to only contain the display level that matches this string.
+ *
+ * @return
+ *  An array of display levels that are supported by this module or extending modules.
+ *  The array keys are the machine names for each display level.
+ */
+function quail_api_get_display_levels($display_level = NULL){
+  $display_levels = array();
+
+  $display_levels[1] = array(
+    'machine_name' => 'quail_test_major',
+    'human_name' => t("Major Problems"),
+    'module' => 'quail_api',
+    'description' => t(
+      "Major problems represent critical failures in accessibility compliance."
+    ),
+    'id' => 1, // QUAIL_TEST_SEVERE
+    'default' => TRUE,
+  );
+
+  $display_levels[2] = array(
+    'machine_name' => 'quail_test_minor',
+    'human_name' => t("Minor Problems"),
+    'module' => 'quail_api',
+    'description' => t(
+      "Minor problems represent simple failures in accessibility compliance."
+    ),
+    'id' => 2, // QUAIL_TEST_MODERATE
+    'default' => TRUE,
+  );
+
+  $display_levels[3] = array(
+    'machine_name' => 'quail_test_suggestion',
+    'human_name' => t("Suggestions"),
+    'module' => 'quail_api',
+    'description' => t(
+      "Suggestions provide notes and suggestions on how to improve accessibility compliance."
+    ),
+    'id' => 3, // QUAIL_TEST_SUGGESTION
+    'default' => TRUE,
+  );
+
+  drupal_alter('quail_api_get_display_levels', $display_levels, $display_level);
+
+  if (!is_null($display_level)){
+    if (isset($display_levels[$display_level])){
+      return $display_levels[$display_level];
+    }
+
+    return array();
+  }
+
+  return $display_levels;
+}
+
+/**
+ * Returns a list of display levels.
+ * This is only a list of the machine_name and human_name of the select lists.
+ * Use this for populating select lists, radio buttons, and check boxes.
+ *
+ * @param display_levels (optional)
+ *   Providing a valid array of display lists as returned by quail_api_get_display_levels() and it will be properly converted into a display levels list.
+ *
+ * @return
+ *  An array of display levels that are supported by this module or extending modules.
+ *  The array keys are the display levels machine name and the array value is the human name.
+ */
+function quail_api_get_display_levels_list($display_levels = NULL){
+  if (is_null($display_levels)){
+    $display_levels = quail_api_get_display_levels();
+  }
+
+  $display_levels_list = array();
+
+  foreach ($display_levels as $machine_name => $value){
+    if (isset($value['human_name'])){
+      $display_levels_list[$machine_name] = $value['human_name'];
+    }
+  }
+
+  return $display_levels_list;
+}
+
+/**
+ * Returns an array of qual test display levels, each initialized to TRUE.
+ *
+ * @param standards (optional)
+ *   Providing a valid array of standards as returned by quail_api_get_display_levels() and it will be properly converted into a standards list.
+ *
+ * @return
+ *   An array of qual test display levels, each initialized to TRUE.
+ */
+function quail_api_get_default_display_level($display_levels = NULL){
+  if (is_null($display_levels)){
+    $display_levels = quail_api_get_display_levels();
+  }
+
+  $display_level = array();
+
+  foreach ($display_levels as $id => $value){
+    if (isset($value['default'])){
+      $display_level[$value['id']] = $value['default'];
+    }
+  }
+
+  return $display_level;
+}
+
+/**
+ * Perform accessibility validation of the given HTML snippet.
+ *
+ * @param $html
+ *   A string of HTML to validate.
+ * @param $standard
+ *   An array containing a single standard to use as returned by: quail_api_get_standards().
+ * @param $display_level (optional)
+ *   An array of booleans representing the qual test display levels (defaults to quail_api_create_quail_display_level_array()).
+ *
+ * @return
+ *   An array of validation results with the following array keys.
+ */
+function quail_api_validate_markup($html, $standard, $display_level = NULL) {
+  quail_api_include_library();
+
+  if (!is_array($display_level)) {
+    $display_level = quail_api_get_default_display_level();
+  }
+
+  // @todo: should processed have multiple states: not processed, processed, failed to process?
+  $results = array('processed' => FALSE, 'report' => NULL, 'total' => 0);
+
+  $quail = new quail($html, $standard['guideline'], 'string', $standard['reporter']);
+
+  $quail->runCheck(
+    array(
+      'ac_module_guideline' => $standard['guideline'],
+      'display_level' => $display_level,
+    )
+  );
+
+  $results = $quail->getReport();
+  $quail->cleanup();
+
+  if (!isset($results['report']) || !is_array($results['report'])){
+    return $results;
+  }
+
+  $results['processed'] = TRUE;
+  return $results;
+}

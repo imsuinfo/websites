@@ -1,0 +1,12 @@
+name = "Quail API - Node"
+description = "Provides validation functionality for nodes."
+package = Accessibility
+core = 7.x
+
+dependencies[] = quail_api
+dependencies[] = node
+dependencies[] = cf
+
+files[] = quail_api_node.install
+files[] = quail_api_node.module
+files[] = includes/pages.inc

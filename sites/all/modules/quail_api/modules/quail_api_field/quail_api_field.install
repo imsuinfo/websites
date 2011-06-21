@@ -1,0 +1,35 @@
+<?php
+
+/**
+ * Implements hook_field_schema().
+ */
+function quail_api_field_field_schema($field) {
+  if (!in_array($field['type'], array('text_long', 'text_with_summary'))) return;
+
+  $columns = array();
+  $indexes = array();
+
+  $columns['quail_enabled'] = array(
+    'type' => 'int',
+    'size' => 'normal',
+    'not null' => TRUE,
+    'unsigned' => TRUE,
+    'default' => 0,
+  );
+
+  $columns['quail_standards'] = array(
+    'type' => 'blob',
+    'size' => 'big',
+    'not null' => TRUE,
+    'serialize' => TRUE,
+  );
+
+  $indexes['quail_enabled'] = array(
+    'quail_enabled',
+  );
+
+  return array(
+    'columns' => $columns,
+    'indexes' => $indexes,
+  );
+}

@@ -1,0 +1,13 @@
+name = "Quail API - Field"
+description = "Provides validation functionality for text area field entities."
+package = Accessibility
+core = 7.x
+
+dependencies[] = quail_api
+dependencies[] = text
+dependencies[] = field
+dependencies[] = field_ui
+dependencies[] = cf
+
+files[] = quail_api_field.install
+files[] = quail_api_field.module
