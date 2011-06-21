@@ -13,9 +13,11 @@ files[] = engines/token.inc
 ; Module integrations.
 files[] = includes/contextual.inc
 files[] = includes/ctools.inc
+files[] = includes/custom_formatters.admin.inc
 files[] = includes/custom_formatters.inc
 files[] = includes/features.inc
 files[] = includes/field.inc
+files[] = includes/insert.inc
 files[] = includes/system.inc
 files[] = includes/token.inc
 
@@ -26,9 +28,9 @@ files[] = plugins/export_ui/custom_formatters_ui.class.php
 ; Core files.
 files[] = custom_formatters.module
 
-; Information added by drupal.org packaging script on 2011-06-01
-version = "7.x-2.0-beta2"
+; Information added by drupal.org packaging script on 2011-06-15
+version = "7.x-2.0-beta3"
 core = "7.x"
 project = "custom_formatters"
-datestamp = "1306969615"
+datestamp = "1308121018"
 

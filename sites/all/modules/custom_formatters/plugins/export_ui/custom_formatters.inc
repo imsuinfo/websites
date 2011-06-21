@@ -37,6 +37,7 @@ $plugin = array(
  * Custom Formatters settings form.
  */
 function custom_formatters_export_ui_form(&$form, &$form_state) {
+  drupal_add_js(drupal_get_path('module', 'custom_formatters') . '/scripts/custom_formatters.admin.js');
   $item = $form_state['item'];
 
   $engines = module_invoke_all('custom_formatters_engine_info');
@@ -225,7 +226,7 @@ function _custom_formatters_preview_variables($form, $form_state) {
     $result = $query->execute();
     $entities = entity_load($entity_type, array_keys($result[$entity_type]));
     foreach ($entities as $key => $entity) {
-      $options['entities'][$key] = "{$entity->title} [eid:{$key}]";
+      $options['entities'][$key] = "Entity ID #{$key}";
     }
   }
 
@@ -259,9 +260,13 @@ function custom_formatters_export_ui_form_js_preview($form, $form_state) {
   $display = $instance['display']['default'];
   $formatter = (object) $form_state['values'];
 
+  $js = drupal_add_js();
   $form['engine']['preview']['preview']['content'] = array(
     '#markup' => render(custom_formatters_field_formatter_view($obj_type, $object, $field, $instance, $langcode, $items, $display, $formatter)),
   );
+
+  $js = array_diff_assoc(drupal_add_js(), $js);
+  $form['engine']['preview']['preview']['content']['#markup'] .= drupal_get_js('header', $js);
 
   return $form['engine']['preview']['preview'];
 }
@@ -272,9 +277,76 @@ function custom_formatters_export_ui_form_js_preview($form, $form_state) {
 function custom_formatters_export_ui_form_submit(&$form, &$form_state) {
   field_cache_clear();
   if ($form_state['values']['op'] == t('Save & Edit')) {
-    $destination = "admin/structure/formatters/list/{$form_state['item']->name}/edit";
+    $destination = "admin/structure/formatters/list/{$form_state['values']['name']}/edit";
     $_GET['destination'] = isset($_GET['destination']) ? $destination . "?destination={$_GET['destination']}" : $destination;
   }
+}
+
+/**
+ * Provide a form for displaying an export.
+ */
+function custom_formatters_export_ui_export_form($form, &$form_state, $item, $title = '') {
+  $form['mode'] = array(
+    '#type' => 'select',
+    '#title' => t('Mode'),
+    '#options' => array(
+      'default' => t('CTools exportable (default)'),
+      'drupal' => t('Drupal API')
+    ),
+    '#default_value' => 'default',
+    '#ajax' => array(
+      'callback' => 'custom_formatters_export_ui_export_form_js',
+      'wrapper' => 'export-wrapper',
+    ),
+  );
+
+  $form['export'] = array(
+    '#type' => 'container',
+    '#prefix' => '<div id="export-wrapper">',
+    '#suffix' => '</div>',
+  );
+
+  $mode = isset($form_state['values']['mode']) ? $form_state['values']['mode'] : $form['mode']['#default_value'];
+  switch ($mode) {
+    case 'default':
+      $code = ctools_export_crud_export('formatters', $item);
+      break;
+
+    case 'drupal':
+      $engines = module_invoke_all('custom_formatters_engine_info');
+      $engine = $item->mode;
+      if (isset($engines[$engine]['file']) && file_exists($engines[$engine]['file'])) {
+        require_once $engines[$engine]['file'];
+      }
+
+      $module = isset($form_state['values']['module']) ? $form_state['values']['module'] : t('MYMODULE');
+      $form['export']['module'] = array(
+        '#type' => 'textfield',
+        '#title' => t('Module name'),
+        '#default_value' => $module,
+        '#ajax' => array(
+          'callback' => 'custom_formatters_export_ui_export_form_js',
+          'wrapper' => 'export-wrapper',
+        ),
+      );
+
+      $code = $engines[$engine]['callbacks']['export']($item, $module);
+      break;
+  }
+
+  $lines = substr_count($code, "\n");
+  $form['export']['code'] = array(
+    '#type' => 'textarea',
+    '#title' => $title,
+    '#value' => $code,
+    '#rows' => $lines,
+  );
+
+  return $form;
+}
+
+function custom_formatters_export_ui_export_form_js($form, $form_state) {
+  return $form['export'];
 }
 
 /**
