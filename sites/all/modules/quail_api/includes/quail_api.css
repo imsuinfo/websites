@@ -1,8 +1,8 @@
-.quail_api_results_list-description {
+.quail_api-results-description {
   margin-bottom: 10px;
 }
 
-.quail_api_results_list-report-description {
+.quail_api-test-description {
   padding: 10px;
   margin: 5px;
 
@@ -10,11 +10,11 @@
   border: 1px dotted;
 }
 
-.quail_api_results_list-report-problem-line {
+.quail_api-problem-line {
   margin-top: 10px;
 }
 
-.quail_api_results_list-report-problem-markup {
+.quail_api-problem-description {
   padding: 10px;
   margin: 5px;
 

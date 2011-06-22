@@ -19,8 +19,8 @@ function quail_api_permission() {
 function quail_api_theme($existing, $type, $theme, $path) {
   $themes = array();
 
-  $themes['quail_api_results_list'] = array(
-    'template' => 'quail_api_results_list',
+  $themes['quail_api_results'] = array(
+    'template' => 'quail_api_results',
     'variables' => array(
       'severity_id' => NULL,
       'severity_array' => NULL,
@@ -33,22 +33,47 @@ function quail_api_theme($existing, $type, $theme, $path) {
     'path' => drupal_get_path('module', 'quail_api') . '/includes',
   );
 
+  $themes['quail_api_test'] = array(
+    'template' => 'quail_api_test',
+    'variables' => array(
+      'test_name' => '',
+      'test_results' => array(),
+      'markup_format' => NULL,
+    ),
+    'path' => drupal_get_path('module', 'quail_api') . '/includes',
+  );
+
+  $themes['quail_api_problem'] = array(
+    'template' => 'quail_api_problem',
+    'variables' => array(
+      'problem_id' => '',
+      'problem_data' => array(),
+      'markup_format' => NULL,
+    ),
+    'path' => drupal_get_path('module', 'quail_api') . '/includes',
+  );
+
   return $themes;
 }
 
 /**
- * Template preprocess function for quail_api_results_list.tpl.php
+ * Template preprocess function for quail_api_results.tpl.php
  */
-function template_preprocess_quail_api_results_list(&$variables){
-  drupal_add_css(drupal_get_path('module', 'quail_api') . '/includes/quail_api-results.css');
+function template_preprocess_quail_api_results(&$variables){
+  drupal_add_css(drupal_get_path('module', 'quail_api') . '/includes/quail_api.css');
 
-  $root_class_name = 'quail_api_results_list';
+  $root_class_name = 'quail_api-results';
 
   $variables['severity_id'] = NULL;
   $variables['severity_machine_name'] = '';
   $variables['severity_human_name'] = '';
   $variables['severity_description'] = '';
   $variables['base_class'] = $root_class_name;
+  $variables['specific_class'] = 'unknown';
+
+  if (empty($variables['severity_results']) || !isset($variables['severity_results']['total'])){
+    $severity_results = array('total' => 0);
+  }
 
   if (is_numeric($variables['id'])){
     if (empty($variables['severity_array'])){
@@ -71,6 +96,69 @@ function template_preprocess_quail_api_results_list(&$variables){
   if (!in_array($variables['title_block'], array('h2', 'h3', 'h4', 'h5', 'h6', 'div', 'span'))){
     $variables['title_block'] = 'h3';
   }
+}
+
+/**
+ * Template preprocess function for quail_api_test.tpl.php
+ */
+function template_preprocess_quail_api_test(&$variables){
+  drupal_add_css(drupal_get_path('module', 'quail_api') . '/includes/quail_api.css');
+
+  $root_class_name = 'quail_api-test';
+
+  $variables['base_class'] = $root_class_name;
+  $variables['specific_class'] = '';
+  $variables['test_title'] = '';
+  $variables['test_description'] = '';
+  $variables['test_problems'] = array();
+
+  if (!empty($variables['test_name'])){
+    $variables['specific_class'] = $root_class_name . '-' . drupal_strtolower(check_plain($variables['test_name']));
+  }
+
+  if (!empty($variables['test_results']['body']['title'])){
+    $variables['test_title'] = check_plain($variables['test_results']['body']['title']);
+
+    if (isset($variables['test_results']['body']['description'])){
+      $variables['test_description'] = check_markup($variables['test_results']['body']['description'], $variables['markup_format']);
+    }
+
+    if (!empty($variables['test_results']['problems'])){
+      $variables['test_problems'] = $variables['test_results']['problems'];
+    }
+  }
+
+  unset($variables['test_name']);
+  unset($variables['test_results']);
+}
+
+/**
+ * Template preprocess function for quail_api_problem.tpl.php
+ */
+function template_preprocess_quail_api_problem(&$variables){
+  drupal_add_css(drupal_get_path('module', 'quail_api') . '/includes/quail_api.css');
+
+  $root_class_name = 'quail_api-problem';
+
+  $variables['base_class'] = $root_class_name;
+  $variables['specific_class'] = '';
+  $variables['problem_line'] = '';
+  $variables['problem_description'] = '';
+
+  if (!empty($variables['problem_id'])){
+    $variables['specific_class'] = $root_class_name . '-' . drupal_strtolower(check_plain($variables['problem_id']));
+  }
+
+  if (!empty($variables['problem_data']['line'])){
+    $variables['problem_line'] = check_plain($variables['problem_data']['line']);
+
+    if (isset($variables['problem_data']['element'])){
+      $variables['problem_description'] = check_markup($variables['problem_data']['element'], $variables['markup_format']);
+    }
+  }
+
+  unset($variables['problem_id']);
+  unset($variables['problem_data']);
 }
 
 /**

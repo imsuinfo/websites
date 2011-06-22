@@ -32,7 +32,7 @@ function quail_api_node_accessibility_tab_page($form, $form_state, $node) {
       $form['accessibility_validation_results'][$display_levels[$severity]['machine_name']]['markup'] = array(
         '#type' => 'markup',
         // @todo Provide runtime configuration options that allows the user to select which markup_format to use
-        '#markup' => theme('quail_api_results_list', array('severity_id' => $severity, 'severity_array' => $display_levels[$severity], 'severity_results' => $severity_results, 'markup_format' => 'full_html', 'display_title' => FALSE)),
+        '#markup' => theme('quail_api_results', array('severity_id' => $severity, 'severity_array' => $display_levels[$severity], 'severity_results' => $severity_results, 'markup_format' => 'full_html', 'display_title' => FALSE)),
       );
     }
   }

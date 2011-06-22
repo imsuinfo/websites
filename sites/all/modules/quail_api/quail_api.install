@@ -5,9 +5,9 @@
  */
 function quail_api_requirements($phase) {
   $requirements = array();
-  $log_message = "Unable to load the Quail php library. You can download the Quail php library from <a href='@quail_url'>http://quail-lib.org/</a>";
-  $log_message_array = array('@qual_url' => "http://quail-lib.org/");
   $library_path = libraries_get_path('quail');
+  $log_message = "Unable to load the Quail php library. You can download the Quail php library from <a href='@quail_url'>http://quail-lib.org/</a>. Make sure to place the extracted quail library at @quail_lib_path";
+  $log_message_array = array('@quail_url' => "http://quail-lib.org/", '@quail_lib_path' => $library_path);
 
   $requirements['quail_library_available']['title'] = t("Quail Library Available");
 
