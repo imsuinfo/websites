@@ -40,3 +40,22 @@ div#block-search-form form#search-block-form div#edit-actions {
   -moz-outline-radius: 0;
   -webkit-border-radius: 0;
 }
+
+
+
+/**
+ * Workaround calendar coloring issue
+ * The default color #f4f4f4 is perceived to be too bright on some screens.
+ * Also fix the line-height.
+ */
+.calendar-calendar .month-view .full td.multi-day div.monthview, .calendar-calendar .week-view .full td.multi-day div.weekview, .calendar-calendar .day-view .full td.multi-day div.dayview {
+  background: none repeat scroll 0 0 #6384b8;
+  color: #ffffff;
+  line-height: 1.9em;
+}
+
+.calendar-calendar .month-view .full td.multi-day .inner .monthview .continues, .calendar-calendar .month-view .full td.multi-day .inner .monthview .cutoff, .calendar-calendar .week-view .full td.multi-day .inner .weekview .continues, .calendar-calendar .week-view .full td.multi-day .inner .weekview .cutoff {
+  background: none repeat scroll 0 0 #6384b8;
+  color: #ffffff;
+  line-height: 1.9em;
+}
