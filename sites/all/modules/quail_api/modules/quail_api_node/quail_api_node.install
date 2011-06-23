@@ -90,12 +90,30 @@ function quail_api_node_schema() {
         'not null' => FALSE,
         'serialize' => TRUE,
       ),
+      'method' => array(
+        'description' => t("A string that represent the validation method to use."),
+        'type' => 'varchar',
+        'length' => 64,
+        'not null' => TRUE,
+        'default' => '',
+      ),
+      'format' => array(
+        'description' => t("The filter format to use when providing validation results."),
+        'type' => 'varchar',
+        'length' => 255,
+        'not null' => TRUE,
+        'default' => '',
+      ),
     ),
     'primary key' => array('type'),
     'foreign keys' => array(
       'type' => array(
         'table' => 'node_type',
         'columns' => array('type' => 'type'),
+      ),
+      'format' => array(
+        'table' => 'filter_format',
+        'columns' => array('format' => 'format'),
       ),
     ),
   );

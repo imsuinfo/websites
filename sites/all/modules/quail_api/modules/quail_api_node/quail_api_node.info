@@ -4,6 +4,7 @@ package = Accessibility
 core = 7.x
 
 dependencies[] = quail_api
+dependencies[] = filter
 dependencies[] = node
 dependencies[] = cf
 

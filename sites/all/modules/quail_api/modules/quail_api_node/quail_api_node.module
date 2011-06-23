@@ -62,6 +62,17 @@ function quail_api_node_menu() {
 }
 
 /**
+ * Implements hook_menu().
+ */
+function quail_api_node_admin_paths() {
+  $paths = array();
+
+  $paths['node/*/accessibility'] = TRUE;
+
+  return $paths;
+}
+
+/**
  * Checks if user can access the
  *
  * @param $node
@@ -101,11 +112,21 @@ function quail_api_node_form_node_type_form_alter(&$form, &$form_state, $form_id
 
   $standards = quail_api_get_standards_list();
   $display_levels = quail_api_get_display_levels_list();
+  $methods = quail_api_get_validation_methods();
+  $methods_list = quail_api_get_validation_methods_list($methods);
+  $filter_formats = filter_formats();
+  $formats = array();
   $options = array();
+
+  foreach ($filter_formats as $filter_format => $filter_format_settings){
+    $formats[$filter_format] = $filter_format_settings->name;
+  }
 
   $default_enabled = 'disabled';
   $default_standards = array();
   $default_display_levels = array();
+  $default_method = 'quail_api_method_immediate';
+  $default_format = 'full_html';
 
   if (!empty($form['#node_type']->type)){
     $node_type_settings_objects = quail_api_node_get_node_type_settings(array($form['#node_type']));
@@ -116,6 +137,8 @@ function quail_api_node_form_node_type_form_alter(&$form, &$form_state, $form_id
       $default_enabled = ($node_type_settings_object->required ? 'required' : 'optional');
       $default_standards = unserialize($node_type_settings_object->standards);
       $default_display_levels = unserialize($node_type_settings_object->messages);
+      $default_method = (!empty($node_type_settings_object->method) ? $node_type_settings_object->method : $default_method);
+      $default_format = (!empty($node_type_settings_object->format) ? $node_type_settings_object->format : $default_format);
     }
   }
 
@@ -141,6 +164,29 @@ function quail_api_node_form_node_type_form_alter(&$form, &$form_state, $form_id
     '#description' => t("Choose if accessibility validation should be enabled for this field and if the field is required to pass accessibility validation."),
   );
 
+  $form['node_accessibility_validation']['method'] = array(
+    '#type' => 'select',
+    '#title' => t("Validation Method"),
+    '#default_value' => $default_method,
+    '#options' => $methods_list,
+    '#description' => t("Choose the way in which validation is performed."),
+  );
+
+  // add documentation for each option
+  $form['node_accessibility_validation']['method']['#description'] .= '<ul>';
+  foreach ($methods as $method => $method_settings){
+    $form['node_accessibility_validation']['method']['#description'] .= '<li>' . $method_settings['human_name'] . ': ' . $method_settings['description'] . '</li>';
+  }
+  $form['node_accessibility_validation']['method']['#description'] .= '</ul>';
+
+  $form['node_accessibility_validation']['format'] = array(
+    '#type' => 'select',
+    '#title' => t("Markup Format"),
+    '#default_value' => $default_format,
+    '#options' => $formats,
+    '#description' => t("Choose the filter to use when presenting the results of validation checks. This is only used for the html markup associated with the problem or suggestion."),
+  );
+
   $form['node_accessibility_validation']['standards'] = array(
     '#type' => 'checkboxes',
     '#title' => t("Accessibility Standards"),
@@ -154,13 +200,11 @@ function quail_api_node_form_node_type_form_alter(&$form, &$form_state, $form_id
     '#title' => t("Accessibility Message Display Level"),
     '#default_value' => $default_display_levels,
     '#options' => $display_levels,
-    '#description' => t("Choose which messages should be immediately shown on a particular node if that node fails any accessibility validation test of the chosen display level."),
+    '#description' => t("Choose which messages should be immediately shown on a particular node if that node fails any accessibility validation test of the chosen display level. This only works when the validation results are saved."),
   );
 
   $form['#submit'][] = 'quail_api_node_node_type_form_submit';
 }
-
-
 
 /**
  * Handles submitting the accessible content specific node type settings into the database.
@@ -171,6 +215,10 @@ function quail_api_node_form_node_type_form_alter(&$form, &$form_state, $form_id
  *   A form state
  */
 function quail_api_node_node_type_form_submit($form, &$form_state) {
+  if (cf_is_empty_or_non_string(__FUNCTION__, 'form_state[values][type]', $form_state['values']['type'], WATCHDOG_ERROR)){
+    return;
+  }
+
   $node_type_settings_objects = quail_api_node_get_node_type_settings(array($form_state['values']['type']), array(__FUNCTION__));
   $node_type_settings_object = FALSE;
 
@@ -178,9 +226,11 @@ function quail_api_node_node_type_form_submit($form, &$form_state) {
     $node_type_settings_object = $node_type_settings_objects['0'];
   }
 
-  $columns = array('enabled', 'required', 'standards', 'messages');
+  $columns = array('enabled', 'required', 'standards', 'messages', 'method', 'format');
   $record = array();
   $record['type'] = $form_state['values']['type'];
+  $record['method'] = isset($form_state['values']['node_accessibility_validation']['method']) ? $form_state['values']['node_accessibility_validation']['method'] : 'quail_api_method_immediate';
+  $record['format'] = isset($form_state['values']['node_accessibility_validation']['format']) ? $form_state['values']['node_accessibility_validation']['format'] : 'full_html';
 
   if (isset($form_state['values']['node_accessibility_validation']['required'])){
     $record['required'] = $form_state['values']['node_accessibility_validation']['required'] === 'disabled';

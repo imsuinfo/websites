@@ -378,7 +378,7 @@ function quail_api_get_display_levels($display_level = NULL){
     'human_name' => t("Suggestions"),
     'module' => 'quail_api',
     'description' => t(
-      "Suggestions provide notes and suggestions on how to improve accessibility compliance."
+      "Suggestions provide notes and tips on how to improve accessibility compliance."
     ),
     'id' => 3, // QUAIL_TEST_SUGGESTION
     'default' => TRUE,
@@ -448,6 +448,110 @@ function quail_api_get_default_display_level($display_levels = NULL){
   }
 
   return $display_level;
+}
+
+/**
+ * Returns an array of validation methods that are supported by this module or extending modules.
+ * A validation method is how the validation process is to be performed.
+ * Examples are:
+ * - performing the validation everytime a page is viewed
+ * - performing the validation only when a validate button is checked
+ *
+ * This is mostly information.
+ * Extending modules are expected to provide
+ *
+ * @todo function name, path, and arguments support should probably be added here
+ *
+ * @param validation_method (optional)
+ *   Providing a valid method id name will cause the return value to only contain the validation method that matches the given id.
+ *
+ * @return
+ *  An array of validation methods that are supported by this module or extending modules.
+ *  The array keys are the machine names for each display level.
+ */
+function quail_api_get_validation_methods($validation_method = NULL){
+  $validation_methods = array();
+
+  $validation_methods['quail_api_method_immediate'] = array(
+    'human_name' => t("Immediately Validate"),
+    'module' => 'quail_api',
+    'description' => t(
+      "Always perform the validation. Validation results are never saved."
+    ),
+    'database'=> FALSE,
+    'automatic' => TRUE,
+  );
+
+  $validation_methods['quail_api_method_manual'] = array(
+    'human_name' => t("Manually Validate"),
+    'module' => 'quail_api',
+    'description' => t(
+      "Perform the validation only when requested. Validation results are never saved."
+    ),
+    'database'=> FALSE,
+    'automatic' => FALSE,
+  );
+
+  $validation_methods['quail_api_method_immediate_database'] = array(
+    'human_name' => t("Immediately Validate & Save"),
+    'module' => 'quail_api',
+    'description' => t(
+      "Always perform the validation. Validation results are stored in the database."
+    ),
+    'database'=> TRUE,
+    'automatic' => TRUE,
+  );
+
+  $validation_methods['quail_api_method_manual_database'] = array(
+    'human_name' => t("Manually Validate & Save"),
+    'module' => 'quail_api',
+    'description' => t(
+      "Perform the validation only when requested. Validation results are stored in the database."
+    ),
+    'database'=> TRUE,
+    'automatic' => FALSE,
+  );
+
+  drupal_alter('quail_api_get_validation_methods', $validation_methods, $validation_method);
+
+  if (!is_null($validation_method)){
+    if (isset($validation_methods[$validation_method])){
+      return $validation_methods[$validation_method];
+    }
+
+    return array();
+  }
+
+  return $validation_methods;
+}
+
+
+/**
+ * Returns a list of validation methods.
+ * This is only a list of the machine_name and human_name of the select lists.
+ * Use this for populating select lists, radio buttons, and check boxes.
+ *
+ * @param validation_methods (optional)
+ *   Providing a valid array of validation methods as returned by quail_api_get_validation_methods() and it will be properly converted into a validation methods list.
+ *
+ * @return
+ *  An array of validation methods that are supported by this module or extending modules.
+ *  The array keys are the validation methods machine name and the array value is the human name.
+ */
+function quail_api_get_validation_methods_list($validation_methods = NULL){
+  if (is_null($validation_methods)){
+    $validation_methods = quail_api_get_validation_methods();
+  }
+
+  $validation_methods_list = array();
+
+  foreach ($validation_methods as $machine_name => $value){
+    if (isset($value['human_name'])){
+      $validation_methods_list[$machine_name] = $value['human_name'];
+    }
+  }
+
+  return $validation_methods_list;
 }
 
 /**
