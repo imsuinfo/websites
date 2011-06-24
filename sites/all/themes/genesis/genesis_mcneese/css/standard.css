@@ -363,6 +363,7 @@ img#front_page_columns-transparent-spotlight {
 div#front_page_columns-events div.views-field-nothing {
   background-color: #25567d;
 
+  margin-top: 15px;
   margin-bottom: 25px;
 }
 
@@ -372,7 +373,8 @@ div#front_page_columns-events div.view-display-id-front_page_events div.views-fi
 
 div#front_page_columns-events div.views-field-nothing div.highlight-title,
 div#front_page_columns-events div.views-field-nothing div.event-title {
-  font-size: 24px;
+  font-size: 23px;
+  font-family: arial, halvetica, sans-serif;
 
   padding: 0 10px 0 10px;
 }
@@ -439,9 +441,13 @@ div#front_page_columns-events div.views-field-nothing div.event-body {
   padding-right: 10px;
 
   font-size: 14px;
-  line-height: 24px;
+  line-height: 25px;
 
-  font-family: Serif, Georgia, Times New Roman;
+  color: #ffffff;
+
+  font-family: arial, halvetica, sans-serif;
+
+  margin-bottom: 31px;
 }
 
 div#front_page_columns-events div.views-field-nothing div.highlight-body a,
@@ -533,10 +539,15 @@ h3#front_page_columns-column_title-spotlight {
 }
 
 div#front_page_columns-spotlight div.views-field-nothing div.spotlight-title {
-  font-size: 18px;
-  line-height: 21px;
+  font-size: 20px;
+  font-weight: normal;
+  line-height: 27px;
 
-  font-family: Serif, Georgia, Times New Roman;
+  text-transform: uppdercase;
+
+  font-family: arial, halvetica, sans-serif;
+
+  margin-bottom: 10px;
 }
 
 div#front_page_columns-spotlight div.views-field-nothing div.spotlight-title a,
@@ -562,7 +573,9 @@ div#front_page_columns-spotlight div.views-field-field-spotlight-image {
 
 div#front_page_columns-spotlight div.views-field-nothing div.spotlight-body {
   font-size: 14px;
-  line-height: 21px;
+  line-height: 25px;
+
+  color: #272727;
 
   font-family: Serif, Georgia, Times New Roman;
 }
@@ -570,6 +583,13 @@ div#front_page_columns-spotlight div.views-field-nothing div.spotlight-body {
 div#front_page_columns-spotlight div.views-field-nothing div.spotlight-event_date {
   font-weight: bold;
   font-size: 12px;
+  font-family: arial, halvetica, sans-serif;
+
+  color: #00335b;
+
+  text-transform: uppercase;
+
+  margin-bottom: 10px;
 }
 
 
