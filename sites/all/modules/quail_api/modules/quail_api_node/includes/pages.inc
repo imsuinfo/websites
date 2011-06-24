@@ -45,12 +45,12 @@ function quail_api_node_accessibility_tab_page($form, &$form_state, $node) {
   if ($automatic || $perform_validation){
     $results = quail_api_node_validate(array($node->nid));
 
-    if ($database){
-      // @todo: save the database results, this does not need to happen when automatic is disabled because there is no new report data to save.
+    if ($database && !empty($results)){
+      quail_api_node_save_node_tests($results);
     }
   }
-  else if ($database){
-    // @todo: manually load the database settings, this does not need to happen when automatic is enabled because there is already a fresh report available
+  else if ($database && !empty($results)){
+    quail_api_node_save_node_tests($results);
   }
 
   if (!empty($results[$node->nid]['report'])){

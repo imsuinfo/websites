@@ -596,3 +596,115 @@ function quail_api_validate_markup($html, $standard, $display_level = NULL) {
   $results['processed'] = TRUE;
   return $results;
 }
+
+/**
+ * Loads the quail test data.
+ *
+ * @param $conditions is an array with the following possible keys:
+ *   'id' the numeric id.
+ *   'severity' a numeric value representing the severity (aka: display level) as defined by the quail library.
+ *   'machine_name' the machine-friendly name for the test as defined by the quail library.
+ *
+ * @return
+ *   An array of database results.
+ */
+function quail_api_node_load_tests($conditions = array()){
+  if (!is_array($conditions)){
+    cf_error_invalid_array(__FUNCTION__, 'conditions');
+    return array();
+  }
+
+  $query = db_select('quail_api_tests', 'qat');
+
+  $query->fields('qat');
+  $query->orderBy('qat.id', 'ASC');
+
+  $and = NULL;
+
+  if (isset($conditions['id']) && is_numeric($conditions['id'])){
+    $and = db_and();
+    $and->condition('id', $conditions['id'], '=');
+  }
+
+  if (isset($conditions['severity']) && is_numeric($conditions['severity'])){
+    if (is_null($and)) $and = db_and();
+
+    $and->condition('severity', $conditions['severity'], '=');
+  }
+
+  if (isset($conditions['machine_name']) && is_numeric($conditions['machine_name'])){
+    if (is_null($and)) $and = db_and();
+
+    $and->condition('machine_name', $conditions['machine_name'], '=');
+  }
+
+  if (is_object($and)) $query->condition($and);
+
+  return $query->execute()->fetchAll();
+}
+
+/**
+ * This stores the quail test information in the drupal database.
+ * The quail test data does not have a unique id associated with is so the machine name must be used.
+ * When the machine name is used, a unique id is associated.
+ * If the machine name already exists then no write is performed.
+ * If an update of the data is required then pass either the 'do_update' vairable.
+ *
+ * @param $test_data
+ *   An array of test data with the following keys:
+ *   - machine_name: This is the name of the test as defined by the quail library.
+ *   - severity: This is the display level of the test as defined by the quail library.
+ *   - human_name: This is a more title of the test as defiend by the quail library.
+ *   - description: The detailed description of the test, which is defined by the quail library in the 'body' item.
+ *   - id: (optional) The numeric id for existing data.
+ *   - do_update: (optional) A boolean. When specified this tells forces an update if the machine name already exists.
+ *
+ * @return
+ *   The return states of either FALSE, SAVED_NEW, or SAVED_UPDATED.
+ */
+function quail_api_node_save_tests($test_data){
+  if (!is_array($test_data)){
+    cf_error_invalid_array(__FUNCTION__, 'test_data', WATCHDOG_ERROR);
+    return FALSE;
+  }
+
+  $result = FALSE;
+
+  if (empty($test_data['machine_name'])){
+    cf_error_missing_array_key(__FUNCTION__, 'test_data', 'machine_name', WATCHDOG_ERROR);
+    return FALSE;
+  }
+
+  if (empty($test_data['severity'])){
+    cf_error_missing_array_key(__FUNCTION__, 'test_data', 'severity', WATCHDOG_ERROR);
+    return FALSE;
+  }
+
+  if (empty($test_data['human_name'])){
+    cf_error_missing_array_key(__FUNCTION__, 'test_data', 'human_name', WATCHDOG_ERROR);
+    return FALSE;
+  }
+
+  if (empty($test_data['description'])){
+    cf_error_missing_array_key(__FUNCTION__, 'test_data', 'description', WATCHDOG_ERROR);
+    return FALSE;
+  }
+
+  // @todo: implement 'id' and 'do_update'
+  $results = quail_api_node_load_tests(array('machine_name' => $test_data['machine_name']));
+
+  if (empty($results)){
+    $data = array();
+    $columns = array('machine_name', 'severity', 'human_name', 'description');
+    $primary_key = array();
+
+    $data['machine_name'] = $test_data['machine_name'];
+    $data['severity'] = $test_data['severity'];
+    $data['human_name'] = $test_data['human_name'];
+    $data['description'] = $test_data['description'];
+
+    $result = drupal_write_record('content_easement_categories', $data, $primary_key);
+  }
+
+  return $result;
+}

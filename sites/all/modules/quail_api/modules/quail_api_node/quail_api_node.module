@@ -129,7 +129,7 @@ function quail_api_node_form_node_type_form_alter(&$form, &$form_state, $form_id
   $default_format = 'full_html';
 
   if (!empty($form['#node_type']->type)){
-    $node_type_settings_objects = quail_api_node_get_node_type_settings(array($form['#node_type']));
+    $node_type_settings_objects = quail_api_node_load_node_type_settings(array($form['#node_type']));
 
     if (!empty($node_type_settings_objects)){
       $node_type_settings_object = $node_type_settings_objects['0'];
@@ -219,7 +219,7 @@ function quail_api_node_node_type_form_submit($form, &$form_state) {
     return;
   }
 
-  $node_type_settings_objects = quail_api_node_get_node_type_settings(array($form_state['values']['type']), array(__FUNCTION__));
+  $node_type_settings_objects = quail_api_node_load_node_type_settings(array($form_state['values']['type']), array(__FUNCTION__));
   $node_type_settings_object = FALSE;
 
   if (!empty($node_type_settings_objects)){
@@ -294,7 +294,7 @@ function quail_api_node_node_operations() {
  */
 function quail_api_node_operation_validate($nids){
   $nodes = node_load_multiple($nids);
-  $node_type_settings_objects = quail_api_node_get_node_type_settings($nodes, array(__FUNCTION__));
+  $node_type_settings_objects = quail_api_node_load_node_type_settings($nodes, array(__FUNCTION__));
   $node_type_settings_types = array();
 
   foreach ($node_type_settings_objects as $node_type_settings_object){
@@ -390,7 +390,7 @@ function quail_api_node_node_load($nodes, $types) {
     $all_nodes[$node->nid]->accessibility = FALSE;
   }
 
-  $results = quail_api_node_get_node_type_settings($all_nodes, array(__FUNCTION__));
+  $results = quail_api_node_load_node_type_settings($all_nodes, array(__FUNCTION__));
 
   foreach ($results as $result){
     $all_nodes[$node->nid]->accessibility = array();
@@ -418,7 +418,7 @@ function quail_api_node_node_load($nodes, $types) {
  * @return
  *   A prepared statement object, already executed.
  */
-function quail_api_node_get_node_type_settings($node_types){
+function quail_api_node_load_node_type_settings($node_types){
   if (count($node_types) == 0){
     return array();
   }
@@ -445,25 +445,25 @@ function quail_api_node_get_node_type_settings($node_types){
 }
 
 /**
- * Loads the accessible content node settings table data for the given node ids or nodes.
- * @todo add support for loading revision-specific settings
+ * Loads the node error settings table data for the given nodes or node ids.
  * @todo add caching support to the results of this check.
+ * @todo add revision id support
  *
  * @param $nodes_or_nids
  *   An array of node objects or node ids
  *
  * @return
- *   A prepared statement object, already executed.
+ *   An array of database results.
  */
-function quail_api_node_get_node_settings($nodes_or_nids){
-  if (count($nodes_or_nids) == 0){
+function quail_api_node_load_node_errors($nodes_or_nids){
+  if (count($node_types) == 0){
     return array();
   }
 
   $query = db_select('quail_api_node_errors', 'qane');
 
   $query->fields('qane');
-  $query->orderBy('qane.nid', 'ASC');
+  $query->orderBy('qane.type', 'ASC');
 
   $and = db_and();
 
@@ -471,8 +471,11 @@ function quail_api_node_get_node_settings($nodes_or_nids){
     if (is_object($node_or_nid)){
       $and->condition('nid', $node_or_nid->nid, '=');
     }
-    else {
+    else if (is_numeric($node_or_nid)) {
       $and->condition('nid', $node_or_nid, '=');
+    }
+    else {
+      cf_error_not_numeric(__FUNCTION__, 'nid');
     }
   }
 
@@ -482,17 +485,65 @@ function quail_api_node_get_node_settings($nodes_or_nids){
 }
 
 /**
+ * Saves the node report data to the database.
+ *
+ * @param $reports
+ *   The reports array as returned by the quail library quail api reporter.
+ *
+ * @return
+ *   A boolean representing the whether the save
+ */
+function quail_api_node_save_node_tests($reports){
+  if (!is_array($reports)){
+    cf_error_invalid_array(__FUNCTION__, 'reports', WATCHDOG_ERROR);
+    return FALSE;
+  }
+
+/*
+  $tests_known = quail_api_node_load_tests();
+  $tests_added = array();
+  $tests_reports = array();
+
+  drupal_set_message("DEBUG: tests_known = " . print_r(array_keys($tests_known), TRUE) . "<br>\n<br>\n");
+
+  foreach ($reports as $nid => $node_results){
+    foreach($node_results['report'] as $severity => $severity_results){
+      if ($severity != 'total'){
+        foreach ($severity_results as $test_name => $test_results){
+          if ($test_name == 'total') continue;
+
+          if (!in_array($tests_known, $tests_added) && !in_array($test_name, $tests_added)){
+            $results = quail_api_node_save_tests(array('machine_name' => $test_name, 'severity' => $severity, 'human_name' => $test_results['title'], 'description' => $test_results['body']));
+
+            if ($results == FALSE){
+              watchdog('quail_api', "Failed to insert :machine_name into quail api tests database table.", array(':machine_name' => $test_name), WATCHDOG_ERROR);
+              continue;
+            }
+
+            $tests_added[$test_name] = quail_api_node_load_tests(array('machine_name' => $test_name));
+            watchdog("DEBUG: added $test_name");
+          }
+
+          drupal_set_message("DEBUG: $severity, $test_name = " . print_r(array_keys($test_results), TRUE) . "<br>\n<br>\n");
+        }
+      }
+    }
+  }
+  */
+}
+
+/**
  * Returns TRUE if accessibility validation functionality is enabled for the given node type.
  * @todo add caching support to the results of this check.
  *
  * @param $node_type
- *   A node type string
+ *   A node type string.
  *
  * @return
- *   TRUE or FALSE depending on whether or not accessibility validation functionality is enabled for the given node type.
+ *   The return states of either FALSE, SAVED_NEW, or SAVED_UPDATED.
  */
 function accessible_content_is_enabled($node_type){
-  $node_type_settings_objects = quail_api_node_get_node_type_settings(array($node_type));
+  $node_type_settings_objects = quail_api_node_load_node_type_settings(array($node_type));
 
   if (!empty($node_type_settings_objects) && is_object($node_type_settings_objects['0'])){
     return TRUE;
@@ -513,7 +564,7 @@ function accessible_content_is_enabled($node_type){
  *   NULL is returned if accessibility validation functionality is not enabled.
  */
 function accessible_content_is_required($node_type){
-  $node_type_settings_objects = quail_api_node_get_node_type_settings(array($node_type));
+  $node_type_settings_objects = quail_api_node_load_node_type_settings(array($node_type));
 
   if (empty($node_type_settings_objects) || !is_object($node_type_settings_objects['0'])){
     return NULL;

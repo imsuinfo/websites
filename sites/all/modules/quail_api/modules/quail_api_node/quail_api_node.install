@@ -5,8 +5,8 @@
 function quail_api_node_schema() {
   $schema = array();
 
-  $schema['quail_api_node_errors'] = array(
-    'description' => st("Nodes that have been killfiled."),
+  $schema['quail_api_node_tests'] = array(
+    'description' => st("Node validation statistics."),
     'fields' => array(
       'nid' => array(
         'description' => st("The node's ID from {node}.nid, serving as the primary key."),

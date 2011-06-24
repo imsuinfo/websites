@@ -30,21 +30,14 @@ function quail_api_requirements($phase) {
 function quail_api_schema() {
   $schema = array();
 
-  $schema['quail_api_errors'] = array(
+  $schema['quail_api_tests'] = array(
     'fields' => array(
       'id' => array(
         'description' => st("A numerical primary key that uniquely represents this node type. Any foreign keys should point to this."),
         'type' => 'serial',
         'not null' => TRUE,
         'unsigned' => TRUE,
-        'size' => 'big'
-      ),
-      'machine_name' => array(
-        'description' => st("This is the machine-friendly name used by the quail library that represents the error."),
-        'type' => 'varchar',
-        'length' => 64,
-        'not null' => TRUE,
-        'default' => '',
+        'size' => 'big',
       ),
       'severity' => array(
         'description' => st("This is the numeric representation of the quail test display levels."),
@@ -52,6 +45,27 @@ function quail_api_schema() {
         'size' => 'tiny',
         'not null' => TRUE,
         'default' => 0,
+      ),
+      'machine_name' => array(
+        'description' => st("This is the machine-friendly name used by the quail library that represents the test."),
+        'type' => 'varchar',
+        'length' => 64,
+        'not null' => TRUE,
+        'default' => '',
+      ),
+      'human_name' => array(
+        'description' => st("This is the human-friendly name used by the quail library that represents the test."),
+        'type' => 'text',
+        'size' => 'normal',
+        'not null' => TRUE,
+        'default' => '',
+      ),
+      'description' => array(
+        'description' => st("This is the description the test that this row represents."),
+        'type' => 'text',
+        'size' => 'medium',
+        'not null' => TRUE,
+        'default' => '',
       ),
     ),
     'primary keys' => array('id'),
