@@ -35,9 +35,6 @@ div#mcneese_drupal-header-horizontal_ruler {
 
 
 
-
-
-
 /*** Header - Search Box Top ***/
 div#search_form-top_box_links {
   position: absolute;
@@ -46,48 +43,9 @@ div#search_form-top_box_links {
   top: 8px;
   right: 20px;
 
-  width: 200px;
-  min-width: 200px;
-  max-width: 200px;
-  overflow: hidden;
-
-  background-color: #023761;
-
-  padding: 3px 3px 0 3px;
-  border: 1px solid #065c9f;
-  border-bottom: 0;
-}
-
-div#search_form-top_box_links,
-div#search_form-top_box_links a,
-div#search_form-top_box_links a:visited {
-  font-size: 10px;
-  font-family: arial, halvetica, sans-serif;
-  color: #ffffff;
-
-  text-decoration: none;
-}
-
-div#search_form-top_box_links a:focus,
-div#search_form-top_box_links a:hover,
-div#search_form-top_box_links a:active {
-  color: #fad703;
-  text-decoration: underline;
-}
-
-
-
-/*** Header - Search Box Top ***/
-div#search_form-top_box_links {
-  position: absolute;
-  display: inline-block;
-
-  top: 8px;
-  right: 20px;
-
-  width: 200px;
-  min-width: 200px;
-  max-width: 200px;
+  width: 215px;
+  min-width: 215px;
+  max-width: 215px;
   overflow: hidden;
 
   background-color: #023761;
@@ -129,9 +87,9 @@ div#block-search-form {
   max-height: 26px;
   line-height: 26px;
 
-  width: 200px;
-  min-width: 200px;
-  max-width: 200px;
+  width: 185px;
+  min-width: 185px;
+  max-width: 185px;
 
   overflow: hidden;
 
@@ -163,9 +121,9 @@ div#block-search-form > div.content {
   max-height: 24px;
   line-height: 24px;
 
-  width: 198px;
-  min-width: 198px;
-  max-width: 198px;
+  width: 213px;
+  min-width: 213px;
+  max-width: 213px;
 
   overflow: hidden;
 
@@ -235,16 +193,21 @@ div#block-search-form form#search-block-form input.form-submit {
 }
 
 div#block-search-form {
-  min-width: 200px;
+  width: 215px;
+  min-width: 215px;
+  max-width: 215px;
 }
 
 div#block-search-form div.form-item-search-block-form,
 div#block-search-form input#edit-search-block-form--1,
 div#block-search-form input#edit-search-block-form--2,
 div#block-search-form input#edit-search-block-form--3 {
-  width: 170px;
-  min-width: 170px;
-  max-width: 170px;
+  width: 185px;
+  min-width: 185px;
+  max-width: 185px;
+
+  font-family: arial, halvetica, sans-serif;
+  font-size: 12px;
 }
 
 div#block-search-form div#edit-actions {
