@@ -383,7 +383,6 @@ div#front_page_columns-events div.views-field-nothing div.event-title a,
 div#front_page_columns-events div.views-field-nothing div.event-title a:visited {
   color: #ececec;
 
-  text-shadow: -1px 1px 2px #000000;
   text-decoration: none;
 }
 
@@ -395,7 +394,6 @@ div#front_page_columns-events div.views-field-nothing div.event-title a:active,
 div#front_page_columns-events div.views-field-nothing div.event-title a:hover {
   color: #a8c1eb;
 
-  text-shadow: -1px 1px 2px #000000;
   text-decoration: underline;
 }
 
