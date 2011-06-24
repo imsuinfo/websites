@@ -35,45 +35,160 @@ div#mcneese_drupal-header-horizontal_ruler {
 
 
 
-/*** Header - search form ***/
-div#mcneese_drupal-header-blocks div#block-search-form {
-  display: inline-block;
+
+
+
+/*** Header - Search Box Top ***/
+div#search_form-top_box_links {
   position: absolute;
+  display: inline-block;
+
+  top: 8px;
+  right: 20px;
+
+  width: 200px;
+  min-width: 200px;
+  max-width: 200px;
+  overflow: hidden;
+
+  background-color: #023761;
+
+  padding: 3px 3px 0 3px;
+  border: 1px solid #065c9f;
+  border-bottom: 0;
+}
+
+div#search_form-top_box_links,
+div#search_form-top_box_links a,
+div#search_form-top_box_links a:visited {
+  font-size: 10px;
+  font-family: arial, halvetica, sans-serif;
+  color: #ffffff;
+
+  text-decoration: none;
+}
+
+div#search_form-top_box_links a:focus,
+div#search_form-top_box_links a:hover,
+div#search_form-top_box_links a:active {
+  color: #fad703;
+  text-decoration: underline;
+}
+
+
+
+/*** Header - Search Box Top ***/
+div#search_form-top_box_links {
+  position: absolute;
+  display: inline-block;
+
+  top: 8px;
+  right: 20px;
+
+  width: 200px;
+  min-width: 200px;
+  max-width: 200px;
+  overflow: hidden;
+
+  background-color: #023761;
+
+  padding: 3px 3px 0 3px;
+  border: 1px solid #065c9f;
+  border-bottom: 0;
+}
+
+div#search_form-top_box_links,
+div#search_form-top_box_links a,
+div#search_form-top_box_links a:visited {
+  font-size: 10px;
+  font-family: arial, halvetica, sans-serif;
+  color: #ffffff;
+
+  text-decoration: none;
+}
+
+div#search_form-top_box_links a:focus,
+div#search_form-top_box_links a:hover,
+div#search_form-top_box_links a:active {
+  color: #fad703;
+  text-decoration: underline;
+}
+
+
+
+/*** Header - search form ***/
+div#block-search-form {
+  position: absolute;
+  display: inline-block;
 
   top: 25px;
   right: 20px;
 
-  background-color: #ffffff;
+  height: 26px;
+  min-height: 26px;
+  max-height: 26px;
+  line-height: 26px;
 
-  height: 20px;
-  min-height: 20px;
-  max-height: 20px;
+  width: 200px;
+  min-width: 200px;
+  max-width: 200px;
+
   overflow: hidden;
 
-  border: 2px inset #0f5eff;
-  padding: 2px;
+  background-color: #023761;
+
+  padding: 3px;
+  border: 1px solid #065c9f;
+  border-top: 0;
 }
 
-div#mcneese_drupal-header-blocks div#block-search-form h2 {
+div#block-search-form > h2 {
   display: block;
 
   font-size: 0;
 
-  height: 0;
-  max-height: 0;
-
   width: 0;
   max-width: 0;
-
+  height: 0;
+  max-height: 0;
   overflow: hidden;
 }
 
-div#mcneese_drupal-header-blocks div#block-search-form div.form-item-search-block-form input.form-text {
-  vertical-align: baseline;
+div#block-search-form > div.block-inner,
+div#block-search-form > div.content {
+  background-color: #ffffff;
+
+  height: 24px;
+  min-height: 24px;
+  max-height: 24px;
+  line-height: 24px;
+
+  width: 198px;
+  min-width: 198px;
+  max-width: 198px;
+
+  overflow: hidden;
+
+  border: 1px solid #0f5eff;
+}
+
+div.form-item-search-block-form {
+  display: inline-block;
+}
+
+div#block-search-form div.form-item-search-block-form input.form-text {
+  display: inline-block;
+
+  height: 24px;
+  min-height: 24px;
+  max-height: 24px;
+  line-height: 24px;
 
   border: 0;
   margin: 0;
   padding: 0;
+
+  vertical-align: baseline;
 }
 
 div#block-search-form form#search-block-form div.form-item-search-block-form {
@@ -81,23 +196,24 @@ div#block-search-form form#search-block-form div.form-item-search-block-form {
   margin: 0;
 }
 
-form#search-block-form div.container-inline .form-item-search-block-form,
-form#search-block-form div.container-inline .form-actions {
+form#search-block-form div.container-inline div.form-item-search-block-form,
+form#search-block-form div.container-inline div.form-actions {
   display: inline-block;
 }
 
-form#search-block-form div.container-inline .form-actions {
+form#search-block-form div.container-inline div.form-actions {
   line-height: 10px;
 }
 
-div#mcneese_drupal-header-blocks div#block-search-form h2.block-title {
+div#block-search-form h2.block-title {
   display: none;
 }
 
-div#mcneese_drupal-header-blocks div#block-search-form form#search-block-form input#edit-submit--1,
-div#mcneese_drupal-header-blocks div#block-search-form form#search-block-form input#edit-submit--2,
-div#mcneese_drupal-header-blocks div#block-search-form form#search-block-form input#edit-submit--3,
-div#mcneese_drupal-header-blocks div#block-search-form form#search-block-form input#edit-submit {
+div#block-search-form form#search-block-form input#edit-submit--1,
+div#block-search-form form#search-block-form input#edit-submit--2,
+div#block-search-form form#search-block-form input#edit-submit--3,
+div#block-search-form form#search-block-form input#edit-submit,
+div#block-search-form form#search-block-form input.form-submit {
   background-image: url(../images/search_button.png);
   background-repeat: no-repeat;
   background-color: #00477f;
@@ -118,20 +234,41 @@ div#mcneese_drupal-header-blocks div#block-search-form form#search-block-form in
   padding: 0;
 }
 
-div#mcneese_drupal-header-blocks div#block-search-form {
-  min-width: 180px;
+div#block-search-form {
+  min-width: 200px;
 }
 
-div#mcneese_drupal-header-blocks div#block-search-form div.form-item-search-block-form,
-div#mcneese_drupal-header-blocks div#block-search-form input#edit-search-block-form--1,
-div#mcneese_drupal-header-blocks div#block-search-form input#edit-search-block-form--2,
-div#mcneese_drupal-header-blocks div#block-search-form input#edit-search-block-form--3 {
-  min-width: 155px;
+div#block-search-form div.form-item-search-block-form,
+div#block-search-form input#edit-search-block-form--1,
+div#block-search-form input#edit-search-block-form--2,
+div#block-search-form input#edit-search-block-form--3 {
+  width: 170px;
+  min-width: 170px;
+  max-width: 170px;
 }
 
-div#mcneese_drupal-header-blocks div#block-search-form div#edit-actions {
+div#block-search-form div#edit-actions {
   display: inline-block;
   float: right;
+}
+
+div#block-search-form form#search-block-form div#edit-actions,
+div#block-search-form form#search-block-form div.form-actions {
+  padding: 0;
+  margin: 2px;
+
+  width: 20px;
+  min-width: 20px;
+  max-width: 20px;
+
+  height: 24px;
+  min-height: 24px;
+  max-height: 24px;
+  overflow: hidden;
+
+  -moz-border-radius: 0;
+  -moz-outline-radius: 0;
+  -webkit-border-radius: 0;
 }
 
 

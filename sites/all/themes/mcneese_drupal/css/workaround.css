@@ -23,23 +23,7 @@ div#block-search-form form#search-block-form .form-item-search-block-form {
   margin: 0;
 }
 
-div#block-search-form form#search-block-form div#edit-actions {
-  padding: 0;
-  margin: 0;
 
-  width: 20px;
-  min-width: 20px;
-  max-width: 20px;
-
-  height: 20px;
-  min-height: 20px;
-  max-height: 20px;
-  overflow: hidden;
-
-  -moz-border-radius: 0;
-  -moz-outline-radius: 0;
-  -webkit-border-radius: 0;
-}
 
 /* Workaround qforms bug where a single background-image is used for multiple images */
 #qforms-form-actions .qforms-form-close {

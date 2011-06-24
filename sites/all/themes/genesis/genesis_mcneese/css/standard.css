@@ -1,46 +1,3 @@
-/*** Standard drupal core tweaks ***/
-/**
- * Markup free clearing.
- *
- * Consider adding your own selectors to this instead of finding ways
- * to sneak the clearfix class into Drupal's markup.
- * From http://perishablepress.com/press/2009/12/06/new-clearfix-hack
- *
-ul.links:after,
-div.admin-panel .body:after,
-.clearfix:after {
-  content: ".";
-  display: block;
-  height: 0;
-  clear: both;
-  visibility: hidden;
-}
-
-/* Exclude inline links from clearfix behavior *
-ul.inline:after {
-  content: "";
-  display: none;
-  clear: none;
-}
-
-/* IE6 *
-* html .form-item,
-* html ul.links,
-* html div.admin-panel .body,
-* html .clearfix {
-  height: 1%;
-}
-
-/* IE7 *
-*:first-child + html .form-item,
-*:first-child + html ul.links,
-*:first-child + html div.admin-panel .body,
-*:first-child + html .clearfix {
-  min-height: 1%;
-}
-
-
-
 /*** Cleanup ***/
 * {
   vertical-align: top;
@@ -484,7 +441,7 @@ div#front_page_columns-events div.views-field-nothing div.event-body {
   padding-right: 10px;
 
   font-size: 14px;
-  line-height: 21px;
+  line-height: 24px;
 
   font-family: Serif, Georgia, Times New Roman;
 }
