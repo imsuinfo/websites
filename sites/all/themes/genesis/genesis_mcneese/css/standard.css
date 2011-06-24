@@ -505,30 +505,29 @@ div#front_page_columns-spotlight div.views-field-field-spotlight-image div.spotl
 
 h3#front_page_columns-column_title-spotlight {
   position: absolute;
-  top: 150px;
+  top: 170px;
   right: 0;
 
   width: 397px;
   min-width: 397px;
   max-width: 397px;
 
-  height: 20px;
-  min-height: 20px;
-  max-height: 20px;
+  height: 10px;
+  min-height: 10px;
+  max-height: 10px;
 
   font-size: 11px;
+  font-weight: bold;
+  font-family: arial, halvetica, sans-serif;
+
   letter-spacing: 1px;
   line-height: 19px;
   text-transform: uppercase;
 
   padding: 15px;
-  margin-bottom: 15px;
 
-  color: #00335b;
+  color: #25567d;
   background-color: #ffffff;
-  opacity: 0.83;
-
-  -ms-filter: "alpha(opacity=83)";
 
   z-index: 10;
 }
