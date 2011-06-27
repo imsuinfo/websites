@@ -36,38 +36,69 @@ div#mcneese_drupal-header-horizontal_ruler {
 
 
 /*** Header - Search Box Top ***/
-div#search_form-top_box_links {
+ul#search_form-top_box_links {
   position: absolute;
   display: inline-block;
 
   top: 8px;
   right: 20px;
 
-  width: 215px;
-  min-width: 215px;
-  max-width: 215px;
+  width: 225px;
+  min-width: 225px;
+  max-width: 225px;
+
+  height: 14px;
+  min-height: 14px;
+  max-height: 14px;
+
   overflow: hidden;
 
+  color: #ffffff;
   background-color: #023761;
+
+  font-size: 10px;
+  font-family: arial, helvetica, sans-serif;
 
   padding: 3px 3px 0 3px;
   border: 1px solid #065c9f;
   border-bottom: 0;
 }
 
-div#search_form-top_box_links,
-div#search_form-top_box_links a,
-div#search_form-top_box_links a:visited {
-  font-size: 10px;
-  font-family: arial, halvetica, sans-serif;
+ul#search_form-top_box_links li {
+  display: inline-block;
+  text-align: center;
+}
+
+ul#search_form-top_box_links li.search_form-top_box_links-bar {
+  width: 5px;
+}
+
+ul#search_form-top_box_links li.search_form-top_box_links-ada {
+  width: 30px;
+}
+
+ul#search_form-top_box_links li.search_form-top_box_links-staff {
+  width: 120px;
+}
+
+ul#search_form-top_box_links li.search_form-top_box_links-index {
+  width: 50px;
+}
+
+ul#search_form-top_box_links a,
+ul#search_form-top_box_links a:visited {
+}
+
+ul#search_form-top_box_links a,
+ul#search_form-top_box_links a:visited {
   color: #ffffff;
 
   text-decoration: none;
 }
 
-div#search_form-top_box_links a:focus,
-div#search_form-top_box_links a:hover,
-div#search_form-top_box_links a:active {
+ul#search_form-top_box_links a:focus,
+ul#search_form-top_box_links a:hover,
+ul#search_form-top_box_links a:active {
   color: #fad703;
   text-decoration: underline;
 }
@@ -87,9 +118,9 @@ div#block-search-form {
   max-height: 26px;
   line-height: 26px;
 
-  width: 185px;
-  min-width: 185px;
-  max-width: 185px;
+  width: 195px;
+  min-width: 195px;
+  max-width: 195px;
 
   overflow: hidden;
 
@@ -121,9 +152,9 @@ div#block-search-form > div.content {
   max-height: 24px;
   line-height: 24px;
 
-  width: 213px;
-  min-width: 213px;
-  max-width: 213px;
+  width: 223px;
+  min-width: 223px;
+  max-width: 223px;
 
   overflow: hidden;
 
@@ -193,21 +224,23 @@ div#block-search-form form#search-block-form input.form-submit {
 }
 
 div#block-search-form {
-  width: 215px;
-  min-width: 215px;
-  max-width: 215px;
+  width: 225px;
+  min-width: 225px;
+  max-width: 225px;
 }
 
 div#block-search-form div.form-item-search-block-form,
 div#block-search-form input#edit-search-block-form--1,
 div#block-search-form input#edit-search-block-form--2,
 div#block-search-form input#edit-search-block-form--3 {
-  width: 185px;
-  min-width: 185px;
-  max-width: 185px;
+  width: 195px;
+  min-width: 195px;
+  max-width: 195px;
 
-  font-family: arial, halvetica, sans-serif;
+  font-family: arial, helvetica, sans-serif;
   font-size: 12px;
+
+  padding-left: 3px;
 }
 
 div#block-search-form div#edit-actions {
