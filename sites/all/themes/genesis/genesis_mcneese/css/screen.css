@@ -577,9 +577,15 @@ div#block-menu-menu-secondary-navigation {
   margin-bottom: 5px;
 }
 
-div#block-menu-menu-secondary-navigation ul.menu {
-  padding-left: 3px;
-  padding-right: 3px;
+div#block-menu-menu-secondary-navigation ul.menu,
+div#block-menu-menu-secondary-navigation ul.menu li.first,
+div#block-menu-menu-secondary-navigation ul.menu li.first a,
+div#block-menu-menu-secondary-navigation ul.menu li.first a:visited,
+div#block-menu-menu-secondary-navigation ul.menu li.first a:focus,
+div#block-menu-menu-secondary-navigation ul.menu li.first a:hover,
+div#block-menu-menu-secondary-navigation ul.menu li.first a:active {
+  -moz-border-radius-bottomleft: 5px;
+  -webkit-border-bottom-left-radius: 5px;
 }
 
 div#block-menu-menu-secondary-navigation ul.menu li.leaf {
