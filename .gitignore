@@ -1,4 +1,5 @@
 sites/default/files
+sites/default/deprecated
 sites/default/settings.php
 sites/private_files
 sites/public_files
