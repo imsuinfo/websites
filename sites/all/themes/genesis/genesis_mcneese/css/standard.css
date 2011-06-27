@@ -283,6 +283,22 @@ div#block-system-main {
   position: relative;
 }
 
+div#front_page_columns-news,
+div#front_page_columns-lagniappe {
+  width: 534px;
+  min-width: 534px;
+  max-width: 534px;
+}
+
+div#front_page_columns-news {
+  background-color: #25567d;
+}
+
+div#front_page_columns-lagniappe {
+  color: #000000;
+  background-color: #ececec;
+}
+
 h3#front_page_columns-column_title-news {
   height: 20px;
   min-height: 20px;
@@ -300,9 +316,14 @@ h3#front_page_columns-column_title-news {
   margin-bottom: 5px;
 }
 
+div#front_page_columns-lagniappe h3#front_page_columns-column_title-news {
+  color: #25567d;
+  background-color: #dadada;
+}
+
 h3#front_page_columns-column_title-news a,
 h3#front_page_columns-column_title-news a:visited {
-  color: #000000;
+  color: #25567d;
 
   text-decoration: none;
 }
@@ -318,16 +339,17 @@ h3#front_page_columns-column_title-news a:hover {
 div#front_page_columns-events {
   position: relative;
 
-  color: #ececec;
-  background-color: #25567d;
+  color: #000000;
+  background-color: #ffffff;
 }
 
 div#front_page_columns-events div.views-field-field-event-image div.event-image {
   display: inline;
 }
 
-div#front_page_columns-events div.view-display-id-front_page_highlight {
-  margin-bottom: 10px;
+div#front_page_columns-events div.view-display-id-front_page_events {
+  background-color: #ffffff;
+  color: #000000;
 }
 
 img#front_page_columns-transparent-image {
@@ -363,8 +385,12 @@ img#front_page_columns-transparent-spotlight {
 div#front_page_columns-events div.views-field-nothing {
   background-color: #25567d;
 
-  margin-top: 15px;
-  margin-bottom: 25px;
+  margin-bottom: 15px;
+}
+
+div#front_page_columns-lagniappe div.views-field-nothing {
+  color: #000000;
+  background-color: #ececec;
 }
 
 div#front_page_columns-events div.view-display-id-front_page_events div.views-field-nothing {
@@ -384,6 +410,15 @@ div#front_page_columns-events div.views-field-nothing div.highlight-title a:visi
 div#front_page_columns-events div.views-field-nothing div.event-title a,
 div#front_page_columns-events div.views-field-nothing div.event-title a:visited {
   color: #ececec;
+
+  text-decoration: none;
+}
+
+div#front_page_columns-lagniappe div.views-field-nothing div.highlight-title a,
+div#front_page_columns-lagniappe div.views-field-nothing div.highlight-title a:visited,
+div#front_page_columns-lagniappe div.views-field-nothing div.event-title a,
+div#front_page_columns-lagniappe div.views-field-nothing div.event-title a:visited {
+  color: #414141;
 
   text-decoration: none;
 }
@@ -437,17 +472,24 @@ div#front_page_columns-events div.views-field-field-hightlight-image {
 
 div#front_page_columns-events div.views-field-nothing div.highlight-body,
 div#front_page_columns-events div.views-field-nothing div.event-body {
-  padding-left: 10px;
-  padding-right: 10px;
-
   font-size: 14px;
   line-height: 25px;
 
   color: #ffffff;
+  background-color: #25567d;
 
   font-family: arial, halvetica, sans-serif;
 
-  margin-bottom: 31px;
+  padding-left: 10px;
+  padding-bottom: 15px;
+  padding-right: 10px;
+}
+
+div#front_page_columns-lagniappe div.views-field-nothing div.highlight-body,
+div#front_page_columns-lagniappe div.views-field-nothing div.event-body {
+  color: #000000;
+  background-color: #ececec;
+
 }
 
 div#front_page_columns-events div.views-field-nothing div.highlight-body a,
@@ -455,6 +497,13 @@ div#front_page_columns-events div.views-field-nothing div.highlight-body a:visit
 div#front_page_columns-events div.views-field-nothing div.event-body a,
 div#front_page_columns-events div.views-field-nothing div.event-body a:visited {
   color: #7fbcec;
+}
+
+div#front_page_columns-lagniappe div.views-field-nothing div.highlight-body a,
+div#front_page_columns-lagniappe div.views-field-nothing div.highlight-body a:visited,
+div#front_page_columns-lagniappe div.views-field-nothing div.event-body a,
+div#front_page_columns-lagniappe div.views-field-nothing div.event-body a:visited {
+  color: #25567d;
 }
 
 div#front_page_columns-events div.views-field-nothing div.highlight-body a:focus,
@@ -468,16 +517,18 @@ div#front_page_columns-events div.views-field-nothing div.event-body a:hover {
   text-decoration: underline;
 }
 
-div#front_page_columns-events div.view-display-id-front_page_events div.views-row-even div.views-field-field-event-image {
-  float: right;
+div#front_page_columns-lagniappe div.views-field-nothing div.highlight-body a:focus,
+div#front_page_columns-lagniappe div.views-field-nothing div.highlight-body a:active,
+div#front_page_columns-lagniappe div.views-field-nothing div.highlight-body a:hover,
+div#front_page_columns-lagniappe div.views-field-nothing div.event-body a:focus,
+div#front_page_columns-lagniappe div.views-field-nothing div.event-body a:active,
+div#front_page_columns-lagniappe div.views-field-nothing div.event-body a:hover {
+  color: #700000;
 
-  padding: 15px 0px 15px 15px;
-  margin: 5px 0 0 10px;
-
-  background-color: #ffffff;
+  text-decoration: underline;
 }
 
-div#front_page_columns-events div.view-display-id-front_page_events div.views-row-odd div.views-field-field-event-image {
+div#front_page_columns-events div.view-display-id-front_page_events div.views-row div.views-field-field-event-image {
   float: left;
 
   padding: 15px 15px 15px 0px;
@@ -486,23 +537,40 @@ div#front_page_columns-events div.view-display-id-front_page_events div.views-ro
   background-color: #ffffff;
 }
 
-div#front_page_columns-spotlight {
+
+div#front_page_columns-lagniappe div.view-display-id-front_page_lagniappe div.views-row div.views-field-field-event-image {
   float: right;
 
-  width: 397px;
-  min-width: 397px;
-  max-width: 397px;
+  padding: 13px 0px 13px 13px;
+  margin: 5px 0 0 10px;
+
+  background-color: #ffffff;
+}
+
+
+div#front_page_columns-spotlight {
+  position: absolute;
+  top: 170px;
+  right: 0;
+
+  width: 396px;
+  min-width: 396px;
+  max-width: 396px;
 
   padding-left: 15px;
   padding-right: 15px;
 
   color: #000000;
   background-color: #ffffff;
+
+  z-index: 10;
 }
 
 div#front_page_columns-spotlight div.views-field-nothing {
   color: #000000;
   background-color: #ffffff;
+
+  margin-bottom: 25px;
 }
 
 div#front_page_columns-spotlight div.views-field-field-spotlight-image div.spotlight-image {
@@ -510,10 +578,6 @@ div#front_page_columns-spotlight div.views-field-field-spotlight-image div.spotl
 }
 
 h3#front_page_columns-column_title-spotlight {
-  position: absolute;
-  top: 170px;
-  right: 0;
-
   width: 397px;
   min-width: 397px;
   max-width: 397px;
@@ -530,12 +594,10 @@ h3#front_page_columns-column_title-spotlight {
   line-height: 19px;
   text-transform: uppercase;
 
-  padding: 15px;
+  padding: 15px 0 25px 0;
 
   color: #25567d;
   background-color: #ffffff;
-
-  z-index: 10;
 }
 
 div#front_page_columns-spotlight div.views-field-nothing div.spotlight-title {
@@ -737,4 +799,3 @@ div#columns div.view-id-more_pages div.views-field-field-headline {
 
   margin: 5px 15px 5px 15px;
 }
-
