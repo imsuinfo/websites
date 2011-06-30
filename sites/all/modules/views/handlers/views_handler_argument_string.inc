@@ -24,6 +24,7 @@ class views_handler_argument_string extends views_handler_argument {
     $options['glossary'] = array('default' => FALSE);
     $options['limit'] = array('default' => 0);
     $options['case'] = array('default' => 'none');
+    $options['case_insensitive'] = array('default' => FALSE);
     $options['path_case'] = array('default' => 'none');
     $options['transform_dash'] = array('default' => FALSE);
     $options['break_phrase'] = array('default' => FALSE);
@@ -69,6 +70,13 @@ class views_handler_argument_string extends views_handler_argument {
       ),
       '#default_value' => $this->options['case'],
       '#fieldset' => 'more',
+    );
+
+    $form['case_insensitive'] = array(
+      '#type' => 'checkbox',
+      '#title' => t('Case Insensitive Searches'),
+      '#description' => t('Allows for doing database searches without case sensitivity. MySQL already works in lower-case mode, so MySQL users should leave this unchecked to improve performance.'),
+      '#default_value' => $this->options['case_insensitive'],
     );
 
     $form['path_case'] = array(
@@ -210,19 +218,46 @@ class views_handler_argument_string extends views_handler_argument {
       $operator = '=';
     }
 
-    if ($formula) {
+    $case_insensitive = FALSE;
+    if (!empty($this->options['case_insensitive']) && $this->options['case_insensitive']){
+      $field = 'LOWER(' . $field . ')';
+
+      $case_insensitive = TRUE;
+    }
+
+    if ($formula || $case_insensitive) {
       $placeholder = $this->placeholder();
       $placeholder_length = $this->placeholder_length;
-      if ($operator == 'IN') {
-        $field .= " IN($placeholder)";
+
+      if ($case_insensitive){
+        if ($operator == 'IN'){
+          $field = " IN(LOWER($placeholder))";
+        }
+        else {
+          $field .= ' = LOWER(' . $placeholder . ')';
+        }
       }
       else {
-        $field .= ' = ' . $placeholder;
+        if ($operator == 'IN') {
+          $field .= " IN($placeholder)";
+        }
+        else {
+          $field .= ' = ' . $placeholder;
+        }
       }
-      $placeholders = array(
-        $placeholder_length => intval($this->options['limit']),
-        $placeholder => $argument,
-      );
+
+      if ($placeholder_length > 0){
+        $placeholders = array(
+          $placeholder_length => intval($this->options['limit']),
+          $placeholder => $argument,
+        );
+      }
+      else {
+        $placeholders = array(
+          $placeholder => $argument,
+        );
+      }
+
       $this->query->add_where_expression(0, $field, $placeholders);
     }
     else {
