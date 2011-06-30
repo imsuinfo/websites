@@ -5660,6 +5660,7 @@ class tableWithBothHeadersUseScope extends quailTest {
 					}
 					else {
 						foreach($child->childNodes as $td) {
+							if (!property_exists($td, 'tagName')) continue;
 							if($td->tagName == 'th' && !$td->hasAttribute('scope'))
 								$fail = true;
 						}
