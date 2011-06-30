@@ -39,7 +39,8 @@ interface DrupalEntityControllerInterface {
    *   An array of conditions in the form 'field' => $value.
    *
    * @return
-   *   An array of entity objects indexed by their ids.
+   *   An array of entity objects indexed by their ids. When no results are
+   *   found, an empty array is returned.
    */
   public function load($ids = array(), $conditions = array());
 }
@@ -159,8 +160,8 @@ class DrupalDefaultEntityController implements DrupalEntityControllerInterface {
   public function load($ids = array(), $conditions = array()) {
     $entities = array();
 
-    // workaround: taxonomy term id returns as a string instead of an array containing a string (cause is unknown
-    if ($ids && !is_array($ids)){ 
+    // workaround: taxonomy term id returns as a string instead of an array containing a string (cause is unknown)
+    if ($ids && !is_array($ids)){
       $ids = array($ids);
     }
 
@@ -655,7 +656,11 @@ class EntityFieldQuery {
    */
   public function fieldCondition($field, $column = NULL, $value = NULL, $operator = NULL, $delta_group = NULL, $language_group = NULL) {
     if (is_scalar($field)) {
-      $field = field_info_field($field);
+      $field_definition = field_info_field($field);
+      if (empty($field_definition)) {
+        throw new EntityFieldQueryException(t('Unknown field: @field_name', array('@field_name' => $field)));
+      }
+      $field = $field_definition;
     }
     // Ensure the same index is used for fieldConditions as for fields.
     $index = count($this->fields);
@@ -757,7 +762,11 @@ class EntityFieldQuery {
    */
   public function fieldOrderBy($field, $column, $direction = 'ASC') {
     if (is_scalar($field)) {
-      $field = field_info_field($field);
+      $field_definition = field_info_field($field);
+      if (empty($field_definition)) {
+        throw new EntityFieldQueryException(t('Unknown field: @field_name', array('@field_name' => $field)));
+      }
+      $field = $field_definition;
     }
     // Save the index used for the new field, for later use in field storage.
     $index = count($this->fields);
