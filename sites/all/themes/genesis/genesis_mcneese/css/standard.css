@@ -386,6 +386,7 @@ img#front_page_columns-transparent-spotlight {
 
 div#front_page_columns-events div.views-field-nothing {
   background-color: #25567d;
+  padding: 2px;
 }
 
 div#front_page_columns-lagniappe div.views-field-nothing {
@@ -434,6 +435,17 @@ div#front_page_columns-events div.views-field-nothing div.event-title a:hover {
   text-decoration: underline;
 }
 
+div#front_page_columns-lagniappe div.views-field-nothing div.highlight-title a:focus,
+div#front_page_columns-lagniappe div.views-field-nothing div.highlight-title a:active,
+div#front_page_columns-lagniappe div.views-field-nothing div.highlight-title a:hover,
+div#front_page_columns-lagniappe div.views-field-nothing div.event-title a:focus,
+div#front_page_columns-lagniappe div.views-field-nothing div.event-title a:active,
+div#front_page_columns-lagniappe div.views-field-nothing div.event-title a:hover {
+  color: #25567d;
+
+  text-decoration: underline;
+}
+
 div#front_page_columns-events div.views-field-nothing div.highlight-event_date,
 div#front_page_columns-events div.views-field-nothing div.event-event_date {
   color: #fad703;
@@ -453,6 +465,11 @@ div#front_page_columns-events div.views-field-nothing div.event-headline {
   text-transform: uppercase;
 
   margin: 5px 15px 5px 15px;
+}
+
+div#front_page_columns-lagniappe div.views-field-nothing div.highlight-headline,
+div#front_page_columns-lagniappe div.views-field-nothing div.event-headline {
+  color: #25567d;
 }
 
 div#front_page_columns-events div.views-field-nothing div.highlight-headline p,
@@ -531,7 +548,7 @@ div#front_page_columns-lagniappe div.views-field-nothing div.event-body a:hover 
 div#front_page_columns-events div.view-display-id-front_page_events div.views-row div.views-field-field-event-image {
   float: left;
 
-  padding: 15px 15px 15px 0px;
+  padding: 15px 15px 15px 0;
   margin: 5px 10px 0 0;
 
   background-color: #ffffff;
@@ -542,7 +559,7 @@ div#front_page_columns-lagniappe div.view-display-id-front_page_lagniappe div.vi
   float: right;
 
   padding: 13px 0px 13px 13px;
-  margin: 5px 0 0 10px;
+  margin: 5px 0 0 0;
 
   background-color: #ffffff;
 }
