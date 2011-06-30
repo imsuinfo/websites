@@ -141,16 +141,8 @@ function template_preprocess_views_view(&$vars) {
   // Flatten the classes to a string for the template file.
   $vars['classes'] = implode(' ', $vars['classes_array']);
 
-  // Check the fields on the View to see if any are adding form elements.
-  $has_form_fields = FALSE;
-  foreach ($view->field as $field_name => $field) {
-    if (property_exists($field, 'views_form_callback') || method_exists($field, 'views_form')) {
-      $has_form_fields = TRUE;
-      break;
-    }
-  }
   // If form fields were found in the View, reformat the View output as a form.
-  if ($has_form_fields) {
+  if (views_view_has_form_elements($view)) {
     $form = drupal_get_form(views_form_id($view), $view, $vars['rows']);
     // The form is requesting that all non-essential views elements be hidden,
     // usually because the rendered step is not a view result.
@@ -270,7 +262,7 @@ function template_preprocess_views_view_fields(&$vars) {
         if ($object->element_label_type) {
           $class = '';
           if ($object->handler->options['element_default_classes']) {
-            $class = 'views-label-' . $object->class;
+            $class = 'views-label views-label-' . $object->class;
           }
 
           $element_label_class = $object->handler->element_label_classes($view->row_index);
@@ -336,12 +328,21 @@ function template_preprocess_views_view_summary(&$vars) {
   if (!empty($view->exposed_raw_input)) {
     $url_options['query'] = $view->exposed_raw_input;
   }
+
+  // Collect all arguments foreach row, to be able to alter them for example by the validator.
+  // This is not done per single argument value, because this could cause performance problems.
+  $row_args = array();
+  foreach ($vars['rows'] as $id => $row) {
+    $row_args[$id] = $argument->summary_argument($row);
+  }
+  $argument->process_summary_arguments($row_args);
+
   foreach ($vars['rows'] as $id => $row) {
     $vars['row_classes'][$id] = '';
 
     $vars['rows'][$id]->link = $argument->summary_name($row);
     $args = $view->args;
-    $args[$argument->position] = $argument->summary_argument($row);
+    $args[$argument->position] = $row_args[$id];
 
     $base_path = NULL;
     if (!empty($argument->options['summary_options']['base_path'])) {
@@ -371,6 +372,15 @@ function template_preprocess_views_view_summary_unformatted(&$vars) {
   }
 
   $count = 0;
+
+  // Collect all arguments foreach row, to be able to alter them for example by the validator.
+  // This is not done per single argument value, because this could cause performance problems.
+  $row_args = array();
+  foreach ($vars['rows'] as $id => $row) {
+    $row_args[$id] = $argument->summary_argument($row);
+  }
+  $argument->process_summary_arguments($row_args);
+
   foreach ($vars['rows'] as $id => $row) {
     // only false on first time:
     if ($count++) {
@@ -378,7 +388,7 @@ function template_preprocess_views_view_summary_unformatted(&$vars) {
     }
     $vars['rows'][$id]->link = $argument->summary_name($row);
     $args = $view->args;
-    $args[$argument->position] = $argument->summary_argument($row);
+    $args[$argument->position] = $row_args[$id];
 
     $base_path = NULL;
     if (!empty($argument->options['summary_options']['base_path'])) {

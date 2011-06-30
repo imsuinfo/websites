@@ -24,7 +24,6 @@ class views_handler_argument_string extends views_handler_argument {
     $options['glossary'] = array('default' => FALSE);
     $options['limit'] = array('default' => 0);
     $options['case'] = array('default' => 'none');
-    $options['case_insensitive'] = array('default' => FALSE);
     $options['path_case'] = array('default' => 'none');
     $options['transform_dash'] = array('default' => FALSE);
     $options['break_phrase'] = array('default' => FALSE);
@@ -72,13 +71,6 @@ class views_handler_argument_string extends views_handler_argument {
       '#fieldset' => 'more',
     );
 
-    $form['case_insensitive'] = array(
-      '#type' => 'checkbox',
-      '#title' => t('Case Insensitive Searches'),
-      '#description' => t('Allows for doing database searches without case sensitivity. MySQL already works in lower-case mode, so MySQL users should leave this unchecked to improve performance.'),
-      '#default_value' => $this->options['case_insensitive'],
-    );
-
     $form['path_case'] = array(
       '#type' => 'select',
       '#title' => t('Case in path'),
@@ -104,7 +96,7 @@ class views_handler_argument_string extends views_handler_argument {
     if (!empty($this->definition['many to one'])) {
       $form['add_table'] = array(
         '#type' => 'checkbox',
-        '#title' => t('Allow multiple filter values to work together.'),
+        '#title' => t('Allow multiple filter values to work together'),
         '#description' => t('If selected, multiple instances of this filter can work together, as though multiple values were supplied to the same filter. This setting is not compatible with the "Reduce duplicates" setting.'),
         '#default_value' => !empty($this->options['add_table']),
         '#fieldset' => 'more',
@@ -121,7 +113,7 @@ class views_handler_argument_string extends views_handler_argument {
     // allow + for or, , for and
     $form['break_phrase'] = array(
       '#type' => 'checkbox',
-      '#title' => t('Allow multiple values.'),
+      '#title' => t('Allow multiple values'),
       '#description' => t('If selected, users can enter multiple values in the form of 1+2+3 (for OR) or 1,2,3 (for AND).'),
       '#default_value' => !empty($this->options['break_phrase']),
       '#fieldset' => 'more',
@@ -218,46 +210,19 @@ class views_handler_argument_string extends views_handler_argument {
       $operator = '=';
     }
 
-    $case_insensitive = FALSE;
-    if (!empty($this->options['case_insensitive']) && $this->options['case_insensitive']){
-      $field = 'LOWER(' . $field . ')';
-
-      $case_insensitive = TRUE;
-    }
-
-    if ($formula || $case_insensitive) {
+    if ($formula) {
       $placeholder = $this->placeholder();
       $placeholder_length = $this->placeholder_length;
-
-      if ($case_insensitive){
-        if ($operator == 'IN'){
-          $field = " IN(LOWER($placeholder))";
-        }
-        else {
-          $field .= ' = LOWER(' . $placeholder . ')';
-        }
+      if ($operator == 'IN') {
+        $field .= " IN($placeholder)";
       }
       else {
-        if ($operator == 'IN') {
-          $field .= " IN($placeholder)";
-        }
-        else {
-          $field .= ' = ' . $placeholder;
-        }
+        $field .= ' = ' . $placeholder;
       }
-
-      if ($placeholder_length > 0){
-        $placeholders = array(
-          $placeholder_length => intval($this->options['limit']),
-          $placeholder => $argument,
-        );
-      }
-      else {
-        $placeholders = array(
-          $placeholder => $argument,
-        );
-      }
-
+      $placeholders = array(
+        $placeholder_length => intval($this->options['limit']),
+        $placeholder => $argument,
+      );
       $this->query->add_where_expression(0, $field, $placeholders);
     }
     else {

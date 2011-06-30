@@ -234,9 +234,9 @@ function _views_find_module_templates($cache, $path) {
  * node portion of the theme registry.
  */
 function views_preprocess_node(&$vars) {
-  // The 'view' attribute of the node is added in template_preprocess_views_view_row_node()
+  // The 'view' attribute of the node is added in views_preprocess_node()
   if (!empty($vars['node']->view) && !empty($vars['node']->view->name)) {
-    $vars['view'] = &$vars['node']->view;
+    $vars['view'] = $vars['node']->view;
     $vars['theme_hook_suggestions'][] = 'node__view__' . $vars['node']->view->name;
     if (!empty($vars['node']->view->current_display)) {
       $vars['theme_hook_suggestions'][] = 'node__view__' . $vars['node']->view->name . '__' . $vars['node']->view->current_display;
@@ -247,7 +247,11 @@ function views_preprocess_node(&$vars) {
         $vars['page'] = FALSE;
       }
     }
+  }
 
+  // Allow to alter comments and links based on the settings in the row plugin.
+  if (!empty($vars['view']->style_plugin->row_plugin) && get_class($vars['view']->style_plugin->row_plugin) == 'views_plugin_row_node_view') {
+    node_row_node_view_preprocess_node($vars);
   }
 }
 
@@ -293,7 +297,7 @@ function views_menu() {
   $items['views/ajax'] = array(
     'title' => 'Views',
     'page callback' => 'views_ajax',
-    'theme callback' => 'views_ajax_theme_callback',
+    'theme callback' => 'ajax_base_page_theme',
     'delivery callback' => 'ajax_deliver',
     'access callback' => TRUE,
     'description' => 'Ajax callback for view loading.',
@@ -304,7 +308,7 @@ function views_menu() {
   // the generic ajax callback.
   $items['admin/views/ajax/autocomplete/user'] = array(
     'page callback' => 'views_ajax_autocomplete_user',
-    'theme callback' => 'views_ajax_theme_callback',
+    'theme callback' => 'ajax_base_page_theme',
     'access callback' => 'user_access',
     'access arguments' => array('access content'),
     'type' => MENU_CALLBACK,
@@ -314,25 +318,13 @@ function views_menu() {
   // does not support a vid a argument anymore
   $items['admin/views/ajax/autocomplete/taxonomy'] = array(
     'page callback' => 'views_ajax_autocomplete_taxonomy',
-    'theme callback' => 'views_ajax_theme_callback',
+    'theme callback' => 'ajax_base_page_theme',
     'access callback' => 'user_access',
     'access arguments' => array('access content'),
     'type' => MENU_CALLBACK,
     'file' => 'includes/ajax.inc',
   );
   return $items;
-}
-
-/**
- * Menu theme callback.
- *
- * This simply ensures that Views' ajax calls are rendered in the same
- * theme as the original page to prevent .css file confusion.
- */
-function views_ajax_theme_callback() {
-  if (!empty($_POST['ajax_page_state']['theme'])) {
-    return $_POST['ajax_page_state']['theme'];
-  }
 }
 
 /**
@@ -476,6 +468,11 @@ function views_page_alter(&$page) {
   // next to the page title.
   $view = views_get_page_view();
   if (!empty($view)) {
+    // If a module is still putting in the display like we used to, catch that.
+    if (is_subclass_of($view, 'views_plugin_display')) {
+      $view = $view->view;
+    }
+
     views_add_contextual_links($page, 'page', $view, $view->current_display);
   }
 }
@@ -778,6 +775,34 @@ function views_add_contextual_links(&$render_element, $location, $view, $display
 }
 
 /**
+ * Returns array of language names.
+ *
+ * This is a one to one copy of locale_language_list because we can't rely on enabled locale module.
+ *
+ * @param $field
+ *   'name' => names in current language, localized
+ *   'native' => native names
+ * @param $all
+ *   Boolean to return all languages or only enabled ones
+ *
+ * @see locale_language_list
+ */
+function views_language_list($field = 'name', $all = FALSE) {
+  if ($all) {
+    $languages = language_list();
+  }
+  else {
+    $languages = language_list('enabled');
+    $languages = $languages[1];
+  }
+  $list = array();
+  foreach ($languages as $language) {
+    $list[$language->language] = ($field == 'name') ? t($language->name) : $language->$field;
+  }
+  return $list;
+}
+
+/**
  * Implements hook_flush_caches().
  */
 function views_flush_caches() {
@@ -1038,7 +1063,7 @@ function views_include_handlers($reset = FALSE) {
  *   aggregation when the handler is redirected to the aggregation
  *   handler.
  *
- * @return
+ * @return views_handler
  *   An instance of a handler object. May be views_handler_broken.
  */
 function views_get_handler($table, $field, $key, $override = NULL) {
@@ -1170,6 +1195,10 @@ function views_fetch_plugin_names($type, $key = NULL, $base = array()) {
 
 /**
  * Get a handler for a plugin
+ *
+ * @return views_plugin
+ *
+ * The created plugin object.
  */
 function views_get_plugin($type, $plugin, $reset = FALSE) {
   views_include('handlers');
@@ -1177,6 +1206,26 @@ function views_get_plugin($type, $plugin, $reset = FALSE) {
   if (!empty($definition)) {
     return _views_create_handler($definition, $type);
   }
+}
+
+/**
+ * Load the current enabled localization plugin.
+ *
+ * @return The name of the localization plugin.
+ */
+function views_get_localization_plugin() {
+  $plugin = variable_get('views_localization_plugin', '');
+  // Provide sane default values for the localization plugin.
+  if (empty($plugin)) {
+    if (module_exists('locale')) {
+      $plugin = 'core';
+    }
+    else {
+      $plugin = 'none';
+    }
+  }
+
+  return $plugin;
 }
 
 // -----------------------------------------------------------------------
@@ -1208,7 +1257,7 @@ function views_get_all_templates() {
 /**
  * Create an empty view to work with.
  *
- * @return
+ * @return view
  *   A fully formed, empty $view object. This object must be populated before
  *   it can be successfully saved.
  */
@@ -1324,7 +1373,7 @@ function views_view_is_disabled($view) {
  *   The name of the view.
  * @param $reset
  *   If TRUE, reset this entry in the load cache.
- * @return $view
+ * @return view
  *   A reference to the $view object. Use $reset if you're sure you want
  *   a fresh one.
  */
@@ -1339,14 +1388,24 @@ function views_get_view($name, $reset = FALSE) {
   ctools_include('export');
   $view = ctools_export_crud_load('views_view', $name);
   if ($view) {
-    // When views are converted automatically the base_table should be renamed
-    // to have a working query.
-    $data = views_fetch_data($view->base_table, FALSE);
-    if (isset($data['moved to'])) {
-      $view->base_table = $data['moved to'];
-    }
+    $view->update();
     return $view->clone_view();
   }
+}
+
+/**
+ * Find the real location of at able.
+ *
+ * If a table has moved, find the new name of the table so that we can
+ * change its name directly in options where necessary.
+ */
+function views_move_table($table) {
+  $data = views_fetch_data($table, FALSE);
+  if (isset($data['moved to'])) {
+    $table = $data['moved to'];
+  }
+
+  return $table;
 }
 
 /**
@@ -1475,6 +1534,26 @@ function vpr_trace() {
 // Views form (View with form elements)
 
 /**
+ * Returns TRUE if the passed-in view contains handlers with views form
+ * implementations, FALSE otherwise.
+ */
+function views_view_has_form_elements($view) {
+  foreach ($view->field as $field) {
+    if (property_exists($field, 'views_form_callback') || method_exists($field, 'views_form')) {
+      return TRUE;
+    }
+  }
+  $area_handlers = array_merge(array_values($view->header), array_values($view->footer));
+  $empty = empty($view->result);
+  foreach ($area_handlers as $area) {
+    if (method_exists($area, 'views_form') && !$area->views_form_empty($empty)) {
+      return TRUE;
+    }
+  }
+  return FALSE;
+}
+
+/**
  * This is the entry function. Just gets the form for the current step.
  * The form is always assumed to be multistep, even if it has only one
  * step (the default 'views_form_vews_form' step). That way it is actually
@@ -1569,6 +1648,15 @@ function views_form_views_form($form, &$form_state, $view, $output) {
     }
   }
 
+  // Give the area handlers a chance to extend the form.
+  $area_handlers = array_merge(array_values($view->header), array_values($view->footer));
+  $empty = empty($view->result);
+  foreach ($area_handlers as $area) {
+    if (method_exists($area, 'views_form') && !$area->views_form_empty($empty)) {
+      $area->views_form($form, $form_state);
+    }
+  }
+
   $form['#substitutions'] = array(
     '#type' => 'value',
     '#value' => $substitutions,
@@ -1578,7 +1666,6 @@ function views_form_views_form($form, &$form_state, $view, $output) {
     '#attributes' => array('class' => array('form-actions')),
     '#weight' => 100,
   );
-
   $form['actions']['submit'] = array(
     '#type' => 'submit',
     '#value' => t('Save'),

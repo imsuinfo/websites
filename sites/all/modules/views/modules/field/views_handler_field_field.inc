@@ -59,7 +59,7 @@ class views_handler_field_field extends views_handler_field {
 
       // Otherwise, we only limit values if the user hasn't selected "all", 0, or
       // the value matching field cardinality.
-      if (intval($this->options['delta_limit']) && ($this->options['delta_limit'] != $field['cardinality'])) {
+      if ((intval($this->options['delta_limit']) && ($this->options['delta_limit'] != $field['cardinality'])) || intval($this->options['delta_offset'])) {
         $this->limit_values = TRUE;
       }
     }
@@ -86,12 +86,14 @@ class views_handler_field_field extends views_handler_field {
       // For example a field from a node author on a node view does have users as base table.
       if (!empty($this->options['relationship']) && $this->options['relationship'] != 'none') {
         $relationships = $this->view->display_handler->get_option('relationships');
-        $options = $relationships[$this->options['relationship']];
-        $data = views_fetch_data($options['table']);
-        $this->base_table = $data[$options['field']]['relationship']['base'];
-//            $this->base_table_alias = $relationship->alias;
+        if (!empty($relationships[$this->options['relationship']])) {
+          $options = $relationships[$this->options['relationship']];
+          $data = views_fetch_data($options['table']);
+          $this->base_table = $data[$options['field']]['relationship']['base'];
+        }
       }
     }
+
     return $this->base_table;
   }
 
@@ -615,7 +617,7 @@ class views_handler_field_field extends views_handler_field {
       }
 
       if ($this->options['multi_type'] == 'separator') {
-        return implode(check_plain($this->options['separator']), $items);
+        return implode(filter_xss_admin($this->options['separator']), $items);
       }
       else {
         return theme('item_list',
@@ -632,14 +634,7 @@ class views_handler_field_field extends views_handler_field {
     return $values->{'field_' . $this->options['id']};
   }
 
-  /**
-   * Return an array of items for the field.
-   */
-  function set_items($values, $row_id) {
-    if (empty($values->_field_data[$this->field_alias]) || empty($values->_field_data[$this->field_alias]['entity'])) {
-      return array();
-    }
-
+  function get_value($values, $field = NULL) {
     // Go ahead and render and store in $this->items.
     $entity = clone $values->_field_data[$this->field_alias]['entity'];
 
@@ -698,6 +693,12 @@ class views_handler_field_field extends views_handler_field {
       else {
         $delta_limit = $this->options['delta_limit'];
         $offset = intval($this->options['delta_offset']);
+
+        // We should only get here in this case if there's an offset, and
+        // in that case we're limiting to all values after the offset.
+        if ($delta_limit == 'all') {
+          $delta_limit = count($all_values) - $offset;
+        }
       }
 
       $new_values = array();
@@ -711,6 +712,22 @@ class views_handler_field_field extends views_handler_field {
       $entity->{$this->definition['field_name']}[$langcode] = $new_values;
     }
 
+    if ($field == 'entity') {
+      return $entity;
+    }
+    else {
+      return $entity->{$this->definition['field_name']}[$langcode];
+    }
+  }
+
+  /**
+   * Return an array of items for the field.
+   */
+  function set_items($values, $row_id) {
+    if (empty($values->_field_data[$this->field_alias]) || empty($values->_field_data[$this->field_alias]['entity'])) {
+      return array();
+    }
+
     $display = array(
       'type' => $this->options['type'],
       'settings' => $this->options['settings'],
@@ -721,6 +738,14 @@ class views_handler_field_field extends views_handler_field {
       'views_row_id' => $row_id,
     );
 
+
+    $entity_type = $values->_field_data[$this->field_alias]['entity_type'];
+    $entity = $this->get_value($values, 'entity');
+    if (!$entity) {
+      return array();
+    }
+
+    $langcode = $this->field_language($entity_type, $entity);
     $render_array = field_view_field($entity_type, $entity, $this->definition['field_name'], $display, $langcode);
 
     $items = array();
@@ -732,7 +757,7 @@ class views_handler_field_field extends views_handler_field {
 
     foreach (element_children($render_array) as $count) {
       $items[$count]['rendered'] = $render_array[$count];
-      $items[$count]['raw'] = isset($render_array['#items'][$count]) ? $render_array['#items'][$count] : '';
+      $items[$count]['raw'] = $render_array['#items'][$count];
     }
     return $items;
   }
