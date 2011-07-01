@@ -892,6 +892,12 @@ class EntityListWrapper extends EntityMetadataWrapper implements IteratorAggrega
     if ($this->get(0) instanceof EntityDrupalWrapper && empty($options['identifier']) && $this->dataAvailable()) {
       $list = parent::value();
       $entities = entity_load($this->get(0)->type, $list);
+
+      // workaround: taxonomy term id returns as a string instead of an array containing a string (cause is unknown)
+      if ($list && gettype($list) != 'array'){
+        $list = array($list);
+      }
+
       // Make sure to keep the array keys as present in the list.
       foreach ($list as $key => $id) {
         if (!isset($entities[$id])) {
