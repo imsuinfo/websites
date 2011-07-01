@@ -1,9 +1,14 @@
-sites/default/files
+# Ignore configuration files that may contain sensitive information.
+sites/*/settings*.php
+
+# Ignore paths that contain user-generated content.
+sites/*/files
+sites/*/private
+
+# Custom ignores
 sites/default/deprecated
-sites/default/settings.php
 sites/private_files
 sites/public_files
 info.php
 *.swp
-branches
-branches/*
+
