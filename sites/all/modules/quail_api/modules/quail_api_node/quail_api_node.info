@@ -11,3 +11,4 @@ dependencies[] = cf
 files[] = quail_api_node.install
 files[] = quail_api_node.module
 files[] = includes/pages.inc
+files[] = includes/quail_api_node_handler_link_validate_node.inc

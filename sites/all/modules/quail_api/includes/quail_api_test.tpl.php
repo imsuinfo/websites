@@ -26,7 +26,6 @@
       </div>
       <div class="<?php print($base_class); ?>-problems">
         <?php foreach ($test_problems as $problem_id => $problem_data){
-          if ($problem_id === 'passed') continue;
           print(theme('quail_api_problem', array('problem_id' => $problem_id, 'problem_data' => $problem_data, 'markup_format' => $markup_format)));
         } ?>
       </div>

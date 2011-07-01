@@ -45,16 +45,23 @@ function quail_api_node_accessibility_tab_page($form, &$form_state, $node) {
   if ($automatic || $perform_validation){
     $results = quail_api_node_validate(array($node->nid));
 
+    if (isset($results[$node->nid]['report'])){
+      $results = $results[$node->nid]['report'];
+    }
+    else {
+      $results = array();
+    }
+
     if ($database && !empty($results)){
-      quail_api_node_save_node_tests($results);
+      quail_api_node_save_node_tests($node->nid, $node->vid, $results);
     }
   }
-  else if ($database && !empty($results)){
-    quail_api_node_save_node_tests($results);
+  else if ($database){
+    $results = quail_api_node_restructure_results($node->nid, $node->vid, $display_levels);
   }
 
-  if (!empty($results[$node->nid]['report'])){
-    foreach($results[$node->nid]['report'] as $severity => $severity_results){
+  if (!empty($results)){
+    foreach($results as $severity => $severity_results){
       $form['accessibility_validation_results'][$display_levels[$severity]['machine_name']]['markup'] = array(
         '#type' => 'markup',
         '#markup' => theme('quail_api_results', array('severity_id' => $severity, 'severity_array' => $display_levels[$severity], 'severity_results' => $severity_results, 'markup_format' => $markup_format, 'display_title' => FALSE)),

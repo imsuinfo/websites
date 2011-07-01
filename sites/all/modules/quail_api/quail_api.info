@@ -9,3 +9,4 @@ files[] = quail_api.install
 files[] = quail_api.module
 files[] = includes/quail_api_reporters.inc
 files[] = includes/quail_api_guidelines.inc
+files[] = includes/quail_api_handler_field_markup.inc

@@ -103,7 +103,5 @@ class reportQuail_api extends quailReporter {
        // @todo: is there a cleaner & more efficient way to handle this?
       $this->quail_api_report['report'][$severity][$test_name]['problems']['message'] = $problem->message;
     }
-
-    $this->quail_api_report['report'][$severity][$test_name]['problems']['passed'] = $problem->pass;
   }
 }

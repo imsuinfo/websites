@@ -14,6 +14,16 @@ function quail_api_permission() {
 }
 
 /**
+ * Implements hook_views_api().
+ */
+function quail_api_views_api() {
+  return array(
+    'api' => 2.0,
+    'path' => drupal_get_path('module', 'quail_api'),
+  );
+}
+
+/**
  * Implements hook_theme().
  */
 function quail_api_theme($existing, $type, $theme, $path) {
@@ -202,102 +212,119 @@ function quail_api_include_library() {
  *
  * @param standard (optional)
  *   Providing a valid standard name will cause the return value to only contain the standard that matches this string.
+ * @param target (optional)
+ *   Providing a target allows for limiting standards by some category.
+ *   The target, in general, represents the scope in which the standards will be applied.
+ *   The following targets are directly supported: 'all', 'snippet', 'page'
  *
  * @return
  *  An array of standards that are supported by this module or extending modules.
  *  The array keys are the machine names for each standard.
  */
-function quail_api_get_standards($standard = NULL){
+function quail_api_get_standards($standard = NULL, $target = 'all'){
   $standards = array();
 
-  $standards['all'] = array(
-    'name' => t("All Tests"),
-    'module' => 'quail_api',
-    'description' => t(
-      "Validate using all known tests. This is more efficient than validating against each individual standard because identical tests are not run multiple times."
-    ),
-    'guideline' => 'quail_api_all',
-    'reporter' => 'quail_api',
-  );
+  if ($target == 'all' || $target == 'snippet'){
+    $standards['all'] = array(
+      'name' => t("All Tests"),
+      'module' => 'quail_api',
+      'description' => t(
+        "Validate using all known tests. This is more efficient than validating against each individual standard because identical tests are not run multiple times."
+      ),
+      'guideline' => 'quail_api_all',
+      'reporter' => 'quail_api',
+      'target' => 'snippet',
+    );
 
-  $standards['section_508'] = array(
-    'name' => t("Section 508"),
-    'module' => 'quail_api',
-    'description' => t(
-      "Validate using the <a href='@section_508'>Section 508</a> standard.",
-      array('@section_508' => 'http://www.section508.gov/index.cfm?fuseAction=stdsdoc#Web')
-    ),
-    'guideline' => 'quail_api_section508',
-    'reporter' => 'quail_api',
-  );
+    $standards['section_508'] = array(
+      'name' => t("Section 508"),
+      'module' => 'quail_api',
+      'description' => t(
+        "Validate using the <a href='@section_508'>Section 508</a> standard.",
+        array('@section_508' => 'http://www.section508.gov/index.cfm?fuseAction=stdsdoc#Web')
+      ),
+      'guideline' => 'quail_api_section508',
+      'reporter' => 'quail_api',
+      'target' => 'snippet',
+    );
 
-  $standards['wcag_1_0_a'] = array(
-    'name' => t("WCAG 1.0 a"),
-    'module' => 'quail_api',
-    'description' => t(
-      "Validate using the <a href='@wcag_1_0'>WCAG 1.0</a> (<a href='@wcag_1_0_a'>A</a>) standard.",
-      array('@wcag_1_0' => 'http://www.w3.org/TR/WCAG10/', '@wcag_1_0_a' => 'http://www.w3.org/WAI/WCAG1A-Conformance')
-    ),
-    'guideline' => 'quail_api_wcag1a',
-    'reporter' => 'quail_api',
-  );
+    $standards['wcag_1_0_a'] = array(
+      'name' => t("WCAG 1.0 a"),
+      'module' => 'quail_api',
+      'description' => t(
+        "Validate using the <a href='@wcag_1_0'>WCAG 1.0</a> (<a href='@wcag_1_0_a'>A</a>) standard.",
+        array('@wcag_1_0' => 'http://www.w3.org/TR/WCAG10/', '@wcag_1_0_a' => 'http://www.w3.org/WAI/WCAG1A-Conformance')
+      ),
+      'guideline' => 'quail_api_wcag1a',
+      'reporter' => 'quail_api',
+      'target' => 'snippet',
+    );
 
-  $standards['wcag_1_0_aa'] = array(
-    'name' => t("WCAG 1.0 aa"),
-    'module' => 'quail_api',
-    'description' => t(
-      "Validate using the <a href='@wcag_1_0'>WCAG 1.0</a> (<a href='@wcag_1_0_aa'>AA</a>) standard.",
-      array('@wcag_1_0' => 'http://www.w3.org/TR/WCAG10/', '@wcag_1_0_a' => 'http://www.w3.org/WAI/WCAG1AA-Conformance')
-    ),
-    'guideline' => 'quail_api_wcag1aa',
-    'reporter' => 'quail_api',
-  );
+    $standards['wcag_1_0_aa'] = array(
+      'name' => t("WCAG 1.0 aa"),
+      'module' => 'quail_api',
+      'description' => t(
+        "Validate using the <a href='@wcag_1_0'>WCAG 1.0</a> (<a href='@wcag_1_0_aa'>AA</a>) standard.",
+        array('@wcag_1_0' => 'http://www.w3.org/TR/WCAG10/', '@wcag_1_0_a' => 'http://www.w3.org/WAI/WCAG1AA-Conformance')
+      ),
+      'guideline' => 'quail_api_wcag1aa',
+      'reporter' => 'quail_api',
+      'target' => 'snippet',
+    );
 
-  $standards['wcag_1_0_aaa'] = array(
-    'name' => t("WCAG 1.0 aaa"),
-    'module' => 'quail_api',
-    'description' => t(
-      "Validate using the <a href='@wcag_1_0'>WCAG 1.0</a> (<a href='@wcag_1_0_aaa'>AAA</a>) standard.",
-      array('@wcag_1_0' => 'http://www.w3.org/TR/WCAG10/', '@wcag_1_0_a' => 'http://www.w3.org/WAI/WCAG1AAA-Conformance')
-    ),
-    'guideline' => 'quail_api_wcag1aaa',
-    'reporter' => 'quail_api',
-  );
+    $standards['wcag_1_0_aaa'] = array(
+      'name' => t("WCAG 1.0 aaa"),
+      'module' => 'quail_api',
+      'description' => t(
+        "Validate using the <a href='@wcag_1_0'>WCAG 1.0</a> (<a href='@wcag_1_0_aaa'>AAA</a>) standard.",
+        array('@wcag_1_0' => 'http://www.w3.org/TR/WCAG10/', '@wcag_1_0_a' => 'http://www.w3.org/WAI/WCAG1AAA-Conformance')
+      ),
+      'guideline' => 'quail_api_wcag1aaa',
+      'reporter' => 'quail_api',
+      'target' => 'snippet',
+    );
 
-  $standards['wcag_2_0_a'] = array(
-    'name' => t("WCAG 2.0 a"),
-    'module' => 'quail_api',
-    'description' => t(
-      "Validate using the <a href='@wcag_2_0'>WCAG 2.0</a> (<a href='@wcag_2_0_a'>A</a>) standard.",
-      array('@wcag_2_0' => 'http://www.w3.org/TR/WCAG20/', '@wcag_1_0_a' => 'http://www.w3.org/WAI/WCAG2A-Conformance')
-    ),
-    'guideline' => 'quail_api_wcag2a',
-    'reporter' => 'quail_api',
-  );
+    $standards['wcag_2_0_a'] = array(
+      'name' => t("WCAG 2.0 a"),
+      'module' => 'quail_api',
+      'description' => t(
+        "Validate using the <a href='@wcag_2_0'>WCAG 2.0</a> (<a href='@wcag_2_0_a'>A</a>) standard.",
+        array('@wcag_2_0' => 'http://www.w3.org/TR/WCAG20/', '@wcag_1_0_a' => 'http://www.w3.org/WAI/WCAG2A-Conformance')
+      ),
+      'guideline' => 'quail_api_wcag2a',
+      'reporter' => 'quail_api',
+      'target' => 'snippet',
+    );
 
-  $standards['wcag_2_0_aa'] = array(
-    'name' => t("WCAG 2.0 aa"),
-    'module' => 'quail_api',
-    'description' => t(
-      "Validate using the <a href='@wcag_2_0'>WCAG 2.0</a> (<a href='@wcag_2_0_aa'>AA</a>) standard.",
-      array('@wcag_2_0' => 'http://www.w3.org/TR/WCAG20/', '@wcag_1_0_a' => 'http://www.w3.org/WAI/WCAG2AA-Conformance')
-    ),
-    'guideline' => 'quail_api_wcag2aa',
-    'reporter' => 'quail_api',
-  );
+    $standards['wcag_2_0_aa'] = array(
+      'name' => t("WCAG 2.0 aa"),
+      'module' => 'quail_api',
+      'description' => t(
+        "Validate using the <a href='@wcag_2_0'>WCAG 2.0</a> (<a href='@wcag_2_0_aa'>AA</a>) standard.",
+        array('@wcag_2_0' => 'http://www.w3.org/TR/WCAG20/', '@wcag_1_0_a' => 'http://www.w3.org/WAI/WCAG2AA-Conformance')
+      ),
+      'guideline' => 'quail_api_wcag2aa',
+      'reporter' => 'quail_api',
+      'target' => 'snippet',
+    );
 
-  $standards['wcag_2_0_aaa'] = array(
-    'name' => t("WCAG 2.0 aaa"),
-    'module' => 'quail_api',
-    'description' => t(
-      "Validate using the <a href='@wcag_2_0'>WCAG 2.0</a> (<a href='@wcag_2_0_aaa'>AAA</a>) standard.",
-      array('@wcag_2_0' => 'http://www.w3.org/TR/WCAG20/', '@wcag_1_0_a' => 'http://www.w3.org/WAI/WCAG2AAA-Conformance')
-    ),
-    'guideline' => 'quail_api_wcag2aaa',
-    'reporter' => 'quail_api',
-  );
+    $standards['wcag_2_0_aaa'] = array(
+      'name' => t("WCAG 2.0 aaa"),
+      'module' => 'quail_api',
+      'description' => t(
+        "Validate using the <a href='@wcag_2_0'>WCAG 2.0</a> (<a href='@wcag_2_0_aaa'>AAA</a>) standard.",
+        array('@wcag_2_0' => 'http://www.w3.org/TR/WCAG20/', '@wcag_1_0_a' => 'http://www.w3.org/WAI/WCAG2AAA-Conformance')
+      ),
+      'guideline' => 'quail_api_wcag2aaa',
+      'reporter' => 'quail_api',
+      'target' => 'snippet',
+    );
+  }
 
-  drupal_alter('quail_api_get_standards', $standards, $standard);
+  $other_arguments = array();
+  $other_arguments['target'] = $target;
+
+  drupal_alter('quail_api_get_standards', $standards, $standard, $other_arguments);
 
   if (!is_null($standard)){
     if (isset($standards[$standard])){
@@ -317,19 +344,29 @@ function quail_api_get_standards($standard = NULL){
  *
  * @param standards (optional)
  *   Providing a valid array of standards as returned by quail_api_get_standards() and it will be properly converted into a standards list.
+ * @param target (optional)
+ *   Providing a target allows for limiting standards by some category.
+ *   The target, in general, represents the scope in which the standards will be applied.
+ *   The following targets are directly supported: 'all', 'snippet', 'page'
  *
  * @return
  *  An array of standards that are supported by this module or extending modules.
  *  The array keys are the standard machine name and the array value is the human name.
  */
-function quail_api_get_standards_list($standards = NULL){
+function quail_api_get_standards_list($standards = NULL, $target = 'all'){
   if (is_null($standards)){
-    $standards = quail_api_get_standards();
+    $standards = quail_api_get_standards(NULL, $target);
   }
 
   $standards_list = array();
 
   foreach ($standards as $machine_name => $value){
+    if ($target != 'all'){
+      if (!isset($value['target']) || $value['target'] != $target){
+        continue;
+      }
+    }
+
     if (isset($value['name'])){
       $standards_list[$machine_name] = $value['name'];
     }
@@ -574,8 +611,7 @@ function quail_api_validate_markup($html, $standard, $display_level = NULL) {
     $display_level = quail_api_get_default_display_level();
   }
 
-  // @todo: should processed have multiple states: not processed, processed, failed to process?
-  $results = array('processed' => FALSE, 'report' => NULL, 'total' => 0);
+  $results = array('report' => NULL, 'total' => 0);
 
   $quail = new quail($html, $standard['guideline'], 'string', $standard['reporter']);
 
@@ -590,25 +626,29 @@ function quail_api_validate_markup($html, $standard, $display_level = NULL) {
   $quail->cleanup();
 
   if (!isset($results['report']) || !is_array($results['report'])){
-    return $results;
+    $results['report'] = FALSE;
   }
 
-  $results['processed'] = TRUE;
   return $results;
 }
 
 /**
  * Loads the quail test data.
  *
- * @param $conditions is an array with the following possible keys:
- *   'id' the numeric id.
- *   'severity' a numeric value representing the severity (aka: display level) as defined by the quail library.
- *   'machine_name' the machine-friendly name for the test as defined by the quail library.
+ * @param $conditions
+ *   An array with the following possible keys:
+ *     'id' the numeric id.
+ *     'severity' a numeric value representing the severity (aka: display level) as defined by the quail library.
+ *     'machine_name' the machine-friendly name for the test as defined by the quail library.
+ * @param $keyed (optional)
+ *   A string matching one of the following: 'id', 'machine_name'
+ *   When this is NULL, the default behavior is to return the array exactly as it was returned by the database call.
+ *   When this is a valid string, the key names of the returned array will use the specified key name.
  *
  * @return
  *   An array of database results.
  */
-function quail_api_node_load_tests($conditions = array()){
+function quail_api_load_tests($conditions = array(), $keyed = NULL){
   if (!is_array($conditions)){
     cf_error_invalid_array(__FUNCTION__, 'conditions');
     return array();
@@ -632,13 +672,26 @@ function quail_api_node_load_tests($conditions = array()){
     $and->condition('severity', $conditions['severity'], '=');
   }
 
-  if (isset($conditions['machine_name']) && is_numeric($conditions['machine_name'])){
+  if (!empty($conditions['machine_name'])){
     if (is_null($and)) $and = db_and();
 
     $and->condition('machine_name', $conditions['machine_name'], '=');
   }
 
   if (is_object($and)) $query->condition($and);
+
+  if ($keyed === 'id' || $keyed === 'machine_name'){
+    $records = $query->execute();
+    $results = array();
+
+    foreach ($records as $record){
+      if (!is_object($record)) continue;
+
+      $results[$record->$keyed] = $record;
+    }
+
+    return $results;
+  }
 
   return $query->execute()->fetchAll();
 }
@@ -662,40 +715,27 @@ function quail_api_node_load_tests($conditions = array()){
  * @return
  *   The return states of either FALSE, SAVED_NEW, or SAVED_UPDATED.
  */
-function quail_api_node_save_tests($test_data){
+function quail_api_save_test($test_data){
   if (!is_array($test_data)){
     cf_error_invalid_array(__FUNCTION__, 'test_data', WATCHDOG_ERROR);
     return FALSE;
   }
 
   $result = FALSE;
+  $columns = array('machine_name', 'severity', 'human_name', 'description');
 
-  if (empty($test_data['machine_name'])){
-    cf_error_missing_array_key(__FUNCTION__, 'test_data', 'machine_name', WATCHDOG_ERROR);
-    return FALSE;
-  }
-
-  if (empty($test_data['severity'])){
-    cf_error_missing_array_key(__FUNCTION__, 'test_data', 'severity', WATCHDOG_ERROR);
-    return FALSE;
-  }
-
-  if (empty($test_data['human_name'])){
-    cf_error_missing_array_key(__FUNCTION__, 'test_data', 'human_name', WATCHDOG_ERROR);
-    return FALSE;
-  }
-
-  if (empty($test_data['description'])){
-    cf_error_missing_array_key(__FUNCTION__, 'test_data', 'description', WATCHDOG_ERROR);
-    return FALSE;
+  foreach ($columns as $key){
+    if (empty($test_data[$key])){
+      cf_error_missing_array_key(__FUNCTION__, 'problem_data', $key, WATCHDOG_ERROR);
+      return FALSE;
+    }
   }
 
   // @todo: implement 'id' and 'do_update'
-  $results = quail_api_node_load_tests(array('machine_name' => $test_data['machine_name']));
+  $results = quail_api_load_tests(array('machine_name' => $test_data['machine_name']));
 
   if (empty($results)){
     $data = array();
-    $columns = array('machine_name', 'severity', 'human_name', 'description');
     $primary_key = array();
 
     $data['machine_name'] = $test_data['machine_name'];
@@ -703,7 +743,7 @@ function quail_api_node_save_tests($test_data){
     $data['human_name'] = $test_data['human_name'];
     $data['description'] = $test_data['description'];
 
-    $result = drupal_write_record('content_easement_categories', $data, $primary_key);
+    $result = drupal_write_record('quail_api_tests', $data, $primary_key);
   }
 
   return $result;

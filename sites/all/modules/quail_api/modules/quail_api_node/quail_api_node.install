@@ -5,11 +5,18 @@
 function quail_api_node_schema() {
   $schema = array();
 
-  $schema['quail_api_node_tests'] = array(
-    'description' => st("Node validation statistics."),
+  $schema['quail_api_node_problems'] = array(
+    'description' => st("Node validation problem statistics."),
     'fields' => array(
+      'id' => array(
+        'description' => st("The primary key used to represent this problem."),
+        'type' => 'serial',
+        'size' => 'big',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+      ),
       'nid' => array(
-        'description' => st("The node's ID from {node}.nid, serving as the primary key."),
+        'description' => st("The node's ID from {node}.nid."),
         'type' => 'int',
         'unsigned' => TRUE,
         'not null' => TRUE,
@@ -22,8 +29,8 @@ function quail_api_node_schema() {
         'not null' => TRUE,
         'default' => 0,
       ),
-      'error_id' => array(
-        'description' => st("The numeric ID from {quail_api_errors}.id, representing a specific error."),
+      'test_id' => array(
+        'description' => st("The numeric ID from {quail_api_tests}.id, representing a specific error."),
         'type' => 'int',
         'size' => 'big',
         'unsigned' => TRUE,
@@ -45,7 +52,7 @@ function quail_api_node_schema() {
         'default' => '',
       ),
     ),
-    'primary key' => array('nid'),
+    'primary key' => array('id'),
     'foreign keys' => array(
       'nid' => array(
         'table' => 'node',
