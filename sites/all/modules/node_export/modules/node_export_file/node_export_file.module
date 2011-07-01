@@ -7,7 +7,7 @@
  * Export helper module for handling CCK FileFields, Uploaded files, and Images.
  */
 
-define('EXPORT_FILE_FILES_DIR_SUBSTITUTION', '#FILES_DIRECTORY_PATH#');
+define('NODE_EXPORT_FILE_FILES_DIR_SUBSTITUTION', '#FILES_DIRECTORY_PATH#');
 
 /**
  * Implements hook_help().
@@ -78,9 +78,12 @@ function node_export_file_form_node_export_settings_alter(&$form, &$form_state, 
  * Implements hook_node_export_node_alter().
  */
 function node_export_file_node_export_node_alter(&$node, $original_node) {
-  node_export_file_alter_filefield($node, $original_node, 'export', 'node_export_file_filefield_filter');
-  node_export_file_alter_upload($node, $original_node, 'export');
-  node_export_file_alter_image($node, $original_node, 'export');
+  $types = array_filter(variable_get('node_export_file_types', array()));
+  if (in_array($node->type, $types)) {
+    node_export_file_alter_filefield($node, $original_node, 'export', 'node_export_file_filefield_filter');
+    node_export_file_alter_upload($node, $original_node, 'export');
+    node_export_file_alter_image($node, $original_node, 'export');
+  }
 }
 
 /**
@@ -360,15 +363,15 @@ function node_export_file_get_export_data($file, $export_mode, $assets_path) {
  * installations and non-standard files directory locations.
  */
 function node_export_file_clean_local_file_path(&$path) {
-  $path = preg_replace('/^' . preg_quote('public:/', '/') . '/', EXPORT_FILE_FILES_DIR_SUBSTITUTION, $path);
+  $path = preg_replace('/^' . preg_quote('public:/', '/') . '/', NODE_EXPORT_FILE_FILES_DIR_SUBSTITUTION, $path);
 }
 
 /**
- * Replaces the EXPORT_FILE_FILES_DIR_SUBSTITUTION with the files directory
+ * Replaces the NODE_EXPORT_FILE_FILES_DIR_SUBSTITUTION with the files directory
  * path, wherever found.
  */
 function node_export_file_unclean_local_file_path(&$path) {
-  $path = strtr($path, array(EXPORT_FILE_FILES_DIR_SUBSTITUTION => 'public:/'));
+  $path = strtr($path, array(NODE_EXPORT_FILE_FILES_DIR_SUBSTITUTION => 'public:/'));
 }
 
 /**
@@ -388,13 +391,14 @@ function node_export_file_import_file(&$file) {
   // The file is already in the right location AND either the
   // node_export_file_path is not set or the node_export_file_path and filepath
   // contain the same file
-  // FIXME: same filesize does NOT mean "same file".
   if (is_file($file->uri) &&
     (
       (!isset($file->node_export_file_path) || !is_file($file->node_export_file_path)) ||
       (
         is_file($file->node_export_file_path) &&
-        filesize($file->uri) == filesize($file->node_export_file_path)
+        filesize($file->uri) == filesize($file->node_export_file_path) &&
+        strtoupper(dechex(crc32(file_get_contents($file->uri)))) ==
+          strtoupper(dechex(crc32(file_get_contents($file->node_export_file_path))))
       )
     )
   ) {
@@ -411,13 +415,13 @@ function node_export_file_import_file(&$file) {
       $file = file_load(array_shift($query));
     }
 
-    file_save($file);
+    $file = file_save($file);
   }
   elseif (isset($file->node_export_file_data)) {
     $directory = drupal_dirname($file->uri);
     if (file_prepare_directory($directory, FILE_CREATE_DIRECTORY)) {
       if (file_put_contents($file->uri, base64_decode($file->node_export_file_data))) {
-        file_save($file);
+        $file = file_save($file);
       }
     }
   }
@@ -434,7 +438,7 @@ function node_export_file_import_file(&$file) {
       // At this point the $file->node_export_file_path will contain the
       // destination of the copied file
       //$file->uri = $node_export_file_path;
-      file_save($file);
+      $file = file_save($file);
     }
   }
   // The file is in a remote location, attempt to download it
@@ -482,7 +486,7 @@ function node_export_file_import_file(&$file) {
     fclose($source);
     fclose($dest);
 
-    file_save($file);
+    $file = file_save($file);
   }
   // Unknown error
   else {
