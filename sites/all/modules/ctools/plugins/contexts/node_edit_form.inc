@@ -32,7 +32,7 @@ $plugin = array(
  */
 function ctools_context_create_node_edit_form($empty, $node = NULL, $conf = FALSE) {
   static $created;
-  $context = new ctools_context(array('form', 'node_edit', 'node_form', 'node', 'node_edit_form'));
+  $context = new ctools_context(array('form', 'node_edit', 'node_form',  'node_edit_form'));
   $context->plugin = 'node_edit_form';
 
   if ($empty || (isset($created) && $created)) {
@@ -71,13 +71,13 @@ function ctools_context_create_node_edit_form($empty, $node = NULL, $conf = FALS
 
     // Fill in the 'node' portion of the context
     $context->data     = $node;
-    $context->title    = $node->title;
+    $context->title    = isset($node->title) ? $node->title : '';
     $context->argument = isset($node->nid) ? $node->nid : $node->type;
 
     $context->form       = $form;
     $context->form_state = &$form_state;
     $context->form_id    = $form_id;
-    $context->form_title = $node->title;
+    $context->form_title = isset($node->title) ? $node->title : '';
     $context->node_type  = $node->type;
     $context->restrictions['type'] = array($node->type);
     $context->restrictions['form'] = array('form');

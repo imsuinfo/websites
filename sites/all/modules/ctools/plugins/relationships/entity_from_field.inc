@@ -59,7 +59,7 @@ function ctools_entity_from_field_get_children($parent_plugin, $parent) {
               if (isset($info['table'])) {
                 foreach ($entities as $to_entity => $to_entity_info) {
                   $from_entity_info = $entities[$from_entity];
-                  if ($to_entity_info['base table'] == $info['table'] && isset($info['columns'][$to_entity_info['entity keys']['id']])) {
+                  if (isset($to_entity_info['base table']) && $to_entity_info['base table'] == $info['table'] && isset($info['columns'][$to_entity_info['entity keys']['id']])) {
                     $name = $field_name . '-' . $from_entity . '-' . $to_entity;
                     $plugin_id = $parent . ':' . $name;
 
@@ -167,10 +167,9 @@ function ctools_entity_from_field_context($context, $conf) {
     $id = $context->data->{$entity_info['entity keys']['id']};
     $entity = entity_load($from_entity, array($id));
     $entity = $entity[$id];
-    if (isset($entity->$field_name)) {
-      $language = field_language($from_entity, $entity, $field_name);
+    if ($items = field_get_items($from_entity, $entity, $field_name)) {
       $to_entity_info_info = entity_get_info($to_entity_info);
-      $to_entity_info_id = $entity->{$field_name}[$language][0][$to_entity_info_info['entity keys']['id']];
+      $to_entity_info_id = $items[0][$to_entity_info_info['entity keys']['id']];
 
       // Send it to ctools.
       return ctools_context_create('entity:' . $to_entity_info, $to_entity_info_id);
