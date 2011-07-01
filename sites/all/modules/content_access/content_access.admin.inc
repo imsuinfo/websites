@@ -87,6 +87,7 @@ function content_access_page_submit($form, &$form_state) {
   if (module_exists('acl')) {
     foreach (array('view', 'update', 'delete') as $op) {
       acl_save_form($form_state['values']['acl'][$op]);
+      module_invoke_all('content_user', $settings);
     }
   }
 
@@ -298,35 +299,6 @@ function content_access_role_based_form(&$form, $defaults = array()) {
   drupal_add_css(drupal_get_path('module', 'content_access') . '/content_access.css');
 
   return $form;
-}
-
-/**
- * Formapi #process callback, that disables checkboxes for roles without access to content
- */
-function content_access_disable_checkboxes($element) {
-  $access_roles = content_access_get_permission_access('access content');
-  $admin_roles = content_access_get_permission_access('administer nodes');
-
-  foreach (element_children($element) as $key) {
-    if (!in_array($key, $access_roles) &&
-        !($key != DRUPAL_ANONYMOUS_RID &&
-        in_array(DRUPAL_AUTHENTICATED_RID, $access_roles))) {
-      $element[$key]['#disabled'] = TRUE;
-      $element[$key]['#default_value'] = FALSE;
-      $element[$key]['#prefix'] = '<span title="' . t("This role is lacking the permission '@perm', so it has no access.", array('@perm' => t('access content'))) . '">';
-      $element[$key]['#suffix'] = "</span>";
-    }
-    elseif (in_array($key, $admin_roles) ||
-            ($key != DRUPAL_ANONYMOUS_RID && in_array(DRUPAL_AUTHENTICATED_RID, $admin_roles))) {
-      // Fix the checkbox to be enabled for users with administer node privileges
-      $element[$key]['#disabled'] = TRUE;
-      $element[$key]['#default_value'] = TRUE;
-      $element[$key]['#prefix'] = '<span title="' . t("This role has '@perm' permission, so access is granted.", array('@perm' => t('administer nodes'))) . '">';
-      $element[$key]['#suffix'] = "</span>";
-    }
-  }
-
-  return $element;
 }
 
 /**

@@ -5,31 +5,72 @@
  * Rules specific functions that expose content_access' API.
  *
  * @todo
- *   A way to enable per-node settings when a rule created, otherwise no effects
+ * A way to enable per-node settings when a rule created, otherwise no effects
  *   will be noticed.
+ * Clean-up function names.
  */
 
 /**
- * Implementation of hook_action_info().
+ * Implements hook_rules_event_info().
+ *
+ * @ingroup rules
  */
-function content_access_rules_action_info() {
-  $actions = array(
+function content_access_rules_rules_event_info() {
+  $events['content_access_content_type'] = array('label' => t('Content type access changed'));
+
+  if (module_exists('acl')) {
+    $events['content_access_content_user'] = array('label' => t('Grant user on content'));
+  }
+
+  $items = array();
+  foreach ($events as $name => $event) {
+    $items[$name] = array(
+      'label' => $event['label'],
+      'group' => t('Content Access'),
+    );
+  }
+
+  return $items;
+}
+
+/**
+ * Implementation of hook_rules_action_info().
+ *
+ * @ingroup rules
+ */
+function content_access_rules_rules_action_info() {
+  $role_actions = array(
     'content_access_action_grant_node_permissions' => array(
       'label' => t('Grant content permissions by role'),
-      'description' => t('Add Desc.'),
+      'description' => t('Grant node permissions to specific role(s).'),
     ),
     'content_access_action_revoke_node_permissions' => array(
       'label' => t('Revoke content permissions by role'),
-      'description' => t('Add Desc.'),
+      'description' => t('Revoke node permissions from specific role(s).'),
     ),
     'content_access_action_reset_node_permissions' => array(
       'label' => t('Reset content permissions'),
-      'description' => t('Add Desc.'),
+      'description' => t('Reset node permissions to default permissions.'),
+    ),
+  );
+
+  $user_actions = array(
+    'content_access_action_user_grant_view' => array(
+      'label' => t('Grant user view access'),
+      'description' => t('Grant node view to specific user(s).'),
+    ),
+    'content_access_action_user_grant_update' => array(
+      'label' => t('Grant user update access'),
+      'description' => t('Grant node update to specific user(s).'),
+    ),
+    'content_access_action_user_grant_delete' => array(
+      'label' => t('Grant user delete access'),
+      'description' => t('Grant node delete to specific user(s).'),
     ),
   );
 
   $items = array();
-  foreach ($actions as $name => $action) {
+  foreach ($role_actions as $name => $action) {
     $items[$name] = array(
       'label' => $action['label'],
       'named parameter' => TRUE,
@@ -47,26 +88,47 @@ function content_access_rules_action_info() {
           'restriction' => 'input',
         ),
       ),
-      'group' => t('Content Access'),
+      'group' => t('Content Access Role'),
       'callbacks' => array(
-        #'access' => 'rules_action_entity_createfetch_access',
         'form_alter' => 'content_access_action_form_alter',
       ),
     );
+  }
+
+  if (module_exists('acl')) {
+    foreach ($user_actions as $name => $action) {
+      $items[$name] = array(
+        'label' => $action['label'],
+        'named parameter' => TRUE,
+        'parameter' => array(
+          'node' => array(
+            'type' => 'node',
+            'label' => t('Content'),
+            'description' => $action['description'],
+          ),
+          'content_access' => array(
+            'type' => 'user',
+            'label' => t('User Based Access Control Settings'),
+            'description' => t('User to grant permissions.'),
+          ),
+        ),
+        'group' => t('Content Access User'),
+      );
+    }
   }
 
   return $items;
 }
 
 /**
- * Desc.
+ * Returns an array of operations used by the module.
  */
 function content_access_action_roles_permissions_list() {
   return _content_access_roles_list();
 }
 
 /**
- * Returns an array of operations used by the module.
+ * Helper function to return the array of available access operations.
  */
 function _content_access_roles_list() {
   $defaults = array();
@@ -74,7 +136,7 @@ function _content_access_roles_list() {
 
   // Make sure defaults are set properly
   foreach (_content_access_get_operations() as $op => $label) {
-    foreach ($roles as $role) {
+    foreach ($roles as $rid => $role) {
       $defaults[$op][$op . ':' . $role] = $role;
     }
   }
@@ -87,22 +149,19 @@ function _content_access_roles_list() {
  * a submit callback to the form submit button.
  */
 function content_access_action_form_alter(&$form, &$form_state) {
-  // Include content_access.admin.inc in order to use it's functions
-  // e.g. content_access_disable_checkboxes() in
-  // content_access_rules_role_based_form()
-  #$include_file = drupal_get_path('module', 'content_access') . '/content_access.admin.inc';
-  #$form_state['build_info']['files']['content_access'] = $include_file;
-  #module_load_include('inc', 'content_access', 'content_access.admin');
-
   // Alter the text<list> to make it into checkboxes groups
-  $ca_element =& $form['parameter']['content_access']['settings']['content_access'];
-  $ca_element = content_access_list_to_checkboxes($ca_element);
+  $ca_elements =& $form['parameter']['content_access']['settings']['content_access'];
+  $ca_elements = content_access_list_to_checkboxes($ca_elements);
 
-  // Add submit callback to process content_access_rules_role_based_form() vals
-  // @todo I think this should go into Rules just like the default form
-  // behaviour
+  // Check and disable default roles.
+  foreach ($ca_elements as $op => $select) {
+    $ca_elements[$op]['#process'] = array('form_process_checkboxes', 'content_access_rules_disable_checkboxes');
+  }
+
+  // Add submit callback to process content_access_rules_role_based_form()
   // rules_ui_edit_element_submit is the default submit callback so we add it
-  // again
+  // again.
+  // @todo I think this should go into Rules just like in FAPI
   $form['submit']['#submit'] = array('content_access_action_settings_form_submit', 'rules_ui_edit_element_submit');
 }
 
@@ -139,9 +198,6 @@ function content_access_list_to_checkboxes($element) {
         $checkboxes[$op]['#default_value'][] = $op_role;
       }
     }
-
-    // @todo needed to disable some checkboxes like the admin ones
-    #$checkboxes[$op]['#process'] = array('form_process_checkboxes', 'content_access_checkboxes');
   }
 
   return $checkboxes;
@@ -268,4 +324,38 @@ function content_access_rules_check_grants($nid) {
   return db_select('node_access')
           ->condition('nid', $nid)
           ->countQuery()->execute()->fetchField();
+}
+
+/**
+ * Action implementation: Grant user view access.
+ */
+function content_access_action_user_grant_view($params) {
+  content_access_action_user_grant($params['node'], $params['content_access']->uid, 'view');
+}
+
+/**
+ * Action implementation: Grant user update access.
+ */
+function content_access_action_user_grant_update($params) {
+  content_access_action_user_grant($params['node'], $params['content_access']->uid, 'update');
+}
+
+/**
+ * Action implementation: Grant user delete access.
+ */
+function content_access_action_user_grant_delete($params) {
+  content_access_action_user_grant($params['node'], $params['content_access']->uid, 'delete');
+}
+
+/**
+ * Process Rule's param, and grant by the passed operation.
+ */
+function content_access_action_user_grant($node, $uid, $op) {
+  module_load_include('inc', 'content_access', 'content_access.admin');
+
+  $acl_id = content_access_get_acl_id($node, $op);
+  acl_node_add_acl($node->nid, $acl_id, (int) ($op == 'view'), (int) ($op == 'update'), (int) ($op == 'delete'), content_access_get_settings('priority', $node->type));
+  acl_add_user($acl_id, $uid);
+
+  node_access_acquire_grants($node);
 }

@@ -66,22 +66,6 @@ function content_access_menu() {
 }
 
 /**
- * Get access tab page for the viewed node.
- */
-function content_access_node_page_access($node) {
-  global $user;
-  return content_access_get_settings('per_node', $node->type) && user_access('grant content access') ||
-    content_access_get_settings('per_node', $node->type) && (user_access('grant own content access') && ($user->uid == $node->uid));
-}
-
-/**
- * Content access settings for content type.
- */
-function content_access_admin_settings_access() {
-  return user_access('administer nodes') && user_access('administer content types');
-}
-
-/**
  * Implements hook_perm().
  */
 function content_access_permission() {
@@ -95,6 +79,22 @@ function content_access_permission() {
       'description' => t('View and modify content access for own nodes'),
     ),
   );
+}
+
+/**
+ * Get access tab page for the viewed node.
+ */
+function content_access_node_page_access($node) {
+  global $user;
+  return content_access_get_settings('per_node', $node->type) && user_access('grant content access') ||
+    content_access_get_settings('per_node', $node->type) && (user_access('grant own content access') && ($user->uid == $node->uid));
+}
+
+/**
+ * Content access settings for content type.
+ */
+function content_access_admin_settings_access() {
+  return user_access('administer nodes') && user_access('administer content types');
 }
 
 /**
@@ -194,7 +194,7 @@ function content_access_disabling($set = NULL) {
 }
 
 /**
- * Returns the content_access' settings.
+ * Returncontent_access' settings.
  *
  * @param $return
  *   One of the content_access_available_settings(), e.g. 'view' or 'per_node'.
@@ -217,7 +217,9 @@ function content_access_get_settings($return = 'all', $type = NULL) {
 }
 
 /**
- * Saves the content_access settings - needs the complete settings array.
+ * Save content_access settings.
+ *
+ * Needs the complete settings array.
  */
 function content_access_set_settings($settings) {
   // Cleanup the settings before saving.
@@ -230,7 +232,10 @@ function content_access_set_settings($settings) {
       }
     }
   }
+
   variable_set('content_access_settings', $settings);
+
+  module_invoke_all('content_type_access', $settings);
 }
 
 /**
@@ -602,4 +607,33 @@ function _content_access_get_operations() {
     'delete_own' => t('Delete own content'),
   );
   return $operations;
+}
+
+/**
+ * Formapi #process callback, that disables checkboxes for roles without access to content
+ */
+function content_access_disable_checkboxes($element) {
+  $access_roles = content_access_get_permission_access('access content');
+  $admin_roles = content_access_get_permission_access('administer nodes');
+
+  foreach (element_children($element) as $key) {
+    if (!in_array($key, $access_roles) &&
+        $key == DRUPAL_ANONYMOUS_RID &&
+        !in_array(DRUPAL_AUTHENTICATED_RID, $access_roles)) {
+      $element[$key]['#disabled'] = TRUE;
+      $element[$key]['#default_value'] = FALSE;
+      $element[$key]['#prefix'] = '<span title="' . t("This role is lacking the permission '@perm', so it has no access.", array('@perm' => t('access content'))) . '">';
+      $element[$key]['#suffix'] = "</span>";
+    }
+    elseif (in_array($key, $admin_roles) ||
+            ($key != DRUPAL_ANONYMOUS_RID && in_array(DRUPAL_AUTHENTICATED_RID, $admin_roles))) {
+      // Fix the checkbox to be enabled for users with administer node privileges
+      $element[$key]['#disabled'] = TRUE;
+      $element[$key]['#default_value'] = TRUE;
+      $element[$key]['#prefix'] = '<span title="' . t("This role has '@perm' permission, so access is granted.", array('@perm' => t('administer nodes'))) . '">';
+      $element[$key]['#suffix'] = "</span>";
+    }
+  }
+
+  return $element;
 }
