@@ -204,3 +204,14 @@
 .qforms-element .qforms-action-delete-option:focus {
   background-position: 16px -16px;
 }
+
+/** Qforms builder settings section **/
+
+#edit-qforms-settings .qforms-custom-message-wrapper {
+  margin-bottom: 1.5em;
+}
+
+#edit-qforms-settings .qforms-custom-message-wrapper .form-type-textarea {
+  margin-bottom: 0;
+  padding-bottom: 3px;
+}

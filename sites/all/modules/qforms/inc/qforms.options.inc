@@ -142,9 +142,14 @@ function qforms_element_add_options(&$element, $element_data) {
       $default_key = str_replace('_option_value', '_default', $key);
       $checked = isset($element_data[$default_key])? $element_data[$default_key] : FALSE;
 
+      // TODO (2) - this stored elements definitions should really be structured in
+      // hierarhical array and not in flat array.
+
       // Since option is retrieved from DB we need number id of that option.
       // For example from something_2_option_value we need 2.
-      $option_id = substr($key, strpos($key, '_') + 1, 1);
+      $pos1 = strpos($key, '_');
+      $pos2 = strpos($key, '_', $pos1 + 1);
+      $option_id = substr($key, $pos1 + 1, $pos2 - $pos1 - 1);
       if ($option_id == 0) {
         $option_id = 1;
       }

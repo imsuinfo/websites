@@ -10,7 +10,115 @@ class QformsBasicTestCase extends DrupalWebTestCase {
   protected $auth_user1;
   protected $auth_user2;
 
-  protected $qform_def = 'a:7:{s:25:"qforms_element_2_textarea";a:9:{s:4:"type";s:8:"textarea";s:6:"delete";s:0:"";s:2:"id";s:25:"qforms_element_2_textarea";s:6:"weight";s:1:"2";s:5:"title";s:30:"Why do you like cars (detail)?";s:11:"description";s:28:"Explain why do you like cars";s:8:"required";i:0;s:7:"visible";i:1;s:4:"size";s:2:"60";}s:27:"qforms_element_3_checkboxes";a:22:{s:4:"type";s:10:"checkboxes";s:6:"delete";s:0:"";s:2:"id";s:27:"qforms_element_3_checkboxes";s:6:"weight";s:1:"3";s:5:"title";s:21:"I like car because...";s:11:"description";s:28:"Reasons why do you like cars";s:8:"required";i:0;s:7:"visible";i:1;s:17:"options_1_default";i:1;s:12:"options_1_id";i:1;s:22:"options_1_option_value";s:20:"I can travel quickly";s:14:"last_option_id";i:1;s:17:"options_3_default";i:0;s:12:"options_3_id";i:3;s:22:"options_3_option_value";s:20:"I have air condition";s:17:"options_4_default";i:0;s:12:"options_4_id";i:4;s:22:"options_4_option_value";s:20:"I just like to drive";s:17:"options_5_default";i:0;s:12:"options_5_id";i:5;s:22:"options_5_option_value";s:19:"I have full comfort";s:5:"other";i:1;}s:23:"qforms_element_4_radios";a:25:{s:4:"type";s:6:"radios";s:6:"delete";s:0:"";s:2:"id";s:23:"qforms_element_4_radios";s:6:"weight";s:1:"4";s:5:"title";s:14:"Favorite brand";s:11:"description";s:19:"Your favorite brand";s:8:"required";i:1;s:7:"visible";i:1;s:17:"options_1_default";i:0;s:12:"options_1_id";i:1;s:22:"options_1_option_value";s:6:"Toyota";s:14:"last_option_id";i:1;s:17:"options_2_default";i:0;s:12:"options_2_id";i:2;s:22:"options_2_option_value";s:2:"VW";s:17:"options_3_default";i:0;s:12:"options_3_id";i:3;s:22:"options_3_option_value";s:4:"Ford";s:17:"options_4_default";i:0;s:12:"options_4_id";i:4;s:22:"options_4_option_value";s:4:"Opel";s:17:"options_5_default";i:0;s:12:"options_5_id";i:5;s:22:"options_5_option_value";s:3:"BMW";s:5:"other";i:1;}s:23:"qforms_element_5_select";a:26:{s:4:"type";s:6:"select";s:6:"delete";s:0:"";s:2:"id";s:23:"qforms_element_5_select";s:6:"weight";s:1:"5";s:5:"title";s:14:"Favorite color";s:11:"description";s:19:"Your favorite color";s:8:"required";i:0;s:7:"visible";i:1;s:17:"options_1_default";i:0;s:12:"options_1_id";i:1;s:22:"options_1_option_value";s:5:"White";s:14:"last_option_id";i:1;s:17:"options_2_default";i:0;s:12:"options_2_id";i:2;s:22:"options_2_option_value";s:4:"Blue";s:17:"options_3_default";i:0;s:12:"options_3_id";i:3;s:22:"options_3_option_value";s:5:"Green";s:17:"options_4_default";i:0;s:12:"options_4_id";i:4;s:22:"options_4_option_value";s:3:"Red";s:17:"options_5_default";i:0;s:12:"options_5_id";i:5;s:22:"options_5_option_value";s:5:"Black";s:8:"multiple";i:0;s:5:"other";i:1;}s:26:"qforms_element_6_textfield";a:9:{s:4:"type";s:9:"textfield";s:6:"delete";s:0:"";s:2:"id";s:26:"qforms_element_6_textfield";s:6:"weight";s:1:"6";s:5:"title";s:31:"Why do you like cars (briefly)?";s:11:"description";s:36:"Briefly explain why do you like cars";s:8:"required";i:1;s:7:"visible";i:1;s:4:"size";s:2:"60";}s:26:"qforms_element_7_textfield";a:9:{s:4:"type";s:9:"textfield";s:6:"delete";s:0:"";s:2:"id";s:26:"qforms_element_7_textfield";s:6:"weight";s:1:"7";s:5:"title";s:17:"Are you a driver?";s:11:"description";s:29:"Do you have a driver licence?";s:8:"required";i:0;s:7:"visible";i:0;s:4:"size";s:2:"20";}s:22:"qforms_last_element_id";i:7;}';
+  protected $qform_def = array(
+    'qforms_element_2_textarea' => array(
+      'type' => 'textarea',
+      'id' => 'qforms_element_2_textarea',
+      'weight' => 2,
+      'title' => 'Why do you like cars (detail)?',
+      'description' => 'Explain why do you like cars',
+      'required' => 0,
+      'visible' => 1,
+      'size' => 60
+    ),
+    'qforms_element_3_checkboxes' => array(
+      'type' => 'checkboxes',
+      'id' => 'qforms_element_3_checkboxes',
+      'weight' => 3,
+      'title' => 'I like car because...',
+      'description' => 'Reasons why do you like cars',
+      'required' => 0,
+      'visible' => 1,
+      'options_1_default' => 1,
+      'options_1_id' => 1,
+      'options_1_option_value' => 'I can travel quickly',
+      'last_option_id' => 1,
+      'options_3_default' => 0,
+      'options_3_id' => 3,
+      'options_3_option_value' => 'I have air condition',
+      'options_4_default' => 0,
+      'options_4_id' => 4,
+      'options_4_option_value' => 'I just like to drive',
+      'options_5_default' => 0,
+      'options_5_id' => 5,
+      'options_5_option_value' => 'I have full comfort',
+      'other' => 1,
+    ),
+    'qforms_element_4_radios' => array(
+      'type' => 'radios',
+      'id' => 'qforms_element_4_radios',
+      'weight' => 4,
+      'title' => 'Favorite brand',
+      'description' => 'Your favorite brand',
+      'required' => 1,
+      'visible' => 1,
+      'options_1_default' => 0,
+      'options_1_id' => 1,
+      'options_1_option_value' => 'Toyota',
+      'last_option_id' => 1,
+      'options_2_default' => 0,
+      'options_2_id' => 2,
+      'options_2_option_value' => 'VW',
+      'options_3_default' => 0,
+      'options_3_id' => 3,
+      'options_3_option_value' => 'Ford',
+      'options_4_default' => 0,
+      'options_4_id' => 4,
+      'options_4_option_value' => 'Opel',
+      'options_5_default' => 0,
+      'options_5_id' => 5,
+      'options_5_option_value' => 'BMW',
+      'other' => 1,
+    ),
+    'qforms_element_5_select' => array(
+      'type' => 'select',
+      'id' => 'qforms_element_5_select',
+      'weight' => 5,
+      'title' => 'Favorite color',
+      'description' => 'Your favorite color',
+      'required' => 0,
+      'visible' => 1,
+      'options_1_default' => 0,
+      'options_1_id' => 1,
+      'options_1_option_value' => 'White',
+      'last_option_id' => 1,
+      'options_2_default' => 0,
+      'options_2_id' => 2,
+      'options_2_option_value' => 'Blue',
+      'options_3_default' => 0,
+      'options_3_id' => 3,
+      'options_3_option_value' => 'Green',
+      'options_4_default' => 0,
+      'options_4_id' => 4,
+      'options_4_option_value' => 'Red',
+      'options_5_default' => 0,
+      'options_5_id' => 5,
+      'options_5_option_value' => 'Black',
+      'multiple' => 0,
+      'other' => 1,
+    ),
+    'qforms_element_6_textfield' => array(
+      'type' => 'textfield',
+      'id' => 'qforms_element_6_textfield',
+      'weight' => 6,
+      'title' => 'Why do you like cars (briefly)?',
+      'description' => 'Briefly explain why do you like cars',
+      'required' => 1,
+      'visible' => 1,
+      'size' => 60,
+    ),
+    'qforms_element_7_textfield' => array(
+      'type' => 'textfield',
+      'id' => 'qforms_element_7_textfield',
+      'weight' => 7,
+      'title' => 'Are you a driver?',
+      'description' => 'Do you have a driver licence?',
+      'required' => 0,
+      'visible' => 0,
+      'size' => 20,
+    ),
+    'qforms_last_element_id' => 7,
+  );
 
   public static function getInfo() {
     return array(
@@ -164,7 +272,11 @@ class QformsBasicTestCase extends DrupalWebTestCase {
   public function testOtherField() {
     $this->drupalLogin($this->auth_user1);
 
-    $qform_def_no_other = 'a:7:{s:25:"qforms_element_2_textarea";a:9:{s:4:"type";s:8:"textarea";s:6:"delete";s:0:"";s:2:"id";s:25:"qforms_element_2_textarea";s:6:"weight";s:1:"2";s:5:"title";s:30:"Why do you like cars (detail)?";s:11:"description";s:28:"Explain why do you like cars";s:8:"required";i:0;s:7:"visible";i:1;s:4:"size";s:2:"60";}s:27:"qforms_element_3_checkboxes";a:22:{s:4:"type";s:10:"checkboxes";s:6:"delete";s:0:"";s:2:"id";s:27:"qforms_element_3_checkboxes";s:6:"weight";s:1:"3";s:5:"title";s:21:"I like car because...";s:11:"description";s:28:"Reasons why do you like cars";s:8:"required";i:0;s:7:"visible";i:1;s:17:"options_1_default";i:1;s:12:"options_1_id";i:1;s:22:"options_1_option_value";s:20:"I can travel quickly";s:14:"last_option_id";i:1;s:17:"options_3_default";i:0;s:12:"options_3_id";i:3;s:22:"options_3_option_value";s:20:"I have air condition";s:17:"options_4_default";i:0;s:12:"options_4_id";i:4;s:22:"options_4_option_value";s:20:"I just like to drive";s:17:"options_5_default";i:0;s:12:"options_5_id";i:5;s:22:"options_5_option_value";s:19:"I have full comfort";s:5:"other";i:0;}s:23:"qforms_element_4_radios";a:25:{s:4:"type";s:6:"radios";s:6:"delete";s:0:"";s:2:"id";s:23:"qforms_element_4_radios";s:6:"weight";s:1:"4";s:5:"title";s:14:"Favorite brand";s:11:"description";s:19:"Your favorite brand";s:8:"required";i:1;s:7:"visible";i:1;s:17:"options_1_default";i:0;s:12:"options_1_id";i:1;s:22:"options_1_option_value";s:6:"Toyota";s:14:"last_option_id";i:1;s:17:"options_2_default";i:0;s:12:"options_2_id";i:2;s:22:"options_2_option_value";s:2:"VW";s:17:"options_3_default";i:0;s:12:"options_3_id";i:3;s:22:"options_3_option_value";s:4:"Ford";s:17:"options_4_default";i:0;s:12:"options_4_id";i:4;s:22:"options_4_option_value";s:4:"Opel";s:17:"options_5_default";i:0;s:12:"options_5_id";i:5;s:22:"options_5_option_value";s:3:"BMW";s:5:"other";i:0;}s:23:"qforms_element_5_select";a:26:{s:4:"type";s:6:"select";s:6:"delete";s:0:"";s:2:"id";s:23:"qforms_element_5_select";s:6:"weight";s:1:"5";s:5:"title";s:14:"Favorite color";s:11:"description";s:19:"Your favorite color";s:8:"required";i:0;s:7:"visible";i:1;s:17:"options_1_default";i:0;s:12:"options_1_id";i:1;s:22:"options_1_option_value";s:5:"White";s:14:"last_option_id";i:1;s:17:"options_2_default";i:0;s:12:"options_2_id";i:2;s:22:"options_2_option_value";s:4:"Blue";s:17:"options_3_default";i:0;s:12:"options_3_id";i:3;s:22:"options_3_option_value";s:5:"Green";s:17:"options_4_default";i:0;s:12:"options_4_id";i:4;s:22:"options_4_option_value";s:3:"Red";s:17:"options_5_default";i:0;s:12:"options_5_id";i:5;s:22:"options_5_option_value";s:5:"Black";s:8:"multiple";i:0;s:5:"other";i:0;}s:26:"qforms_element_6_textfield";a:9:{s:4:"type";s:9:"textfield";s:6:"delete";s:0:"";s:2:"id";s:26:"qforms_element_6_textfield";s:6:"weight";s:1:"6";s:5:"title";s:31:"Why do you like cars (briefly)?";s:11:"description";s:36:"Briefly explain why do you like cars";s:8:"required";i:1;s:7:"visible";i:1;s:4:"size";s:2:"60";}s:26:"qforms_element_7_textfield";a:9:{s:4:"type";s:9:"textfield";s:6:"delete";s:0:"";s:2:"id";s:26:"qforms_element_7_textfield";s:6:"weight";s:1:"7";s:5:"title";s:17:"Are you a driver?";s:11:"description";s:29:"Do you have a driver licence?";s:8:"required";i:0;s:7:"visible";i:0;s:4:"size";s:2:"20";}s:22:"qforms_last_element_id";i:7;}';
+    //$qform_def_no_other = 'a:7:{s:25:"qforms_element_2_textarea";a:9:{s:4:"type";s:8:"textarea";s:6:"delete";s:0:"";s:2:"id";s:25:"qforms_element_2_textarea";s:6:"weight";s:1:"2";s:5:"title";s:30:"Why do you like cars (detail)?";s:11:"description";s:28:"Explain why do you like cars";s:8:"required";i:0;s:7:"visible";i:1;s:4:"size";s:2:"60";}s:27:"qforms_element_3_checkboxes";a:22:{s:4:"type";s:10:"checkboxes";s:6:"delete";s:0:"";s:2:"id";s:27:"qforms_element_3_checkboxes";s:6:"weight";s:1:"3";s:5:"title";s:21:"I like car because...";s:11:"description";s:28:"Reasons why do you like cars";s:8:"required";i:0;s:7:"visible";i:1;s:17:"options_1_default";i:1;s:12:"options_1_id";i:1;s:22:"options_1_option_value";s:20:"I can travel quickly";s:14:"last_option_id";i:1;s:17:"options_3_default";i:0;s:12:"options_3_id";i:3;s:22:"options_3_option_value";s:20:"I have air condition";s:17:"options_4_default";i:0;s:12:"options_4_id";i:4;s:22:"options_4_option_value";s:20:"I just like to drive";s:17:"options_5_default";i:0;s:12:"options_5_id";i:5;s:22:"options_5_option_value";s:19:"I have full comfort";s:5:"other";i:0;}s:23:"qforms_element_4_radios";a:25:{s:4:"type";s:6:"radios";s:6:"delete";s:0:"";s:2:"id";s:23:"qforms_element_4_radios";s:6:"weight";s:1:"4";s:5:"title";s:14:"Favorite brand";s:11:"description";s:19:"Your favorite brand";s:8:"required";i:1;s:7:"visible";i:1;s:17:"options_1_default";i:0;s:12:"options_1_id";i:1;s:22:"options_1_option_value";s:6:"Toyota";s:14:"last_option_id";i:1;s:17:"options_2_default";i:0;s:12:"options_2_id";i:2;s:22:"options_2_option_value";s:2:"VW";s:17:"options_3_default";i:0;s:12:"options_3_id";i:3;s:22:"options_3_option_value";s:4:"Ford";s:17:"options_4_default";i:0;s:12:"options_4_id";i:4;s:22:"options_4_option_value";s:4:"Opel";s:17:"options_5_default";i:0;s:12:"options_5_id";i:5;s:22:"options_5_option_value";s:3:"BMW";s:5:"other";i:0;}s:23:"qforms_element_5_select";a:26:{s:4:"type";s:6:"select";s:6:"delete";s:0:"";s:2:"id";s:23:"qforms_element_5_select";s:6:"weight";s:1:"5";s:5:"title";s:14:"Favorite color";s:11:"description";s:19:"Your favorite color";s:8:"required";i:0;s:7:"visible";i:1;s:17:"options_1_default";i:0;s:12:"options_1_id";i:1;s:22:"options_1_option_value";s:5:"White";s:14:"last_option_id";i:1;s:17:"options_2_default";i:0;s:12:"options_2_id";i:2;s:22:"options_2_option_value";s:4:"Blue";s:17:"options_3_default";i:0;s:12:"options_3_id";i:3;s:22:"options_3_option_value";s:5:"Green";s:17:"options_4_default";i:0;s:12:"options_4_id";i:4;s:22:"options_4_option_value";s:3:"Red";s:17:"options_5_default";i:0;s:12:"options_5_id";i:5;s:22:"options_5_option_value";s:5:"Black";s:8:"multiple";i:0;s:5:"other";i:0;}s:26:"qforms_element_6_textfield";a:9:{s:4:"type";s:9:"textfield";s:6:"delete";s:0:"";s:2:"id";s:26:"qforms_element_6_textfield";s:6:"weight";s:1:"6";s:5:"title";s:31:"Why do you like cars (briefly)?";s:11:"description";s:36:"Briefly explain why do you like cars";s:8:"required";i:1;s:7:"visible";i:1;s:4:"size";s:2:"60";}s:26:"qforms_element_7_textfield";a:9:{s:4:"type";s:9:"textfield";s:6:"delete";s:0:"";s:2:"id";s:26:"qforms_element_7_textfield";s:6:"weight";s:1:"7";s:5:"title";s:17:"Are you a driver?";s:11:"description";s:29:"Do you have a driver licence?";s:8:"required";i:0;s:7:"visible";i:0;s:4:"size";s:2:"20";}s:22:"qforms_last_element_id";i:7;}';
+    $qform_def_no_other = $this->qform_def;
+    $qform_def_no_other['qforms_element_3_checkboxes']['other'] = 0;
+    $qform_def_no_other['qforms_element_4_radios']['other'] = 0;
+    $qform_def_no_other['qforms_element_5_select']['other'] = 0;
 
     $this->addContent();
 
@@ -186,13 +298,11 @@ class QformsBasicTestCase extends DrupalWebTestCase {
     $this->assertNoField('edit-qforms-element-5-select-other', 'Other field for select is OK');
   }
 
-
   public function testPreview() {
     $this->drupalLogin($this->auth_user1);
     $this->addContent();
 
-    $edit = unserialize($this->qform_def);
-    $edit = $this->definitionToArrayForSubmit($edit);
+    $edit = $this->definitionToArrayForSubmit($this->qform_def);
     $edit['title'] = t('Car survey');
 
     $this->drupalPost('node/1/edit', $edit, t('Preview'));
@@ -214,7 +324,7 @@ class QformsBasicTestCase extends DrupalWebTestCase {
     $this->assertText(t('Qform @title has been created.', array('@title' => $edit['title'])));
     
     qforms_db_delete_form($node_id);
-    qforms_db_save_form($node_id, $qform_def, '');
+    qforms_db_save_form($node_id, serialize($qform_def), '');
   }
 
   public function definitionToArrayForSubmit($definitions) {

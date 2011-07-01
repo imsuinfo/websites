@@ -45,8 +45,12 @@ Drupal.behaviors.qforms = {
         return false;
       });
 
-      // On element title change auto refresh header element title.
-      $this.find('.qforms-element-data').find('input.qforms-element-title').keyup(function() {
+      // Init header element title.
+      var $inputTitle = $this.find('input.qforms-element-title');
+      $this.find('.qforms-element-header').find('.qforms-element-live-title').text($inputTitle.val());
+
+      // On element title change auto refresh element header title.
+      $inputTitle.keyup(function() {
         var title = $(this).val();
         $this.find('.qforms-element-header').find('.qforms-element-live-title').text(title);
       });
@@ -97,7 +101,7 @@ $('document').ready(function () {
   var $elements = $('#qforms-elements');
   var listElements = $elements.children('.qforms-element').get();
   listElements.sort(function(a, b) {
-     return $(a).find('.qforms-element-weight').val() < $(b).find('.qforms-element-weight').val() ? -1 : 1;
+     return parseInt($(a).find('.qforms-element-weight').val()) < parseInt($(b).find('.qforms-element-weight').val()) ? -1 : 1;
   })
   $.each(listElements, function(index, element) {$elements.append(element);});
 

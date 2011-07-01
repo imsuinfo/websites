@@ -92,7 +92,7 @@ function qforms_element_common($data) {
 
   $element[$data['id'] . '_header']['title'] = array(
     '#markup' => '<div class="qforms-element-title">' . $data['element_title'] .
-    ': <span class="qforms-element-live-title">' . (isset($data['title'])? check_plain($data['title']) : '') . '</span></div>',
+    ': <span class="qforms-element-live-title"></span></div>',
   );
 
   // Form element actions.

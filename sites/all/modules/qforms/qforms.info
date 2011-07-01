@@ -16,9 +16,9 @@ files[] = inc/qforms.select.inc
 files[] = inc/qforms.textarea.inc
 files[] = inc/qforms.textfield.inc
 
-; Information added by drupal.org packaging script on 2011-03-26
-version = "7.x-1.0-beta1"
+; Information added by drupal.org packaging script on 2011-04-08
+version = "7.x-1.x-dev"
 core = "7.x"
 project = "qforms"
-datestamp = "1301149869"
+datestamp = "1302222779"
 

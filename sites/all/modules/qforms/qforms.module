@@ -63,9 +63,10 @@ function qforms_menu() {
 /**
  * Implementation of hook_qforms().
  *
- * This hook should return qform configuration array. Array consist of two
+ * This hook should return qform configuration array. Array consist of next
  * elements:
- *   - js - defines js files that needs to be loaded for qform.
+ *   - js - defines js files that needs to be loaded for qform elements.
+ *   - css - defines css files that needs to be loaded for qform elements.
  *   - elements - defines all qforms elements and apropriate function calls.
  */
 function qforms_qforms() {
@@ -274,14 +275,24 @@ function qforms_form($node, &$form_state) {
     ),
     '#default_value' => isset($node->qforms_submit_action)? $node->qforms_submit_action : '',
   );
-  $form['qforms_settings']['qforms_submit_action_custom_message'] = array(
-    '#type' => 'textfield',
+
+  // Custom message is a text area with a text format.
+  $custom_message = array(
+    '#base_type' => 'textarea',
     '#title' => t('Custom message text'),
-    '#states' => array(
-      'visible' => array(':input[name="qforms_submit_action"]' => array('value' => 'custom_message')),
-    ),
-    '#default_value' => isset($node->qforms_submit_action_custom_message)? $node->qforms_submit_action_custom_message : '',
+    '#parents' => array('qforms_submit_action_custom_message'),
+    '#format' => isset($node->qforms_submit_action_custom_message['format']) ? $node->qforms_submit_action_custom_message['format'] : filter_default_format(),
+    '#default_value' => isset($node->qforms_submit_action_custom_message['value']) ? $node->qforms_submit_action_custom_message['value'] : '',
   );
+  $custom_message = filter_process_format($custom_message);
+  $custom_message += array(
+    '#prefix' => '<div class="qforms-custom-message-wrapper">',
+    '#suffix' => '</div>',
+    '#tree' => TRUE,
+  );
+  $custom_message['value']['#states'] = $custom_message['format']['#states'] =
+    array('visible' => array(':input[name="qforms_submit_action"]' => array('value' => 'custom_message')));
+  $form['qforms_settings']['qforms_submit_action_custom_message'] = $custom_message;
 
   $default_value_redirect = '';
   if (isset($node->qforms_submit_action_redirect)) {
@@ -356,8 +367,8 @@ function qforms_validate($node, $form, &$form_state) {
     }
   }
 
-  if ($node->qforms_submit_action == 'custom_message' && empty($node->qforms_submit_action_custom_message)) {
-    form_set_error('qforms_submit_action_custom_message', t('Please enter custom message text.'));
+  if ($node->qforms_submit_action == 'custom_message' && empty($node->qforms_submit_action_custom_message['value'])) {
+    form_set_error('qforms_submit_action_custom_message][value', t('Please enter custom message text.'));
   }
 
   if ($node->qforms_submit_action == 'redirect') {
@@ -739,7 +750,10 @@ function qforms_submit_form_submit($form, &$form_state) {
       drupal_set_message(t('Thank you for your submission.'));
       break;
     case 'custom_message':
-      drupal_set_message(check_plain($options['qforms_submit_action_custom_message']));
+      drupal_set_message(check_markup(
+        $options['qforms_submit_action_custom_message']['value'],
+        $options['qforms_submit_action_custom_message']['format']
+      ));
       break;
     case 'redirect':
       drupal_goto($options['qforms_submit_action_redirect']);
@@ -912,6 +926,9 @@ function qforms_get_elements_definition() {
   }
 
   $defs = module_invoke_all('qforms');
+
+  // Give other modules a chance to alter qforms element configurations.
+  drupal_alter('qforms', $defs);
 
   return $defs;
 }
