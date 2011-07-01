@@ -142,7 +142,6 @@ function wysiwyg_ckeditor_settings($editor, $config, $theme) {
     // @todo Check whether completely disabling ProcessHTMLEntities is an option.
     'entities_latin' => FALSE,
     'entities_greek' => FALSE,
-    'global_basepath_var' => 'CKEDITOR_BASEPATH',
   );
 
   // Add HTML block format settings; common block formats are already predefined
@@ -185,7 +184,7 @@ function wysiwyg_ckeditor_settings($editor, $config, $theme) {
     $settings['language'] = $config['language'];
   }
   if (isset($config['resizing'])) {
-    // CKEditor tests "!== false", so ensure it is a Boolean.
+    // CKEditor performs a type-agnostic comparison on this particular setting.
     $settings['resize_enabled'] = (bool) $config['resizing'];
   }
   if (isset($config['toolbar_loc'])) {
