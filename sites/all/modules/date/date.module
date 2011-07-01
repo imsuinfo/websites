@@ -146,6 +146,17 @@ function date_input_date($field, $instance, $element, $input) {
 }
 
 /**
+ * Helper function to tell if a date object contains
+ * a valid date, centralized to make it easier to use.
+ */
+function date_is_date($date) {
+  if (empty($date) || !is_object($date) || !empty($date->errors)) {
+    return FALSE;
+  }
+  return TRUE;
+}
+
+/**
  * Implements hook_theme().
  */
 function date_theme() {
@@ -401,8 +412,6 @@ function date_help($path, $arg) {
 
 /**
  * Implements hook_form_FORM_ID_alter().
- *
- * Make sure date information gets updated.
  */
 function date_form_field_ui_field_edit_form_alter(&$form, &$form_state, $form_id) {
   $field = $form['field'];
@@ -411,6 +420,57 @@ function date_form_field_ui_field_edit_form_alter(&$form, &$form_state, $form_id
   if (module_exists('date_repeat') && date_is_repeat_field($field, $instance)) {
     $form['field']['cardinality'] = array('#type' => 'hidden', '#value' => FIELD_CARDINALITY_UNLIMITED);
   }
+  // Reorganize the instance settings and widget settings sections into a more
+  // intuitive combined fieldset.
+  $form['instance']['defaults'] = array(
+    '#type' => 'fieldset',
+    '#title' => t('Default formats and values'),
+    '#collapsible' => TRUE,
+    '#collapsed' => TRUE,
+  );
+  $form['instance']['date_format'] = array(
+    '#type' => 'fieldset',
+    '#title' => t('Date format'),
+    '#collapsible' => TRUE,
+    '#collapsed' => FALSE,
+  );
+  $form['instance']['default_values'] = array(
+    '#type' => 'fieldset',
+    '#title' => t('Default values'),
+    '#collapsible' => TRUE,
+    '#collapsed' => FALSE,
+  );
+  $form['instance']['years_back_and_forward'] = array(
+    '#type' => 'fieldset',
+    '#title' => t('Years back and forward'),
+    '#collapsible' => TRUE,
+    '#collapsed' => FALSE,
+  );
+
+  $form['instance']['#pre_render'][] = 'date_field_ui_field_edit_form_pre_render';
+}
+
+/**
+ * Rearrange form elements into fieldsets for presentation only.
+ */
+function date_field_ui_field_edit_form_pre_render($form) {
+  foreach ($form as $name => $element) {
+    if (is_array($element) && isset($element['#fieldset'])) {
+      $fieldset = $element['#fieldset'];
+      $form[$fieldset][$name] = $element;
+      unset($form[$name]);
+    }
+  }
+  foreach (array('date_format', 'default_values', 'years_back_and_forward') as $name) {
+    if (element_children($form[$name])) {
+      // Force the items in the fieldset to be resorted now that the instance
+      // and widget settings are combined.
+      $form[$name]['#sorted'] = FALSE;
+      $form['defaults'][$name] = $form[$name];
+    }
+    unset($form[$name]);
+  }
+  return $form;
 }
 
 /**
@@ -424,6 +484,7 @@ function date_field_widget_error($element, $error, $form, &$form_state) {
  * Retrieve a date format string from formatter settings.
  */
 function date_formatter_format($formatter, $settings, $granularity = NULL, $langcode = NULL) {
+
   $default = variable_get('date_format_medium',  'D, m/d/Y - H:i');
   $format_type = !empty($settings['format_type']) ? $settings['format_type'] : 'format_interval';
 
@@ -431,19 +492,12 @@ function date_formatter_format($formatter, $settings, $granularity = NULL, $lang
     case 'format_interval':
       return 'format_interval';
       break;
-    case 'date_default':
+    default:
       $format = system_date_format_locale($langcode, $format_type);
       if (empty($format)) {
         $format = variable_get('date_format_'. $format_type, $default);
       }      
       break; 
-    default:
-      $type = str_replace('date_', '', $formatter);
-      $format = system_date_format_locale($langcode, $type);
-      if (empty($format)) {
-        $format = variable_get('date_format_'. $type, $default);
-      }
-      break;
   }
 
   // A selected format might include timezone information.
