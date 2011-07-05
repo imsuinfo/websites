@@ -22,10 +22,9 @@ function theme_ldap_authorization_admin_index(&$variables) {
   foreach ($consumers as $consumer_type => $consumer) {
 
     if ($consumer->consumerConf->inDatabase) {
-      $actions =  ' | ' . l(t('edit'), LDAP_SERVERS_MENU_BASE_PATH . '/authorization/edit/' . $consumer->consumerType) . ' | ' .
-        l(t('delete'), LDAP_SERVERS_MENU_BASE_PATH . '/authorization/delete/' . $consumer->consumerType) . ' | ' .
-        l(t('test'), LDAP_SERVERS_MENU_BASE_PATH . '/authorization/test/' . $consumer->consumerType) . ' | ';
-        }
+      $admin = new LdapAuthorizationConsumerConfAdmin($consumer);
+      $actions =  join(' | ', $admin->getLdapAuthorizationConsumerActions());
+    }
     else {
       $actions =  l(t('add'), LDAP_SERVERS_MENU_BASE_PATH . '/authorization/add/' . $consumer->consumerType);
     }
@@ -70,7 +69,8 @@ function theme_ldap_authorization_test_results($variables) {
       foreach ($user_results as $consumer_type => $authorizations) {
         if (is_array($authorizations) && count($authorizations) > 0) {
           $authorizations_text =  theme('item_list', array('items' => $authorizations, 'title' => NULL, 'type' => 'ul', 'attributes' => array()));
-        } else {
+        }
+        else {
           $authorizations_text = "";
         }
         $row = array($username, $consumer->name, $authorizations_text, $consumer_conf_link, $server_link);

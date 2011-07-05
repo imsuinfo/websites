@@ -19,7 +19,9 @@ function _ldap_servers_get_user_ldap_data($drupal_user, $sid) {
   }
 }
 
-
+/**
+ * see ldap_servers_get_servers()
+ */
 function _ldap_servers_get_servers($sid, $type, $flatten, $reset) {
   require_once('LdapServerAdmin.class.php');
   static $servers;
@@ -31,6 +33,7 @@ function _ldap_servers_get_servers($sid, $type, $flatten, $reset) {
     $servers['all'] = LdapServerAdmin::getLdapServerObjects('all');
   }
   if (!isset($servers['enabled'])) {
+    $servers['enabled'] = array();
     foreach ($servers['all'] as $_sid => $ldap_server) {
       if ($ldap_server->status == 1) {
         $servers['enabled'][$_sid] = $ldap_server;
@@ -50,20 +53,20 @@ function _ldap_servers_get_servers($sid, $type, $flatten, $reset) {
   }
 }
 
+/**
+ * see ldap_servers_get_servers()
+ */
 function _ldap_servers_get_simpletest_servers($sid, $type, $flatten, $reset = TRUE) {
   require_once('tests/LdapServerTest.class.php');
 
   $servers['all'] = LdapServerTest::getLdapServerObjects('all');
-  //debug('_ldap_servers_get_simpletest_servers'); debug($servers['all']);
-  if (!isset($servers['enabled'])) {
-    foreach ($servers['all'] as $_sid => $ldap_server) {
-      if ($ldap_server->status == 1) {
-        $servers['enabled'][$_sid] = $ldap_server;
-      }
 
-
+  foreach ($servers['all'] as $_sid => $ldap_server) {
+    if ($ldap_server->status == 1) {
+      $servers['enabled'][$_sid] = $ldap_server;
     }
   }
+
 
   if ($sid) {
     if (!isset($servers[$type][$sid])) {

@@ -47,6 +47,14 @@ function ldap_servers_requirements($phase) {
     $requirements['ldap_extension_loaded']['description'] = t('No LDAP Extension is loaded for PHP, so LDAP will not work properly.');
   }
 
+  if (db_table_exists('ldapauth')) {
+    $requirements['ldap_servers_ldap_integration']['title'] = t('LDAP Integration LDAP Auth to LDAP Servers Upgrade Concern');
+    $requirements['ldap_servers_ldap_integration']['severity'] = REQUIREMENT_WARNING;
+    $requirements['ldap_servers_ldap_integration']['value'] = NULL;
+    $requirements['ldap_servers_ldap_integration']['description'] = t('Upgrade from Drupal 6 LDAP Auth to Drupal 7
+      LDAP Servers is not automatic.  LDAP Servers will need to be configured by hand.
+      See http://drupal.org/node/1023016. This message will go away when the ldapauth database table is removed.');
+  }
   // check that ldapauth not installed.
   return $requirements;
 }
@@ -59,6 +67,7 @@ function ldap_servers_schema() {
     'export' => array(
       'key' => 'sid',
       'key name' => 'Server ID',
+      'primary key' => 'numeric_sid',
       'identifier' => 'ldap_servers_conf',
       'api' => array(
         'owner' => 'ldap_servers',
@@ -91,7 +100,7 @@ function ldap_servers_schema() {
         'not null' => TRUE,
         'default' => 0,
       ),
-      'type' =>  array(
+      'ldap_type' =>  array(
         'type' => 'varchar',
         'length' => 20,
         'not null' => FALSE,
@@ -120,6 +129,7 @@ function ldap_servers_schema() {
       ),
       'basedn' => array(
         'type' => 'text',
+        'serialize' => TRUE,
       ),
       'binddn' => array(
         'type' => 'varchar',
@@ -128,7 +138,7 @@ function ldap_servers_schema() {
       'bindpw' => array(
         'type' => 'varchar',
         'length' => 255,
-        'no export' => TRUE,
+        'no export' => variable_get('ldap_servers_encryption' , LDAP_SERVERS_ENC_TYPE_CLEARTEXT) == LDAP_SERVERS_ENC_TYPE_CLEARTEXT ? TRUE : FALSE,
       ),
       'user_dn_expression' => array(
         'type' => 'varchar',
@@ -171,3 +181,16 @@ function ldap_servers_schema() {
   return $schema;
 
 }
+
+function ldap_servers_update_7100() {
+
+  db_change_field('ldap_servers', 'type', 'ldap_type', array(
+    'type' => 'varchar',
+    'length' => 20,
+    'not null' => FALSE
+  ));
+
+  return t('ldap_servers table field "type" renamed to "ldap_type"');
+
+}
+

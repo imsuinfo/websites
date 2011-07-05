@@ -17,53 +17,61 @@ class LdapAuthorizationConsumerConfAdmin extends LdapAuthorizationConsumerConf {
   public function save() {
 
     $op = $this->inDatabase ? 'edit' : 'insert';
+    $values = $this;
+    $values->sid = $this->sid;
+    $values->consumer_type = $this->consumerType;
+    $values->consumer_module = $this->consumer->consumerModule;
+    $values->description = $this->description;
+    $values->status = (int)$this->status;
+    $values->only_ldap_authenticated = (int)$this->onlyApplyToLdapAuthenticated;
+    $values->derive_from_dn = (int)$this->deriveFromDn;
+    $values->derive_from_dn_attr = $this->deriveFromDnAttr;
+    $values->derive_from_attr = (int)$this->deriveFromAttr;
+    $values->derive_from_attr_attr = $this->arrayToLines($this->deriveFromAttrAttr);
+    $values->derive_from_entry = (int)$this->deriveFromEntry;
+    $values->derive_from_entry_entries = $this->arrayToLines($this->deriveFromEntryEntries);
+    $values->derive_from_entry_attr = $this->deriveFromEntryAttr;
+    $values->mappings = $this->arrayToPipeList($this->mappings);
+    $values->use_filter = (int)$this->useMappingsAsFilter;
+    $values->synch_to_ldap = (int)$this->synchToLdap;
+    $values->synch_on_logon = (int)$this->synchOnLogon;
+    $values->revoke_ldap_provisioned = (int)$this->revokeLdapProvisioned;
+    $values->create_consumers = (int)$this->createConsumers;
+    $values->regrant_ldap_provisioned = (int)$this->regrantLdapProvisioned;
 
-    $values['sid'] = $this->sid;
-    $values['consumer_type'] = $this->consumerType;
-    $values['consumer_module'] = $this->consumer->consumerModule;
-    $values['description'] = $this->description;
-    $values['status'] = (int)$this->status;
-    $values['only_ldap_authenticated'] = (int)$this->onlyApplyToLdapAuthenticated;
-    $values['derive_from_dn'] = (int)$this->deriveFromDn;
-    $values['derive_from_dn_attr'] = $this->deriveFromDnAttr;
-    $values['derive_from_attr'] = (int)$this->deriveFromAttr;
-    $values['derive_from_attr_attr'] = $this->arrayToLines($this->deriveFromAttrAttr);
-    $values['derive_from_entry'] = (int)$this->deriveFromEntry;
-    $values['derive_from_entry_entries'] = $this->arrayToLines($this->deriveFromEntryEntries);
-    $values['derive_from_entry_attr'] = $this->deriveFromEntryAttr;
-    $values['mappings'] = $this->arrayToPipeList($this->mappings);
-    $values['use_filter'] = (int)$this->useMappingsAsFilter;
-    $values['synch_to_ldap'] = (int)$this->synchToLdap;
-    $values['synch_on_logon'] = (int)$this->synchOnLogon;
-    $values['revoke_ldap_provisioned'] = (int)$this->revokeLdapProvisioned;
-    $values['create_consumers'] = (int)$this->createConsumers;
-    $values['regrant_ldap_provisioned'] = (int)$this->regrantLdapProvisioned;
-
-    if ($op == 'edit') {
-      try {
-        $count = db_update('ldap_authorization')
-        ->fields($values)
-        ->condition('consumer_type', $values['consumer_type'])
-        ->execute();
+    if (module_exists('ctools')) {
+      ctools_include('export');
+      // Populate our object with ctool's properties
+      $object = ctools_export_crud_new('ldap_authorization');
+      foreach ($object as $property => $value) {
+        if (!isset($values->$property)) {
+          $values->$property = $value;
+        }
       }
-      catch (Exception $e) {
-        drupal_set_message(t('db update failed. Message = %message, query= %query',
-        array('%message' => $e->getMessage(), '%query' => $e->query_string)), 'error');
-      }
+      $result = ctools_export_crud_save('ldap_authorization', $values);
+    }
+    elseif ($op == 'edit') {
+      $result = drupal_write_record('ldap_authorization', $values, 'consumer_type');
     }
     else { // insert
+      $result = drupal_write_record('ldap_authorization', $values);
+    }
 
-      try {
-        $ret = db_insert('ldap_authorization')
-        ->fields($values)
-        ->execute();
-        }
-      catch (Exception $e) {
-        drupal_set_message(t('db insert failed. Message = %message, query= %query',
-        array('%message' => $e->getMessage(), '%query' => $e->query_string)), 'error');
-      }
-
+    if ($result) {
       $this->inDatabase = TRUE;
+    }
+    else {
+      drupal_set_message(t('Failed to write LDAP Authorization to the database.'));
+    }
+
+    // rever mappings to array and remove temporary properties from ctools export
+    $this->mappings = $this->pipeListToArray($values->mappings);
+    foreach (array('consumer_type', 'consumer_module', 'only_ldap_authenticated',
+      'derive_from_dn', 'derive_from_dn_attr', 'derive_from_attr', 'derive_from_attr_attr',
+      'derive_from_entry', 'derive_from_entry_entries', 'derive_from_entry_attr', 'use_filter',
+      'synch_to_ldap', 'synch_on_logon', 'revoke_ldap_provisioned', 'create_consumers',
+      'regrant_ldap_provisioned') as $prop_name) {
+      unset($this->{$prop_name});
     }
   }
 
@@ -406,6 +414,24 @@ Enter one mapping per line with an <code>|</code> separating the raw authorizati
 
   protected function loadFromForm($values, $op) {
 
+  }
+
+  public function getLdapAuthorizationConsumerActions() {
+    $actions = array();
+    $actions[] =  l(t('edit'), LDAP_SERVERS_MENU_BASE_PATH . '/authorization/edit/' . $this->consumerType);
+    if (property_exists($this, 'type')) {
+      if ($this->type == 'Overridden') {
+          $actions[] = l(t('revert'), LDAP_SERVERS_MENU_BASE_PATH . '/authorization/delete/' . $this->consumerType);
+      }
+      if ($this->type == 'Normal') {
+          $actions[] = l(t('delete'), LDAP_SERVERS_MENU_BASE_PATH . '/authorization/delete/' . $this->consumerType);
+      }
+    }
+    else {
+        $actions[] = l(t('delete'), LDAP_SERVERS_MENU_BASE_PATH . '/authorization/delete/' . $this->consumerType);
+    }
+    $actions[] = l(t('test'), LDAP_SERVERS_MENU_BASE_PATH . '/authorization/test/' . $this->consumerType);
+    return $actions;
   }
 
   public function drupalFormValidate($op, $values)  {

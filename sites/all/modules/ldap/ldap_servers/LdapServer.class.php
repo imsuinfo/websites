@@ -26,7 +26,7 @@ class LdapServer {
   public $sid;
   public $name;
   public $status;
-  public $type;
+  public $ldap_type;
   public $address;
   public $port = 389;
   public $tls = FALSE;
@@ -40,17 +40,15 @@ class LdapServer {
   public $ldapToDrupalUserPhp;
   public $testingDrupalUsername;
 
-
-
   public $inDatabase = FALSE;
 
-  protected $connection;
+  public $connection;
   // direct mapping of db to object properties
   public static function field_to_properties_map() {
     return array( 'sid' => 'sid',
     'name'  => 'name' ,
     'status'  => 'status',
-    'type'  => 'type',
+    'ldap_type'  => 'ldap_type',
     'address'  => 'address',
     'port'  => 'port',
     'tls'  => 'tls',
@@ -74,14 +72,26 @@ class LdapServer {
       return;
     }
 
-    $this->sid = $sid;
-    $this->detailedWatchdogLog = variable_get('ldap_help_watchdog_detail', 0);
-    $select = db_select('ldap_servers', 'ldap_servers');
-    $select->fields('ldap_servers');
-    $select->condition('ldap_servers.sid',  $this->sid);
-
-
-    $server_record = $select->execute()->fetchAllAssoc('sid',  PDO::FETCH_ASSOC);
+    $server_record = array();
+    if (module_exists('ctools')) {
+      ctools_include('export');
+      $result = ctools_export_load_object('ldap_servers', 'names', array($sid));
+      if (isset($result[$sid])) {
+        $server_record[$sid] = $result[$sid];
+        foreach ($server_record[$sid] as $property => $value) {
+          $this->{$property} = $value;
+        }
+      }
+    }
+    else {
+      $select = db_select('ldap_servers')
+        ->fields('ldap_servers')
+        ->condition('ldap_servers.sid',  $sid)
+        ->execute();
+      foreach ($select as $record) {
+        $server_record[$record->sid] = $record;
+      }
+    }
     if (!isset($server_record[$sid])) {
       $this->inDatabase = FALSE;
       return;
@@ -90,20 +100,23 @@ class LdapServer {
 
     if ($server_record) {
       $this->inDatabase = TRUE;
+      $this->sid = $sid;
+      $this->detailedWatchdogLog = variable_get('ldap_help_watchdog_detail', 0);
     }
     else {
       // @todo throw error
     }
+
     foreach ($this->field_to_properties_map() as $db_field_name => $property_name ) {
-      if (isset($server_record[$db_field_name])) {
-        $this->{$property_name} = $server_record[$db_field_name];
+      if (isset($server_record->$db_field_name)) {
+        $this->{$property_name} = $server_record->$db_field_name;
       }
     }
     if (is_scalar($this->basedn)) {
       $this->basedn = unserialize($this->basedn);
     }
-    if (isset($server_record['bindpw']) && $server_record['bindpw'] != '') {
-      $this->bindpw = $server_record['bindpw'];
+    if (isset($server_record->bindpw) && $server_record->bindpw != '') {
+      $this->bindpw = $server_record->bindpw;
       $this->bindpw = ldap_servers_decrypt($this->bindpw);
     }
   }
@@ -220,6 +233,7 @@ class LdapServer {
    *   An array of matching entries->attributes, or FALSE if the search is
    *   empty.
    */
+
   function search($base_dn = NULL, $filter, $attributes = array(), $attrsonly = 0, $sizelimit = 0, $timelimit = 0, $deref = LDAP_DEREF_NEVER) {
     if ($base_dn == NULL) {
       if (count($this->basedn) == 1) {
@@ -230,18 +244,19 @@ class LdapServer {
       }
     }
     $result = @ldap_search($this->connection, $base_dn, $filter, $attributes, $attrsonly, $sizelimit, $timelimit, $deref);
-
     if ($result && ldap_count_entries($this->connection, $result)) {
       $entries = ldap_get_entries($this->connection, $result);
       return $entries;
-    } elseif ($this->ldapErrorNumber()) {
+    }
+    elseif ($this->ldapErrorNumber()) {
       $watchdog_tokens =  array('%basedn' => $base_dn, '%filter' => $filter,
         '%attributes' => print_r($attributes, TRUE), '%errmsg' => $this->errorMsg('ldap'),
         '%errno' => $this->ldapErrorNumber());
       watchdog('ldap', "LDAP ldap_search error. basedn: %basedn, filter: %filter, attributes:
         %attributes, errmsg: %errmsg, ldap err no: %errno,", $watchdog_tokens);
       return array();
-    } else {
+    }
+    else {
       return array();
     }
   }
@@ -362,9 +377,9 @@ class LdapServer {
     }
   }
 
-   public function errorName($type = NULL) {
+  public function errorName($type = NULL) {
     if ($type == 'ldap' && $this->connection) {
-      return "LDAP Error: ". ldap_error($this->connection);
+      return "LDAP Error: " . ldap_error($this->connection);
     }
     elseif ($type == NULL) {
       return $this->_errorName;

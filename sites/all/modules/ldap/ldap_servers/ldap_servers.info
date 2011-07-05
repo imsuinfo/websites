@@ -22,13 +22,10 @@ files[] = tests/ldap_servers.test
 
 configure = admin/config/people/ldap/servers
 
-features[variable][] = "ldap_servers_encryption"
-features[variable][] = "ldap_servers_require_ssl_for_credentials"
-features[variable][] = "ldap_servers_encrypt_key"
 
-; Information added by drupal.org packaging script on 2011-05-27
-version = "7.x-1.0-beta1"
+; Information added by drupal.org packaging script on 2011-07-02
+version = "7.x-1.0-beta2"
 core = "7.x"
 project = "ldap"
-datestamp = "1306479733"
+datestamp = "1309638120"
 

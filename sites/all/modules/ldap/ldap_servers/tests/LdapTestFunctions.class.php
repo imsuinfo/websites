@@ -1,9 +1,10 @@
 <?php
-// $Id:$
+// $Id$
 
 
 /**
- * @file LdapTestCase.class.php
+ * @file
+ *  LdapTestCase.class.php
  *
  * stub for test class for any ldap module.  has functionality of fake ldap server
  * with user configurations.  Intended to help unifying test environment
@@ -12,32 +13,63 @@
 
 class LdapTestFunctions  {
 
-//   $this->testFunctions->prepTestServers($consumer_conf['sid'],  $test_data['server']);
-  function prepTestServers($sid, $data) {
-    $current_sids = variable_get('ldap_test_servers', array());
-    if (! in_array($sid, $current_sids)) {
-      $current_sids[] = $sid;
-      variable_set('ldap_test_servers', $current_sids);
+  function prepTestConfiguration($test_data, $feetures = FALSE) {
+    $this->prepTestServers($test_data['servers'], $feetures);
+
+    if (!$feetures && isset($test_data['authentication'])) {
+      $this->configureAuthentication($test_data['authentication']);
     }
-    variable_set('ldap_test_server__'. $sid, $data);
-  //  debug('prepTestServers, ldap_test_server__'. $sid); debug(variable_get('ldap_test_servers', 'empty')); debug(variable_get('ldap_test_server__'. $sid, 'empty'));
+
+    if (!$feetures && isset($test_data['authorization'])) {
+      $this->prepConsumerConf($test_data['authorization']);
+    }
+
+    if (!$feetures && isset($test_data['variables'])) {
+      foreach ($test_data['variables'] as $name => $value) {
+        variable_set($name, $value);
+      }
+    }
+
+  $consumer_conf_admin = ldap_authorization_get_consumer_admin_object('drupal_role');
+  $consumer_conf_admin->status = 1;
+  $consumer_conf_admin->save();
+
   }
 
-  function removeTestServers($sids = NULL) {
+  function prepTestServers($servers, $feetures = FALSE, $feature_name = NULL) {
+    $current_sids = array();
+    foreach ($servers as $sid => $server_data) {
+      $current_sids[$sid] = $sid;
+      variable_set('ldap_test_server__' . $sid, $server_data);
+    }
+    variable_set('ldap_test_servers', $current_sids);
+  }
 
-    $current_sids = variable_get('ldap_test_servers', array());
 
-    if (! $sids) {
-      $sids = $current_sids;
+  function configureAuthentication($options) {
+    require_once(drupal_get_path('module', 'ldap_authentication') . '/LdapAuthenticationConfAdmin.class.php');
+
+    $ldapServerAdmin = new LdapAuthenticationConfAdmin();
+
+    foreach ($ldapServerAdmin->saveable as $prop_name) {
+      if (isset( $options[$prop_name])) {
+        $ldapServerAdmin->{$prop_name} = $options[$prop_name];
+      }
     }
-    elseif(is_scalar($sids)) {
-      $sids = array($sids);
+    $ldapServerAdmin->save();
+  }
+
+
+  function prepConsumerConf($consumer_confs) {
+    // create consumer authorization configuration.
+    foreach ($consumer_confs as $consumer_type => $consumer_conf) {
+      $consumer_obj = ldap_authorization_get_consumer_object($consumer_type);
+      $consumer_conf_admin = new LdapAuthorizationConsumerConfAdmin($consumer_obj, TRUE);
+      foreach ($consumer_conf as $property_name => $property_value) {
+        $consumer_conf_admin->{$property_name} = $property_value;
+      }
+      $consumer_conf_admin->save();
     }
-    foreach ($sids as $sid) {
-      variable_del('ldap_authorization_test_server__'. $sid);  // remove fake server configuation
-    }
-    $remaining_sids = array_diff($current_sids, $sids);
-    variable_set('ldap_test_servers', $remaining_sids);
   }
 
 
@@ -48,7 +80,6 @@ class LdapTestFunctions  {
   }
 
   function drupalLdapUpdateUser($edit = array(), $ldap_authenticated = FALSE, $user) {
-
 
     if (count($edit)) {
       $user = user_save($user, $edit);

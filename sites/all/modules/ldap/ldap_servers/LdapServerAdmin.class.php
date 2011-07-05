@@ -14,25 +14,35 @@ class LdapServerAdmin extends LdapServer {
 
   public $bindpw_new = FALSE;
   public $bindpw_clear = FALSE;
+
+  /**
+   * @param $type = 'all', 'enabled'
+   */
   public static function getLdapServerObjects($sid = NULL, $type = NULL, $class = 'LdapServer') {
-  $select = db_select('ldap_servers', 'ldap_servers');
-  $select->fields('ldap_servers');
-  try {
-    $servers = $select->execute()->fetchAllAssoc('sid',  PDO::FETCH_ASSOC);
+    $servers = array();
+    if (module_exists('ctools')) {
+      ctools_include('export');
+      $select = ctools_export_load_object('ldap_servers', 'all');
+    }
+    else {
+      try {
+        $select = db_select('ldap_servers', 'ldap_servers')
+          ->fields('ldap_servers')
+          ->execute();
+      }
+      catch (Exception $e) {
+        drupal_set_message(t('server index query failed. Message = %message, query= %query',
+          array('%message' => $e->getMessage(), '%query' => $e->query_string)), 'error');
+        return array();
+      }
+    }
+    foreach ($select as $result) {
+      $servers[$result->sid] = ($class == 'LdapServer') ? new LdapServer($result->sid) : new LdapServerAdmin($result->sid);
+    }
+    return $servers;
 
   }
-  catch (Exception $e) {
-    drupal_set_message(t('server index query failed. Message = %message, query= %query',
-      array('%message' => $e->getMessage(), '%query' => $e->query_string)), 'error');
-    return array();
-  }
-  foreach ($servers as $sid => $server) {
-    $servers[$sid] = ($class == 'LdapServer') ? new LdapServer($sid) : new LdapServerAdmin($sid);
-  }
 
-  return $servers;
-
-}
   function __construct($sid) {
     parent::__construct($sid);
   }
@@ -42,7 +52,7 @@ class LdapServerAdmin extends LdapServer {
     $this->sid = trim($values['sid']);
     $this->name = trim($values['name']);
     $this->status = ($values['status']) ? 1 : 0;
-    $this->type = trim($values['type']);
+    $this->ldap_type = trim($values['ldap_type']);
     $this->address = trim($values['address']);
     $this->port = trim($values['port']);
     $this->tls = trim($values['tls']);
@@ -62,46 +72,53 @@ class LdapServerAdmin extends LdapServer {
 
   public function save($op) {
 
+    $entry = $this;
     foreach ($this->field_to_properties_map() as $field_name => $property_name) {
-      $entry[$field_name] = $this->{$property_name};
+      $entry->{$field_name} = $this->{$property_name};
+    }
+    if (isset($this->bindpw) && $this->bindpw) {
+      $entry->bindpw = ldap_servers_encrypt($this->bindpw);
     }
     if ($this->bindpw_new) {
-      $entry['bindpw'] =  ldap_servers_encrypt($this->bindpw_new);
+      $entry->bindpw =  ldap_servers_encrypt($this->bindpw_new);
     }
     elseif ($this->bindpw_clear) {
-      $entry['bindpw'] = NULL;
+      $entry->bindpw = NULL;
     }
+    $entry->tls = (int)$entry->tls;
 
-    $entry['basedn'] = serialize($entry['basedn']);
-    $entry['tls'] = (int)$entry['tls'];
+    $result = FALSE;
     if ($op == 'edit') {
-
-      try {
-        $count = db_update('ldap_servers')
-        ->fields($entry)
-        ->condition('sid', $entry['sid'])
-        ->execute();
+      if (module_exists('ctools')) {
+        ctools_include('export');
+        $result = ctools_export_crud_save('ldap_servers', $entry);
       }
-      catch (Exception $e) {
-        drupal_set_message(t('db update failed. Message = %message, query= %query',
-        array('%message' => $e->getMessage(), '%query' => $e->query_string)), 'error');
+      else {
+        $result = drupal_write_record('ldap_servers', $entry, 'sid');
       }
     }
     else {
-      try {
-        $ret = db_insert('ldap_servers')
-        ->fields($entry)
-        ->execute();
+      if (module_exists('ctools')) {
+        ctools_include('export');
+        // Populate our object with ctool's properties
+        $object = ctools_export_crud_new('ldap_servers');
+        foreach ($object as $property => $value) {
+          if (!isset($entry->$property)) {
+            $entry->$property = $value;
+          }
+        }
+        $result = ctools_export_crud_save('ldap_servers', $entry);
       }
-      catch (Exception $e) {
-        drupal_set_message(t('db insert failed. Message = %message, query= %query',
-          array('%message' => $e->getMessage(), '%query' => $e->query_string)), 'error');
+      else {
+        $result = drupal_write_record('ldap_servers', $entry);
       }
-
+    }
+    if ($result) {
       $this->inDatabase = TRUE;
     }
-
-
+    else {
+      drupal_set_message(t('Failed to write LDAP Server to the database.'));
+    }
   }
 
   public function delete($sid) {
@@ -113,9 +130,29 @@ class LdapServerAdmin extends LdapServer {
       return FALSE;
     }
   }
+  public function getLdapServerActions() {
+    $switch = ($this->status ) ? 'disable' : 'enable';
+    $actions = array();
+    $actions[] =  l(t('edit'), LDAP_SERVERS_MENU_BASE_PATH . '/servers/edit/' . $this->sid);
+    if (property_exists($this, 'type')) {
+      if ($this->type == 'Overridden') {
+          $actions[] = l(t('revert'), LDAP_SERVERS_MENU_BASE_PATH . '/servers/delete/' . $this->sid);
+      }
+      if ($this->type == 'Normal') {
+          $actions[] = l(t('delete'), LDAP_SERVERS_MENU_BASE_PATH . '/servers/delete/' . $this->sid);
+      }
+    }
+    else {
+        $actions[] = l(t('delete'), LDAP_SERVERS_MENU_BASE_PATH . '/servers/delete/' . $this->sid);
+    }
+    $actions[] = l(t('test'), LDAP_SERVERS_MENU_BASE_PATH . '/servers/test/' . $this->sid);
+    $actions[] = l($switch, LDAP_SERVERS_MENU_BASE_PATH . '/servers/' . $switch . '/' . $this->sid);
+    return $actions;
+  }
+
   public function drupalForm($op) {
 
-    drupal_add_css(drupal_get_path('module','ldap_servers') . '/ldap_servers.admin.css','module','all');
+    drupal_add_css(drupal_get_path('module', 'ldap_servers') . '/ldap_servers.admin.css', 'module', 'all');
 
     $form['#prefix'] = <<<EOF
 <p>Setup an LDAP server configuration to be used by other modules such as LDAP Authentication,
@@ -162,11 +199,11 @@ $form['#prefix'] = t($form['#prefix']);
     '#description' => t('Disable in order to keep configuration without having it active.'),
   );
 
-  $form['server']['type'] = array(
+  $form['server']['ldap_type'] = array(
     '#type' => 'select',
     '#options' =>  ldap_servers_ldaps_option_array(),
     '#title' => t('LDAP Server Type'),
-    '#default_value' => $this->type,
+    '#default_value' => $this->ldap_type,
     '#description' => t('This field is informative.  It\'s purpose is to assist with default values and give validation warnings.'),
     '#required' => FALSE,
   );
@@ -259,7 +296,8 @@ $form['#prefix'] = t($form['#prefix']);
       If you are using a service account, enter one.');
     if ($this->bind_method == LDAP_SERVERS_BIND_METHOD_SERVICE_ACCT) {
       $pwd_class = 'ldap-pwd-abscent';
-    } else {
+    }
+    else {
       $pwd_class = 'ldap-pwd-not-applicable';
     }
   }
@@ -278,7 +316,7 @@ $form['#prefix'] = t($form['#prefix']);
 
     '#maxlength' => 255,
     '#default_value' => "",
-   );
+  );
 
   $form['binding_service_acct']['clear_bindpw'] = array(
     '#type' => 'checkbox',
@@ -447,8 +485,8 @@ public function drupalFormWarnings($op, $values)  {
 protected function warnings($op) {
 
     $warnings = array();
-    if ($this->type) {
-      $defaults = ldap_servers_get_ldap_defaults($this->type);
+    if ($this->ldap_type) {
+      $defaults = ldap_servers_get_ldap_defaults($this->ldap_type);
       if (isset($defaults['user']['user_attr']) && ($this->user_attr != $defaults['user']['user_attr'])) {
         $tokens = array('%name' => $defaults['name'], '%default' => $defaults['user']['user_attr'], '%user_attr' => $this->user_attr);
         $warnings['user_attr'] =  t('The standard UserName attribute in %name is %default.  You have %user_attr. This may be correct

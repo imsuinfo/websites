@@ -36,9 +36,9 @@ class LdapAuthenticationConf {
   public $allowOnlyIfTextInDn = array(); // eg ou=education that must be met to allow ldap authentication
   public $excludeIfTextInDn = array();
   public $allowTestPhp = NULL; // code that returns boolean TRUE || FALSE for allowing ldap authentication
+  public $excludeIfNoAuthorizations = LDAP_AUTHENTICATION_EXCL_IF_NO_AUTHZ_DEFAULT;
 
-
-  protected $saveable = array(
+  public $saveable = array(
     'sids',
     'authenticationMode',
     'loginConflictResolve',
@@ -50,6 +50,7 @@ class LdapAuthenticationConf {
     'allowOnlyIfTextInDn',
     'excludeIfTextInDn',
     'allowTestPhp',
+    'excludeIfNoAuthorizations',
   );
 
   /** are any ldap servers that are enabled associated with ldap authentication **/
@@ -70,9 +71,12 @@ class LdapAuthenticationConf {
           $this->{$property} = $saved[$property];
         }
       }
-      foreach ($this->sids as $sid) {
-        $this->servers[$sid] = ldap_servers_get_servers($sid, 'enabled', TRUE);
+      foreach ($this->sids as $sid => $is_enabled) {
+        if ($is_enabled) {
+          $this->servers[$sid] = ldap_servers_get_servers($sid, 'enabled', TRUE);
+        }
       }
+
     }
     else {
       $this->inDatabase = FALSE;
@@ -112,13 +116,14 @@ class LdapAuthenticationConf {
    *
    * return boolean
    */
-  public function allowUser($name, $ldap_user) {
+  public function allowUser($name, $ldap_user_entry) {
+
     /**
      * do one of the exclude attribute pairs match
      */
     $exclude = FALSE;
     foreach ($this->excludeIfTextInDn as $test) {
-      if (strpos(drupal_strtolower($ldap_user['dn']), drupal_strtolower($test)) !== FALSE) {
+      if (strpos(drupal_strtolower($ldap_user_entry['dn']), drupal_strtolower($test)) !== FALSE) {
         return FALSE;//  if a match, return FALSE;
       }
     }
@@ -127,10 +132,23 @@ class LdapAuthenticationConf {
     /**
      * evaluate php if it exists
      */
-    if (module_exists('php') && $this->allowTestPhp) {
-      $code = '<?php ' . $this->allowTestPhp . ' ?>';
-      $code_result = @php_eval($code);
-      if ((boolean)($code_result) == FALSE) {
+    if ($this->allowTestPhp) {
+      if (module_exists('php')) {
+        global $_name, $_ldap_user_entry;
+        $_name = $name;
+        $_ldap_user_entry = $ldap_user_entry;
+        $code = '<?php ' . "global \$_name; \n  global \$_ldap_user_entry; \n" . $this->allowTestPhp . ' ?>';
+        $code_result = php_eval($code);
+        $_name = NULL;
+        $_ldap_user_entry = NULL;
+        if ((boolean)($code_result) == FALSE) {
+          return FALSE;
+        }
+      }
+      else {
+        drupal_set_message(t(LDAP_AUTHENTICATION_DISABLED_FOR_BAD_CONF_MSG), 'warning');
+        $tokens = array('!ldap_authentication_config' => l(t('LDAP Authentication Configuration'), 'admin/config/people/ldap/authentication'));
+        watchdog('warning', 'LDAP Authentication is configured to deny users based on php execution with php_eval function, but php module is not enabled. Please enable php module or remove php code at !ldap_authentication_config .', $tokens);
         return FALSE;
       }
     }
@@ -139,13 +157,55 @@ class LdapAuthenticationConf {
      * do one of the allow attribute pairs match
      */
     if (count($this->allowOnlyIfTextInDn)) {
+      $fail = TRUE;
       foreach ($this->allowOnlyIfTextInDn as $test) {
-        if (strpos(drupal_strtolower($ldap_user['dn']), drupal_strtolower($test)) !== FALSE) {
-          return TRUE;
+        if (strpos(drupal_strtolower($ldap_user_entry['dn']), drupal_strtolower($test)) !== FALSE) {
+          $fail = FALSE;
         }
       }
+      if ($fail) {
+        return FALSE;
+      }
+
+    }
+    /**
+     * is excludeIfNoAuthorizations option enabled and user not granted any groups
+     */
+
+    if ($this->excludeIfNoAuthorizations) {
+      if (!module_exists('ldap_authorization')) {
+        drupal_set_message(t(LDAP_AUTHENTICATION_DISABLED_FOR_BAD_CONF_MSG), 'warning');
+        $tokens = array('!ldap_authentication_config' => l(t('LDAP Authentication Configuration'), 'admin/config/people/ldap/authentication'));
+        watchdog('warning', 'LDAP Authentication is configured to deny users without LDAP Authorization mappings, but LDAP Authorization module is not enabled.  Please enable and configure LDAP Authorization or disable this option at !ldap_authentication_config .', $tokens);
+        return FALSE;
+      }
+      $user = new stdClass();
+      $user->name = $name;
+      $user->ldap_authenticated = TRUE; // fake user property added for query
+      $consumers = ldap_authorization_get_consumers();
+      $has_enabled_consumers = FALSE;
+      foreach ($consumers as $consumer_type => $consumer_config) {
+
+        $consumer_obj = ldap_authorization_get_consumer_object($consumer_type);
+        if ($consumer_obj->consumerConf->status) {
+          $has_enabled_consumers = TRUE;
+          list($authorizations, $notifications) = ldap_authorizations_user_authorizations($user, 'query', $consumer_type, 'test_if_authorizations_granted');
+          if (count(array_filter(array_values($authorizations))) > 0) {
+            return TRUE;
+          }
+        }
+      }
+
+      if (!$has_enabled_consumers) {
+        drupal_set_message(t(LDAP_AUTHENTICATION_DISABLED_FOR_BAD_CONF_MSG), 'warning');
+        $tokens = array('!ldap_consumer_config' => l(t('LDAP Authorization Configuration'), 'admin/config/people/ldap/authorization'));
+        watchdog('warning', 'LDAP Authentication is configured to deny users without LDAP Authorization mappings, but 0 LDAP Authorization consumers are configured:  !ldap_consumer_config .', $tokens);
+        return FALSE;
+      }
+
       return FALSE;
     }
+
 
     /**
      * default to allowed
