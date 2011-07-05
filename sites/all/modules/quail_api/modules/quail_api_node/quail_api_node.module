@@ -29,11 +29,6 @@ function quail_api_node_quail_api_permission_alter(&$permissions) {
     'description' => t("Grants permissions to use the perform a manual validation of any given node."),
   );
 
-  $permissions['view node accessibility validation messages'] = array(
-    'title' => t("View node Accessiblity Validation Messages"),
-    'description' => t("Grants permissions to view accessibility validation failure messages while viewing the node."),
-  );
-
   // @todo: add node-specific validation permissions or at the very least node_type-specific
 
   return $permissions;
@@ -117,13 +112,14 @@ function quail_api_node_access_accessibility_tab($node) {
  * Implements hook_form_FORM_ID_alter() for the node type form.
  */
 function quail_api_node_form_node_type_form_alter(&$form, &$form_state, $form_id) {
+  $function_history = array(__FUNCTION__);
   $node_type_settings_object = FALSE;
-  $node_type_settings_array  = array('type' => NULL, 'required' => NULL, 'standards' => NULL, 'messages' => NULL);
+  $node_type_settings_array  = array('type' => NULL, 'required' => NULL, 'standards' => NULL);
 
-  $standards = quail_api_get_standards_list(NULL, 'snippet');
-  $display_levels = quail_api_get_display_levels_list();
-  $methods = quail_api_get_validation_methods();
-  $methods_list = quail_api_get_validation_methods_list($methods);
+  $standards = quail_api_get_standards_list(NULL, 'snippet', $function_history);
+  $display_levels = quail_api_get_display_levels_list(NULL, $function_history);
+  $methods = quail_api_get_validation_methods(NULL, $function_history);
+  $methods_list = quail_api_get_validation_methods(NULL, $function_history);
   $filter_formats = filter_formats();
   $formats = array();
   $options = array();
@@ -134,7 +130,6 @@ function quail_api_node_form_node_type_form_alter(&$form, &$form_state, $form_id
 
   $default_enabled = 'disabled';
   $default_standards = array();
-  $default_display_levels = array();
   $default_method = 'quail_api_method_immediate';
   $default_format = 'full_html';
 
@@ -146,7 +141,6 @@ function quail_api_node_form_node_type_form_alter(&$form, &$form_state, $form_id
 
       $default_enabled = ($node_type_settings_object->required ? 'required' : 'optional');
       $default_standards = unserialize($node_type_settings_object->standards);
-      $default_display_levels = unserialize($node_type_settings_object->messages);
       $default_method = (!empty($node_type_settings_object->method) ? $node_type_settings_object->method : $default_method);
       $default_format = (!empty($node_type_settings_object->format) ? $node_type_settings_object->format : $default_format);
     }
@@ -205,14 +199,6 @@ function quail_api_node_form_node_type_form_alter(&$form, &$form_state, $form_id
     '#description' => t("Choose which accessiblity standards to validate against. It is strongly suggested that only 1 standard should be used because many of the validation tests are performed by more than one standard."),
   );
 
-  $form['node_accessibility_validation']['messages'] = array(
-    '#type' => 'checkboxes',
-    '#title' => t("Accessibility Message Display Level"),
-    '#default_value' => $default_display_levels,
-    '#options' => $display_levels,
-    '#description' => t("Choose which messages should be immediately shown on a particular node if that node fails any accessibility validation test of the chosen display level. This only works when the validation results are saved."),
-  );
-
   $form['#submit'][] = 'quail_api_node_node_type_form_submit';
 }
 
@@ -236,7 +222,7 @@ function quail_api_node_node_type_form_submit($form, &$form_state) {
     $node_type_settings_object = $node_type_settings_objects['0'];
   }
 
-  $columns = array('enabled', 'required', 'standards', 'messages', 'method', 'format');
+  $columns = array('enabled', 'required', 'standards', 'method', 'format');
   $record = array();
   $record['type'] = $form_state['values']['type'];
   $record['method'] = isset($form_state['values']['node_accessibility_validation']['method']) ? $form_state['values']['node_accessibility_validation']['method'] : 'quail_api_method_immediate';
@@ -259,18 +245,6 @@ function quail_api_node_node_type_form_submit($form, &$form_state) {
   }
   else {
     $record['standards'] = array();
-  }
-
-  if (isset($form_state['values']['node_accessibility_validation']['messages'])){
-    foreach($form_state['values']['node_accessibility_validation']['messages'] as $key => $value){
-      if ($value == '0'){
-        unset($form_state['values']['node_accessibility_validation']['messages'][$key]);
-      }
-    }
-    $record['messages'] = $form_state['values']['node_accessibility_validation']['messages'];
-  }
-  else {
-    $record['messages'] = array();
   }
 
   if (is_object($node_type_settings_object)){
@@ -322,7 +296,7 @@ function quail_api_node_operation_validate($nids){
     if (!is_object($node)) continue;
     if (!array_key_exists($node->type, $node_type_settings_types)) continue;
 
-    $methods = quail_api_get_validation_methods();
+    $methods = quail_api_get_validation_methods(NULL, array(__FUNCTION__));
     $database = FALSE;
     $node_settings = $node_type_settings_types[$node->type];
 
@@ -336,7 +310,7 @@ function quail_api_node_operation_validate($nids){
       $node->accessibility = array();
 
       foreach ($node_settings as $key => $value){
-        if ($key == 'messages' || $key == 'standards'){
+        if ($key == 'standards'){
           $node->accessibility[$key] = unserialize($value);
         }
         else {
@@ -345,13 +319,27 @@ function quail_api_node_operation_validate($nids){
       }
     }
 
-    $results = quail_api_node_validate(array($node));
+    $results = quail_api_node_validate(array($node), NULL, NULL, array(__FUNCTION__));
 
     if (isset($results[$node->nid]['report'])){
       $results = $results[$node->nid]['report'];
 
       if ($database && !empty($results)){
-        quail_api_node_save_node_tests($node->nid, $node->vid, $results);
+        $no_failures = TRUE;
+
+        foreach($results as $severity => $severity_results){
+          if (isset($severity_results['total']) && $severity_results['total'] > 0){
+            $no_failures = FALSE;
+            break;
+          }
+        }
+
+        if ($no_failures){
+          quail_api_node_delete_node_tests($node->nid, $node->vid);
+        }
+        else {
+          quail_api_node_save_node_tests($node->nid, $node->vid, $results);
+        }
       }
     }
     else {
@@ -377,13 +365,15 @@ function quail_api_node_operation_validate($nids){
  *   The language to use during validation
  * @param $display_level (optional)
  *   An array of booleans representing the qual test display levels (defaults to quail_api_create_quail_display_level_array()).
+ * @param $function_history
+ *   (optional) array of function names, ie: array('0' => 'my_function_name')
  *
  * @return
  *   An array of all test failures, if any.
  */
-function quail_api_node_validate($nodes_or_nids, $language = NULL, $display_level = NULL){
+function quail_api_node_validate($nodes_or_nids, $language = NULL, $display_level = NULL, array $function_history = array()){
   if (!is_array($nodes_or_nids)){
-    cf_error_invalid_array(__FUNCTION__, 'nodes_or_nids');
+    cf_error_invalid_array(__FUNCTION__, 'nodes_or_nids', WATCHDOG_ERROR, $function_history);
     return array();
   }
 
@@ -391,8 +381,9 @@ function quail_api_node_validate($nodes_or_nids, $language = NULL, $display_leve
     return array();
   }
 
+  $function_history[] = __FUNCTION__;
   $results = array();
-  $standards = quail_api_get_standards(NULL, 'snippet');
+  $standards = quail_api_get_standards(NULL, 'snippet', $function_history);
 
   foreach ($nodes_or_nids as $node_or_nid){
     if (is_object($node_or_nid)){
@@ -413,7 +404,7 @@ function quail_api_node_validate($nodes_or_nids, $language = NULL, $display_leve
 
       if (!empty($node->accessibility['standards'])){
         foreach ($node->accessibility['standards'] as $standard_name){
-          $results[$node->nid] = array_merge($results[$node->nid], quail_api_validate_markup($rendered_node, $standards[$standard_name], $display_level));
+          $results[$node->nid] = array_merge($results[$node->nid], quail_api_validate_markup($rendered_node, $standards[$standard_name], $display_level, $function_history));
 
           if (module_exists('rules')){
             rules_invoke_event('quail_api_node_after_validating', $node, $results[$node->nid]);
@@ -443,7 +434,7 @@ function quail_api_node_node_load($nodes, $types) {
     $all_nodes[$node->nid]->accessibility = array();
 
     foreach ($result as $key => $value){
-      if ($key == 'messages' || $key == 'standards'){
+      if ($key == 'standards'){
         $all_nodes[$node->nid]->accessibility[$key] = unserialize($value);
       }
       else {
@@ -527,7 +518,9 @@ function quail_api_node_save_node_tests($nid, $vid, $reports){
     return FALSE;
   }
 
-  $tests_known = (array) quail_api_load_tests(array(), 'machine_name');
+  $function_history = array(__FUNCTION__);
+
+  $tests_known = (array) quail_api_load_tests(array(), 'machine_name', $function_history);
   $problems = array();
 
   foreach ($reports as $severity => $severity_results){
@@ -547,7 +540,7 @@ function quail_api_node_save_node_tests($nid, $vid, $reports){
           $test_data['human_name'] = $test_results['body']['title'];
           $test_data['description'] = $test_results['body']['description'];
 
-          $results = quail_api_save_test($test_data);
+          $results = quail_api_save_test($test_data, array(__FUNCTION__));
 
           if ($results === FALSE){
             watchdog('quail_api', "Failed to insert :machine_name into quail api tests database table.", array(':machine_name' => $test_name), WATCHDOG_ERROR);
@@ -555,7 +548,7 @@ function quail_api_node_save_node_tests($nid, $vid, $reports){
           }
 
           // The row must be loaded from the database so that the id can be retrieved
-          $loaded_test = quail_api_load_tests(array('machine_name' => $test_name));
+          $loaded_test = quail_api_load_tests(array('machine_name' => $test_name), NULL, $function_history);
 
           if (!isset($loaded_test['0']) || !is_object($loaded_test['0'])){
             watchdog('quail_api', "Failed to insert :machine_name problems into quail api tests database table because tests_known[:machine_name] is not a valid object.", array(':machine_name' => $test_name), WATCHDOG_ERROR);
@@ -591,6 +584,36 @@ function quail_api_node_save_node_tests($nid, $vid, $reports){
       watchdog('quail_api', "Failed to insert :machine_name problems into quail api node problems database table.", array(':machine_name' => $test_name), WATCHDOG_ERROR);
     }
   }
+}
+
+/**
+ * Deletes the node report data from the database.
+ * This is primarly used to remove data for a node that no longer has any validation failures.
+ *
+ * @param $nid
+ *   The node id of the node associated with the given reports.
+ * @param $vid
+ *   The node revision id of the node associated with the given reports.
+ *
+ * @return
+ *   A boolean representing the whether the save
+ */
+function quail_api_node_delete_node_tests($nid, $vid){
+  if (!is_numeric($nid)){
+    cf_error_not_numeric(__FUNCTION__, 'nid', WATCHDOG_ERROR);
+    return FALSE;
+  }
+
+  if (!is_numeric($vid)){
+    cf_error_not_numeric(__FUNCTION__, 'vid', WATCHDOG_ERROR);
+    return FALSE;
+  }
+
+  // @todo when vid support is added, be sure to add a conditional check against vid here
+  $query = db_delete('quail_api_node_problems');
+  $query->condition('nid', $nid);
+
+  return $query->execute();
 }
 
 /**
@@ -848,12 +871,13 @@ function quail_api_node_save_problem($problem_data){
  *   An array of database results in a format that can be processed by the quail_api theme functions.
  */
 function quail_api_node_restructure_results($nid, $vid, $display_levels = NULL){
+  $function_history = array(__FUNCTION__);
   $problems = (array) quail_api_node_load_problems(array('nid' => $nid));
-  $tests = quail_api_load_tests(array(), 'id');
+  $tests = quail_api_load_tests(array(), 'id', $function_history);
   $results = array();
 
   if (!is_array($display_levels)){
-    $display_levels = quail_api_get_display_levels();
+    $display_levels = quail_api_get_display_levels($function_history);
   }
 
   foreach ($display_levels as $key => $value){

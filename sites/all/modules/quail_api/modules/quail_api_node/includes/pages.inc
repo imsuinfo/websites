@@ -5,10 +5,11 @@
  */
 function quail_api_node_accessibility_tab_page($form, &$form_state, $node) {
   $form = array();
+  $function_history = array(__FUNCTION__);
 
   $results = array();
-  $display_levels = quail_api_get_display_levels();
-  $methods = quail_api_get_validation_methods();
+  $display_levels = quail_api_get_display_levels(NULL, $function_history);
+  $methods = quail_api_get_validation_methods(NULL, $function_history);
   $markup_format = 'full_html';
   $automatic = TRUE;
   $database = FALSE;
@@ -43,7 +44,7 @@ function quail_api_node_accessibility_tab_page($form, &$form_state, $node) {
   }
 
   if ($automatic || $perform_validation){
-    $results = quail_api_node_validate(array($node->nid));
+    $results = quail_api_node_validate(array($node), NULL, NULL, array(__FUNCTION__));
 
     if (isset($results[$node->nid]['report'])){
       $results = $results[$node->nid]['report'];
@@ -53,7 +54,21 @@ function quail_api_node_accessibility_tab_page($form, &$form_state, $node) {
     }
 
     if ($database && !empty($results)){
-      quail_api_node_save_node_tests($node->nid, $node->vid, $results);
+      $no_failures = TRUE;
+
+      foreach($results as $severity => $severity_results){
+        if (isset($severity_results['total']) && $severity_results['total'] > 0){
+          $no_failures = FALSE;
+          break;
+        }
+      }
+
+      if ($no_failures){
+        quail_api_node_delete_node_tests($node->nid, $node->vid);
+      }
+      else {
+        quail_api_node_save_node_tests($node->nid, $node->vid, $results);
+      }
     }
   }
   else if ($database){

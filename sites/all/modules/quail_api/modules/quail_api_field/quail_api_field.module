@@ -45,6 +45,7 @@ function quail_api_form_field_ui_field_edit_form_alter(&$form, &$form_state, $fo
     return;
   }
 
+  $function_history = array(__FUNCTION__);
   $current_values = &$form['#instance'];
   $instance_form = &$form['instance'];
 
@@ -73,7 +74,7 @@ function quail_api_form_field_ui_field_edit_form_alter(&$form, &$form_state, $fo
     '#type' => 'checkboxes',
     '#title' => t("Accessibility Standards"),
     '#default_value' => isset($current_values['field_accessibility_validation']['quail_standards']) ? $current_values['field_accessibility_validation']['quail_standards'] : array(),
-    '#options' => quail_api_get_standards_list(),
+    '#options' => quail_api_get_standards_list(NULL, 'all', $function_history),
     '#description' => t("Choose which accessiblity standards to validate against. It is strongly suggested that only 1 standard should be used because many of the validation tests are performed by more than one standard."),
   );
 }

@@ -81,15 +81,29 @@ function quail_api_node_perform_validation_action($node) {
   }
   $execute_once = TRUE;
 
-  $results = quail_api_node_validate(array($node));
+  $results = quail_api_node_validate(array($node), NULL, NULL, array(__FUNCTION__));
 
   if (isset($results[$node->nid]['report'])){
     $results = $results[$node->nid]['report'];
-    $methods = quail_api_get_validation_methods();
+    $methods = quail_api_get_validation_methods(NULL, array(__FUNCTION__));
     $database = isset($methods[$node->accessibility['method']]['database']) ? $methods[$node->accessibility['method']]['database'] : FALSE;
 
     if ($database && !empty($results)){
-      quail_api_node_save_node_tests($node->nid, $node->vid, $results);
+      $no_failures = TRUE;
+
+      foreach($results as $severity => $severity_results){
+        if (isset($severity_results['total']) && $severity_results['total'] > 0){
+          $no_failures = FALSE;
+          break;
+        }
+      }
+
+      if ($no_failures){
+        quail_api_node_delete_node_tests($node->nid, $node->vid);
+      }
+      else {
+        quail_api_node_save_node_tests($node->nid, $node->vid, $results);
+      }
     }
   }
 

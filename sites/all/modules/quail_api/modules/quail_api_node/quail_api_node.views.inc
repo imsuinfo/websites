@@ -68,5 +68,14 @@ function quail_api_node_views_data() {
     'filter' => array('handler' => 'views_handler_filter_string'),
   );
 
+  $data['quail_api_node_problems']['validate_link'] = array(
+    'field' => array(
+      'title' => t("Validate Link"),
+      'help' => t("Provide a simple link to the node accessibility validate page."),
+      'handler' => 'quail_api_node_handler_link_validate_node',
+      'path' => drupal_get_path('module', 'quail_api_node') . '/includes',
+    ),
+  );
+
   return $data;
 }

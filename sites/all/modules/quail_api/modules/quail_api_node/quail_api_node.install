@@ -90,13 +90,6 @@ function quail_api_node_schema() {
         'not null' => FALSE,
         'serialize' => TRUE,
       ),
-      'messages' => array(
-        'description' => t("A serialized array that contains the numeric id of all enabled messages."),
-        'type' => 'blob',
-        'size' => 'big',
-        'not null' => FALSE,
-        'serialize' => TRUE,
-      ),
       'method' => array(
         'description' => t("A string that represent the validation method to use."),
         'type' => 'varchar',

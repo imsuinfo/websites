@@ -9,12 +9,27 @@ class quail_api_node_handler_link_validate_node extends views_handler_field_node
   }
 
   function render_link($data, $values) {
-    if (!quail_api_node_is_enabled($values->type){
+    if (!is_object($values)){
+      cf_error_invalid_object(__FUNCTION__, 'values');
+      return;
+    }
+
+    $type = '';
+
+    if (property_exists($values, 'type')){
+      $type = $values->type;
+    }
+    else if (property_exists($values, 'nid')){
+      $node = node_load($values->nid);
+      $type = $node->type;
+    }
+
+    if (empty($type) || !quail_api_node_is_enabled($type)){
       return;
     }
 
     $this->options['alter']['make_link'] = TRUE;
-    $this->options['alter']['path'] = 'node/' . $values->nid . '/validate/perform';
+    $this->options['alter']['path'] = 'node/' . $values->nid . '/accessibility';
     $this->options['alter']['query'] = drupal_get_destination();
 
     $text = !empty($this->options['text']) ? $this->options['text'] : t("validate");
