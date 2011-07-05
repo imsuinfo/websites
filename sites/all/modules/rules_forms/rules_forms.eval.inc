@@ -39,108 +39,6 @@ function rules_forms_equal_array_values($array1, $array2) {
 }
 
 /**
- * Action: Set the redirect target.
- */
-function rules_forms_action_redirect($form_state, $path, $query, $fragment) {
-  $form_state['redirect'] = array($path, array('query' => array($query), 'fragment' => $fragment));
-}
-
-/**
- * Action: Adjust weight of a form element.
- */
-function rules_forms_action_adjust_weight($form, $element, $weight) {
-  $form_element = &_rules_forms_get_element($form, $element);
-  $form_element['#weight'] = $weight;
-}
-
-/**
- * Action: Insert prefix/suffix HTML code.
- */
-function rules_forms_action_prefix_suffix_html($form, $element, $prefix, $suffix) {
-  $form_element = &_rules_forms_get_element($form, $element);
-  if (!empty($prefix)) {
-    $form_element['#prefix'] = $prefix;
-  }
-  if (!empty($suffix)) {
-    $form_element['#suffix'] = $suffix;
-  }
-}
-
-/**
- * Action: Set form error.
- */
-function rules_forms_action_set_error($form, $element, $message) {
-  $form_element = &_rules_forms_get_element($form, $element);
-  if (isset($element['#parents'])) {
-    $element = implode('][', $form_element['#parents']);
-  }
-  else {
-    // Remove trailing ']'.
-    $element = substr($element, 0, strlen($element)-1);
-    // Insert ']' before the first '['.
-    $first_part = substr($element, 0, strpos($element, '['));
-    $second_part = substr($element, strpos($element, '['));
-    $form_element = $first_part .']'. $second_part;
-  }
-  form_set_error($element, $message);
-}
-
-/**
- * Action: Set the default value.
- */
-function rules_forms_action_set_element($form, $element, $value) {
-  $form_element = &_rules_forms_get_element($form, $element);
-  if (empty($form_element) || !array_key_exists('#default_value', $form_element)) {
-    return;
-  }
-  $lines = explode("\r\n", $value);
-  if (count($lines) == 1) {
-    $form_element['#default_value'] = $value;
-  }
-  else {
-    $form_element['#default_value'] = $lines;
-  }
-}
-
-/**
- * Action: Set text attributes of a form element.
- */
-function rules_forms_action_set_text($form, $element, $title, $description, $default_value) {
-  $form_element = &_rules_forms_get_element($form, $element);
-  $attributes = _rules_forms_element_attributes();
-  foreach ($attributes as $key => $value) {
-    $attribute = '#'. $key;
-    // Empty attribute strings will be ignored.
-    if (!empty(${$key}) && ${$key} != $element[$attribute]) {
-      $form_element[$attribute] = ${$key};
-    }
-  }
-}
-
-/**
- * Action: Set form attributes.
- */
-function rules_forms_action_set_access($form, $element, $access, $disabled, $required) {
-  $form_element = &_rules_forms_get_element($form, $element);
-  $attributes = _rules_forms_element_attributes();
-  foreach ($attributes as $key => $value) {
-    $attribute = '#'. $key;
-    // Since we're dealing with boolean values, we just check if the setting changed.
-    if (${$key} != $element[$attribute]) {
-      $form_element[$attribute] = ${$key};
-    }
-  }
-}
-
-/**
- * Action: Set multiple value element options.
- */
-function rules_forms_action_set_options($form, $element, $options) {
-  $form_element = &_rules_forms_get_element($form, $element);
-  $form_element['#options'] = explode("\r\n", $options);
-}
-
-/**
  * Action: Load a form element.
  */
 function rules_forms_action_load_element($form, $element) {
@@ -196,14 +94,122 @@ function rules_forms_action_create_element($form, $type, $parent, $name, $title)
  * Defines attributes importance for form elements.
  */
 function _rules_forms_element_attributes() {
-  $defaults = array(
+  return array(
     'type' => RULES_FORMS_REQUIRED,
     'title' => RULES_FORMS_REQUIRED,
     'default_value' => RULES_FORMS_OPTIONAL,
     'description' => RULES_FORMS_OPTIONAL,
+    'disabled' => RULES_FORMS_OPTIONAL,
     'required' => RULES_FORMS_OPTIONAL,
     'access' => RULES_FORMS_OPTIONAL,
   );
+}
+
+/**
+ * Action: Set the redirect target.
+ */
+function rules_forms_action_redirect($form_state, $path, $query, $fragment) {
+  $form_state['redirect'] = array($path, array('query' => array($query), 'fragment' => $fragment));
+}
+
+/**
+ * Action: Adjust weight of a form element.
+ */
+function rules_forms_action_adjust_weight($form, $element, $weight) {
+  $form_element = &_rules_forms_get_element($form, $element);
+  $form_element['#weight'] = $weight;
+}
+
+/**
+ * Action: Insert prefix/suffix HTML code.
+ */
+function rules_forms_action_prefix_suffix_html($form, $element, $prefix, $suffix) {
+  $form_element = &_rules_forms_get_element($form, $element);
+  if (!empty($prefix)) {
+    $form_element['#prefix'] = $prefix;
+  }
+  if (!empty($suffix)) {
+    $form_element['#suffix'] = $suffix;
+  }
+}
+
+/**
+ * Action: Set form error.
+ */
+function rules_forms_action_set_error($form, $element, $message) {
+  if (substr($element, strlen($element)-1) === ']') {
+    $form_element = &_rules_forms_get_element($form, $element);
+    if (isset($form_element['#parents'])) {
+      $element = implode('][', $form_element['#parents']);
+    }
+    else {
+      // Remove trailing ']'.
+      $element = substr($element, 0, strlen($element)-1);
+      // Insert ']' before the first '['.
+      $first_part = substr($element, 0, strpos($element, '['));
+      $second_part = substr($element, strpos($element, '['));
+      $element = $first_part .']'. $second_part;
+    }
+  }
+  form_set_error($element, $message);
+}
+
+/**
+ * Action: Set the default value.
+ */
+function rules_forms_action_set_element($form, $element, $value) {
+  $form_element = &_rules_forms_get_element($form, $element);
+  if (empty($form_element)) {
+    return;
+  }
+  $lines = explode("\r\n", $value);
+  if (count($lines) == 1) {
+    $form_element['#default_value'] = $value;
+  }
+  else {
+    $form_element['#default_value'] = $lines;
+  }
+}
+
+/**
+ * Action: Set text attributes of a form element.
+ */
+function rules_forms_action_set_text($form, $element, $title, $description) {
+  $form_element = &_rules_forms_get_element($form, $element);
+  $attributes = _rules_forms_element_attributes();
+  foreach ($attributes as $key => $value) {
+    // Empty attribute strings will be ignored.
+    if (!empty(${$key})) {
+      $attribute = '#'. $key;
+      $form_element[$attribute] = ${$key};
+    }
+  }
+}
+
+/**
+ * Action: Set form attributes.
+ */
+function rules_forms_action_set_access($form, $element, $access, $disabled, $required) {
+  // Access is selected by the user in the opposite fashion of how it actually works.
+  // Set the '#access' attribute based on whether to *hide* the form element or not.
+  $access = $access == 0;
+  $form_element = &_rules_forms_get_element($form, $element);
+  $attributes = _rules_forms_element_attributes();
+  foreach ($attributes as $key => $value) {
+    $attribute = '#'. $key;
+    // Since we're dealing with boolean values, we just check if the setting changed.
+    if (isset(${$key})) {
+      $form_element[$attribute] = ${$key};
+    }
+  }
+}
+
+/**
+ * Action: Set multiple value element options.
+ */
+function rules_forms_action_set_options($form, $element, $options) {
+  $form_element = &_rules_forms_get_element($form, $element);
+  $form_element['#options'] = explode("\r\n", $options);
 }
 
 /**

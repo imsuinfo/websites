@@ -26,7 +26,7 @@ function rules_forms_permission() {
   return array(
     'administer rules forms rules' => array(
       'title' => t('Administer Rules Forms rules'),
-      'description' => t('Gives users access to create and edit Rules Forms rules.'),
+      'description' => t('Grants access to building rules for forms.'),
     ),
     'administer rules forms' => array(
       'title' => t('Administer Rules Forms'),
@@ -45,7 +45,7 @@ function rules_forms_menu() {
     'description' => 'Configure Rules forms events.',
     'page callback' => 'drupal_get_form',
     'page arguments' => array('rules_forms_admin_events'),
-    'access arguments' => array('administer rules', 'administer rules forms'),
+    'access arguments' => array('administer rules forms'),
     'type' => MENU_LOCAL_TASK,
     'weight' => 1,
     'file' => 'rules_forms.admin.inc',
@@ -55,7 +55,7 @@ function rules_forms_menu() {
     'type' => MENU_CALLBACK,
     'page callback' => 'rules_forms_activate',
     'page arguments' => array(5),
-    'access arguments' => array('administer rules', 'administer rules forms'),
+    'access arguments' => array('administer rules forms'),
     'file' => 'rules_forms.admin.inc',
   );
   return $items;

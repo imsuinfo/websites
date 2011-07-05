@@ -18,7 +18,8 @@
  ---------------
  This is a short usage guide to build Rules on you forms:
 
- * Go to the "Form events" page in the Rules administration menu (admin/rules/forms).
+ * Go to the "Form events" page in the Rules administration menu
+   (admin/config/workflow/rules/forms).
  * Select the checkbox "Enable event activation messages on forms" and hit the "Save
    settings" button.
  * Go to the form on your site that you would like to customize with Rules, e.g.
@@ -46,8 +47,9 @@
  * Select the checkbox "Display form element IDs" and hit the "Save settings" button.
  * Go to the target form on your site, where you will see the form element ID below
    each form element.
- * Copy the ID of the form element you would like to examine or manipulate, e.g.
-   copy "search_block_form" on the search form if you want to do something
-   with the search text field.
- * Paste this ID when you create a condition or an action which requires a form
-   element ID.
+ * Actions for individual form elements can be taken once that element is loaded
+   either by creating or loading an element.
+ * To load an element, paste the Element ID in the "Load a form element" action.
+ * Once loaded, the data selector may be used to access or alter the element properties.
+ * New elements will create data named element_created and loaded elements will create
+   data named element_fetched by default.

@@ -6,10 +6,13 @@
  */
 
 /**
- * Implements of hook_install().
+ * Implements hook_install().
  */
 function rules_forms_install() {
   // Set the modules' weight to 20, because we want it to be the last one using
   // hook_form_alter().
   db_query("UPDATE {system} SET weight = 20 WHERE name = 'rules_forms'");
+
+  // Notify the user of configuration requirements for Rules Forms.
+  drupal_set_message(t('You may now <a href="!rules_forms_settings">enable Rules Forms rules</a> for individual forms. For more information please consult the documentation in README.txt in your Rules Forms Support module folder.', array('!rules_forms_settings' => url(RULES_FORMS_ADMIN_PATH))), 'status');
 }

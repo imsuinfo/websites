@@ -27,18 +27,12 @@ function rules_forms_rules_event_info() {
   foreach ($form_events as $form_id => $label) {
     $events[$form_id .'_form_built'] = $defaults + array(
       'label' => t('@form is being built', array('@form' => $label)),
-      'group' => 'Rules Forms',
-      'variables' => rules_forms_event_variables(),
     );
     $events[$form_id .'_form_submit'] = $defaults + array(
       'label' => t('@form is submitted', array('@form' => $label)),
-      'group' => 'Rules Forms',
-      'variables' => rules_forms_event_variables(),
     );
     $events[$form_id .'_form_validate'] = $defaults + array(
       'label' => t('@form is being validated', array('@form' => $label)),
-      'group' => 'Rules Forms',
-      'variables' => rules_forms_event_variables(),
     );
   }
   return $events;
@@ -78,8 +72,8 @@ function rules_forms_event_variables() {
  * @see rules_forms_event_variables()
  */
 function rules_forms_variables_global_user() {
-  $uid = $GLOBALS['user']->uid;
-  return user_load($uid);
+  global $user;
+  return $user;
 }
 
 /**
@@ -192,6 +186,7 @@ function rules_forms_rules_action_info() {
       'element' => array(
         'type' => 'form_element',
         'label' => t('Form element'),
+        'restriction' => 'selector',
         'description' => t('The element that should be targeted.'),
       ),
       'title' => array(
@@ -218,6 +213,7 @@ function rules_forms_rules_action_info() {
       'element' => array(
         'type' => 'form_element',
         'label' => t('Form element'),
+        'restriction' => 'selector',
         'description' => t('The element that should be targeted.'),
       ),
       'access' => array(
@@ -247,6 +243,7 @@ function rules_forms_rules_action_info() {
       'element' => array(
         'type' => 'form_element',
         'label' => t('Form element'),
+        'restriction' => 'selector',
         'description' => t('The element that should be targeted.'),
       ),
       'access' => array(
@@ -273,7 +270,7 @@ function rules_forms_rules_action_info() {
         'label' => t('Message'),
       ),
     ),
-    'base' => 'rules_forms_action_set_error',
+    'base' => 'rules_forms_action_set_element',
     'access callback' => 'rules_forms_integration_access',
   );
   $actions['redirect'] = array(
@@ -297,6 +294,7 @@ function rules_forms_rules_action_info() {
       'element' => array(
         'type' => 'form_element',
         'label' => t('Form element'),
+        'restriction' => 'selector',
         'description' => t('The element that should be adjusted.'),
       ),
       'weight' => array(
@@ -316,6 +314,7 @@ function rules_forms_rules_action_info() {
       'element' => array(
         'type' => 'form_element',
         'label' => t('Form element'),
+        'restriction' => 'selector',
         'description' => t('ID of the form element to be targeted.'),
       ),
       'prefix' => array(
@@ -340,6 +339,7 @@ function rules_forms_rules_action_info() {
       'element' => array(
         'type' => 'form_element',
         'label' => t('Form element'),
+        'restriction' => 'selector',
         'description' => t('The element that should be marked.'),
       ),
       'message' => array(
