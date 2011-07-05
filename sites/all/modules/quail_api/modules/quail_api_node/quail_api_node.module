@@ -877,7 +877,7 @@ function quail_api_node_restructure_results($nid, $vid, $display_levels = NULL){
   $results = array();
 
   if (!is_array($display_levels)){
-    $display_levels = quail_api_get_display_levels($function_history);
+    $display_levels = quail_api_get_display_levels(NULL, $function_history);
   }
 
   foreach ($display_levels as $key => $value){

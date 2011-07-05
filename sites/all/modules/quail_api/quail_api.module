@@ -474,7 +474,7 @@ function quail_api_get_display_levels_list($display_levels = NULL, array $functi
   $function_history[] = __FUNCTION__;
 
   if (is_null($display_levels)){
-    $display_levels = quail_api_get_display_levels($function_history);
+    $display_levels = quail_api_get_display_levels(NULL, $function_history);
   }
 
   $display_levels_list = array();
@@ -503,7 +503,7 @@ function quail_api_get_default_display_level($display_levels = NULL, array $func
   $function_history[] = __FUNCTION__;
 
   if (is_null($display_levels)){
-    $display_levels = quail_api_get_display_levels($function_history);
+    $display_levels = quail_api_get_display_levels(NULL, $function_history);
   }
 
   $display_level = array();
