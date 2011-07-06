@@ -319,7 +319,7 @@ function quail_api_node_operation_validate($nids){
       }
     }
 
-    $results = quail_api_node_validate(array($node), NULL, NULL, array(__FUNCTION__));
+    $results = quail_api_node_perform_validation(array($node), NULL, NULL, array(__FUNCTION__));
 
     if (isset($results[$node->nid]['report'])){
       $results = $results[$node->nid]['report'];
@@ -371,7 +371,7 @@ function quail_api_node_operation_validate($nids){
  * @return
  *   An array of all test failures, if any.
  */
-function quail_api_node_validate($nodes_or_nids, $language = NULL, $display_level = NULL, array $function_history = array()){
+function quail_api_node_perform_validation($nodes_or_nids, $language = NULL, $display_level = NULL, array $function_history = array()){
   if (!is_array($nodes_or_nids)){
     cf_error_invalid_array(__FUNCTION__, 'nodes_or_nids', WATCHDOG_ERROR, $function_history);
     return array();

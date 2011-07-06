@@ -44,7 +44,7 @@ function quail_api_node_accessibility_tab_page($form, &$form_state, $node) {
   }
 
   if ($automatic || $perform_validation){
-    $results = quail_api_node_validate(array($node), NULL, NULL, array(__FUNCTION__));
+    $results = quail_api_node_perform_validation(array($node), NULL, NULL, array(__FUNCTION__));
 
     if (isset($results[$node->nid]['report'])){
       $results = $results[$node->nid]['report'];

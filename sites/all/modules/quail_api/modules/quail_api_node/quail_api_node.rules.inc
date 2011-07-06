@@ -81,7 +81,7 @@ function quail_api_node_perform_validation_action($node) {
   }
   $execute_once = TRUE;
 
-  $results = quail_api_node_validate(array($node), NULL, NULL, array(__FUNCTION__));
+  $results = quail_api_node_perform_validation(array($node), NULL, NULL, array(__FUNCTION__));
 
   if (isset($results[$node->nid]['report'])){
     $results = $results[$node->nid]['report'];
