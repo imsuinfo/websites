@@ -452,7 +452,6 @@ function _htmlpurifier_settings($form, &$form_state, $filter, $format, $defaults
   $settings = array();
   
   $settings['#attached']['css'][] = "$module_path/config-form.css";
-  $settings['#attached']['js'][] = "$module_path/config-form.js";
   $settings['#attached']['js'][] = array(
     'data' => HTMLPurifier_Printer_ConfigForm::getJavaScript(),
     'type' => 'inline',
