@@ -123,7 +123,7 @@ class quailCSS {
 		foreach($this->css as $selector => $style) {
 			$xpath = new DOMXPath($this->dom);
 			$entries = @$xpath->query($this->getXpath($selector));
-			if($entries->length) {
+			if(is_object($entries) && property_exists($entries, 'length') && $entries->length) {
 				foreach($entries as $e) {
 					if(!$e->hasAttribute('quail_style_index')) {
 						$e->setAttribute('quail_style_index', $this->next_index);
@@ -149,10 +149,16 @@ class quailCSS {
 	*/
 	private function addCSSToElement($element, $style, $specificity) {
 		$index_id = $element->getAttribute('quail_style_index');
+		if (!isset($this->style_index[$index_id])){
+			$this->style_index[$index_id] = array();
+		}
+
 		foreach($style as $name => $value) {
-			if(!$this->style_index[$index_id][$name] ||
-			    $this->style_index[$index_id][$name]['specificity'] < $specificity
-			    || strpos($value, '!important') !== false) 
+			if(!isset($this->style_index[$index_id][$name]) ||
+			  !$this->style_index[$index_id][$name] ||
+			  (isset($this->style_index[$index_id][$name]['specificity']) &&
+			  $this->style_index[$index_id][$name]['specificity'] < $specificity) ||
+			  strpos($value, '!important') !== false)
 			{
 				$this->style_index[$index_id][$name] = array(
 					'value' => str_replace('!important', '', trim(strtolower($value))),
