@@ -6,7 +6,7 @@
 function quail_api_node_drush_command() {
   $items = array();
 
-  $items['accessibility_validate_node'] = array(
+  $items['acc_validate_node'] = array(
     'callback' => 'quail_api_node_drush_callback_validate',
     'description' => "Perform accessibility validation on nodes. This is only useful if the content type has save to database support enabled.",
     'arguments' => array(
@@ -17,15 +17,15 @@ function quail_api_node_drush_command() {
       '--type' => "Perform validation on every single node in the system of the specified content type (use the machine name of the content type).",
     ),
     'examples' => array(
-      'drush accessibility_validate_node 45 46 47' => "Validate nodes with IDs of 45, 46, and 47.",
-      'drush accessibility_validate_node --all' => "Validate all nodes in the system.",
-      'drush accessibility_validate_node --type page' => "Validate all nodes in the system of the content type 'page'.",
+      'drush acc_validate_node 45 46 47' => "Validate nodes with IDs of 45, 46, and 47.",
+      'drush acc_validate_node --all' => "Validate all nodes in the system.",
+      'drush acc_validate_node --type page' => "Validate all nodes in the system of the content type 'page'.",
     ),
   );
 
   // Add aliases for usability.
-  quail_api_node_drush_command_add_alias($items, 'accessibility_validate_node', 'accessibility_validate_node');
-  quail_api_node_drush_command_add_alias($items, 'accessibility_validate_node', 'av_node');
+  quail_api_node_drush_command_add_alias($items, 'acc_validate_node', 'acc_validate_node');
+  quail_api_node_drush_command_add_alias($items, 'acc_validate_node', 'av_node');
 
   return $items;
 }

@@ -306,7 +306,7 @@ function quail_api_node_operation_validate($nids){
 
     // @fixme perhaps this is a caching issue, but the node->accessibility settings is not always accurate
     // manually create the accessibility array because it must already be enabled for the code to get this far
-    if (!is_array($node->accessibility)){
+    if (!property_exists($node, 'accessibility') || !is_array($node->accessibility)){
       $node->accessibility = array();
 
       foreach ($node_settings as $key => $value){
@@ -399,7 +399,7 @@ function quail_api_node_perform_validation($nodes_or_nids, $language = NULL, $di
 
     $results[$node->nid] = array();
 
-    if (is_array($node->accessibility)){
+    if (property_exists($node, 'accessibility') && is_array($node->accessibility)){
       $rendered_node = drupal_render(node_view($node, 'full', $language));
 
       if (!empty($node->accessibility['standards'])){
@@ -781,6 +781,9 @@ function quail_api_node_replace_problems($nid, $vid, $problems){
       $result = quail_api_node_save_problem($problem);
       // @todo handle return errors
     }
+
+    // force transaction to execute
+    unset($transaction);
   }
   catch (Exception $e){
     $transaction->rollback();

@@ -19,13 +19,15 @@ function quail_api_node_accessibility_tab_page($form, &$form_state, $node) {
     $perform_validation = TRUE;
   }
 
-  if (!empty($node->accessibility['format'])){
-    $markup_format = $node->accessibility['format'];
-  }
+  if (property_exists($node, 'accessibility') && is_array($node->accessibility)){
+    if (!empty($node->accessibility['format'])){
+      $markup_format = $node->accessibility['format'];
+    }
 
-  if (!empty($node->accessibility['method']) && !empty($methods[$node->accessibility['method']])){
-    $automatic = $methods[$node->accessibility['method']]['automatic'];
-    $database = $methods[$node->accessibility['method']]['database'];
+    if (!empty($node->accessibility['method']) && !empty($methods[$node->accessibility['method']])){
+      $automatic = $methods[$node->accessibility['method']]['automatic'];
+      $database = $methods[$node->accessibility['method']]['database'];
+    }
   }
 
   $form['accessibility_validation_results'] = array(
