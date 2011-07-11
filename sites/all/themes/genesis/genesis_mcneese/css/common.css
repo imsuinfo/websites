@@ -10,6 +10,15 @@ fieldset {
 }
 
 
+/*** Unsupported Notice ***/
+div#unsupported {
+  background-color: #ffc0cb;
+
+  border: 2px dotted #ff0000;
+  margin: 5px;
+  padding: 5px;
+}
+
 
 /*** Login Form ***/
 form#user-login-form {

@@ -38,10 +38,6 @@ div#columns {
   min-height: 500px;
 }
 
-div.drupal_content div.content > div.node {
-  min-height: 400px;
-}
-
 .element-invisible {
   display: block;
 

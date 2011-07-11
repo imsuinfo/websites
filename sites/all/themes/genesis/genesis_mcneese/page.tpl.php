@@ -72,6 +72,12 @@
   <div id="container" class="<?php print $classes; ?><?php print($page['is_front_css']);?><?php print($emergency['css']); ?>">
     <?php if (!$in_overlay): // hide in overlay ?>
 
+    <?php if (!empty($unsupported)){ ?>
+      <div id="unsupported" class="clearfix">
+        <?php print($unsupported); ?>
+      </div>
+    <?php } ?>
+
       <?php if (!empty($page['leaderboard'])): ?>
         <div id="leaderboard" class="clearfix">
           <?php print($page['leaderboard']); ?>
