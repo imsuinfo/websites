@@ -256,6 +256,14 @@ table.system-status-report tr.error {
 
 
 
+/*** Messages Region ***/
+div#content-column > div.messages {
+  max-height: 250px;
+  overflow: auto;
+}
+
+
+
 /*** Content - home page ***/
 div.view-display-id-front_page_featured {
   max-height: 379px;
