@@ -12,9 +12,9 @@ fieldset {
 
 /*** Unsupported Notice ***/
 div#unsupported {
-  background-color: #ffc0cb;
+  background-color: #ffe0eb;
 
-  border: 2px dotted #ff0000;
+  border: 2px dotted #ff5555;
   margin: 5px;
   padding: 5px;
 
