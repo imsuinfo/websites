@@ -40,6 +40,8 @@
   <?php print $rdf_namespaces; ?>>
 <head profile="<?php print $grddl_profile; ?>">
   <meta http-equiv="X-UA-Compatible" content="IE=8" />
+  <?php if (!empty($meta_page_expires)){ ?><meta http-equiv="expires" content="<?php print($meta_page_expires);?>"><?php } ?>
+
   <?php print $head; ?>
   <title><?php print $head_title; ?></title>
   <?php print $styles; ?>

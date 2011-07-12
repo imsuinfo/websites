@@ -43,7 +43,14 @@ function genesis_mcneese_process(&$vars, $hook) {
 function genesis_mcneese_preprocess_html(&$vars) {
   $vars['emergency'] = genesis_mcneese_generate_emergency_array();
   $vars['unsupported'] = '';
-  $agent_settings = $_SERVER['HTTP_USER_AGENT'];
+  $vars['meta_page_expires'] = '';
+  $agent_settings = isset($_SERVER['HTTP_USER_AGENT']) ? $_SERVER['HTTP_USER_AGENT'] : '';
+  $request_time = isset($_SERVER['REQUEST_TIME']) ? $_SERVER['REQUEST_TIME'] : '';
+
+  if (!empty($request_time)){
+    $date_value = strtotime('+1 hours', $request_time);
+    $vars['meta_page_expires'] = gmdate('D, d M Y H:i:s T', $date_value);
+  }
 
   if (function_exists('get_browser')){
     $browser_details = get_browser(null, true);
