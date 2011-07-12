@@ -17,6 +17,8 @@ div#unsupported {
   border: 2px dotted #ff0000;
   margin: 5px;
   padding: 5px;
+
+  font-size: 13px;
 }
 
 

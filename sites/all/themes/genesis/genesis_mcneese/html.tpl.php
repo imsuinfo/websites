@@ -56,6 +56,12 @@
     </span>
   <?php endif; ?>
 
+  <?php if (!empty($unsupported)){ ?>
+    <div id="unsupported" class="clearfix">
+      <?php print($unsupported); ?>
+    </div>
+  <?php } ?>
+
   <?php print $page_top; ?>
   <?php print $page; ?>
   <?php print $page_bottom; ?>
