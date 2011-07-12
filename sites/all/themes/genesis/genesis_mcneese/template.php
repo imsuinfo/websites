@@ -43,7 +43,6 @@ function genesis_mcneese_process(&$vars, $hook) {
 function genesis_mcneese_preprocess_html(&$vars) {
   drupal_add_css(path_to_theme() . '/css/ie8.css', array('group' => CSS_THEME, 'browsers' => array('IE' => 'lte IE 8', '!IE' => FALSE), 'preprocess' => FALSE, 'weight' => 2));
   drupal_add_css(path_to_theme() . '/css/ie_old.css', array('group' => CSS_THEME, 'browsers' => array('IE' => 'lte IE 7', '!IE' => FALSE), 'preprocess' => FALSE, 'weight' => 3));
-  drupal_add_css(path_to_theme() . '/css/moz_old.css', array('group' => CSS_THEME, 'browsers' => array('Mozilla' => 'lte IE 3', '!Mozilla' => FALSE), 'preprocess' => FALSE, 'weight' => 3));
 
   $vars['emergency'] = genesis_mcneese_generate_emergency_array();
 }
@@ -77,6 +76,7 @@ function genesis_mcneese_preprocess_page(&$vars) {
   $vars['page']['subtitle'] = '';
   $vars['emergency'] = genesis_mcneese_generate_emergency_array();
   $vars['unsupported'] = '';
+  $agent_settings = $_SERVER['HTTP_USER_AGENT'];
   $subboard_image_display = '_large';
 
   if (function_exists('get_browser')){
@@ -90,6 +90,11 @@ function genesis_mcneese_preprocess_page(&$vars) {
       $majorver = $browser_details['majorver'];
     }
 
+    // gather agent statistics, but only for the front page.
+    if (drupal_is_front_page() === TRUE && !empty($agent_settings)){
+      watchdog('agent', "Agent: " . check_plain($_SERVER['HTTP_USER_AGENT']));
+    }
+
     switch ($browser){
       case 'firefox':
         if ($majorver < 3){
@@ -98,12 +103,16 @@ function genesis_mcneese_preprocess_page(&$vars) {
         break;
       case 'mozilla':
         if ($majorver < 4){
+          drupal_add_css(path_to_theme() . '/css/moz_old.css', array('group' => CSS_THEME, 'browsers' => array('Mozilla' => 'lte IE 3', '!Mozilla' => FALSE), 'preprocess' => FALSE, 'weight' => 3));
           $vars['unsupported'] = t("You are using an unsupported version of Mozilla. To properly view this website, please upgrade your webbrowser or <a href='@alternate_browser_url'>download an alternative browser</a>.", array('@alternate_browser_url' => "/supported_browsers"));
         }
         break;
       case 'ie':
         if ($majorver < 8){
-          $vars['unsupported'] = t("You are using an unsupported version of Internet Explorer. To properly view this website, please upgrade your webbrowser or <a href='@alternate_browser_url'>download an alternative browser</a>.", array('@alternate_browser_url' => "/supported_browsers"));
+          // check for trident as a lot of campus machines have their firefox improperly configured to report as ie 6 or ie 7.
+          if (!empty($agent_settings) && preg_match('/ Trident/i', $agent_settings) > 0){
+            $vars['unsupported'] = t("You are using an unsupported version of Internet Explorer. To properly view this website, please upgrade your webbrowser or <a href='@alternate_browser_url'>download an alternative browser</a>.", array('@alternate_browser_url' => "/supported_browsers"));
+          }
         }
         break;
       case 'chrome':
