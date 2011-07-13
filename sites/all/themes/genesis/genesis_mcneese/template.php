@@ -80,7 +80,7 @@ function genesis_mcneese_preprocess_html(&$vars) {
           if ($result > 0){
             if (isset($matches[1]) && isset($matches[2])) {
               if ($matches[1] <= 1 && $matches[2] <= 7){
-                drupal_add_css(path_to_theme() . '/css/moz_old.css', array('group' => CSS_THEME, 'browsers' => array('Mozilla' => 'lte IE 3', '!Mozilla' => FALSE), 'preprocess' => FALSE, 'weight' => 3));
+                drupal_add_css(path_to_theme() . '/css/moz_old.css', array('group' => CSS_THEME, 'preprocess' => FALSE, 'weight' => 3));
                 $vars['unsupported'] = t("You are using an unsupported version of Mozilla. To properly view this website, please upgrade your webbrowser or <a href='@alternate_browser_url'>download an alternative browser</a>.", array('@alternate_browser_url' => "/supported_browsers"));
               }
             }
