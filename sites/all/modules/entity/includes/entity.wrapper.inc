@@ -928,6 +928,12 @@ class EntityListWrapper extends EntityMetadataWrapper implements IteratorAggrega
     if ($this->get(0) instanceof EntityDrupalWrapper && $this->itemType() != 'entity' && empty($options['identifier']) && $this->dataAvailable()) {
       $list = parent::value();
       $entities = $list ? entity_load($this->get(0)->type, $list) : array();
+
+      // workaround: taxonomy term id returns as a string instead of an array containing a string (cause is unknown)
+      if ($list && gettype($list) != 'array'){
+        $list = array($list);
+      }
+
       // Make sure to keep the array keys as present in the list.
       foreach ($list as $key => $id) {
         if (!isset($entities[$id])) {
@@ -942,7 +948,7 @@ class EntityListWrapper extends EntityMetadataWrapper implements IteratorAggrega
 
   public function set($values) {
     // Support setting lists of fully loaded entities.
-    if ($this->get(0) instanceof EntityDrupalWrapper && $this->itemType() != 'entity' && $values && is_object(reset($values))) {
+    if ($this->get(0) instanceof EntityDrupalWrapper && $this->itemType() != 'entity' && is_array($values) && is_object(reset($values))) {
       foreach ($values as $key => $value) {
         list($id, $vid, $bundle) = entity_extract_ids($this->get(0)->type, $value);
         $values[$key] = $id;

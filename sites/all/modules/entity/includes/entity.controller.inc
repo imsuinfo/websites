@@ -176,6 +176,11 @@ class EntityAPIController extends DrupalDefaultEntityController implements Entit
       $revision_id = FALSE;
     }
 
+    // workaround: taxonomy term id returns as a string instead of an array containing a string (cause is unknown)
+    if ($ids && !is_array($ids)){
+      $ids = array($ids);
+    }
+
     // Create a new variable which is either a prepared version of the $ids
     // array for later comparison with the entity cache, or FALSE if no $ids
     // were passed. The $ids array is reduced as items are loaded from cache,
