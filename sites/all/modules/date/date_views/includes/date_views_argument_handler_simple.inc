@@ -16,9 +16,6 @@ class date_views_argument_handler_simple extends views_handler_argument_date {
   function init(&$view, &$options) {
     parent::init($view, $options);
 
-    // Identify the type of display we're using.
-    $this->display_handler = $view->display_handler->definition['handler'];
-
     // Add a date handler.
     module_load_include('inc', 'date_api', 'date_api_sql');
     $this->date_handler = new date_sql_handler(DATE_UNIX);
@@ -29,12 +26,11 @@ class date_views_argument_handler_simple extends views_handler_argument_date {
       }
     }
     $this->date_handler->granularity = $this->options['granularity'];
-
     $this->format = $this->date_handler->views_formats($this->date_handler->granularity, 'display');
     $this->sql_format = $this->date_handler->views_formats($this->date_handler->granularity, 'sql');
     // $this->arg_format is the format the parent date handler will use to create a default argument.
     $this->arg_format = $this->format();
- }
+  }
 
   /**
    * Add a callback for the formula to wrap the field in the right SQL.
@@ -58,6 +54,16 @@ class date_views_argument_handler_simple extends views_handler_argument_date {
     else {
       return !empty($this->options[$this->option_name]) ? $this->options[$this->option_name] : 'Y-m';
     }
+  }
+
+  function get_related_pager_type() {
+    $display = $this->view->current_display;
+    $this->pager_type = $this->view->$display['display_options']['pager']['type'];
+  }
+
+  function get_related_pager_options() {
+    $display = $this->view->current_display;
+    $this->pager_options = $this->view->$display['display_options']['pager']['options'];
   }
 
   /**
@@ -88,6 +94,7 @@ class date_views_argument_handler_simple extends views_handler_argument_date {
     $options['year_range'] = array('default' => '-3:+3', 'export' => 'export_plugin');
     $options['granularity'] = array('default' => 'month', 'export' => 'export_plugin');
     $options['default_argument_type'] = array('default' => 'date', 'export' => 'export_plugin');
+    $options['add_delta'] = array('default' => '', 'export' => 'export_plugin');  
     return $options;
   }
 
@@ -97,7 +104,7 @@ class date_views_argument_handler_simple extends views_handler_argument_date {
    */
   function export_plugin($indent, $prefix, $storage, $option, $definition, $parents) {
     $output = '';
-    if (in_array($option, array('year_range', 'granularity', 'default_argument_type'))) {
+    if (in_array($option, array('year_range', 'granularity', 'default_argument_type', 'add_delta'))) {
       $name = $this->options[$option];
       $output .= $indent . $prefix . "['$option'] = '$name';\n";
       return $output;
@@ -128,6 +135,15 @@ class date_views_argument_handler_simple extends views_handler_argument_date {
       '#default_value' => $this->options['year_range'],
       '#description' => t("Set the allowable minimum and maximum year range for this argument, either a -X:+X offset from the current year, like '-3:+3' or an absolute minimum and maximum year, like '2005:2010' . When the argument is set to a date outside the range, the page will be returned as 'Page not found (404)' ."),
     );
+
+    $form['add_delta'] = array(
+      '#type' => 'radios',
+      '#title' => t('Add multiple value identifier'),
+      '#default_value' => $this->options['add_delta'],
+      '#options' => array('' => t('No'), 'yes' => t('Yes')),
+      '#description' => t('Add an identifier to the view to show which multiple value date fields meet the filter criteria. Note: This option may introduce duplicate values into the view. Required when using multiple value fields in a Calendar or any time you want the node view of multiple value dates to display only the values that match the view filters.'),
+    );
+
   }
 
   function options_validate(&$form, &$form_state) {
@@ -191,14 +207,18 @@ class date_views_argument_handler_simple extends views_handler_argument_date {
     if ($this->date_forbid()) {
       return;
     }
-    
     $this->formula = $this->formula($this->real_field);
     $this->date_handler->granularity = $this->date_handler->arg_granularity($this->argument);
+    $this->granularity = $this->date_handler->granularity;
     $this->format = $this->date_handler->views_formats($this->date_handler->granularity, 'display');
     $this->sql_format = $this->date_handler->views_formats($this->date_handler->granularity, 'sql');
-
     $this->ensure_my_table();
     $group = !empty($this->options['date_group']) ? $this->options['date_group'] : 0;
+
+    // Add the delta field to the view so we can later find the value that matched our query.
+    if (!empty($this->options['add_delta']) && (substr($this->real_field, -6) == '_value' || substr($this->real_field, -7) == '_value2')) {
+      $this->query->add_field($this->table, 'delta');
+    }
 
     // Now that our table is secure, get our formula.
     if ($this->date_handler->granularity != 'week') {
@@ -208,6 +228,7 @@ class date_views_argument_handler_simple extends views_handler_argument_date {
         $placeholder => $this->argument,
       );
       $this->query->add_where($group, $formula, $placeholders, 'formula');
+      $this->date_handler->placeholders = $placeholders;
     }
     else {
       $min_value = date_format($this->min_date, DATE_FORMAT_DATETIME);
@@ -216,6 +237,7 @@ class date_views_argument_handler_simple extends views_handler_argument_date {
       $field = $this->date_handler->sql_format(DATE_FORMAT_DATETIME, $field);
       $placeholder_min = $this->placeholder();
       $placeholder_max = $this->placeholder();
+      $this->date_handler->placeholders = array($placeholder_min => $min_value, $placeholder_max => $max_value);
       $this->query->add_where_expression($group, "$field >= $placeholder_min AND $field <= $placeholder_max", array($placeholder_min => $min_value, $placeholder_max => $max_value));
     }
 

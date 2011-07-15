@@ -51,23 +51,24 @@ function date_views_views_plugins() {
         'help topic' => 'date-browser',
       ),
     ),
-    'style' => array(
-      'parent' => array(
-        // this isn't really a display but is necessary so the file can
-        // be included.
-        'no ui' => TRUE,
-        'handler' => 'views_plugin_style',
-        'path' => "$views_path/plugins",
-        'theme file' => 'theme.inc',
-        'theme path' => "$views_path/theme",
-        'parent' => '',
+
+    'pager' => array(
+      'date_views_pager' => array(
+        'title' => t('Page by date'),
+        'help' => t('Page using the value of a date field.'),
+        'handler' => 'date_views_plugin_pager',
+        'path' => "$path/includes",
+        'help topic' => 'date-views-pager',
+        'uses options' => TRUE,
       ),
+    ),
+
+    'style' => array(
       'date_nav' => array(
         'title' => t('Date browser style'),
         'help' => t('Creates back/next navigation.'),
         'handler' => 'date_navigation_plugin_style',
         'path' => "$path/includes",
-        'parent' => 'parent',
         'theme' => 'date_navigation',
         'theme file' => 'theme.inc',
         'theme path' => "$path/theme",
@@ -185,6 +186,11 @@ function date_views_querystring($view, $extra_params = array()) {
   if (empty($extra_params['view'])) {
     $exclude[] = 'view';
   }
+  // Clear out old date pager settings if not explicitly added.
+  if (!empty($view->date_info->pager_id) && empty($extra_params[$view->date_info->pager_id])) {
+    $exclude[] = $view->date_info->pager_id;
+  }
+
   $query = drupal_get_query_parameters($query_params, $exclude);
   // To prevent an empty query string from adding a "?" on to the end of a URL,
   // we return NULL.

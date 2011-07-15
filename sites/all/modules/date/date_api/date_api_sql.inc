@@ -192,7 +192,7 @@ class date_sql_handler {
             $field = "$field::ABSTIME";
             break;
           case DATE_ISO:
-            $field = "TO_DATE($field, 'FMYYYY-FMMM-FMDDTFMHH:FMMI:FMSS')";
+            $field = "TO_DATE($field, 'FMYYYY-FMMM-FMDDTFMHH24:FMMI:FMSS')";
             break;
           case DATE_DATETIME:
             break;
@@ -753,6 +753,9 @@ class date_sql_handler {
   }
 
   function views_formats($granularity, $type = 'sql') {
+    if (empty($granularity)) {
+      return DATE_FORMAT_ISO;
+    }
     $formats = array('display', 'sql');
     // Start with the site long date format and add seconds to it
     $long = str_replace(':i', ':i:s', variable_get('date_format_long',  'l, F j, Y - H:i'));
@@ -784,10 +787,6 @@ class date_sql_handler {
       case ('week'):
         $formats['display'] = 'F j Y (W)';
         $formats['sql'] = 'Y-\WW';
-        break;
-     default:
-        $formats['display'] = 'Y-m-d';
-        $formats['sql'] = 'Y-m-d';
         break;
     }
     return $formats[$type];

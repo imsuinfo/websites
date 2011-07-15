@@ -30,6 +30,7 @@ class date_views_filter_handler_simple extends views_handler_filter_date {
     $options['default_date'] = array('default' => '', 'export' => 'export_plugin');
     $options['default_to_date'] = array('default' => '', 'export' => 'export_plugin');
     $options['year_range'] = array('default' => '-3:+3', 'export' => 'export_plugin');  
+    $options['add_delta'] = array('default' => '', 'export' => 'export_plugin');  
     return $options;
   }
 
@@ -39,7 +40,7 @@ class date_views_filter_handler_simple extends views_handler_filter_date {
    */
   function export_plugin($indent, $prefix, $storage, $option, $definition, $parents) {
     $output = '';
-    if (in_array($option, array('granularity', 'form_type', 'default_date', 'default_to_date', 'year_range'))) {
+    if (in_array($option, array('granularity', 'form_type', 'default_date', 'default_to_date', 'year_range', 'add_delta'))) {
       $name = $this->options[$option];
       $output .= $indent . $prefix . "['$option'] = '$name';\n";
       return $output;
@@ -118,6 +119,12 @@ class date_views_filter_handler_simple extends views_handler_filter_date {
   }
 
   function op_between($field) {
+    // Add the delta field to the view so we can later find the value that matched our query.
+    list($table_name, $field_name) = explode('.', $field);
+    if (!empty($this->options['add_delta']) && (substr($field_name, -6) == '_value' || substr($field_name, -7) == '_value2')) {
+      $this->query->add_field($table_name, 'delta');
+    }
+
     $min_value = $this->get_filter_value('min', $this->value['min']);
     $max_value = $this->get_filter_value('max', $this->value['max']);
     $field = $this->date_handler->sql_field($field);
@@ -134,6 +141,12 @@ class date_views_filter_handler_simple extends views_handler_filter_date {
   }
 
   function op_simple($field) {
+    // Add the delta field to the view so we can later find the value that matched our query.
+    list($table_name, $field_name) = explode('.', $field);
+    if (!empty($this->options['add_delta']) && (substr($field_name, -6) == '_value' || substr($field_name, -7) == '_value2')) {
+      $this->query->add_field($table_name, 'delta');
+    }
+    
     $value = $this->get_filter_value('value', $this->value['value']);
     $field = $this->date_handler->sql_field($field);
     $field = $this->date_handler->sql_format($this->format, $field);
@@ -174,7 +187,15 @@ class date_views_filter_handler_simple extends views_handler_filter_date {
 
   function extra_options_form(&$form, &$form_state) {
     parent::extra_options_form($form, $form_state);
-    $form['form_type'] = array(
+     $form['add_delta'] = array(
+      '#type' => 'radios',
+      '#title' => t('Add multiple value identifier'),
+      '#default_value' => $this->options['add_delta'],
+      '#options' => array('' => t('No'), 'yes' => t('Yes')),
+      '#description' => t('Add an identifier to the view to show which multiple value date fields meet the filter criteria. Note: This option may introduce duplicate values into the view. Required when using multiple value fields in a Calendar or any time you want the node view of multiple value dates to display only the values that match the view filters.'),
+      );
+
+     $form['form_type'] = array(
       '#type' => 'radios',
       '#title' => t('Date form type'),
       '#default_value' => $this->options['form_type'],
@@ -214,9 +235,9 @@ class date_views_filter_handler_simple extends views_handler_filter_date {
     if (!empty($form['operator'])) {
       $source = ($form['operator']['#type'] == 'radios') ? 'radio:options[operator]' : 'edit-options-operator';
     }
-
+    
+    $identifier = $this->options['expose']['identifier'];
     if (!empty($form_state['exposed'])) {
-      $identifier = $this->options['expose']['identifier'];
 
       if (empty($this->options['expose']['use_operator']) || empty($this->options['expose']['operator_id'])) {
         // exposed and locked.
