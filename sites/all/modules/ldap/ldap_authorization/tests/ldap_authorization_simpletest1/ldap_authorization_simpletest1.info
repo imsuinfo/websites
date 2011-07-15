@@ -7,9 +7,9 @@ package = "Features"
 project = "ldap_authorization_simpletest1"
 version = "7.x-1.0"
 
-; Information added by drupal.org packaging script on 2011-07-02
-version = "7.x-1.0-beta2"
+; Information added by drupal.org packaging script on 2011-07-11
+version = "7.x-1.0-beta3"
 core = "7.x"
 project = "ldap"
-datestamp = "1309638120"
+datestamp = "1310403720"
 
