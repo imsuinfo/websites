@@ -212,7 +212,7 @@
 
   <?php if (!$in_overlay): // hide in overlay ?>
 
-  <div id="footer" style="<?php print($page['is_front_css']);?>">
+  <div id="footer" class="drupal_footer" style="<?php print($page['is_front_css']);?>">
     <?php if (!empty($page['footer']) || $feed_icons): ?>
       <?php print ($page['footer']); ?>
       <?php print $feed_icons; ?>

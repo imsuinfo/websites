@@ -708,7 +708,7 @@ div#columns div.view-display-id-more_pages_news div.view-content {
 }
 
 div#columns div.view-id-more_pages div.view-content div.more_pages-field_group,
-div#columns div.view-id-more_pages div.view-content div.more_pages-field_event_date{
+div#columns div.view-id-more_pages div.view-content div.more_pages-field_event_date {
   display: inline-block;
 
   font-size: 12px;
