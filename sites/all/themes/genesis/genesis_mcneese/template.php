@@ -246,8 +246,11 @@ function genesis_mcneese_generate_emergency_array($additional_css = '') {
   $emergency = array();
   $emergency['content'] = '';
   $emergency['css'] = '';
+  $loaded_node = '';
 
-  $loaded_node = node_load(914);
+  if (function_exists('node_load')){
+    $loaded_node = node_load(914);
+  }
 
   if (is_object($loaded_node)){
     if (isset($loaded_node->status) && $loaded_node->status == NODE_PUBLISHED){
