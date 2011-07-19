@@ -1,0 +1,7 @@
+; $Id$
+name = View Unpublished Content
+description = "Select which roles should be able to see unpublished nodes by content type, or all unpubished nodes."
+core = 7.x
+package = "Access control"
+dependencies[] = cf
+files[] = view_unpublished.module
