@@ -1,0 +1,6 @@
+name = Edit Shortcut Name Restriction
+description = "Restricts changing the shortcut name to only users who have the 'can change shortcut name' permission."
+core = 7.x
+package = Access control
+dependencies[] = shortcut
+files[] = edit_shortcut_name_restriction.module
