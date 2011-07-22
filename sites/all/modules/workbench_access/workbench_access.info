@@ -10,9 +10,9 @@ files[] = includes/workbench_access_handler_filter_access.inc
 files[] = includes/workbench_access_handler_sort_section.inc
 files[] = tests/workbench_access.test
 
-; Information added by drupal.org packaging script on 2011-07-15
-version = "7.x-1.0-beta8"
+; Information added by drupal.org packaging script on 2011-07-21
+version = "7.x-1.0-beta9"
 core = "7.x"
 project = "workbench_access"
-datestamp = "1310750520"
+datestamp = "1311264720"
 
