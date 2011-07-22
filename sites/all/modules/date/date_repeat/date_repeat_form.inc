@@ -96,7 +96,6 @@ function _date_repeat_rrule_process($element, $form_state, $form) {
       '#date_text_parts'  => !empty($element['#date_text_parts']) ? $element['#date_text_parts'] : array(),
       '#date_year_range'  => !empty($element['#date_year_range']) ? $element['#date_year_range'] : '-3:+3',
       '#date_label_position' => !empty($element['#date_label_position']) ? $element['#date_label_position'] : 'within',
-      '#date_flexible' => 0,
       ),
     'tz' => array('#type' => 'hidden', '#value' => $element['#date_timezone']),
     'all_day' => array('#type' => 'hidden', '#value' => 1),
@@ -180,7 +179,6 @@ function _date_repeat_rrule_process($element, $form_state, $form) {
         '#date_text_parts'  => !empty($element['#date_text_parts']) ? $element['#date_text_parts'] : array(),
         '#date_year_range'  => !empty($element['#date_year_range']) ? $element['#date_year_range'] : '-3:+3',
         '#date_label_position' => !empty($element['#date_label_position']) ? $element['#date_label_position'] : 'within',
-        '#date_flexible' => 0,
         ),
       'tz' => array('#type' => 'hidden', '#value' => $element['#date_timezone']),
       'all_day' => array('#type' => 'hidden', '#value' => 1),
@@ -217,7 +215,6 @@ function _date_repeat_rrule_process($element, $form_state, $form) {
         '#date_text_parts'  => !empty($element['#date_text_parts']) ? $element['#date_text_parts'] : array(),
         '#date_year_range'  => !empty($element['#date_year_range']) ? $element['#date_year_range'] : '-3:+3',
         '#date_label_position' => !empty($element['#date_label_position']) ? $element['#date_label_position'] : 'within',
-        '#date_flexible' => 0,
         ),
       'tz' => array('#type' => 'hidden', '#value' => $element['#date_timezone']),
       'all_day' => array('#type' => 'hidden', '#value' => 1),
@@ -264,11 +261,17 @@ function date_repeat_add_addition_callback($form, &$form_state) {
 }
 
 function date_repeat_add_exception($form, &$form_state) {
+  if (!isset($form_state['num_exceptions']) || !is_numeric($form_state['num_exceptions'])){
+    $form_state['num_exceptions'] = 0;
+  }
   $form_state['num_exceptions']++;
   $form_state['rebuild'] = TRUE;
 }
 
 function date_repeat_add_addition($form, &$form_state) {
+  if (!isset($form_state['num_additions']) || !is_numeric($form_state['num_additions'])){
+    $form_state['num_additions'] = 0;
+  }
   $form_state['num_additions']++;
   $form_state['rebuild'] = TRUE;
 }

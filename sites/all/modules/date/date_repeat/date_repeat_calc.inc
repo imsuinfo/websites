@@ -46,7 +46,7 @@ function _date_repeat_calc($rrule, $start, $end, $exceptions, $timezone, $additi
   $rrule = date_ical_parse_rrule('RRULE:', $rrule);
 
   // These default values indicate there is no RRULE here.
-  if ($rrule['FREQ'] == 'NONE' || (isset($rrule['INTERVAL']) && $rrule['INTERVAL'] == 0)) {
+  if ($rrule['FREQ'] == 'NONE' || $rrule['INTERVAL'] == 0) {
     return array();
   }
 
@@ -63,10 +63,7 @@ function _date_repeat_calc($rrule, $start, $end, $exceptions, $timezone, $additi
   }
 
   // Get an integer value for the interval, if none given, '1' is implied.
-  if (empty($rrule['INTERVAL'])) {
-    $rrule['INTERVAL'] = 1;
-  }
-  $interval = max(1, $rrule['INTERVAL']);
+  $interval = max(1, isset($rrule['INTERVAL']) ? $rrule['INTERVAL'] : 1);
   $count = isset($rrule['COUNT']) ? $rrule['COUNT'] : NULL;
 
   if (empty($rrule['FREQ'])) {
