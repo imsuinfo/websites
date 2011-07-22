@@ -522,7 +522,7 @@ class quailTableTest extends quailTest {
 				}
 				else if ($child->tagName == 'tbody') {
 					foreach($child->childNodes as $tbody_child) {
-						if ($tbody_child->tagName == 'tr') {
+						if (property_exists($tbody_child, 'tagName') && $tbody_child->tagName == 'tr') {
 							foreach($tbody_child->childNodes as $row_child) {
 								if(property_exists($row_child, 'tagName') && $row_child->tagName == 'th')
 									return true;
