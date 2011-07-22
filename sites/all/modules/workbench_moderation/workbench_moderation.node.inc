@@ -248,8 +248,4 @@ function workbench_moderation_node_unpublish_form_submit($form, &$form_state) {
 
   drupal_set_message(t('The live revision of this content has been unpublished.'));
   $form_state['redirect'] ="node/{$node->nid}/moderation";
-
-  if (module_exists('rules')){
-    rules_invoke_event('workbench_moderation_after_unpublishing_live_content', $node, $live_revision);
-  }
 }
