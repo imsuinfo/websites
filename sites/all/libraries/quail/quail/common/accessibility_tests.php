@@ -1138,7 +1138,7 @@ class cssTextHasContrast extends quailColorTest {
 				$background = (isset($style['background-color']))
 							   ? $style['background-color']
 							   : $style['background'];
-				if(!$background || $this->options['css_only_use_default']) {
+				if(!$background || (isset($this->options['css_only_use_default']) && $this->options['css_only_use_default'])) {
 					$background = $this->default_background;
 				}
 				$luminosity = $this->getLuminosity(
