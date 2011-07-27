@@ -636,8 +636,14 @@ function search_index($sid, $module, $text) {
               $linknid = $match[1];
               if ($linknid > 0) {
                 $node = db_query('SELECT title, nid, vid FROM {node} WHERE nid = :nid', array(':nid' => $linknid), array('target' => 'slave'))->fetchObject();
-                $link = TRUE;
-                $linktitle = $node->title;
+                if (is_object($node)){
+                  $link = TRUE;
+                  $linktitle = $node->title;
+                }
+                else {
+                  $link = FALSE;
+                  watchdog('search', "Failed to load node :nid from the database, a node of this id may not exist.", array(':nid' => $linknid), WATCHDOG_WARNING);
+                }
               }
             }
           }
