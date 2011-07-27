@@ -889,7 +889,7 @@ function search_by_page_menu() {
     'type' => MENU_CALLBACK,
     'page callback' => 'drupal_get_form',
     'page arguments' => array('search_by_page_delete_confirm'),
-    'access arguments' => array('search by page'),
+    'access arguments' => array('administer search by page'),
   );
 
   $envs = search_by_page_list_environments();
