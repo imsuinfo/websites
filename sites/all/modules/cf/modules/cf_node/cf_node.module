@@ -1,5 +1,4 @@
 <?php
-// $Id: cf_node.module,v 1.1 2010/12/06 19:04:19 thekevinday Exp $
 
 /**
  * Create a node class object primarily to be used for cf_node_create() or drupal_execute() functions.
@@ -106,4 +105,3 @@ function cf_node_create($form_id, $node_class, array $function_history = array()
 
   return $form_errors;
 }
-?>

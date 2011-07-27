@@ -1,0 +1,36 @@
+<?php
+
+/**
+ * Implements hook_permission().
+ */
+function cf_menu_permission() {
+  $permissions = array();
+
+  // see: http://drupal.org/node/460408#comment-4525794
+  $permissions['view unpublished content in menu'] = array(
+    'title' => t("View Unpublished Content in Menu"),
+    'description' => t("Grants permissions to view menu items that is unpublished content. (This requires a patch against drupal core in order to function.)"),
+  );
+
+  return $permissions;
+}
+
+/**
+ * Implements hook_query_TAG_alter().
+ *
+ * Why:
+ *   The drupal menu core prevents administrators from seeing the unpublished nodes in the admin menu.
+ *   See: http://drupal.org/node/460408#comment-4367202
+ *
+ * Errata:
+ *   This requires a patch against drupal core function (drupal-7.x-add_menu_tree_check_access-1.patch).
+ */
+function cf_menu_query_menu_tree_check_access_alter(&$query) {
+  if (user_access('view unpublished content in menu')) {
+    $where =& $query->conditions();
+
+    foreach ($where as $key => &$value){
+      if ($value['field'] == 'n.status') unset($where[$key]);
+    }
+  }
+}

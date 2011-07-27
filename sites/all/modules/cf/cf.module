@@ -1,5 +1,4 @@
 <?php
-// $Id: cf.module,v 1.4 2010/12/09 19:57:15 thekevinday Exp $
 
 /**
  * Provide a safe way to get the current user.
@@ -206,16 +205,16 @@ function cf_page_not_accessible(&$form_state, $id = ''){
   $form['page_not_accessible'] = array(
     '#type' => 'item',
     '#title' => t("Unable to access page."),
-    '#description' => t("This page cannot be presented either because there was an error loading the page or you are not authorized to access this page."),
+    '#description' => t("This page cannot be presented because there was an error loading the page."),
   );
 
   $form['#id'] = is_string($id) ? $id : '';
   $form['#validate'] = array();
   $form['#submit'] = array();
+  $form['#array_parents'] = array();
   $form['#tree'] = FALSE;
 
   $form_state['process_input'] = FALSE;
 
   return $form;
 }
-?>

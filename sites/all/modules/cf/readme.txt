@@ -1,4 +1,3 @@
-; $Id: readme.txt,v 1.1 2010/12/06 17:17:31 thekevinday Exp $
 
 CONTENTS OF THIS FILE
 ---------------------

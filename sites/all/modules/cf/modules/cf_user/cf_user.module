@@ -1,5 +1,4 @@
 <?php
-// $Id: cf_user.module,v 1.4 2011/01/26 20:11:38 thekevinday Exp $
 
 /**
  * Provide a simple way to get the roles ids for the current or specified user.
@@ -122,5 +121,3 @@ function cf_user_get_users_by_rids($rids, array $function_history = array()){
 
   return $query;
 }
-
-?>

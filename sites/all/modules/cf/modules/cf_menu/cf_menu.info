@@ -1,11 +1,11 @@
-name = CF Node
+name = CF Menu
 description = "Provides commonly used/needed functions to be called by other modules or inline php scripts that are specific to the node module."
 core = 7.x
 package = Common Functionality
-dependencies[] = cf
+files[] = cf_menu.module
+
 dependencies[] = node
-files[] = cf_node.module
-files[] = cf_node.install
+dependencies[] = menu
 
 ; Information added by drupal.org packaging script on 2011-07-27
 version = "7.x-1.1"
