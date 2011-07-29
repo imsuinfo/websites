@@ -1,7 +1,7 @@
 <?php
 /**
  * @file
- * Template to display a view item as a calendar week node.
+ * Template to display a view item as a calendar month node.
  * 
  * $node 
  *   A node object for this calendar item. Note this is
@@ -34,30 +34,12 @@
  * 
  *   print date_format($calendar_start_date, 'l, j F Y - g:ia');
  * 
- * @see template_preprocess_calendar_week_node.
- */ 
-$index = 0;
+ * @see template_preprocess_calendar_row_node.
+ */
 ?>
 <div class="view-item view-item-<?php print $view->name ?>">
-  <div class="calendar weekview">
-    <?php print theme('calendar_stripe_stripe', array('node' => $node)); ?>
-    <div class="<?php print $node->date_id ?> contents">
-    <?php foreach ($fields as $field): ?>
-      <?php if ($index++ == 0 && (isset($node->continuation) && $node->continuation)) : ?>
-      <div class="continuation">&laquo;</div>
-      <?php endif;?>
-      <div id="<?php print $field['id']; ?>" class="view-field view-data-<?php print $field['id'] ?>">
-        <?php if ($field['label']): ?>
-          <div class="view-label-<?php print $field['id'] ?>"><?php print $field['label'] ?></div>
-        <?php endif; ?>  
-        <?php print $field['data']; ?>
-      </div>  
-    <?php endforeach; ?>
-    </div>
-    <?php if (isset($node->continues) && $node->continues) : ?>
-    <div class="continues">&raquo;</div>
-    <?php else : ?>
-    <div class="cutoff">&nbsp;</div>
-    <?php endif;?>
+  <div class="<?php print $item->class; ?>">
+    <?php print theme('calendar_stripe_stripe', array('node' => $item)); ?>
+    <?php print $item->body; ?>
   </div>    
 </div>
