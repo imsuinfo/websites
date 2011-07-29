@@ -46,7 +46,7 @@ function date_default_formatter_settings_form($field, $instance, $view_mode, $fo
     '#field_suffix' => $suffix,
     '#default_value' => $settings['multiple_number'],
     '#weight' => 2,
-    '#access' => $field['cardinality'] == FIELD_CARDINALITY_UNLIMITED ? 1 : $field['cardinality'],
+    '#access' => ($field['cardinality'] == FIELD_CARDINALITY_UNLIMITED) || ($field_cardinality > 1),
     '#description' => t('Identify a specific number of values to display, or leave blank to show all values.'),
   );
 
@@ -58,7 +58,7 @@ function date_default_formatter_settings_form($field, $instance, $view_mode, $fo
     '#field_suffix' => $suffix,
     '#default_value' => $settings['multiple_from'],
     '#weight' => 3,
-    '#access' => $field['cardinality'] == FIELD_CARDINALITY_UNLIMITED ? 1 : $field['cardinality'],
+    '#access' => ($field['cardinality'] === FIELD_CARDINALITY_UNLIMITED) || ($field_cardinality > 1),
   );
 
   list($prefix, $suffix) = explode('@isodate', t('ending with @isodate'));
@@ -69,7 +69,7 @@ function date_default_formatter_settings_form($field, $instance, $view_mode, $fo
     '#field_suffix' => $suffix,
     '#default_value' => $settings['multiple_to'],
     '#weight' => 4,
-    '#access' => $field['cardinality'] == FIELD_CARDINALITY_UNLIMITED ? 1 : $field['cardinality'],
+    '#access' => ($field['cardinality'] === FIELD_CARDINALITY_UNLIMITED) || ($field_cardinality > 1),
     '#description' => t('Identify specific start and/or end dates in the format YYYY-MM-DDTHH:MM:SS, or leave blank for all available dates.'),
    );
 
@@ -173,7 +173,7 @@ function _date_field_instance_settings_form($field, $instance) {
     '#fieldset' => 'default_values',
     );
 
-  $description = t("The relative value to use. This should be something that describes a time by reference to the current day using strtotime, like '+90 days' (90 days from the day the field is created) or '+1 Saturday' (the next Saturday). See !strtotime for more details.", array('!strtotime' => l(t('strtotime'), 'http://www.php.net/manual/en/function.strtotime.php')));
+  $description = t("Describe a time by reference to the current day, like '+90 days' (90 days from the day the field is created) or '+1 Saturday' (the next Saturday). See !strtotime for more details.", array('!strtotime' => l(t('strtotime'), 'http://www.php.net/manual/en/function.strtotime.php')));
   $form['default_value_code'] = array(
     '#type' => 'textfield', 
     '#title' => t('Relative default value'),
@@ -284,17 +284,37 @@ function _date_field_widget_settings_form($field, $instance) {
       '#value' => '',
       );
   }
+
+  // Year range is stored in the -3:+3 format, but collected as two separate
+  // fieldsets.
+  $form['year_range'] = array(
+    '#type' => 'hidden',
+    '#value' => $settings['year_range'],
+  );
   if (in_array($widget['type'], array('date_select', 'date_popup', 'date_select_repeat', 'date_popup_repeat'))) {
-    $form['year_range'] = array(
+    list($years_back, $years_forward) = explode(':', $settings['year_range']);
+    drupal_add_js(drupal_get_path('module', 'date') . '/date_admin.js');
+    $form['#attached']['js'][] = drupal_get_path('module', 'date') . '/date_admin.js';
+    $form['years_back'] = array(
       '#type' => 'textfield',
-      '#title' => t('Years back and forward'),
-      '#default_value' => $settings['year_range'],
+      '#title' => t('Years back in the selection list'),
+      '#default_value' => $years_back,
       '#size' => 10,
       '#maxsize' => 10,
-      '#description' => t('Number of years to go back and forward in the year selection list, default is -3:+3.'),
-      '#weight' => 6,
       '#fieldset' => 'years_back_and_forward',
-      );
+      '#attributes' => array('class' => array('select-list-with-custom-option', 'back')),
+      '#description' => t('Must be in the format -9, or an absolute year such as 1980.'),
+    );
+    $form['years_forward'] = array(
+      '#type' => 'textfield',
+      '#title' => t('Years forward in the selection list'),
+      '#default_value' => $years_forward,
+      '#size' => 10,
+      '#maxsize' => 10,
+      '#fieldset' => 'years_back_and_forward',
+      '#attributes' => array('class' => array('select-list-with-custom-option', 'forward')),
+      '#description' => t('Must be in the format +9, or an absolute year such as 2030.'),
+    );
     $form['increment'] = array(
       '#type' => 'select', '#title' => t('Choose how users enter time'),
       '#default_value' => $settings['increment'],
@@ -304,7 +324,7 @@ function _date_field_widget_settings_form($field, $instance) {
         10 => t('10 minute intervals'),
         15 => t('15 minute intervals'),
         30 => t('30 minute intervals')),
-      '#description' => t('Provide an easier way to choose a time by limiting choices to larger intervals, e.g. 15, 30, 45 minutes.'),
+      '#description' => t('Limit choices to larger intervals, e.g., 15, 30, 45 minutes.'),
       '#weight' => 7,
       '#fieldset' => 'date_format',
     );
@@ -313,10 +333,6 @@ function _date_field_widget_settings_form($field, $instance) {
     $form['increment'] = array(
       '#type' => 'hidden',
       '#value' => $settings['increment'],
-      );
-    $form['year_range'] = array(
-      '#type' => 'hidden',
-      '#value' => $settings['year_range'],
       );
   }
 
@@ -341,7 +357,7 @@ function _date_field_widget_settings_form($field, $instance) {
     '#options' => array('above' => t('Above'), 'within' => t('Within'), 'none' => t('None')),
     '#default_value' => $settings['label_position'],
     '#title' => t('Position of date part labels'),
-    '#description' => t("The location of date part labels, like 'Year', 'Month', or 'Day' . 'Above' will display them as titles above each date part. 'Within' will insert the label as the first option in the select list and in blank textfields. 'None' will not label any of the date parts. The exact text in the label is controlled by themes like 'date_part_label_year' and 'date_part_label_month' ."),
+    '#description' => t("The location of date part labels, like 'Year', 'Month', or 'Day' . 'Above' displays the label as titles above each date part. 'Within' inserts the label as the first option in the select list and in blank textfields. 'None' doesn't label any of the date parts. Theme functions like 'date_part_label_year' and 'date_part_label_month' control label text."),
     );
   $form['advanced']['text_parts'] = array(
     '#theme' => $widget['type'] == 'date_select' ? 'date_text_parts' : '',
@@ -382,13 +398,18 @@ function date_field_widget_settings_form_validate(&$form, &$form_state) {
   unset($settings['advanced']);
   form_set_value(array('#parents' => array('instance', 'widget', 'settings')), $settings, $form_state);
 
-  $widget = $form_state['values']['instance']['widget'];
+  $widget = &$form_state['values']['instance']['widget'];
   // Munge the table display for text parts back into an array of text parts.
   if (is_array($widget['settings']['text_parts'])) {
     form_set_value($form['text_parts'], array_keys(array_filter($widget['settings']['text_parts'])), $form_state);
   }
-  if (in_array($widget['type'], array('date_select', 'date_popup', 'date_select_repeat', 'date_popup_repeat')) && !date_range_valid($widget['settings']['year_range'])) {
-    form_set_error('instance][widget][settings][year_range', t('Years back and forward must be in the format -9:+9.'));
+  // Recombine the years back and years forward values into year_range.
+  if (in_array($widget['type'], array('date_select', 'date_popup', 'date_select_repeat', 'date_popup_repeat'))) {
+    $widget['settings']['year_range'] = $widget['settings']['years_back'] . ':' . $widget['settings']['years_forward'];
+    if (!date_range_valid($widget['settings']['year_range'])) {
+      form_set_error('instance][widget][settings][years_back', t('Years back must be in the format -9, or an absolute year such as 1980.'));
+      form_set_error('instance][widget][settings][years_forward', t('Years forward must be in the format +9, or an absolute year such as 2030.'));
+    }
   }
   if ($widget['settings']['input_format'] === 'custom' && empty($widget['settings']['input_format_custom'])) {
     form_set_error('instance][widget][settings][input_format_custom', t('Please enter a custom date format, or choose one of the preset formats.'));
@@ -415,16 +436,27 @@ function _date_field_settings_form($field, $instance, $has_data) {
     $form['repeat'] = array('#type' => 'hidden', '#value' => 0);
   }
 
-  $description = t('Set the date elements to be stored (at least a year is required).');
+  $description = t('Select the date attributes to collect, store, and present.');
+  $options = date_granularity_names();
+  $checkbox_year = array(
+    '#type' => 'checkbox',
+    '#title' => $options['year'],
+    '#value' => 'year',
+    '#return_value' => 'year',
+    '#disabled' => TRUE,
+  );
+  unset($options['year']);
   $form['granularity'] = array(
-    '#type' => 'select', 
-    '#title' => t('Granularity'),
+    '#type' => 'checkboxes',
+    '#title' => t('Date attributes to collect'),
     '#default_value' => $granularity,
-    '#options' => date_granularity_names(),
-    '#multiple' => TRUE,
+    '#options' => $options,
+    '#attributes' => array('class' => array('container-inline')),
     '#description' => $description,
     '#disabled' => $has_data,
+    'year' => $checkbox_year,
   );
+
   $description = t('End dates are used to collect duration. E.g., allow an event to start on September 15, and end on September 16.');
   $form['enddate'] = array(
     '#type' => 'checkbox',
@@ -444,7 +476,7 @@ function _date_field_settings_form($field, $instance, $has_data) {
       ),
     ),
   );
-  $description = t('Select the timezone handling method to be used for this date field.');
+  $description = t('Select the timezone handling method for this date field.');
   $form['tz_handling'] = array(
     '#type' => 'select',
     '#title' => t('Time zone handling'),
@@ -473,9 +505,6 @@ function date_field_settings_validate(&$form, &$form_state) {
   }
   else {
     form_set_value($form['timezone_db'], date_get_timezone_db($field['settings']['tz_handling']), $form_state);
-  }
-  if (!in_array('year', $field['settings']['granularity'])) {
-    form_set_error('field][settings][granularity', t('Granularity must include a year.'));
   }
   if ($field['settings']['tz_handling'] != 'none' && !in_array('hour', array_filter($field['settings']['granularity']))) {
     form_set_error('field][settings][tz_handling', t('Dates without hours granularity must not use any timezone handling.'));

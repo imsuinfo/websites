@@ -36,12 +36,12 @@
  * 
  */
 ?>
+<?php if (!empty($pager_prefix)) print $pager_prefix; ?>
 <div class="date-nav-wrapper clear-block<?php if (!empty($extra_classes)) print $extra_classes; ?>">
-  <?php if (!empty($pager_prefix)) print $pager_prefix; ?>
   <div class="date-nav">
     <div class="date-prev">
       <?php if (!empty($prev_url)) : ?>
-      <span class="next">  <?php print l('&laquo;' . ($mini ? '' : t('Prev', array(), array('context' => 'date_nav'))), $prev_url, $prev_options); ?></span>
+      <span class="prev">  <?php print l('&laquo;' . ($mini ? '' : t('Prev', array(), array('context' => 'date_nav'))), $prev_url, $prev_options); ?></span>
       <?php endif; ?>
     &nbsp;</div>
     <div class="date-heading">

@@ -1,5 +1,5 @@
 name = Date
-description = Defines date/time fields and widgets.
+description = Makes date/time fields available.
 dependencies[] = date_api
 package = Date/Time
 core = 7.x
@@ -17,9 +17,9 @@ files[] = tests/date_api.test
 files[] = tests/date.test
 files[] = tests/date_field.test
 files[] = tests/date_validation.test
-; Information added by drupal.org packaging script on 2011-07-15
+; Information added by drupal.org packaging script on 2011-07-29
 version = "7.x-2.x-dev"
 core = "7.x"
 project = "date"
-datestamp = "1310731542"
+datestamp = "1311898278"
 

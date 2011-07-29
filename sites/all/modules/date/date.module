@@ -97,7 +97,8 @@ function date_repeat_page($entity, $entity_type = 'node') {
   $field_names = date_repeat_fields($entity, $entity_type);
   $output = '';
   foreach ($field_names as $field_name) {
-    $output .= drupal_render(field_view_field($entity_type, $entity, $field_name, 'full'));
+    $field = field_view_field($entity_type, $entity, $field_name, 'full');
+    $output .= drupal_render($field);
   }
   return $output;
 }
@@ -146,17 +147,6 @@ function date_input_date($field, $instance, $element, $input) {
 }
 
 /**
- * Helper function to tell if a date object contains
- * a valid date, centralized to make it easier to use.
- */
-function date_is_date($date) {
-  if (empty($date) || !is_object($date) || !empty($date->errors)) {
-    return FALSE;
-  }
-  return TRUE;
-}
-
-/**
  * Implements hook_theme().
  */
 function date_theme() {
@@ -187,13 +177,21 @@ function date_theme() {
     'date_all_day_label' => $base + array('variables' => array()),
     'date_display_single' => $base + array('variables' => array(
         'date' => NULL,
-        'timezone' => NULL
+        'timezone' => NULL,
+        'dates' => NULL,
+        'attributes' => NULL,
+        'rdf_mapping' => NULL,
+        'add_rdf' => NULL,
     )),
     'date_display_range' => $base + array(
       'variables' => array(
         'date1' => NULL,
         'date2' => NULL,
-        'timezone' => NULL
+        'timezone' => NULL,
+        'dates' => NULL,
+        'attributes' => NULL,
+        'rdf_mapping' => NULL,
+        'add_rdf' => NULL,
     )),
     'date_repeat_display' => $base + array(
       'variables' => array(
@@ -204,33 +202,39 @@ function date_theme() {
         'dates' => NULL
       ),
       'function' => 'theme_date_repeat_display',
+    ),
+    'date_display_combination' => $base + array(
+      'variables' => array(
+        'entity_type' => NULL,
+        'entity' => NULL,
+        'field' => NULL,
+        'instance' => NULL,
+        'langcode' => NULL,
+        'item' => NULL,
+        'delta' => NULL,
+        'display' => NULL,
+        'dates' => NULL,
+        'attributes' => NULL,
+        'rdf_mapping' => NULL,
+        'add_rdf' => NULL,
       ),
-     'date_display_combination' => $base + array(
-       'variables' => array(
-         'entity_type' => NULL,
-         'entity' => NULL,
-         'field' => NULL,
-         'instance' => NULL,
-         'langcode' => NULL,
-         'item' => NULL,
-         'delta' => NULL,
-         'display' => NULL,
-         'dates' => NULL,
-        ),
-     ),
-     'date_display_interval' => $base + array(
-       'variables' => array(
-         'entity_type' => NULL,
-         'entity' => NULL,
-         'field' => NULL,
-         'instance' => NULL,
-         'langcode' => NULL,
-         'item' => NULL,
-         'delta' => NULL,
-         'display' => NULL,
-         'dates' => NULL,
-        ),
-     ),
+    ),
+    'date_display_interval' => $base + array(
+      'variables' => array(
+        'entity_type' => NULL,
+        'entity' => NULL,
+        'field' => NULL,
+        'instance' => NULL,
+        'langcode' => NULL,
+        'item' => NULL,
+        'delta' => NULL,
+        'display' => NULL,
+        'dates' => NULL,
+        'attributes' => NULL,
+        'rdf_mapping' => NULL,
+        'add_rdf' => NULL,
+       ),
+    ),
   );
 
   return $themes;
@@ -318,6 +322,7 @@ function date_formatter_process($formatter, $entity_type, $entity, $field, $inst
 
       //format the date, special casing the 'interval' format which doesn't need to be processed
       $dates[$processed]['formatted'] = '';
+      $dates[$processed]['formatted_iso'] = date_format_date($date, 'custom', 'c');
       if (is_object($date)) {
         if ($format == 'format_interval') {
            $dates[$processed]['interval'] = date_format_interval($date);

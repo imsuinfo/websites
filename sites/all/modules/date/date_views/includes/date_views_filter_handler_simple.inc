@@ -6,6 +6,7 @@
 
 class date_views_filter_handler_simple extends views_handler_filter_date {
   var $date_handler = NULL;
+  var $offset = NULL;
 
   function init(&$view, &$options) {
     parent::init($view, $options);
@@ -25,27 +26,13 @@ class date_views_filter_handler_simple extends views_handler_filter_date {
   // Set default values for the date filter.
   function option_definition() {
     $options = parent::option_definition();
-    $options['granularity'] = array('default' => 'day', 'export' => 'export_plugin');
-    $options['form_type'] = array('default' => 'date_select', 'export' => 'export_plugin');
-    $options['default_date'] = array('default' => '', 'export' => 'export_plugin');
-    $options['default_to_date'] = array('default' => '', 'export' => 'export_plugin');
-    $options['year_range'] = array('default' => '-3:+3', 'export' => 'export_plugin');  
-    $options['add_delta'] = array('default' => '', 'export' => 'export_plugin');  
+    $options['granularity'] = array('default' => 'day');
+    $options['form_type'] = array('default' => 'date_select');
+    $options['default_date'] = array('default' => '');
+    $options['default_to_date'] = array('default' => '');
+    $options['year_range'] = array('default' => '-3:+3');  
+    $options['add_delta'] = array('default' => '');  
     return $options;
-  }
-
-  /**
-   * Make sure our custom options get exported.
-   * Handle the options we know about, pass the rest to the parent plugin.
-   */
-  function export_plugin($indent, $prefix, $storage, $option, $definition, $parents) {
-    $output = '';
-    if (in_array($option, array('granularity', 'form_type', 'default_date', 'default_to_date', 'year_range', 'add_delta'))) {
-      $name = $this->options[$option];
-      $output .= $indent . $prefix . "['$option'] = '$name';\n";
-      return $output;
-    }
-    return parent::export_plugin($indent, $prefix, $storage, $option, $definition, $parents);
   }
 
   /**
@@ -118,6 +105,11 @@ class date_views_filter_handler_simple extends views_handler_filter_date {
 
   }
 
+  function pre_query() {
+    // Setting the offset to avoid trying to use timezone adjustments for dates that don't need it.
+    $this->offset = in_array($this->date_handler->granularity, array('hour', 'minute', 'sec')) ? NULL : 0;
+  }
+
   function op_between($field) {
     // Add the delta field to the view so we can later find the value that matched our query.
     list($table_name, $field_name) = explode('.', $field);
@@ -127,7 +119,7 @@ class date_views_filter_handler_simple extends views_handler_filter_date {
 
     $min_value = $this->get_filter_value('min', $this->value['min']);
     $max_value = $this->get_filter_value('max', $this->value['max']);
-    $field = $this->date_handler->sql_field($field);
+    $field = $this->date_handler->sql_field($field, $this->offset);
     $field = $this->date_handler->sql_format($this->format, $field);
     $placeholder_min = $this->placeholder();
     $placeholder_max = $this->placeholder();
@@ -148,7 +140,7 @@ class date_views_filter_handler_simple extends views_handler_filter_date {
     }
     
     $value = $this->get_filter_value('value', $this->value['value']);
-    $field = $this->date_handler->sql_field($field);
+    $field = $this->date_handler->sql_field($field, $this->offset);
     $field = $this->date_handler->sql_format($this->format, $field);
     $placeholder = $this->placeholder();
     $group = !empty($this->options['date_group']) ? $this->options['date_group'] : $this->options['group'];
