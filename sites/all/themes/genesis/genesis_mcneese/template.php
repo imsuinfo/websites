@@ -52,7 +52,7 @@ function genesis_mcneese_preprocess_html(&$vars) {
     $vars['meta_page_expires'] = gmdate('D, d M Y H:i:s T', $date_value);
   }
 
-  if (function_exists('get_browser')){
+  if (function_exists('get_browser') && isset($_SERVER['HTTP_USER_AGENT'])){
     $browser_details = get_browser(null, true);
 
     if (!empty($browser_details['browser'])){
