@@ -2,9 +2,9 @@ name = Node export push
 description = "Allows a node export to be pushed directly from one site to another."
 core = 7.x
 dependencies[] = node_export
-; Information added by drupal.org packaging script on 2011-07-20
+; Information added by drupal.org packaging script on 2011-07-27
 version = "7.x-3.x-dev"
 core = "7.x"
 project = "node_export"
-datestamp = "1311164097"
+datestamp = "1311768893"
 

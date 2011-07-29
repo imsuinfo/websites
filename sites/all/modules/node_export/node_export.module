@@ -222,7 +222,7 @@ function node_export_node_operations() {
           $operations['node_export_' . $format_handler] = array(
             'label' => t('Node export') . " (" . $format['#title'] . ")",
             'callback' => 'node_export_bulk_operation',
-            'callback arguments' => array($format_handler),
+            'callback arguments' => array('format' => $format_handler),
           );
         }
       }
@@ -232,7 +232,7 @@ function node_export_node_operations() {
         'node_export' => array(
           'label' => t('Node export'),
           'callback' => 'node_export_bulk_operation',
-          'callback arguments' => array(NULL),
+          //'callback arguments' => array(),
         ),
       );
     }
@@ -287,38 +287,7 @@ function node_export($nids, $format = NULL, $msg_t = 't') {
       );
     }
 
-    $node = clone($original_node);
-
-    // Fix taxonomy array
-    if (isset($node->taxonomy) && count($node->taxonomy)) {
-      $vocabularies = taxonomy_get_vocabularies();
-      $new_taxonomy = array();
-      foreach ($node->taxonomy as $term) {
-        // Free-tagging vocabularies need a different format
-        if ($vocabularies[$term->vid]->tags) {
-          $new_taxonomy['tags'][$term->vid][] = $term->name;
-        }
-        else {
-          $new_taxonomy[$term->vid][$term->tid] = $term->tid;
-        }
-      }
-      if (isset($new_taxonomy['tags']) && count($new_taxonomy['tags'])) {
-        // Comma seperate the tags
-        foreach ($new_taxonomy['tags'] as $vid => $tags) {
-          $new_taxonomy['tags'][$vid] = implode(', ', $tags);
-        }
-      }
-      $node->taxonomy = $new_taxonomy;
-    }
-
-    // Fix menu array
-    $node->menu = node_export_get_menu($original_node);
-
-    // Remove recursion from the object.
-    $node = node_export_remove_recursion($node);
-
-    // Add a parameter to identify this node as coming from D7, might be useful some day.
-    $node->node_export_drupal_version = '7';
+    $node = node_export_prepare_node($original_node);
 
     // Let other modules do special fixing up.
     drupal_alter('node_export_node', $node, $original_node);
@@ -351,6 +320,46 @@ function node_export($nids, $format = NULL, $msg_t = 't') {
     'output' => $code_string,
   );
 
+}
+
+/**
+ * Prepare a single node during export.
+ */
+function node_export_prepare_node(&$original_node) {
+  $node = clone($original_node);
+
+  // Fix taxonomy array
+  if (isset($node->taxonomy) && count($node->taxonomy)) {
+    $vocabularies = taxonomy_get_vocabularies();
+    $new_taxonomy = array();
+    foreach ($node->taxonomy as $term) {
+      // Free-tagging vocabularies need a different format
+      if ($vocabularies[$term->vid]->tags) {
+        $new_taxonomy['tags'][$term->vid][] = $term->name;
+      }
+      else {
+        $new_taxonomy[$term->vid][$term->tid] = $term->tid;
+      }
+    }
+    if (isset($new_taxonomy['tags']) && count($new_taxonomy['tags'])) {
+      // Comma seperate the tags
+      foreach ($new_taxonomy['tags'] as $vid => $tags) {
+        $new_taxonomy['tags'][$vid] = implode(', ', $tags);
+      }
+    }
+    $node->taxonomy = $new_taxonomy;
+  }
+
+  // Fix menu array
+  $node->menu = node_export_get_menu($original_node);
+
+  // Remove recursion from the object.
+  $node = node_export_remove_recursion($node);
+
+  // Add a parameter to identify this node as coming from D7, might be useful some day.
+  $node->node_export_drupal_version = '7';
+
+  return $node;
 }
 
 /**
@@ -674,8 +683,10 @@ function node_export_node_clone($original_node) {
  * another nodes menu. Returns NULL if the node has no menu title.
  */
 function node_export_get_menu($node) {
+
   // This will fetch the existing menu item if the node had one.
   module_invoke_all('node_prepare', $node);
+
   $type = $node->type;
 
   // Only keep the values we care about.
@@ -807,11 +818,12 @@ if (!function_exists('uuid_set_uuid')) {
       return FALSE;
     }
 
-    $uuid_table = 'uuid_' . $table;
-    $query = db_query("UPDATE {" . $uuid_table . "} SET uuid = :uuid WHERE " . $key . " = :id", array(':uuid' => $uuid, ':id' => $serial_id));
+    $query = db_query("UPDATE {" . $table . "} SET uuid = :uuid WHERE " . $key . " = :id", array(':uuid' => $uuid, ':id' => $serial_id));
+    /*
     if (!$query->rowCount()) {
-      @db_query("INSERT INTO {" . $uuid_table . "} (" . $key . ", uuid) VALUES (:id, :uuid)", array(':uuid' => $uuid, ':id' => $serial_id));
+      @db_query("INSERT INTO {" . $table . "} (" . $key . ", uuid) VALUES (:id, :uuid)", array(':uuid' => $uuid, ':id' => $serial_id));
     }
+    */
 
     return $uuid;
   }
@@ -833,7 +845,6 @@ if (!function_exists('uuid_get_uuid')) {
    *   The UUID of the object, or FALSE if not found.
    */
   function uuid_get_uuid($table, $key, $id) {
-    $uuid_table = 'uuid_' . $table;
-    return db_query("SELECT uuid FROM {{$uuid_table}} WHERE $key = :id", array(':id' => $id))->fetchField();
+    return db_query("SELECT uuid FROM {" . $table . "} WHERE " . $key . " = :id", array(':id' => $id))->fetchField();
   }
 }
