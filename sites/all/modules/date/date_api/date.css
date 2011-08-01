@@ -3,13 +3,18 @@
  * Main stylesheet for Date module.
  */
 
-/* Force from/to dates to float using inline-block, where it works, otherwise inline. */
+/* Force start/end dates to float using inline-block, where it works, otherwise inline. */
 .container-inline-date {
+  border: 1px #dedede solid;
   clear: both;
   display: inline-block;
   margin-right: 0.5em; /* LTR */
+  margin-bottom: 10px;
   vertical-align: top;
   width: auto;
+}
+.views-exposed-form .container-inline-date {
+  border:none;
 }
 .container-inline-date .form-item {
   float: none;
@@ -48,6 +53,14 @@
   width: auto;
 }
 
+/* The exposed Views form doesn't need some of these styles */
+.container-inline-date .date-padding {
+  padding: 10px;
+}
+.views-exposed-form .container-inline-date .date-padding {
+  padding: 0:
+}
+
 /* Fixes for date popup css so it will behave in Drupal */
 #calendar_div,
 #calendar_div td,
@@ -69,7 +82,7 @@
   padding: 0;
 }
 
-/* formatting for from/to dates in nodes and views */
+/* formatting for start/end dates in nodes and views */
 span.date-display-single {
 }
 span.date-display-start {
@@ -135,39 +148,27 @@ span.date-display-separator {
   float: none;
 }
 
-.date-clear-block {
+.date-no-float {
   clear: both;
   float: none;
+  width: 98%;
+}
+
+.date-float {
+  clear: none;
+  float: left;
   width: auto;
+}
+
+/* Add space between date option checkboxes ('All day' & 'Collect End Date') */
+.date-float .form-type-checkbox{
+  padding-right: 1em;
 }
 
 /* Add space between the date and time portions of the date_select widget. */
 .form-type-date-select .form-type-select[class$=hour] {
   margin-left: .75em; /* LTR */
 }
-
-/**
- * Markup free clearing that fixes unwanted scrollbars
- * @see http://drupal.org/node/232959
- */
-.date-clear-block:after {
-  clear: both;
-  content: " ";
-  display: block;
-  height: 0;
-  visibility: hidden;
-}
-.date-clear-block {
-  display: inline-block;
-}
-/* Hides from IE-mac \*/
-* html .date-clear-block {
-  height: 1%;
-}
-.date-clear-block {
-  display: block;
-}
-/* End hide from IE-mac */
 
 .date-container .date-format-delete {
   float: left;
@@ -196,7 +197,6 @@ div.date-calendar-day {
   border-bottom: 1px solid #BBB;
   color: #999;
   float: left;
-  font-family: Georgia, Arial, Verdana, sans;
   line-height: 1;
   margin: 6px 10px 0 0;
   text-align: center;

@@ -191,7 +191,10 @@ function date_popup_element_value_callback($element, $input = FALSE, &$form_stat
   $has_time = date_has_time($granularity);
   $date = NULL;
   $return = $has_time ? array('date' => '', 'time' => '') : array('date' => '');
-  if ($input !== FALSE) {
+  // For some reason I cannot fathom empty Popup widgets in exposed filters return
+  // an empty $input value that does not meet the !== FALSE test while text
+  // and select widgets do. So adjusting the test.
+  if ($input != FALSE) {
     $return = $input;
     $date = date_popup_input_date($element, $input);
   }
@@ -274,6 +277,7 @@ function date_popup_process_date_part(&$element) {
   $parents = array_merge($element['#parents'], array('date'));
   $sub_element = array(
     '#type' => 'textfield',
+    '#title' => $element['#date_label_position'] == 'above' ? t('Date') : '',
     '#default_value' => $element['#value']['date'],
     '#id' => $id,
     '#input' => FALSE,
@@ -297,6 +301,7 @@ function date_popup_process_time_part(&$element) {
   $granularity = date_format_order($element['#date_format']);
   $has_time = date_has_time($granularity);
   if (empty($has_time)) return array();
+  $all_day_id = !empty($element['#date_all_day_id']) ? $element['#date_all_day_id'] : '';
 
   $spinner_text = array(t('Now'), t('Previous field'), t('Next field'), t('Increment'), t('Decrement'));
   $settings = array(
@@ -322,6 +327,7 @@ function date_popup_process_time_part(&$element) {
   $parents = array_merge($element['#parents'], array('time'));
   $sub_element = array(
     '#type' => 'textfield',
+    '#title' => $element['#date_label_position'] == 'above' ? t('Time') : '',
     '#default_value' => $element['#value']['time'],
     '#id' => $id,
     '#size' => 10,
@@ -330,6 +336,10 @@ function date_popup_process_time_part(&$element) {
     '#parents' => $parents,
     '#name' => array_shift($parents) . '['. implode('][', $parents) .']',
     '#ajax' => !empty($element['#ajax']) ? $element['#ajax'] : FALSE,
+    '#states' => array(
+      'visible' => array(
+        '#' . $all_day_id => array('checked' => FALSE),
+    )),
   );
   $sub_element['#value'] = $sub_element['#default_value'];
 
@@ -364,6 +374,13 @@ function date_popup_validate($element, &$form_state) {
 
   $input_exists = NULL;
   $input = drupal_array_get_nested_value($form_state['input'], $element['#parents'], $input_exists);
+
+  // If we have an all day flag on this date and the time is empty,
+  // change the format to match the input value so we don't get validation errors.
+  if (!empty($element['#date_all_day_id']) && empty($input['time'])) {
+    $element['#date_format'] = date_part_format($element['#date_format'], 'date');
+  }
+
   $date = date_popup_input_date($element, $input);
 
   // If the date has errors, display them.
@@ -526,16 +543,13 @@ function datepicker_format_replacements() {
 */
 function theme_date_popup($vars) {
   $element = $vars['element'];
-  $output = '';
-  $class = 'container-inline-date form-item';
-  // Add #date_float to allow date parts to float together on the same line.
-  if (empty($element['#date_float'])) {
-    $class .= ' date-clear-block';
-  }
+  $attributes = !empty($element['#wrapper_attributes']) ? $element['#wrapper_attributes'] : array('class' => array());
+  $attributes['class'][] = 'container-inline-date';
+  // Add an wrapper to mimic the way a single value field works, for ease in using #states.
   if (isset($element['#children'])) {
-    $output = $element['#children'];
+    $element['#children'] = '<div id="' . $element['#id'] . '" class="date-padding">' . $element['#children'] . '</div>';
   }
-  return '<div class="' . $class .'">' . theme('form_element', $element, $output) .'</div>';
+  return '<div ' . drupal_attributes($attributes) .'>' . theme('form_element', $element) . '</div>';
 }
 
 /**

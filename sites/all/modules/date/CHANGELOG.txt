@@ -5,16 +5,55 @@ Date Module 7.x
 Version 7.x-2.x-dev
 ===================
 
-- Issue #1130814 by cdracars, mikeryan, mayobutter, Fix date_modify difference between PHP 5.3.5 and 5.3.6 so both work.
+Notes to themers:
+
+Previous versions put dates with both From and To dates into a fieldset and other dates were not.
+The new code adds additional floating elements that are hard to contain, so now all dates are
+enclosed in fieldsets in the node form. There are also new elements on the form, an optional
+checkbox for hiding/showing the To date and an optional checkbox for hiding/showing time.
+Previously dates on the node form had 'From date' and 'To date' labels above them, this
+has been changed to remove those labels, using the Google calendar date entry screen
+as a model. This simplifies the node form and dates take up less space. A light grey border
+has been added around each collection of dates (the From date and the To date). The display
+of labels above the date parts (year, month, day, date, time, etc) is controlled in the
+field settings. Previous versions did not always honor those settings, this one does.
+
+New Features/UX Improvements
+
+- Issue #1145976 by tim.plunkett and KarenS, Add 'is date' identifier to all date handlers.
+- Issue #1234140 by arlinsundbulte, Change terminology in user-facing text from 'From/To Date' to 'Start/End Date'.
+- Issue #1233948 by KarenS, Add 'All Day' checkbox to hide/show the time parts of the date form. If All day is chosen, any time is replaced with 00:00:00 when the form is submitted.
+- Issue #1233612 by KarenS, Add 'Collect end date' checkbox for dates with optional end dates to hide/show the end date.
+- Issue #821200 by scor and KarenS, Add RDF support to the date field.
+- Issue #1211744 by EclipseGC and KarenS, Add a Date pager plugin that is designed to add paging in conjunction with a Date argument.
+- Issue #1180612 by mikeryan, Add support for Migrate module.
+- Issue #1198320 by ksenzee, David_Rothstein, Noyz: Make UI improvements to field settings page.
+- Issue #1215738 by ksenzee, Make granularity settings checkboxes horizontal.
+- Issue #1215686 by ksenzee, Change name of date field types to be more intuitive.
+- Issue #1216996 by ksenzee, Change the years back/forward setting into two drop down boxes.
+- Issue #1222468 by ksenzee, Hide timezone options when using granularity without time.
+- Issue #1229388 by ksenzee, Hide formatter from/to choices on fields without multiple values.
+- Lots of new tests.
+
+Bugfixes
+
+- Follow up to Issue #874322, Date popup field needs to accept date without time for the all day flag to work.
+- Remove unused date_handler_field_multiple.
+- Follow up to Issue #1130814, It looks like the modification is not needed in date_repeat_set_month_day and date_repeat_set_year_day.
+- Issue #1160132 by seanbfuller and KarenS, Exposed filter widgets were not displaying the default values.
+- Adjust the way widgets are styled in Views exposed filters after the latest style changes for form elements.
+- Issue #1234114 by arlinsandbulte, Add more space between checkboxes.
+- Issue #1234090, Fix undefined variable 'all_day'.
+- Issue #1232570 by dboulet, Remove some unneeded duplication of core clearfix and other css cleanup.
+- Issue #1232614 by dboulet, Date css should not be setting font family.
+- Timezone and Date Popup weren't obeying the settings for displaying the date part label.
+- Issue #1130814 by cdracars, mikeryan, mayobutter, Fix date_modify difference between PHP 5.3.5 and 5.3.6 so both work to compute repeating dates.
 - Issue #1017866 by KarenS and Jason89s, Make sure views argument and filter don't do timezone adjustment for dates that don't have time.
 - Issue #1204988 by paulsheldrake, Remove IE6 code from datepicker CSS.
 - Issue #1231864 by Damien McKenna, Clean up line endings in vevent and vcalendar tpl files.
 - Issue #1231382 by dboulet, Clean up date css, code style fixes.
-- Issue #821200 by scor and KarenS, Add RDF support to the date field.
-- Issue #1222468 by ksenzee, Hide timezone options when using granularity without time.
 - Date repeat additions and exceptions need to be reworked into full, timezone-adjusted, datetime values when passing them to FAPI as default values.
 - Issue #1223034 by c4rl, Make sure repeating date additions and exceptions work correctly when there is more than one repeating date in the same form.
-- Issue #1229388 by ksenzee, Hide formatter from/to choices on fields without multiple values.
 - Issue #1229362, Date Popup module needs date_is_date() function, which should not require Date module. Move that to Date API.
 - Issue #1227208 by ksenzee, Minor text changes.
 - Issue #1094408, Change method of identifying Field module filters, using the name of the group is not robust enough.
@@ -28,10 +67,6 @@ Version 7.x-2.x-dev
 - The value for variable_get('date_first_day') should default to zero to match core default.
 - Issue #1147620 by KarenS with an assist from tim.plunkett, Fix the query so it will locate dates that span days or months by checking the intersection of the date range and the query range. Also add an option to the argument so you can do a simple query for either the from or to date when checking the whole range isn't the right solution.
 - Issue #307274 by ksenzee, Fix broken validation for absolute value in years back/forward.
-- Issue #1216996 by ksenzee, Change the years back/forward setting into two drop down boxes.
-- Issue #1215738 by ksenzee, Make granularity settings checkboxes horizontal.
-- Issue #1215686 by ksenzee, Change name of date field types to be more intuitive.
-- Issue #1211744 by EclipseGC and KarenS, Add a Date pager plugin that is designed to add paging in conjunction with a Date argument.
 - Issue #1209408 Make sure date_repeat_calc() returns empty array for FREQ=NONE and INTERVAL=0, also add a test for that.
 - Issue #1173374 by fietserwin, Remove translation of the jQuery datepicker day and month names, now handled by core.
 - Issue #1192020 by tim.plunkett: Fixed date granularity is too fragile in date_field_all_day().
@@ -42,10 +77,8 @@ Version 7.x-2.x-dev
 - Issue #1123186 by KingJoshi, Fix misnamed date_part_hour_prefix in hook_theme().
 - Issue #1032942 by fietserwin, Rename date popup functions that are getting picked up by theme('date').
 - Issue #1206756 More tweaks to the validation changes. They were blocking zero times and causing some test failures.
-- Issue #1180612 by mikeryan, Add support for Migrate module.
 - Issue #1197352 Don't display language about from and to dates when there is no todate.
 - Issue #1201288 by rafa0961, fix broken references to SQLSERVER.
-- Issue #1198320 by ksenzee, David_Rothstein, Noyz: UI improvements to field settings page.
 - More work on cleaning up validation, add in some ideas from fearlsgrove about checking the granularity of the input array against the expected granularity.
 - Issue #1161006 Dates that should have time but do not were not correctly caught in validation.
 - Issue #1161006 by justinrandall, Add tests to check that dates that should have time but do not are correctly caught in validation.

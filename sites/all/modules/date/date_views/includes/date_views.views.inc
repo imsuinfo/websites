@@ -16,7 +16,7 @@
  *   for the filter form and an option to set the default value to 
  *   a set date or something like 'now +90 days' . If the operator is 
  *   set to 'between' or 'not between' you can set a default value for
- *   both the from and to dates. 
+ *   both the start and end dates. 
  * 
  * Current date argument default
  *   Adds a default option to set the argument to the current date 
@@ -99,6 +99,7 @@ function date_views_views_data() {
       'argument' => array(
         'handler' => 'date_views_argument_handler',
         'empty field name' => t('Undated'),
+        'is date' => TRUE,
         //'skip base' => $base_table,
       ),
     );  
@@ -110,12 +111,32 @@ function date_views_views_data() {
       'filter' => array(
         'handler' => 'date_views_filter_handler',
         'empty field name' => t('Undated'),
+        'is date' => TRUE,
         //'skip base' => $base_table,
       ),
     ); 
   }
 
   return $data;
+}
+
+/**
+ * Implements hook_views_data_alter().
+ */
+function date_views_views_data_alter(&$data) {
+
+  // Mark all the core date handlers as date fields.
+  // This will identify all handlers that directly use the _date handlers,
+  // will not pick up any that extend those handlers.
+  foreach ($data as $module => &$table) {
+    foreach ($table as $id => &$field) {
+      foreach (array('field', 'sort', 'filter', 'argument') as $type) {
+        if (isset($field[$type]) && isset($field[$type]['handler']) && ($field[$type]['handler'] == 'views_handler_' . $type . '_date')) {
+          $field[$type]['is date'] = TRUE;
+        }
+      }
+    }
+  }
 }
 
 /**

@@ -1593,6 +1593,20 @@ function date_has_date($granularity) {
 }
 
 /**
+ * Helper function to get a format for a specific part of a date field.
+ */
+function date_part_format($part, $format) {
+  switch ($part) {
+    case 'date':
+      return date_limit_format($format, array('year', 'month', 'day'));
+    case 'time':
+      return date_limit_format($format, array('hour', 'minute', 'second'));
+    default:
+      return date_limit_format($format, array($part));
+  }
+}
+
+/**
  * Rewrite a format string so it only includes elements from a
  * specified granularity array.
  *
@@ -1985,10 +1999,10 @@ function date_format_type_options() {
 }
 
 /**
- * Determine if a from/to date combination qualify as 'All day'.
+ * Determine if a start/end date combination qualify as 'All day'.
  *
- * @param object $date1, a string date in datetime format for the 'from' date.
- * @param object $date2, a string date in datetime format for the 'to' date.
+ * @param object $date1, a string date in datetime format for the 'start' date.
+ * @param object $date2, a string date in datetime format for the 'end' date.
  * @return TRUE or FALSE.
  */
 function date_is_all_day($string1, $string2, $granularity = 'second', $increment = 1) {
@@ -2013,7 +2027,6 @@ function date_is_all_day($string1, $string2, $granularity = 'second', $increment
   $hour2 = $count > 3 ? intval($matches[3]) : 0;
   $min2 = $count > 4 ? intval($matches[4]) : 0;
   $sec2 = $count > 5 ? intval($matches[5]) : 0;
-
   if (empty($date1) || empty($date2)) {
     return FALSE;
   }
@@ -2043,7 +2056,7 @@ function date_is_all_day($string1, $string2, $granularity = 'second', $increment
       $min_match = TRUE;
       $max_match = FALSE;
   }
-
+  
   if ($min_match && $max_match) {
     return TRUE;
   }
