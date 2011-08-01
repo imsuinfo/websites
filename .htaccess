@@ -101,7 +101,11 @@ DirectoryIndex index.php index.html index.htm
   #
   # If your site is running in a VirtualDocumentRoot at http://example.com/,
   # uncomment the following line:
-  # RewriteBase /
+  RewriteBase /
+
+  # begin custom redirects
+  RewriteRule ^police/parking.htm$ police/parking [R=301,L]
+  # end custom redirects
 
   # Pass all requests not referring directly to files in the filesystem to
   # index.php. Clean URLs are handled in drupal_environment_initialize().
