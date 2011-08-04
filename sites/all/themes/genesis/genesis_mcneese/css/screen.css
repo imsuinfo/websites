@@ -677,9 +677,6 @@ div#breadcrumb a:hover,
 div#breadcrumb a:active {
   color: #000000;
   background-color: #fad703;
-
-  -webkit-transition-property: background-color;
-  -webkit-transition-duration: 0.3s;
 }
 
 div#breadcrumb .views-field-field-event-datetime .field-content {
