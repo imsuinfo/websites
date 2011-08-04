@@ -8,7 +8,9 @@ div#container {
   margin: 0 auto;
 
   background-color: #ffffff;
+}
 
+body#maintenance_mode-body div#container {
   -moz-border-radius-bottomright: 10px;
   -moz-border-radius-bottomleft: 10px;
 
