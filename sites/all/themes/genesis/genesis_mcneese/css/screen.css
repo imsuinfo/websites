@@ -352,7 +352,7 @@ div#block-menu-menu-primary-navigation div.block-inner div.content ul.menu li {
 }
 
 div#block-menu-menu-primary-navigation div.block-inner div.content ul.menu li a {
-  display: block;
+  display: inline-block;
 
   height: 28px;
 
