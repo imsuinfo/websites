@@ -100,14 +100,8 @@ function genesis_mcneese_preprocess_html(&$vars) {
         }
         break;
       case 'chrome':
-        // FIXME: what should the min really be?
-        //if ($majorver < 11){
-        //}
         break;
       case 'opera':
-        // FIXME: what should the min really be?
-        //if ($majorver < 10){
-        //}
         break;
     }
   }
