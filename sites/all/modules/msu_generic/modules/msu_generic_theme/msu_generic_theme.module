@@ -1,0 +1,241 @@
+<?php
+
+/**
+ * Returns an array of variables to be used by a given theme.
+ *
+ * @param variables
+ *   The variables array from the theme template functions.
+ *
+ * @return
+ *  An array of variables to be provided to the calling theme.
+ */
+function msu_generic_theme_get_variables(array &$variables){
+  $msu = array();
+  $msu['css'] = array();
+  $msu['meta'] = array();
+  $msu['meta']['charset'] = 'UTF-8';
+  $msu['meta']['content'] = NULL;
+  $msu['meta']['http-equiv'] = array();
+  $msu['meta']['name'] = array();
+  $msu['agent'] = array();
+  $msu['agent']['name'] = 'unknown';
+  $msu['agent']['major_version'] = '';
+  $msu['breadcrumb'] = array();
+  $msu['markup_css'] = array();
+  $msu['markup_css']['body'] = array();
+  $msu['markup_css']['body']['id'] = '';
+  $msu['markup_css']['body']['class'] = '';
+  $msu['markup_css']['content'] = array();
+  $msu['markup_css']['content']['id'] = '';
+  $msu['markup_css']['content']['class'] = '';
+  $msu['is'] = array();
+  $msu['is']['front'] = FALSE;
+  $msu['is']['admin'] = FALSE;
+  $msu['is']['using_database'] = FALSE;
+  $msu['is']['node'] = FALSE;
+  $msu['is']['emergency'] = FALSE;
+  $msu['is']['maintenance'] = FALSE;
+  $msu['is']['unsupported'] = FALSE;
+  $msu['is']['debug'] = FALSE;
+  $msu['is_data']['front'] = array();
+  $msu['is_data']['admin'] = array();
+  $msu['is_data']['using_database'] = array();
+  $msu['is_data']['node'] = array();
+  $msu['is_data']['emergency'] = array();
+  $msu['is_data']['maintenance'] = array();
+  $msu['is_data']['unsupported'] = array();
+  $msu['is_data']['debug'] = array();
+  $msu['at'] = '';
+  $msu['at_data'] = array();
+
+  $user = cf_get_user();
+
+  // set the request time if it exists
+  if (!empty($_SERVER['REQUEST_TIME'])){
+    $msu['request'] = $_SERVER['REQUEST_TIME'];
+  }
+  else {
+    $msu['request'] = microtime();
+  }
+
+  // default to a 1-hour page expiration.
+  $date_value = strtotime('+1 hours', $msu['request']);
+  $msu['meta']['name']['expires'] = gmdate('D, d M Y H:i:s T', $data_value);
+
+  // set the user agent
+  if (function_exists('get_browser') && isset($_SERVER['HTTP_USER_AGENT'])){
+    $browser_details = get_browser(null, true);
+
+    if (!empty($browser_details['browser'])){
+      $msu['agent']['name'] = strtolower($browser_details['browser']);
+    }
+
+    if (!empty($browser_details['majorver'])){
+      $msu['agent']['major_version'] = $browser_details['majorver'];
+    }
+
+    switch ($browser){
+      case 'firefox':
+        if ($majorver < 3){
+          $msu['is']['unsupported'] = TRUE;
+        }
+        break;
+      case 'mozilla':
+        // get the gecko api version and report unsupported for old mozilla apis
+        if (!empty($agent_settings)){
+          $matches = array();
+          $result = preg_match('/rv:(\d*)\.(\d*)/i', $agent_settings, $matches);
+          if ($result > 0){
+            if (isset($matches[1]) && isset($matches[2])) {
+              if ($matches[1] <= 1 && $matches[2] <= 7){
+                $msu['is']['unsupported'] = TRUE;
+              }
+            }
+          }
+        }
+        break;
+      case 'ie':
+        if ($majorver < 8){
+          $msu['is']['unsupported'] = TRUE;
+        }
+        break;
+    }
+  }
+
+  // set the default meta
+  $msu['meta']['name']['copyright'] = '2011© McNeese State University';
+  $msu['meta']['name']['description'] = 'McNeese State University Website';
+  $msu['meta']['name']['distribution'] = 'web';
+  $msu['meta']['name']['X-UA-Compatible'] = 'IE=8';
+
+  // set frontpage defaults
+  if (drupal_is_front_page() === TRUE) {
+    $msu['is']['front'] = TRUE;
+    $msu['meta']['name']['googlebot'] = 'noarchive,noindex';
+    $msu['meta']['name']['robots'] = 'NOARCHIVE,NOINDEX,FOLLOW';
+    $msu['meta']['name']['refresh'] = '43200'; // 12-hours
+  }
+
+  if (!empty($vars['is_admin'])){
+    $msu['is']['admin'] = TRUE;
+  }
+
+  if (!empty($vars['logged_in'])){
+    $msu['is']['logged_in'] = TRUE;
+    $msu['is_data']['logged_in']['user'] = &$user;
+  }
+
+  if (!empty($vars['db_is_active'])){
+    $msu['is']['using_database'] = TRUE;
+    $msu['is_data']['using_database']['database'] = db_driver();
+  }
+
+  if (isset($vars['node']) && is_object($vars['node']) && isset($vars['node']->type)) {
+    if (isset($vars['node']->nid) && !empty($vars['node']->nid)){
+      $msu['is']['node'] = TRUE;
+      $msu['is_data']['node']['node'] = &$vars['node'];
+    }
+  }
+
+  // add url specific css
+  global $base_url;
+  $msi['at'] = preg_replace('/^.*\/\//i', '', $base_url);
+
+  drupal_alter('msu_generic_theme_get_variables', $msu, $variables);
+
+  // populate the body and content css tags
+  foreach ($msu['is'] as $key => $value){
+    if ($value === TRUE){
+      $msu['markup_css']['body']['class'] .= ' is-' . $key;
+      $msu['markup_css']['content']['class'] .= ' is-' . $key;
+    }
+  }
+
+  $msi['at'] = preg_replace('/(\W)+/i', '_', $msi['at']);
+  $msu['markup_css']['body']['class'] .= ' at-' . $msu['at'];
+  $msu['markup_css']['content']['class'] .= ' at-' . $msu['at'];
+
+  return $msu;
+}
+
+/**
+ * Properly generates html 4/5 headers depending on the contents of the $msu parameter.
+ * This will auto-add all appropriate css headers through the appropriate drupal css calls.
+ *
+ * @param msu
+ *   An array of header elements to process
+ *
+ * @return
+ *   A string of html data
+ */
+function msu_generic_theme_generate_headers(array $msu){
+  $output = '';
+
+  // handle meta tags
+  if (!empty($msu['meta']['charset'])){
+    $output .= '<meta charset="' . filter_xss($msu['meta']['charset'], array()) . '">' . "\n";
+  }
+
+  $supported_meta = array();
+  $supported_meta[] = 'abstract';
+  $supported_meta[] = 'author';
+  $supported_meta[] = 'classification';
+  $supported_meta[] = 'copyright';
+  $supported_meta[] = 'description';
+  $supported_meta[] = 'distribution';
+  $supported_meta[] = 'doc-class';
+  $supported_meta[] = 'doc-rights';
+  $supported_meta[] = 'doc-type';
+  $supported_meta[] = 'DownloadOptions';
+  $supported_meta[] = 'expires';
+  $supported_meta[] = 'generator';
+  $supported_meta[] = 'googlebot';
+  $supported_meta[] = 'keywords';
+  $supported_meta[] = 'MSSmartTagsPreventParsing';
+  $supported_meta[] = 'name';
+  $supported_meta[] = 'owner';
+  $supported_meta[] = 'progid';
+  $supported_meta[] = 'rating';
+  $supported_meta[] = 'refresh';
+  $supported_meta[] = 'reply-to';
+  $supported_meta[] = 'resource-type';
+  $supported_meta[] = 'revisit-after';
+  $supported_meta[] = 'robots';
+  $supported_meta[] = 'Template';
+  $supported_meta[] = 'X-UA-Compatible'; // for specifying minimum Internet Explorer version
+
+  foreach ($supported_meta as $tag){
+    if (!empty($msu['meta']['name'][$tag])){
+      $output .= '<meta name="' . $tag . '" content="' . filter_xss($msu['meta']['name'][$tag], array()) . '">' . "\n";
+    }
+  }
+
+  // handle css
+  foreach ($msu['css'] as $css){
+    if (!empty($css['data'])){
+      drupal_add_css($css['data'], (!empty($css['options']) ? $css['options'] : NULL));
+    }
+  }
+
+  return $output;
+}
+
+/**
+ * Safely render all variables in the $keys in the $variables['page'] array.
+ *
+ * @param variables
+ *   The variables array to process
+ *
+ * @param keys
+ *   An array of key names to process
+ */
+function msu_generic_theme_render_page_variables(&$variables, $keys){
+  foreach ($keys as $key){
+    if (isset($variables['page'][$key])){
+      $variables['page'][$key] = render($variables['page'][$key]);
+    }
+    else {
+      $variables['page'][$key] = '';
+    }
+  }
+}
