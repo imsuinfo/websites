@@ -100,8 +100,13 @@ function genesis_mcneese_preprocess_html(&$vars) {
         }
         break;
       case 'chrome':
+        drupal_add_css(path_to_theme() . '/css/webkit.css', array('group' => CSS_THEME, 'preprocess' => FALSE, 'weight' => 2));
         break;
-      case 'opera':
+      case 'safari':
+        drupal_add_css(path_to_theme() . '/css/webkit.css', array('group' => CSS_THEME, 'preprocess' => FALSE, 'weight' => 2));
+        break;
+      case 'midori':
+        drupal_add_css(path_to_theme() . '/css/webkit.css', array('group' => CSS_THEME, 'preprocess' => FALSE, 'weight' => 2));
         break;
     }
   }
