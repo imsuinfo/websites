@@ -25,13 +25,13 @@ function rules_forms_rules_event_info() {
 
   $events = array();
   foreach ($form_events as $form_id => $label) {
-    $events[$form_id .'_form_built'] = $defaults + array(
+    $events['rules_forms_'. $form_id .'_form_built'] = $defaults + array(
       'label' => t('@form is being built', array('@form' => $label)),
     );
-    $events[$form_id .'_form_submit'] = $defaults + array(
+    $events['rules_forms_'. $form_id .'_form_submit'] = $defaults + array(
       'label' => t('@form is submitted', array('@form' => $label)),
     );
-    $events[$form_id .'_form_validate'] = $defaults + array(
+    $events['rules_forms_'. $form_id .'_form_validate'] = $defaults + array(
       'label' => t('@form is being validated', array('@form' => $label)),
     );
   }
@@ -59,21 +59,9 @@ function rules_forms_event_variables() {
     ),
     'user' => array(
       'type' => 'user',
-      'label' => t('acting user'),
-      'handler' => 'rules_forms_variables_global_user',
+      'label' => t('Logged in user'),
     ),
   );
-}
-
-/**
- * Returns the user account of the acting user.
- *
- * @see rules_forms_rules_event_info()
- * @see rules_forms_event_variables()
- */
-function rules_forms_variables_global_user() {
-  global $user;
-  return $user;
 }
 
 /**
@@ -81,7 +69,7 @@ function rules_forms_variables_global_user() {
  */
 function rules_forms_rules_condition_info() {
   $conditions = array();
-  $conditions['element_value'] = array(
+  $conditions['rules_forms_element_value'] = array(
     'label' => t('Form element has value'),
     'group' => 'Rules Forms',
     'parameter' => array(
@@ -115,7 +103,7 @@ function rules_forms_rules_condition_info() {
  */
 function rules_forms_rules_action_info() {
   $actions = array();
-  $actions['load_element'] = array(
+  $actions['rules_forms_load_element'] = array(
     'label' => t('Load a form element'),
     'group' => 'Rules Forms',
     'parameter' => array(
@@ -132,7 +120,7 @@ function rules_forms_rules_action_info() {
     'access callback' => 'rules_forms_integration_access',
     'help' => t('Enter an element ID to load a form element.'),
   );
-  $actions['add_element'] = array(
+  $actions['rules_forms_add_element'] = array(
     'label' => t('Create a new form element'),
     'group' => 'Rules Forms',
     'parameter' => array(
@@ -178,7 +166,7 @@ function rules_forms_rules_action_info() {
     'validate' => 'rules_forms_create_element_validate',
     'help' => t('To save form data from newly created form elements, you may have to set up an execute PHP code action on form submit.'),
   );
-  $actions['text'] = array(
+  $actions['rules_forms_text'] = array(
     'label' => t('Set element text attributes'),
     'group' => 'Rules Forms',
     'parameter' => array(
@@ -205,7 +193,7 @@ function rules_forms_rules_action_info() {
     'base' => 'rules_forms_action_set_text',
     'help' => t('Note: If a field is left empty, the empty text will not be applied to the form element.'),
   );
-  $actions['access'] = array(
+  $actions['rules_forms_access'] = array(
     'label' => t('Set element access attributes'),
     'group' => 'Rules Forms',
     'parameter' => array(
@@ -235,7 +223,7 @@ function rules_forms_rules_action_info() {
     'base' => 'rules_forms_action_set_access',
     'help' => t('Note: All attributes will be applied to the form element.'),
   );
-  $actions['options'] = array(
+  $actions['rules_forms_options'] = array(
     'label' => t('Set multiple value element options'),
     'group' => 'Rules Forms',
     'parameter' => array(
@@ -256,7 +244,7 @@ function rules_forms_rules_action_info() {
     'validate' => 'rules_forms_action_set_options_validate',
     'access callback' => 'rules_forms_integration_access',
   );
-  $actions['default'] = array(
+  $actions['rules_forms_default'] = array(
     'label' => t('Set the default value of a form element'),
     'group' => 'Rules Forms',
     'parameter' => array(
@@ -273,7 +261,7 @@ function rules_forms_rules_action_info() {
     'base' => 'rules_forms_action_set_element',
     'access callback' => 'rules_forms_integration_access',
   );
-  $actions['redirect'] = array(
+  $actions['rules_forms_redirect'] = array(
     'label' => t('Set the redirect target of the form'),
     'group' => 'Rules Forms',
     'parameter' => array(
@@ -286,7 +274,7 @@ function rules_forms_rules_action_info() {
     'access callback' => 'rules_forms_integration_access',
     'help' => t('Enter a Drupal path, path alias, or external URL to redirect to. Enter (optional) queries after "?" and (optional) anchor after "#".'),
   );
-  $actions['adjust_weight'] = array(
+  $actions['rules_forms_adjust_weight'] = array(
     'label' => t('Adjust weight of an element in the form'),
     'group' => 'Rules Forms',
     'parameter' => array(
@@ -306,7 +294,7 @@ function rules_forms_rules_action_info() {
     'access callback' => 'rules_forms_integration_access',
     'base' => 'rules_forms_action_adjust_weight',
   );
-  $actions['prefix_suffix_html'] = array(
+  $actions['rules_forms_prefix_suffix_html'] = array(
     'label' => t('Insert HTML prefix/suffix code'),
     'group' => 'Rules Forms',
     'parameter' => array(
@@ -331,7 +319,7 @@ function rules_forms_rules_action_info() {
     'access callback' => 'rules_forms_integration_access',
     'base' => 'rules_forms_action_prefix_suffix_html',
   );
-  $actions['set_error'] = array(
+  $actions['rules_forms_set_error'] = array(
     'label' => t('Set a form error'),
     'group' => 'Rules Forms',
     'parameter' => array(

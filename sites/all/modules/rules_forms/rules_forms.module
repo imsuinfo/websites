@@ -108,6 +108,7 @@ function rules_forms_event_submit(&$form, &$form_state) {
  * @see rules_forms_form_alter()
  */
 function rules_forms_invoke_event($event_type, &$form, &$form_state, $form_id = NULL) {
+  global $user;
   if (empty($form_id)) {
     $form_id = $form['form_id']['#value'];
   }
@@ -117,7 +118,7 @@ function rules_forms_invoke_event($event_type, &$form, &$form_state, $form_id = 
   $form_state_data = new ArrayObject((array)$form_state);
 
   // Invoke events with form arrays passed by reference.
-  rules_invoke_event($form_id .'_'. $event_type, $form_data, $form_state_data, $form_id);
+  rules_invoke_event($form_id .'_'. $event_type, $form_data, $form_state_data, $form_id, $user);
 
   // Repopulate form arrays to update the form.
   $form = (array) $form_data;
