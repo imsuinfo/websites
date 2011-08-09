@@ -12,41 +12,22 @@
 function msu_generic_theme_get_variables(array &$variables){
   $msu = array();
   $msu['css'] = array();
-  $msu['meta'] = array();
-  $msu['meta']['charset'] = 'UTF-8';
-  $msu['meta']['content'] = NULL;
-  $msu['meta']['http-equiv'] = array();
-  $msu['meta']['name'] = array();
-  $msu['agent'] = array();
-  $msu['agent']['name'] = 'unknown';
-  $msu['agent']['major_version'] = '';
+  $msu['meta'] = array('charset' => 'UTF-8', 'content' => NULL, 'http-equiv' => array(), 'name' => array());
+  $msu['agent'] = array('machine_name' => 'unknown', 'human_name' => 'unknown', 'major_version' => 'unknown', 'engine' => 'unknown', 'raw' => '');
   $msu['breadcrumb'] = array();
-  $msu['markup_css'] = array();
-  $msu['markup_css']['body'] = array();
-  $msu['markup_css']['body']['id'] = '';
-  $msu['markup_css']['body']['class'] = '';
-  $msu['markup_css']['content'] = array();
-  $msu['markup_css']['content']['id'] = '';
-  $msu['markup_css']['content']['class'] = '';
+  $msu['markup_css'] = array('body' => array('id' => '', 'class' => ''), 'content' => array('id' => '', 'class' => ''));
+  $msu['at'] = array('machine_name' => '', 'human_name' => '', 'url' => '', 'path' => '');
+  $msu['theme'] = array('path' => '', 'machine_name' => '', 'human_name' => '');
   $msu['is'] = array();
-  $msu['is']['front'] = FALSE;
-  $msu['is']['admin'] = FALSE;
-  $msu['is']['using_database'] = FALSE;
-  $msu['is']['node'] = FALSE;
-  $msu['is']['emergency'] = FALSE;
-  $msu['is']['maintenance'] = FALSE;
-  $msu['is']['unsupported'] = FALSE;
-  $msu['is']['debug'] = FALSE;
-  $msu['is_data']['front'] = array();
-  $msu['is_data']['admin'] = array();
-  $msu['is_data']['using_database'] = array();
-  $msu['is_data']['node'] = array();
-  $msu['is_data']['emergency'] = array();
-  $msu['is_data']['maintenance'] = array();
-  $msu['is_data']['unsupported'] = array();
-  $msu['is_data']['debug'] = array();
-  $msu['at'] = '';
-  $msu['at_data'] = array();
+  $msu['is_data'] = array();
+  $msu['show'] = array();
+
+  foreach (array('front', 'admin', 'using_database', 'node', 'emergency', 'maintenance', 'unsupported', 'debug', 'overlay') as $key){
+    $msu['is'][$key] = FALSE;
+    $msu['is_data'][$key] = array();
+  }
+
+  $msu['is_data']['unsupported'] = '';
 
   $user = cf_get_user();
 
@@ -60,25 +41,48 @@ function msu_generic_theme_get_variables(array &$variables){
 
   // default to a 1-hour page expiration.
   $date_value = strtotime('+1 hours', $msu['request']);
-  $msu['meta']['name']['expires'] = gmdate('D, d M Y H:i:s T', $data_value);
+  $msu['meta']['name']['expires'] = gmdate('D, d M Y H:i:s T', $date_value);
 
   // set the user agent
   if (function_exists('get_browser') && isset($_SERVER['HTTP_USER_AGENT'])){
     $browser_details = get_browser(null, true);
 
+    $msu['agent']['raw'] = $_SERVER['HTTP_USER_AGENT'];
+
+    if (!empty($msu['agent']['raw'])){
+      // Gecko
+      $matches = array();
+      $result = preg_match('/ Gecko\b/i', $msu['agent']['raw'], $matches);
+      if ($result > 0){
+        $msu['agent']['engine'] = 'gecko';
+      }
+
+      // webkit
+      $matches = array();
+      $result = preg_match('/ AppleWebKit\b/i', $msu['agent']['raw'], $matches);
+      if ($result > 0){
+        $msu['agent']['engine'] = 'webkit';
+      }
+    }
+
     if (!empty($browser_details['browser'])){
-      $msu['agent']['name'] = strtolower($browser_details['browser']);
+      if ($browser_details['browser'] != 'Default Browser'){
+        $msu['agent']['machine_name'] = strtolower($browser_details['browser']);
+        $msu['agent']['human_name'] = $browser_details['browser'];
+      }
     }
 
     if (!empty($browser_details['majorver'])){
       $msu['agent']['major_version'] = $browser_details['majorver'];
     }
 
-    switch ($browser){
+    switch ($msu['agent']['machine_name']){
       case 'firefox':
-        if ($majorver < 3){
+        if ($msu['agent']['major_version'] < 3){
           $msu['is']['unsupported'] = TRUE;
         }
+        $msu['agent']['human_name'] = 'Firefox';
+        $msu['agent']['engine'] = 'gecko';
         break;
       case 'mozilla':
         // get the gecko api version and report unsupported for old mozilla apis
@@ -93,10 +97,34 @@ function msu_generic_theme_get_variables(array &$variables){
             }
           }
         }
+        $msu['agent']['human_name'] = 'Mozilla';
+        $msu['agent']['engine'] = 'gecko';
         break;
       case 'ie':
-        if ($majorver < 8){
+        if ($msu['agent']['major_version'] < 8){
           $msu['is']['unsupported'] = TRUE;
+        }
+        $msu['agent']['human_name'] = 'Internet Explorer';
+        $msu['agent']['engine'] = 'trident';
+        break;
+      case 'opera':
+        $msu['agent']['human_name'] = 'Opera';
+        $msu['agent']['engine'] = 'presto';
+        break;
+      case 'chrome':
+        $msu['agent']['human_name'] = 'Google Chrome';
+        $msu['agent']['engine'] = 'webkit';
+        break;
+      default:
+        if (!empty($msu['agent']['raw'])){
+          // Midori
+          $matches = array();
+          $result = preg_match('/ Midori\b/i', $msu['agent']['raw'], $matches);
+          if ($result > 0){
+            $msu['agent']['machine_name'] = 'midori';
+            $msu['agent']['human_name'] = 'Midori';
+            $msu['agent']['engine'] = 'webkit';
+          }
         }
         break;
     }
@@ -137,9 +165,21 @@ function msu_generic_theme_get_variables(array &$variables){
     }
   }
 
+  if (module_exists('overlay')){
+    $overlay_mode = overlay_get_mode();
+
+    if ($overlay_mode == 'child'){
+      $msu['is']['overlay'] = TRUE;
+    }
+  }
+
   // add url specific css
   global $base_url;
-  $msi['at'] = preg_replace('/^.*\/\//i', '', $base_url);
+  global $base_dir;
+  $msu['at']['machine_name'] = preg_replace('/^.*\/\//i', '', $base_url);
+  $msu['at']['human_name'] = variable_get('site_name');
+  $msu['at']['url'] = $base_url;
+  $msu['at']['path'] = $base_dir;
 
   drupal_alter('msu_generic_theme_get_variables', $msu, $variables);
 
@@ -151,7 +191,7 @@ function msu_generic_theme_get_variables(array &$variables){
     }
   }
 
-  $msi['at'] = preg_replace('/(\W)+/i', '_', $msi['at']);
+  $msu['at'] = preg_replace('/(\W)+/i', '_', $msu['at']);
   $msu['markup_css']['body']['class'] .= ' at-' . $msu['at'];
   $msu['markup_css']['content']['class'] .= ' at-' . $msu['at'];
 
@@ -159,7 +199,7 @@ function msu_generic_theme_get_variables(array &$variables){
 }
 
 /**
- * Properly generates html 4/5 headers depending on the contents of the $msu parameter.
+ * Properly generates html headers depending on the contents of the $msu parameter.
  * This will auto-add all appropriate css headers through the appropriate drupal css calls.
  *
  * @param msu
@@ -210,32 +250,54 @@ function msu_generic_theme_generate_headers(array $msu){
     }
   }
 
-  // handle css
-  foreach ($msu['css'] as $css){
+  // handle css (Currently not working)
+  /*
+  foreach ($msu['css'] as $key => &$css){
     if (!empty($css['data'])){
       drupal_add_css($css['data'], (!empty($css['options']) ? $css['options'] : NULL));
     }
   }
+  */
 
   return $output;
 }
 
 /**
- * Safely render all variables in the $keys in the $variables['page'] array.
+ * Safely render all variables specified in the $keys array.
  *
  * @param variables
  *   The variables array to process
  *
  * @param keys
  *   An array of key names to process
+ *
+* @param subdir (optional)
+ *   A string representing a subdirectory inside of the variables parameter
  */
-function msu_generic_theme_render_page_variables(&$variables, $keys){
-  foreach ($keys as $key){
-    if (isset($variables['page'][$key])){
-      $variables['page'][$key] = render($variables['page'][$key]);
+function msu_generic_theme_render_variables(&$variables, $keys, $subdir = NULL){
+  if (is_null($subdir)){
+    foreach ($keys as $key){
+      if (empty($variables[$key])){
+        $variables[$key] = '';
+        $variables['msu']['show'][$key] = FALSE;
+      }
+      else {
+        $variables[$key] = render($variables[$key]);
+        $variables['msu']['show'][$key] = TRUE;
+      }
     }
-    else {
-      $variables['page'][$key] = '';
+  } else {
+    $variables['msu']['show'][$subdir] = array();
+
+    foreach ($keys as $key){
+      if (empty($variables[$subdir][$key])){
+        $variables[$subdir][$key] = '';
+        $variables['msu']['show'][$subdir][$key] = FALSE;
+      }
+      else {
+        $variables[$subdir][$key] = render($variables[$subdir][$key]);
+        $variables['msu']['show'][$subdir][$key] = TRUE;
+      }
     }
   }
 }

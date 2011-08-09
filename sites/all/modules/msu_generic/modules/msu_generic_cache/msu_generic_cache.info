@@ -1,0 +1,6 @@
+name = MSU Generic - Cache
+description = "Provides a caching functionality to be used by McNeese State University drupal modules."
+core = 7.x
+package = MSU
+dependencies[] = cf_error
+files[] = msu_generic_cache.module
