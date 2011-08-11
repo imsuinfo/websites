@@ -27,8 +27,6 @@ function msu_generic_theme_get_variables(array &$variables){
     $msu['is_data'][$key] = array();
   }
 
-  $msu['is_data']['unsupported'] = '';
-
   $user = cf_get_user();
 
   // set the request time if it exists
