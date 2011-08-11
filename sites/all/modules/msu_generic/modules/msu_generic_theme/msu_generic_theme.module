@@ -21,6 +21,7 @@ function msu_generic_theme_get_variables(array &$variables){
   $msu['is'] = array();
   $msu['is_data'] = array();
   $msu['show'] = array();
+  $msu['data'] = array();
 
   foreach (array('front', 'admin', 'using_database', 'node', 'emergency', 'maintenance', 'unsupported', 'debug', 'overlay') as $key){
     $msu['is'][$key] = FALSE;
