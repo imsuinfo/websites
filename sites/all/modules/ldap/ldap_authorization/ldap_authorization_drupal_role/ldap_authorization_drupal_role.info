@@ -6,13 +6,13 @@ package = "Lightweight Directory Access Protocol"
 dependencies[] = ldap_authorization
 core = 7.x
 configure = admin/config/people/ldap/authorization
-files[] = LdapAuthorizationConsumerDrupalRole.class.php
+files[] = LdapAuthorizationConsumerRole.class.php
 files[] = ldap_authorization_drupal_role.module
 files[] = ldap_authorization_drupal_role.inc
 
-; Information added by drupal.org packaging script on 2011-07-11
-version = "7.x-1.0-beta3"
+; Information added by drupal.org packaging script on 2011-08-08
+version = "7.x-1.0-beta4"
 core = "7.x"
 project = "ldap"
-datestamp = "1310403720"
+datestamp = "1312774621"
 

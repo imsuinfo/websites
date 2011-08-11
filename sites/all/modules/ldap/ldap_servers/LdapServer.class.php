@@ -39,6 +39,7 @@ class LdapServer {
   public $mail_attr;
   public $ldapToDrupalUserPhp;
   public $testingDrupalUsername;
+  public $detailed_watchdog_log;
 
 
   public $inDatabase = FALSE;
@@ -72,7 +73,7 @@ class LdapServer {
     if (!is_scalar($sid)) {
       return;
     }
-
+    $this->detailed_watchdog_log = variable_get('ldap_help_watchdog_detail', 0);
     $server_record = array();
     if (module_exists('ctools')) {
       ctools_include('export');
@@ -244,6 +245,20 @@ class LdapServer {
         return FALSE;
       }
     }
+    if ($this->detailed_watchdog_log) {
+      $query = 'ldap_search() call: '. join("<hr/>", array(
+        'base_dn: ' . $base_dn,
+        'filter = ' . $filter,
+        'attributes: ' .  join(',', $attributes),
+        'attrsonly = ' .  $attrsonly,
+        'sizelimit = ' .  $sizelimit,
+        'timelimit = ' .  $timelimit,
+        'deref = ' .  $deref,
+        )
+      );
+      watchdog('ldap_server', $query, array());
+    }
+
     $result = @ldap_search($this->connection, $base_dn, $filter, $attributes, $attrsonly, $sizelimit, $timelimit, $deref);
     if ($result && ldap_count_entries($this->connection, $result)) {
       $entries = ldap_get_entries($this->connection, $result);
@@ -253,8 +268,8 @@ class LdapServer {
       $watchdog_tokens =  array('%basedn' => $base_dn, '%filter' => $filter,
         '%attributes' => print_r($attributes, TRUE), '%errmsg' => $this->errorMsg('ldap'),
         '%errno' => $this->ldapErrorNumber());
-      watchdog('ldap', "LDAP ldap_search error. basedn: %basedn, filter: %filter, attributes:
-        %attributes, errmsg: %errmsg, ldap err no: %errno,", $watchdog_tokens);
+      watchdog('ldap', "LDAP ldap_search error. basedn: %basedn| filter: %filter| attributes:
+        %attributes| errmsg: %errmsg| ldap err no: %errno|", $watchdog_tokens);
       return array();
     }
     else {
@@ -276,6 +291,7 @@ class LdapServer {
     $watchdog_tokens = array('%drupal_user_name' => $drupal_user_name);
     if ($this->ldapToDrupalUserPhp && module_exists('php')) {
       global $name;
+      $old_name_value = $name;
       $name = $drupal_user_name;
       $code = "<?php global \$name; \n". $this->ldapToDrupalUserPhp . "; \n ?>";
       $watchdog_tokens['%code'] = $this->ldapToDrupalUserPhp;
@@ -283,7 +299,7 @@ class LdapServer {
       $watchdog_tokens['%code_result'] = $code_result;
       $ldap_username = $code_result;
       $watchdog_tokens['%ldap_username'] = $ldap_username;
-      $name = NULL;
+      $name = $old_name_value;
       if ($this->detailedWatchdogLog) {
         watchdog('ldap_server', '%drupal_user_name tansformed to %ldap_username by applying code <code>%code</code>', $watchdog_tokens, WATCHDOG_DEBUG);
       }
@@ -298,7 +314,7 @@ class LdapServer {
     foreach ($this->basedn as $basedn) {
       if (empty($basedn)) continue;
 
-      $filter = $this->user_attr . '=' . $ldap_username;
+      $filter = '('. $this->user_attr . '=' . $ldap_username . ')';
 
       $result = $this->search($basedn, $filter);
       if (!$result || !isset($result['count']) || !$result['count']) continue;
@@ -418,7 +434,5 @@ class LdapServer {
       return FALSE;
     }
   }
-
-
 
 }

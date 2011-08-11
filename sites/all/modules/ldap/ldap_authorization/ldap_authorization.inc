@@ -200,7 +200,6 @@ function _ldap_authorizations_user_authorizations(&$user, $op, $consumer_type, $
       $filtered_ldap_authorizations = array_keys($proposed_ldap_authorizations);
     }
     $filtered_ldap_authorizations = array_unique($filtered_ldap_authorizations);
-
     if ($detailed_watchdog_log) {
       $watchdog_tokens['%filtered_ldap_authorizations'] = join(', ', $filtered_ldap_authorizations);
       watchdog('ldap_authorization', '%username : filtered authorization for %consumer_type: %filtered_ldap_authorizations.',
@@ -335,7 +334,8 @@ function _ldap_authorization_ldap_authorization_maps_alter(&$user, &$user_ldap_e
   // Strategy 1: group extracted from user's DN.
   $derive_from_dn_authorizations = array();
   if ($consumer_conf->deriveFromDn) {
-    $pairs = explode(',', $user_ldap_entry['dn']);
+    $pairs = ldap_explode_dn($user_ldap_entry['dn'], 0);
+    $count = array_shift($pairs);
     foreach ($pairs as $p) {
       $pair = explode('=', $p);
       if (drupal_strtolower(trim($pair[0])) == drupal_strtolower($consumer_conf->deriveFromDnAttr)) {
@@ -358,9 +358,9 @@ function _ldap_authorization_ldap_authorization_maps_alter(&$user, &$user_ldap_e
           $attr_lcase = drupal_strtolower($user_attr_values[$i]);
 
           if ($consumer_conf->deriveFromAttrUseFirstAttr) {
-            $attr_parts = explode(',', $attr_lcase);
+            $attr_parts = ldap_explode_dn($attr_lcase, 0);
             $first_part = explode('=', $attr_parts[0]);
-            $attr_lcase = trim($first_part[1]);
+            $attr_lcase = str_replace('\\2C',',',trim($first_part[1])); // for matching should not expect escaped commas
           }
           $derive_from_attr_authorizations[$attr_lcase] = $attr_lcase;
         }
@@ -387,9 +387,11 @@ function _ldap_authorization_ldap_authorization_maps_alter(&$user, &$user_ldap_e
   $derive_from_entry_authorizations = array();
   if ($consumer_conf->deriveFromEntry) {
     foreach ($consumer_conf->deriveFromEntryEntries as $branch) {
-      $entries = $ldap_server->search($branch, $consumer_conf->deriveFromEntryAttr . '=' . $user_ldap_entry['dn'],  array('cn'));
+      $filter = '(' . $consumer_conf->deriveFromEntryAttr . '="' . $user_ldap_entry['dn'] . '")';
+      $entries = $ldap_server->search($branch, $filter, array('cn'));
       if (empty($entries) || $entries['count'] == 0) {
-        $entries = $ldap_server->search($branch, $consumer_conf->deriveFromEntryAttr . '=' . $user->name,  array('cn'));
+        $filter = '(' . $consumer_conf->deriveFromEntryAttr . '=' . $user->name . ')';
+        $entries = $ldap_server->search($branch, $filter,  array('cn'));
       }
       foreach ($entries as $entry) {
         if (isset($entry['cn'])) {
