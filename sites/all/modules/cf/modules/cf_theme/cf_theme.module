@@ -29,7 +29,7 @@ function cf_theme_get_variables(array &$variables){
   $cf['show'] = array();
   $cf['data'] = array();
 
-  foreach (array('front', 'admin', 'using_database', 'node', 'emergency', 'maintenance', 'unsupported', 'debug', 'overlay') as $key){
+  foreach (array('front', 'admin', 'using_database', 'node', 'emergency', 'maintenance', 'unsupported', 'debug', 'overlay', 'logged_in') as $key){
     $cf['is'][$key] = FALSE;
     $cf['is_data'][$key] = array();
   }
