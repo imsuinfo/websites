@@ -166,7 +166,7 @@ function cf_theme_get_variables(array &$variables){
     $cf['is']['admin'] = TRUE;
   }
 
-  if (!empty($vars['logged_in'])){
+  if (is_object($user) && property_exists($user, 'uid') && $user->uid > 0){
     $cf['is']['logged_in'] = TRUE;
     $cf['is_data']['logged_in']['user'] = &$user;
   }
