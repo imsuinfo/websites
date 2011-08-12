@@ -1,0 +1,6 @@
+name = CF Theme
+description = "Provides theme specific functions to be called by themes."
+core = 7.x
+package = Common Functionality
+dependencies[] = cf
+files[] = cf_theme.module
