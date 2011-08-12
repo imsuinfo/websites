@@ -270,7 +270,6 @@ function cf_theme_generate_headers(array $cf){
   $supported_meta[] = 'revisit-after';
   $supported_meta[] = 'robots';
   $supported_meta[] = 'Template';
-  $supported_meta[] = 'X-UA-Compatible'; // for specifying minimum Internet Explorer version
 
   foreach ($supported_meta as $tag){
     if (!empty($cf['meta']['name'][$tag])){
@@ -289,6 +288,7 @@ function cf_theme_generate_headers(array $cf){
   $supported_http_equiv[] = 'refresh';
   $supported_http_equiv[] = 'set-cookie';
   $supported_http_equiv[] = 'window-target';
+  $supported_http_equiv[] = 'X-UA-Compatible'; // for specifying minimum Internet Explorer version
 
   foreach ($supported_http_equiv as $tag){
     if (!empty($cf['meta']['http-equiv'][$tag])){
