@@ -1,10 +1,14 @@
 .cf_http-was_h1,
 .cf_http-was_h2,
-.cf_http-was_h3,
+.cf_http-was_h3 {
+  margin: 0.5em 0;
+  font-weight: bold;
+}
+
 .cf_http-was_h4,
 .cf_http-was_h5,
 .cf_http-was_h6 {
-  margin: 0.67em 0;
+  margin: 0.4em 0;
   font-weight: bold;
 }
 
