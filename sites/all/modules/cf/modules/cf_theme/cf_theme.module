@@ -29,7 +29,7 @@ function cf_theme_get_variables(array &$variables){
   $cf['show'] = array();
   $cf['data'] = array();
 
-  foreach (array('front', 'admin', 'using_database', 'node', 'emergency', 'maintenance', 'unsupported', 'debug', 'overlay', 'logged_in') as $key){
+  foreach (array('front', 'admin', 'using_database', 'node', 'emergency', 'maintenance', 'unsupported', 'debug', 'overlay', 'logged_in', 'published', 'promoted', 'sticky') as $key){
     $cf['is'][$key] = FALSE;
     $cf['is_data'][$key] = array();
   }
@@ -39,7 +39,6 @@ function cf_theme_get_variables(array &$variables){
   // set the request time if it exists
   if (empty($_SERVER['REQUEST_TIME'])){
     $cf['request'] = microtime();
-
   }
   else {
     $cf['request'] = $_SERVER['REQUEST_TIME'];
@@ -176,10 +175,25 @@ function cf_theme_get_variables(array &$variables){
     $cf['is_data']['using_database']['database'] = db_driver();
   }
 
-  if (isset($vars['node']) && is_object($vars['node']) && isset($vars['node']->type)) {
-    if (isset($vars['node']->nid) && !empty($vars['node']->nid)){
+  if (isset($vars['node']) && is_object($vars['node']) && property_exists($vars['node'], 'type') && !empty($vars['node']->type)) {
+    if (property_exists($vars['node'], 'nid') && !empty($vars['node']->nid)){
       $cf['is']['node'] = TRUE;
-      $cf['is_data']['node']['node'] = &$vars['node'];
+      $cf['is_data']['node']['object'] = &$vars['node'];
+
+      if ($cf['is_data']['node']['object']->status == NODE_PUBLISHED){
+        $cf['is']['published'] = TRUE;
+        $cf['is_data']['published']['value'] = $vars['node']->status;
+      }
+
+      if ($cf['is_data']['node']['node']->promote == NODE_PROMOTED){
+        $cf['is']['promoted'] = TRUE;
+        $cf['is_data']['promoted']['value'] = $vars['node']->promote;
+      }
+
+      if ($cf['is_data']['node']['node']->promote == NODE_STICKY){
+        $cf['is']['sticky'] = TRUE;
+        $cf['is_data']['sticky']['value'] = $vars['node']->sticky;
+      }
     }
   }
 
