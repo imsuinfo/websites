@@ -448,6 +448,12 @@ div#front_page_columns-lagniappe {
   max-width: 534px;
 }
 
+div#front_page_columns-lagniappe {
+  height: 350px;
+  min-height: 350px;
+  max-height: 350px;
+}
+
 div#front_page_columns-news {
   background-color: #25567d;
 }
@@ -508,8 +514,11 @@ div#front_page_columns-events div.views-field-field-event-image div.event-image 
 }
 
 div#front_page_columns-events div.view-display-id-front_page_events {
-  background-color: #ffffff;
   color: #000000;
+
+  height: 150px;
+  min-height: 150px;
+  max-height: 150px;
 }
 
 img#front_page_columns-transparent-image {
@@ -544,7 +553,13 @@ img#front_page_columns-transparent-spotlight {
 
 div#front_page_columns-events div.views-field-nothing {
   background-color: #25567d;
+
+  height: 161px;
+  min-height: 161px;
+  max-height: 161px;
+
   padding: 2px;
+  margin-bottom: 13px;
 }
 
 div#front_page_columns-lagniappe div.views-field-nothing {
@@ -562,6 +577,7 @@ div#front_page_columns-events div.views-field-nothing div.event-title {
   font-family: arial, helvetica, sans-serif;
 
   padding: 0 10px 0 10px;
+  margin-bottom: 5px;
 }
 
 div#front_page_columns-events div.views-field-nothing div.highlight-title a,
@@ -706,7 +722,7 @@ div#front_page_columns-lagniappe div.views-field-nothing div.event-body a:hover 
 div#front_page_columns-events div.view-display-id-front_page_events div.views-row div.views-field-field-event-image {
   float: left;
 
-  padding: 15px 15px 15px 0;
+  padding: 15px 15px 0 0;
   margin: 5px 10px 0 0;
 
   background-color: #ffffff;
@@ -731,6 +747,9 @@ div#front_page_columns-spotlight {
   width: 396px;
   min-width: 396px;
   max-width: 396px;
+
+  height: 650px;
+  min-height: 650px;
 
   padding-left: 15px;
   padding-right: 15px;
@@ -778,13 +797,13 @@ h3#front_page_columns-column_title-spotlight {
 div#front_page_columns-spotlight div.views-field-nothing div.spotlight-title {
   font-size: 20px;
   font-weight: normal;
-  line-height: 27px;
+  line-height: 25px;
 
   text-transform: uppdercase;
 
   font-family: arial, helvetica, sans-serif;
 
-  margin-bottom: 10px;
+  margin-bottom: 5px;
 }
 
 div#front_page_columns-spotlight div.views-field-nothing div.spotlight-title a,
