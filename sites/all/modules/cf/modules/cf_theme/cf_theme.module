@@ -22,7 +22,7 @@ function cf_theme_get_variables(array &$variables){
   $cf['agent'] = array('machine_name' => 'unknown', 'human_name' => 'unknown', 'major_version' => 'unknown', 'engine' => 'unknown', 'raw' => '');
   $cf['breadcrumb'] = array();
   $cf['markup_css'] = array('body' => array('id' => '', 'class' => ''), 'content' => array('id' => '', 'class' => ''));
-  $cf['at'] = array('machine_name' => '', 'human_name' => '', 'url' => '', 'path' => '');
+  $cf['at'] = array('machine_name' => '', 'human_name' => '', 'url' => '', 'base' => '', 'path' => '', 'alias' => '', 'css' => '');
   $cf['theme'] = array('path' => '', 'machine_name' => '', 'human_name' => '');
   $cf['is'] = array();
   $cf['is_data'] = array();
@@ -211,8 +211,33 @@ function cf_theme_get_variables(array &$variables){
   $cf['at']['machine_name'] = preg_replace('/^.*\/\//i', '', $base_url);
   $cf['at']['human_name'] = variable_get('site_name');
   $cf['at']['url'] = $base_url;
-  $cf['at']['path'] = $base_dir;
-  $cf['at']['css'] = preg_replace('/(\W)+/i', '_', $cf['at']['machine_name']);
+  $cf['at']['base'] = $base_dir;
+
+  if (!empty($cf['at']['machine_name'])){
+    $cf['at']['css'] = ' at-' . preg_replace('/(\W)+/i', '_', $cf['at']['machine_name']);
+  }
+
+  if (function_exists('current_path')){
+    $cf['at']['path'] = current_path();
+  }
+  else if (isset($_GET['q'])) {
+    $cf['at']['path'] = $_GET['q'];
+  }
+
+  if (function_exists('request_path')){
+    $cf['at']['alias'] = request_path();
+  }
+  else if (isset($_GET['q'])) {
+    $cf['at']['alias'] = $_GET['q'];
+  }
+
+  if (!empty($cf['at']['path'])){
+    $cf['at']['css'] .=  ' path-' . preg_replace('/(\W)+/i', '_', $cf['at']['path']);
+  }
+
+  if (!empty($cf['at']['alias'])){
+    $cf['at']['css'] .=  ' alias-' . preg_replace('/(\W)+/i', '_', $cf['at']['alias']);
+  }
 
   drupal_alter('cf_theme_get_variables', $cf, $variables);
 
@@ -224,8 +249,8 @@ function cf_theme_get_variables(array &$variables){
     }
   }
 
-  $cf['markup_css']['body']['class'] .= ' at-' . $cf['at']['css'];
-  $cf['markup_css']['content']['class'] .= ' at-' . $cf['at']['css'];
+  $cf['markup_css']['body']['class'] .= $cf['at']['css'];
+  $cf['markup_css']['content']['class'] .= $cf['at']['css'];
 
   return $cf;
 }
