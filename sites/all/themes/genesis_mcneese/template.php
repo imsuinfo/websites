@@ -92,6 +92,14 @@ function genesis_mcneese_process_variables(&$vars){
     $vars['cf']['show']['breadcrumb'] = FALSE;
   }
 
+  // never show the following on the given special pages (FIXME: this should be moved to cf_www)
+  if ($vars['cf']['at']['alias'] == 'preview/front'){
+      $vars['cf']['show']['title_prefix'] = FALSE;
+      $vars['cf']['show']['title'] = FALSE;
+      $vars['cf']['show']['title_suffix'] = FALSE;
+      $vars['cf']['show']['breadcrumb'] = FALSE;
+  }
+
   // add container-specific css based on the content css
   $vars['cf']['markup_css']['container'] = array();
   $vars['cf']['markup_css']['container']['class'] = (empty($vars['cf']['markup_css']['content']['class']) ? '' : $vars['cf']['markup_css']['content']['class']);

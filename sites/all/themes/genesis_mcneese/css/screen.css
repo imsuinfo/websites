@@ -383,7 +383,8 @@ div#block-menu-menu-primary-navigation div.block-inner div.content ul.menu li.ac
 
 
 /*** Content - container **/
-body.is-front div#container div#columns {
+body.is-front div#container div#columns,
+body.alias-preview_front div#container div#columns {
   margin-top: 5px;
 }
 
@@ -428,6 +429,8 @@ html#ckeditor-wysiwygarea {
 }
 
 html#ckeditor-wysiwygarea body {
+  background-color: #ffffff;
+
   width: 745px;
   min-width: 745px;
   max-width: 745px;
