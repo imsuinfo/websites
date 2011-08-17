@@ -1,6 +1,0 @@
-name = MSU Generic - Theme
-description = "Provides a library of functions to be used by McNeese State University themes."
-core = 7.x
-package = MSU
-dependencies[] = cf
-files[] = msu_generic_theme.module
