@@ -1,13 +1,6 @@
 <?php
 
 /**
- * Implementation of hook_init().
- */
-function content_easement_unpublished_message_init() {
-  drupal_add_css(drupal_get_path('module', 'content_easement_unpublished_message') . '/includes/message-unpublished.css');
-}
-
-/**
  * Implements hook_content_easement_permission_alter().
  */
 function content_easement_unpublished_message_content_easement_permission_alter(&$permissions) {
@@ -36,38 +29,50 @@ function content_easement_unpublished_message_help($path, $arg = NULL) {
 }
 
 /**
- * Implements hook_node_view().
+ * Implements hook_block_info().
  */
-function content_easement_unpublished_message_node_view($node, $view_mode, $langcode){
-  content_easement_unpublished_message_display_notice($node, array(__FUNCTION__));
+function content_easement_unpublished_message_block_info() {
+  $blocks = array();
+
+  $blocks['block'] = array(
+    'info' => t("Unpublished Message"),
+    'weight' => -99,
+    'status' => 1,
+    'region' => 'messages',
+    'cache' => DRUPAL_NO_CACHE,
+  );
+
+  return $blocks;
 }
 
 /**
- * Implements hook_node_prepare().
+ * Implements hook_block_view().
  */
-function content_easement_unpublished_message_node_prepare($node) {
-  content_easement_unpublished_message_display_notice($node, array(__FUNCTION__));
-}
+function content_easement_unpublished_message_block_view($delta = '') {
+  if (!user_access('view unpublished message')) return array();
 
+  $node = menu_get_object();
 
-/**
- * If the given node is unpublished, then print a message to the screen.
- *
- * @param $node
- *   A node object
- * @param $function_history
- *   (optional) array of function names, ie: array('0' => 'my_function_name')
- */
-function content_easement_unpublished_message_display_notice($node, $function_name = array()){
-  if (!is_object($node)){
-    cf_error_invalid_object(__FUNCTION__, 'node', WATCHDOG_ERROR, $function_name);
-    return;
-  }
-
-  if ($node->status == NODE_NOT_PUBLISHED && user_access('view unpublished message')){
-    $node_type_name = node_type_get_name($node);
+  if (is_object($node) && property_exists($node, 'status') && $node->status == NODE_NOT_PUBLISHED){
+    $node_type_name = check_plain(node_type_get_name($node));
     $node_title = isset($node->title) ? $node->title : '';
 
-    drupal_set_message(t("The @type '@title' is not published.", array('@type' => $node_type_name, '@title' => $node_title)), 'unpublished', FALSE);
+    if (empty($node_type_name)){
+      $node_type_name = 'node';
+    }
+
+    $message = t("The !type '%title' is not published.", array('!type' => '<strong>' . $node_type_name . '</strong>', '%title' => $node_title));
+
+    $block['subject'] = NULL;
+    $block['content'] = array(
+      '#markup' => theme('container', array('element' => array('#children' => $message, '#attributes' => array('class' => 'content-easement-unpublished-message')))),
+      '#attached' => array(
+        'css' => array(drupal_get_path('module', 'content_easement_unpublished_message') . '/includes/message-unpublished.css'),
+      ),
+    );
+
+    return $block;
   }
+
+  return array();
 }
