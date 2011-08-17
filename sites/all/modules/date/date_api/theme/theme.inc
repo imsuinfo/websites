@@ -16,10 +16,10 @@
 function theme_date_timezone($vars) {
   $element = $vars['element'];
   $attributes = $element['#attributes'];
-  //$attributes['class'][] = 'container-inline-date';
+  $wrapper_attributes = array();
   // Add an wrapper to mimic the way a single value field works, for ease in using #states.
   if (isset($element['#children'])) {
-    $element['#children'] = '<div id="' . $element['#id'] . '" class="date-padding">' . $element['#children'] . '</div>';
+    $element['#children'] = '<div id="' . $element['#id'] . '" ' . drupal_attributes($wrapper_attributes) .'>' . $element['#children'] . '</div>';
   }
   return '<div ' . drupal_attributes($attributes) .'>' . theme('form_element', $element) . '</div>';
 }
@@ -37,9 +37,11 @@ function theme_date_select($vars) {
   $element = $vars['element'];
   $attributes = !empty($element['#wrapper_attributes']) ? $element['#wrapper_attributes'] : array('class' => array());
   $attributes['class'][] = 'container-inline-date';
+  $wrapper_attributes = array('class' => array('date-padding'));
+  $wrapper_attributes['class'][] = 'clearfix';
   // Add an wrapper to mimic the way a single value field works, for ease in using #states.
   if (isset($element['#children'])) {
-    $element['#children'] = '<div id="' . $element['#id'] . '" class="date-padding">' . $element['#children'] . '</div>';
+    $element['#children'] = '<div id="' . $element['#id'] . '" ' . drupal_attributes($wrapper_attributes) .'>' . $element['#children'] . '</div>';
   }
   return '<div ' . drupal_attributes($attributes) .'>' . theme('form_element', $element) . '</div>';
 }
@@ -57,9 +59,14 @@ function theme_date_text($vars) {
   $element = $vars['element'];
   $attributes = !empty($element['#wrapper_attributes']) ? $element['#wrapper_attributes'] : array('class' => array());
   $attributes['class'][] = 'container-inline-date';
+  // If there is no description, the floating date elements need some extra padding below them.
+  $wrapper_attributes = array('class' => array('date-padding'));
+  if (empty($element['date']['#description'])) {
+    $wrapper_attributes['class'][] = 'clearfix';
+  }
   // Add an wrapper to mimic the way a single value field works, for ease in using #states.
   if (isset($element['#children'])) {
-    $element['#children'] = '<div id="' . $element['#id'] . '" class="date-padding">' . $element['#children'] . '</div>';
+    $element['#children'] = '<div id="' . $element['#id'] . '" ' . drupal_attributes($wrapper_attributes) .'>' . $element['#children'] . '</div>';
   }
   return '<div ' . drupal_attributes($attributes) .'>' . theme('form_element', $element) . '</div>';
 }
@@ -148,6 +155,17 @@ function theme_date_part_label_timezone($vars) {
   $element = $vars['element'];
   return t('Timezone');
 }
+function theme_date_part_label_date($vars) {
+  $part_type = $vars['part_type'];
+  $element = $vars['element'];
+  return t('Date', array(), array('context' => 'datetime'));
+}
+function theme_date_part_label_time($vars) {
+  $part_type = $vars['part_type'];
+  $element = $vars['element'];
+  return t('Time', array(), array('context' => 'datetime'));
+}
+
 
 /**
  * Theme for a date block that looks like a mini calendar day.

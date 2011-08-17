@@ -29,6 +29,11 @@
  * The date_timezone element will create a drop-down selector to pick a
  * timezone name.
  *
+ * The date_year_range element will create two textfields (for users with
+ * JavaScript enabled they will appear as drop-down selectors with an option
+ * for custom text entry) to pick a range of years that will be passed to form
+ * submit handlers as a single string (e.g., -3:+3).
+ *
  * #date_timezone
  *   The local timezone to be used to create this date.
  *
@@ -67,23 +72,32 @@ function _date_api_element_info() {
     '#date_increment' => 1,
     '#date_year_range' => '-3:+3',
     '#date_label_position' => 'above',
-    );
+  );
+  if (module_exists('ctools')) {
+    $date_base['#pre_render'] = array('ctools_dependent_pre_render');
+  }
   $type['date_select'] = array_merge($date_base, array(
     '#process' => array('date_select_element_process'),
     '#theme_wrappers' => array('date_select'),
     '#value_callback' => 'date_select_element_value_callback',
-    ));
+  ));
   $type['date_text'] = array_merge($date_base, array(
     '#process' => array('date_text_element_process'),
     '#theme_wrappers' => array('date_text'),
     '#value_callback' => 'date_text_element_value_callback',
-    ));
+  ));
   $type['date_timezone'] = array(
     '#input' => TRUE, '#tree' => TRUE,
     '#process' => array('date_timezone_element_process'),
     '#theme_wrappers' => array('date_text'),
     '#value_callback' => 'date_timezone_element_value_callback',
-    );  
+  );
+  $type['date_year_range'] = array(
+    '#input' => TRUE,
+    '#process' => array('date_year_range_element_process'),
+    '#value_callback' => 'date_year_range_element_value_callback',
+    '#element_validate' => array('date_year_range_validate'),
+  );
   return $type;
 }
 
@@ -124,6 +138,67 @@ function date_default_date($element) {
     return $date;
   }
   return NULL;
+}
+
+/**
+ * Process callback which creates a date_year_range form element.
+ */
+function date_year_range_element_process($element, $form_state, $form) {
+  // Year range is stored in the -3:+3 format, but collected as two separate
+  // textfields.
+  $element['years_back'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Starting year'),
+    '#default_value' => $element['#value']['years_back'],
+    '#size' => 10,
+    '#maxsize' => 10,
+    '#attributes' => array('class' => array('select-list-with-custom-option', 'back')),
+    '#description' => t('Enter a relative value (-9, +9) or an absolute year such as 2015.'),
+  );
+  $element['years_forward'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Ending year'),
+    '#default_value' => $element['#value']['years_forward'],
+    '#size' => 10,
+    '#maxsize' => 10,
+    '#attributes' => array('class' => array('select-list-with-custom-option', 'forward')),
+    '#description' => t('Enter a relative value (-9, +9) or an absolute year such as 2015.'),
+  );
+
+  $element['#tree'] = TRUE;
+  $element['#attached']['js'][] = drupal_get_path('module', 'date_api') . '/date_year_range.js';
+
+  return $element;
+}
+
+/**
+ * Element value callback for the date_year_range form element.
+ */
+function date_year_range_element_value_callback($element, $input = FALSE, &$form_state) {
+  // Convert the element's default value from a string to an array (to match
+  // what we will get from the two textfields when the form is submitted).
+  if ($input === FALSE) {
+    list($years_back, $years_forward) = explode(':', $element['#default_value']);
+    return array(
+      'years_back' => $years_back,
+      'years_forward' => $years_forward,
+    );
+  }
+}
+
+/**
+ * Element validation function for the date_year_range form element.
+ */
+function date_year_range_validate(&$element, &$form_state) {
+  // Recombine the two submitted form values into the -3:+3 format we will
+  // validate and save.
+  $year_range_submitted = drupal_array_get_nested_value($form_state['values'], $element['#parents']);
+  $year_range = $year_range_submitted['years_back'] . ':' . $year_range_submitted['years_forward'];
+  drupal_array_set_nested_value($form_state['values'], $element['#parents'], $year_range);
+  if (!date_range_valid($year_range)) {
+    form_error($element['years_back'], t('Years back must be in the format -9, or an absolute year such as 1980.'));
+    form_error($element['years_forward'], t('Years forward must be in the format +9, or an absolute year such as 2030.'));
+  }
 }
 
 /**
@@ -367,6 +442,7 @@ function date_select_element_process($element, $form_state, $form) {
     $element['#element_validate'] = array('date_select_validate');
   }
 
+  $element['#attached']['js'][] = drupal_get_path('module', 'date') . '/date.js';
   return $element;
 }
 
@@ -437,10 +513,12 @@ function date_parts_element($element, $date, $format) {
           $sub_element[$field]['#options'] = drupal_map_assoc(date_hours($hours_format, $part_required));
         }
         $sub_element[$field]['#prefix'] = theme('date_part_hour_prefix', $element);
-        $sub_element[$field]['#states'] = array(
-          'visible' => array(
-            '#' . $all_day_id => array('checked' => FALSE),
-        ));
+        if ($all_day_id != '') {
+          $sub_element[$field]['#states'] = array(
+            'visible' => array(
+              '#' . $all_day_id => array('checked' => FALSE),
+            ));
+        }
         break;
       case 'minute':
         $sub_element[$field]['#default_value'] = is_object($date) ? $date->format('i') : '';
@@ -448,10 +526,12 @@ function date_parts_element($element, $date, $format) {
           $sub_element[$field]['#options'] = drupal_map_assoc(date_minutes('i', $part_required, $element['#date_increment']));
         }
         $sub_element[$field]['#prefix'] = theme('date_part_minsec_prefix', $element);
-        $sub_element[$field]['#states'] = array(
-          'visible' => array(
-            '#' . $all_day_id => array('checked' => FALSE),
-        ));
+        if ($all_day_id != '') {
+          $sub_element[$field]['#states'] = array(
+            'visible' => array(
+              '#' . $all_day_id => array('checked' => FALSE),
+            ));
+        }
         break;
       case 'second':
         $sub_element[$field]['#default_value'] = is_object($date) ? $date->format('s') : '';
@@ -459,10 +539,12 @@ function date_parts_element($element, $date, $format) {
           $sub_element[$field]['#options'] = drupal_map_assoc(date_seconds('s', $part_required, $element['#date_increment']));
         }
         $sub_element[$field]['#prefix'] = theme('date_part_minsec_prefix', $element);
-        $sub_element[$field]['#states'] = array(
-          'visible' => array(
-            '#' . $all_day_id => array('checked' => FALSE),
-        ));
+        if ($all_day_id != '') {
+          $sub_element[$field]['#states'] = array(
+            'visible' => array(
+              '#' . $all_day_id => array('checked' => FALSE),
+            ));
+        }
         break;
     }
 
@@ -515,10 +597,12 @@ function date_parts_element($element, $date, $format) {
       '#weight' => 8,
       '#attributes' => array('class' => array('date-ampm')),
     );
-    $sub_element['ampm']['#states'] = array(
-      'visible' => array(
-        '#' . $all_day_id => array('checked' => FALSE),
-    ));
+    if ($all_day_id != '') {
+      $sub_element['ampm']['#states'] = array(
+        'visible' => array(
+          '#' . $all_day_id => array('checked' => FALSE),
+        ));
+    }
     if ($element['#date_label_position'] == 'within') {
       $sub_element['ampm']['#options'] = array('' => '-' . theme('date_part_label_ampm', array('part_type' => 'ampm', 'eleement' => $element))) + $sub_element['ampm']['#options'];
     }
