@@ -456,6 +456,8 @@ div#front_page_columns-lagniappe {
 
 div#front_page_columns-news {
   background-color: #25567d;
+
+  margin-bottom: 30px;
 }
 
 div#front_page_columns-lagniappe {
@@ -515,10 +517,10 @@ div#front_page_columns-events div.views-field-field-event-image div.event-image 
 
 div#front_page_columns-events div.view-display-id-front_page_events {
   color: #000000;
+}
 
-  height: 150px;
-  min-height: 150px;
-  max-height: 150px;
+div#front_page_columns-events div.view-display-id-front_page_events > div.view-content > div.views-row > div.views-field views-field-nothing {
+  min-height: 200px;
 }
 
 img#front_page_columns-transparent-image {
@@ -551,15 +553,13 @@ img#front_page_columns-transparent-spotlight {
   background-color: #ffffff;
 }
 
+div#front_page_columns-news > div.view-id-front_page > div.view-content > div.views-row > div.views-field-nothing {
+  min-height: 180px;
+  height: 180px;
+}
+
 div#front_page_columns-events div.views-field-nothing {
-  background-color: #25567d;
-
-  height: 165px;
-  min-height: 165px;
-  max-height: 165px;
-
   padding: 2px;
-  margin-bottom: 13px;
 }
 
 div#front_page_columns-lagniappe div.views-field-nothing {
@@ -568,7 +568,8 @@ div#front_page_columns-lagniappe div.views-field-nothing {
 }
 
 div#front_page_columns-events div.view-display-id-front_page_events div.views-field-nothing {
-  min-height: 180px;
+  min-height: 215px;
+  height: 215px;
 }
 
 div#front_page_columns-events div.views-field-nothing div.highlight-title,
@@ -672,7 +673,6 @@ div#front_page_columns-events div.views-field-nothing div.event-body {
   font-family: arial, helvetica, sans-serif;
 
   padding-left: 10px;
-  padding-bottom: 10px;
   padding-right: 10px;
 }
 
