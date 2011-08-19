@@ -202,7 +202,10 @@ function themekey_debug_set_debug_message($msg, $placeholder = array(), $transla
 
   if (1 == $user->uid || user_access('themekey_debug_see_messages', $user) || variable_get('themekey_debug_non_admin_users', FALSE)) {
     if ('flush' == $msg) {
-      $messages = array(t('Current theme: %theme', array('%theme' => $theme)));
+      $messages = array();
+      if (variable_get('themekey_debug_trace_rule_switching', FALSE)) {
+        $messages[] = t('Current theme: %theme', array('%theme' => $theme));
+      }
       foreach ($msg_stack as $key => $msg) {
         $messages[] = filter_xss($msg['translate'] ? t($msg['msg'], $msg['placeholder']) : $msg['msg'], array('a', 'b', 'br', 'li', 'ul'));
         unset($msg_stack[$key]);
