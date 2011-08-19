@@ -156,7 +156,7 @@ function genesis_mcneese_cf_theme_get_variables_alter(&$cf, $variables){
   $cf['data']['subboard_image'] = array('content' => '', 'css' => '');
 
   if (!$cf['is']['logged_in']){
-    $date_value = strtotime('+1 hour', $cf['request']);
+    $date_value = strtotime('+3 hours', $cf['request']);
     $cf['meta']['name']['expires'] = gmdate('D, d M Y H:i:s T', $date_value);
     $cf['meta']['http-equiv']['expires'] = gmdate('D, d M Y H:i:s T', $date_value);
   }
