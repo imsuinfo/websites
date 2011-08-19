@@ -75,14 +75,6 @@
       <?php } ?>
     <?php } ?>
 
-    <?php if ($cf['show']['secondary_content'] && !$cf['is']['overlay']){ ?>
-      <div id="secondary-content">
-        <!--(begin_secondary_content)-->
-        <?php print($secondary_content); ?>
-        <!--(end_secondary_content)-->
-      </div>
-    <?php } ?>
-
     <div id="columns" class="clear clearfix <?php print($cf['markup_css']['container']['class']); ?>">
       <?php if ($cf['show']['sidebar_first']){ ?>
         <div id="sidebar-first" class="sidebar">
@@ -111,12 +103,6 @@
           <!--(begin_help)-->
           <?php print($help); ?>
           <!--(end_help)-->
-        <?php } ?>
-
-        <?php if ($cf['show']['renderred_action_links']){ ?>
-          <!--(begin_renderred_action_links)-->
-          <ul class="action-links"><?php print($renderred_action_links); ?></ul>
-          <!--(end_renderred_action_links)-->
         <?php } ?>
 
         <div class="content-inner">
@@ -164,11 +150,11 @@
               <!--(end_title_suffix)-->
             <?php } ?>
 
-            <?php if ($cf['show']['renderred_tabs']){ ?>
-              <div class="local-tasks">
-                <!--(begin_renderred_tabs)-->
-                <?php print($renderred_tabs); ?>
-                <!--(end_renderred_tabs)-->
+            <?php if ($cf['show']['primary_local_tasks']){ ?>
+              <div id='local-tasks'>
+                <!--(begin_primary_tabs)-->
+                <ul class='tabs primary'><?php print($primary_local_tasks); ?></ul>
+                <!--(end_primary_tabs)-->
               </div>
             <?php } ?>
 
@@ -185,6 +171,22 @@
                   <div class="subtitle"><?php print($cf['data']['subtitle']['content']);?></div>
                   <!--(end_subtitle)-->
                 <?php } ?>
+              </div>
+            <?php } ?>
+
+            <?php if ($cf['show']['secondary_local_tasks']){ ?>
+              <div id='secondary_local_tasks'>
+                <!--(begin_secondary_tabs)-->
+                <ul class='tabs secondary'><?php print($secondary_local_tasks); ?></ul>
+                <!--(end_secondary_tabs)-->
+              </div>
+            <?php } ?>
+
+            <?php if ($cf['show']['action_links']){ ?>
+              <div id='action_links'>
+                <!--(begin_action_links)-->
+                <ul class="action-links"><?php print($action_links); ?></ul>
+                <!--(end_action_links)-->
               </div>
             <?php } ?>
 
