@@ -449,9 +449,7 @@ div#front_page_columns-lagniappe {
 }
 
 div#front_page_columns-lagniappe {
-  height: 350px;
   min-height: 350px;
-  max-height: 350px;
 }
 
 div#front_page_columns-news {
@@ -555,7 +553,6 @@ img#front_page_columns-transparent-spotlight {
 
 div#front_page_columns-news > div.view-id-front_page > div.view-content > div.views-row > div.views-field-nothing {
   min-height: 180px;
-  height: 180px;
 }
 
 div#front_page_columns-events div.views-field-nothing {
@@ -569,7 +566,6 @@ div#front_page_columns-lagniappe div.views-field-nothing {
 
 div#front_page_columns-events div.view-display-id-front_page_events div.views-field-nothing {
   min-height: 215px;
-  height: 215px;
 }
 
 div#front_page_columns-events div.views-field-nothing div.highlight-title,
