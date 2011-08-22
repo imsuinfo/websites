@@ -628,7 +628,6 @@ function date_entity_metadata_property_info_alter(&$info, $entity_type, $field, 
     // Add a getter callback to convert the date into the right format.
     $property['getter callback'] = 'date_entity_metadata_field_getter';
     unset($property['query callback']);
-    unset($property['setter callback']);
   }
   if (!empty($field['settings']['todate'])) {
     // Define a simple data structure containing both dates.
@@ -653,7 +652,6 @@ function date_entity_metadata_property_info_alter(&$info, $entity_type, $field, 
       ),
     );
     unset($property['query callback']);
-    unset($property['setter callback']);
   }
 }
 
