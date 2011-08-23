@@ -252,7 +252,7 @@ function _date_field_widget_settings_form($field, $instance) {
   }
   $form['input_format'] = array(
     '#type' => 'select',
-    '#title' => t('Choose how users enter dates'),
+    '#title' => t('Date entry options'),
     '#default_value' => $settings['input_format'],
     '#options' => $options,
     '#description' => t('Control the order and format of the options users see.'),
@@ -285,21 +285,22 @@ function _date_field_widget_settings_form($field, $instance) {
       );
   }
 
-  if (in_array($widget['type'], array('date_select', 'date_popup', 'date_select_repeat', 'date_popup_repeat'))) {
+  if (in_array($widget['type'], array('date_select', 'date_popup'))) {
     $form['year_range'] = array(
       '#type' => 'date_year_range',
       '#default_value' => $settings['year_range'],
-      '#fieldset' => 'years_back_and_forward',
+      '#fieldset' => 'date_format',
+      '#weight' => 6,
     );
     $form['increment'] = array(
-      '#type' => 'select', '#title' => t('Choose how users enter time'),
+      '#type' => 'select', '#title' => t('Time increments'),
       '#default_value' => $settings['increment'],
       '#options' => array(
-        1 => t('1 minute intervals'),
-        5 => t('5 minute intervals'),
-        10 => t('10 minute intervals'),
-        15 => t('15 minute intervals'),
-        30 => t('30 minute intervals')),
+        1 => t('1 minute'),
+        5 => t('5 minute'),
+        10 => t('10 minute'),
+        15 => t('15 minute'),
+        30 => t('30 minute')),
       '#weight' => 7,
       '#fieldset' => 'date_format',
     );
@@ -325,18 +326,26 @@ function _date_field_widget_settings_form($field, $instance) {
     );
   $form['advanced'] = array(
     '#type' => 'fieldset',
-    '#title' => t('Advanced formatting'),
+    '#title' => t('Advanced settings'),
     '#collapsible' => TRUE,
     '#collapsed' => TRUE,
     '#fieldset' => 'date_format',
     '#weight' => 9,
     );
+  if (in_array($widget['type'], array('date_select'))) {
+    $options = array('above' => t('Above'), 'within' => t('Within'), 'none' => t('None'));
+    $description = t("The location of date part labels, like 'Year', 'Month', or 'Day' . 'Above' displays the label as titles above each date part. 'Within' inserts the label as the first option in the select list and in blank textfields. 'None' doesn't label any of the date parts. Theme functions like 'date_part_label_year' and 'date_part_label_month' control label text.");
+  }
+  else {
+    $options = array('above' => t('Above'), 'none' => t('None'));
+    $description = t("The location of date part labels, like 'Year', 'Month', or 'Day' . 'Above' displays the label as titles above each date part. 'None' doesn't label any of the date parts. Theme functions like 'date_part_label_year' and 'date_part_label_month' control label text.");
+  }
   $form['advanced']['label_position'] = array(
     '#type' => 'radios',
-    '#options' => array('above' => t('Above'), 'within' => t('Within'), 'none' => t('None')),
+    '#options' => $options,
     '#default_value' => $settings['label_position'],
     '#title' => t('Position of date part labels'),
-    '#description' => t("The location of date part labels, like 'Year', 'Month', or 'Day' . 'Above' displays the label as titles above each date part. 'Within' inserts the label as the first option in the select list and in blank textfields. 'None' doesn't label any of the date parts. Theme functions like 'date_part_label_year' and 'date_part_label_month' control label text."),
+    '#description' => $description,
     );
   $form['advanced']['text_parts'] = array(
     '#theme' => $widget['type'] == 'date_select' ? 'date_text_parts' : '',
@@ -394,19 +403,30 @@ function _date_field_settings_form($field, $instance, $has_data) {
   $form = array(
     '#element_validate' => array('date_field_settings_validate'),
   );
+
+  if (module_exists('date_repeat')) {
+    $form['repeat'] = array(
+      '#type' => 'select',
+      '#title' => t('Repeating date'),
+      '#default_value' => $field['settings']['repeat'],
+      '#options' => array(0 => t('No'), 1 => t('Yes')),
+      '#attributes' => array('class' => array('container-inline')),
+      '#description' => t("Repeating dates use an 'Unlimited' number of values. Instead of the 'Add more' button, they include a form to select when and how often the date should repeat."),
+      '#disabled' => $has_data,
+    );
+  }
+  else {
+    $form['repeat'] = array(
+      '#type' => 'hidden',
+      '#value' => 0,
+    );
+  }
+
   // Make sure granularity is in the right format and has no empty values.
   if (!empty($settings['granularity']) && is_array($settings['granularity'])) {
     $granularity = array_filter($settings['granularity']);  
   }
   $tz_handling = $settings['tz_handling'];
-
-  // If adding a repeat, override the Content module's handling of the multiple values option.
-  if (module_exists('date_repeat') && date_is_repeat_field($field, $instance)) {
-    $form['repeat'] = array('#type' => 'hidden', '#value' => 1);
-  }
-  else {
-    $form['repeat'] = array('#type' => 'hidden', '#value' => 0);
-  }
 
   $description = t('Select the date attributes to collect and store.');
   $options = date_granularity_names();
@@ -430,7 +450,7 @@ function _date_field_settings_form($field, $instance, $has_data) {
   );
 
   $description = t('End dates are used to collect duration. E.g., allow an event to start on September 15, and end on September 16.');
-  $form['enddate'] = array(
+  $form['enddate_get'] = array(
     '#type' => 'checkbox',
     '#title' => t('Collect an end date'),
     '#description' => $description,
@@ -444,7 +464,7 @@ function _date_field_settings_form($field, $instance, $has_data) {
     '#disabled' => $has_data,
     '#states' => array(
       'invisible' => array(
-        'input[name="field[settings][enddate]"]' => array('checked' => FALSE)
+        'input[name="field[settings][enddate_get]"]' => array('checked' => FALSE)
       ),
     ),
   );
@@ -475,6 +495,7 @@ function _date_field_settings_form($field, $instance, $has_data) {
  */
 function date_field_settings_validate(&$form, &$form_state) {
   $field = &$form_state['values']['field'];
+
   if ($field['settings']['tz_handling'] == 'none') {
     form_set_value($form['timezone_db'], '', $form_state);
   }
@@ -485,7 +506,7 @@ function date_field_settings_validate(&$form, &$form_state) {
     form_set_error('field][settings][tz_handling', t('Dates without hours granularity must not use any timezone handling.'));
   }
   // Extract the correct 'todate' value out of the two end date checkboxes.
-  if ($field['settings']['enddate']) {
+  if ($field['settings']['enddate_get']) {
     if ($field['settings']['enddate_required']) {
       $field['settings']['todate'] = 'required';
     }
@@ -496,6 +517,8 @@ function date_field_settings_validate(&$form, &$form_state) {
   else {
     $field['settings']['todate'] = '';
   }
+  // Don't save the pseudo values created in the UI.
+  unset($field['settings']['enddate_get'], $field['settings']['enddate_required']);
 }
 
 /**

@@ -5,6 +5,14 @@ Date Module 7.x
 Version 7.x-2.x-dev
 ===================
 
+- Issue #1238568, Add more checks to pager to bail gracefully when a date argument is missing.
+- Issue #1233722, Fix undefined index notice in pager when other filters are used.
+- Issue #1216878, Re-introduce 'repeat' as a field setting rather than a widget type so people can't try to switch back and forth between repeating and non-repeating dates. Eliminate repeat widgets.
+
+======================
+Version 7.x-2.0-alpha4
+======================
+
 Notes to themers:
 
 Previous versions put dates with both From and To dates into a fieldset and other dates were not.
@@ -20,6 +28,10 @@ field settings. Previous versions did not always honor those settings, this one 
 
 New Features/UX Improvements
 
+- Issue #1249724 by KarenS, Gábor Hojtsy, David_Rothstein, Improve usability of date and time input configuration.
+- Issue #1250784 by David_Rothstein, Add user-friendly labels for start and end date values in Views.
+- Issue #742146, Add option to remove X-WR-CALNAME if VEVENT is not a feed.
+- Add option to change method from PUBLISH to REQUEST in VCALENDAR.
 - Issue #334435, Add a theme function for the 'Date' and 'Time' labels in the Popup widget.
 - Issue #1239956 by David_Rothstein, Change the default separation between from and to dates to use 'to' instead of a hyphen.
 - Issue #1240628 by David_Rothstein, Make the date increment default to 15 instead of 1.
@@ -51,6 +63,7 @@ Removed deprecated functions
 
 Tests
 
+- Issue #1251592 by David_Rothstein, Set reasonable default values if date formats have not been configured, and add tests for that.
 - Issue #1242764 Add tests for every possible combination of field type, timezone handling, and granularity.
 - More work on tests, add a foreach loop to run through all field_type/widget_type combinations.
 - Rework tests to use a base class rather than copying the same functions everywhere.
@@ -59,6 +72,19 @@ Tests
 
 Bugfixes
 
+- Issue #1256406 by q0rban, use variable_get() in hook_requirments().
+- Follow up to Issue #1145976, Make sure 'is date' only gets applied to the date values, not delta, timezone, etc.
+- Issue #1238364, Make sure the Date pager doesn't throw errors if the default date is missing.
+- Issue #1246416, Add info to the Date Popup README.txt about how to download the WVega timepicker.
+- Issue #1253230, Package name of Date Migrate was different than the other Date components.
+- Issue #1251592, Add installation message and system requirements warnings about missing system date settings.
+- Issue #1250784, Don't save psuedo field settings created by the new UI in the field itself.
+- Issue #1239228 by David_Rothstein, Always add Date Views css to View UI edit forms.
+- Issue #1254540 by David_Rothstein, Move borders off of the wrappers so they don't appear when the dates inside them are hidden.
+- Issue #1253248 by David_Rothstein, Move RDF attributes handling to preprocess function.
+- Issue #1087798 by anj, Fix X-WR-CALNAME in VCALENDAR.
+- Issue #1254582 Repeat additions need to be adjusted to use the same time as the original date.
+- Move vcalendar and vevent templates from Date Views to Date API modules.
 - Follow up to Issue #1250344, We don't need extra space when there is a description, only when there is not.
 - Issue #1239228 by Gábor Hojtsy, More tweaks to filter css.
 - Issue #1244924 by Gábor Hojtsy, Minor text improvements in date filter configuration

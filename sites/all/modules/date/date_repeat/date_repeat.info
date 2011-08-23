@@ -9,9 +9,9 @@ files[] = date_repeat_form.inc
 files[] = date_repeat.install
 files[] = date_repeat.module
 files[] = tests/date_repeat.test
-; Information added by drupal.org packaging script on 2011-08-17
-version = "7.x-2.x-dev"
+; Information added by drupal.org packaging script on 2011-08-23
+version = "7.x-2.0-alpha4"
 core = "7.x"
 project = "date"
-datestamp = "1313582767"
+datestamp = "1314097619"
 

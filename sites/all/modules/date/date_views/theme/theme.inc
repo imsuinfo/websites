@@ -148,7 +148,9 @@ function template_preprocess_date_views_pager(&$vars) {
   $pos = $date_info->date_arg_pos;
   if (!empty($input)) {
     $id = $plugin->options['date_id'];
-    $view->args[$pos] = isset($input[$id]) ? $input[$id] : '';
+    if (array_key_exists($id, $input) && !empty($input[$id])) {
+      $view->args[$pos] = $input[$id];
+    }
   }
 
   $next_args = $view->args;
@@ -294,97 +296,6 @@ function theme_date_nav_title($params) {
   else {
     return $title;
   }  
-}
-
-/**
- *  Preprocessor to construct an ical vcalendar
- * 
- * @param $events
- *   An array of events where each event is an array keyed on the uid:
- *    'start'
- *      Start date object,
- *    'end'
- *      End date object, optional, omit for all day event.
- *    'summary'
- *      Title of event (Text)
- *    'description'
- *      Description of event (Text)
- *    'location'
- *      Location of event (Text or vvenue id)
- *    'uid'
- *      ID of the event for use by calendaring program, usually the url of the node
- *    'url'
- *      URL of event information
- * 
- *    'alarm'
- *      sub-array of alarm information for the event, including:
- *      - 'action' .- the action to take, either 'DISPLAY' .or 'EMAIL'
- *      - 'trigger' .- the time period for the trigger, like -P2D.
- *      - 'repeat' .- the number of times to repeat the alarm.
- *      - 'duration' .- the time period between repeated alarms, like P1D.
- *      - 'description' .- the description of the alarm.
- *      An email alarm should have two additional parts:
- *      - 'email' .- a comma-separated list of email recipients.
- *      - 'summary' .- the subject of the alarm email.
- *
- * @param $calname
- *   Name of the calendar.  Use site name if none is specified.
- * 
- */
-function template_preprocess_date_vcalendar(&$vars) {
-
-  $vars['current_date'] = date_format(date_now(), DATE_FORMAT_ICAL);
-  $vars['current_date_utc'] = date_format(date_now('UTC'), DATE_FORMAT_ICAL);
-  $vars['site_timezone'] = date_default_timezone();
-  $vars['calname'] = date_ical_escape_text(!empty($vars['calname']) ? $vars['calname'] : variable_get('site_name', ''));
-
-  // Format the event results as iCal expects.
-  $events_in = $vars['events'];
-  $events = array();
-  $rows = (array) $vars['rows'];
-  foreach ($events_in as $uid => $event) {
-    $row = array_shift($rows);
-    // Omit any items with empty dates.
-    if (!empty($event['start'])) {
-      $events[$uid] = $event;
-      $timezone = timezone_name_get(date_timezone_get($event['start']));
-      if (!empty($timezone)) {
-        $events[$uid]['timezone'] = "TZID=$timezone:";
-      }
-      else {
-        $events[$uid]['timezone'] = '';
-      }
-      $date_format = (!empty($row->calendar_all_day) && $row->calendar_all_day == TRUE) ? DATE_FORMAT_ICAL_DATE : DATE_FORMAT_ICAL;
-      $events[$uid]['start'] = date_format($event['start'], $date_format);
-      if ($event['start'] && $event['end']) {
-        $events[$uid]['end'] = date_format($event['end'], $date_format);
-      }
-      else {
-        $events[$uid]['end'] = $events[$uid]['start'];
-      }
-      foreach ($event as $key => $value) {
-        if (is_string($value)) {
-          $event[trim($key)] = trim($value);
-        }
-      }
-
-      // Escape text values.
-      foreach ($event as $key => $value) {
-        if ($key == 'alarm') {
-          foreach ($value as $alarm_key => $alarm_value) {
-            if (in_array($alarm_key, array('summary', 'description'))) {
-              $events[$uid]['alarm'][$alarm_key] = date_ical_escape_text($alarm_value);
-            }
-          }
-        }
-        elseif (in_array($key, array('summary', 'description', 'location'))) {
-          $events[$uid][$key] = date_ical_escape_text(html_entity_decode($value, ENT_QUOTES, 'UTF-8'));
-        }
-      }
-    }
-  }
-
-  $vars['events'] = $events;  
 }
 
 /**
