@@ -446,7 +446,7 @@ function workbench_access_editors($access_type = NULL, $access_type_id = NULL, $
         }
       }
       if ($type == 'editor') {
-        $count = db_query("SELECT COUNT(wau.uid) FROM {workbench_access_user} wau
+        $count = db_query("SELECT COUNT(DISTINCT(wau.uid)) FROM {workbench_access_user} wau
           INNER JOIN {users_roles} ur ON wau.uid = ur.uid
           WHERE wau.access_scheme = :access_scheme AND wau.access_id = :access_id
           AND ur.rid IN (:rids)",
@@ -694,6 +694,10 @@ function workbench_access_role_form($form, &$form_state, $access_type, $access_t
     '#default_value' => $default,
     '#description' => empty($roles) ? t('There are no roles with the proper permissions.') : t('Select the role(s) that should have all users assigned to this section.'),
   );
+  // TODO: replace with fancy jQuery.
+  if (isset($roles[DRUPAL_AUTHENTICATED_RID])) {
+    $form['roles']['#description'] .= '<p>' . t('Selecting the %auth role will select all registered users.', array('%auth' => $roles[DRUPAL_AUTHENTICATED_RID])) . '</p>';
+  }
   $form['default_roles'] = array('#type' => 'value', '#value' => !empty($roles) ? $default : array());
   $form['workbench_access'] = array(
     '#type' => 'value',
@@ -711,6 +715,14 @@ function workbench_access_role_form($form, &$form_state, $access_type, $access_t
  */
 function workbench_access_role_form_submit($form, &$form_state) {
   $values = $form_state['values'];
+  // Handle the authenticated user role, which is all roles but anonymous.
+  if (!empty($values['roles'][DRUPAL_AUTHENTICATED_RID])) {
+    foreach ($values['roles'] as $key => $value) {
+      if ($key > 0) {
+        $values['roles'][$key] = $key;
+      }
+    }
+  }
   // Role handling.
   foreach ($values['roles'] as $rid => $status) {
     if (!empty($status) && !in_array($rid, $values['default_roles'])) {
@@ -745,15 +757,17 @@ function workbench_access_example_taxonomy() {
   }
   // Save.
   taxonomy_vocabulary_save($vocabulary);
+  // Use the proper translation function, in case this is run from the install.
+  $t = get_t();
   // Create some terms.
   $terms = array(
-    t('Exhibits'),
-    t('Library'),
-    t('Gift Shop'),
+    $t('Exhibits'),
+    $t('Library'),
+    $t('Gift Shop'),
   );
   $children = array(
-    t('Staff'),
-    t('Visitors'),
+    $t('Staff'),
+    $t('Visitors'),
   );
   // Get the proper filter format for taxonomy descriptions.
   $account = new stdClass();
@@ -767,7 +781,7 @@ function workbench_access_example_taxonomy() {
     $term->name = $name;
     $term->vocabulary_machine_name = 'workbench_access';
     $term->vid = $vocabulary->vid;
-    $term->description = st('Test term for Workbench Access.');
+    $term->description = $t('Test term for Workbench Access.');
     $term->format = $format;
     $term->weight = $i;
     taxonomy_term_save($term);
@@ -781,7 +795,7 @@ function workbench_access_example_taxonomy() {
       $item->vocabulary_machine_name = 'workbench_access';
       $item->vid = $vocabulary->vid;
       $item->format = $format;
-      $item->description = t('Test child term for Workbench Access.');
+      $item->description = $t('Test child term for Workbench Access.');
       taxonomy_term_save($item);
       $ids[] = $item->tid;
     }
@@ -852,11 +866,12 @@ function workbench_access_vocabulary_exists($vocabulary) {
  *   A vocabulary object.
  */
 function workbench_access_sample_vocabulary() {
+  $t = get_t();
   $vocabulary = new stdClass();
-  $vocabulary->name = t('Museum');
+  $vocabulary->name = $t('Museum');
   $vocabulary->module = 'workbench_access';
   $vocabulary->machine_name = 'workbench_access';
-  $vocabulary->description = t('Access control for editorial content.');
+  $vocabulary->description = $t('Access control for editorial content.');
   $vocabulary->hierarchy = 1;
   $vocabulary->weight = -10;
   return $vocabulary;
