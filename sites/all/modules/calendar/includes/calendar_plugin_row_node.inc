@@ -205,6 +205,14 @@ class calendar_plugin_row_node extends views_plugin_row {
     }  
   }
 
+  function options_submit(&$form, &$form_state) {
+    parent::options_submit($form, $form_state);
+    if (!empty($form_state['values']['row_options']['calendar_date_link'])) {
+      $path = $this->view->display_handler->get_option('path');
+      variable_set('calendar_date_link_' . $form_state['values']['row_options']['calendar_date_link'], $path);
+    }
+  }
+
   function pre_render($values) {
 
     // @TODO When the date is coming in through a relationship, the nid
@@ -224,6 +232,9 @@ class calendar_plugin_row_node extends views_plugin_row {
     if (!empty($nids)) {
       $this->nodes = node_load_multiple($nids);
     }
+
+    // Let the style know if a link to create a new date is required.
+    $this->view->date_info->calendar_date_link = $this->options['calendar_date_link'];
 
     // Identify the date argument and fields that apply to this view.
     // Preload the Date Views field info for each field, keyed by the
@@ -283,11 +294,11 @@ class calendar_plugin_row_node extends views_plugin_row {
       $tz_handling = $info['tz_handling'];
       $tz_field    = $info['timezone_field'];
       $rrule_field = $info['rrule_field'];
-      $is_field = substr($info['real_field_name'], 0, 6) == 'field_';
+      $is_field    =  $info['is_field'];
      
       // Retrieve the field value that matched our query from the cached node.
       // Find the date and set it to the right timezone.  
-          
+   
       $item = $node->$field_name;
       $node->date_id = array();
       $item_start_date = NULL;
