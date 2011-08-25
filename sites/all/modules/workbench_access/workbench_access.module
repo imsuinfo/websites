@@ -284,20 +284,14 @@ function workbench_access_views_default_views() {
  * Implements hook_field_extra_fields()
  */
 function workbench_access_field_extra_fields() {
-  $base = array(
-    'workbench_access' => array(
-      'label' => t('Workbench Access'),
-      'description' => t('Workbench Access settings.'),
-      'weight' => -1,
-    ),
-  );
-  // Attach the field to all node bundles.
-  // @TODO: be more selective here.
   $extra = array();
   foreach (node_type_get_names() as $name => $value) {
     if (variable_get('workbench_access_node_type_' . $name, 1)) {
-      $extra['node'][$name]['form'] = $base;
-      $extra['node'][$name]['display'] = $base;
+      $extra['node'][$name]['form']['workbench_access'] = array(
+        'label' => t('Workbench Access'),
+        'description' => t('Workbench Access settings.'),
+        'weight' => 0,
+      );
     }
   }
   return $extra;
@@ -1375,6 +1369,7 @@ function workbench_access_form_alter(&$form, $form_state, $form_id) {
       }
     }
     workbench_access_alter_form('node_element', $element, $form_state);
+    $form['workbench_access']['#type'] = 'container';
     $form['workbench_access']['workbench_access_id'] = $element;
     $form['workbench_access']['workbench_access_scheme'] = array(
       '#type' => 'value',
@@ -1455,7 +1450,7 @@ function workbench_access_vocabulary_submit($form, &$form_state) {
  * Add a sections form to native term editing.
  */
 function workbench_access_form_taxonomy_form_term_alter(&$form, &$form_state, $form_id) {
-  if (!user_access('administer workbench access') || variable_get('workbench_access', 'taxonomy') != 'taxonomy') {
+  if (!user_access('administer workbench access') || variable_get('workbench_access', 'taxonomy') != 'taxonomy' || isset($form_state['confirm_delete'])) {
     return;
   }
   // On delete, the term may be an object. Be consistent, core!
