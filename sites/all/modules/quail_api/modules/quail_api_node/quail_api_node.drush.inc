@@ -25,7 +25,6 @@ function quail_api_node_drush_command() {
 
   // Add aliases for usability.
   quail_api_node_drush_command_add_alias($items, 'acc_validate_node', 'acc_validate_node');
-  quail_api_node_drush_command_add_alias($items, 'acc_validate_node', 'av_node');
 
   return $items;
 }

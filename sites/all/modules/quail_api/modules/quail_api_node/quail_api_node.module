@@ -912,3 +912,15 @@ function quail_api_node_restructure_results($nid, $vid, $display_levels = NULL){
 
   return $results;
 }
+
+/**
+ * Implements hook_node_type_delete().
+ */
+function quail_api_node_node_type_delete($info) {
+  if (!is_object($info)){
+    cf_error_invalid_object(__FUNCTION__, 'info', WATCHDOG_ERROR);
+    return;
+  }
+
+  db_delete('quail_api_node_types')->condition('type', $info->type)->execute();
+}
