@@ -1,0 +1,38 @@
+<?php
+
+/**
+ * Implementation of hook_schema().
+ */
+function content_easement_publishing_button_schema() {
+  $schema = array();
+
+  $schema['content_easement_publishing_button_node_types'] = array(
+    'description' => t("Content type specific settings for the content easement publishing button."),
+    'fields' => array(
+      'type' => array(
+        'description' => t("The machine-readable name of the node type."),
+        'type' => 'varchar',
+        'length' => 32,
+        'not null' => TRUE,
+        'default' => '',
+      ),
+      'enabled' => array(
+        'description' => t("A boolean that designates whether or not publishing button is enabled for some content type."),
+        'type' => 'int',
+        'size' => 'tiny',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'default' => TRUE,
+      ),
+    ),
+    'primary key' => array('type'),
+    'foreign keys' => array(
+      'type' => array(
+        'table' => 'node_type',
+        'columns' => array('type' => 'type'),
+      ),
+    ),
+  );
+
+  return $schema;
+}
