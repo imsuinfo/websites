@@ -1468,6 +1468,12 @@ function workbench_moderation_moderate($node, $state) {
   if (!empty($node->workbench_moderation['published'])) {
     drupal_register_shutdown_function('workbench_moderation_store', $node);
   }
+
+  if (module_exists('rules')){
+    if ($new_revision->from_state !== $new_revision->state){
+      rules_invoke_event('workbench_moderation_after_changing_state', $node, $new_revision);
+    }
+  }
 }
 
 /**
@@ -1841,4 +1847,51 @@ function workbench_moderation_workbench_block() {
   }
 
   return $output;
+}
+
+/**
+ * Implements hook_action_info().
+ */
+function workbench_moderation_action_info() {
+  return array(
+    'workbench_moderation_set_state_action' => array(
+      'type' => 'node',
+      'label' => t('Set moderation state'),
+      'configurable' => TRUE,
+      'behavior' => array('changes_property'),
+      'triggers' => array('node_insert', 'node_update'),
+    ),
+  );
+}
+
+/**
+ * Form builder; Prepare a form for possible moderation states.
+ */
+function workbench_moderation_set_state_action_form($context) {
+  $form = array();
+
+  $form['state'] = array(
+    '#type' => 'select',
+    '#options' => workbench_moderation_state_labels(),
+    '#default_value' => isset($context['state']) ? $context['state'] : '',
+  );
+
+  return $form;
+}
+
+/**
+ * Process workbench_moderation_set_state_action_form form submissions.
+ */
+function workbench_moderation_set_state_action_form_submit($form, $form_state) {
+  return array('state' => $form_state['values']['state']);
+}
+
+/**
+ * Changes the moderation state for a given node.
+ */
+function workbench_moderation_set_state_action($node, $context) {
+  if (!empty($context['state']) && _workbench_moderation_moderate_access($node, $context['state'])) {
+    workbench_moderation_moderate($node, $context['state']);
+    watchdog('action', 'Change node %nid moderation state to %state.', array('%nid' => $node->nid, '%state' => $context['state']));
+  }
 }
