@@ -252,6 +252,16 @@ function cf_theme_get_variables(array &$variables){
   $cf['markup_css']['body']['class'] .= $cf['at']['css'];
   $cf['markup_css']['content']['class'] .= $cf['at']['css'];
 
+  if (!empty($cf['agent']['machine_name'])){
+    $cf['markup_css']['body']['class'] .= ' agent-name-' . preg_replace('/(\W)+/i', '_', $cf['agent']['machine_name']);
+    $cf['markup_css']['content']['class'] .= ' agent-name' . preg_replace('/(\W)+/i', '_', $cf['agent']['machine_name']);
+  }
+
+  if (!empty($cf['agent']['engine'])){
+    $cf['markup_css']['body']['class'] .= ' agent-engine-' . preg_replace('/(\W)+/i', '_', $cf['engine']['engine']);
+    $cf['markup_css']['content']['class'] .= ' agent-engine' . preg_replace('/(\W)+/i', '_', $cf['engine']['engine']);
+  }
+
   return $cf;
 }
 
