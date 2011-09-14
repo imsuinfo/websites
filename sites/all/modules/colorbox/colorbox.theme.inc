@@ -70,6 +70,8 @@ function theme_colorbox_image_formatter($variables) {
     $path = file_create_url($image['path']);
   }
 
+  $path = preg_replace('`^' . $GLOBALS['base_url'] . '`i', '', $path);
+
   return theme('colorbox_imagefield', array('image' => $image, 'path' => $path, 'title' => $image['title'], 'gid' => $gallery_id));
 }
 
@@ -119,6 +121,7 @@ function template_preprocess_colorbox_insert_image(&$variables) {
   $file = file_load($variables['item']['fid']);
 
   $variables['image_path'] = image_style_url($variables['item']['style_name'], $file->uri);
+  $variables['image_path'] = preg_replace('`^' . $GLOBALS['base_url'] . '`i', '', $variables['image_path']);
 
   if ($style_name = variable_get('colorbox_image_style', '')) {
     $variables['link_path'] = image_style_url($style_name, $file->uri);
@@ -126,6 +129,8 @@ function template_preprocess_colorbox_insert_image(&$variables) {
   else {
     $variables['link_path'] = file_create_url($file->uri);
   }
+
+  $variables['link_path'] = preg_replace('`^' . $GLOBALS['base_url'] . '`i', '', $variables['link_path']);
 
   $variables['class'] = $variables['widget']['settings']['insert_class'];
 
