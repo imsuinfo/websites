@@ -41,3 +41,26 @@ div#block-search-form form#search-block-form .form-item-search-block-form {
   color: #ffffff;
   line-height: 1.9em;
 }
+
+
+
+/**
+ * Workaround a calendar prev/next button display issue
+ * see: http://drupal.org/node/1279612
+ */
+div.view div.date-nav-wrapper div.date-nav ul.pager {
+  position: static;
+
+  margin: 0;
+}
+
+/**
+ * Fix padding issues on calendar buttons
+ */
+div.view div.date-nav-wrapper div.date-nav ul.pager li.date-prev {
+  padding-left: 5px;
+}
+
+div.view div.date-nav-wrapper div.date-nav ul.pager li.date-next {
+  padding-right: 5px;
+}
