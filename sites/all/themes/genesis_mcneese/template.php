@@ -62,6 +62,9 @@ function genesis_mcneese_preprocess_page(&$vars) {
     $vars['cf'] = cf_theme_get_variables($vars);
   }
 
+  $keys_to_render = array('logo', 'title_prefix', 'title_suffix', 'side_links', 'primary_local_tasks', 'secondary_local_tasks', 'action_links');
+  cf_theme_render_variables($vars, $keys_to_render);
+
   $keys_to_render = array('leaderboard', 'primary_links', 'header', 'help', 'secondary_content', 'sidebar_first', 'highlighted', 'content', 'sidebar_second', 'tertiary_content', 'footer', 'subboard');
   cf_theme_render_variables($vars, $keys_to_render, 'page');
 
@@ -79,12 +82,13 @@ function genesis_mcneese_process_variables(&$vars){
   $vars['main_menu_links'] = theme('links__system_main_menu', array('links' => $vars['main_menu'], 'attributes' => array('id' => 'main-menu', 'class' => array('links', 'clearfix')), 'heading' => t("Main Menu")));
   $vars['secondary_menu_links'] = theme('links__system_secondary_menu', array('links' => $vars['secondary_menu'], 'attributes' => array('id' => 'secondary-menu', 'class' => array('links', 'clearfix')), 'heading' => t("Secondary Menu")));
 
-  $keys_to_render = array('logo', 'messages', 'title_prefix', 'title_suffix', 'side_links', 'primary_local_tasks', 'secondary_local_tasks', 'action_links', 'main_menu_links', 'secondary_menu_links');
+  $keys_to_render = array('main_menu_links', 'secondary_menu_links');
   cf_theme_render_variables($vars, $keys_to_render);
 
   // always show the following fields (unless disabled on frontpage)
   $vars['cf']['show']['title'] = TRUE;
   $vars['cf']['show']['breadcrumb'] = TRUE;
+  $vars['cf']['show']['messages'] = TRUE;
   $vars['cf']['show']['page']['content'] = TRUE;
   $vars['cf']['show']['page']['footer'] = TRUE;
 
