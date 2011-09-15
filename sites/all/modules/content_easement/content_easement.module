@@ -4,7 +4,7 @@
  * Implements hook_init().
  */
 function content_easement_init() {
-  $mode = overlay_get_mode();
+  $mode = (function_exists('overlay_get_mode') ? overlay_get_mode() : FALSE);
   $user = cf_get_user(FALSE, array(__FUNCTION__));
 
   $use_overlay = (isset($user->data['overlay']) && $user->data['overlay']);
