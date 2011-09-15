@@ -51,6 +51,8 @@ div#block-search-form form#search-block-form .form-item-search-block-form {
 div.view div.date-nav-wrapper div.date-nav ul.pager {
   position: static;
 
+  font-weight: bold;
+
   margin: 0;
 }
 
