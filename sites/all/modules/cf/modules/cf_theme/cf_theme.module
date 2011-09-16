@@ -29,7 +29,7 @@ function cf_theme_get_variables(array &$variables){
   $cf['show'] = array();
   $cf['data'] = array();
 
-  foreach (array('front', 'admin', 'using_database', 'node', 'emergency', 'maintenance', 'unsupported', 'debug', 'overlay', 'logged_in', 'published', 'promoted', 'sticky') as $key){
+  foreach (array('front', 'admin', 'using_database', 'node', 'emergency', 'maintenance', 'unsupported', 'debug', 'overlay', 'logged_in', 'published', 'unpublished', 'promoted', 'sticky') as $key){
     $cf['is'][$key] = FALSE;
     $cf['is_data'][$key] = array();
   }
@@ -161,7 +161,7 @@ function cf_theme_get_variables(array &$variables){
     $cf['meta']['name']['robots'] = 'NOARCHIVE,NOINDEX,FOLLOW';
   }
 
-  if (!empty($vars['is_admin'])){
+  if (!empty($variables['is_admin'])){
     $cf['is']['admin'] = TRUE;
   }
 
@@ -170,29 +170,43 @@ function cf_theme_get_variables(array &$variables){
     $cf['is_data']['logged_in']['user'] = &$user;
   }
 
-  if (!empty($vars['db_is_active'])){
+  if (!empty($variables['db_is_active'])){
     $cf['is']['using_database'] = TRUE;
     $cf['is_data']['using_database']['database'] = db_driver();
   }
 
-  if (isset($vars['node']) && is_object($vars['node']) && property_exists($vars['node'], 'type') && !empty($vars['node']->type)) {
-    if (property_exists($vars['node'], 'nid') && !empty($vars['node']->nid)){
+  $node_object = NULL;
+
+  if (isset($variables['node'])){
+    $node_object = & $variables['node'];
+  }
+  else if (isset($variables['page']) && is_array($variables['page']) && !empty($variables['page']['#type']) && isset($variables['page']['content']['system_main']['#node']) && is_object($variables['page']['content']['system_main']['#node'])){
+    $node_object = & $variables['page']['content']['system_main']['#node'];
+  }
+
+  if (is_object($node_object) && property_exists($node_object, 'type') && !empty($node_object->type)) {
+    if (property_exists($node_object, 'nid') && !empty($node_object->nid)){
       $cf['is']['node'] = TRUE;
-      $cf['is_data']['node']['object'] = &$vars['node'];
+      $cf['is_data']['node']['object'] = &$node_object;
 
       if ($cf['is_data']['node']['object']->status == NODE_PUBLISHED){
         $cf['is']['published'] = TRUE;
-        $cf['is_data']['published']['value'] = $vars['node']->status;
+        $cf['is_data']['published']['value'] = $node_object->status;
       }
 
-      if ($cf['is_data']['node']['node']->promote == NODE_PROMOTED){
+      if ($cf['is_data']['node']['object']->status != NODE_PUBLISHED){
+        $cf['is']['unpublished'] = TRUE;
+        $cf['is_data']['unpublished']['value'] = $node_object->status;
+      }
+
+      if ($cf['is_data']['node']['object']->promote == NODE_PROMOTED){
         $cf['is']['promoted'] = TRUE;
-        $cf['is_data']['promoted']['value'] = $vars['node']->promote;
+        $cf['is_data']['promoted']['value'] = $node_object->promote;
       }
 
-      if ($cf['is_data']['node']['node']->promote == NODE_STICKY){
+      if ($cf['is_data']['node']['object']->promote == NODE_STICKY){
         $cf['is']['sticky'] = TRUE;
-        $cf['is_data']['sticky']['value'] = $vars['node']->sticky;
+        $cf['is_data']['sticky']['value'] = $node_object->sticky;
       }
     }
   }
@@ -260,6 +274,11 @@ function cf_theme_get_variables(array &$variables){
   if (!empty($cf['agent']['engine'])){
     $cf['markup_css']['body']['class'] .= ' agent-engine-' . preg_replace('/(\W)+/i', '_', $cf['agent']['engine']);
     $cf['markup_css']['content']['class'] .= ' agent-engine-' . preg_replace('/(\W)+/i', '_', $cf['agent']['engine']);
+  }
+
+  if ($cf['is']['node']){
+    $cf['markup_css']['body']['class'] .= ' node_type-' . preg_replace('/(\W)+/i', '_', $cf['is_data']['node']['object']->type);
+    $cf['markup_css']['content']['class'] .= ' node_type-' . preg_replace('/(\W)+/i', '_', $cf['is_data']['node']['object']->type);
   }
 
   return $cf;
