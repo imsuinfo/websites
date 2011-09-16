@@ -169,6 +169,15 @@ div.drupal_footer div.mcneese_footer_block div.copyright div.copyright_menus ul 
 
 
 
+/*** css variables specific ***/
+div.drupal_content .node-unpublished,
+body.is-node.is-unpublished .drupal-page,
+div.is-node.is-unpublished.drupal-page {
+  background-color: #ffeeee !important;
+}
+
+
+
 /*** wwwdev.mcneese.edu-specific ***/
 body.at-wwwdev_mcneese_edu {
   background-color: #000000 !important;

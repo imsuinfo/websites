@@ -1,5 +1,5 @@
 <?php ?>
-  <div id="container" class="<?php print($cf['markup_css']['container']['class']); ?>">
+  <div id="container" class="drupal-page<?php print($cf['markup_css']['container']['class']); ?>">
     <?php if (!$cf['is']['overlay']){ ?>
       <?php if ($cf['show']['page']['leaderboard']){ ?>
         <div id="leaderboard" class="clearfix">
