@@ -50,7 +50,11 @@
             <!--(begin_branding)-->
             <h1 class="logo-site-name">
               <!--(begin_site_name)-->
-              <span id="logo"><a rel="home" title="Home page" href="/"><img alt=" logo" src="<?php print($base_path . path_to_theme());?>/images/web_logo.png"></a></span>
+              <span id="logo">
+                <a rel="home" title="Home page" href="/">
+                  <img alt="<?php print($cf['at']['human_name']); ?>" title="<?php print($cf['at']['human_name']); ?>" src="<?php print($base_path . path_to_theme());?>/images/web_logo.png">
+                </a>
+              </span>
               <!--(end_site_name)-->
             </h1>
             <!--(end_branding)-->
