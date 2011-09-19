@@ -64,16 +64,11 @@ function workbench_moderation_rules_event_info() {
     'label' => t("Live workbench content"),
   );
 
-  $items['workbench_moderation_after_changing_state'] = array(
-    'label' => t("After changing workbench moderation state"),
+  $items['workbench_moderation_after_moderation_transition'] = array(
+    'label' => t("After moderation transition"),
     'group' => t("Node"),
     'variables' => rules_events_node_variables(t("Content"), FALSE),
     'access callback' => 'rules_node_integration_access',
-  );
-
-  $items['workbench_moderation_after_changing_state']['variables']['new_revision'] = array(
-    'type' => 'unknown',
-    'label' => t("New revision"),
   );
 
   return $items;
