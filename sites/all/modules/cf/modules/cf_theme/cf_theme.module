@@ -23,6 +23,7 @@ function cf_theme_get_variables(array &$variables){
   $cf['breadcrumb'] = array();
   $cf['markup_css'] = array('body' => array('id' => '', 'class' => ''), 'content' => array('id' => '', 'class' => ''));
   $cf['at'] = array('machine_name' => '', 'human_name' => '', 'url' => '', 'base' => '', 'path' => '', 'alias' => '', 'css' => '');
+  $cf['date'] = array('enabled' => FALSE, 'year' => '', 'month' => '', 'day' => '', 'week' => '', 'hour' => '', 'minute' => '', 'timezone' => '');
   $cf['theme'] = array('path' => '', 'machine_name' => '', 'human_name' => '');
   $cf['is'] = array();
   $cf['is_data'] = array();
@@ -228,7 +229,7 @@ function cf_theme_get_variables(array &$variables){
   $cf['at']['base'] = $base_dir;
 
   if (!empty($cf['at']['machine_name'])){
-    $cf['at']['css'] = ' at-' . preg_replace('/(\W)+/i', '_', $cf['at']['machine_name']);
+    $cf['at']['css'] = ' at-' . cf_theme_safe_css_string_part($cf['at']['machine_name']);
   }
 
   if (function_exists('current_path')){
@@ -246,12 +247,21 @@ function cf_theme_get_variables(array &$variables){
   }
 
   if (!empty($cf['at']['path'])){
-    $cf['at']['css'] .=  ' path-' . preg_replace('/(\W)+/i', '_', $cf['at']['path']);
+    $cf['at']['css'] .=  ' path-' . cf_theme_safe_css_string_part($cf['at']['path']);
   }
 
   if (!empty($cf['at']['alias'])){
-    $cf['at']['css'] .=  ' alias-' . preg_replace('/(\W)+/i', '_', $cf['at']['alias']);
+    $cf['at']['css'] .=  ' alias-' . cf_theme_safe_css_string_part($cf['at']['alias']);
   }
+
+  // Add date-specific css
+  $cf['date']['year'] = date('Y', REQUEST_TIME);
+  $cf['date']['month'] = date('m', REQUEST_TIME);
+  $cf['date']['day'] = date('d', REQUEST_TIME);
+  $cf['date']['week'] = date('W', REQUEST_TIME);
+  $cf['date']['hour'] = date('H', REQUEST_TIME);
+  $cf['date']['minute'] = date('i', REQUEST_TIME);
+  $cf['date']['timezone'] = date('O', REQUEST_TIME);
 
   drupal_alter('cf_theme_get_variables', $cf, $variables);
 
@@ -267,18 +277,36 @@ function cf_theme_get_variables(array &$variables){
   $cf['markup_css']['content']['class'] .= $cf['at']['css'];
 
   if (!empty($cf['agent']['machine_name'])){
-    $cf['markup_css']['body']['class'] .= ' agent-name-' . preg_replace('/(\W)+/i', '_', $cf['agent']['machine_name']);
-    $cf['markup_css']['content']['class'] .= ' agent-name-' . preg_replace('/(\W)+/i', '_', $cf['agent']['machine_name']);
+    $cf['markup_css']['body']['class'] .= ' agent-name-' . cf_theme_safe_css_string_part($cf['agent']['machine_name']);
+    $cf['markup_css']['content']['class'] .= ' agent-name-' . cf_theme_safe_css_string_part($cf['agent']['machine_name']);
   }
 
   if (!empty($cf['agent']['engine'])){
-    $cf['markup_css']['body']['class'] .= ' agent-engine-' . preg_replace('/(\W)+/i', '_', $cf['agent']['engine']);
-    $cf['markup_css']['content']['class'] .= ' agent-engine-' . preg_replace('/(\W)+/i', '_', $cf['agent']['engine']);
+    $cf['markup_css']['body']['class'] .= ' agent-engine-' . cf_theme_safe_css_string_part($cf['agent']['engine']);
+    $cf['markup_css']['content']['class'] .= ' agent-engine-' . cf_theme_safe_css_string_part($cf['agent']['engine']);
   }
 
   if ($cf['is']['node']){
-    $cf['markup_css']['body']['class'] .= ' node_type-' . preg_replace('/(\W)+/i', '_', $cf['is_data']['node']['object']->type);
-    $cf['markup_css']['content']['class'] .= ' node_type-' . preg_replace('/(\W)+/i', '_', $cf['is_data']['node']['object']->type);
+    $cf['markup_css']['body']['class'] .= ' node_type-' . cf_theme_safe_css_string_part($cf['is_data']['node']['object']->type);
+    $cf['markup_css']['content']['class'] .= ' node_type-' . cf_theme_safe_css_string_part($cf['is_data']['node']['object']->type);
+  }
+
+  if ($cf['date']['enabled']){
+    foreach (array('year', 'month', 'day', 'week', 'hour', 'minute') as $key){
+      if (!empty($cf['date'][$key])){
+        $cf['markup_css']['body']['class'] .= ' date-' . $key . '-' . cf_theme_safe_css_string_part($cf['date'][$key]);
+        $cf['markup_css']['content']['class'] .= ' date-' . $key . '-' . cf_theme_safe_css_string_part($cf['date'][$key]);
+      }
+    }
+
+    if (!empty($cf['date']['timezone'])){
+      $timezone = preg_replace('/^\+/i', 'P', $cf['date']['timezone']);
+      $timezone = preg_replace('/^\-/i', 'N', $timezone);
+      $timezone_css = cf_theme_safe_css_string_part($timezone);
+
+      $cf['markup_css']['body']['class'] .= ' date-timezone-' . $timezone_css;
+      $cf['markup_css']['content']['class'] .= ' date-timezone-' . $timezone_css;
+    }
   }
 
   return $cf;
@@ -419,4 +447,22 @@ function cf_theme_render_variables(&$variables, $keys, $subdir = NULL){
       }
     }
   }
+}
+
+/**
+ * Returns a string with all non-word characters turned into underscores.
+ *
+ * Why:
+ *   Drupals core css cleanup code does not properly handle all allowed css, namely underscores.
+ *   This is a quick-way to ensure that all non-word characters are removed from a string to be used in css.
+ *   This function is intended to be used to only create part of a string as done throughout the cf_theme_* functions to generate css names, such as: at-www_drupal_org.
+ *
+ * @param string
+ *   The string to cleanup.
+ *
+ * @return
+ *  A string with all non-word characters turned into underscores
+ */
+function cf_theme_safe_css_string_part($string){
+  return preg_replace('/(\W)+/i', '_', $string);
 }
