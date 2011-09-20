@@ -1185,6 +1185,19 @@ function workbench_access_options($tree, $active) {
 }
 
 /**
+ * Build an array of form options for the currently active workbench access tree.
+ *
+ * @return
+ *   An array of options, suitable for use in a form.
+ */
+function workbench_access_active_options() {
+  $active = workbench_access_get_active_tree();
+  $tree = $active['tree'];
+  workbench_access_build_tree($tree);
+  return workbench_access_options($tree, $active['active']);
+}
+
+/**
  * Ensure the proper action for our content form.
  */
 function workbench_access_form_views_exposed_form_alter(&$form, &$form_state) {
@@ -1752,4 +1765,157 @@ function workbench_access_access_scheme_load($scheme) {
   workbench_access_load_include();
   $info = module_invoke_all('workbench_access_info');
   return isset($info[$scheme]) ? $info[$scheme] : FALSE;
+}
+
+/**
+ * Implements hook_action_info().
+ */
+function workbench_access_action_info() {
+  $info = array();
+
+  $info['workbench_access_assign_section_presave_action'] = array(
+    'type' => 'node',
+    'label' => t("Assign Section (Presave)"),
+    'configurable' => TRUE,
+    'behavior' => array('changes_property'),
+    'triggers' => array('node_presave'),
+  );
+
+  $info['workbench_access_unassign_section_presave_action'] = array(
+    'type' => 'node',
+    'label' => t("Unassign Section (Presave)"),
+    'configurable' => TRUE,
+    'behavior' => array('changes_property'),
+    'triggers' => array('node_presave'),
+  );
+
+  if (module_exists('workbench_moderation')){
+    // Get all workbench transitions.
+    $transitions = workbench_moderation_transitions();
+
+    // Add a trigger for each transition.
+    foreach ($transitions as $transition_definition) {
+      $transition_string = 'wmt_' . $transition_definition->from_name . '__' . $transition_definition->to_name;
+      // Hash this string if it's longer than the db field size
+      if (strlen($transition_string) > 32) {
+        $transition_string = md5($transition_string);
+      }
+
+      $info['workbench_access_assign_section_presave_action']['triggers'][] = $transition_string;
+      $info['workbench_access_unassign_section_presave_action']['triggers'][] = $transition_string;
+    }
+  }
+
+  return $info;
+}
+
+/**
+ * Form builder; Prepare a form for possible sections.
+ */
+function workbench_access_assign_section_presave_action_form($context) {
+  $form = array();
+
+  $active = workbench_access_get_active_tree();
+  $tree = $active['tree'];
+  workbench_access_build_tree($tree);
+  $options = workbench_access_options($tree, $active['active']);
+
+  // display an error if workbench access module has not been configured
+  if (empty($options) && !variable_get('workbench_access', FALSE)) {
+    $message = workbench_access_configuration_needed_message();
+    drupal_set_message($message, 'error', $repeat = FALSE);
+  }
+
+  $form['section'] = array(
+    '#type' => 'select',
+    '#options' => $options,
+    '#default_value' => isset($context['section']) ? $context['section'] : '',
+  );
+
+  return $form;
+}
+
+/**
+ * Process workbench_moderation_set_state_action_form form submissions.
+ */
+function workbench_access_assign_section_presave_action_submit($form, $form_state) {
+  return array('section' => $form_state['values']['section']);
+}
+
+/**
+ * Changes the moderation state for a given node.
+ */
+function workbench_access_assign_section_presave_action($node, $context) {
+  if (empty($context['section']) || !variable_get('workbench_access_node_type_' . $node->type, 1)){
+    return;
+  }
+
+  if (variable_get('workbench_access_allow_multiple', 0)){
+    if (empty($node->workbench_access_id) || !is_array($node->workbench_access_id)) {
+      $node->workbench_access_id = array();
+    }
+
+    if (!in_array($context['section'], $node->workbench_access_id)){
+      $node->workbench_access_id[] = $context['section'];
+    }
+  }
+  else {
+    $node->workbench_access_id = array($context['section']);
+  }
+}
+
+/**
+ * Form builder; Prepare a form for possible sections.
+ */
+function workbench_access_unassign_section_presave_action_form($context) {
+  $form = array();
+
+  $options = workbench_access_active_options();
+
+  // display an error if workbench access module has not been configured
+  if (empty($options) && !variable_get('workbench_access', FALSE)) {
+    $message = workbench_access_configuration_needed_message();
+    drupal_set_message($message, 'error', $repeat = FALSE);
+  }
+
+  $form['section'] = array(
+    '#type' => 'select',
+    '#options' => $options,
+    '#default_value' => isset($context['section']) ? $context['section'] : '',
+  );
+
+  return $form;
+}
+
+/**
+ * Process workbench_moderation_set_state_action_form form submissions.
+ */
+function workbench_access_unassign_section_presave_action_submit($form, $form_state) {
+  return array('section' => $form_state['values']['section']);
+}
+
+/**
+ * Changes the moderation state for a given node.
+ */
+function workbench_access_unassign_section_presave_action($node, $context) {
+  if (empty($context['section']) || !variable_get('workbench_access_node_type_' . $node->type, 1)){
+    return;
+  }
+
+  if (variable_get('workbench_access_allow_multiple', 0)){
+    if (empty($node->workbench_access_id) || !is_array($node->workbench_access_id)) {
+      return;
+    }
+
+    $key = array_search($context['section'], $node->workbench_access_id);
+
+    if ($key !== FALSE){
+      unset($node->workbench_access_id[$key]);
+    }
+  }
+  else {
+    if ($node->workbench_access_id == $context['section']){
+      $node->workbench_access_id = array();
+    }
+  }
 }
