@@ -103,7 +103,7 @@ function workbench_access_rules_action_info() {
     ),
     'provides' => array(
       'workbench_access_states' => array(
-        'type' => 'unknown',
+        'type' => 'list<taxonomy_term>',
         'label' => t("Workbench Access States"),
       ),
     ),
