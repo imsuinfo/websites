@@ -14,9 +14,19 @@ function workbench_moderation_rules_file_info() {
  * Implements hook_rules_condition_info().
  */
 function workbench_moderation_rules_condition_info() {
-   $items = array();
+  $items = array();
 
-   $items['content_is_live_revision'] = array(
+  $items['content_is_using_workbench_moderation'] = array(
+    'group' => t("Node"),
+    'label' => t("Content is using workbench moderation"),
+    'base' => 'workbench_access_rules_condition_content_is_using_workbench_moderation',
+    'parameter' => array(
+      'node' => array('type' => 'node', 'label' => t("Content")),
+    ),
+    'access callback' => 'rules_node_integration_access',
+  );
+
+  $items['content_is_live_revision'] = array(
     'group' => t("Node"),
     'label' => t("Content is live revision"),
     'base' => 'workbench_moderation_rules_condition_content_is_live_revision',
@@ -26,22 +36,22 @@ function workbench_moderation_rules_condition_info() {
     'access callback' => 'rules_node_integration_access',
   );
 
-   $items['contents_current_state'] = array(
-     'group' => t('Node'),
-     'label' => t('Contents current moderation state'),
-     'base' => 'workbench_moderation_rules_condition_contents_current_state',
-     'parameter' => array(
-       'node' => array('type' => 'node', 'label' => t('Content')),
-       'moderation_state' => array(
-         'type' => 'text',
-         'label' => t('Workbench moderation state'),
-         'options list' => 'workbench_moderation_state_labels',
-         'restriction' => 'input',
-         'save' => TRUE,
-       ),
-     ),
-     'access callback' => 'rules_node_integration_access',
-   );
+  $items['contents_current_state'] = array(
+    'group' => t("Node"),
+    'label' => t("Contents current moderation state"),
+    'base' => 'workbench_moderation_rules_condition_contents_current_state',
+    'parameter' => array(
+      'node' => array('type' => 'node', 'label' => t("Content")),
+      'moderation_state' => array(
+        'type' => 'text',
+        'label' => t("Workbench moderation state"),
+        'options list' => 'workbench_moderation_state_labels',
+        'restriction' => 'input',
+        'save' => TRUE,
+      ),
+    ),
+    'access callback' => 'rules_node_integration_access',
+  );
 
   return $items;
 }
@@ -92,14 +102,50 @@ function workbench_moderation_rules_action_info() {
       ),
       'moderation_state' => array(
         'type' => 'text',
-        'label' => t('Workbench moderation state'),
+        'label' => t("Workbench moderation state"),
         'options list' => 'workbench_moderation_state_labels',
         'restriction' => 'input',
       ),
     ),
   );
 
+  $items['workbench_moderation_load_current_state'] = array(
+    'label' => t("Load current moderation state"),
+    'group' => t("Node"),
+    'base' => 'workbench_moderation_load_current_state_rules_action',
+
+    'parameter' => array(
+      'node' => array(
+        'type' => 'node',
+        'label' => t("Content"),
+      ),
+    ),
+    'provides' => array(
+      'workbench_moderation_state' => array(
+        'type' => 'unknown',
+        'label' => t("Workbench moderation state"),
+      ),
+    ),
+  );
+
   return $items;
+}
+
+/**
+ * Condition: Check if the content is using workbench moderation.
+ *
+ * @param $node
+ *   A node object
+ *
+ * @return
+ *   TRUE/FALSE depending on if the content is using workbench moderation.
+ */
+function workbench_access_rules_condition_content_is_using_workbench_moderation($node) {
+  if (!is_object($node)) {
+    return FALSE;
+  }
+
+  return workbench_moderation_node_type_moderated($node->type);
 }
 
 /**
@@ -125,6 +171,9 @@ function workbench_moderation_rules_condition_content_is_live_revision($node) {
  * @param $node
  *   A node object
  *
+ * @param $moderation_state
+ *   The desired moderation state to compare with
+ *
  * @return
  *  TRUE/FALSE depending on if the nodes current state matches selected state.
  */
@@ -147,7 +196,7 @@ function workbench_moderation_rules_condition_contents_current_state($node, $mod
  *   A node object
  *
  * $param $moderation_state
- *   A machine-name string of the desired moderation state to assign.
+ *   The desired moderation state to assign.
  *
  * @return
  *   An array containing the node object stored in the key called 'node'.
@@ -160,3 +209,21 @@ function workbench_moderation_set_state_rules_action($node, $moderation_state) {
   return array('node' => $node);
 }
 
+/**
+ * Action: Loads the workbench access states into a variable.
+ *
+ * $param $node
+ *   A node object
+ *
+ * @return
+ *   An array containing the node object stored in the key called 'node' and an array containing the access control states for the given node.
+ */
+function workbench_moderation_load_current_state_rules_action($node) {
+  $state = '';
+
+  if (is_object($node) && property_exists($node, 'workbench_moderation') && isset($node->workbench_moderation['current'])){
+    $state = $node->workbench_moderation['current'];
+  }
+
+  return array('node' => $node, 'workbench_moderation_state' => $state);
+}
