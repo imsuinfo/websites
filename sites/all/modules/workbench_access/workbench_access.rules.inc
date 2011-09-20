@@ -208,6 +208,10 @@ function workbench_access_load_access_states_rules_action($node) {
     $states = $node->workbench_access_id;
   }
 
+  if (!is_array($states) && is_numeric($states)){
+    $states = array($states => $states);
+  }
+
   return array('node' => $node, 'workbench_access_states' => $states);
 }
 
