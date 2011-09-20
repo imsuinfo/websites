@@ -206,7 +206,6 @@ function workbench_access_load_access_states_rules_action($node) {
 
   if (is_object($node) && property_exists($node, 'workbench_access_id')){
     $states = $node->workbench_access_id;
-    drupal_set_message("the states = " . print_r($states, TRUE));
   }
 
   return array('node' => $node, 'workbench_access_states' => $states);
