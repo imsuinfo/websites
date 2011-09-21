@@ -1,8 +1,8 @@
 .content-easement-unpublished-message {
   color: #880017;
 
-  min-height: 28px;
-  line-height: 28px;
+  min-height: 19px;
+  line-height: 19px;
 
   border-style: solid;
   border-color: #ff006e;
@@ -11,6 +11,7 @@
   background-color: #fff4f4;
   background-image: url(message-unpublished.png);
   background-repeat: no-repeat;
+  background-position: 8px 6px;
 
-  padding-left: 30px;
+  padding: 10px 10px 10px 48px;
 }
