@@ -914,11 +914,13 @@ function views_ui_build_preview($view, $display_id) {
     $args = explode('/', $form_state['values']['view_args']);
   }
 
-  $build['preview'] = array(
-    '#theme_wrappers' => array('container'),
-    '#attributes' => array('id' => 'views-live-preview'),
-    '#markup' => views_ui_preview($view->clone_view(), $display_id, $args),
-  );
+  if($form_state['show_preview'] == TRUE) {
+    $build['preview'] = array(
+      '#theme_wrappers' => array('container'),
+      '#attributes' => array('id' => 'views-live-preview'),
+      '#markup' => views_ui_preview($view->clone_view(), $display_id, $args),
+    );
+  }
 
   return $build;
 }
@@ -1137,8 +1139,20 @@ function views_ui_preview_form($form, &$form_state, $view, $display_id = 'defaul
 
   $form['#attributes'] = array('class' => array('clearfix',));
 
+  // Explicitely enforce executing the preview.
+  // @todo Refresh/Clear preview form when checkbox 'Auto preview' is unset.
+  //  This requires a change in ajax.js (Drupal.behaviors.livePreview) 
+  // @todo Preserve 'Auto Preview' setting when switching displays (not views!).
+  //  This requires saving the setting in $_GLOBAL/$_SESSION (?) 
+  if (!empty($form_state['show_preview'])) {
+    // Preview is already requested by pressing the button 'Update preview'
+  } else {
+    // Preview is shown depending on checkbox 'Auto preview'
+    $form_state['show_preview'] = variable_get('views_ui_always_live_preview', TRUE);
+  }
+
   // Add a checkbox controlling whether or not this display auto-previews.
-  $form['live_preview'] = array(
+  $form['show_preview'] = array(
     '#type' => 'checkbox',
     '#id' => 'edit-displays-live-preview',
     '#title' => t('Auto preview'),
