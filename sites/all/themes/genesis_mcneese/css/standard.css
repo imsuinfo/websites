@@ -416,6 +416,7 @@ div#content-column > div.messages {
 
   border: 0;
   padding: 10px 10px 10px 40px;
+  margin: 0;
 }
 
 div#content-column > div.messages.help {
@@ -446,6 +447,13 @@ div#content-column > div.messages.status {
 
   color: #234600;
   background-color: #f8fff0;
+}
+
+
+
+/*** Unpublished Content Message ***/
+div#block-content_easement_unpublished_message-block div.content-easement-unpublished-message {
+  border: 0;
 }
 
 
