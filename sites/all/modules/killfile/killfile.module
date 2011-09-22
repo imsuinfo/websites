@@ -921,7 +921,7 @@ function killfile_fake_delete_nodes($nodes_or_nids, $account = NULL, array $func
 
     if ($results[$key]){
       if (module_exists('rules')){
-        rules_invoke_event('killfile_after_deleting', array($node));
+        rules_invoke_event('killfile_after_deleting', $node);
       }
     }
   }
@@ -1071,7 +1071,7 @@ function killfile_undelete_nodes($nodes_or_nids, $account = NULL, array $functio
         ->execute();
 
       if (module_exists('rules')){
-        rules_invoke_event('killfile_after_undeleting', array($node));
+        rules_invoke_event('killfile_after_undeleting', $node);
       }
     }
   }
