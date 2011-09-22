@@ -36,14 +36,13 @@ function killfile_unkillfile_form($form, &$form_state, $node) {
     return cf_page_not_accessible($form_state, $form['#id']);
   }
 
-  $node_type_settings_object = array();
-  $node_type_settings_array  = array('type' => NULL, 'publish_on_undelete' => NULL);
+  $node_type_settings_array = array();
 
   if (!empty($node->type)){
-    $node_type_settings_object = killfile_get_node_type_settings($node->type, array(__FUNCTION__));
+    $node_type_settings_array = killfile_get_node_type_settings(array($node->type), array(__FUNCTION__));
   }
 
-  if (!is_object($node_type_settings_object) || $node->deleted === FALSE){
+  if ($node->deleted === FALSE || !is_array($node_type_settings_array) || count($node_type_settings_array) != 1){
     return cf_page_not_accessible($form_state, $form['#id']);
   }
 

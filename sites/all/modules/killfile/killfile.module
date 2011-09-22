@@ -820,6 +820,7 @@ function killfile_node_deleted_notice($node, array $function_history = array()){
 
   if (property_exists($node, 'deleted') && $node->deleted !== FALSE){
     $node_type_name = node_type_get_name($node);
+    $node_title = isset($node->title) ? $node->title : '';
 
     if ($node_type_name == FALSE){
       $node_type_name = '';
@@ -841,7 +842,7 @@ function killfile_node_deleted_notice($node, array $function_history = array()){
       $username = '';
     }
 
-    drupal_set_message(t("This @type has been deleted on @date by @user.", array('@type' => $node_type_name, '@date' => $formatted_date, '@user' => $username)), 'warning', FALSE);
+    drupal_set_message(t("The @type '@title' has been deleted on @date by @user.", array('@type' => $node_type_name, '@title' => $node_title, '@date' => $formatted_date, '@user' => $username)), 'warning', FALSE);
   }
 }
 
@@ -975,6 +976,9 @@ function killfile_permanent_delete_nodes($nodes_or_nids, array $function_history
       ->execute();
 
     node_delete_multiple($nids);
+
+    // force transaction to execute
+    unset($transaction);
   }
   catch (Exception $e) {
     $transaction->rollback();
@@ -1074,6 +1078,9 @@ function killfile_undelete_nodes($nodes_or_nids, $account = NULL, array $functio
         rules_invoke_event('killfile_after_undeleting', $node);
       }
     }
+
+    // force transaction to execute
+    unset($transaction);
   }
   catch (Exception $e) {
     $transaction->rollback();
