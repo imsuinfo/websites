@@ -1,5 +1,4 @@
 <?php
-// $Id: sbp_attach.module,v 1.11 2011/01/01 00:02:55 jhodgdon Exp $
 
 /**
  * @file
@@ -315,12 +314,13 @@ function sbp_attach_sbp_details($id, $environment, $keys = NULL) {
   // Extract file content, using helper function
   $helpers = search_files_get_helpers();
   $fileinfo = pathinfo($file->filename);
+  $extension = strtolower($fileinfo['extension']);
 
-  if (!isset($helpers[ $fileinfo['extension'] ])) {
+  if (!isset($helpers[$extension])) {
     // no text extraction function for this file extension defined
     return $ret;
   }
-  $help = $helpers[ $fileinfo['extension'] ];
+  $help = $helpers[$extension];
 
   $quoted_file_path = '"' . escapeshellcmd($fullpath) . '"';
   $helper_command = preg_replace('/%file%/', $quoted_file_path, $help);
@@ -379,18 +379,12 @@ function sbp_attach_sbp_settings($environment) {
 
   // Which node types to index attachments for
 
-  $types = node_type_get_types();
-  $opts = array();
-  foreach ($types as $mname => $info) {
-    $opts[ $mname ] = $info->name;
-  }
-
   $form[ 'sbp_attach'][ 'sbp_attach_node_types' ] = array(
     '#type' => 'select',
     '#multiple' => TRUE,
     '#title' => t('Content types to index attachments of'),
     '#default_value' => search_by_page_setting_get('sbp_attach_node_types', $environment, array()),
-    '#options' => $opts,
+    '#options' => node_type_get_names(),
     '#description' => t('Choose the content types whose file field attachments you would like to have indexed by Search by Page. Use the Control or Command key to select multiple types or undo your selections.'),
     '#weight' => 0,
   );
@@ -504,7 +498,7 @@ function sbp_attach_sbp_settings($environment) {
     '#options' => $times,
     '#default_value' => search_by_page_setting_get('sbp_attach_max_time', $environment, 0),
     '#weight' => 9,
-    '#description' => t("Conversely to the minimum reindexing time (see above), Search by Page can be set to prioritize reindexing each attachment (by marking it as needing immediate reindexing) after this amount of time has passed. This has higher priority than the cycle-through reindexing of the setting above."),
+    '#description' => t("Conversely to the minimum reindexing time (see above), Search by Page can be set to prioritize reindexing each attachment (by marking it as needing immediate reindexing) after this amount of time has passed. This has higher priority than the cycle-through reindexing of the setting above.") . ' ' . t('But be careful with this setting! If you set it too small, it can interfere with new content being indexed, because the reindexed content will have equal priority to content that has never been indexed. So make sure your settings allow for enough time for new content to be indexed before forcing reindexing.'),
   );
 
   // Add a link to helper function config page

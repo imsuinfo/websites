@@ -1,5 +1,3 @@
-// $Id: README.txt,v 1.8 2011/01/01 00:02:55 jhodgdon Exp $
-
 Search by Page module for Drupal
 
 This module adds searching to the core Drupal search module that is oriented by
@@ -90,6 +88,9 @@ permission to view each page in the list, to exclude pages the person doesn't
 have permission to view from search results, and this has to be done via a PHP
 loop rather than an SQL query because of how Drupal permissions work.)
 
+IMPORTANT NOTE: If you are using Search by Page Paths, your database must be
+set up with permission to create temporary tables.
+
 The "Attachments" sub-module indexes the text in certain types of files that are
 attached to content items via the core File field. This requires "helper"
 programs to extract the text from file attachments, and the helper programs are
@@ -125,7 +126,10 @@ above by using the minimum/maximum reindexing time settings, which are on a
 per-module, per-environment basis. Setting the minimum reindexing time forces
 Search by Page to wait at least this amount of time before reindexing that type
 of page.  Setting the maximum reindex time forces Search by Page to reindex that
-type of page immediately when this amount of time has passed.
+type of page immediately when this amount of time has passed. WARNING: Do not
+choose too small of a maximum reindex page globally! This setting works by
+marking the pages for immediate reindexing when this time has passed, and it can
+interfere with the reindexing of new content.
 * You can exclude the contents of specific HTML tags from indexing.
 * You will also need to set permissions, which are separate from the core Search
 permissions.

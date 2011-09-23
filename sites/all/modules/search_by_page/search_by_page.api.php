@@ -1,5 +1,4 @@
 <?php
-// $Id: search_by_page.api.php,v 1.6 2011/01/01 00:02:55 jhodgdon Exp $
 
 /**
  * @file

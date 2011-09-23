@@ -1,5 +1,4 @@
 <?php
-// $Id: sbp_test.module,v 1.7 2010/06/15 23:50:58 jhodgdon Exp $
 
 /**
  * @file
@@ -249,6 +248,14 @@ function sbp_test_menu() {
     'type' => MENU_SUGGESTED_ITEM,
   );
 
+  $items['sbp_test_output_page'] = array(
+    'title' => 'Search by Page output Page',
+    'description' => 'Test content',
+    'page callback' => 'sbp_test_make_output_page',
+    'access arguments' => array( 'access content' ),
+    'type' => MENU_SUGGESTED_ITEM,
+  );
+
   return $items;
 }
 
@@ -285,6 +292,36 @@ function sbp_test_make_another_page() {
 }
 
 /**
+ * Page callback function for path 'sbp_test_output_page'.
+ *
+ * This page intentionally does some things designed to screw up the
+ * Search by Page output:
+ * - Sets the page title.
+ * - Sets the breadcrumb.
+ * - Sets the active trail.
+ * - Prints some output instead of just returning output.
+ */
+function sbp_test_make_output_page() {
+
+  drupal_set_title('wrong page title');
+  print "wrong information printed";
+  drupal_set_breadcrumb(array(l('wrong breadcrumb', '<front>'), l('wrong breadcrumb 2', 'sbp_test_pub_page')));
+
+  $trail = menu_get_active_trail();
+  $i = 1;
+  foreach($trail as $item) {
+    $item['title'] = "wrong trail $i";
+    $i++;
+  }
+  menu_set_active_trail($trail);
+
+  return '<h2>' . t( 'Trees' ) . '</h2>' . '<ul>' .
+    '<li>' . t( 'Apple' ) . '</li>' .
+    '<li>' . t( 'Pear' ) . '</li>' .
+    '</ul>';
+}
+
+/**
  * Page callback function for path 'sbp_test_queried_page'.
  */
 function sbp_test_make_queried_page() {
@@ -307,3 +344,15 @@ function sbp_test_make_exclude_page() {
 
 }
 
+/**
+ * Implements MODULE_preprocess_HOOK() for search-result.tpl.php.
+ *
+ * Makes sure the 'type' is displayed, so that the internationalization
+ * test can verify it's translated.
+ */
+function sbp_test_preprocess_search_result(&$variables) {
+  if (isset($variables['result']['type'])) {
+    $variables['info_split']['type'] = check_plain($variables['result']['type']);
+    $variables['info'] = implode(' - ', $variables['info_split']);
+  }
+}

@@ -1,5 +1,4 @@
 <?php
-// $Id: sbp_paths.module,v 1.6 2011/01/01 00:02:55 jhodgdon Exp $
 
 /**
  * @file
@@ -98,13 +97,13 @@ function sbp_paths_sbp_details($id, $environment, $keys = NULL) {
   }
 
   // Translate if necessary
-  if (module_exists('i18nstrings')) {
+  if (module_exists('i18n_string')) {
     $code = 'sbp_paths:path:' . $item->pid . ':';
-    $item->title = tt($code . 'title', $item->title);
-    $item->type = tt($code . 'type', $item->title);
+    $item->title = i18n_string_translate($code . 'title', $item->title);
+    $item->page_type = i18n_string_translate($code . 'type', $item->page_type);
     $snip = drupal_strtolower($item->snippet);
     if ($snip != 'yes' && $snip != 'no' && $keys) {
-      $item->snippet = tt($code . 'snippet', $item->snippet);
+      $item->snippet = i18n_string_translate($code . 'snippet', $item->snippet);
     }
   }
 
@@ -172,7 +171,7 @@ function sbp_paths_sbp_settings($environment) {
     '#options' => $times,
     '#default_value' => search_by_page_setting_get('sbp_paths_max_time', $environment, 0),
     '#weight' => 6,
-    '#description' => t("Conversely to the minimum reindexing time (see above), Search by Page can be set to prioritize reindexing each page (by marking it as needing immediate reindexing) after this amount of time has passed. This has higher priority than the cycle-through reindexing of the setting above."),
+    '#description' => t("Conversely to the minimum reindexing time (see above), Search by Page can be set to prioritize reindexing each page (by marking it as needing immediate reindexing) after this amount of time has passed. This has higher priority than the cycle-through reindexing of the setting above.") .  ' ' . t('But be careful with this setting! If you set it too small, it can interfere with new content being indexed, because the reindexed content will have equal priority to content that has never been indexed. So make sure your settings allow for enough time for new content to be indexed before forcing reindexing.'),
   );
 
   return $form;
@@ -225,20 +224,36 @@ function sbp_paths_menu() {
 }
 
 /**
- * Implements hook_locale().
+ * Implements hook_i18n_string_info().
  */
-function sbp_paths_locale($op = 'groups', $group = NULL) {
-  switch ($op) {
-    case 'groups':
-      return array('sbp_paths' => t('Search by Page Paths'));
+function sbp_paths_i18n_string_info() {
+  $groups = array();
+  $groups['sbp_paths'] = array(
+    'title' => t('Search by Page Paths'),
+    'description' => t('Path setting text for Search by Page Paths'),
+    'format' => FALSE,
+    'list' => FALSE,
+    'refresh callback' => '_sbp_paths_refresh_all_translations',
+  );
 
-    case 'refresh':
-      if (module_exists('i18nstrings')) {
-        $res = db_query('SELECT * FROM {sbpp_path} p')->fetchAll();
-        foreach ($res as $vals) {
-          _sbp_paths_update_translation($vals, NULL);
-        }
-      }
+  return $groups;
+}
+
+/**
+ * Refreshes all path info translations.
+ */
+function _sbp_paths_refresh_all_translations() {
+  if (module_exists('i18n_string')) {
+    $res = db_query('SELECT * FROM {sbpp_path} p')->fetchAll();
+    foreach ($res as $vals) {
+      $arr = array(
+        'pid' => $vals->pid,
+        'title' => $vals->title,
+        'type' => $vals->page_type,
+        'snippet' => $vals->snippet,
+      );
+      _sbp_paths_update_translation($arr);
+    }
   }
 }
 
@@ -354,7 +369,7 @@ function sbp_paths_edit_form($form, &$form_state, $edit = array()) {
     '#title' => t('Type of page'),
     '#default_value' => $edit['page_type'],
     '#size' => 45,
-    '#description' => t('Type to display in search results for this page'),
+    '#description' => t('Type to display in search results for this page, if the theme displays item types'),
     '#required' => TRUE,
   );
 
@@ -465,8 +480,7 @@ function sbp_paths_edit_form_submit($form, &$form_state) {
   }
 
   // Update the translation strings
-  $language = language_default('language');
-  _sbp_paths_update_translation($vals, $language);
+  _sbp_paths_update_translation($vals);
 
   // Go back to the paths list
 
@@ -540,17 +554,15 @@ function sbp_paths_sbp_delete_environment($environment) {
  *
  * @param $vals
  *    Associative array of information from sbpp_path table.
- * @param $language
- *    Language to update.
  */
-function _sbp_paths_update_translation($vals, $language) {
-  if (module_exists('i18nstrings') && $vals['pid']) {
+function _sbp_paths_update_translation($vals) {
+  if (module_exists('i18n_string') && $vals['pid']) {
     $code = 'sbp_paths:path:' . $vals['pid'] . ':';
-    tt($code . 'title', $vals['title'], $language, TRUE);
-    tt($code . 'type', $vals['type'], $language, TRUE);
+    i18n_string_update($code . 'title', $vals['title']);
+    i18n_string_update($code . 'type', $vals['type']);
     $snip = drupal_strtolower($vals['snippet']);
     if ($snip != 'yes' && $snip != 'no') {
-      tt($code . 'snippet', $vals['snippet'], $language, TRUE);
+      i18n_string_update($code . 'snippet', $vals['snippet']);
     }
   }
 }

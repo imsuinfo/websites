@@ -1,5 +1,4 @@
 <?php
-// $Id: search_by_page.test,v 1.17 2011/01/01 00:02:55 jhodgdon Exp $
 
 /**
  * @file
@@ -78,12 +77,14 @@ class SearchByPageUnitTest extends DrupalWebTestCase {
    */
   function testStripTags() {
     $env = 1;
-    $test_string = '<div>This is a test. <tag1>This should be removed</tag1> <tag2>This should also be removed</tag2> This should be left. <tag1>This should not be here</tag1></div>';
+    $test_string = '<div>This is a test. <tag1>This should be removed</tag1> <tag2>This should also be removed</tag2> This should be left. <tag1>This should not be here</tag1><tag1 some="attribute">This although with attributes, should also be removed</tag1></div>';
+
     // Try excluding some tags.
     search_by_page_setting_set('exclude_tags', $env, 'tag1 tag2');
     $result = search_by_page_strip_tags($test_string, $env);
     $this->assertEqual($result, '<div>This is a test.   This should be left. </div>', 'search_by_page_strip_tags() is working correctly.');
 
+    // Try not excluding any tags.
     search_by_page_setting_set('exclude_tags', $env, '');
     $result = search_by_page_strip_tags($test_string, $env);
     $this->assertEqual($result, $test_string, 'search_by_page_strip_tags() with no tags to strip is working correctly.');
@@ -2022,6 +2023,9 @@ class SearchByPageAttachTest extends SearchByPageTester {
     $this->assertNoText('bush', "Separator not shown");
     $this->assertNoText('lonely', "Description not shown");
 
+    // Also verify that the upper-case extension was found.
+    $this->assertText('attach5.TXT', "Upper case extension file name shown");
+
     // Set display options so it should have page title shown with separator
     $this->setDisplayOptions(TRUE, " bush ", FALSE, $this->envid2);
 
@@ -2152,6 +2156,7 @@ class SearchByPageAttachTest extends SearchByPageTester {
     $node = $this->drupalCreateNode($info);
     $this->attachFileUpload($node, 'attach2.txt', 0, 'A very happy file');
     $this->attachFileUpload($node, 'attach1.txt', 1, 'A very lonely file');
+    $this->attachFileUpload($node, 'attach5.TXT', 1, 'An upper-case extension file');
 
     $info = array(
       'title' => 'Favorite cars',
@@ -2675,3 +2680,282 @@ class SearchbyPageAttachReindexTest extends SearchByPageAttachTest {
 
 }
 
+
+/**
+ * Tests that Search by Page doesn't get fooled by page output.
+ */
+class SearchByPageOutputTest extends SearchByPageTester {
+
+  public $superuser;
+
+  public static function getInfo() {
+    return array(
+      'name' => t('Search by Page Output Tests'),
+      'description' => t('Test that page title, active trail, etc. do not affect search results display'),
+      'group' => t('Search by Page'),
+      'dependencies' => array('search', 'sbp_test', 'sbp_paths', 'dblog', 'search_by_page'),
+    );
+  }
+
+  public function setUp() {
+    parent::setUp('search', 'search_by_page', 'sbp_paths', 'sbp_test', 'dblog');
+
+    $this->setUpEnvironments();
+
+    $this->superuser = $this->drupalCreateUser(array('administer nodes',
+        'access content', 'administer content types', 'administer blocks',
+        'administer search', 'search content', 'administer search by page',
+        $this->searchPerm($this->envinfo1), 'access administration pages',
+        'administer site configuration', 'administer users',
+        'administer permissions', 'view test private content',
+        'access site reports'));
+
+    $this->drupalLogin($this->superuser);
+
+    // Set up indexing of pages.
+
+    $this->drupalPost('admin/config/search/search_by_page/edit/' . $this->envid1,
+      array(
+        'button_label' => t('Search pages'),
+      ),
+      'Save configuration');
+
+    $path_add_path = 'admin/config/search/search_by_page/edit/' .
+      $this->envid1 . '/paths/add';
+
+    $this->drupalPost($path_add_path,
+      array(
+        'path' => 'sbp_test_output_page',
+        'title' => t("Output page"),
+        'type' => t('Page'),
+        'snippet' => 'yes',
+        'role' => $this->getNewRoleID($this->superuser),
+      ),
+      'Create new indexed page');
+
+    cache_clear_all('variables', 'cache_bootstrap');
+    variable_initialize();
+
+    $this->doCronrun();
+    $this->drupalLogin($this->superuser);
+    $this->drupalGet('admin/reports/dblog');
+    $this->assertText(t('Cron run completed'), 'Log shows cron run completed');
+    $this->drupalLogout();
+  }
+
+  /**
+   * Tests that pages can be searched.
+   */
+  function testSearchPages() {
+
+    // Search and verify that the word "wrong" doesn't appear on the page.
+    // It would appear if some of the bad output got through. Also make
+    // sure that the correct output does appear.
+
+    $search_path = $this->envinfo1['page_path'];
+
+    $this->drupalLogin($this->superuser);
+    $this->drupalPost($search_path,
+      array('keys' => 'Trees'),
+      t('Search pages')
+    );
+
+    $this->assertText('Trees', "Found Trees on the search results page");
+    $this->assertText('Apple', "Found Apple on the search results page");
+    $this->assertNoText('Wrong', "Bad output did not make it to the results page");
+  }
+}
+
+/**
+ * Environment internationalization test.
+ */
+class SearchByPageIntlTest extends SearchByPageTester {
+  public $superuser;
+  public $lang_to_use = 'es';
+  public $strings_to_test = array(
+    'page_title' => 'Translated page title',
+    'block_title' => 'Translated block title',
+    'field_label' => 'Translated field label',
+    'button_label' => 'Translated button label',
+    'path_title' => 'Translated path title',
+    'path_type' => 'Translated path type',
+    'path_snippet' => 'Translated path snippet',
+  );
+
+  public static function getInfo() {
+    return array(
+      'name' => t('Search by Page Internationalization Tests'),
+      'description' => t('Test that search environments can be internationalized.'),
+      'group' => t('Search by Page'),
+      'dependencies' => array('search', 'search_by_page', 'variable', 'i18n', 'i18n_string', 'sbp_paths', 'sbp_test', 'locale', 'translation', 'block'),
+    );
+  }
+
+  public function setUp() {
+    parent::setUp('locale', 'translation', 'search', 'search_by_page', 'variable', 'i18n', 'i18n_string', 'sbp_paths', 'sbp_test', 'block');
+
+    $this->setUpEnvironments();
+
+    $this->superuser = $this->drupalCreateUser(array(
+        'administer blocks', 'access administration pages',
+        'administer search', 'administer search by page',
+        'search content', 'access content',
+        $this->searchPerm($this->envinfo1),
+        'administer site configuration', 'administer permissions',
+        'administer languages', 'translate interface',
+      ));
+
+    $this->drupalLogin($this->superuser);
+
+    // Set up the languages, environments, path, and block. Run cron.
+    $this->setUpLanguages();
+    $this->setUpPath();
+    $this->drupalPost('admin/structure/block',
+      array(
+        'blocks[search_by_page_' . $this->envid1 . '][region]' => 'content',
+      ),
+      'Save blocks');
+
+    cache_clear_all('variables', 'cache_bootstrap');
+    variable_initialize();
+    drupal_static_reset();
+
+    // Visit the foreign-language search page to trigger the page title getting
+    // added to the translation interface.
+    $langs = language_list();
+    $lang = $langs[$this->lang_to_use];
+    $this->drupalGet( $this->envinfo1['page_path'],
+      array('language' => $lang));
+
+    // Run cron to index.
+    $this->doCronrun();
+    $this->drupalLogin($this->superuser);
+  }
+
+  /**
+   * Tests that environment settings for main module and paths are translated.
+   */
+  public function testTranslations() {
+
+    $this->translateEnvironment();
+
+    // Visit the search results page in English, and verify that all the
+    // test strings are there.
+    $this->drupalPost($this->envinfo1['page_path'],
+      array('keys' => 'Trees'),
+      t('Search button 1 label')
+    );
+    $this->doLanguageTest('en');
+
+    // Now visit the page in the other language and test.
+    $langs = language_list();
+    $lang = $langs[$this->lang_to_use];
+    $this->drupalPost( $this->envinfo1['page_path'],
+      array('keys' => 'Trees'),
+      $this->strings_to_test['button_label'],
+      array('language' => $lang)
+    );
+    $this->doLanguageTest($this->lang_to_use);
+  }
+
+  /**
+   * Sets up languages for this test.
+   */
+  public function setUpLanguages() {
+    $lang = $this->lang_to_use;
+
+    // Add the language.
+    $this->drupalPost('admin/config/regional/language/add', array(
+        'langcode' => $lang,
+      ),
+      t('Add language'));
+
+    // Set up path prefix language negotiation.
+    $this->drupalPost('admin/config/regional/language/configure', array(
+        'language[enabled][locale-url]' => 1,
+      ),
+      t('Save settings'));
+  }
+
+  /**
+   * Sets up SBP Paths with a path to index.
+   */
+  function setupPath() {
+    $path_add_path = 'admin/config/search/search_by_page/edit/' . $this->envid1 .
+      '/paths/add';
+
+    $this->envinfo1['path_title'] = t('Public page title');
+    $this->envinfo1['path_type'] = t('Public page type');
+    $this->envinfo1['path_snippet'] = t('Public page snippet');
+
+    $this->drupalPost($path_add_path,
+      array(
+        'path' => 'sbp_test_pub_page',
+        'title' => $this->envinfo1['path_title'],
+        'type' => $this->envinfo1['path_type'],
+        'snippet' => $this->envinfo1['path_snippet'],
+        'role' => $this->getNewRoleID($this->superuser),
+        'languages[en]' => 'en',
+        'languages[' . $this->lang_to_use . ']' => $this->lang_to_use,
+      ),
+      'Create new indexed page');
+  }
+
+  /**
+   * Translates environment 1.
+   */
+  public function translateEnvironment() {
+    $stuff = $this->envinfo1;
+    $lang = $this->lang_to_use;
+    foreach ($this->strings_to_test as $key => $trans) {
+      // Find the string in the translate interface.
+      $english = $stuff[$key];
+      $this->drupalPost('admin/config/regional/translate/translate', array(
+          'string' => $english,
+        ),
+        'Filter');
+      $this->assertLink('edit', 0, 'Found translation link for ' . $english);
+      $this->clickLink('edit');
+      $this->drupalPost(NULL, array(
+          'translations[' . $lang . ']' => $trans,
+        ),
+        'Save translations');
+    }
+
+    // Special case for the page title: since it's in hook_menu, it gets
+    // into the translate interface as part of the built-in interface. So
+    // make sure that version of it is translated too.
+    $key = 'page_title';
+    $english = $stuff[$key];
+    $this->drupalPost('admin/config/regional/translate/translate', array(
+        'string' => $english,
+        'group' => 'default',
+      ),
+      'Filter');
+    $this->assertLink('edit', 0, 'Found translation link for ' . $english);
+    $this->clickLink('edit');
+    $this->drupalPost(NULL, array(
+        'translations[' . $lang . ']' => $this->strings_to_test[$key],
+      ),
+      'Save translations');
+  }
+
+  /**
+   * Tests that the right strings are present for the given language.
+   */
+  public function doLanguageTest($lang) {
+    // Figure out which strings we want to look for and verify are not there.
+    $good = $this->envinfo1;
+    $bad = $this->strings_to_test;
+    if ($lang != 'en') {
+      $bad = $this->envinfo1;
+      $good = $this->strings_to_test;
+    }
+
+    // Verify that all the good strings are there and not the bad ones.
+    foreach ($this->strings_to_test as $key => $ignore) {
+      $this->assertRaw($good[$key], "Text for $key in right language is present");
+      $this->assertNoRaw($bad[$key], "Text for $key in other language is not present");
+    }
+  }
+}

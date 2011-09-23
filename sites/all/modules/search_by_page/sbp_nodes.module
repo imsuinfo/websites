@@ -1,5 +1,4 @@
 <?php
-// $Id: sbp_nodes.module,v 1.9 2011/01/01 00:02:55 jhodgdon Exp $
 
 /**
  * @file
@@ -152,7 +151,8 @@ function sbp_nodes_sbp_details($id, $environment, $keys = NULL) {
   }
   else {
     // We want a teaser
-    $ret['snippet'] = search_by_page_strip_tags(drupal_render(node_view($node, 'teaser')), $environment);
+    $view = node_view($node, 'teaser');
+    $ret['snippet'] = search_by_page_strip_tags(drupal_render($view), $environment);
   }
 
   return $ret;
@@ -173,17 +173,11 @@ function sbp_nodes_sbp_settings($environment) {
     '#title' => t('Nodes'),
   );
 
-  $types = node_type_get_types();
-  $opts = array();
-  foreach ($types as $mname => $info) {
-    $opts[$mname] = $info->name;
-  }
-
   $form['sbp_nodes']['sbp_nodes_types_indexed'] = array(
     '#type' => 'checkboxes',
     '#title' => t('Content types to index'),
     '#default_value' => search_by_page_setting_get('sbp_nodes_types_indexed', $environment, array()),
-    '#options' => $opts,
+    '#options' => node_type_get_names(),
     '#description' => t('Choose which content types you would like to have indexed by Search by Page'),
   );
 
@@ -231,7 +225,7 @@ function sbp_nodes_sbp_settings($environment) {
     '#options' => $times,
     '#default_value' => search_by_page_setting_get('sbp_nodes_max_time', $environment, 0),
     '#weight' => 6,
-    '#description' => t("Conversely to the minimum reindexing time (see above), Search by Page can be set to prioritize reindexing each content item page (by marking it as needing immediate reindexing) after this amount of time has passed. This has higher priority than the cycle-through reindexing of the setting above."),
+    '#description' => t("Conversely to the minimum reindexing time (see above), Search by Page can be set to prioritize reindexing each content item page (by marking it as needing immediate reindexing) after this amount of time has passed. This has higher priority than the cycle-through reindexing of the setting above.") . ' ' . t('But be careful with this setting! If you set it too small, it can interfere with new content being indexed, because the reindexed content will have equal priority to content that has never been indexed. So make sure your settings allow for enough time for new content to be indexed before forcing reindexing.'),
   );
 
   return $form;

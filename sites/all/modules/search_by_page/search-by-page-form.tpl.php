@@ -1,5 +1,4 @@
 <?php
-// $Id: search-by-page-form.tpl.php,v 1.3 2010/06/15 23:50:58 jhodgdon Exp $
 
 /**
  * @file

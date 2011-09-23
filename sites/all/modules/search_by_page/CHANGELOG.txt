@@ -1,4 +1,3 @@
-// $Id: CHANGELOG.txt,v 1.23 2011/01/01 00:05:03 jhodgdon Exp $
 
 Search by Page x.x-x.x, xxxx-xx-xx
 ----------------------------------
@@ -6,6 +5,32 @@ Search by Page x.x-x.x, xxxx-xx-xx
 Search by Page 7.x-1.x, xxxx-xx-xx
 ----------------------------------
 
+
+Search by Page 7.x-1.2, 2011-09-22
+----------------------------------
+#1274254 by jhodgdon, joachm: Allow upper-case file extensions to be indexed.
+
+#1274154 by jhodgdon, joachim: Order content types by name on settings page.
+
+#1183716 by jhodgdon: Add note to README about temporary table permission.
+
+#815864 by jhodgdon: Update to support new Internationalization module API,
+and add test for internationalization
+
+#1040002 by kirill.volkov: Add fix for more active trail problems.
+
+#1155166 by jhodgdon: Add warnings to README and settings page about bad
+settings that will cause content not to be indexed
+
+#1187776 by jhodgdon: attempt to fix PHP notice in node_page_title
+
+#1018764, #1040002 by jhodgdon: Catch extra headers and active trail problems
+during search results display generation. Also fix one PHP warning.
+
+#1231426 by thekevinday: Fix permission name on environment delete URL.
+
+#1227528 by jhodgdon, ralf.strobel: Fix tag stripping function so it works with
+tags with attributes, and update test to test this.
 
 Search by Page 7.x-1.1, 2010-12-31
 ----------------------------------
