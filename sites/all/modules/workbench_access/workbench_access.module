@@ -1843,7 +1843,13 @@ function workbench_access_assign_section_presave_action_submit($form, $form_stat
 }
 
 /**
- * Changes the moderation state for a given node.
+ * Adds the section for a given node.
+ * When multiple sections are allowed, then this will append the given section.
+ * When multiple sections are disallowed, then this will replace the existing
+ *  section with the given section.
+ *
+ * This is a presave function, so this neither performs a node_save() nor
+ * writes to the workbench_access database tables.
  */
 function workbench_access_assign_section_presave_action($node, $context) {
   if (empty($context['section']) || !variable_get('workbench_access_node_type_' . $node->type, 1)){
@@ -1895,7 +1901,11 @@ function workbench_access_unassign_section_presave_action_submit($form, $form_st
 }
 
 /**
- * Changes the moderation state for a given node.
+ * Removes a section for a given node.
+ * If the given section is not already assigned, then this does nothing.
+ *
+ * This is a presave function, so this neither performs a node_save() nor
+ * writes to the workbench_access database tables.
  */
 function workbench_access_unassign_section_presave_action($node, $context) {
   if (empty($context['section']) || !variable_get('workbench_access_node_type_' . $node->type, 1)){
