@@ -122,7 +122,7 @@ function genesis_mcneese_process_variables(&$vars){
 
   // perform sanitation
   if ($vars['cf']['is']['emergency']){
-    $vars['cf']['is_data']['emergency']['notice'] = check_markup($vars['cf']['is_data']['emergency']['notice']);
+    $vars['cf']['is_data']['emergency']['notice'] = check_markup($vars['cf']['is_data']['emergency']['notice'], 'full_html');
   }
 }
 
@@ -275,6 +275,8 @@ function genesis_mcneese_cf_theme_get_variables_alter(&$cf, $variables){
 
         $cf['is_data']['emergency']['notice'] = 'This website is operating in <span class="emergency_mode-notice-emergency_mode">Emergency Mode</span>.<br>' . "\n";
         $cf['is_data']['emergency']['notice'] .= 'To exit <span class="emergency_mode-notice-emergency_mode">Emergency Mode</span>, you must <a href="/emergency_page">Unpublish the Emergency Page</a>.' . "\n";
+
+        $cf['meta']['http-equiv']['cache-control'] = 'no-cache';
       }
     }
   }

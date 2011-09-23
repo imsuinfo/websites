@@ -89,7 +89,7 @@
       <?php } ?>
 
       <div id="content-column">
-        <?php if ($cf['is']['emergency']){ ?>
+        <?php if ($cf['is']['emergency'] && $cf['is']['logged_in']){ ?>
           <div class="emergency_mode-notice">
             <!--(begin_emergency_mode_notice)-->
             <?php print($cf['is_data']['emergency']['notice']); ?>
