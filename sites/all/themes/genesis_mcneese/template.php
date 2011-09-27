@@ -152,6 +152,7 @@ function genesis_mcneese_cf_theme_get_variables_alter(&$cf, $variables){
   }
 
   $cf['show']['title'] = TRUE;
+  $cf['date']['enabled'] = TRUE;
 
   if ($cf['is']['front']){
     $cf['show']['breadcrumb'] = FALSE;
