@@ -25,10 +25,12 @@
  *   Changes to this variable will not be retained.
  */
 function cf_get_user($reset = FALSE, array $function_history = array()){
+  cf_error_append_history($function_history, __FUNCTION__);
+
   global $user;
 
   if (!is_object($user) || !property_exists($user, 'uid')){
-    cf_error_invalid_object(__FUNCTION__, 'user', WATCHDOG_CRITICAL, $function_history);
+    cf_error_invalid_object($function_history, 'user', WATCHDOG_CRITICAL);
     return FALSE;
   }
 
@@ -57,7 +59,9 @@ function cf_get_user($reset = FALSE, array $function_history = array()){
  *   FALSE if the array key does not exist or a parameter is invalid.
  */
 function cf_has_array_key($key, $variable, array $function_history = array()){
-  if (cf_is_empty_or_non_string(__FUNCTION__, 'key', $key, WATCHDOG_ERROR, $function_history)){
+  cf_error_append_history($function_history, __FUNCTION__);
+
+  if (cf_is_empty_or_non_string($function_history, 'key', $key, WATCHDOG_ERROR)){
     return FALSE;
   }
 
@@ -89,11 +93,13 @@ function cf_has_array_key($key, $variable, array $function_history = array()){
  *   boolean that represents whether or not the UPDATE flag is set to TRUE or FALSE
  * @param delete
  *   boolean that represents whether or not the DELETE flag is set to TRUE or FALSE
+ * @param $function_history
+ *   (optional) array of function names, ie: array('0' => 'my_function_name')
  *
  * @return
  *   A single numerical value that represents all 4 permissions.
  */
-function cf_convert_to_crud($create, $read, $update, $delete){
+function cf_convert_to_crud($create, $read, $update, $delete, array $function_history = array()){
   $crud = 0;
 
   if ($create){
@@ -135,12 +141,14 @@ function cf_convert_to_crud($create, $read, $update, $delete){
  *
  * @return
  *   an array containing the following keys:
- *   - create: a boolean represting create permissions
- *   - read: a boolean represting read permissions
- *   - update: a boolean represting update permissions
- *   - delete: a boolean represting delete permissions
+ *   - create: a boolean representing create permissions
+ *   - read: a boolean representing read permissions
+ *   - update: a boolean representing update permissions
+ *   - delete: a boolean representing delete permissions
  */
 function cf_convert_from_crud($crud, array $function_history = array()){
+  cf_error_append_history($function_history, __FUNCTION__);
+
   $uncrud = array();
 
   $uncrud['create'] = FALSE;
@@ -149,13 +157,13 @@ function cf_convert_from_crud($crud, array $function_history = array()){
   $uncrud['delete'] = FALSE;
 
   if (!isset($crud)){
-    cf_error_invalid_variable(__FUNCTION__, 'crud', 'Not defined', array(), WATCHDOG_WARNING, $function_history);
+    cf_error_invalid_variable($function_history, 'crud', 'Not defined', array());
 
     return $uncrud;
   }
 
   if (!is_numeric($crud)){
-    cf_error_not_numeric(__FUNCTION__, 'crud', WATCHDOG_WARNING, $function_history);
+    cf_error_not_numeric($function_history, 'crud');
 
     return $uncrud;
   }
@@ -193,11 +201,13 @@ function cf_convert_from_crud($crud, array $function_history = array()){
  *    the form state
  *  @param $id
  *    (optional) the form id, generally this should be taken from: $form['#id']
+ * @param $function_history
+ *   (optional) array of function names, ie: array('0' => 'my_function_name')
  *
  * @return
  *   An array that can be safely as a return statement for a page.
  */
-function cf_page_not_accessible(&$form_state, $id = ''){
+function cf_page_not_accessible(&$form_state, $id = '', array $function_history = array()){
   $form = array();
 
   drupal_set_title("Unable to access page");

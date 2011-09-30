@@ -19,12 +19,14 @@
  *   A SelectQuery database object, this object has not been executed.
  */
 function cf_user_get_rids($uid = NULL, array $function_history = array()){
+  cf_error_append_history($function_history, __FUNCTION__);
+
   if ($uid == NULL){
-    $current_user = cf_get_user(FALSE, array_merge($function_history, array(__FUNCTION__)));
+    $current_user = cf_get_user(FALSE, $function_history);
     $uid = $current_user->uid;
   }
   else if (!is_numeric($uid)){
-    cf_error_not_numeric(__FUNCTION__, 'uid', WATCHDOG_ERROR, $function_history);
+    cf_error_not_numeric($function_history, 'uid');
     return FALSE;
   }
 
@@ -60,12 +62,14 @@ function cf_user_get_rids($uid = NULL, array $function_history = array()){
  *   FALSE on error, FALSE if not in role, and TRUE if in role
  */
 function cf_user_has_role($rid, $uid = NULL, array $function_history = array()){
+  cf_error_append_history($function_history, __FUNCTION__);
+
   if (!is_numeric($rid)){
-    cf_error_not_numeric(__FUNCTION__, 'rid', WATCHDOG_ERROR, $function_history);
+    cf_error_not_numeric($function_history, 'rid');
     return FALSE;
   }
 
-  $query = cf_user_get_rids($uid, array_merge($function_history, array(__FUNCTION__)));
+  $query = cf_user_get_rids($uid, $function_history);
 
   if (is_object($query)){
     $and = db_and();
@@ -73,10 +77,15 @@ function cf_user_has_role($rid, $uid = NULL, array $function_history = array()){
 
     $query->condition($and);
 
-    $query_execute = $query->execute();
+    try {
+      $query_execute = $query->execute();
 
-    if ($query_execute->rowCount() == 1){
-      return TRUE;
+      if ($query_execute->rowCount() == 1){
+        return TRUE;
+      }
+    }
+    catch (Exception $e) {
+      cf_error_on_query_execution($function_history, $e);
     }
   }
 
@@ -98,8 +107,10 @@ function cf_user_has_role($rid, $uid = NULL, array $function_history = array()){
  *   A SelectQuery database object, this object has not been executed.
  */
 function cf_user_get_users_by_rids($rids, array $function_history = array()){
+  cf_error_append_history($function_history, __FUNCTION__);
+
   if (!is_array($rids) || empty($rids)){
-    cf_error_invalid_array(__FUNCTION__, 'rids', WATCHDOG_ERROR, $function_history);
+    cf_error_invalid_array($function_history, 'rids');
     return FALSE;
   }
 

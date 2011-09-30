@@ -41,18 +41,20 @@ function cf_http_init() {
  *     This http response must be processed.
  */
 function cf_http_get_response($server, $path, $port = 80, array $function_history = array()){
+  cf_error_append_history($function_history, __FUNCTION__);
+
   $results = array('connected' => FALSE, 'response' => '', 'is_local' => FALSE);
 
-  if (cf_is_empty_or_non_string(__FUNCTION__, 'server', $server, WATCHDOG_ERROR, $function_history)){
+  if (cf_is_empty_or_non_string($function_history, 'server', $server, WATCHDOG_ERROR)){
     return $results;
   }
 
-  if (cf_is_empty_or_non_string(__FUNCTION__, 'path', $path, WATCHDOG_ERROR, $function_history)){
+  if (cf_is_empty_or_non_string($function_history, 'path', $path, WATCHDOG_ERROR)){
     return $results;
   }
 
   if (!is_numeric($port)){
-    cf_error_not_numeric(__FUNCTION__, 'port', WATCHDOG_ERROR, $function_history);
+    cf_error_not_numeric($function_history, 'port');
     return $results;
   }
 
@@ -95,11 +97,13 @@ function cf_http_get_response($server, $path, $port = 80, array $function_histor
  *
  * @param $headers
  *   An array of http headers to validate
+ * @param $function_history
+ *   (optional) array of function names, ie: array('0' => 'my_function_name')
  *
  * @return
  *   A boolean with TRUE representing that the headers are valid, FALSE otherwise.
  */
-function cf_http_validate_response(array $headers) {
+function cf_http_validate_response(array $headers, array $function_history = array()) {
   if (empty($headers)) return FALSE;
 
   switch (trim(strtolower($headers[0]))) {
@@ -124,11 +128,13 @@ function cf_http_validate_response(array $headers) {
  *
  * @param $headers
  *   An array of http headers.
+ * @param $function_history
+ *   (optional) array of function names, ie: array('0' => 'my_function_name')
  *
  * @return
  *   A number representing the error code of the error found, 0 otherwise.
  */
-function cf_http_headers_errors(array &$headers){
+function cf_http_headers_errors(array &$headers, array $function_history = array()){
   foreach ($headers as $key => &$value){
     $matches = array();
 
@@ -152,6 +158,8 @@ function cf_http_headers_errors(array &$headers){
  *
  * @param $document
  *   An string representing an html document.
+ * @param $function_history
+ *   (optional) array of function names, ie: array('0' => 'my_function_name')
  *
  * @return
  *   An array containing the unchunk status and unchunked string.
@@ -161,7 +169,7 @@ function cf_http_headers_errors(array &$headers){
  *   'document'
  *     The complete (unchunked) html document.
  */
-function cf_http_unchunk_response(string $document) {
+function cf_http_unchunk_response(string $document, array $function_history = array()) {
   $results = array('unchunked' => FALSE, 'document' => '');
 
   if (empty($document)) return $results;
@@ -219,9 +227,11 @@ function cf_http_unchunk_response(string $document) {
  *     The complete html document from the http response.
  */
 function cf_http_parse_response($http_response, array $function_history = array()) {
+  cf_error_append_history($function_history, __FUNCTION__);
+
   $results = array('parsed' => FALSE, 'header' => '', 'document' => '', 'http_error' => array('error_code' => 0, 'key' => '', 'value' => ''));
 
-  if (cf_is_empty_or_non_string(__FUNCTION__, 'http_response', $http_response, WATCHDOG_ERROR, $function_history)){
+  if (cf_is_empty_or_non_string($function_history, 'http_response', $http_response, WATCHDOG_ERROR)){
     return $results;
   }
 
@@ -240,12 +250,12 @@ function cf_http_parse_response($http_response, array $function_history = array(
   unset($header);
   unset($document);
 
-  if (!cf_http_validate_response($results['headers'])){
-    $results['http_error'] = cf_http_headers_errors($results['headers']);
+  if (!cf_http_validate_response($results['headers'], $function_history)){
+    $results['http_error'] = cf_http_headers_errors($results['headers'], $function_history);
   }
 
   if (in_array('Transfer-Coding: chunked', $results['headers'])) {
-    $result = cf_http_unchunk_response($results['document']);
+    $result = cf_http_unchunk_response($results['document'], $function_history);
 
     if ($result['unchunked']){
       $results['document'] = $result['document'];
@@ -288,9 +298,11 @@ function cf_http_parse_response($http_response, array $function_history = array(
  *     The complete html document from the http response.
  */
 function cf_http_split_response($document, array $function_history = array()) {
+  cf_error_append_history($function_history, __FUNCTION__);
+
   $results = array('split' => FALSE, 'head' => '', 'body' => '');
 
-  if (cf_is_empty_or_non_string(__FUNCTION__, 'document', $document, WATCHDOG_ERROR, $function_history)){
+  if (cf_is_empty_or_non_string($function_history, 'document', $document, WATCHDOG_ERROR)){
     return $results;
   }
 
@@ -357,6 +369,8 @@ function cf_http_split_response($document, array $function_history = array()) {
  *     The complete html text with all links adjusted to absolute paths.
  */
 function cf_http_adjust_urls($text, $server, $relative_path, $scheme = 'http', $suffix = '/', $port = 80, array $function_history = array()){
+  cf_error_append_history($function_history, __FUNCTION__);
+
   $results = array('adjusted' => FALSE, 'text' => $text);
   $matches = array();
 
@@ -446,6 +460,8 @@ function cf_http_adjust_urls($text, $server, $relative_path, $scheme = 'http', $
  *     The complete html document from the http response.
  */
 function cf_http_get_webpage($server, $path, $port = 80, array $function_history = array()){
+  cf_error_append_history($function_history, __FUNCTION__);
+
   $results = array('read' => FALSE, 'headers' => '', 'document' => '', 'http_error' => array('error_code' => 0, 'key' => '', 'value' => ''));
 
   $result = cf_http_get_response($server, $path, $port, $function_history);
@@ -494,10 +510,12 @@ function cf_http_get_webpage($server, $path, $port = 80, array $function_history
  *     The http text with all html headers reduced by $depth.
  */
 function cf_http_reduce_html_headers($text, $depth = 1, $preserve = TRUE, array $function_history = array()){
+  cf_error_append_history($function_history, __FUNCTION__);
+
   $results = array('reduced' => FALSE, 'text' => '');
 
   if (!is_string($text)){
-    cf_error_not_string(__FUNCTION__, 'text', WATCHDOG_ERROR, $function_history);
+    cf_error_not_string($function_history, 'text');
     return $results;
   }
 

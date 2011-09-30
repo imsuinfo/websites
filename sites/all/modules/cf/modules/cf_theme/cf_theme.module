@@ -11,11 +11,13 @@
  *
  * @param variables
  *   The variables array from the theme template functions.
+ * @param $function_history
+ *   (optional) array of function names, ie: array('0' => 'my_function_name')
  *
  * @return
  *  An array of variables to be provided to the calling theme.
  */
-function cf_theme_get_variables(array &$variables){
+function cf_theme_get_variables(array &$variables, array $function_history = array()){
   $cf = array();
   $cf['css'] = array();
   $cf['meta'] = array('charset' => 'UTF-8', 'content' => NULL, 'http-equiv' => array(), 'name' => array());
@@ -328,11 +330,13 @@ function cf_theme_get_variables(array &$variables){
  *
  * @param cf
  *   An array of header elements to process
+ * @param $function_history
+ *   (optional) array of function names, ie: array('0' => 'my_function_name')
  *
  * @return
  *   A string of html data
  */
-function cf_theme_generate_headers(array $cf){
+function cf_theme_generate_headers(array $cf, array $function_history = array()){
   $output = '';
 
   // handle meta tags
@@ -417,11 +421,13 @@ function cf_theme_generate_headers(array $cf){
  *   The variables array to process
  * @param keys
  *   An array of key names to process
+ * @param $function_history
+ *   (optional) array of function names, ie: array('0' => 'my_function_name')
  *
 * @param subdir (optional)
  *   A string representing a subdirectory inside of the variables parameter
  */
-function cf_theme_render_variables(&$variables, $keys, $subdir = NULL){
+function cf_theme_render_variables(&$variables, $keys, $subdir = NULL, array $function_history = array()){
   if (is_null($subdir)){
     foreach ($keys as $key){
       if (empty($variables[$key])){
@@ -459,10 +465,12 @@ function cf_theme_render_variables(&$variables, $keys, $subdir = NULL){
  *
  * @param string
  *   The string to cleanup.
+ * @param $function_history
+ *   (optional) array of function names, ie: array('0' => 'my_function_name')
  *
  * @return
  *  A string with all non-word characters turned into underscores
  */
-function cf_theme_safe_css_string_part($string){
+function cf_theme_safe_css_string_part($string, array $function_history = array()){
   return preg_replace('/(\W)+/i', '_', $string);
 }

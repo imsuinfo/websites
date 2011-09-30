@@ -20,13 +20,15 @@
  *   A basic node object that can be safely passed to drupal_execute().
  */
 function cf_node_initialize_class($node_type, $node_title, $node_body = '', array $function_history = array()){
+  cf_error_append_history($function_history, __FUNCTION__);
+
   $node_class = new stdClass();
 
-  if (cf_is_empty_or_non_string(__FUNCTION__, 'node_type', $node_type, WATCHDOG_ERROR, $function_history)){
+  if (cf_is_empty_or_non_string($function_history, 'node_type', $node_type, WATCHDOG_ERROR)){
     return $node_class;
   }
 
-  if (cf_is_empty_or_non_string(__FUNCTION__, 'node_title', $node_title, WATCHDOG_ERROR, $function_history)){
+  if (cf_is_empty_or_non_string($function_history, 'node_title', $node_title, WATCHDOG_ERROR)){
     return $node_title;
   }
 
@@ -74,12 +76,14 @@ function cf_node_initialize_class($node_type, $node_title, $node_body = '', arra
  *   An array of all errors (if any) that occurred during the creation process.
  **/
 function cf_node_create($form_id, $node_class, array $function_history = array()){
-  if (cf_is_empty_or_non_string(__FUNCTION__, 'form_id', $form_id, WATCHDOG_ERROR, $function_history)){
+  cf_error_append_history($function_history, __FUNCTION__);
+
+  if (cf_is_empty_or_non_string($function_history, 'form_id', $form_id, WATCHDOG_ERROR)){
     return array();
   }
 
   if (!is_object($node_class)){
-    cf_error_invalid_object(__FUNCTION__, 'node_class', WATCHDOG_ERROR, $function_history);
+    cf_error_invalid_object($function_history, 'node_class');
     return array();
   }
 
