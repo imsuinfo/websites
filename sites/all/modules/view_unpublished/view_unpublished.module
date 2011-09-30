@@ -5,7 +5,10 @@
  * Implements hook_help().
  */
 function view_unpublished_help($path, $arg = NULL) {
-  if (cf_is_empty_or_non_string(__FUNCTION__, 'path', $path, WATCHDOG_ERROR)){
+  $function_history = array();
+  cf_error_append_history($function_history, __FUNCTION__);
+
+  if (cf_is_empty_or_non_string($function_history, 'path', $path, WATCHDOG_ERROR)){
     return;
   }
 
@@ -55,12 +58,15 @@ function view_unpublished_permission() {
  * Impliments hook_node_access().
  */
 function view_unpublished_node_access($node, $op, $account){
-  if (cf_is_empty_or_non_string(__FUNCTION__, 'op', $op, WATCHDOG_ERROR)){
+  $function_history = array();
+  cf_error_append_history($function_history, __FUNCTION__);
+
+  if (cf_is_empty_or_non_string($function_history, 'op', $op, WATCHDOG_ERROR)){
     return NODE_ACCESS_IGNORE;
   }
 
   if (!is_object($account)){
-    cf_error_invalid_object(__FUNCTION__, 'account', WATCHDOG_ERROR, array(__FUNCTION__));
+    cf_error_invalid_object($function_history, 'account');
     return NODE_ACCESS_IGNORE;
   }
 
@@ -69,7 +75,7 @@ function view_unpublished_node_access($node, $op, $account){
     return NODE_ACCESS_IGNORE;
   }
   else if (!is_object($node)) {
-    cf_error_invalid_variable(__FUNCTION__, 'node', 'Not a valid object or a valid string', array(), WATCHDOG_WARNING);
+    cf_error_invalid_variable($function_history, 'node', 'Not a valid object or a valid string', array(), WATCHDOG_WARNING);
     return NODE_ACCESS_IGNORE;
   }
 

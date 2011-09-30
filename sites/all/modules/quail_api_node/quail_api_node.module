@@ -102,10 +102,13 @@ function quail_api_node_admin_paths() {
  *   TRUE if user can make conversions using this type, FALSE otherwise.
  */
 function quail_api_node_access_accessibility_tab($node) {
+  $function_history = array();
+  cf_error_append_history($function_history, __FUNCTION__);
+
   $access = FALSE;
 
   if (!is_object($node)){
-    cf_error_invalid_object(__FUNCTION__, 'node', WATCHDOG_ERROR);
+    cf_error_invalid_object($function_history, 'node');
     return $access;
   }
 
@@ -127,7 +130,9 @@ function quail_api_node_access_accessibility_tab($node) {
  * Implements hook_form_FORM_ID_alter() for the node type form.
  */
 function quail_api_node_form_node_type_form_alter(&$form, &$form_state, $form_id) {
-  $function_history = array(__FUNCTION__);
+  $function_history = array();
+  cf_error_append_history($function_history, __FUNCTION__);
+
   $node_type_settings_object = FALSE;
   $node_type_settings_array  = array('type' => NULL, 'required' => NULL, 'standards' => NULL);
 
@@ -226,11 +231,14 @@ function quail_api_node_form_node_type_form_alter(&$form, &$form_state, $form_id
  *   A form state
  */
 function quail_api_node_node_type_form_submit($form, &$form_state) {
-  if (cf_is_empty_or_non_string(__FUNCTION__, 'form_state[values][type]', $form_state['values']['type'], WATCHDOG_ERROR)){
+  $function_history = array();
+  cf_error_append_history($function_history, __FUNCTION__);
+
+  if (cf_is_empty_or_non_string($function_history, 'form_state[values][type]', $form_state['values']['type'])){
     return;
   }
 
-  $node_type_settings_objects = quail_api_node_load_node_type_settings(array($form_state['values']['type']), array(__FUNCTION__));
+  $node_type_settings_objects = quail_api_node_load_node_type_settings(array($form_state['values']['type']), $function_history);
   $node_type_settings_object = FALSE;
 
   if (!empty($node_type_settings_objects)){
@@ -294,8 +302,11 @@ function quail_api_node_node_operations() {
  *   An array of node ids
  */
 function quail_api_node_operation_validate($nids){
+  $function_history = array();
+  cf_error_append_history($function_history, __FUNCTION__);
+
   $nodes = node_load_multiple($nids);
-  $node_type_settings_objects = quail_api_node_load_node_type_settings($nodes, array(__FUNCTION__));
+  $node_type_settings_objects = quail_api_node_load_node_type_settings($nodes, $function_history);
   $node_type_settings_types = array();
 
   foreach ($node_type_settings_objects as $node_type_settings_object){
@@ -311,7 +322,7 @@ function quail_api_node_operation_validate($nids){
     if (!is_object($node)) continue;
     if (!array_key_exists($node->type, $node_type_settings_types)) continue;
 
-    $methods = quail_api_get_validation_methods(NULL, array(__FUNCTION__));
+    $methods = quail_api_get_validation_methods(NULL, $function_history);
     $database = FALSE;
     $node_settings = $node_type_settings_types[$node->type];
 
@@ -334,7 +345,7 @@ function quail_api_node_operation_validate($nids){
       }
     }
 
-    $results = quail_api_node_perform_validation(array($node), NULL, NULL, array(__FUNCTION__));
+    $results = quail_api_node_perform_validation(array($node), NULL, NULL, $function_history);
 
     if (isset($results[$node->nid]['report'])){
       $results = $results[$node->nid]['report'];
@@ -387,8 +398,10 @@ function quail_api_node_operation_validate($nids){
  *   An array of all test failures, if any.
  */
 function quail_api_node_perform_validation($nodes_or_nids, $language = NULL, $display_level = NULL, array $function_history = array()){
+  cf_error_append_history($function_history, __FUNCTION__);
+
   if (!is_array($nodes_or_nids)){
-    cf_error_invalid_array(__FUNCTION__, 'nodes_or_nids', WATCHDOG_ERROR, $function_history);
+    cf_error_invalid_array($function_history, 'nodes_or_nids');
     return array();
   }
 
@@ -407,7 +420,7 @@ function quail_api_node_perform_validation($nodes_or_nids, $language = NULL, $di
       $node = node_load($node_or_nid);
 
       if (!is_object($node)){
-        cf_error_invalid_variable(__FUNCTION__, $node, "Unable to load the node with the following node id: :nid.", array(':nid' => $node_or_nid), WATCHDOG_ERROR);
+        cf_error_invalid_variable($function_history, $node, "Unable to load the node with the following node id: :nid.", array(':nid' => $node_or_nid));
         continue;
       }
     }
@@ -436,6 +449,9 @@ function quail_api_node_perform_validation($nodes_or_nids, $language = NULL, $di
  * Implements hook_node_load().
  */
 function quail_api_node_node_load($nodes, $types) {
+  $function_history = array();
+  cf_error_append_history($function_history, __FUNCTION__);
+
   $all_nodes = array();
 
   foreach($nodes as &$node){
@@ -443,7 +459,7 @@ function quail_api_node_node_load($nodes, $types) {
     $all_nodes[$node->nid]->accessibility = FALSE;
   }
 
-  $results = quail_api_node_load_node_type_settings($all_nodes, array(__FUNCTION__));
+  $results = quail_api_node_load_node_type_settings($all_nodes, $function_history);
 
   foreach ($results as $result){
     $all_nodes[$node->nid]->accessibility = array();
@@ -528,12 +544,15 @@ function quail_api_node_load_node_type_settings($node_types, $keyed = NULL){
  *   A boolean representing the whether the save
  */
 function quail_api_node_save_node_tests($nid, $vid, $reports){
+  $function_history = array();
+  cf_error_append_history($function_history, __FUNCTION__);
+
   if (!is_array($reports)){
-    cf_error_invalid_array(__FUNCTION__, 'reports', WATCHDOG_ERROR);
+    cf_error_invalid_array($function_history, 'reports');
     return FALSE;
   }
 
-  $function_history = array(__FUNCTION__);
+  $function_history = $function_history;
 
   $tests_known = (array) quail_api_load_tests(array(), 'machine_name', $function_history);
   $problems = array();
@@ -555,7 +574,7 @@ function quail_api_node_save_node_tests($nid, $vid, $reports){
           $test_data['human_name'] = $test_results['body']['title'];
           $test_data['description'] = $test_results['body']['description'];
 
-          $results = quail_api_save_test($test_data, array(__FUNCTION__));
+          $results = quail_api_save_test($test_data, $function_history);
 
           if ($results === FALSE){
             watchdog('quail_api', "Failed to insert :machine_name into quail api tests database table.", array(':machine_name' => $test_name), WATCHDOG_ERROR);
@@ -614,13 +633,16 @@ function quail_api_node_save_node_tests($nid, $vid, $reports){
  *   A boolean representing the whether the save
  */
 function quail_api_node_delete_node_tests($nid, $vid){
+  $function_history = array();
+  cf_error_append_history($function_history, __FUNCTION__);
+
   if (!is_numeric($nid)){
-    cf_error_not_numeric(__FUNCTION__, 'nid', WATCHDOG_ERROR);
+    cf_error_not_numeric($function_history, 'nid');
     return FALSE;
   }
 
   if (!is_numeric($vid)){
-    cf_error_not_numeric(__FUNCTION__, 'vid', WATCHDOG_ERROR);
+    cf_error_not_numeric($function_history, 'vid');
     return FALSE;
   }
 
@@ -768,18 +790,21 @@ function quail_api_node_load_problems($conditions = array(), $keyed = NULL){
  *   The return states of either FALSE, SAVED_NEW, or SAVED_UPDATED.
  */
 function quail_api_node_replace_problems($nid, $vid, $problems){
+  $function_history = array();
+  cf_error_append_history($function_history, __FUNCTION__);
+
   if (!is_numeric($nid)){
-    cf_error_not_numeric(__FUNCTION__, 'nid', WATCHDOG_ERROR);
+    cf_error_not_numeric($function_history, 'nid');
     return FALSE;
   }
 
   if (!is_numeric($vid)){
-    cf_error_not_numeric(__FUNCTION__, 'vid', WATCHDOG_ERROR);
+    cf_error_not_numeric($function_history, 'vid');
     return FALSE;
   }
 
   if (!is_array($problems)){
-    cf_error_invalid_array(__FUNCTION__, 'problems', WATCHDOG_ERROR);
+    cf_error_invalid_array($function_history, 'problems');
     return FALSE;
   }
 
@@ -824,8 +849,11 @@ function quail_api_node_replace_problems($nid, $vid, $problems){
  *   The return states of either FALSE, SAVED_NEW, or SAVED_UPDATED.
  */
 function quail_api_node_save_problem($problem_data){
+  $function_history = array();
+  cf_error_append_history($function_history, __FUNCTION__);
+
   if (!is_array($problem_data)){
-    cf_error_invalid_array(__FUNCTION__, 'problem_data', WATCHDOG_ERROR);
+    cf_error_invalid_array($function_history, 'problem_data');
     return FALSE;
   }
 
@@ -834,7 +862,7 @@ function quail_api_node_save_problem($problem_data){
 
   foreach ($columns as $key){
     if (empty($problem_data[$key])){
-      cf_error_missing_array_key(__FUNCTION__, 'problem_data', $key, WATCHDOG_ERROR);
+      cf_error_missing_array_key($function_history, 'problem_data', $key);
       return FALSE;
     }
   }
@@ -845,7 +873,7 @@ function quail_api_node_save_problem($problem_data){
 
   if (!empty($problem_data['id'])){
     if (!is_numeric($problem_data['id'])){
-      cf_error_not_numeric(__FUNCTION__, 'problem_data', WATCHDOG_ERROR);
+      cf_error_not_numeric($function_history, 'problem_data');
       return FALSE;
     }
 
@@ -889,7 +917,9 @@ function quail_api_node_save_problem($problem_data){
  *   An array of database results in a format that can be processed by the quail_api theme functions.
  */
 function quail_api_node_restructure_results($nid, $vid, $display_levels = NULL){
-  $function_history = array(__FUNCTION__);
+  $function_history = array();
+  cf_error_append_history($function_history, __FUNCTION__);
+
   $problems = (array) quail_api_node_load_problems(array('nid' => $nid));
   $tests = quail_api_load_tests(array(), 'id', $function_history);
   $results = array();
@@ -932,8 +962,11 @@ function quail_api_node_restructure_results($nid, $vid, $display_levels = NULL){
  * Implements hook_node_type_delete().
  */
 function quail_api_node_node_type_delete($info) {
+  $function_history = array();
+  cf_error_append_history($function_history, __FUNCTION__);
+
   if (!is_object($info)){
-    cf_error_invalid_object(__FUNCTION__, 'info', WATCHDOG_ERROR);
+    cf_error_invalid_object($function_history, 'info');
     return;
   }
 
@@ -950,16 +983,19 @@ function quail_api_node_node_type_delete($info) {
  *   An array containing the validation results or FALSE.
  */
 function quail_api_node_validate_action($node) {
+  $function_history = array();
+  cf_error_append_history($function_history, __FUNCTION__);
+
   if (!is_object($node)){
-    cf_error_invalid_object(__FUNCTION__, 'node', WATCHDOG_ERROR);
+    cf_error_invalid_object($function_history, 'node');
     return FALSE;
   }
 
-  $results = quail_api_node_perform_validation(array($node), NULL, NULL, array(__FUNCTION__));
+  $results = quail_api_node_perform_validation(array($node), NULL, NULL, $function_history);
 
   if (isset($results[$node->nid]['report'])){
     $results = $results[$node->nid]['report'];
-    $methods = quail_api_get_validation_methods(NULL, array(__FUNCTION__));
+    $methods = quail_api_get_validation_methods(NULL, $function_history);
     $database = isset($methods[$node->accessibility['method']]['database']) ? $methods[$node->accessibility['method']]['database'] : FALSE;
 
     if ($database && !empty($results)){

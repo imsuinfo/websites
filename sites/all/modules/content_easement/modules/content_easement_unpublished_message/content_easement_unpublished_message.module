@@ -14,7 +14,10 @@ function content_easement_unpublished_message_content_easement_permission_alter(
  * Implements hook_help().
  */
 function content_easement_unpublished_message_help($path, $arg = NULL) {
-  if (cf_is_empty_or_non_string(__FUNCTION__, 'path', $path, WATCHDOG_ERROR)){
+  $function_history = array();
+  cf_error_append_history($function_history, __FUNCTION__);
+
+  if (cf_is_empty_or_non_string($function_history, 'path', $path, WATCHDOG_ERROR)){
     return;
   }
 

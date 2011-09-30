@@ -4,7 +4,10 @@
  * Implements hook_help().
  */
 function editing_overlay_help($path, $arg = NULL) {
-  if (cf_is_empty_or_non_string(__FUNCTION__, 'path', $path, WATCHDOG_ERROR)){
+  $function_history = array();
+  cf_error_append_history($function_history, __FUNCTION__);
+
+  if (cf_is_empty_or_non_string($function_history, 'path', $path, WATCHDOG_ERROR)){
     return;
   }
 
@@ -33,8 +36,11 @@ function editing_overlay_permission() {
  * Implements hook_init().
  */
 function editing_overlay_init() {
+  $function_history = array();
+  cf_error_append_history($function_history, __FUNCTION__);
+
   $mode = overlay_get_mode();
-  $user = cf_get_user(FALSE, array(__FUNCTION__));
+  $user = cf_get_user(FALSE, $function_history);
 
   $use_overlay = !isset($user->data['editing_overlay']) || $user->data['editing_overlay'];
 

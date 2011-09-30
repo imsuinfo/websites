@@ -14,11 +14,14 @@ class killfile_handler_link_unkillfile extends views_handler_field_node_link {
   }
 
   function render_link($data, $values) {
-    if (!killfile_can_undelete($values, NULL, array(__FUNCTION__)) || !killfile_can_undelete($values)) {
+    $function_history = array();
+    cf_error_append_history($function_history, __FUNCTION__);
+
+    if (!killfile_can_undelete($values, NULL, $function_history)) {
       return;
     }
 
-    $results = killfile_get_node_delete_settings(array($values), array(__FUNCTION__));
+    $results = killfile_get_node_delete_settings(array($values), $function_history);
 
     if (count($results) == 0){
       return;

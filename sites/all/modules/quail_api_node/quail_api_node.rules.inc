@@ -87,8 +87,11 @@ function quail_api_node_rules_action_info() {
  *   An array containing the node object stored in the key called 'node' and the validation results (if any) stored in the key called 'results'.
  */
 function quail_api_node_validate_rules_action($node) {
+  $function_history = array();
+  cf_error_append_history($function_history, __FUNCTION__);
+
   if (!is_object($node)){
-    cf_error_invalid_object(__FUNCTION__, 'node', WATCHDOG_ERROR);
+    cf_error_invalid_object($function_history, 'node');
     return array('node' => $node);
   }
 

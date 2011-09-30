@@ -4,8 +4,10 @@
  * Provides the accessibility tab page.
  */
 function quail_api_node_accessibility_tab_page($form, &$form_state, $node) {
+  $function_history = array();
+  cf_error_append_history($function_history, __FUNCTION__);
+
   $form = array();
-  $function_history = array(__FUNCTION__);
 
   $results = array();
   $display_levels = quail_api_get_display_levels(NULL, $function_history);
@@ -46,7 +48,7 @@ function quail_api_node_accessibility_tab_page($form, &$form_state, $node) {
   }
 
   if ($automatic || $perform_validation){
-    $results = quail_api_node_perform_validation(array($node), NULL, NULL, array(__FUNCTION__));
+    $results = quail_api_node_perform_validation(array($node), NULL, NULL, $function_history);
 
     if (isset($results[$node->nid]['report'])){
       $results = $results[$node->nid]['report'];

@@ -4,8 +4,11 @@
  * Implements hook_form_alter() for field_ui_field_edit_form.
  */
 function content_easement_field_cardinality_form_field_ui_field_edit_form_alter(&$form, &$form_state, $form_id) {
+  $function_history = array();
+  cf_error_append_history($function_history, __FUNCTION__);
+
   if (!is_array($form)){
-    cf_error_invalid_array(__FUNCTION__, 'form', WATCHDOG_ERROR);
+    cf_error_invalid_array($function_history, 'form');
     return;
   }
 
@@ -27,7 +30,10 @@ function content_easement_field_cardinality_form_field_ui_field_edit_form_alter(
  * This, however, allows for non-numeric values to be inserted and therefore additional validation is needed.
  */
 function content_easement_field_cardinality_validate($form, &$form_state){
-  if (cf_is_not_form_state(__FUNCTION__, 'form_state', $form_state, WATCHDOG_ERROR)){
+  $function_history = array();
+  cf_error_append_history($function_history, __FUNCTION__);
+
+  if (cf_is_not_form_state($function_history, 'form_state', $form_state)){
     return;
   }
 
