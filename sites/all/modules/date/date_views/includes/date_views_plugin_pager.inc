@@ -158,11 +158,11 @@ class date_views_plugin_pager extends views_plugin_pager {
         if (empty($this->view->date_info)) $this->view->date_info = new stdClass();
         $this->view->date_info->granularity = $argument->date_handler->granularity;
         $format = $this->view->date_info->granularity == 'week' ? DATE_FORMAT_DATETIME : $argument->sql_format;
-        $this->view->date_info->placeholders = $argument->date_handler->placeholders;
+        $this->view->date_info->placeholders = property_exists($argument->date_handler, 'placeholders') ? $argument->date_handler->placeholders : NULL;
         $this->view->date_info->date_arg = $argument->argument;
         $this->view->date_info->date_arg_pos = $i;
         $this->view->date_info->year = date_format($argument->min_date, 'Y');
-        $this->view->date_info->month = date_format($argument->min_date, 'n');;
+        $this->view->date_info->month = date_format($argument->min_date, 'n');
         $this->view->date_info->day = date_format($argument->min_date, 'j');
         $this->view->date_info->week = date_week(date_format($argument->min_date, DATE_FORMAT_DATE));
         $this->view->date_info->date_range = $argument->date_range;
