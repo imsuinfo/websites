@@ -266,7 +266,7 @@ function genesis_mcneese_cf_theme_get_variables_alter(&$cf, $variables){
   }
 
   // FIXME: this should be moved to cf_www
-  if (function_exists('node_load')){
+  if (function_exists('node_load') && $cf['is']['maintenance']){
     $loaded_node = node_load(914);
     if (is_object($loaded_node)){
       if (property_exists($loaded_node, 'status') && $loaded_node->status == NODE_PUBLISHED){
