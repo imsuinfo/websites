@@ -1,13 +1,8 @@
 <?php
 
-function imce_dir_man_install() {
-  drupal_install_schema('imce_dir_man');
-}
-
-function imce_dir_man_uninstall() {
-  drupal_uninstall_schema('imce_dir_man');
-}
-
+/**
+ * Implements hook_schema()
+ */
 function imce_dir_man_schema() {
   $schema['imce_dir_man'] = array(
     'fields' => array(
