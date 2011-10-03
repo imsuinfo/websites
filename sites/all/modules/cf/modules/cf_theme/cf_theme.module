@@ -48,10 +48,13 @@ function cf_theme_get_variables(array &$variables, array $function_history = arr
   }
 
   // do not cache maintenance mode pages.
-  if (!empty($MAINTENANCE_MODE)){
+  $maintenace_mode = variable_get('maintenance_mode', 0);
+
+  if ($maintenace_mode || !empty($MAINTENANCE_MODE)){
     $cf['meta']['name']['googlebot'] = 'noarchive,noindex,nofollow,nosnippet';
     $cf['meta']['name']['robots'] = 'NONE';
     $cf['meta']['http-equiv']['cache-control'] = 'no-cache';
+    $cf['is']['maintenance'] = TRUE;
   }
 
   // set the user agent
