@@ -10,10 +10,10 @@
  *   The roles stored in the global $user variable are role names and not ids.
  *   This provides a way to get user role ids without having to load the user data, process each role, and produce an array of role ids.
  *
- * @param $uid
- *   (optional) a uid of the user to get the role ids of if the current user is not to be used.
- * @param $function_history
- *   (optional) array of function names, ie: array('0' => 'my_function_name')
+ * @param $uid (optional)
+ *   a uid of the user to get the role ids of if the current user is not to be used.
+ * @param $function_history (optional)
+ *   An array of function names, ie: array('0' => 'my_function_name').
  *
  * @return
  *   A SelectQuery database object, this object has not been executed.
@@ -53,13 +53,13 @@ function cf_user_get_rids($uid = NULL, array $function_history = array()){
  *
  * @param $rid
  *   a rid of the role to check to see if a user has the given permission.
- * @param $uid
- *   (optional) a uid of the user to get the role ids of if the current user is not to be used.
- * @param $function_history
- *   (optional) array of function names, ie: array('0' => 'my_function_name')
+ * @param $uid (optional)
+ *   a uid of the user to get the role ids of if the current user is not to be used.
+ * @param $function_history (optional)
+ *   An array of function names, ie: array('0' => 'my_function_name').
  *
  * @return
- *   FALSE on error, FALSE if not in role, and TRUE if in role
+ *   FALSE on error, FALSE if not in role, and TRUE if in role.
  */
 function cf_user_has_role($rid, $uid = NULL, array $function_history = array()){
   cf_error_append_history($function_history, __FUNCTION__);
@@ -100,8 +100,8 @@ function cf_user_has_role($rid, $uid = NULL, array $function_history = array()){
  *
  * @param $rids
  *   an array rid of the role to check to see if a user has the given permission.
- * @param $function_history
- *   (optional) array of function names, ie: array('0' => 'my_function_name')
+ * @param $function_history (optional)
+ *   An array of function names, ie: array('0' => 'my_function_name').
  *
  * @return
  *   A SelectQuery database object, this object has not been executed.

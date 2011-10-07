@@ -9,9 +9,9 @@
  *   This facilitates validating that the function_history is an array without having each and every usage need to manually do so.
  *
  * @param $function_history
- *   array of function names, ie: array('0' => 'my_function_name')
+ *   An array of function names, ie: array('0' => 'my_function_name').
  * @param $function_name
- *   the function name to append to the function_history
+ *   The function name to append to the function_history.
  */
 function cf_error_append_history(&$function_history, $function_name){
   if (!is_array($function_history)){
@@ -36,22 +36,22 @@ function cf_error_append_history(&$function_history, $function_name){
  *   Silently failing on these arguments will only hide the problem.
  *
  * @param $function_history
- *   array of function names, ie: array('0' => 'my_function_name')
+ *   An array of function names, ie: array('0' => 'my_function_name').
  *
  *   Deprecated usage:
- *     a string that represents the name of the calling function.
+ *     A string that represents the name of the calling function.
  *     NULL may be passed to avoid appending the function_name in the case that it already exists in $function_history.
  * @param $argument_name
- *   the variable name of the argument in question.
+ *   The variable name of the argument in question.
  * @param $why
- *   the specific reason for this watchdog report.
- * @param $variables
- *   (optional) locale safe parameter handling for all text found in the 'why' parameter.
- * @param $severity
- *   (optional) this is passed directly to watchdog and represents the severity of the report.
- * deprecated_history
- *   (optional) array of function names, ie: array('0' => 'my_function_name')
- *   This is no longer supported, instead use the first parameter function_history
+ *   The specific reason for this watchdog report.
+ * @param $variables (optional)
+ *   Locale safe parameter handling for all text found in the 'why' parameter.
+ * @param $severity (optional)
+ *   This is passed directly to watchdog and represents the severity of the report.
+ * deprecated_history (optional)
+ *   An array of function names, ie: array('0' => 'my_function_name').
+ *   This is no longer supported, instead use the first parameter: function_history..
  *
  */
 function cf_error_invalid_variable($function_history, $argument_name, $why, array $variables = array(), $severity = WATCHDOG_ERROR, array $deprecated_history = array()){
@@ -87,18 +87,18 @@ function cf_error_invalid_variable($function_history, $argument_name, $why, arra
  *   See reason from cf_error_invalid_variable() function.
  *
  * @param $function_history
- *   array of function names, ie: array('0' => 'my_function_name')
+ *   An array of function names, ie: array('0' => 'my_function_name').
  *
  *   Deprecated usage:
- *     a string that represents the name of the calling function.
+ *     A string that represents the name of the calling function.
  *     NULL may be passed to avoid appending the function_name in the case that it already exists in $function_history.
  * @param $argument_name
- *   the variable name of the argument in question.
- * @param $severity
- *   (optional) this is passed directly to watchdog and represents the severity of the report.
- * deprecated_history
- *   (optional) array of function names, ie: array('0' => 'my_function_name')
- *   This is no longer supported, instead use the first parameter function_history
+ *   The variable name of the argument in question.
+ * @param $severity (optional)
+ *   This is passed directly to watchdog and represents the severity of the report.
+ * deprecated_history (optional)
+ *   An array of function names, ie: array('0' => 'my_function_name').
+ *   This is no longer supported, instead use the first parameter: function_history.
  */
 function cf_error_not_string($function_history, $argument_name, $severity = WATCHDOG_ERROR, array $deprecated_history = array()){
   if (is_string($function_history) || is_null($function_history)){
@@ -124,18 +124,18 @@ function cf_error_not_string($function_history, $argument_name, $severity = WATC
  *   See reason from cf_error_invalid_variable() function.
  *
  * @param $function_history
- *   array of function names, ie: array('0' => 'my_function_name')
+ *   An array of function names, ie: array('0' => 'my_function_name').
  *
  *   Deprecated usage:
- *     a string that represents the name of the calling function.
+ *     A string that represents the name of the calling function.
  *     NULL may be passed to avoid appending the function_name in the case that it already exists in $function_history.
  * @param $argument_name
- *   the variable name of the argument in question.
- * @param $severity
- *   (optional) this is passed directly to watchdog and represents the severity of the report.
- * deprecated_history
- *   (optional) array of function names, ie: array('0' => 'my_function_name')
- *   This is no longer supported, instead use the first parameter function_history
+ *   The variable name of the argument in question.
+ * @param $severity (optional)
+ *   This is passed directly to watchdog and represents the severity of the report.
+ * deprecated_history (optional)
+ *   An array of function names, ie: array('0' => 'my_function_name').
+ *   This is no longer supported, instead use the first parameter: function_history.
  */
 function cf_error_empty_string($function_history, $argument_name, $severity = WATCHDOG_ERROR, array $deprecated_history = array()){
   if (is_string($function_history) || is_null($function_history)){
@@ -161,18 +161,18 @@ function cf_error_empty_string($function_history, $argument_name, $severity = WA
  *   See reason from cf_error_invalid_variable() function.
  *
  * @param $function_history
- *   array of function names, ie: array('0' => 'my_function_name')
+ *   An array of function names, ie: array('0' => 'my_function_name').
  *
  *   Deprecated usage:
- *     a string that represents the name of the calling function.
+ *     A string that represents the name of the calling function.
  *     NULL may be passed to avoid appending the function_name in the case that it already exists in $function_history.
  * @param $argument_name
- *   the variable name of the argument in question.
- * @param $severity
- *   (optional) this is passed directly to watchdog and represents the severity of the report.
- * deprecated_history
- *   (optional) array of function names, ie: array('0' => 'my_function_name')
- *   This is no longer supported, instead use the first parameter function_history
+ *   The variable name of the argument in question.
+ * @param $severity (optional)
+ *   This is passed directly to watchdog and represents the severity of the report.
+ * deprecated_history (optional)
+ *   An array of function names, ie: array('0' => 'my_function_name').
+ *   This is no longer supported, instead use the first parameter: function_history.
  */
 function cf_error_invalid_array($function_history, $argument_name, $severity = WATCHDOG_ERROR, array $deprecated_history = array()){
   if (is_string($function_history) || is_null($function_history)){
@@ -198,18 +198,18 @@ function cf_error_invalid_array($function_history, $argument_name, $severity = W
  *   See reason from cf_error_invalid_variable() function.
  *
  * @param $function_history
- *   array of function names, ie: array('0' => 'my_function_name')
+ *   An array of function names, ie: array('0' => 'my_function_name').
  *
  *   Deprecated usage:
- *     a string that represents the name of the calling function.
+ *     A string that represents the name of the calling function.
  *     NULL may be passed to avoid appending the function_name in the case that it already exists in $function_history.
  * @param $argument_name
- *   the variable name of the argument in question.
- * @param $severity
- *   (optional) this is passed directly to watchdog and represents the severity of the report.
- * deprecated_history
- *   (optional) array of function names, ie: array('0' => 'my_function_name')
- *   This is no longer supported, instead use the first parameter function_history
+ *   The variable name of the argument in question.
+ * @param $severity (optional)
+ *   This is passed directly to watchdog and represents the severity of the report.
+ * deprecated_history (optional)
+ *   An array of function names, ie: array('0' => 'my_function_name').
+ *   This is no longer supported, instead use the first parameter: function_history.
  */
 function cf_error_invalid_object($function_history, $argument_name, $severity = WATCHDOG_ERROR, array $deprecated_history = array()){
   if (is_string($function_history) || is_null($function_history)){
@@ -235,20 +235,20 @@ function cf_error_invalid_object($function_history, $argument_name, $severity = 
  *   See reason from cf_error_invalid_variable() function.
  *
  * @param $function_history
- *   array of function names, ie: array('0' => 'my_function_name')
+ *   An array of function names, ie: array('0' => 'my_function_name').
  *
  *   Deprecated usage:
- *     a string that represents the name of the calling function.
+ *     A string that represents the name of the calling function.
  *     NULL may be passed to avoid appending the function_name in the case that it already exists in $function_history.
  * @param $argument_name
- *   the variable name of the argument in question.
+ *   The variable name of the argument in question.
  * @param $key_name
- *   name of the array key that is missing
- * @param $severity
- *   (optional) this is passed directly to watchdog and represents the severity of the report.
- * deprecated_history
- *   (optional) array of function names, ie: array('0' => 'my_function_name')
- *   This is no longer supported, instead use the first parameter function_history
+ *   Name of the array key that is missing.
+ * @param $severity (optional)
+ *   This is passed directly to watchdog and represents the severity of the report.
+ * deprecated_history (optional)
+ *   An array of function names, ie: array('0' => 'my_function_name').
+ *   This is no longer supported, instead use the first parameter: function_history.
  */
 function cf_error_missing_array_key($function_history, $argument_name, $key_name, $severity = WATCHDOG_ERROR, array $deprecated_history = array()){
   if (is_string($function_history) || is_null($function_history)){
@@ -272,24 +272,53 @@ function cf_error_missing_array_key($function_history, $argument_name, $key_name
 }
 
 /**
+ * Reports that a given argument is supposed to be have a specific object property but does not.
+ *
+ * Why:
+ *   See reason from cf_error_invalid_variable() function.
+ *
+ * @param $function_history
+ *   An array of function names, ie: array('0' => 'my_function_name').
+ * @param $argument_name
+ *   The variable name of the argument in question.
+ * @param $property_name
+ *   Name of the array key that is missing.
+ * @param $severity (optional)
+ *   This is passed directly to watchdog and represents the severity of the report.
+ */
+function cf_error_missing_object_property($function_history, $argument_name, $property_name, $severity = WATCHDOG_ERROR){
+  cf_error_append_history($function_history, __FUNCTION__);
+
+  if ($argument_name == ''){
+    cf_error_empty_string($function_history, 'argument_name');
+  }
+
+  if ($property_name == ''){
+    return cf_error_empty_string($function_history, 'property_name', $severity);
+  }
+
+  cf_error_invalid_variable($function_history, $argument_name, "The object property '%property_name' is missing.", array('%property_name' => $property_name), $severity);
+}
+
+/**
  * Reports that a given argument is supposed to be numeric but is not.
  *
  * Why:
  *   See reason from cf_error_invalid_variable() function.
  *
  * @param $function_history
- *   array of function names, ie: array('0' => 'my_function_name')
+ *   An array of function names, ie: array('0' => 'my_function_name').
  *
  *   Deprecated usage:
- *     a string that represents the name of the calling function.
+ *     A string that represents the name of the calling function.
  *     NULL may be passed to avoid appending the function_name in the case that it already exists in $function_history.
  * @param $argument_name
- *   the variable name of the argument in question.
- * @param $severity
- *   (optional) this is passed directly to watchdog and represents the severity of the report.
- * deprecated_history
- *   (optional) array of function names, ie: array('0' => 'my_function_name')
- *   This is no longer supported, instead use the first parameter function_history
+ *   The variable name of the argument in question.
+ * @param $severity (optional)
+ *   This is passed directly to watchdog and represents the severity of the report.
+ * deprecated_history (optional)
+ *   An array of function names, ie: array('0' => 'my_function_name').
+ *   This is no longer supported, instead use the first parameter: function_history.
  */
 function cf_error_not_numeric($function_history, $argument_name, $severity = WATCHDOG_ERROR, array $deprecated_history = array()){
   if (is_string($function_history) || is_null($function_history)){
@@ -309,118 +338,6 @@ function cf_error_not_numeric($function_history, $argument_name, $severity = WAT
 }
 
 /**
- * Checks if a string is empty or not and returns TRUE when empty or not a string and FALSE otherwise.
- * When there is an error returns TRUE.
- * The purpose is to validate if a string is not empty.
- * When that variable is empty then this is considered an error.
- * This handles reporting if the string is empty
- *
- * Why:
- *   Checking that a string is empty may also require a check to see if a variable is a string.
- *   This provides a way to do that two step process in 1 step.
- *   Do not use this for any other purpose.
- *
- * @param $function_history
- *   array of function names, ie: array('0' => 'my_function_name')
- *
- *   Deprecated usage:
- *     a string that represents the name of the calling function.
- *     NULL may be passed to avoid appending the function_name in the case that it already exists in $function_history.
- * @param $argument_name
- *   the variable name of the argument in question.
- * @param $variable
- *   the argument that is to be validated
- * @param $severity
- *   (optional) this is passed directly to watchdog and represents the severity of the report.
- * deprecated_history
- *   (optional) array of function names, ie: array('0' => 'my_function_name')
- *   This is no longer supported, instead use the first parameter function_history
- */
-function cf_is_empty_or_non_string($function_history, $argument_name, $variable, $severity = WATCHDOG_WARNING, array $deprecated_history = array()){
-  if (is_string($function_history) || is_null($function_history)){
-    $function_name = $function_history;
-    $function_history = $deprecated_history;
-    $function_history[] = $function_name;
-    watchdog('deprecated', "The old cf_error api of passing function_name directly is deprecated and will be removed in the next release, function history: %function_history", array('%function_history' => print_r($function_history, TRUE)));
-  }
-
-  cf_error_append_history($function_history, __FUNCTION__);
-
-  if ($argument_name == ''){
-    cf_error_empty_string($function_history, 'argument_name');
-  }
-
-  if (!is_string($variable)){
-    cf_error_not_string($function_history, $argument_name, $severity);
-
-    return TRUE;
-  }
-
-  if ($variable == ''){
-    cf_error_empty_string($function_history, $argument_name, $severity);
-
-    return TRUE;
-  }
-
-  return FALSE;
-}
-
-/**
- * Checks if the argument is an array with all of the default form_state array keys as defined by form_state_defaults().
- * This helps ensure that this argument is a valid form state.
- * This handles reporting if the form state is invalid.
- *
- * Why:
- *   Checking if the form_state is valid on every function call can quickly clutter up the code, reducing readability.
- *   form state is common enough to have its own cf error checking function.
- *
- * @param $function_history
- *   array of function names, ie: array('0' => 'my_function_name')
- *
- *   Deprecated usage:
- *     a string that represents the name of the calling function.
- *     NULL may be passed to avoid appending the function_name in the case that it already exists in $function_history.
- * @param $argument_name
- *   the variable name of the argument in question.
- * @param $variable
- *   the argument that is to be validated
- * @param $severity
- *   (optional) this is passed directly to watchdog and represents the severity of the report.
- * deprecated_history
- *   (optional) array of function names, ie: array('0' => 'my_function_name')
- *   This is no longer supported, instead use the first parameter function_history
- */
-function cf_is_not_form_state($function_history, $argument_name, $variable, $severity = WATCHDOG_WARNING, array $deprecated_history = array()){
-  if (is_string($function_history) || is_null($function_history)){
-    $function_name = $function_history;
-    $function_history = $deprecated_history;
-    $function_history[] = $function_name;
-    watchdog('deprecated', "The old cf_error api of passing function_name directly is deprecated and will be removed in the next release, function history: %function_history", array('%function_history' => print_r($function_history, TRUE)));
-  }
-
-  cf_error_append_history($function_history, __FUNCTION__);
-
-  if ($argument_name == ''){
-    cf_error_empty_string($function_history, 'argument_name');
-  }
-
-  if (!is_array($variable)){
-    cf_error_invalid_array($function_history, 'argument_name', $variable, $severity);
-    return TRUE;
-  }
-
-  foreach (array_keys(form_state_defaults()) as $key){
-    if (!array_key_exists($key, $variable)){
-      cf_error_missing_array_key($function_history, $argument_name, $key, $severity);
-
-      return TRUE;
-    }
-  }
-
-  return FALSE;
-}
-
-/**
  * This provides a common solution for reporting query execution failures to the watchdog system.
  *
  * Why:
@@ -428,11 +345,11 @@ function cf_is_not_form_state($function_history, $argument_name, $variable, $sev
  *   Therefore, provide a function to be re-used in every catch for reporting the error.
  *
  * @param $function_history
- *   array of function names, ie: array('0' => 'my_function_name')
+ *   An array of function names, ie: array('0' => 'my_function_name').
  * @param $exception
- *   The query exception object
- * @param $severity
- *   (optional) this is passed directly to watchdog and represents the severity of the report.
+ *   The query exception object.
+ * @param $severity (optional)
+ *   This is passed directly to watchdog and represents the severity of the report.
  *
  */
 function cf_error_on_query_execution($function_history, $exception, $severity = WATCHDOG_ERROR){

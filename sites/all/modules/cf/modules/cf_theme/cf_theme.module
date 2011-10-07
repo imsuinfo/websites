@@ -11,8 +11,8 @@
  *
  * @param variables
  *   The variables array from the theme template functions.
- * @param $function_history
- *   (optional) array of function names, ie: array('0' => 'my_function_name')
+ * @param $function_history (optional)
+ *   An array of function names, ie: array('0' => 'my_function_name').
  *
  * @return
  *  An array of variables to be provided to the calling theme.
@@ -332,12 +332,12 @@ function cf_theme_get_variables(array &$variables, array $function_history = arr
  *   This also allows custom modules to alter themes without having to hack or alter any existing theme that supports these functions.
  *
  * @param cf
- *   An array of header elements to process
- * @param $function_history
- *   (optional) array of function names, ie: array('0' => 'my_function_name')
+ *   An array of header elements to process.
+ * @param $function_history (optional)
+ *   An array of function names, ie: array('0' => 'my_function_name').
  *
  * @return
- *   A string of html data
+ *   A string of html data.
  */
 function cf_theme_generate_headers(array $cf, array $function_history = array()){
   $output = '';
@@ -421,14 +421,13 @@ function cf_theme_generate_headers(array $cf, array $function_history = array())
  *   This also allows custom modules to alter themes without having to hack or alter any existing theme that supports these functions.
  *
  * @param variables
- *   The variables array to process
+ *   The variables array to process.
  * @param keys
- *   An array of key names to process
- * @param $function_history
- *   (optional) array of function names, ie: array('0' => 'my_function_name')
- *
-* @param subdir (optional)
- *   A string representing a subdirectory inside of the variables parameter
+ *   An array of key names to process.
+ * @param $function_history (optional)
+ *   An array of function names, ie: array('0' => 'my_function_name').
+ * @param subdir (optional)
+ *   A string representing a subdirectory inside of the variables parameter.
  */
 function cf_theme_render_variables(&$variables, $keys, $subdir = NULL, array $function_history = array()){
   if (is_null($subdir)){
@@ -468,11 +467,11 @@ function cf_theme_render_variables(&$variables, $keys, $subdir = NULL, array $fu
  *
  * @param string
  *   The string to cleanup.
- * @param $function_history
- *   (optional) array of function names, ie: array('0' => 'my_function_name')
+ * @param $function_history (optional)
+ *   An array of function names, ie: array('0' => 'my_function_name').
  *
  * @return
- *  A string with all non-word characters turned into underscores
+ *  A string with all non-word characters turned into underscores.
  */
 function cf_theme_safe_css_string_part($string, array $function_history = array()){
   return preg_replace('/(\W)+/i', '_', $string);

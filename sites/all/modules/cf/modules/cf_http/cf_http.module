@@ -22,22 +22,20 @@ function cf_http_init() {
  *   A disadvantage is that remote images and links need to be processed, updated, and possibly even manually cached.
  *
  * @param $server
- *   hostname or ip address of the server.
- *   should not contain http:// or similary prefixes.
+ *   Hostname or ip address of the server.
+ *   Should not contain http:// or similary prefixes.
  * @param $path
  *  The file/path on the server to
- * @param $port
- *   (optional) port number of the page to read (defaults to 80).
- * @param $function_history
- *   (optional) array of function names, ie: array('0' => 'my_function_name')
+ * @param $port (optional)
+ *   port number of the page to read (defaults to 80).
+ * @param $function_history (optional)
+ *   An array of function names, ie: array('0' => 'my_function_name').
  *
  * @return
  *   An array containing the connection status and return http response.
  *   The array keys:
- *   'connected'
- *     A boolean with TRUE representing that the connection to the server was established and FALSE otherwise.
- *   'response'
- *     The http response as returned by the target server.
+ *   - connected: A boolean with TRUE representing that the connection to the server was established and FALSE otherwise.
+ *   - response: The http response as returned by the target server.
  *     This http response must be processed.
  */
 function cf_http_get_response($server, $path, $port = 80, array $function_history = array()){
@@ -96,9 +94,9 @@ function cf_http_get_response($server, $path, $port = 80, array $function_histor
  *   A disadvantage is that remote images and links need to be processed, updated, and possibly even manually cached.
  *
  * @param $headers
- *   An array of http headers to validate
- * @param $function_history
- *   (optional) array of function names, ie: array('0' => 'my_function_name')
+ *   An array of http headers to validate.
+ * @param $function_history (optional)
+ *   An array of function names, ie: array('0' => 'my_function_name').
  *
  * @return
  *   A boolean with TRUE representing that the headers are valid, FALSE otherwise.
@@ -128,8 +126,8 @@ function cf_http_validate_response(array $headers, array $function_history = arr
  *
  * @param $headers
  *   An array of http headers.
- * @param $function_history
- *   (optional) array of function names, ie: array('0' => 'my_function_name')
+ * @param $function_history (optional)
+ *   An array of function names, ie: array('0' => 'my_function_name').
  *
  * @return
  *   A number representing the error code of the error found, 0 otherwise.
@@ -158,16 +156,14 @@ function cf_http_headers_errors(array &$headers, array $function_history = array
  *
  * @param $document
  *   An string representing an html document.
- * @param $function_history
- *   (optional) array of function names, ie: array('0' => 'my_function_name')
+ * @param $function_history (optional)
+ *   An array of function names, ie: array('0' => 'my_function_name').
  *
  * @return
  *   An array containing the unchunk status and unchunked string.
  *   The array keys:
- *   'unchunked'
- *     A boolean with TRUE representing that the document string was successfully unchunked, FALSE otherwise.
- *   'document'
- *     The complete (unchunked) html document.
+ *   - unchunked: A boolean with TRUE representing that the document string was successfully unchunked, FALSE otherwise.
+ *   - document: The complete (unchunked) html document.
  */
 function cf_http_unchunk_response(string $document, array $function_history = array()) {
   $results = array('unchunked' => FALSE, 'document' => '');
@@ -210,21 +206,18 @@ function cf_http_unchunk_response(string $document, array $function_history = ar
  * @param $http_response
  *   An http response string.
  * @param $path
- *   The file/path on the server to
- * @param $port
- *   (optional) port number of the page to read (defaults to 80).
- * @param $function_history
- *   (optional) array of function names, ie: array('0' => 'my_function_name')
+ *   The file/path on the server to.
+ * @param $port (optional)
+ *   port number of the page to read (defaults to 80).
+ * @param $function_history (optional)
+ *   An array of function names, ie: array('0' => 'my_function_name').
  *
  * @return
  *   An array containing the connection status and return http response.
  *   The array keys:
- *   'parsed'
- *     A boolean with TRUE representing that the http request string was successfully parsed, FALSE otherwise.
- *   'headers'
- *     The http header from the httpd response.
- *   'document'
- *     The complete html document from the http response.
+ *   - parsed: A boolean with TRUE representing that the http request string was successfully parsed, FALSE otherwise.
+ *   - headers: The http header from the httpd response.
+ *   - document: The complete html document from the http response.
  */
 function cf_http_parse_response($http_response, array $function_history = array()) {
   cf_error_append_history($function_history, __FUNCTION__);
@@ -284,18 +277,15 @@ function cf_http_parse_response($http_response, array $function_history = array(
  *
  * @param $document
  *   An http response string.
- * @param $function_history
- *   (optional) array of function names, ie: array('0' => 'my_function_name')
+ * @param $function_history (optional)
+ *   An array of function names, ie: array('0' => 'my_function_name').
  *
  * @return
  *   An array containing the connection status and return http response.
  *   The array keys:
- *   'split'
- *     A boolean with TRUE representing that the document string was successfully split, FALSE otherwise.
- *   'headers'
- *     The http header from the httpd response.
- *   'document'
- *     The complete html document from the http response.
+ *   - split: A boolean with TRUE representing that the document string was successfully split, FALSE otherwise.
+ *   - headers: The http header from the httpd response.
+ *   - document: The complete html document from the http response.
  */
 function cf_http_split_response($document, array $function_history = array()) {
   cf_error_append_history($function_history, __FUNCTION__);
@@ -347,26 +337,24 @@ function cf_http_split_response($document, array $function_history = array()) {
  *   This must not contain the 'http://' prefixes nor the suffixes such as '/' or ':80'.
  * @param $relative_path
  *   all relative paths will have this prepended to the absolute url.
- * @param $scheme
- *   (optional) The 'http' at the front of most urls.
+ * @param $scheme (optional)
+ *   The 'http' at the front of most urls.
  *   A common alternative is 'https'.
- * @param $suffix
- *   (optional) The suffix to prepend to the url.
+ * @param $suffix (optional)
+ *   The suffix to prepend to the url.
  *   Most cases this should be '/', but if the links are being cached on a different server and a different sub-path, then this must be used.
- * @param $port
- *   (optional) The port number of the web-server.
+ * @param $port (optional)
+ *   The port number of the web-server.
  *   In almost all cases this should be 80.
  *   If $schema is set to 'https', then normally this should instead be 443.
- * @param $function_history
- *   (optional) array of function names, ie: array('0' => 'my_function_name')
+ * @param $function_history (optional)
+ *   An array of function names, ie: array('0' => 'my_function_name').
  *
  * @return
  *   An array containing the connection status and return http response.
  *   The array keys:
- *   'adjusted'
- *     A boolean with TRUE representing that the text's urls were successfully adjuested, FALSE otherwise.
- *   'text'
- *     The complete html text with all links adjusted to absolute paths.
+ *   - adjusted: A boolean with TRUE representing that the text's urls were successfully adjuested, FALSE otherwise.
+ *   - text: The complete html text with all links adjusted to absolute paths.
  */
 function cf_http_adjust_urls($text, $server, $relative_path, $scheme = 'http', $suffix = '/', $port = 80, array $function_history = array()){
   cf_error_append_history($function_history, __FUNCTION__);
@@ -440,24 +428,21 @@ function cf_http_adjust_urls($text, $server, $relative_path, $scheme = 'http', $
  *   A disadvantage is that remote images and links need to be processed, updated, and possibly even manually cached.
  *
  * @param $server
- *   hostname or ip address of the server.
- *   should not contain http:// or similary prefixes.
+ *   Hostname or ip address of the server.
+ *   Should not contain http:// or similary prefixes.
  * @param $path
- *  The file/path on the server to
- * @param $port
- *   (optional) port number of the page to read (defaults to 80).
- * @param $function_history
- *   (optional) array of function names, ie: array('0' => 'my_function_name')
+ *  The file/path on the server to.
+ * @param $port (optional)
+ *   Port number of the page to read (defaults to 80).
+ * @param $function_history (optional)
+ *   An array of function names, ie: array('0' => 'my_function_name').
  *
  * @return
  *   An array containing the connection status and return http response.
  *   The array keys:
- *   'read'
- *     A boolean with TRUE representing that the read was successful and FALSE otherwise.
- *   'headers'
- *     The http header from the httpd response.
- *   'document'
- *     The complete html document from the http response.
+ *   - read: A boolean with TRUE representing that the read was successful and FALSE otherwise.
+ *   - headers: The http header from the httpd response.
+ *   - document: The complete html document from the http response.
  */
 function cf_http_get_webpage($server, $path, $port = 80, array $function_history = array()){
   cf_error_append_history($function_history, __FUNCTION__);
@@ -491,23 +476,21 @@ function cf_http_get_webpage($server, $path, $port = 80, array $function_history
  *   A disadvantage is that remote images and links need to be processed, updated, and possibly even manually cached.
  *
  * @param $text
- *   hostname or ip address of the server.
- *   should not contain http:// or similary prefixes.
+ *   Hostname or ip address of the server.
+ *   Should not contain http:// or similary prefixes.
  * @param $depth
  *   The amount of shrinkage to perform. Any number from 1 to 6.
  * @param $preserve
  *   A boolean representing whether or not to preserve the header structure when the depth of a given header is reduced to a number greater than 6.
  *   If preserve is false, all header formatting will be lost.
- * @param $function_history
- *   (optional) array of function names, ie: array('0' => 'my_function_name')
+ * @param $function_history (optional)
+ *   An array of function names, ie: array('0' => 'my_function_name').
  *
  * @return
  *   An array containing the connection status and return http response.
  *   The array keys:
- *   'reduced'
- *     A boolean with TRUE representing that the text was successful reduced and FALSE otherwise.
- *   'text'
- *     The http text with all html headers reduced by $depth.
+ *   - reduced: A boolean with TRUE representing that the text was successful reduced and FALSE otherwise.
+ *   - text: The http text with all html headers reduced by $depth.
  */
 function cf_http_reduce_html_headers($text, $depth = 1, $preserve = TRUE, array $function_history = array()){
   cf_error_append_history($function_history, __FUNCTION__);

@@ -8,13 +8,13 @@
  *   See why from cf_node_create() function.
  *
  * @param $node_type
- *   the node type to initialize
+ *   The node type to initialize.
  * @param $node_title
- *   the note title to use
- * @param $node_body
- *   (optional) the node body to use
- * @param $function_history
- *   (optional) array of function names, ie: array('0' => 'my_function_name')
+ *   The note title to use.
+ * @param $node_body (optional)
+ *   The node body to use.
+ * @param $function_history (optional)
+ *   An array of function names, ie: array('0' => 'my_function_name').
  *
  * @return
  *   A basic node object that can be safely passed to drupal_execute().
@@ -66,11 +66,11 @@ function cf_node_initialize_class($node_type, $node_title, $node_body = '', arra
  *   The solution given here is to use drupal_execute while only needing to populate a single variable.
  *
  * @param $form_id
- *   the node type to initialize
+ *   The node type to initialize.
  * @param $node_class
- *   should be created via the cf_node_initialize_class() function and then altered as necessary
- * @param $function_history
- *   (optional) array of function names, ie: array('0' => 'my_function_name')
+ *   Should be created via the cf_node_initialize_class() function and then altered as necessary.
+ * @param $function_history (optional)
+ *   An array of function names, ie: array('0' => 'my_function_name').
  *
  * @return
  *   An array of all errors (if any) that occurred during the creation process.
