@@ -26,6 +26,16 @@ function quail_api_node_rules_condition_info() {
     'access callback' => 'rules_node_integration_access',
   );
 
+  $items['content_is_requiring_quail_api_validation'] = array(
+    'group' => t("Node"),
+    'label' => t("Content is requiring accessibility validation"),
+    'base' => 'quail_api_node_rules_condition_content_is_requiring_quail_api_node',
+    'parameter' => array(
+      'node' => array('type' => 'node', 'label' => t("Content")),
+    ),
+    'access callback' => 'rules_node_integration_access',
+  );
+
   return $items;
 }
 
@@ -111,7 +121,7 @@ function quail_api_node_validate_rules_action($node) {
  *   A node object
  *
  * @return
- *   TRUE/FALSE depending on if the content is using workbench access control.
+ *   TRUE/FALSE depending on if the content is using quail api node validation.
  */
 function quail_api_node_rules_condition_content_is_using_quail_api_node($node) {
   if (!is_object($node)) {
@@ -119,4 +129,21 @@ function quail_api_node_rules_condition_content_is_using_quail_api_node($node) {
   }
 
   return quail_api_node_is_enabled($node->type);
+}
+
+/**
+ * Condition: Check if the content is requiring accessibility validation.
+ *
+ * @param $node
+ *   A node object
+ *
+ * @return
+ *   TRUE/FALSE depending on if the content is requiring quail api node validation.
+ */
+function quail_api_node_rules_condition_content_is_requiring_quail_api_node($node) {
+  if (!is_object($node)) {
+    return FALSE;
+  }
+
+  return quail_api_node_is_required($node->type);
 }

@@ -1,0 +1,7 @@
+.quail_api_node-node_information-object {
+  font-weight: bold;
+}
+
+.quail_api_node-node_information-object:after {
+  content: ':';
+}

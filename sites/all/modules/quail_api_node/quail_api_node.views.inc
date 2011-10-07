@@ -19,7 +19,10 @@ function quail_api_node_views_data() {
   $data['quail_api_node_problems']['table']['group'] = t("Accessibility Validation Problem");
 
   $data['quail_api_node_problems']['table']['join'] = array(
-    'node'  => array('left_field' => 'nid', 'field' => 'nid'),
+    'node'  => array(
+      'left_field' => 'vid',
+      'field' => 'vid',
+    ),
     'quail_api_tests' => array('left_field' => 'id', 'field' => 'test_id'),
   );
 

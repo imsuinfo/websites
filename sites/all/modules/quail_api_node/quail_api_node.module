@@ -34,7 +34,6 @@ function quail_api_node_quail_api_permission_alter(&$permissions) {
   return $permissions;
 }
 
-
 /**
  * Implements hook_action_info().
  */
@@ -78,7 +77,30 @@ function quail_api_node_menu() {
     'context' => MENU_CONTEXT_PAGE | MENU_CONTEXT_INLINE,
   );
 
+  $items['node/%node/accessibility/%/revision'] = array(
+    'title' => "Accessibility",
+    'load arguments' => array(3),
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('quail_api_node_accessibility_tab_page', 1),
+    'access callback' => 'quail_api_node_access_accessibility_tab',
+    'access arguments' => array(1),
+    'file' => 'pages.inc',
+    'file path' => drupal_get_path('module', 'quail_api_node') . '/includes',
+  );
+
   return $items;
+}
+
+/**
+ * Implements hook_menu_alter().
+ */
+function quail_api_node_menu_alter(&$items) {
+  // provide a failsafe way to prevent menu override conflicts
+  $alter_menu = variable_get('quail_api_node_alter_revision_menu', TRUE);
+
+  if ($alter_menu){
+    $items['node/%node/revisions']['page callback'] = 'quail_api_node_revision_overview';
+  }
 }
 
 /**
@@ -88,8 +110,67 @@ function quail_api_node_admin_paths() {
   $paths = array();
 
   $paths['node/*/accessibility'] = TRUE;
+  $paths['node/*/accessibility/*/revision'] = TRUE;
 
   return $paths;
+}
+
+/**
+ * Implements hook_node_delete().
+ */
+function quail_api_node_node_delete($node){
+  $function_history = array();
+  cf_error_append_history($function_history, __FUNCTION__);
+
+  if (!is_object($node)){
+    cf_error_invalid_object($function_history, 'node');
+    return;
+  }
+
+  quail_api_node_delete_node_tests($node->nid);
+}
+
+/**
+ * Implements hook_node_revision_delete().
+ */
+function quail_api_node_node_revision_delete($node){
+  $function_history = array();
+  cf_error_append_history($function_history, __FUNCTION__);
+
+  if (!is_object($node)){
+    cf_error_invalid_object($function_history, 'node');
+    return;
+  }
+
+  quail_api_node_delete_node_tests($node->nid, $node->vid);
+}
+
+
+/**
+ * Implements hook_theme().
+ */
+function quail_api_node_theme($existing, $type, $theme, $path) {
+  $themes = array();
+
+  $themes['quail_api_node_information'] = array(
+    'template' => 'quail_api_node_information',
+    'variables' => array(
+      'node' => NULL,
+    ),
+    'path' => drupal_get_path('module', 'quail_api_node') . '/includes',
+  );
+
+  return $themes;
+}
+
+/**
+ * Template preprocess function for quail_api_node_information.tpl.php
+ */
+function template_preprocess_quail_api_node_information(&$variables){
+  $function_history = array();
+  cf_error_append_history($function_history, __FUNCTION__);
+
+  drupal_add_css(drupal_get_path('module', 'quail_api_node') . '/includes/quail_api_node_information.css');
 }
 
 /**
@@ -345,10 +426,10 @@ function quail_api_node_operation_validate($nids){
       }
     }
 
-    $results = quail_api_node_perform_validation(array($node), NULL, NULL, $function_history);
+    $results = quail_api_node_perform_validation(array($node), array(), NULL, NULL, $function_history);
 
-    if (isset($results[$node->nid]['report'])){
-      $results = $results[$node->nid]['report'];
+    if (isset($results[$node->nid][$node->vid]['report'])){
+      $results = $results[$node->nid][$node->vid]['report'];
 
       if ($database && !empty($results)){
         $no_failures = TRUE;
@@ -387,21 +468,30 @@ function quail_api_node_operation_validate($nids){
  *
  * @param $nodes_or_nids
  *   An array of node objects or node ids
+ * @param $vids (optional)
+ *   The an array vids to use during validation, with the following structure:
+ *   - nid: an array of vids With the array key being the node id.
+ *     - example: $vids = array('1' => array('2', '3', '4')) such '1' is the node id and 2, 3, and 4 are the vids for node 1.
  * @param $language (optional)
  *   The language to use during validation
  * @param $display_level (optional)
  *   An array of booleans representing the qual test display levels (defaults to quail_api_create_quail_display_level_array()).
- * @param $function_history
- *   (optional) array of function names, ie: array('0' => 'my_function_name')
+ * @param $function_history (optional)
+ *   array of function names, ie: array('0' => 'my_function_name')
  *
  * @return
  *   An array of all test failures, if any.
  */
-function quail_api_node_perform_validation($nodes_or_nids, $language = NULL, $display_level = NULL, array $function_history = array()){
+function quail_api_node_perform_validation($nodes_or_nids, $vids = array(), $language = NULL, $display_level = NULL, array $function_history = array()){
   cf_error_append_history($function_history, __FUNCTION__);
 
   if (!is_array($nodes_or_nids)){
     cf_error_invalid_array($function_history, 'nodes_or_nids');
+    return array();
+  }
+
+  if (!is_array($vids)){
+    cf_error_invalid_array($function_history, 'vids');
     return array();
   }
 
@@ -420,22 +510,45 @@ function quail_api_node_perform_validation($nodes_or_nids, $language = NULL, $di
       $node = node_load($node_or_nid);
 
       if (!is_object($node)){
-        cf_error_invalid_variable($function_history, $node, "Unable to load the node with the following node id: :nid.", array(':nid' => $node_or_nid));
+        cf_error_invalid_variable($function_history, 'node', "Unable to load the node with the following node id: :nid.", array(':nid' => $node_or_nid));
         continue;
       }
     }
 
+    if (array_key_exists($node->nid, $vids) && !empty($vids[$node->nid])){
+      $revisions = $vids[$node->nid];
+    }
+    else {
+      $revisions = array($node->vid);
+    }
+
     $results[$node->nid] = array();
 
-    if (property_exists($node, 'accessibility') && is_array($node->accessibility)){
-      $rendered_node = drupal_render(node_view($node, 'full', $language));
+    foreach ($revisions as $rid){
+      $results[$node->nid][$rid] = array();
 
-      if (!empty($node->accessibility['standards'])){
-        foreach ($node->accessibility['standards'] as $standard_name){
-          $results[$node->nid] = array_merge($results[$node->nid], quail_api_validate_markup($rendered_node, $standards[$standard_name], $display_level, $function_history));
+      if ($node->vid == $rid){
+        $revision = $node;
+      }
+      else {
+        $revision = node_load($node->nid, $rid);
 
-          if (module_exists('rules')){
-            rules_invoke_event('quail_api_node_after_validating', $node, $results[$node->nid]);
+        if (!is_object($revision)){
+          cf_error_invalid_variable($function_history, 'revision', "Unable to load the node revision with the node id of :nid and the revision id of :rid.", array(':nid' => $node->nid, ':rid' => $rid));
+          continue;
+        }
+      }
+
+      if (property_exists($revision, 'accessibility') && is_array($revision->accessibility)){
+        $rendered_node = drupal_render(node_view($revision, 'full', $language));
+
+        if (!empty($revision->accessibility['standards'])){
+          foreach ($revision->accessibility['standards'] as $standard_name){
+            $results[$revision->nid][$rid] = array_merge($results[$revision->nid][$rid], quail_api_validate_markup($rendered_node, $standards[$standard_name], $display_level, $function_history));
+
+            if (module_exists('rules')){
+              rules_invoke_event('quail_api_node_after_validating', $revision, $results[$node->nid][$rid]);
+            }
           }
         }
       }
@@ -626,13 +739,13 @@ function quail_api_node_save_node_tests($nid, $vid, $reports){
  *
  * @param $nid
  *   The node id of the node associated with the given reports.
- * @param $vid
+ * @param $vid (optional)
  *   The node revision id of the node associated with the given reports.
  *
  * @return
  *   A boolean representing the whether the save
  */
-function quail_api_node_delete_node_tests($nid, $vid){
+function quail_api_node_delete_node_tests($nid, $vid = NULL){
   $function_history = array();
   cf_error_append_history($function_history, __FUNCTION__);
 
@@ -641,7 +754,7 @@ function quail_api_node_delete_node_tests($nid, $vid){
     return FALSE;
   }
 
-  if (!is_numeric($vid)){
+  if (!is_null($vid) && !is_numeric($vid)){
     cf_error_not_numeric($function_history, 'vid');
     return FALSE;
   }
@@ -649,6 +762,10 @@ function quail_api_node_delete_node_tests($nid, $vid){
   // @todo when vid support is added, be sure to add a conditional check against vid here
   $query = db_delete('quail_api_node_problems');
   $query->condition('nid', $nid);
+
+  if (!is_null($vid)){
+    $query->condition('vid', $vid);
+  }
 
   return $query->execute();
 }
@@ -705,6 +822,7 @@ function quail_api_node_is_required($node_type){
  * @param $conditions is an array with the following possible keys:
  *   'id' The unique id representing a specific problem.
  *   'nid' the node id.
+ *   'vid' the node revision id.
  *   'test_id' a numeric value representing the id of the test the problem is associated with.
  *   'line' a numeric value representing the line number in which a problem applies to.
  * @param $keyed (optional)
@@ -737,6 +855,12 @@ function quail_api_node_load_problems($conditions = array(), $keyed = NULL){
     if (is_null($and)) $and = db_and();
 
     $and->condition('nid', $conditions['nid'], '=');
+  }
+
+  if (isset($conditions['vid']) && is_numeric($conditions['vid'])){
+    if (is_null($and)) $and = db_and();
+
+    $and->condition('vid', $conditions['vid'], '=');
   }
 
   if (isset($conditions['test_id']) && is_numeric($conditions['test_id'])){
@@ -814,7 +938,7 @@ function quail_api_node_replace_problems($nid, $vid, $problems){
   try {
     $query = db_delete('quail_api_node_problems');
     $query->condition('nid', $nid);
-    // @todo when vid support is added, be sure to add a conditional check against vid here
+    $query->condition('vid', $vid);
     $query->execute();
 
     foreach ($problems as $problem){
@@ -903,7 +1027,6 @@ function quail_api_node_save_problem($problem_data){
 
 /**
  * This restructures an array of problems as returned from database calls into a format that can be processed by the quail api theme functions.
- * @todo when vid support is added, update this function to properly use vid.
  *
  * @param $nid
  *   A node id the results belong to.
@@ -920,7 +1043,7 @@ function quail_api_node_restructure_results($nid, $vid, $display_levels = NULL){
   $function_history = array();
   cf_error_append_history($function_history, __FUNCTION__);
 
-  $problems = (array) quail_api_node_load_problems(array('nid' => $nid));
+  $problems = (array) quail_api_node_load_problems(array('nid' => $nid, 'vid' => $vid));
   $tests = quail_api_load_tests(array(), 'id', $function_history);
   $results = array();
 
@@ -977,7 +1100,7 @@ function quail_api_node_node_type_delete($info) {
  * Performs accessibility validation on a given node.
  *
  * $param $node
- *   A node object
+ *   A node object.
  *
  * @return
  *   An array containing the validation results or FALSE.
@@ -991,10 +1114,10 @@ function quail_api_node_validate_action($node) {
     return FALSE;
   }
 
-  $results = quail_api_node_perform_validation(array($node), NULL, NULL, $function_history);
+  $results = quail_api_node_perform_validation(array($node), array(), NULL, NULL, $function_history);
 
-  if (isset($results[$node->nid]['report'])){
-    $results = $results[$node->nid]['report'];
+  if (isset($results[$node->nid][$node->vid]['report'])){
+    $results = $results[$node->nid][$node->vid]['report'];
     $methods = quail_api_get_validation_methods(NULL, $function_history);
     $database = isset($methods[$node->accessibility['method']]['database']) ? $methods[$node->accessibility['method']]['database'] : FALSE;
 
@@ -1020,4 +1143,71 @@ function quail_api_node_validate_action($node) {
   watchdog('actions', "Accessibility validating node %nid:%vid.", array('%nid' => $node->nid, '%vid' => $node->vid));
 
   return $results;
+}
+
+/**
+ * Wraps or Replaces the node_revision_overview function with our own so we can add an "accessibility" link.
+ *
+ * $param $node
+ *   A node object.
+ *
+ * @return
+ *   An array containing the overview page structure.
+ */
+function quail_api_node_revision_overview($node) {
+  if (!user_access('access node accessibility tab')){
+    return node_revision_overview($node);
+  }
+
+  drupal_set_title(t("Revisions for %title", array('%title' => $node->title)), PASS_THROUGH);
+
+  $header = array(t("Revision"), array('data' => t("Operations"), 'colspan' => 3));
+
+  $revisions = node_revision_list($node);
+
+  $rows = array();
+  $revert_permission = FALSE;
+  if ((user_access('revert revisions') || user_access('administer nodes')) && node_access('update', $node)) {
+    $revert_permission = TRUE;
+  }
+
+  $delete_permission = FALSE;
+  if ((user_access('delete revisions') || user_access('administer nodes')) && node_access('delete', $node)) {
+    $delete_permission = TRUE;
+  }
+
+  foreach ($revisions as $revision) {
+    $row = array();
+    $operations = array();
+
+    if ($revision->current_vid > 0) {
+      $row[] = array(
+        'data' => t("!date by !username", array('!date' => l(format_date($revision->timestamp, 'short'), 'node/' . $node->nid), '!username' => theme('username', array('account' => $revision)))) . (($revision->log != '') ? "<p class='revision-log'>" . filter_xss($revision->log) . "</p>" : ""),
+        'class' => array('revision-current')
+      );
+
+      $operations[] = array('data' => drupal_placeholder(t("current revision")), 'class' => array('revision-current'), 'colspan' => 3);
+    }
+    else {
+      $row[] = t('!date by !username', array('!date' => l(format_date($revision->timestamp, 'short'), 'node/' . $node->nid . '/revisions/' . $revision->vid . '/view'), '!username' => theme('username', array('account' => $revision)))) . (($revision->log != '') ? "<p class='revision-log'>" . filter_xss($revision->log) . "</p>" : '');
+
+      $operations[] = l(t("accessibility"), 'node/' . $node->nid . '/accessibility/' . $revision->vid . '/revision');
+
+      if ($revert_permission) {
+        $operations[] = l(t("revert"), 'node/' . $node->nid . '/revisions/' . $revision->vid . '/revert');
+      }
+      if ($delete_permission) {
+        $operations[] = l(t("delete"), 'node/' . $node->nid . '/revisions/' . $revision->vid . '/delete');
+      }
+    }
+    $rows[] = array_merge($row, $operations);
+  }
+
+  $build['node_revisions_table'] = array(
+    '#theme' => 'table',
+    '#rows' => $rows,
+    '#header' => $header,
+  );
+
+  return $build;
 }

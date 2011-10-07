@@ -7,6 +7,8 @@ function quail_api_node_accessibility_tab_page($form, &$form_state, $node) {
   $function_history = array();
   cf_error_append_history($function_history, __FUNCTION__);
 
+  drupal_set_title(t("Accessibility Information for %title", array('%title' => $node->title)), PASS_THROUGH);
+
   $form = array();
 
   $results = array();
@@ -32,6 +34,20 @@ function quail_api_node_accessibility_tab_page($form, &$form_state, $node) {
     }
   }
 
+  $form['about_this_node'] = array(
+    '#type' => 'item',
+    '#title' => t("About This Node"),
+  );
+
+  $form['about_this_node']['node_information'] = array(
+    '#type' => 'fieldset',
+    '#title' =>  t("Node Information"),
+    '#collapsible' => TRUE,
+    '#collapsed' => TRUE,
+    '#tree' => TRUE,
+    '#description' => theme('quail_api_node_information', array('node' => $node)),
+  );
+
   $form['accessibility_validation_results'] = array(
     '#type' => 'item',
     '#title' => t("Accessibility Validation Results"),
@@ -48,10 +64,10 @@ function quail_api_node_accessibility_tab_page($form, &$form_state, $node) {
   }
 
   if ($automatic || $perform_validation){
-    $results = quail_api_node_perform_validation(array($node), NULL, NULL, $function_history);
+    $results = quail_api_node_perform_validation(array($node), array(), NULL, NULL, $function_history);
 
-    if (isset($results[$node->nid]['report'])){
-      $results = $results[$node->nid]['report'];
+    if (isset($results[$node->nid][$node->vid]['report'])){
+      $results = $results[$node->nid][$node->vid]['report'];
     }
     else {
       $results = array();
@@ -104,6 +120,47 @@ function quail_api_node_accessibility_tab_page($form, &$form_state, $node) {
       '#value' => t("Validate"),
     );
   }
+
+  // store the variables in the form such that hook_form_alter() functions don't have to build the data
+  $form['variables']['node'] = array(
+    '#type' => 'value',
+    '#value' => $node,
+  );
+
+  $form['variables']['results'] = array(
+    '#type' => 'value',
+    '#value' => $results,
+  );
+
+  $form['variables']['display_levels'] = array(
+    '#type' => 'value',
+    '#value' => $display_levels,
+  );
+
+  $form['variables']['methods'] = array(
+    '#type' => 'value',
+    '#value' => $methods,
+  );
+
+  $form['variables']['markup_format'] = array(
+    '#type' => 'value',
+    '#value' => $markup_format,
+  );
+
+  $form['variables']['automatic'] = array(
+    '#type' => 'value',
+    '#value' => $automatic,
+  );
+
+  $form['variables']['database'] = array(
+    '#type' => 'value',
+    '#value' => $database,
+  );
+
+  $form['variables']['perform_validation'] = array(
+    '#type' => 'value',
+    '#value' => $perform_validation,
+  );
 
   return $form;
 }
