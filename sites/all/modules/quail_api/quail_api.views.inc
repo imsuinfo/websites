@@ -1,6 +1,11 @@
 <?php
 
 /**
+ * @file
+ * Views integration file for the quail api.
+ */
+
+/**
  * Implementation of hook_views_handlers().
  */
 function quail_api_views_handlers() {

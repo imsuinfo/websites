@@ -1,6 +1,11 @@
 <?php
 
 /**
+ * @file
+ * Contains quail reporter class objects for the quail api.
+ */
+
+/**
  * An array reporter that generates a nested array of tests and report objects.
  * The quail library will look for a function called "report$name_of_reporter".
  * Therefore, 'quail_api_reporter' must be used as the name of this reporter.

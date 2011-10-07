@@ -1,7 +1,10 @@
 <?php
 
 /**
- * The guidelines here are modified versions provided by quial.
+ * @file
+ * Contains quail guideline class objects for the quail api.
+ *
+ * The guidelines here are modified versions provided by quail.
  * They are intended to be used against indidivual snippets of html and not an entire page.
  *
  * The quail library will look for guidelines by searching for a function called "${name_ofguideline}Guideline".
@@ -16,9 +19,8 @@
  *   siteMap
  */
 
-
 /**
- * All known tests are performed here, exception for the removed tests.
+ * All known tests are performed here, except for the removed tests.
  * - this is intended to be used on html snippets only, not an entire document.
  */
 class Quail_api_allGuideline extends quailGuideline {

@@ -1,6 +1,11 @@
 <?php
 
 /**
+ * @file
+ * Install file for the quail api.
+ */
+
+/**
  * Implements hook_requirements().
  */
 function quail_api_requirements($phase) {

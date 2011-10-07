@@ -1,13 +1,16 @@
 <?php
 
 /**
+ * @file
+ * Module file for the quail api.
+ */
+
+/**
  * Implements hook_permission().
  */
 function quail_api_permission() {
   $permissions = array();
 
-  // normally other modules can implement their own hook_permission
-  // however, in order to help improve organization of the permission page, this hook is provided so that all sub-modules may have their permissions appear under the parent group
   drupal_alter('quail_api_permission', $permissions);
 
   return $permissions;
@@ -177,8 +180,8 @@ function template_preprocess_quail_api_problem(&$variables){
 /**
  * Returns the expected path to the quail library.
  *
- * @param $function_history
- *   (optional) array of function names, ie: array('0' => 'my_function_name')
+ * @param $function_history (optional)
+ *   An array of function names, ie: array('0' => 'my_function_name').
  */
 function quail_api_library_path(array $function_history = array()){
   $library_path = libraries_get_path('quail');
@@ -189,8 +192,8 @@ function quail_api_library_path(array $function_history = array()){
 /**
  * Loads the quail library.
  *
- * @param $function_history
- *   (optional) array of function names, ie: array('0' => 'my_function_name')
+ * @param $function_history (optional)
+ *   An array of function names, ie: array('0' => 'my_function_name').
  */
 function quail_api_include_library(array $function_history = array()) {
   static $loaded_quail_api_library_includes = FALSE;
@@ -224,115 +227,118 @@ function quail_api_include_library(array $function_history = array()) {
  * @param standard (optional)
  *   Providing a valid standard name will cause the return value to only contain the standard that matches this string.
  * @param target (optional)
- *   Providing a target allows for limiting standards by some category.
+ *   Target allows for selecting standards based on some category or purpose.
  *   The target, in general, represents the scope in which the standards will be applied.
- *   The following targets are directly supported: 'all', 'snippet', 'page'
- * @param $function_history
- *   (optional) array of function names, ie: array('0' => 'my_function_name')
+ *   The following targets are directly supported: 'snippet', 'page'.
+ * @param $function_history (optional)
+ *   An array of function names, ie: array('0' => 'my_function_name').
  *
  * @return
- *  An array of standards that are supported by this module or extending modules.
- *  The array keys are the machine names for each standard.
+ *   An array of standards that are supported by this module or extending modules.
+ *   The array keys are the machine names for each standard.
  */
-function quail_api_get_standards($standard = NULL, $target = 'all', array $function_history = array()){
+function quail_api_get_standards($standard = NULL, $target = 'snippet', array $function_history = array()){
   $standards = array();
 
   cf_error_append_history($function_history, __FUNCTION__);
 
-  if ($target == 'all' || $target == 'snippet'){
+  if ($target == 'snippet' || $target == 'page'){
+    $reporter = 'quail_api';
+    $module = 'quail_api';
+
     $standards['all'] = array(
-      'name' => t("All Tests"),
-      'module' => 'quail_api',
+      'human_name' => t("All Tests"),
+      'module' => $module,
       'description' => t(
         "Validate using all known tests. This is more efficient than validating against each individual standard because identical tests are not run multiple times."
       ),
-      'guideline' => 'quail_api_all',
-      'reporter' => 'quail_api',
-      'target' => 'snippet',
+      'guideline' => ($target == 'snippet') ? 'quail_api_all' : 'all',
+      'reporter' => $reporter,
+      'target' => $target,
     );
 
     $standards['section_508'] = array(
-      'name' => t("Section 508"),
-      'module' => 'quail_api',
+      'human_name' => t("Section 508"),
+      'module' => $module,
       'description' => t(
         "Validate using the <a href='@section_508'>Section 508</a> standard.",
         array('@section_508' => 'http://www.section508.gov/index.cfm?fuseAction=stdsdoc#Web')
       ),
-      'guideline' => 'quail_api_section508',
-      'reporter' => 'quail_api',
-      'target' => 'snippet',
+      'guideline' => ($target == 'snippet') ? 'quail_api_section508' : 'section508',
+      'reporter' => $reporter,
+      'target' => $target,
     );
 
     $standards['wcag_1_0_a'] = array(
-      'name' => t("WCAG 1.0 a"),
-      'module' => 'quail_api',
+      'human_name' => t("WCAG 1.0 a"),
+      'module' => $module,
       'description' => t(
         "Validate using the <a href='@wcag_1_0'>WCAG 1.0</a> (<a href='@wcag_1_0_a'>A</a>) standard.",
         array('@wcag_1_0' => 'http://www.w3.org/TR/WCAG10/', '@wcag_1_0_a' => 'http://www.w3.org/WAI/WCAG1A-Conformance')
       ),
-      'guideline' => 'quail_api_wcag1a',
-      'reporter' => 'quail_api',
-      'target' => 'snippet',
+      'guideline' => ($target == 'snippet') ? 'quail_api_wcag1a' : 'wcag1a',
+      'reporter' => $reporter,
+      'target' => $target,
     );
 
     $standards['wcag_1_0_aa'] = array(
-      'name' => t("WCAG 1.0 aa"),
-      'module' => 'quail_api',
+      'human_name' => t("WCAG 1.0 aa"),
+      'module' => $module,
       'description' => t(
         "Validate using the <a href='@wcag_1_0'>WCAG 1.0</a> (<a href='@wcag_1_0_aa'>AA</a>) standard.",
         array('@wcag_1_0' => 'http://www.w3.org/TR/WCAG10/', '@wcag_1_0_a' => 'http://www.w3.org/WAI/WCAG1AA-Conformance')
       ),
-      'guideline' => 'quail_api_wcag1aa',
-      'reporter' => 'quail_api',
-      'target' => 'snippet',
+      'guideline' => ($target == 'snippet') ? 'quail_api_wcag1aa' : 'wcag1aa',
+      'reporter' => $reporter,
+      'target' => $target,
     );
 
     $standards['wcag_1_0_aaa'] = array(
-      'name' => t("WCAG 1.0 aaa"),
-      'module' => 'quail_api',
+      'human_name' => t("WCAG 1.0 aaa"),
+      'module' => $module,
       'description' => t(
         "Validate using the <a href='@wcag_1_0'>WCAG 1.0</a> (<a href='@wcag_1_0_aaa'>AAA</a>) standard.",
         array('@wcag_1_0' => 'http://www.w3.org/TR/WCAG10/', '@wcag_1_0_a' => 'http://www.w3.org/WAI/WCAG1AAA-Conformance')
       ),
-      'guideline' => 'quail_api_wcag1aaa',
-      'reporter' => 'quail_api',
-      'target' => 'snippet',
+      'guideline' => ($target == 'snippet') ? 'quail_api_wcag1aaa' : 'wcag1aaa',
+      'reporter' => $reporter,
+      'target' => $target,
     );
 
     $standards['wcag_2_0_a'] = array(
-      'name' => t("WCAG 2.0 a"),
-      'module' => 'quail_api',
+      'human_name' => t("WCAG 2.0 a"),
+      'module' => $module,
       'description' => t(
         "Validate using the <a href='@wcag_2_0'>WCAG 2.0</a> (<a href='@wcag_2_0_a'>A</a>) standard.",
         array('@wcag_2_0' => 'http://www.w3.org/TR/WCAG20/', '@wcag_1_0_a' => 'http://www.w3.org/WAI/WCAG2A-Conformance')
       ),
-      'guideline' => 'quail_api_wcag2a',
-      'reporter' => 'quail_api',
-      'target' => 'snippet',
+      'guideline' => ($target == 'snippet') ? 'quail_api_wcag2a' : 'wcag2a',
+      'reporter' => $reporter,
+      'target' => $target,
     );
 
     $standards['wcag_2_0_aa'] = array(
-      'name' => t("WCAG 2.0 aa"),
-      'module' => 'quail_api',
+      'human_name' => t("WCAG 2.0 aa"),
+      'module' => $module,
       'description' => t(
         "Validate using the <a href='@wcag_2_0'>WCAG 2.0</a> (<a href='@wcag_2_0_aa'>AA</a>) standard.",
         array('@wcag_2_0' => 'http://www.w3.org/TR/WCAG20/', '@wcag_1_0_a' => 'http://www.w3.org/WAI/WCAG2AA-Conformance')
       ),
-      'guideline' => 'quail_api_wcag2aa',
-      'reporter' => 'quail_api',
-      'target' => 'snippet',
+      'guideline' => ($target == 'snippet') ? 'quail_api_wcag2aa' : 'wcag2aa',
+      'reporter' => $reporter,
+      'target' => $target,
     );
 
     $standards['wcag_2_0_aaa'] = array(
-      'name' => t("WCAG 2.0 aaa"),
-      'module' => 'quail_api',
+      'human_name' => t("WCAG 2.0 aaa"),
+      'module' => $module,
       'description' => t(
         "Validate using the <a href='@wcag_2_0'>WCAG 2.0</a> (<a href='@wcag_2_0_aaa'>AAA</a>) standard.",
         array('@wcag_2_0' => 'http://www.w3.org/TR/WCAG20/', '@wcag_1_0_a' => 'http://www.w3.org/WAI/WCAG2AAA-Conformance')
       ),
-      'guideline' => 'quail_api_wcag2aaa',
-      'reporter' => 'quail_api',
-      'target' => 'snippet',
+      'guideline' => ($target == 'snippet') ? 'quail_api_wcag2aaa' : 'wcag2aaa',
+      'reporter' => $reporter,
+      'target' => $target,
     );
   }
 
@@ -363,15 +369,15 @@ function quail_api_get_standards($standard = NULL, $target = 'all', array $funct
  * @param target (optional)
  *   Providing a target allows for limiting standards by some category.
  *   The target, in general, represents the scope in which the standards will be applied.
- *   The following targets are directly supported: 'all', 'snippet', 'page'
- * @param $function_history
- *   (optional) array of function names, ie: array('0' => 'my_function_name')
+ *   The following targets are directly supported: 'snippet', 'page'.
+ * @param $function_history (optional)
+ *   An array of function names, ie: array('0' => 'my_function_name').
  *
  * @return
  *  An array of standards that are supported by this module or extending modules.
  *  The array keys are the standard machine name and the array value is the human name.
  */
-function quail_api_get_standards_list($standards = NULL, $target = 'all', array $function_history = array()){
+function quail_api_get_standards_list($standards = NULL, $target = 'snippet', array $function_history = array()){
   cf_error_append_history($function_history, __FUNCTION__);
 
   if (is_null($standards)){
@@ -381,14 +387,12 @@ function quail_api_get_standards_list($standards = NULL, $target = 'all', array 
   $standards_list = array();
 
   foreach ($standards as $machine_name => $value){
-    if ($target != 'all'){
-      if (!isset($value['target']) || $value['target'] != $target){
-        continue;
-      }
+    if (!isset($value['target']) || $value['target'] != $target){
+      continue;
     }
 
-    if (isset($value['name'])){
-      $standards_list[$machine_name] = $value['name'];
+    if (isset($value['human_name'])){
+      $standards_list[$machine_name] = $value['human_name'];
     }
   }
 
@@ -399,13 +403,15 @@ function quail_api_get_standards_list($standards = NULL, $target = 'all', array 
  * Returns an array of display_levels that are supported by this module or extending modules.
  *
  * @param display_level (optional)
- *   Providing a valid display level id name will cause the return value to only contain the display level that matches this string.
- * @param $function_history
- *   (optional) array of function names, ie: array('0' => 'my_function_name')
+ *   A number representing the display level.
+ *   When defined, the return value to only contain the display level that matches this string.
+ *   When undefined, all display levels will be loaded into the display_levels array.
+ * @param $function_history (optional)
+ *   An array of function names, ie: array('0' => 'my_function_name').
  *
  * @return
- *  An array of display levels that are supported by this module or extending modules.
- *  The array keys are the machine names for each display level.
+ *   An array of display levels that are supported by this module or extending modules.
+ *   The array keys are the machine names for each display level.
  */
 function quail_api_get_display_levels($display_level = NULL, array $function_history = array()){
   cf_error_append_history($function_history, __FUNCTION__);
@@ -468,12 +474,12 @@ function quail_api_get_display_levels($display_level = NULL, array $function_his
  *
  * @param display_levels (optional)
  *   Providing a valid array of display lists as returned by quail_api_get_display_levels() and it will be properly converted into a display levels list.
- * @param $function_history
- *   (optional) array of function names, ie: array('0' => 'my_function_name')
+ * @param $function_history (optional)
+ *   An array of function names, ie: array('0' => 'my_function_name').
  *
  * @return
- *  An array of display levels that are supported by this module or extending modules.
- *  The array keys are the display levels machine name and the array value is the human name.
+ *   An array of display levels that are supported by this module or extending modules.
+ *   The array keys are the display levels machine name and the array value is the human name.
  */
 function quail_api_get_display_levels_list($display_levels = NULL, array $function_history = array()){
   cf_error_append_history($function_history, __FUNCTION__);
@@ -498,8 +504,8 @@ function quail_api_get_display_levels_list($display_levels = NULL, array $functi
  *
  * @param standards (optional)
  *   Providing a valid array of standards as returned by quail_api_get_display_levels() and it will be properly converted into a standards list.
- * @param $function_history
- *   (optional) array of function names, ie: array('0' => 'my_function_name')
+ * @param $function_history (optional)
+ *   An array of function names, ie: array('0' => 'my_function_name').
  *
  * @return
  *   An array of qual test display levels, each initialized to TRUE.
@@ -524,24 +530,27 @@ function quail_api_get_default_display_level($display_levels = NULL, array $func
 
 /**
  * Returns an array of validation methods that are supported by this module or extending modules.
+ *
  * A validation method is how the validation process is to be performed.
  * Examples are:
  * - performing the validation everytime a page is viewed
  * - performing the validation only when a validate button is checked
  *
  * This is mostly information.
- * Extending modules are expected to provide
+ * Extending modules are expected to provide the functionality that utilizes this data.
  *
  * @todo function name, path, and arguments support should probably be added here
  *
  * @param validation_method (optional)
- *   Providing a valid method id name will cause the return value to only contain the validation method that matches the given id.
- * @param $function_history
- *   (optional) array of function names, ie: array('0' => 'my_function_name')
+ *   A machine name representing of the validation method.
+ *   When defined, the return value to only contain the validation method that matches the given id.
+ *   When undefined, all validation methods will be loaded into the validation_method array.
+ * @param $function_history (optional)
+ *   An array of function names, ie: array('0' => 'my_function_name').
  *
  * @return
- *  An array of validation methods that are supported by this module or extending modules.
- *  The array keys are the machine names for each display level.
+ *   An array of validation methods that are supported by this module or extending modules.
+ *   The array keys are the machine names for each display level.
  */
 function quail_api_get_validation_methods($validation_method = NULL, array $function_history = array()){
   cf_error_append_history($function_history, __FUNCTION__);
@@ -612,12 +621,12 @@ function quail_api_get_validation_methods($validation_method = NULL, array $func
  *
  * @param validation_methods (optional)
  *   Providing a valid array of validation methods as returned by quail_api_get_validation_methods() and it will be properly converted into a validation methods list.
- * @param $function_history
- *   (optional) array of function names, ie: array('0' => 'my_function_name')
+ * @param $function_history (optional)
+ *   An array of function names, ie: array('0' => 'my_function_name').
  *
  * @return
- *  An array of validation methods that are supported by this module or extending modules.
- *  The array keys are the validation methods machine name and the array value is the human name.
+ *   An array of validation methods that are supported by this module or extending modules.
+ *   The array keys are the validation methods machine name and the array value is the human name.
  */
 function quail_api_get_validation_methods_list($validation_methods = NULL, array $function_history = array()){
   cf_error_append_history($function_history, __FUNCTION__);
@@ -646,8 +655,8 @@ function quail_api_get_validation_methods_list($validation_methods = NULL, array
  *   An array containing a single standard to use as returned by: quail_api_get_standards().
  * @param $display_level (optional)
  *   An array of booleans representing the qual test display levels (defaults to quail_api_create_quail_display_level_array()).
- * @param $function_history
- *   (optional) array of function names, ie: array('0' => 'my_function_name')
+ * @param $function_history (optional)
+ *   An array of function names, ie: array('0' => 'my_function_name').
  *
  * @return
  *   An array of validation results with the following array keys.
@@ -687,15 +696,15 @@ function quail_api_validate_markup($html, $standard, $display_level = NULL, arra
  *
  * @param $conditions
  *   An array with the following possible keys:
- *     'id' the numeric id.
- *     'severity' a numeric value representing the severity (aka: display level) as defined by the quail library.
- *     'machine_name' the machine-friendly name for the test as defined by the quail library.
+ *   - id: The numeric id.
+ *   - severity: A numeric value representing the severity (aka: display level) as defined by the quail library.
+ *   - machine_name: The machine-friendly name for the test as defined by the quail library.
  * @param $keyed (optional)
- *   A string matching one of the following: 'id', 'machine_name'
+ *   A string matching one of the following: 'id', 'machine_name'.
  *   When this is NULL, the default behavior is to return the array exactly as it was returned by the database call.
  *   When this is a valid string, the key names of the returned array will use the specified key name.
- * @param $function_history
- *   (optional) array of function names, ie: array('0' => 'my_function_name')
+ * @param $function_history (optional)
+ *   An array of function names, ie: array('0' => 'my_function_name').
  *
  * @return
  *   An array of database results.
@@ -772,8 +781,8 @@ function quail_api_load_tests($conditions = array(), $keyed = NULL, array $funct
  *   - description: The detailed description of the test, which is defined by the quail library in the 'body' item.
  *   - id: (optional) The numeric id for existing data.
  *   - do_update: (optional) A boolean. When specified this tells forces an update if the machine name already exists.
- * @param $function_history
- *   (optional) array of function names, ie: array('0' => 'my_function_name')
+ * @param $function_history (optional)
+ *   An array of function names, ie: array('0' => 'my_function_name').
  *
  * @return
  *   The return states of either FALSE, SAVED_NEW, or SAVED_UPDATED.

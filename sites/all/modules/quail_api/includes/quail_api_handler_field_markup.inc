@@ -1,6 +1,11 @@
 <?php
 
 /**
+ * @file
+ * Provides field markup handler for views integration for the quail api.
+ */
+
+/**
  * A handler for the quail_api_node problem "element" field that is otherwise called a problem snippet.
  */
 class quail_api_handler_field_markup extends views_handler_field {
