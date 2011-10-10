@@ -1,0 +1,10 @@
+name = "Phplot API"
+description = "Provides an API for generating graphs using the phplot library."
+package = Statistics
+core = 7.x
+
+dependencies[] = libraries
+
+files[] = phplot_api.install
+files[] = phplot_api.module
+files[] = includes/phplot_api_plot.inc
