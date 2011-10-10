@@ -1,0 +1,122 @@
+<?php
+/**
+ * Implementation of hook_schema().
+ */
+function node_accessibility_schema() {
+  $schema = array();
+
+  $schema['node_accessibility_problems'] = array(
+    'description' => st("Node validation problem statistics."),
+    'fields' => array(
+      'id' => array(
+        'description' => st("The primary key used to represent this problem."),
+        'type' => 'serial',
+        'size' => 'big',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+      ),
+      'nid' => array(
+        'description' => st("The node's ID from {node}.nid."),
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'default' => 0,
+      ),
+      'vid' => array(
+        'description' => st("The node's version ID from {node}.vid."),
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'default' => 0,
+      ),
+      'test_id' => array(
+        'description' => st("The numeric ID from {quail_api_tests}.id, representing a specific error."),
+        'type' => 'int',
+        'size' => 'big',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'default' => 0,
+      ),
+      'line' => array(
+        'description' => st("The line number in which the error happened."),
+        'type' => 'int',
+        'size' => 'normal',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'default' => 0,
+      ),
+      'element' => array(
+        'description' => st("A snippet of the code that failed validation."),
+        'type' => 'text',
+        'not null' => TRUE,
+        'default' => '',
+      ),
+    ),
+    'primary key' => array('id'),
+    'foreign keys' => array(
+      'nid' => array(
+        'table' => 'node',
+        'columns' => array('nid' => 'nid'),
+      ),
+      'error_id' => array(
+        'table' => 'quail_api_errors',
+        'columns' => array('id' => 'id'),
+      ),
+    ),
+  );
+
+  $schema['node_accessibility_types'] = array(
+    'description' => t("Content type specific settings for quail api."),
+    'fields' => array(
+      'type' => array(
+        'description' => t("The machine-readable name of the node type that has accessibility validation enabled."),
+        'type' => 'varchar',
+        'length' => 32,
+        'not null' => TRUE,
+        'default' => '',
+      ),
+      'required' => array(
+        'description' => t("A boolean that designates whether or not accessibility validation is required."),
+        'type' => 'int',
+        'size' => 'tiny',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'default' => TRUE,
+      ),
+      'standards' => array(
+        'description' => t("A serialized array that contains the machine name of all enabled standards."),
+        'type' => 'blob',
+        'size' => 'big',
+        'not null' => FALSE,
+        'serialize' => TRUE,
+      ),
+      'method' => array(
+        'description' => t("A string that represent the validation method to use."),
+        'type' => 'varchar',
+        'length' => 64,
+        'not null' => TRUE,
+        'default' => '',
+      ),
+      'format' => array(
+        'description' => t("The filter format to use when providing validation results."),
+        'type' => 'varchar',
+        'length' => 255,
+        'not null' => TRUE,
+        'default' => '',
+      ),
+    ),
+    'primary key' => array('type'),
+    'foreign keys' => array(
+      'type' => array(
+        'table' => 'node_type',
+        'columns' => array('type' => 'type'),
+      ),
+      'format' => array(
+        'table' => 'filter_format',
+        'columns' => array('format' => 'format'),
+      ),
+    ),
+  );
+
+  return $schema;
+}
