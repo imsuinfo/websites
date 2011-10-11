@@ -1,6 +1,11 @@
 <?php
 
 /**
+ * @file
+ * Php class file for the phplot api project that provides the phplot_api_plot class object.
+ */
+
+/**
  * Plot class object for creating phplots.
  *
  * @todo review how function_history is handled here.
@@ -272,6 +277,25 @@ class phplot_api_plot {
 
     if (isset($this->data['background_color'])){
       $plot->SetBackgroundColor($this->data['background_color']);
+    }
+
+    if (isset($this->data['margins_pixels'])){
+      $item = $this->data['margins_pixels'];
+
+      switch(count($item)){
+        case 4:
+          $plot->SetMarginsPixels($item[0], $item[1], $item[2], $item[3]);
+          break;
+        case 3:
+          $plot->SetMarginsPixels($item[0], $item[1], $item[2]);
+          break;
+        case 2:
+          $plot->SetMarginsPixels($item[0], $item[1]);
+          break;
+        case 1:
+          $plot->SetMarginsPixels($item[0]);
+          break;
+      }
     }
 
     if (isset($this->data['plot_area_background_draw'])){

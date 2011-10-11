@@ -2,7 +2,7 @@
 
 /**
  * @file
- * TODO
+ * Module file for the phplot api project.
  */
 
 /**
@@ -283,6 +283,7 @@ function phplot_api_get_plots($plot_type = NULL, array $function_history = array
     $value['features']['legend_style'] = PHPLOT_API_FEATURE_SINGLE;
     $value['features']['legend_use_shapes'] = PHPLOT_API_FEATURE_SINGLE;
     $value['features']['legend_world'] = PHPLOT_API_FEATURE_SINGLE;
+    $value['features']['margins_pixels'] = PHPLOT_API_FEATURE_SINGLE;
     $value['features']['plot_area_world'] = PHPLOT_API_FEATURE_SINGLE;
     $value['features']['plot_area_background_image'] = PHPLOT_API_FEATURE_SINGLE;
     $value['features']['plot_area_pixels'] = PHPLOT_API_FEATURE_SINGLE;
