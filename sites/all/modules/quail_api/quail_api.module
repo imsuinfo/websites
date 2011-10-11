@@ -431,7 +431,7 @@ function quail_api_get_display_levels($display_level = NULL, array $function_his
   static $display_levels = NULL;
 
   if (isset($display_levels)){
-    if (!is_null($display_levels)){
+    if (!is_null($display_level)){
       if (isset($display_levels[$display_level])){
         return $display_levels[$display_level];
       }
@@ -584,7 +584,7 @@ function quail_api_get_validation_methods($validation_method = NULL, array $func
   static $validation_methods = NULL;
 
   if (isset($validation_methods)){
-    if (!is_null($validation_methods)){
+    if (!is_null($validation_method)){
       if (isset($validation_methods[$validation_method])){
         return $validation_methods[$validation_method];
       }
