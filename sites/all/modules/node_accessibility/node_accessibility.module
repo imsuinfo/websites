@@ -332,8 +332,8 @@ function node_accessibility_node_type_form_submit($form, &$form_state) {
   $record['method'] = isset($form_state['values']['node_accessibility_validation']['method']) ? $form_state['values']['node_accessibility_validation']['method'] : 'quail_api_method_immediate';
   $record['format'] = isset($form_state['values']['node_accessibility_validation']['format']) ? $form_state['values']['node_accessibility_validation']['format'] : 'full_html';
 
-  if (isset($form_state['values']['node_accessibility_validation']['required'])){
-    $record['required'] = $form_state['values']['node_accessibility_validation']['required'] === 'disabled';
+  if (isset($form_state['values']['node_accessibility_validation']['quail_enabled'])){
+    $record['required'] = $form_state['values']['node_accessibility_validation']['quail_enabled'] === 'required';
   }
   else {
     $record['required'] = FALSE;
