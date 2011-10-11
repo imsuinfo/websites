@@ -1,6 +1,11 @@
 <?php
 
 /**
+ * @file
+ * Module file for the node accessibility project.
+ */
+
+/**
  * Implements hook_help().
  */
 function node_accessibility_help($path, $arg) {
@@ -275,6 +280,7 @@ function node_accessibility_form_node_type_form_alter(&$form, &$form_state, $for
     '#default_value' => $default_method,
     '#options' => $methods_list,
     '#description' => t("Choose the way in which validation is performed."),
+    '#dependency' => array('edit-node-accessibility-validation-quail-enabled' => array('optional', 'required')),
   );
 
   // add documentation for each option
@@ -290,6 +296,7 @@ function node_accessibility_form_node_type_form_alter(&$form, &$form_state, $for
     '#default_value' => $default_format,
     '#options' => $formats,
     '#description' => t("Choose the filter to use when presenting the results of validation checks. This is only used for the html markup associated with the problem or suggestion."),
+    '#dependency' => array('edit-node-accessibility-validation-quail-enabled' => array('optional', 'required')),
   );
 
   $form['node_accessibility_validation']['standards'] = array(
@@ -298,6 +305,7 @@ function node_accessibility_form_node_type_form_alter(&$form, &$form_state, $for
     '#default_value' => $default_standards,
     '#options' => $standards,
     '#description' => t("Choose which accessiblity standards to validate against. It is strongly suggested that only 1 standard should be used because many of the validation tests are performed by more than one standard."),
+    '#dependency' => array('edit-node-accessibility-validation-quail-enabled' => array('optional', 'required')),
   );
 
   $form['#submit'][] = 'node_accessibility_node_type_form_submit';
