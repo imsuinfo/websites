@@ -17,6 +17,7 @@ class phplot_api_plot {
   protected $caller_history = array();
   protected $image = NULL;
   protected $file = NULL;
+  protected $plot = NULL;
 
 
   /**
@@ -87,6 +88,39 @@ class phplot_api_plot {
    */
   public function get_file(){
     return $this->file;
+  }
+
+  /**
+   * Returns the size of the legend.
+   *
+   * @return
+   *   A file object that represents the plot image.
+   */
+  public function get_legend_size(){
+    if (is_object($this->plot)){
+      return $this->plot->GetLegendSize();
+    }
+
+    return array(0, 0);
+  }
+
+  /**
+   * Returns a translation of world coordinates into device coordinates.
+   *
+   * @param x_world
+   *   The X coordinate to translate from world coordinates.
+   * @param y_world
+   *   The Y coordinate to translate from world coordinates.
+   *
+   * @return
+   *   A file object that represents the plot image.
+   */
+  public function get_device_xy($x_world, $y_world){
+    if (is_object($this->plot)){
+      return $this->plot->GetDeviceXY($x_world, $y_world);
+    }
+
+    return array(0, 0);
   }
 
   /**
@@ -181,14 +215,14 @@ class phplot_api_plot {
 
     // Create a PHPlot object with the given dimensions
     if (is_null($width) || is_null($height)){
-      $plot = new PHPlot();
+      $this->plot = new PHPlot();
     }
     else {
-      $plot = new PHPlot($width, $height);
+      $this->plot = new PHPlot($width, $height);
     }
 
     if (isset($this->data['data_type'])){
-      $plot->SetDataType($this->data['data_type']);
+      $this->plot->SetDataType($this->data['data_type']);
     }
 
     if (isset($this->data['data_colors'])){
@@ -196,87 +230,87 @@ class phplot_api_plot {
 
       switch(count($item)){
         case 3:
-          $plot->SetDataColors($item[0], $item[1], $item[2]);
+          $this->plot->SetDataColors($item[0], $item[1], $item[2]);
           break;
         case 2:
-          $plot->SetDataColors($item[0], $item[1]);
+          $this->plot->SetDataColors($item[0], $item[1]);
           break;
         case 1:
-          $plot->SetDataColors($item[0]);
+          $this->plot->SetDataColors($item[0]);
           break;
       }
     }
 
     if (isset($this->data['data_border_colors'])){
-      $plot->SetDataBorderColors($this->data['data_border_colors']);
+      $this->plot->SetDataBorderColors($this->data['data_border_colors']);
     }
 
     if (isset($this->data['data_values'])){
-      $plot->SetDataValues($this->data['data_values']);
+      $this->plot->SetDataValues($this->data['data_values']);
     }
 
     if (isset($this->data['data_label_angle_x'])){
-      $plot->SetXDataLabelAngle($this->data['data_label_angle_x']);
+      $this->plot->SetXDataLabelAngle($this->data['data_label_angle_x']);
     }
 
     if (isset($this->data['data_label_position_x'])){
-      $plot->SetXDataLabelPos($this->data['data_label_position_x']);
+      $this->plot->SetXDataLabelPos($this->data['data_label_position_x']);
     }
 
     if (isset($this->data['data_label_type_x'])){
-      $plot->SetXDataLabelType($this->data['data_label_type_x']);
+      $this->plot->SetXDataLabelType($this->data['data_label_type_x']);
     }
 
     if (isset($this->data['data_label_angle_y'])){
-      $plot->SetXDataLabelAngle($this->data['data_label_angle_y']);
+      $this->plot->SetXDataLabelAngle($this->data['data_label_angle_y']);
     }
 
     if (isset($this->data['data_label_position_y'])){
-      $plot->SetXDataLabelPos($this->data['data_label_position_y']);
+      $this->plot->SetXDataLabelPos($this->data['data_label_position_y']);
     }
 
     if (isset($this->data['data_label_type_y'])){
-      $plot->SetXDataLabelType($this->data['data_label_type_y']);
+      $this->plot->SetXDataLabelType($this->data['data_label_type_y']);
     }
 
     if (isset($this->data['title'])){
-      $plot->SetTitle($this->data['title']);
+      $this->plot->SetTitle($this->data['title']);
     }
 
     if (isset($this->data['title_color'])){
-      $plot->SetTitleColor($this->data['title_color']);
+      $this->plot->SetTitleColor($this->data['title_color']);
     }
 
     if (isset($this->data['title_font_size'])){
-      $plot->SetTitleFontSize($this->data['title_font_size']);
+      $this->plot->SetTitleFontSize($this->data['title_font_size']);
     }
 
     if (isset($this->data['ttf_path'])){
-      $plot->SetTTFPath($this->data['ttf_path']);
+      $this->plot->SetTTFPath($this->data['ttf_path']);
     }
 
     if (isset($this->data['ttf_default'])){
-      $plot->SetDefaultTTFont($this->data['ttf_default']);
+      $this->plot->SetDefaultTTFont($this->data['ttf_default']);
     }
 
     if (isset($this->data['ttf_font'])){
       foreach ($this->data['ttf_font'] as $item){
         switch(count($item)){
           case 4:
-            $plot->SetFontTTF($item[0], $item[1], $item[2], $item[3]);
+            $this->plot->SetFontTTF($item[0], $item[1], $item[2], $item[3]);
             break;
           case 3:
-            $plot->SetFontTTF($item[0], $item[1], $item[2]);
+            $this->plot->SetFontTTF($item[0], $item[1], $item[2]);
             break;
           case 2:
-            $plot->SetFontTTF($item[0], $item[1]);
+            $this->plot->SetFontTTF($item[0], $item[1]);
             break;
         }
       }
     }
 
     if (isset($this->data['background_color'])){
-      $plot->SetBackgroundColor($this->data['background_color']);
+      $this->plot->SetBackgroundColor($this->data['background_color']);
     }
 
     if (isset($this->data['margins_pixels'])){
@@ -284,72 +318,72 @@ class phplot_api_plot {
 
       switch(count($item)){
         case 4:
-          $plot->SetMarginsPixels($item[0], $item[1], $item[2], $item[3]);
+          $this->plot->SetMarginsPixels($item[0], $item[1], $item[2], $item[3]);
           break;
         case 3:
-          $plot->SetMarginsPixels($item[0], $item[1], $item[2]);
+          $this->plot->SetMarginsPixels($item[0], $item[1], $item[2]);
           break;
         case 2:
-          $plot->SetMarginsPixels($item[0], $item[1]);
+          $this->plot->SetMarginsPixels($item[0], $item[1]);
           break;
         case 1:
-          $plot->SetMarginsPixels($item[0]);
+          $this->plot->SetMarginsPixels($item[0]);
           break;
       }
     }
 
     if (isset($this->data['plot_area_background_draw'])){
-      $plot->SetDrawPlotAreaBackground($this->data['plot_area_background_draw']);
+      $this->plot->SetDrawPlotAreaBackground($this->data['plot_area_background_draw']);
     }
 
     if (isset($this->data['plot_background_color'])){
-      $plot->SetPlotBgColor($this->data['plot_background_color']);
+      $this->plot->SetPlotBgColor($this->data['plot_background_color']);
     }
 
     if (isset($this->data['precision_x'])){
-      $plot->SetPrecisionX($this->data['precision_x']);
+      $this->plot->SetPrecisionX($this->data['precision_x']);
     }
 
     if (isset($this->data['precision_y'])){
-      $plot->SetPrecisionY($this->data['precision_y']);
+      $this->plot->SetPrecisionY($this->data['precision_y']);
     }
 
     if (isset($this->data['shading'])){
-      $plot->SetShading($this->data['shading']);
+      $this->plot->SetShading($this->data['shading']);
     }
 
     if (isset($this->data['label_color'])){
-      $plot->SetLabelColor($this->data['label_color']);
+      $this->plot->SetLabelColor($this->data['label_color']);
     }
 
     if (isset($this->data['label_type'])){
       foreach ($this->data['label_type'] as $item){
         if (count($item) == 2){
-          $plot->SetLabelType($item[0], $item[1]);
+          $this->plot->SetLabelType($item[0], $item[1]);
         }
       }
     }
 
     if (isset($this->data['label_scale_position'])){
-      $plot->SetLabelScalePosition($this->data['label_scale_position']);
+      $this->plot->SetLabelScalePosition($this->data['label_scale_position']);
     }
 
-    // @todo is this a special case where if plot_area_world is an empty array it should call: $plot->SetPlotAreaWorld(); ?
+    // @todo is this a special case where if plot_area_world is an empty array it should call: $this->plot->SetPlotAreaWorld(); ?
     if (isset($this->data['plot_area_world'])){
       $item = $this->data['plot_area_world'];
 
       switch(count($item)){
         case 4:
-          $plot->SetPlotAreaWorld($item[0], $item[1], $item[2], $item[3]);
+          $this->plot->SetPlotAreaWorld($item[0], $item[1], $item[2], $item[3]);
           break;
         case 3:
-          $plot->SetPlotAreaWorld($item[0], $item[1], $item[2]);
+          $this->plot->SetPlotAreaWorld($item[0], $item[1], $item[2]);
           break;
         case 2:
-          $plot->SetPlotAreaWorld($item[0], $item[1]);
+          $this->plot->SetPlotAreaWorld($item[0], $item[1]);
           break;
         case 1:
-          $plot->SetPlotAreaWorld($item[0]);
+          $this->plot->SetPlotAreaWorld($item[0]);
           break;
       }
     }
@@ -358,53 +392,53 @@ class phplot_api_plot {
       $plot_area_background_image = $this->data['plot_area_background_image'];
 
       if (count($plot_area_background_image) == 2){
-        $plot->SetLabelType($plot_area_background_image[0], $plot_area_background_image[1]);
+        $this->plot->SetLabelType($plot_area_background_image[0], $plot_area_background_image[1]);
       }
     }
 
-    // @todo is this a special case where if plot_area_pixels is an empty array it should call: $plot->SetPlotAreaPixels(); ?
+    // @todo is this a special case where if plot_area_pixels is an empty array it should call: $this->plot->SetPlotAreaPixels(); ?
     if (isset($this->data['plot_area_pixels'])){
       $item = $this->data['plot_area_pixels'];
 
       switch(count($item)){
         case 4:
-          $plot->SetPlotAreaPixels($item[0], $item[1], $item[2], $item[3]);
+          $this->plot->SetPlotAreaPixels($item[0], $item[1], $item[2], $item[3]);
           break;
         case 3:
-          $plot->SetPlotAreaPixels($item[0], $item[1], $item[2]);
+          $this->plot->SetPlotAreaPixels($item[0], $item[1], $item[2]);
           break;
         case 2:
-          $plot->SetPlotAreaPixels($item[0], $item[1]);
+          $this->plot->SetPlotAreaPixels($item[0], $item[1]);
           break;
         case 1:
-          $plot->SetPlotAreaPixels($item[0]);
+          $this->plot->SetPlotAreaPixels($item[0]);
           break;
       }
     }
 
     if (isset($this->data['image_border_color'])){
-      $plot->SetImageBorderColor($this->data['image_border_color']);
+      $this->plot->SetImageBorderColor($this->data['image_border_color']);
     }
 
     if (isset($this->data['image_border_type'])){
-      $plot->SetImageBorderType($this->data['image_border_type']);
+      $this->plot->SetImageBorderType($this->data['image_border_type']);
     }
 
     if (isset($this->data['image_border_width'])){
-      $plot->SetImageBorderWidth($this->data['image_border_width']);
+      $this->plot->SetImageBorderWidth($this->data['image_border_width']);
     }
 
     if (isset($this->data['tick_color'])){
-      $plot->SetTickColor($this->data['tick_color']);
+      $this->plot->SetTickColor($this->data['tick_color']);
     }
 
     if (isset($this->data['tick_length'])){
-      $plot->SetTickLength($this->data['tick_length']);
+      $this->plot->SetTickLength($this->data['tick_length']);
     }
 
     if (isset($this->data['legend'])){
       foreach ($this->data['legend'] as $item){
-        $plot->SetLegend($item);
+        $this->plot->SetLegend($item);
       }
     }
 
@@ -413,10 +447,10 @@ class phplot_api_plot {
 
       switch(count($item)){
         case 2:
-          $plot->SetDataColors($item[0], $item[1]);
+          $this->plot->SetDataColors($item[0], $item[1]);
           break;
         case 1:
-          $plot->SetDataColors($item[0]);
+          $this->plot->SetDataColors($item[0]);
           break;
       }
     }
@@ -426,31 +460,31 @@ class phplot_api_plot {
 
       switch(count($item)){
         case 7:
-          $plot->SetLegendPosition($item[0], $item[1], $item[2], $item[3], $item[4], $item[5], $item[6]);
+          $this->plot->SetLegendPosition($item[0], $item[1], $item[2], $item[3], $item[4], $item[5], $item[6]);
           break;
         case 6:
-          $plot->SetLegendPosition($item[0], $item[1], $item[2], $item[3], $item[4], $item[5]);
+          $this->plot->SetLegendPosition($item[0], $item[1], $item[2], $item[3], $item[4], $item[5]);
           break;
         case 5:
-          $plot->SetLegendPosition($item[0], $item[1], $item[2], $item[3], $item[4]);
+          $this->plot->SetLegendPosition($item[0], $item[1], $item[2], $item[3], $item[4]);
           break;
         case 4:
-          $plot->SetLegendPosition($item[0], $item[1], $item[2], $item[3]);
+          $this->plot->SetLegendPosition($item[0], $item[1], $item[2], $item[3]);
           break;
         case 3:
-          $plot->SetLegendPosition($item[0], $item[1], $item[2]);
+          $this->plot->SetLegendPosition($item[0], $item[1], $item[2]);
           break;
         case 2:
-          $plot->SetLegendPosition($item[0], $item[1]);
+          $this->plot->SetLegendPosition($item[0], $item[1]);
           break;
         case 1:
-          $plot->SetLegendPosition($item[0]);
+          $this->plot->SetLegendPosition($item[0]);
           break;
       }
     }
 
     if (isset($this->data['legend_reverse'])){
-      $plot->SetLegendReverse($this->data['legend_reverse']);
+      $this->plot->SetLegendReverse($this->data['legend_reverse']);
     }
 
     if (isset($this->data['legend_style'])){
@@ -458,16 +492,16 @@ class phplot_api_plot {
 
       switch(count($item)){
         case 2:
-          $plot->SetLegendStyle($item[0], $item[1]);
+          $this->plot->SetLegendStyle($item[0], $item[1]);
           break;
         case 1:
-          $plot->SetLegendStyle($item[0]);
+          $this->plot->SetLegendStyle($item[0]);
           break;
       }
     }
 
     if (isset($this->data['legend_use_shapes'])){
-      $plot->SetLegendUseShapes($this->data['legend_use_shapes']);
+      $this->plot->SetLegendUseShapes($this->data['legend_use_shapes']);
     }
 
     if (isset($this->data['legend_world'])){
@@ -475,73 +509,83 @@ class phplot_api_plot {
 
       switch(count($item)){
         case 2:
-          $plot->SetLegendWorld($item[0], $item[1]);
+          $this->plot->SetLegendWorld($item[0], $item[1]);
           break;
         case 1:
-          $plot->SetLegendWorld($item[0]);
+          $this->plot->SetLegendWorld($item[0]);
           break;
       }
     }
 
     if (isset($this->data['tick_anchor_x'])){
-      $plot->SetXTickAnchor($this->data['tick_anchor_x']);
+      $this->plot->SetXTickAnchor($this->data['tick_anchor_x']);
     }
 
     if (isset($this->data['tick_crossing_x'])){
-      $plot->SetXTickCrossing($this->data['tick_crossing_x']);
+      $this->plot->SetXTickCrossing($this->data['tick_crossing_x']);
     }
 
     if (isset($this->data['tick_increment_x'])){
-      $plot->SetXTickIncrement($this->data['tick_increment_x']);
+      $this->plot->SetXTickIncrement($this->data['tick_increment_x']);
     }
 
     if (isset($this->data['tick_label_position_x'])){
-      $plot->SetXTickLabelPos($this->data['tick_label_position_x']);
+      $this->plot->SetXTickLabelPos($this->data['tick_label_position_x']);
     }
 
     if (isset($this->data['tick_length_x'])){
-      $plot->SetXTickLength($this->data['tick_length_x']);
+      $this->plot->SetXTickLength($this->data['tick_length_x']);
     }
 
     if (isset($this->data['tick_position_x'])){
-      $plot->SetXTickPos($this->data['tick_position_x']);
+      $this->plot->SetXTickPos($this->data['tick_position_x']);
     }
 
     if (isset($this->data['tick_anchor_y'])){
-      $plot->SetXTickAnchor($this->data['tick_anchor_y']);
+      $this->plot->SetXTickAnchor($this->data['tick_anchor_y']);
     }
 
     if (isset($this->data['tick_crossing_y'])){
-      $plot->SetXTickCrossing($this->data['tick_crossing_y']);
+      $this->plot->SetXTickCrossing($this->data['tick_crossing_y']);
     }
 
     if (isset($this->data['tick_increment_y'])){
-      $plot->SetXTickIncrement($this->data['tick_increment_y']);
+      $this->plot->SetXTickIncrement($this->data['tick_increment_y']);
     }
 
     if (isset($this->data['tick_label_position_y'])){
-      $plot->SetXTickLabelPos($this->data['tick_label_position_y']);
+      $this->plot->SetXTickLabelPos($this->data['tick_label_position_y']);
     }
 
     if (isset($this->data['tick_length_y'])){
-      $plot->SetXTickLength($this->data['tick_length_y']);
+      $this->plot->SetXTickLength($this->data['tick_length_y']);
     }
 
     if (isset($this->data['tick_position_y'])){
-      $plot->SetXTickPos($this->data['tick_position_y']);
+      $this->plot->SetXTickPos($this->data['tick_position_y']);
     }
 
     // @todo provide a modules_invoke call so that modules that provide their own tweaks can alter the plot object.
+  }
 
-    // Enforce the defined type here to prevent extending modules from altering this.
-    $plot->SetPlotType($this->type);
+  /**
+   * Generates and image blob file.
+   *
+   * @return
+   *   TRUE if no problems were detected and FALSE if a problem was detected.
+   *
+   * @see file_default_scheme()
+   */
+  function create_image(){
+    // Enforce the defined type here to prevent extending modules from improperly altering this.
+    $this->plot->SetPlotType($this->type);
 
     // The image must be inline for it to be loaded and returned in this way.
-    $plot->SetIsInline(TRUE);
+    $this->plot->SetIsInline(TRUE);
 
     // Draw the graph into a buffer $image
     ob_start();
-    $plot->DrawGraph();
+    $this->plot->DrawGraph();
     $this->image = ob_get_contents();
     ob_end_clean();
   }
