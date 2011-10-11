@@ -238,6 +238,20 @@ function quail_api_include_library(array $function_history = array()) {
  *   The array keys are the machine names for each standard.
  */
 function quail_api_get_standards($standard = NULL, $target = 'snippet', array $function_history = array()){
+  static $standards = NULL;
+
+  if (isset($standards)){
+    if (!is_null($standard)){
+      if (isset($standards[$standard])){
+        return $standards[$standard];
+      }
+
+      return array();
+    }
+
+    return $standards;
+  }
+
   $standards = array();
 
   cf_error_append_history($function_history, __FUNCTION__);
@@ -414,6 +428,20 @@ function quail_api_get_standards_list($standards = NULL, $target = 'snippet', ar
  *   The array keys are the machine names for each display level.
  */
 function quail_api_get_display_levels($display_level = NULL, array $function_history = array()){
+  static $display_levels = NULL;
+
+  if (isset($display_levels)){
+    if (!is_null($display_levels)){
+      if (isset($display_levels[$display_level])){
+        return $display_levels[$display_level];
+      }
+
+      return array();
+    }
+
+    return $display_levels;
+  }
+
   cf_error_append_history($function_history, __FUNCTION__);
 
   $display_levels = array();
@@ -553,6 +581,20 @@ function quail_api_get_default_display_level($display_levels = NULL, array $func
  *   The array keys are the machine names for each display level.
  */
 function quail_api_get_validation_methods($validation_method = NULL, array $function_history = array()){
+  static $validation_methods = NULL;
+
+  if (isset($validation_methods)){
+    if (!is_null($validation_methods)){
+      if (isset($validation_methods[$validation_method])){
+        return $validation_methods[$validation_method];
+      }
+
+      return array();
+    }
+
+    return $validation_methods;
+  }
+
   cf_error_append_history($function_history, __FUNCTION__);
 
   $validation_methods = array();
