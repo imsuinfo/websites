@@ -594,6 +594,12 @@ class phplot_api_plot {
    * Saves the phplot image block to the filesystem and the drupal database.
    * The plot file is saved as a temporary file.
    *
+   * @param file_status (optional)
+   *   Define whether or not a file is permanent or temporary.
+   *   Temporary is represented by 0 (for some reason drupal core does not define a global constant for this).
+   *   Permanent is represented by FILE_STATUS_PERMANENT.
+   *   Temporary is the default behavior.
+   *
    * @param directory (optional)
    *   A string defining the directory structure where the file will be saved.
    *   This should not begin with a '/'.
@@ -609,7 +615,7 @@ class phplot_api_plot {
    * @see phplot_api_build_plot()
    * @see file_default_scheme()
    */
-  function create_file($directory = 'statistics/plots', $file_schema = NULL){
+  function create_file($file_status = 0, $directory = 'statistics/plots', $file_schema = NULL){
     $function_history = $this->history(__FUNCTION__);
 
     // @todo how does one validate the image blob?
@@ -625,26 +631,33 @@ class phplot_api_plot {
     $filename = 'plot-' . sha1($this->image) . '.png';
     $directory =  $file_schema . '://' . $directory;
     $destination = $directory . '/' . $filename;
-    $timestamp = empty($_SERVER['REQUEST_TIME']) ? time() : REQUEST_TIME;
+    $filepath = '';
 
     file_prepare_directory($directory, FILE_MODIFY_PERMISSIONS | FILE_CREATE_DIRECTORY);
-    $filepath = file_unmanaged_save_data($this->image, $destination, FILE_EXISTS_REPLACE);
 
-    if (!file_exists($filepath)){
-      // create a drupal file object so that the file can be properly saved to the drupal database as a temporary file.
-      $this->file = new stdClass();
-      $this->file->uri         = $filepath;
-      $this->file->filename    = basename($filename);
-      $this->file->filemime    = 'image/png';
-      $this->file->filesize    = filesize($filepath);
-      $this->file->uid         = $user->uid;
-      $this->file->status      = 0;
-      $this->file->timestamp   = $timestamp;
+    if ($file_status == 0){
+      $filepath = file_unmanaged_save_data($this->image, $destination, FILE_EXISTS_REPLACE);
 
-      file_save($this->file);
+      if (!file_exists($filepath)){
+        $this->file = new stdClass();
+        $this->file->fid = NULL;
+        $this->file->uri = $filepath;
+        $this->file->filename = basename($filename);
+        $this->file->filemime = 'image/png';
+        $this->file->filesize = filesize($filepath);
+        $this->file->uid = $user->uid;
+        $this->file->status = 0;
+
+        file_save($this->file);
+      }
+      else {
+        // @todo what should be done here is to attempt to load the file object from the database and return that file object
+      }
     }
-    else {
-      // @todo what should be done here is to attempt to load the file object from the database and return that file object
+    else if ($file_status == FILE_STATUS_PERMANENT){
+      $this->file = file_save_data($this->image, $destination, FILE_EXISTS_REPLACE);
+
+      $filepath = $this->file->uri;
     }
 
     return $filepath;

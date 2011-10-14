@@ -196,7 +196,7 @@ function phplot_api_get_plots($plot_type = NULL, array $function_history = array
       "Pie chart with or without 3-D affects."
     ),
     'defaults' => array(),
-    'features' => array(),
+    'features' => array('label_scale_position' => PHPLOT_API_FEATURE_SINGLE,),
     'data_types' => array('text-data-single'),
   );
 
@@ -275,7 +275,6 @@ function phplot_api_get_plots($plot_type = NULL, array $function_history = array
     $value['features']['image_border_width'] = PHPLOT_API_FEATURE_SINGLE;
     $value['features']['label_color'] = PHPLOT_API_FEATURE_SINGLE;
     $value['features']['label_type'] = PHPLOT_API_FEATURE_MULTIPLE;
-    $value['features']['label_scale_position'] = PHPLOT_API_FEATURE_SINGLE;
     $value['features']['legend'] = PHPLOT_API_FEATURE_MULTIPLE;
     $value['features']['legend_pixels'] = PHPLOT_API_FEATURE_SINGLE;
     $value['features']['legend_position'] = PHPLOT_API_FEATURE_SINGLE;
