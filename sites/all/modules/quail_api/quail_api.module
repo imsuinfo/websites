@@ -786,8 +786,15 @@ function quail_api_load_tests($conditions = array(), $keyed = NULL, array $funct
   if (is_object($and)) $query->condition($and);
 
   if ($keyed === 'id' || $keyed === 'machine_name'){
-    $records = $query->execute();
     $results = array();
+
+    try {
+      $records = $query->execute();
+    }
+    catch (Exception $e) {
+      cf_error_on_query_execution($function_history, $e);
+      return array();
+    }
 
     foreach ($records as $record){
       if (!is_object($record)) continue;
