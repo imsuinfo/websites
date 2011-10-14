@@ -139,7 +139,8 @@ function _ldap_authorizations_user_authorizations(&$user, $op, $consumer_type, $
       continue;
     }
 
-    if (! ($user_ldap_entry = ldap_servers_get_user_ldap_data($user, $consumer->consumerConf->sid))) {
+    $consumer_sid = $consumer->consumerConf->deriveFromEntrySearchAll ? NULL : $consumer->consumerConf->sid;
+    if (! ($user_ldap_entry = ldap_servers_get_user_ldap_data($user, $consumer_sid))) {
       $notifications[$consumer_type][] = LDAP_AUTHORIZATION_USER_LDAP_NOT_FOUND;
       if ($detailed_watchdog_log) {
         watchdog('ldap_authorization', '%username : %consumer_type ldap user not found.', $watchdog_tokens, WATCHDOG_DEBUG);
@@ -387,11 +388,11 @@ function _ldap_authorization_ldap_authorization_maps_alter(&$user, &$user_ldap_e
   $derive_from_entry_authorizations = array();
   if ($consumer_conf->deriveFromEntry) {
     foreach ($consumer_conf->deriveFromEntryEntries as $branch) {
-      $filter = '(' . $consumer_conf->deriveFromEntryAttr . '="' . $user_ldap_entry['dn'] . '")';
+      $filter = '(' . $consumer_conf->deriveFromEntryAttr . '=' . $user_ldap_entry['dn'] . ')';
       $entries = $ldap_server->search($branch, $filter, array('cn'));
       if (empty($entries) || $entries['count'] == 0) {
         $filter = '(' . $consumer_conf->deriveFromEntryAttr . '=' . $user->name . ')';
-        $entries = $ldap_server->search($branch, $filter,  array('cn'));
+        $entries = $ldap_server->search($branch, $filter, array('cn'));
       }
       foreach ($entries as $entry) {
         if (isset($entry['cn'])) {

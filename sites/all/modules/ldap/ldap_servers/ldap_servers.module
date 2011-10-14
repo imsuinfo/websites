@@ -2,12 +2,19 @@
 // $Id: ldap_servers.module,v 1.5.2.1 2011/02/08 06:01:00 johnbarclay Exp $
 
 
+define('LDAP_SCOPE_BASE', 1);
+define('LDAP_SCOPE_ONELEVEL', 2);
+define('LDAP_SCOPE_SUBTREE', 3);
 
 define('LDAP_SERVERS_PROJECT_TAG', 'ldap');
 define('LDAP_SERVERS_MENU_BASE_PATH', 'admin/config/people/ldap');
 define('LDAP_SERVERS_INDEX_BASE_PATH', 'admin/config/people/ldap/servers');
 define('LDAP_SERVERS_MENU_BASE_PATH_PARTS', 4); // for argument offsets
 define('LDAP_SERVERS_DRUPAL_HELP_URL', 'http://drupal.org/node/997082');
+
+define('LDAP_SERVERS_TOKEN_PRE', '[');
+define('LDAP_SERVERS_TOKEN_POST', ']');
+define('LDAP_SERVERS_TOKEN_DEL', ':');
 
 define('LDAP_SERVERS_ENC_TYPE_MD5', 1);
 define('LDAP_SERVERS_ENC_TYPE_CRYPT', 2);
@@ -187,8 +194,6 @@ function ldap_servers_menu() {
     'file' => 'ldap_servers.admin.inc',
   );
 
-
-
   return $items;
 }
 
@@ -211,7 +216,16 @@ function ldap_servers_theme() {
       'render element' => 'element',
       'file' => 'ldap_servers.theme.inc'
     ),
-
+    'ldap_server_token_table' => array(
+      'variables' => array('tokens' => array()),
+      'render element' => 'element',
+      'file' => 'ldap_servers.theme.inc'
+    ),
+    'ldap_server_ldap_entry_table' => array(
+      'variables' => array('entry' => array()),
+      'render element' => 'element',
+      'file' => 'ldap_servers.theme.inc'
+    ),
   );
 }
 

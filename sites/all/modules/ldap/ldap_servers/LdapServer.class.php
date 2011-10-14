@@ -37,6 +37,9 @@ class LdapServer {
   public $user_dn_expression;
   public $user_attr;
   public $mail_attr;
+  public $mail_template;
+  public $unique_persistent_attr;
+  public $allow_conflicting_drupal_accts = FALSE;
   public $ldapToDrupalUserPhp;
   public $testingDrupalUsername;
   public $detailed_watchdog_log;
@@ -60,6 +63,9 @@ class LdapServer {
     'user_dn_expression' => 'user_dn_expression',
     'user_attr'  => 'user_attr',
     'mail_attr'  => 'mail_attr',
+    'mail_template'  => 'mail_template',
+    'unique_persistent_attr' => 'unique_persistent_attr',
+    'allow_conflicting_drupal_accts' => 'allow_conflicting_drupal_accts',
     'ldap_to_drupal_user'  => 'ldapToDrupalUserPhp',
     'testing_drupal_username'  => 'testingDrupalUsername'
     );
@@ -236,7 +242,7 @@ class LdapServer {
    *   empty.
    */
 
-  function search($base_dn = NULL, $filter, $attributes = array(), $attrsonly = 0, $sizelimit = 0, $timelimit = 0, $deref = LDAP_DEREF_NEVER) {
+  function search($base_dn = NULL, $filter, $attributes = array(), $attrsonly = 0, $sizelimit = 0, $timelimit = 0, $deref = NULL, $scope = LDAP_SCOPE_SUBTREE) {
     if ($base_dn == NULL) {
       if (count($this->basedn) == 1) {
         $base_dn = $this->basedn[0];
@@ -245,21 +251,59 @@ class LdapServer {
         return FALSE;
       }
     }
+
+    $attr_display =  is_array($attributes) ? join(',', $attributes) : 'none';
+    $query = 'ldap_search() call: '. join(",\n", array(
+      'base_dn: ' . $base_dn,
+      'filter = ' . $filter,
+      'attributes: ' . $attr_display,
+      'attrsonly = ' .  $attrsonly,
+      'sizelimit = ' .  $sizelimit,
+      'timelimit = ' .  $timelimit,
+      'deref = ' .  $deref,
+      'scope = ' .  $scope,
+      )
+    );
     if ($this->detailed_watchdog_log) {
-      $query = 'ldap_search() call: '. join("<hr/>", array(
-        'base_dn: ' . $base_dn,
-        'filter = ' . $filter,
-        'attributes: ' .  join(',', $attributes),
-        'attrsonly = ' .  $attrsonly,
-        'sizelimit = ' .  $sizelimit,
-        'timelimit = ' .  $timelimit,
-        'deref = ' .  $deref,
-        )
-      );
       watchdog('ldap_server', $query, array());
     }
 
-    $result = @ldap_search($this->connection, $base_dn, $filter, $attributes, $attrsonly, $sizelimit, $timelimit, $deref);
+    // When checking multiple servers, there's a chance we might not be connected yet.
+    if (! $this->connection) {
+      $this->connect();
+      $this->bind();
+    }
+
+
+    switch ($scope) {
+      case LDAP_SCOPE_SUBTREE:
+        $result = ldap_search($this->connection, $base_dn, $filter, $attributes, $attrsonly, $sizelimit, $timelimit, $deref);
+        if ($this->hasError()) {
+          watchdog('ldap_server', 'ldap_search() function error. LDAP Error: %message, ldap_search() parameters: %query',
+            array('%message' => $this->errorMsg('ldap'), '%query' => $query),
+            WATCHDOG_ERROR);
+        }
+        break;
+
+      case LDAP_SCOPE_BASE:
+        $result = ldap_read($this->connection, $base_dn, $filter, $attributes, $attrsonly, $sizelimit, $timelimit, $deref);
+        if ($this->hasError()) {
+          watchdog('ldap_server', 'ldap_read() function error.  LDAP Error: %message, ldap_read() parameters: %query',
+            array('%message' => $this->errorMsg('ldap'), '%query' => $query),
+            WATCHDOG_ERROR);
+        }
+        break;
+
+      case LDAP_SCOPE_ONELEVEL:
+        $result = ldap_list($this->connection, $base_dn, $filter, $attributes, $attrsonly, $sizelimit, $timelimit, $deref);
+        if ($this->hasError()) {
+          watchdog('ldap_server', 'ldap_list() function error. LDAP Error: %message, ldap_list() parameters: %query',
+            array('%message' => $this->errorMsg('ldap'), '%query' => $query),
+            WATCHDOG_ERROR);
+        }
+        break;
+    }
+
     if ($result && ldap_count_entries($this->connection, $result)) {
       $entries = ldap_get_entries($this->connection, $result);
       return $entries;
@@ -313,13 +357,11 @@ class LdapServer {
    // print "$ldap_username from $drupal_user_name"; die;
     foreach ($this->basedn as $basedn) {
       if (empty($basedn)) continue;
-
       $filter = '('. $this->user_attr . '=' . $ldap_username . ')';
-
       $result = $this->search($basedn, $filter);
       if (!$result || !isset($result['count']) || !$result['count']) continue;
 
-      // Must find exactly one user for authentication to.
+      // Must find exactly one user for authentication to work.
       if ($result['count'] != 1) {
         $count = $result['count'];
         watchdog('ldap_authentication', "Error: !count users found with $filter under $basedn.", array('!count' => $count), WATCHDOG_ERROR);
@@ -342,7 +384,7 @@ class LdapServer {
         if ($this->bind_method == LDAP_SERVERS_BIND_METHOD_ANON_USER) {
           $result = array(
             'dn' =>  $match['dn'],
-            'mail' => @$match[$this->mail_attr][0],
+            'mail' => $this->deriveEmailFromEntry($match),
             'attr' => $match,
             );
           return $result;
@@ -364,7 +406,7 @@ class LdapServer {
         if (drupal_strtolower(trim($value)) == drupal_strtolower($ldap_username)) {
           $result = array(
             'dn' =>  $match['dn'],
-            'mail' => @$match[$this->mail_attr][0],
+            'mail' => $this->deriveEmailFromEntry($match),
             'attr' => $match,
           );
 
@@ -374,7 +416,18 @@ class LdapServer {
     }
   }
 
-
+  public function deriveEmailFromEntry($ldap_entry) {
+    if ($this->mail_attr) { // not using template
+      return @$ldap_entry[$this->mail_attr][0];
+    }
+    elseif ($this->mail_template) {  // template is of form [cn]@illinois.edu
+      require_once('ldap_servers.functions.inc');
+      return ldap_server_token_replace($ldap_entry, $this->mail_template);
+    }
+    else {
+      return FALSE;
+    }
+  }
 
 
   /**

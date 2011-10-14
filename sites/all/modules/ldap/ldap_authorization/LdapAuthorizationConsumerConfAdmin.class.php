@@ -30,6 +30,7 @@ class LdapAuthorizationConsumerConfAdmin extends LdapAuthorizationConsumerConf {
     $values->derive_from_attr_attr = $this->arrayToLines($this->deriveFromAttrAttr);
     $values->derive_from_attr_use_first_attr = (int)$this->deriveFromAttrUseFirstAttr;
     $values->derive_from_entry = (int)$this->deriveFromEntry;
+    $values->derive_from_entry_search_all = (int)$this->deriveFromEntrySearchAll;
     $values->derive_from_entry_entries = $this->arrayToLines($this->deriveFromEntryEntries);
     $values->derive_from_entry_attr = $this->deriveFromEntryAttr;
     $values->mappings = $this->arrayToPipeList($this->mappings);
@@ -69,7 +70,7 @@ class LdapAuthorizationConsumerConfAdmin extends LdapAuthorizationConsumerConf {
     $this->mappings = $this->pipeListToArray($values->mappings);
     foreach (array('consumer_type', 'consumer_module', 'only_ldap_authenticated',
       'derive_from_dn', 'derive_from_dn_attr', 'derive_from_attr', 'derive_from_attr_attr', 'derive_from_attr_use_first_attr',
-      'derive_from_entry', 'derive_from_entry_entries', 'derive_from_entry_attr', 'use_filter',
+      'derive_from_entry', 'derive_from_entry_entries', 'derive_from_entry_attr', 'derive_from_entry_search_all', 'use_filter',
       'synch_to_ldap', 'synch_on_logon', 'revoke_ldap_provisioned', 'create_consumers',
       'regrant_ldap_provisioned') as $prop_name) {
       unset($this->{$prop_name});
@@ -263,6 +264,13 @@ class LdapAuthorizationConsumerConfAdmin extends LdapAuthorizationConsumerConf {
       '#maxlength' => 255,
       '#description' => t('Name of the multivalued attribute which holds the CNs of !consumer_shortNamePlural members,
          for example: memberUid', $consumer_tokens),
+    );
+
+
+    $form['derive_from_entry']['derive_from_entry_search_all'] = array(
+      '#type' => 'checkbox',
+      '#title' => t('Search all enabled LDAP servers for matching users.  (Enables roles on one server referencing users on another)'),
+      '#default_value' => $this->deriveFromEntrySearchAll,
     );
 
 
@@ -519,6 +527,7 @@ Enter one mapping per line with an <code>|</code> separating the raw authorizati
     $this->deriveFromAttr  = (bool)($values['derive_from_attr']);
     $this->deriveFromAttrAttr = $values['derive_from_attr_attr'];
     $this->deriveFromAttrUseFirstAttr  = (bool)($values['derive_from_attr_use_first_attr']);
+    $this->deriveFromEntrySearchAll  = (bool)($values['derive_from_entry_search_all']);
 
     $this->deriveFromEntry  = (bool)(@$values['derive_from_entry']);
     $this->deriveFromEntryEntries = $values['derive_from_entry_entries'];
@@ -679,6 +688,15 @@ Enter one mapping per line with an <code>|</code> separating the raw authorizati
         )
       ),
 
+      'derive_from_entry_search_all'  => array(
+          'schema' => array(
+            'type' => 'int',
+            'size' => 'tiny',
+           'not null' => TRUE,
+            'default' => 0,
+        )
+      ),
+
       'mappings'  => array(
         'form_default' => array(),
         'schema' => array(
@@ -688,7 +706,7 @@ Enter one mapping per line with an <code>|</code> separating the raw authorizati
         )
       ),
 
-      'use_filter'   => array(
+      'use_filter' => array(
         'schema' => array(
           'type' => 'int',
           'size' => 'tiny',
@@ -696,11 +714,12 @@ Enter one mapping per line with an <code>|</code> separating the raw authorizati
           'default' => 1,
         )
       ),
-      'synchronization_modes'  => array(
+
+      'synchronization_modes' => array(
         'form_default' =>  array('user_logon'),
       ),
 
-      'synchronization_actions'  => array(
+      'synchronization_actions' => array(
         'form_default' =>  array('revoke_ldap_provisioned', 'create_consumers'),
       ),
 
@@ -730,6 +749,7 @@ Enter one mapping per line with an <code>|</code> separating the raw authorizati
           'default' => '0',
         ),
       ),
+
      'create_consumers'  => array(
         'schema' => array(
           'type' => 'int',
@@ -738,6 +758,7 @@ Enter one mapping per line with an <code>|</code> separating the raw authorizati
           'default' => '0',
         ),
       ),
+
      'regrant_ldap_provisioned'  => array(
         'schema' => array(
           'type' => 'int',

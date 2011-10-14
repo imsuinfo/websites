@@ -19,9 +19,9 @@ files[] = tests/1197636.test
 files[] = tests/OtherAuthenticationIntegrationTests.test
 configure = admin/config/people/ldap/authorization
 
-; Information added by drupal.org packaging script on 2011-08-08
-version = "7.x-1.0-beta4"
+; Information added by drupal.org packaging script on 2011-10-10
+version = "7.x-1.0-beta5"
 core = "7.x"
 project = "ldap"
-datestamp = "1312774621"
+datestamp = "1318263413"
 

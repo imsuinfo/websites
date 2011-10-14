@@ -1,9 +1,37 @@
-// $Id: CHANGELOG.txt,v 1.1.4.3 2011/02/08 20:19:24 johnbarclay Exp $
+
+==================
+7.x-1.0-beta5
+==================
+Updated documentation page http://drupal.org/node/997082
+Fix token in ldap_authorization config page
+Fixed ldap_help uninstall of straggling variable
+Moved readme to http://drupal.org/node/1300810
+Fixed bug with ldap_feeds users. Added documentation for one use case at http://drupal.org/node/1300812
+Fixed a number of ldap_feeds issues. Both feed fetchers work and parser now. But not heavily tested and no simpletest coverage.
+Update 7100 for ldap_query to add scope field to ldap_query table
+Issue #1296994 by johnbarclay.  case sensitivity issue in ldap query.
+Issue #1296984 by johnbarclay.  ldap_query.  when no attributes specified, all should be returned.
+Issue #1290832 by slerby. space issue in attributes property
+Issue #1290826 by slerby. unused parameters in getLdapQueryObjects
+Issue #1290816 by slerby. failed saving of attribute to table
+Issue #1296154 by mrryanjohnston fixed with patch from same author.
+"final" release candidate plan of action. See http://drupal.org/node/1115704#comment-5045030
+Added ldap_query module into 7.1 branch.
+Issue #1202744 by slerby.  ldap_views integration module to 7.1 branch
+Issue #1267552 by stred.  object issue in sso hook_boot.
+Issue #1259628 by justintime, missing include in test form
+Issue #1256658 by matir, fix install time requirements for profiles.  also fixed feeds bug (see diff).
+Issue #1248116 by justintime, Allow users on one LDAP server to be assigned roles defined on a different server
+Issue #1240782 by justintime, fixes flatten returned array in ldap servers
+Issue #1240782 by justintime, fixes _ldap_servers_get_user_ldap_data when sid is passed in.
+Issue #1236532, #986806 by johnbarclay, begin to deal with a number of username, email, and unique id issues.
+Issue #1224808#21 by mfulz, need to remove quotes from filter.
+
 ==================
 7.x-1.0-beta4
 ==================
 Issue #1227088 by hotspoons. Allow SSO for authentication http://drupal.org/project/ldap_sso
-Issue #1240966 by sunil.  Fix multiple consumer loads adn display on authorizations test page.
+Issue #1240966 by sunil.  Fix multiple consumer loads and display on authorizations test page.
 Issue #1235430 by kbnielsen.  Improve message of disabled password reset form.
 Issue #1238818 by showmanlkz.  Made sid required on server form.
 Backed out of quoting filter values.  Though valid syntax, doesn't seem to work.
