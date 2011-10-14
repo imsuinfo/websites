@@ -1,6 +1,41 @@
 <?php
 
 
+/**
+ * Implements hook_cf_permission_alter().
+ *
+ * @see cf_permission()
+ */
+function cf_error_cf_permission_alter(&$permissions) {
+  if (!is_array($permissions)){
+    $permissions = array();
+  }
+
+  $permissions['view cf emergency messages'] = array(
+    'title' => t("View Emergency Messages"),
+    'description' => t("Grants permissions to view emergency messages presented by cf_error module."),
+  );
+
+  $permissions['view cf error messages'] = array(
+    'title' => t("View Error Messages"),
+    'description' => t("Grants permissions to view error messages presented by cf_error module."),
+  );
+
+  $permissions['view cf warning messages'] = array(
+    'title' => t("View Warning Messages"),
+    'description' => t("Grants permissions to view warning messages presented by cf_error module."),
+  );
+
+  $permissions['view cf information messages'] = array(
+    'title' => t("View Information Messages"),
+    'description' => t("Grants permissions to view information messages presented by cf_error module."),
+  );
+
+  $permissions['view cf debug messages'] = array(
+    'title' => t("View Debug Messages"),
+    'description' => t("Grants permissions to view debug messages presented by cf_error module."),
+  );
+}
 
 /**
  * This provides a common solution for appending the function name to the function_history array.
@@ -20,11 +55,94 @@ function cf_error_append_history(&$function_history, $function_name){
 
   if (!is_string($function_name)){
     $function_history[] = __FUNCTION__;
-    cf_error_empty_string($function_history, 'cf_error_append_history');
+    cf_error_empty_string($function_history, 'function_name');
     return;
   }
 
   $function_history[] = $function_name;
+}
+
+
+/**
+ * This provides a common solution for printing error messages to the screen using drupal_set_message() and watchdog().
+ *
+ * Why:
+ *   This facilitates printing the error messages without having each and every usage need to manually do so.
+ *
+ * @param $message
+ *   A string to display.
+ * @param $variables_array
+ *   An array of string substitutions for anything in the $message string.
+ * @param $type
+ *   The category to which this message belongs. Can be any string, but the general practice is to use the name of the module calling watchdog().
+* @param $severity
+ *   The severity of the message, as per RFC 3164. Possible values are WATCHDOG_ERROR, WATCHDOG_WARNING, etc.
+ * @param $function_history (optional)
+ *   An array of function names, ie: array('0' => 'my_function_name').
+ *
+ * @see drupal_set_message()
+ * @see watchdog()
+ * @see watchdog_severity_levels()
+ */
+function cf_error_print_message($message, $variables_array, $type, $severity, array $function_history = array()){
+  cf_error_append_history($function_history, __FUNCTION__);
+
+  if (!is_string($message)){
+    cf_error_empty_string($function_history, 'message');
+    return;
+  }
+
+  if (!is_array($variables_array)){
+    cf_error_invalid_array($function_history, 'variables_array');
+    return;
+  }
+
+  if (!is_string($type)){
+    cf_error_empty_string($function_history, 'type');
+    return;
+  }
+
+  if (!is_numeric($severity)){
+    cf_error_empty_string($function_history, 'severity');
+    return;
+  }
+
+  watchdog($type, $message . ", function history: %function_history", $variables_array, $severity);
+
+  switch ($severity){
+    case WATCHDOG_EMERGENCY:
+      if (user_access('view cf emergency messages')){
+        drupal_set_message(t($message, $variables_array), 'error', FALSE);
+      }
+      break;
+
+    case WATCHDOG_ALERT:
+    case WATCHDOG_CRITICAL:
+    case WATCHDOG_ERROR:
+      if (user_access('view cf error messages')){
+        drupal_set_message(t($message, $variables_array), 'error', FALSE);
+      }
+      break;
+
+    case WATCHDOG_WARNING:
+      if (user_access('view cf warning messages')){
+        drupal_set_message(t($message, $variables_array), 'warning', FALSE);
+      }
+      break;
+
+    case WATCHDOG_NOTICE:
+    case WATCHDOG_INFO:
+      if (user_access('view cf information messages')){
+        drupal_set_message(t($message, $variables_array), 'status', FALSE);
+      }
+      break;
+
+    case WATCHDOG_DEBUG:
+      if (user_access('view cf debug messages')){
+        drupal_set_message(t($message, $variables_array), 'status', FALSE);
+      }
+      break;
+  }
 }
 
 /**
@@ -73,11 +191,9 @@ function cf_error_invalid_variable($function_history, $argument_name, $why, arra
   }
 
   $variables_array = array_merge($variables, array('%argument_name' =>  $argument_name, '%function_history' => print_r($function_history, TRUE)));
+  $message = "The argument '%argument_name' is invalid or has a problem, reason: " . $why;
 
-  // TODO: report only if a global variable is defined to say report
-  // TODO: report function history only if a global variable is defined to say report function history
-  // TODO: also reporting drupal_set_message($error_message, 'error'); based on current user error message settings
-  watchdog('bad variable', "The argument '%argument_name' is invalid or has a problem, reason: " . $why . ", function history: %function_history", $variables_array, $severity);
+  cf_error_print_message($message, $variables_array, 'bad variable', $severity, $function_history);
 }
 
 /**
@@ -356,14 +472,15 @@ function cf_error_on_query_execution($function_history, $exception, $severity = 
   cf_error_append_history($function_history, __FUNCTION__);
 
   if (is_object($exception)){
-    $exception_message = $e->getMessage();
+    $exception_message = $exception->getMessage();
   }
   else {
     cf_error_invalid_object($function_history, 'exception');
     $exception_message = "";
   }
 
-  $variables_array = array_merge($variables, array('@exception' => $exception_message, '%function_history' => print_r($function_history, TRUE)));
+  $message = "Database Query Execution Failure: @exception";
+  $variables_array = array('@exception' => $exception_message, '%function_history' => print_r($function_history, TRUE));
 
-  watchdog('database', "Database Query Execution Failure: @exception, function history: %function_history", $variables_array, $severity);
+  cf_error_print_message($message, $variables_array, 'database', $severity, $function_history);
 }

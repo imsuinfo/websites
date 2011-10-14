@@ -1,5 +1,17 @@
 <?php
 
+
+/**
+ * Implements hook_permission().
+ */
+function cf_permission() {
+  $permissions = array();
+
+  drupal_alter('cf_permission', $permissions);
+
+  return $permissions;
+}
+
 /**
  * Provide a safe way to get the current user.
  *
