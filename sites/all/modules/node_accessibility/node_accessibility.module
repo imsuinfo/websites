@@ -84,7 +84,7 @@ function node_accessibility_menu() {
 
   $items['node/%node/accessibility/%/revision'] = array(
     'title' => "Accessibility",
-    'load arguments' => array(3),
+    'load arguments' => array(3, 3),
     'page callback' => 'drupal_get_form',
     'page arguments' => array('node_accessibility_accessibility_tab_page', 1),
     'access callback' => 'node_accessibility_access_accessibility_tab',
@@ -132,7 +132,7 @@ function node_accessibility_node_delete($node){
     return;
   }
 
-  node_accessibility_delete_node_tests($node->nid);
+  node_accessibility_delete_node_tests($node->nid, NULL, $function_history);
 }
 
 /**
@@ -147,7 +147,7 @@ function node_accessibility_node_revision_delete($node){
     return;
   }
 
-  node_accessibility_delete_node_tests($node->nid, $node->vid);
+  node_accessibility_delete_node_tests($node->nid, $node->vid, $function_history);
 }
 
 
@@ -183,12 +183,13 @@ function template_preprocess_node_accessibility_information(&$variables){
  *
  * @param $node
  *   A node object whose access is to be returned.
+ * @param $function_history (optional)
+ *   An array of function names, ie: array('0' => 'my_function_name').
  *
  * @return
  *   TRUE if user can make conversions using this type, FALSE otherwise.
  */
-function node_accessibility_access_accessibility_tab($node) {
-  $function_history = array();
+function node_accessibility_access_accessibility_tab($node, array $function_history = array()) {
   cf_error_append_history($function_history, __FUNCTION__);
 
   $access = FALSE;
@@ -240,7 +241,7 @@ function node_accessibility_form_node_type_form_alter(&$form, &$form_state, $for
   $default_format = 'full_html';
 
   if (!empty($form['#node_type']->type)){
-    $node_type_settings_objects = node_accessibility_load_node_type_settings(array($form['#node_type']));
+    $node_type_settings_objects = node_accessibility_load_node_type_settings(array($form['#node_type']), NULL, $function_history);
 
     if (!empty($node_type_settings_objects)){
       $node_type_settings_object = $node_type_settings_objects['0'];
@@ -327,7 +328,7 @@ function node_accessibility_node_type_form_submit($form, &$form_state) {
     return;
   }
 
-  $node_type_settings_objects = node_accessibility_load_node_type_settings(array($form_state['values']['type']), $function_history);
+  $node_type_settings_objects = node_accessibility_load_node_type_settings(array($form_state['values']['type']), NULL, $function_history);
   $node_type_settings_object = FALSE;
 
   if (!empty($node_type_settings_objects)){
@@ -395,7 +396,7 @@ function node_accessibility_operation_validate($nids){
   cf_error_append_history($function_history, __FUNCTION__);
 
   $nodes = node_load_multiple($nids);
-  $node_type_settings_objects = node_accessibility_load_node_type_settings($nodes, $function_history);
+  $node_type_settings_objects = node_accessibility_load_node_type_settings($nodes, NULL, $function_history);
   $node_type_settings_types = array();
 
   foreach ($node_type_settings_objects as $node_type_settings_object){
@@ -450,10 +451,10 @@ function node_accessibility_operation_validate($nids){
         }
 
         if ($no_failures){
-          node_accessibility_delete_node_tests($node->nid, $node->vid);
+          node_accessibility_delete_node_tests($node->nid, $node->vid, $function_history);
         }
         else {
-          node_accessibility_save_node_tests($node->nid, $node->vid, $results);
+          node_accessibility_save_node_tests($node->nid, $node->vid, $results, $function_history);
         }
       }
     }
@@ -507,7 +508,6 @@ function node_accessibility_perform_validation($nodes_or_nids, $vids = array(), 
     return array();
   }
 
-  $function_history[] = __FUNCTION__;
   $results = array();
   $standards = quail_api_get_standards(NULL, 'snippet', $function_history);
 
@@ -580,7 +580,7 @@ function node_accessibility_node_load($nodes, $types) {
     $all_nodes[$node->nid]->accessibility = FALSE;
   }
 
-  $results = node_accessibility_load_node_type_settings($all_nodes, $function_history);
+  $results = node_accessibility_load_node_type_settings($all_nodes, NULL, $function_history);
 
   foreach ($results as $result){
     $all_nodes[$node->nid]->accessibility = array();
@@ -602,42 +602,69 @@ function node_accessibility_node_load($nodes, $types) {
  * Loads the node type settings table data for the given node type.
  * @todo add caching support to the results of this check.
  *
- * @param $node_types
- *   An array of node type strings or node objects
+ * @param $node_types (optional)
+ *   An array of node type strings or node objects.
  * @param $keyed (optional)
  *   A string matching one of the following: 'type'
  *   When this is NULL, the default behavior is to return the array exactly as it was returned by the database call.
  *   When this is a valid string, the key names of the returned array will use the specified key name.
+ * @param $function_history (optional)
+ *   An array of function names, ie: array('0' => 'my_function_name').
  *
  * @return
  *   A prepared statement object, already executed.
  */
-function node_accessibility_load_node_type_settings($node_types, $keyed = NULL){
-  if (count($node_types) == 0){
+function node_accessibility_load_node_type_settings($node_types = array(), $keyed = NULL, array $function_history = array()){
+  if (!is_array($node_types)){
+    cf_error_invalid_array($function_history, 'node_types');
     return array();
   }
 
-  $query = db_select('node_accessibility_types', 'qant');
+  $function_history = array();
+  cf_error_append_history($function_history, __FUNCTION__);
 
-  $query->fields('qant');
-  $query->orderBy('qant.type', 'ASC');
+  $query = db_select('node_accessibility_types', 'nat');
 
-  $or = db_or();
+  $query->fields('nat');
+  $query->orderBy('nat.type', 'ASC');
 
-  foreach ($node_types as $node_type){
+  $total_types = count($node_types);
+
+  if ($total_types > 1){
+    $or = db_or();
+
+    foreach ($node_types as $node_type){
+      if (is_object($node_type)){
+        $or->condition('type', $node_type->type, '=');
+      }
+      else {
+        $or->condition('type', $node_type, '=');
+      }
+    }
+
+    $query->condition($or);
+  }
+  else if ($total_types == 1){
+    $node_type = array_pop($node_types);
+
     if (is_object($node_type)){
-      $or->condition('type', $node_type->type, '=');
+      $query->condition('type', $node_type->type, '=');
     }
     else {
-      $or->condition('type', $node_type, '=');
+      $query->condition('type', $node_type, '=');
     }
   }
 
-  $query->condition($or);
-
   if ($keyed === 'type'){
-    $records = $query->execute();
     $results = array();
+
+    try {
+      $records = $query->execute();
+    }
+    catch (Exception $e) {
+      cf_error_on_query_execution($function_history, $e);
+      return array();
+    }
 
     foreach ($records as $record){
       if (!is_object($record)) continue;
@@ -648,7 +675,14 @@ function node_accessibility_load_node_type_settings($node_types, $keyed = NULL){
     return $results;
   }
 
-  return $query->execute()->fetchAll();
+  try {
+    return $query->execute()->fetchAll();
+  }
+  catch (Exception $e) {
+    cf_error_on_query_execution($function_history, $e);
+  }
+
+  return array();
 }
 
 /**
@@ -660,12 +694,13 @@ function node_accessibility_load_node_type_settings($node_types, $keyed = NULL){
  *   The node revision id of the node associated with the given reports.
  * @param $reports
  *   The reports array as returned by the quail library quail api reporter.
+ * @param $function_history (optional)
+ *   An array of function names, ie: array('0' => 'my_function_name').
  *
  * @return
  *   A boolean representing the whether the save
  */
-function node_accessibility_save_node_tests($nid, $vid, $reports){
-  $function_history = array();
+function node_accessibility_save_node_tests($nid, $vid, $reports, array $function_history = array()){
   cf_error_append_history($function_history, __FUNCTION__);
 
   if (!is_array($reports)){
@@ -733,7 +768,7 @@ function node_accessibility_save_node_tests($nid, $vid, $reports){
   }
 
   if (!empty($problems)){
-    $results = node_accessibility_replace_problems($nid, $vid, $problems);
+    $results = node_accessibility_replace_problems($nid, $vid, $problems, $function_history);
 
     if ($results === FALSE){
       watchdog('node_accessibility', "Failed to insert :machine_name problems into node accessibility problems database table.", array(':machine_name' => $test_name), WATCHDOG_ERROR);
@@ -749,12 +784,13 @@ function node_accessibility_save_node_tests($nid, $vid, $reports){
  *   The node id of the node associated with the given reports.
  * @param $vid (optional)
  *   The node revision id of the node associated with the given reports.
+ * @param $function_history (optional)
+ *   An array of function names, ie: array('0' => 'my_function_name').
  *
  * @return
  *   A boolean representing the whether the save
  */
-function node_accessibility_delete_node_tests($nid, $vid = NULL){
-  $function_history = array();
+function node_accessibility_delete_node_tests($nid, $vid = NULL, array $function_history = array()){
   cf_error_append_history($function_history, __FUNCTION__);
 
   if (!is_numeric($nid)){
@@ -775,7 +811,14 @@ function node_accessibility_delete_node_tests($nid, $vid = NULL){
     $query->condition('vid', $vid);
   }
 
-  return $query->execute();
+  try {
+    return $query->execute();
+  }
+  catch (Exception $e) {
+    cf_error_on_query_execution($function_history, $e);
+  }
+
+  return FALSE;
 }
 
 /**
@@ -784,12 +827,15 @@ function node_accessibility_delete_node_tests($nid, $vid = NULL){
  *
  * @param $node_type
  *   A node type string.
+ * @param $function_history (optional)
+ *   An array of function names, ie: array('0' => 'my_function_name').
  *
  * @return
  *   The return states of either FALSE, SAVED_NEW, or SAVED_UPDATED.
  */
-function node_accessibility_is_enabled($node_type){
-  $node_type_settings_objects = node_accessibility_load_node_type_settings(array($node_type));
+function node_accessibility_is_enabled($node_type, array $function_history = array()){
+  cf_error_append_history($function_history, __FUNCTION__);
+  $node_type_settings_objects = node_accessibility_load_node_type_settings(array($node_type), NULL, $function_history);
 
   if (!empty($node_type_settings_objects) && is_object($node_type_settings_objects['0'])){
     return TRUE;
@@ -804,13 +850,17 @@ function node_accessibility_is_enabled($node_type){
  *
  * @param $node_type
  *   A node type string
+ * @param $function_history (optional)
+ *   An array of function names, ie: array('0' => 'my_function_name').
  *
  * @return
  *   TRUE or FALSE depending on whether or not accessibility validation functionality is required for the given node type.
  *   NULL is returned if accessibility validation functionality is not enabled.
  */
-function node_accessibility_is_required($node_type){
-  $node_type_settings_objects = node_accessibility_load_node_type_settings(array($node_type));
+function node_accessibility_is_required($node_type, array $function_history = array()){
+  cf_error_append_history($function_history, __FUNCTION__);
+
+  $node_type_settings_objects = node_accessibility_load_node_type_settings(array($node_type), NULL, $function_history);
 
   if (empty($node_type_settings_objects) || !is_object($node_type_settings_objects['0'])){
     return NULL;
@@ -827,67 +877,159 @@ function node_accessibility_is_required($node_type){
 /**
  * Loads the nodes problem data.
  *
- * @param $conditions is an array with the following possible keys:
- *   'id' The unique id representing a specific problem.
- *   'nid' the node id.
- *   'vid' the node revision id.
- *   'test_id' a numeric value representing the id of the test the problem is associated with.
- *   'line' a numeric value representing the line number in which a problem applies to.
+ * @param $conditions
+ *   An array with the following possible keys:
+ *   - 'id' The unique id representing a specific problem.
+ *   - 'nid' the node id.
+ *   - 'vid' the node revision id.
+ *   - 'test_id' a numeric value representing the id of the test the problem is associated with.
+ *   - 'line' a numeric value representing the line number in which a problem applies to.
+ *   - 'live_only' a boolean that specifies whether or not to restrict loading of problems to live content (active revision). (defaults to FALSE)
+ *   - 'unlive_only' a boolean that specifies whether or not to restrict loading of problems to non-live content (active revision). (defaults to FALSE)
+ *   - 'published_only' a boolean that specifies whether or not to restrict loading of problems to published content (active revision). (defaults to FALSE)
+ *   - 'unpublished_only' a boolean that specifies whether or not to restrict loading of problems to unpublished content (active revision). (defaults to FALSE)
+ *   - 'sort_by' the name of a column to sort by.
+ *   - 'sort_order' the order in which to sort by ('asc' or 'desc').
+ *   - 'node_columns' a boolean that specifies whether or not to load the node column fields in addition to the node accessibility problems fields. (defaults to FALSE)
  * @param $keyed (optional)
  *   A string matching one of the following: 'id'
  *   When this is NULL, the default behavior is to return the array exactly as it was returned by the database call.
  *   When this is a valid string, the key names of the returned array will use the specified key name.
+ * @param $function_history (optional)
+ *   An array of function names, ie: array('0' => 'my_function_name').
  *
  * @return
  *   An array of database results.
  */
-function node_accessibility_load_problems($conditions = array(), $keyed = NULL){
+function node_accessibility_load_problems($conditions = array(), $keyed = NULL, array $function_history = array()){
+  cf_error_append_history($function_history, __FUNCTION__);
+
   if (!is_array($conditions)){
-    cf_error_invalid_array(__FUNCTION__, 'conditions');
+    cf_error_invalid_array($function_history, 'conditions');
     return array();
   }
 
-  $query = db_select('node_accessibility_problems', 'qanp');
+  $query = db_select('node_accessibility_problems', 'nap');
+  $query->fields('nap');
 
-  $query->fields('qanp');
-  $query->orderBy('qanp.nid', 'ASC');
+  $sort_by = 'nap.nid';
+  $sort_order = 'ASC';
+
+  if (isset($conditions['sort_order'])){
+    switch ($conditions['sort_order']){
+      case 'ASC':
+      case 'DESC':
+        $sort_order = $conditions['sort_order'];
+        break;
+    }
+  }
+
+  if (isset($conditions['sort_by']) && is_string($conditions['sort_by'])){
+    switch ($conditions['sort_by']){
+      case 'id':
+      case 'nid':
+      case 'vid':
+      case 'test_id':
+      case 'line':
+      case 'element':
+        $sort_by = 'nap.' . $conditions['sort_by'];
+        break;
+
+      default:
+        $sort_by = $conditions['sort_by'];
+        break;
+    }
+  }
+
+  $query->orderBy($sort_by, $sort_order);
 
   $and = NULL;
+  $joined = FALSE;
+
+  if (isset($conditions['live_only']) && is_bool($conditions['live_only'])){
+    $query->innerjoin('node', 'n', 'nap.vid = n.vid');
+    $joined = TRUE;
+  }
+  else if (isset($conditions['unlive_only']) && is_bool($conditions['unlive_only'])){
+    $query->innerjoin('node', 'n', 'nap.nid = n.nid');
+    $joined = TRUE;
+    $and = db_and();
+
+    $and->where('NOT nap.vid = n.vid');
+  }
+
+  if (isset($conditions['published_only']) && is_bool($conditions['published_only'])){
+    if (!$joined){
+      $query->innerjoin('node', 'n', 'nap.nid = n.nid');
+      $joined = TRUE;
+    }
+
+    if (is_null($and)) $and = db_and();
+
+    $and->condition('n.status', 1, '=');
+  }
+  else if (isset($conditions['unpublished_only']) && is_bool($conditions['unpublished_only'])){
+    if (!$joined){
+      $query->innerjoin('node', 'n', 'nap.nid = n.nid');
+      $joined = TRUE;
+    }
+
+    if (is_null($and)) $and = db_and();
+
+    $and->condition('n.status', 0, '=');
+  }
 
   if (isset($conditions['id']) && is_numeric($conditions['id'])){
-    $and = db_and();
-    $and->condition('id', $conditions['id'], '=');
+    if (is_null($and)) $and = db_and();
+
+    $and->condition('nap.id', $conditions['id'], '=');
   }
 
   if (isset($conditions['nid']) && is_numeric($conditions['nid'])){
     if (is_null($and)) $and = db_and();
 
-    $and->condition('nid', $conditions['nid'], '=');
+    $and->condition('nap.nid', $conditions['nid'], '=');
   }
 
   if (isset($conditions['vid']) && is_numeric($conditions['vid'])){
     if (is_null($and)) $and = db_and();
 
-    $and->condition('vid', $conditions['vid'], '=');
+    $and->condition('nap.vid', $conditions['vid'], '=');
   }
 
   if (isset($conditions['test_id']) && is_numeric($conditions['test_id'])){
     if (is_null($and)) $and = db_and();
 
-    $and->condition('test_id', $conditions['test_id'], '=');
+    $and->condition('nap.test_id', $conditions['test_id'], '=');
   }
 
   if (!empty($conditions['line'])){
     if (is_null($and)) $and = db_and();
 
-    $and->condition('line', $conditions['line'], '=');
+    $and->condition('nap.line', $conditions['line'], '=');
   }
 
   if (is_object($and)) $query->condition($and);
 
+  if (isset($conditions['node_columns']) && is_bool($conditions['node_columns'])){
+    if (!$joined){
+      $query->innerjoin('node', 'n', 'nap.nid = n.nid');
+      $joined = TRUE;
+    }
+
+    $query->fields('n');
+  }
+
   if ($keyed === 'id'){
-    $records = $query->execute();
     $results = array();
+
+    try {
+      $records = $query->execute();
+    }
+    catch (Exception $e) {
+      cf_error_on_query_execution($function_history, $e);
+      return array();
+    }
 
     foreach ($records as $record){
       if (!is_object($record)) continue;
@@ -898,7 +1040,14 @@ function node_accessibility_load_problems($conditions = array(), $keyed = NULL){
     return $results;
   }
 
-  return $query->execute()->fetchAll();
+  try {
+    return $query->execute()->fetchAll();
+  }
+  catch (Exception $e) {
+    cf_error_on_query_execution($function_history, $e);
+  }
+
+  return array();
 }
 
 /**
@@ -917,12 +1066,13 @@ function node_accessibility_load_problems($conditions = array(), $keyed = NULL){
  *     - test_id: The id of the problem.
  *     - line: The line number of the problem.
  *     - element: The html markup of the problem.
+ * @param $function_history (optional)
+ *   An array of function names, ie: array('0' => 'my_function_name').
  *
  * @return
  *   The return states of either FALSE, SAVED_NEW, or SAVED_UPDATED.
  */
-function node_accessibility_replace_problems($nid, $vid, $problems){
-  $function_history = array();
+function node_accessibility_replace_problems($nid, $vid, $problems, array $function_history = array()){
   cf_error_append_history($function_history, __FUNCTION__);
 
   if (!is_numeric($nid)){
@@ -950,7 +1100,7 @@ function node_accessibility_replace_problems($nid, $vid, $problems){
     $query->execute();
 
     foreach ($problems as $problem){
-      $result = node_accessibility_save_problem($problem);
+      $result = node_accessibility_save_problem($problem, $function_history);
       // @todo handle return errors
     }
 
@@ -959,7 +1109,7 @@ function node_accessibility_replace_problems($nid, $vid, $problems){
   }
   catch (Exception $e){
     $transaction->rollback();
-    watchdog_exception('node_accessibility', $e);
+    cf_error_on_query_execution($function_history, $e);
     return FALSE;
   }
 
@@ -976,12 +1126,13 @@ function node_accessibility_replace_problems($nid, $vid, $problems){
  *   - test_id: The id of the problem.
  *   - line: The line number of the problem.
  *   - element: The html markup of the problem.
+ * @param $function_history (optional)
+ *   An array of function names, ie: array('0' => 'my_function_name').
  *
  * @return
  *   The return states of either FALSE, SAVED_NEW, or SAVED_UPDATED.
  */
-function node_accessibility_save_problem($problem_data){
-  $function_history = array();
+function node_accessibility_save_problem($problem_data, array $function_history = array()){
   cf_error_append_history($function_history, __FUNCTION__);
 
   if (!is_array($problem_data)){
@@ -1009,7 +1160,7 @@ function node_accessibility_save_problem($problem_data){
       return FALSE;
     }
 
-    $results = node_accessibility_load_problems(array('id' => $problem_data['id']));
+    $results = node_accessibility_load_problems(array('id' => $problem_data['id']), NULL, $function_history);
 
     if (is_array($results) && !empty($results)){
       $data['id'] = $problem_data['id'];
@@ -1043,15 +1194,16 @@ function node_accessibility_save_problem($problem_data){
  * @param $display_levels (optional)
  *   An array of display levels as returned by quail_api_get_display_levels().
  *   If NULL is passed, then this will auto-call quail_api_get_display_levels().
+ * @param $function_history (optional)
+ *   An array of function names, ie: array('0' => 'my_function_name').
  *
  * @return
  *   An array of database results in a format that can be processed by the quail_api theme functions.
  */
-function node_accessibility_restructure_results($nid, $vid, $display_levels = NULL){
-  $function_history = array();
+function node_accessibility_restructure_results($nid, $vid, $display_levels = NULL, array $function_history = array()){
   cf_error_append_history($function_history, __FUNCTION__);
 
-  $problems = (array) node_accessibility_load_problems(array('nid' => $nid, 'vid' => $vid));
+  $problems = (array) node_accessibility_load_problems(array('nid' => $nid, 'vid' => $vid), NULL, $function_history);
   $tests = quail_api_load_tests(array(), 'id', $function_history);
   $results = array();
 
@@ -1140,10 +1292,10 @@ function node_accessibility_validate_action($node) {
       }
 
       if ($no_failures){
-        node_accessibility_delete_node_tests($node->nid, $node->vid);
+        node_accessibility_delete_node_tests($node->nid, $node->vid, $function_history);
       }
       else {
-        node_accessibility_save_node_tests($node->nid, $node->vid, $results);
+        node_accessibility_save_node_tests($node->nid, $node->vid, $results, $function_history);
       }
     }
   }

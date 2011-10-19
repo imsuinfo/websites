@@ -3,7 +3,7 @@
 /**
  * Provides the accessibility tab page.
  */
-function node_accessibility_accessibility_tab_page($form, &$form_state, $node) {
+function node_accessibility_accessibility_tab_page($form, &$form_state, $node, $vid = NULL) {
   $function_history = array();
   cf_error_append_history($function_history, __FUNCTION__);
 
@@ -18,6 +18,12 @@ function node_accessibility_accessibility_tab_page($form, &$form_state, $node) {
   $automatic = TRUE;
   $database = FALSE;
   $perform_validation = FALSE;
+
+  $vids = array();
+
+  if (is_numeric($vid)){
+    $vids[$node->nid] = array($vid);
+  }
 
   if (isset($form_state['perform_validation'])){
     $perform_validation = TRUE;
@@ -64,7 +70,7 @@ function node_accessibility_accessibility_tab_page($form, &$form_state, $node) {
   }
 
   if ($automatic || $perform_validation){
-    $results = node_accessibility_perform_validation(array($node), array(), NULL, NULL, $function_history);
+    $results = node_accessibility_perform_validation(array($node), $vids, NULL, NULL, $function_history);
 
     if (isset($results[$node->nid][$node->vid]['report'])){
       $results = $results[$node->nid][$node->vid]['report'];
@@ -84,15 +90,15 @@ function node_accessibility_accessibility_tab_page($form, &$form_state, $node) {
       }
 
       if ($no_failures){
-        node_accessibility_delete_node_tests($node->nid, $node->vid);
+        node_accessibility_delete_node_tests($node->nid, $node->vid, $function_history);
       }
       else {
-        node_accessibility_save_node_tests($node->nid, $node->vid, $results);
+        node_accessibility_save_node_tests($node->nid, $node->vid, $results, $function_history);
       }
     }
   }
   else if ($database){
-    $results = node_accessibility_restructure_results($node->nid, $node->vid, $display_levels);
+    $results = node_accessibility_restructure_results($node->nid, $node->vid, $display_levels, $function_history);
   }
 
   if (!empty($results)){

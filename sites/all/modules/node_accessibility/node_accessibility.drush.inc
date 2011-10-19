@@ -109,6 +109,9 @@ function node_accessibility_drush_help($section) {
  * Import nodes from data.
  */
 function node_accessibility_drush_callback_validate() {
+  $function_history = array();
+  cf_error_append_history($function_history, __FUNCTION__);
+
   $uid = drush_get_option('uid');
   $nids = array();
   $rows = array();
@@ -123,7 +126,13 @@ function node_accessibility_drush_callback_validate() {
   if (drush_get_option('all')){
     $query = db_select('node', 'n');
     $query->fields('n', array('nid'));
-    $rows = $query->execute()->fetchAllAssoc('nid');
+
+    try {
+      $rows = $query->execute()->fetchAllAssoc('nid');
+    }
+    catch (Exception $e) {
+      cf_error_on_query_execution($function_history, $e);
+    }
   }
   else {
     $node_type = drush_get_option('type');
@@ -135,7 +144,13 @@ function node_accessibility_drush_callback_validate() {
       $query = db_select('node', 'n');
       $query->fields('n', array('nid'));
       $query->condition('type', check_plain($node_type), '=');
-      $rows = $query->execute()->fetchAllAssoc('nid');
+
+      try {
+        $rows = $query->execute()->fetchAllAssoc('nid');
+      }
+      catch (Exception $e) {
+        cf_error_on_query_execution($function_history, $e);
+      }
     }
   }
 

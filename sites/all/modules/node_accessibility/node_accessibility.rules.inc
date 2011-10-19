@@ -128,7 +128,10 @@ function node_accessibility_rules_condition_content_is_using_node_accessibility(
     return FALSE;
   }
 
-  return node_accessibility_is_enabled($node->type);
+  $function_history = array();
+  cf_error_append_history($function_history, __FUNCTION__);
+
+  return node_accessibility_is_enabled($node->type, $function_history);
 }
 
 /**
@@ -145,5 +148,8 @@ function node_accessibility_rules_condition_content_is_requiring_node_accessibil
     return FALSE;
   }
 
-  return node_accessibility_is_required($node->type);
+  $function_history = array();
+  cf_error_append_history($function_history, __FUNCTION__);
+
+  return node_accessibility_is_required($node->type, $function_history);
 }
