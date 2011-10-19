@@ -1,8 +1,0 @@
-name = "PHplot Wrapper"
-description = "Auto-includes the phplot library so that manual scripts"
-package = Simple
-core = 7.x
-
-dependencies[] = libraries
-
-files[] = phplot_wrapper.module
