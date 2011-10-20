@@ -10,13 +10,13 @@
   display: inline-block;
   width: 16px;
   height: 16px;
-  background: url(../images/field-permissions-status-on.png) no-repeat 0 0;
+  background: url(images/field_permissions.status-on.png) no-repeat 0 0;
 }
 .field-permissions-status-off {
   display: inline-block;
   width: 16px;
   height: 16px;
-  background: url(../images/field-permissions-status-off.png) no-repeat 0 0;
+  background: url(images/field_permissions.status-off.png) no-repeat 0 0;
 }
 
 /* Quick tooltips behavior. */
@@ -52,4 +52,23 @@ html.js .field-permissions-tooltip {
 #field-permissions-tooltip h3 {
   font-size: 1.2em;
   font-weight: bold;
+}
+
+/**
+ * Administration on the field settings page.
+ */
+
+/**
+ * Do not display the hide/show descriptions link above the permissions matrix.
+ */
+#field-ui-field-edit-form .compact-link {
+  display: none;
+}
+
+/**
+ * Indent the matrix and make it appear inline with the corresponding radio button.
+ */
+#field-ui-field-edit-form table#permissions {
+  margin-left: 1.5em;
+  width: 98%;
 }
