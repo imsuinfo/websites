@@ -97,8 +97,7 @@ function _pathologic($text, $filter) {
           (?:(?:index\.php)?(?:\?q=)?) # Allow for paths which include index.php
                                                                     # and/or ?q=
           ([^"]*)                                       # Finally, get the path.
-        )"~x
-      ',
+        )"~x',
       // create_funtion() lets us do lambdas in a really crappy but pre-PHP 5.3-
       // compatible way. We're using it here so we can pass the value of
       // $filter->settings['absolute'] to the replacement function. We could
@@ -115,22 +114,18 @@ function _pathologic($text, $filter) {
  */
 function _pathologic_replace($matches, $absolute) {
   // First, "files:" support. This is fairly easy.
-  if (isset($matches[2]) && $matches[2] === 'files:') {
+  if ($matches[2] === 'files:') {
     return $matches[1] . '="' . file_create_url(file_build_uri(urldecode($matches[3]))) . '"';
   }
   // Build the full URL, then take it apart
-  if (isset($matches[3])){
-    $parts = parse_url('http://example.com/' . urldecode($matches[3]));
-    if ($parts['path'] === '/' || $parts['path'] === '//') {
-      // '//' will be the case if the original path was just a slash
-      $parts['path'] = '<front>';
-    }
-    else {
-      // Trim initial slash off path.
-      $parts['path'] = drupal_substr($parts['path'], 1);
-    }
-  } else {
-    $parts = parse_url('http://example.com/');
+  $parts = parse_url('http://example.com/' . urldecode($matches[3]));
+  if ($parts['path'] === '/' || $parts['path'] === '//') {
+    // '//' will be the case if the original path was just a slash
+    $parts['path'] = '<front>';
+  }
+  else {
+    // Trim initial slash off path.
+    $parts['path'] = drupal_substr($parts['path'], 1);
   }
 
   // Need to parse the query parts
