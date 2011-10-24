@@ -4547,13 +4547,18 @@ class pNotUsedAsHeader extends quailTest {
 				($p->nodeValue == $p->firstChild->nodeValue) &&
 			 	property_exists($p->firstChild, 'tagName') && 
 				in_array($p->firstChild->tagName, $this->head_tags)) {
-					$this->addReport($p);
-					
+					$matches = preg_match("/\.\W*/", $p->nodeValue);
+					if ($matches == 0){
+						$this->addReport($p);
+					}
 			}
 			else {
 				$style = $this->css->getStyle($p);
 				if(isset($style['font-weight']) && $style['font-weight'] == 'bold') {
-					$this->addReport($p);
+					$matches = preg_match("/\.\W*/", $p->nodeValue);
+					if ($matches == 0){
+						$this->addReport($p);
+					}
 				}
 			}
 		}
