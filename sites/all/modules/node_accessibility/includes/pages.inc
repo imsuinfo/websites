@@ -73,16 +73,18 @@ function node_accessibility_accessibility_tab_page($form, &$form_state, $node, $
     $results = node_accessibility_perform_validation(array($node), $vids, NULL, NULL, $function_history);
 
     if (isset($results[$node->nid][$node->vid]['report'])){
-      $results = $results[$node->nid][$node->vid]['report'];
+      $reports = $results[$node->nid][$node->vid]['report'];
     }
     else {
-      $results = array();
+      $reports = array();
     }
 
-    if ($database && !empty($results)){
+    unset($results);
+
+    if ($database && !empty($reports)){
       $no_failures = TRUE;
 
-      foreach($results as $severity => $severity_results){
+      foreach($reports as $severity => $severity_results){
         if (isset($severity_results['total']) && $severity_results['total'] > 0){
           $no_failures = FALSE;
           break;
@@ -90,19 +92,19 @@ function node_accessibility_accessibility_tab_page($form, &$form_state, $node, $
       }
 
       if ($no_failures){
-        node_accessibility_delete_node_tests($node->nid, $node->vid, $function_history);
+        node_accessibility_delete_node_problems($node->nid, $node->vid, $function_history);
       }
       else {
-        node_accessibility_save_node_tests($node->nid, $node->vid, $results, $function_history);
+        node_accessibility_save_node_problems($node->nid, $node->vid, $reports, $function_history);
       }
     }
   }
   else if ($database){
-    $results = node_accessibility_restructure_results($node->nid, $node->vid, $display_levels, $function_history);
+    $reports = node_accessibility_restructure_results($node->nid, $node->vid, $display_levels, $function_history);
   }
 
-  if (!empty($results)){
-    foreach($results as $severity => $severity_results){
+  if (!empty($reports)){
+    foreach($reports as $severity => $severity_results){
       $form['accessibility_validation_results'][$display_levels[$severity]['machine_name']]['markup'] = array(
         '#type' => 'markup',
         '#markup' => theme('quail_api_results', array('severity_id' => $severity, 'severity_array' => $display_levels[$severity], 'severity_results' => $severity_results, 'markup_format' => $markup_format, 'display_title' => FALSE)),
@@ -135,7 +137,7 @@ function node_accessibility_accessibility_tab_page($form, &$form_state, $node, $
 
   $form['variables']['results'] = array(
     '#type' => 'value',
-    '#value' => $results,
+    '#value' => $reports,
   );
 
   $form['variables']['display_levels'] = array(

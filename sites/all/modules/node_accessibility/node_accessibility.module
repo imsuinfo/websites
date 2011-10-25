@@ -132,7 +132,7 @@ function node_accessibility_node_delete($node){
     return;
   }
 
-  node_accessibility_delete_node_tests($node->nid, NULL, $function_history);
+  node_accessibility_delete_node_problems($node->nid, NULL, $function_history);
 }
 
 /**
@@ -147,7 +147,7 @@ function node_accessibility_node_revision_delete($node){
     return;
   }
 
-  node_accessibility_delete_node_tests($node->nid, $node->vid, $function_history);
+  node_accessibility_delete_node_problems($node->nid, $node->vid, $function_history);
 }
 
 
@@ -438,12 +438,13 @@ function node_accessibility_operation_validate($nids){
     $results = node_accessibility_perform_validation(array($node), array(), NULL, NULL, $function_history);
 
     if (isset($results[$node->nid][$node->vid]['report'])){
-      $results = $results[$node->nid][$node->vid]['report'];
+      $reports = $results[$node->nid][$node->vid]['report'];
+      unset($results);
 
-      if ($database && !empty($results)){
+      if ($database && !empty($reports)){
         $no_failures = TRUE;
 
-        foreach($results as $severity => $severity_results){
+        foreach($reports as $severity => $severity_results){
           if (isset($severity_results['total']) && $severity_results['total'] > 0){
             $no_failures = FALSE;
             break;
@@ -451,10 +452,10 @@ function node_accessibility_operation_validate($nids){
         }
 
         if ($no_failures){
-          node_accessibility_delete_node_tests($node->nid, $node->vid, $function_history);
+          node_accessibility_delete_node_problems($node->nid, $node->vid, $function_history);
         }
         else {
-          node_accessibility_save_node_tests($node->nid, $node->vid, $results, $function_history);
+          node_accessibility_save_node_problems($node->nid, $node->vid, $reports, $function_history);
         }
       }
     }
@@ -700,7 +701,7 @@ function node_accessibility_load_node_type_settings($node_types = array(), $keye
  * @return
  *   A boolean representing the whether the save
  */
-function node_accessibility_save_node_tests($nid, $vid, $reports, array $function_history = array()){
+function node_accessibility_save_node_problems($nid, $vid, $reports, array $function_history = array()){
   cf_error_append_history($function_history, __FUNCTION__);
 
   if (!is_array($reports)){
@@ -790,7 +791,7 @@ function node_accessibility_save_node_tests($nid, $vid, $reports, array $functio
  * @return
  *   A boolean representing the whether the save
  */
-function node_accessibility_delete_node_tests($nid, $vid = NULL, array $function_history = array()){
+function node_accessibility_delete_node_problems($nid, $vid = NULL, array $function_history = array()){
   cf_error_append_history($function_history, __FUNCTION__);
 
   if (!is_numeric($nid)){
@@ -1277,14 +1278,15 @@ function node_accessibility_validate_action($node) {
   $results = node_accessibility_perform_validation(array($node), array(), NULL, NULL, $function_history);
 
   if (isset($results[$node->nid][$node->vid]['report'])){
-    $results = $results[$node->nid][$node->vid]['report'];
+    $reports = $results[$node->nid][$node->vid]['report'];
     $methods = quail_api_get_validation_methods(NULL, $function_history);
     $database = isset($methods[$node->accessibility['method']]['database']) ? $methods[$node->accessibility['method']]['database'] : FALSE;
+    unset($results);
 
-    if ($database && !empty($results)){
+    if ($database && !empty($reports)){
       $no_failures = TRUE;
 
-      foreach($results as $severity => $severity_results){
+      foreach($reports as $severity => $severity_results){
         if (isset($severity_results['total']) && $severity_results['total'] > 0){
           $no_failures = FALSE;
           break;
@@ -1292,10 +1294,10 @@ function node_accessibility_validate_action($node) {
       }
 
       if ($no_failures){
-        node_accessibility_delete_node_tests($node->nid, $node->vid, $function_history);
+        node_accessibility_delete_node_problems($node->nid, $node->vid, $function_history);
       }
       else {
-        node_accessibility_save_node_tests($node->nid, $node->vid, $results, $function_history);
+        node_accessibility_save_node_problems($node->nid, $node->vid, $reports, $function_history);
       }
     }
   }
