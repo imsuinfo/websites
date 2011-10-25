@@ -40,20 +40,6 @@ function node_accessibility_statistics_menu() {
 
   $items['admin/content/accessibility/node_statistics'] = array(
     'title' => "Node Accessibility Statistics",
-    'description' => "Statistical information derived from node accessibility validation results for all content.",
-    'page callback' => 'node_accessibility_statistics_page',
-    'file' => 'node_accessibility_statistics_page.inc',
-    'file path' => drupal_get_path('module', 'node_accessibility_statistics') . '/includes',
-    'access callback' => 'user_access',
-    'access arguments' => array('node accessibility statistics page access'),
-    'tab_parent' => 'admin/content/accessibility',
-    'tab_root' => 'admin/content/accessibility',
-    'type' => MENU_LOCAL_TASK,
-    'weight' => 10,
-  );
-
-  $items['admin/content/accessibility/node_statistics/live'] = array(
-    'title' => "Live Content",
     'description' => "Statistical information derived from node accessibility validation results for live content.",
     'page callback' => 'node_accessibility_statistics_page',
     'page arguments' => array('live'),
