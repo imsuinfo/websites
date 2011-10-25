@@ -66,3 +66,16 @@ div.view div.date-nav-wrapper div.date-nav ul.pager li.date-prev {
 div.view div.date-nav-wrapper div.date-nav ul.pager li.date-next {
   padding-right: 5px;
 }
+
+
+
+/**
+ * Workaround workbench left & right width issue.
+ */
+div.admin.my-workbench .right {
+  margin-right: 0;
+}
+
+div.admin.my-workbench .left {
+  margin-left: 0;
+}
