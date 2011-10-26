@@ -7383,11 +7383,10 @@ function entity_extract_ids($entity_type, $entity) {
   $id = isset($entity->{$info['entity keys']['id']}) ? $entity->{$info['entity keys']['id']} : NULL;
   $vid = ($info['entity keys']['revision'] && isset($entity->{$info['entity keys']['revision']})) ? $entity->{$info['entity keys']['revision']} : NULL;
 
-  if (!empty($info['entity keys']['bundle'])) {
-    // Explicitly fail for malformed entities missing the bundle property.
-    if (!isset($entity->{$info['entity keys']['bundle']}) || $entity->{$info['entity keys']['bundle']} === '') {
-      throw new EntityMalformedException(t('Missing bundle property on entity of type @entity_type.', array('@entity_type' => $entity_type)));
-    }
+  // Construct the bundle from the entity keys.
+  $bundle = isset($info['entity keys']['bundle']) ? $info['entity keys']['bundle'] : '';
+  if (!empty($bundle) && isset($entity->{$info['entity keys']['bundle']}) && !empty($entity->{$info['entity keys']['bundle']})) {
+    // If the bundle property is set within the entity, use that.
     $bundle = $entity->{$info['entity keys']['bundle']};
   }
   else {
