@@ -50,6 +50,12 @@ function node_accessibility_action_info() {
       'configurable' => FALSE,
       'triggers' => array('node_presave', 'node_insert', 'node_update'),
     ),
+    'node_accessibility_delete_action' => array(
+      'type' => 'node',
+      'label' => t("Delete accessibility statistics for content"),
+      'configurable' => FALSE,
+      'triggers' => array('node_presave', 'node_insert', 'node_update'),
+    ),
   );
 }
 
@@ -1304,7 +1310,36 @@ function node_accessibility_validate_action($node) {
 
   watchdog('actions', "Accessibility validating node %nid:%vid.", array('%nid' => $node->nid, '%vid' => $node->vid));
 
-  return $results;
+  return $reports;
+}
+
+/**
+ * Delete accessibility validation statistics for a node.
+ *
+ * $param $node
+ *   A node object.
+ *
+ * @return
+ *   An TRUE on success, FALSE otherwise.
+ */
+function node_accessibility_delete_action($node) {
+  $function_history = array();
+  cf_error_append_history($function_history, __FUNCTION__);
+
+  if (!is_object($node)){
+    cf_error_invalid_object($function_history, 'node');
+    return FALSE;
+  }
+
+  $result = node_accessibility_delete_node_problems($node->nid, $node->vid, $function_history);
+
+  if ($result === FALSE){
+    return FALSE;
+  }
+
+  watchdog('actions', "Deleted accessibility validation statistics for node %nid:%vid.", array('%nid' => $node->nid, '%vid' => $node->vid));
+
+  return TRUE;
 }
 
 /**

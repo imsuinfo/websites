@@ -82,9 +82,40 @@ function node_accessibility_rules_action_info() {
         ),
       ),
     ),
+   'node_accessibility_delete_action' => array(
+      'label' => t("Delete accessibility statistics for content"),
+      'group' => t("Node"),
+      'base' => 'node_accessibility_delete_rules_action',
+      'parameter' => array(
+        'node' => array(
+          'type' => 'node',
+          'label' => t("Content to delete statistics from"),
+        ),
+      ),
+    ),
   );
 
   return $items;
+}
+
+/**
+ * Action: Delete accessibility validation statistics for a node.
+ *
+ * $param $node
+ *   A node object
+ */
+function node_accessibility_delete_rules_action($node) {
+  $function_history = array();
+  cf_error_append_history($function_history, __FUNCTION__);
+
+  if (!is_object($node)){
+    cf_error_invalid_object($function_history, 'node');
+    return array('node' => $node);
+  }
+
+  actions_do('node_accessibility_delete_action', $node);
+
+  return array('node' => $node);
 }
 
 /**
