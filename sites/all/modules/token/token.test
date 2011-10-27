@@ -430,13 +430,6 @@ class TokenMenuTestCase extends TokenTestHelper {
       'menu-link:root:mlid' => $root_link['mlid'],
     );
     $this->assertTokens('node', array('node' => $node), $tokens);
-
-    // Test [node:menu] tokens for a loaded node.
-    $loaded_node = node_load($node->nid);
-    $this->assertTokens('node', array('node' => $loaded_node), $tokens);
-    // Save the loaded node after token generation.
-    node_save($loaded_node);
-    $this->assertTrue(menu_link_load($node->menu['mlid']), t('Make sure menu link was not deleted after token generation, if save a loaded node.'), 'Other');
   }
 }
 
