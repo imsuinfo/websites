@@ -1032,7 +1032,7 @@ function menu_tokens($type, $tokens, array $data = array(), array $options = arr
 
   // Node tokens.
   if ($type == 'node' && !empty($data['node'])) {
-    $node = $data['node'];
+    $node = clone $data['node'];
 
     if (!isset($node->menu)) {
       // Nodes do not have their menu links loaded via menu_node_load().
