@@ -79,3 +79,14 @@ function quail_api_schema() {
 
   return $schema;
 }
+
+/**
+ * Implementation of hook_disable().
+ */
+function quail_api_disable() {
+  cf_error_append_history($function_history, __FUNCTION__);
+
+  if (function_exists('quail_api_reset_cache')){
+    quail_api_reset_cache($function_history);
+  }
+}
