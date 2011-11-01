@@ -105,30 +105,31 @@ function node_accessibility_statistics_page($statistics_type = 'all') {
     '#tree' => TRUE,
   );
 
+  $display_levels = quail_api_get_display_levels(NULL, $function_history);
+
+  $form['major_problems']['#attributes'] = array('id' => 'accessibility_problems-' . $display_levels[1]['machine_name']);
+  $form['minor_problems']['#attributes'] = array('id' => 'accessibility_problems-' . $display_levels[2]['machine_name']);
+
+  $form['major_problems']['node_accessibility_statistics-header'] = array(
+    '#type' => 'markup',
+    '#markup' => '<h3 id="accessibility_problems-quail_test_major">' . t("Major Problems") . '</h3>',
+    '#weight' => -100,
+  );
+
+  $form['minor_problems']['node_accessibility_statistics-header'] = array(
+    '#type' => 'markup',
+    '#markup' => '<h3 id="accessibility_problems-quail_test_minor">' . t("Minor Problems") . '</h3>',
+    '#weight' => -100,
+  );
+
   if ($save_cache){
     $problems = (array) node_accessibility_load_problems($conditions, NULL, $function_history);
     $tests = quail_api_load_tests(array(), 'id', $function_history);
     $plot_data = array();
     $data = array();
     $information = array();
-    $display_levels = quail_api_get_display_levels(NULL, $function_history);
     $markup_format = 'full_html';
     $grand_total = 0;
-
-    $form['major_problems']['#attributes'] = array('id' => 'accessibility_problems-' . $display_levels[1]['machine_name']);
-    $form['minor_problems']['#attributes'] = array('id' => 'accessibility_problems-' . $display_levels[2]['machine_name']);
-
-    $form['major_problems']['node_accessibility_statistics-header'] = array(
-      '#type' => 'markup',
-      '#markup' => '<h3 id="accessibility_problems-quail_test_major">' . t("Major Problems") . '</h3>',
-      '#weight' => -100,
-    );
-
-    $form['minor_problems']['node_accessibility_statistics-header'] = array(
-      '#type' => 'markup',
-      '#markup' => '<h3 id="accessibility_problems-quail_test_minor">' . t("Minor Problems") . '</h3>',
-      '#weight' => -100,
-    );
 
     $major_problems = array();
     $minor_problems = array();
@@ -378,17 +379,10 @@ function node_accessibility_statistics_page($statistics_type = 'all') {
           '#markup' => theme('node_accessibility_statistics_plot', $theme_settings),
         );
       }
-      else {
-        switch ($type_name){
-          case 'major_problems':
-            $form['major_problems']['node_accessibility_statistics-header']['#markup'] .= '<div class="accessibility_problems-' . $type_name . '-description">' . t("There are no major problems detected.") . '</div>';
-            break;
+    }
 
-          case 'minor_problems':
-            $form['minor_problems']['node_accessibility_statistics-header']['#markup'] .=  '<div class="accessibility_problems-' . $type_name . '-description">' . t("There are no minor problems detected." . '</div>');
-            break;
-        }
-      }
+    if ($grand_total == 0){
+      $statistics['#description'] = t("There are no accessibility statistics available.");
     }
 
     if ($save_cache){
@@ -396,30 +390,28 @@ function node_accessibility_statistics_page($statistics_type = 'all') {
     }
   }
 
-  foreach ($major_problems as $machine_name => &$problem){
-    $form['major_problems'][$machine_name] = array(
-      '#type' => 'markup',
-      '#markup' => theme('node_accessibility_statistics_problem_details', $problem),
-    );
+  if (count($major_problems) == 0){
+    $form['major_problems']['node_accessibility_statistics-header']['#markup'] .= '<div class="accessibility_problems-major_problems-description">' . t("There are no major problems detected.") . '</div>';
+  }
+  else {
+    foreach ($major_problems as $machine_name => &$problem){
+      $form['major_problems'][$machine_name] = array(
+        '#type' => 'markup',
+        '#markup' => theme('node_accessibility_statistics_problem_details', $problem),
+      );
+    }
   }
 
-  foreach ($minor_problems as $machine_name => &$problem){
-    $form['minor_problems'][$machine_name] = array(
-      '#type' => 'markup',
-      '#markup' => theme('node_accessibility_statistics_problem_details', $problem),
-    );
+  if (count($minor_problems) == 0){
+    $form['minor_problems']['node_accessibility_statistics-header']['#markup'] .=  '<div class="accessibility_problems-minor_problems-description">' . t("There are no minor problems detected.") . '</div>';
   }
-
-  if ($grand_total == 0){
-    $form['statistics']['#description'] = t("There are no accessibility statistics available.");
-  }
-
-  if ($grand_total == 0 || count($major_problems) == 0){
-    $form['major_problems']['#description'] = t("There are no major accessibility problems detected.");
-  }
-
-  if ($grand_total == 0 || count($minor_problems) == 0){
-    $form['minor_problems']['#description'] = t("There are no minor accessibility problems detected.");
+  else {
+    foreach ($minor_problems as $machine_name => &$problem){
+      $form['minor_problems'][$machine_name] = array(
+        '#type' => 'markup',
+        '#markup' => theme('node_accessibility_statistics_problem_details', $problem),
+      );
+    }
   }
 
   return $form;
