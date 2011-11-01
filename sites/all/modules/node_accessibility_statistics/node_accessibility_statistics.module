@@ -1032,3 +1032,16 @@ function node_accessibility_statistics_delete_plots(array $plots, $keyed = NULL,
 
   return TRUE;
 }
+
+/**
+ * Resets all static caches provided by this module.
+ *
+ * @param $function_history (optional)
+ *   An array of function names, ie: array('0' => 'my_function_name').
+ */
+function node_accessibility_statistics_reset_cache(array $function_history = array()){
+  cf_error_append_history($function_history, __FUNCTION__);
+
+  drupal_static_reset('node_accessibility_statistics_page');
+  cache_clear_all('node_accessibility_statistics_page', 'cache', TRUE);
+}

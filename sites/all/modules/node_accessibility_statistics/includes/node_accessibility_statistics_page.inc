@@ -16,24 +16,6 @@ function node_accessibility_statistics_page($statistics_type = 'all') {
   $function_history = array();
   cf_error_append_history($function_history, __FUNCTION__);
 
-  $form['statistics'] = array(
-    '#collapsible' => TRUE,
-    '#collapsed' => FALSE,
-    '#tree' => TRUE,
-  );
-
-  $form['major_problems'] = array(
-    '#collapsible' => TRUE,
-    '#collapsed' => FALSE,
-    '#tree' => TRUE,
-  );
-
-  $form['minor_problems'] = array(
-    '#collapsible' => TRUE,
-    '#collapsed' => FALSE,
-    '#tree' => TRUE,
-  );
-
   $conditions = array();
   $title = "All Content";
   $statistics_type_path = '';
@@ -68,10 +50,62 @@ function node_accessibility_statistics_page($statistics_type = 'all') {
 
   drupal_set_title(t("Node Accessibility Statistics - @title", array('@title' => $title)), PASS_THROUGH);
 
-  static $major_problems = NULL;
-  static $minor_problems = NULL;
+  $static_variables = &drupal_static(__FUNCTION__, array());
+  $save_cache = FALSE;
 
-  if (is_null($major_problems) || is_null($minor_problems)){
+  if (empty($static_variables)){
+    if ($cache = cache_get('node_accessibility_statistics_page')){
+      $static_variables = $cache->data;
+    }
+    else {
+      $save_cache = TRUE;
+    }
+  }
+
+  if (!isset($static_variables[$statistics_type]['major_problems'])){
+    $static_variables[$statistics_type]['major_problems'] = NULL;
+    $save_cache = TRUE;
+  }
+
+  if (!isset($static_variables[$statistics_type]['minor_problems'])){
+    $static_variables[$statistics_type]['minor_problems'] = NULL;
+    $save_cache = TRUE;
+  }
+
+  if (!isset($static_variables[$statistics_type]['grand_total'])){
+    $static_variables[$statistics_type]['grand_total'] = 0;
+    $save_cache = TRUE;
+  }
+
+  if (!isset($static_variables[$statistics_type]['statistics'])){
+    $static_variables[$statistics_type]['statistics'] = array(
+      '#collapsible' => TRUE,
+      '#collapsed' => FALSE,
+      '#tree' => TRUE,
+    );
+    $save_cache = TRUE;
+  }
+
+  $major_problems = &$static_variables[$statistics_type]['major_problems'];
+  $minor_problems = &$static_variables[$statistics_type]['minor_problems'];
+  $grand_total = &$static_variables[$statistics_type]['grand_total'];
+  $statistics = &$static_variables[$statistics_type]['statistics'];
+
+  $form['statistics'] = &$statistics;
+
+  $form['major_problems'] = array(
+    '#collapsible' => TRUE,
+    '#collapsed' => FALSE,
+    '#tree' => TRUE,
+  );
+
+  $form['minor_problems'] = array(
+    '#collapsible' => TRUE,
+    '#collapsed' => FALSE,
+    '#tree' => TRUE,
+  );
+
+  if ($save_cache){
     $problems = (array) node_accessibility_load_problems($conditions, NULL, $function_history);
     $tests = quail_api_load_tests(array(), 'id', $function_history);
     $plot_data = array();
@@ -227,7 +261,7 @@ function node_accessibility_statistics_page($statistics_type = 'all') {
           $row['value'] = $row['value'] . ' (' . round((($row['value']) / $total) * 100) . '%)';
         }
 
-        $form['statistics'][$type_name] = array(
+        $statistics[$type_name] = array(
           '#type' => 'markup',
           '#markup' => theme('node_accessibility_statistics_plot', $theme_settings),
         );
@@ -339,7 +373,7 @@ function node_accessibility_statistics_page($statistics_type = 'all') {
 
         $theme_settings['image_url'] = $plot_file_path;
 
-        $form['statistics'][$type_name] = array(
+        $statistics[$type_name] = array(
           '#type' => 'markup',
           '#markup' => theme('node_accessibility_statistics_plot', $theme_settings),
         );
@@ -355,6 +389,10 @@ function node_accessibility_statistics_page($statistics_type = 'all') {
             break;
         }
       }
+    }
+
+    if ($save_cache){
+      cache_set('node_accessibility_statistics_page', $static_variables, 'cache', CACHE_TEMPORARY);
     }
   }
 

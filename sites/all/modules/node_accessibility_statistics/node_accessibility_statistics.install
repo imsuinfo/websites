@@ -107,3 +107,14 @@ function node_accessibility_statistics_schema() {
 
   return $schema;
 }
+
+/**
+ * Implementation of hook_disable().
+ */
+function node_accessibility_statistics_disable() {
+  cf_error_append_history($function_history, __FUNCTION__);
+
+  if (function_exists('node_accessibility_statistics_reset_cache')){
+    node_accessibility_statistics_reset_cache($function_history);
+  }
+}
