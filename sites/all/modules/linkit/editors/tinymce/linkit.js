@@ -45,6 +45,8 @@ LinkitDialog = {
 				tinyMCEPopup.close();
 				return;
 			}
+      tinyMCEPopup.close();
+		  return;
 		}
     
     tinyMCEPopup.execCommand("mceBeginUndoLevel");
@@ -108,7 +110,7 @@ LinkitDialog = {
     }
 
 		tinyMCEPopup.execCommand("mceEndUndoLevel");
-		//tinyMCEPopup.close();
+		tinyMCEPopup.close();
 
   }
 };

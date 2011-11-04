@@ -65,7 +65,6 @@ function linkit_permission() {
       'title' => t('Administer linkit settings'), 
     ),
   );
-  return array('administer linkit');
 }
 
 /**
@@ -89,6 +88,29 @@ function linkit_element_info_alter(&$types) {
       _linkit_add_settings('ckeditor');  
     }
   }
+}
+
+/**
+ * Implementation of hook_ckeditor_plugin().
+ */
+function linkit_ckeditor_plugin() {
+  return array(
+    'linkit' => array(
+      // Name of the plugin used to write it
+      'name' => 'Linkit',
+      // Description of plugin - it would appear in plugins managment of profile settings
+      'desc' => t('Support for Linkit module'),
+      // The full path to the CKEditor plugin directory, with trailing slash.
+      'path' => drupal_get_path('module', 'linkit') . '/editors/ckeditor/',
+      // Buttons to show up in the toolbar config area.
+      'buttons' => array(
+        'Linkit' => array(
+          'label' => 'Linkit',
+          'icon' => 'linkit.png',
+        ),
+      ),
+    )
+  );
 }
 
 /**
@@ -155,8 +177,8 @@ function linkit_dashboard_page($editor) {
       drupal_add_js(drupal_get_path('module', 'linkit') . '/editors/fckeditor/linkit/linkitDialog.js');
       break;
   }
-  
-  print theme('linkit_dashboard', array('form' => render(drupal_get_form('_linkit_form'))));
+  $form = drupal_get_form('_linkit_form');
+  print theme('linkit_dashboard', array('form' => render($form)));
 }
 
 /**
