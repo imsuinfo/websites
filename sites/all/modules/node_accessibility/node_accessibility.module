@@ -884,7 +884,7 @@ function node_accessibility_is_required($node_type, array $function_history = ar
 /**
  * Loads the nodes problem data.
  *
- * @param $conditions
+ * @param $conditions (optional)
  *   An array with the following possible keys:
  *   - 'id' The unique id representing a specific problem.
  *   - 'nid' the node id.
@@ -1282,6 +1282,7 @@ function node_accessibility_validate_action($node) {
   }
 
   $results = node_accessibility_perform_validation(array($node), array(), NULL, NULL, $function_history);
+  $reports = array();
 
   if (isset($results[$node->nid][$node->vid]['report'])){
     $reports = $results[$node->nid][$node->vid]['report'];
