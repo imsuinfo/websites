@@ -475,7 +475,8 @@ div#sidebar-first div.region-sidebar-first {
   border-bottom: 1px solid #888888;
 }
 
-div#sidebar-first div.block-menu {
+div#sidebar-first div.block-menu,
+div#sidebar-first div.block-workbench-menu {
   position: relative;
 
   letter-spacing: 1.4px;
@@ -485,39 +486,63 @@ div#sidebar-first div.block-menu {
   padding-bottom: 15px;
 }
 
+div#sidebar-first div.block-workbench-menu li.workbench_menu-menu_item-type-item_label {
+  font-weight: bold;
+  color: #00477f;
+}
+
+div#sidebar-first div.block-workbench-menu li.workbench_menu-menu_item-type-item_label span {
+  padding: 2px 4px;
+}
+
+div#sidebar-first div.block-workbench-menu li.workbench_menu-menu_item-type-item_label.disabled {
+  color: #a0a0a0;
+}
+
+div#sidebar-first div.block-workbench-menu li.workbench_menu-menu_item-type-item_label.leaf {
+  font-weight: normal;
+}
+
 div#sidebar-first div.block-menu a,
-div#sidebar-first div.block-menu a:visited {
+div#sidebar-first div.block-menu a:visited,
+div#sidebar-first div.block-workbench-menu a,
+div#sidebar-first div.block-workbench-menu a:visited {
   font-size: 12px;
   color: #00477f;
 
   text-decoration: none;
 }
 
-div#sidebar-first div.block-menu a {
+div#sidebar-first div.block-menu a,
+div#sidebar-first div.block-workbench-menu a {
   display: block;
 
   padding: 2px 4px;
 }
 
-div#sidebar-first div.block-menu div.content ul.menu {
+div#sidebar-first div.block-menu div.content ul.menu,
+div#sidebar-first div.block-workbench-menu div.content ul.menu {
   padding-top: 15px;
   border-top: 1px solid #888888;
 }
 
-div#sidebar-first div.block-menu div.content ul.menu ul.menu {
+div#sidebar-first div.block-menu div.content ul.menu ul.menu,
+div#sidebar-first div.block-workbench-menu div.content ul.menu ul.menu {
   border: 0;
   padding: 0;
 
   margin-left: 18px;
 }
 
-div#sidebar-first div.block-menu div.content ul.menu li {
+div#sidebar-first div.block-menu div.content ul.menu li,
+div#sidebar-first div.block-workbench-menu div.content ul.menu li {
   padding-left: 0;
   padding-right: 0;
   margin-left: 0;
 }
 
-div#sidebar-first div.block-menu div.content ul.menu li ul.menu li {
+div#sidebar-first div.block-menu div.content ul.menu li ul.menu li,
+div#sidebar-first div.block-workbench-menu div.content ul.menu li ul.menu li {
   padding-left: 0;
   padding-right: 0;
   margin-left: 0;
@@ -526,11 +551,14 @@ div#sidebar-first div.block-menu div.content ul.menu li ul.menu li {
 }
 
 div#sidebar-first div.block-menu div.content ul.menu li.expanded,
-div#sidebar-first div.block-menu div.content ul.menu li ul.menu li.expanded {
+div#sidebar-first div.block-menu div.content ul.menu li ul.menu li.expanded,
+div#sidebar-first div.block-workbench-menu div.content ul.menu li.expanded,
+div#sidebar-first div.block-workbench-menu div.content ul.menu li ul.menu li.expanded {
   list-style-image: url(../images/singlearrow_down.png);
 }
 
-div#sidebar-first div.block-menu div.content ul.menu li ul.menu li a.active-trail.active {
+div#sidebar-first div.block-menu div.content ul.menu li ul.menu li a.active-trail.active,
+div#sidebar-first div.block-workbench-menu div.content ul.menu li ul.menu li a.active-trail.active {
   color: #fad703;
   background-color: #00335b;
 }
@@ -540,7 +568,13 @@ div#sidebar-first div.block-menu div.content ul.menu li a:active,
 div#sidebar-first div.block-menu div.content ul.menu li a:hover,
 div#sidebar-first div.block-menu div.content ul.menu li ul.menu li a.active-trail.active:focus,
 div#sidebar-first div.block-menu div.content ul.menu li ul.menu li a.active-trail.active:active,
-div#sidebar-first div.block-menu div.content ul.menu li ul.menu li a.active-trail.active:hover {
+div#sidebar-first div.block-menu div.content ul.menu li ul.menu li a.active-trail.active:hover,
+div#sidebar-first div.block-workbench-menu div.content ul.menu li a:focus,
+div#sidebar-first div.block-workbench-menu div.content ul.menu li a:active,
+div#sidebar-first div.block-workbench-menu div.content ul.menu li a:hover,
+div#sidebar-first div.block-workbench-menu div.content ul.menu li ul.menu li a.active-trail.active:focus,
+div#sidebar-first div.block-workbench-menu div.content ul.menu li ul.menu li a.active-trail.active:active,
+div#sidebar-first div.block-workbench-menu div.content ul.menu li ul.menu li a.active-trail.active:hover {
   color: #ffffff;
   background-color: #00335b;
 }
@@ -549,7 +583,12 @@ div#sidebar-first div.block-menu div.content ul.menu li a,
 div#sidebar-first div.block-menu div.content ul.menu li a:visited,
 div#sidebar-first div.block-menu div.content ul.menu li a:focus,
 div#sidebar-first div.block-menu div.content ul.menu li a:active,
-div#sidebar-first div.block-menu div.content ul.menu li a:hover {
+div#sidebar-first div.block-menu div.content ul.menu li a:hover,
+div#sidebar-first div.block-workbench-menu div.content ul.menu li a,
+div#sidebar-first div.block-workbench-menu div.content ul.menu li a:visited,
+div#sidebar-first div.block-workbench-menu div.content ul.menu li a:focus,
+div#sidebar-first div.block-workbench-menu div.content ul.menu li a:active,
+div#sidebar-first div.block-workbench-menu div.content ul.menu li a:hover {
   font-weight: bold;
 }
 
@@ -557,7 +596,12 @@ div#sidebar-first div.block-menu div.content ul.menu li ul.menu li a,
 div#sidebar-first div.block-menu div.content ul.menu li ul.menu li a:visited
 div#sidebar-first div.block-menu div.content ul.menu li ul.menu li a:focus,
 div#sidebar-first div.block-menu div.content ul.menu li ul.menu li a:active,
-div#sidebar-first div.block-menu div.content ul.menu li ul.menu li a:hover {
+div#sidebar-first div.block-menu div.content ul.menu li ul.menu li a:hover,
+div#sidebar-first div.block-workbench-menu div.content ul.menu li ul.menu li a,
+div#sidebar-first div.block-workbench-menu div.content ul.menu li ul.menu li a:visited
+div#sidebar-first div.block-workbench-menu div.content ul.menu li ul.menu li a:focus,
+div#sidebar-first div.block-workbench-menu div.content ul.menu li ul.menu li a:active,
+div#sidebar-first div.block-workbench-menu div.content ul.menu li ul.menu li a:hover {
   font-weight: normal;
 }
 
