@@ -28,20 +28,16 @@ function node_accessibility_statistics_page($statistics_type = 'all') {
         $statistics_type_path = '/live';
         break;
 
-      case 'unlive':
-        $conditions['unlive_only'] = TRUE;
-        $title = "Unlive Content";
-        $statistics_type_path = '/unlive';
-        break;
-
       case 'published':
         $conditions['published_only'] = TRUE;
+        $conditions['live_only'] = TRUE;
         $title = "Published Content";
         $statistics_type_path = '/published';
         break;
 
       case 'unpublished':
         $conditions['unpublished_only'] = TRUE;
+        $conditions['live_only'] = TRUE;
         $title = "Unpublished Content";
         $statistics_type_path = '/unpublished';
         break;

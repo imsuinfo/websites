@@ -53,21 +53,6 @@ function node_accessibility_statistics_menu() {
     'weight' => 11,
   );
 
-  $items['admin/content/accessibility/node_statistics/unlive'] = array(
-    'title' => "Unlive Content",
-    'description' => "Statistical information derived from node accessibility validation results for unlive content.",
-    'page callback' => 'node_accessibility_statistics_page',
-    'page arguments' => array('unlive'),
-    'file' => 'node_accessibility_statistics_page.inc',
-    'file path' => drupal_get_path('module', 'node_accessibility_statistics') . '/includes',
-    'access callback' => 'user_access',
-    'access arguments' => array('node accessibility statistics page access'),
-    'tab_parent' => 'admin/content/accessibility',
-    'tab_root' => 'admin/content/accessibility',
-    'type' => MENU_LOCAL_TASK,
-    'weight' => 12,
-  );
-
   $items['admin/content/accessibility/node_statistics/published'] = array(
     'title' => "Published Content",
     'description' => "Statistical information derived from node accessibility validation results for published content.",
@@ -80,7 +65,7 @@ function node_accessibility_statistics_menu() {
     'tab_parent' => 'admin/content/accessibility',
     'tab_root' => 'admin/content/accessibility',
     'type' => MENU_LOCAL_TASK,
-    'weight' => 13,
+    'weight' => 12,
   );
 
   $items['admin/content/accessibility/node_statistics/unpublished'] = array(
@@ -95,7 +80,7 @@ function node_accessibility_statistics_menu() {
     'tab_parent' => 'admin/content/accessibility',
     'tab_root' => 'admin/content/accessibility',
     'type' => MENU_LOCAL_TASK,
-    'weight' => 14,
+    'weight' => 13,
   );
 
   $items['admin/content/accessibility/node_statistics/problem/%'] = array(
@@ -120,16 +105,6 @@ function node_accessibility_statistics_menu() {
     'access arguments' => array('node accessibility statistics page access'),
   );
 
-  $items['admin/content/accessibility/node_statistics/problem/%/unlive'] = array(
-    'title' => "Node Accessibility Problem",
-    'description' => "Statistical information derived from node accessibility validation results for an individual problem for unlive content.",
-    'page callback' => 'node_accessibility_statistics_page_problem',
-    'page arguments' => array(5, 'unlive'),
-    'file' => 'node_accessibility_statistics_page.inc',
-    'file path' => drupal_get_path('module', 'node_accessibility_statistics') . '/includes',
-    'access callback' => 'user_access',
-    'access arguments' => array('node accessibility statistics page access'),
-  );
 
   $items['admin/content/accessibility/node_statistics/problem/%/published'] = array(
     'title' => "Node Accessibility Problem",
