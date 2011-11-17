@@ -140,7 +140,7 @@ function workbench_menu_edit_settings_form($form, &$form_state, $access_type, $a
 
   $form['redirect_to'] = array(
     '#type' => 'value',
-    '#value' => $destination,
+    '#value' => $destination . '/taxonomy/' . $access_type_id,
   );
 
   $form['actions']['submit'] = array(
@@ -397,7 +397,7 @@ function workbench_menu_admin_settings_form($form, &$form_state, $access_type, $
 
   $form['redirect_to'] = array(
     '#type' => 'value',
-    '#value' => $destination,
+    '#value' => $destination . '/taxonomy/' . $access_type_id,
   );
 
   $form['actions']['submit'] = array(
