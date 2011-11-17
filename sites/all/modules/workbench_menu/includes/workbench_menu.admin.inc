@@ -455,17 +455,19 @@ function workbench_menu_admin_settings_form_submit($form, &$form_state) {
 
   $results = workbench_menu_save_menus(array($menu), $function_history);
 
-  foreach ($form_state['values']['items'] as $id => &$item){
-    if (!is_numeric($id)) continue;
+  if (!empty($form_state['values']['items'])){
+    foreach ($form_state['values']['items'] as $id => &$item){
+      if (!is_numeric($id)) continue;
 
-    $primary_keys = array('id');
+      $primary_keys = array('id');
 
-    $record = array();
-    $record['id'] = $id;
-    $record['parent_id'] = $item['parent'];
-    $record['weight'] = $item['weight'];
+      $record = array();
+      $record['id'] = $id;
+      $record['parent_id'] = $item['parent'];
+      $record['weight'] = $item['weight'];
 
-    drupal_write_record('workbench_menu_items', $record, $primary_keys);
+      drupal_write_record('workbench_menu_items', $record, $primary_keys);
+    }
   }
 
   if (empty($form_state['values']['redirect_to'])){
