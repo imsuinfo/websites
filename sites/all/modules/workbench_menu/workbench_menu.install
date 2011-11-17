@@ -1,0 +1,338 @@
+<?php
+
+/**
+ * Implementation of hook_schema().
+ */
+function workbench_menu_schema() {
+  $schema = array();
+
+  $schema['workbench_menus'] = array(
+    'description' => st("Menus defined in the workbench module."),
+    'fields' => array(
+      'id' => array(
+        'description' => st("The primary key used to represent a menu."),
+        'type' => 'serial',
+        'size' => 'big',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+      ),
+      'access_id' => array(
+        'description' => st("The workbench access id from {workbench_access}.access_id, which may be non-numeric."),
+        'type' => 'varchar',
+        'length' => 80,
+        'not null' => TRUE,
+        'default' => '',
+      ),
+      'path' => array(
+        'description' => st("The base path in which this menu listens on."),
+        'type' => 'varchar',
+        'length' => 127,
+        'not null' => TRUE,
+        'default' => '',
+      ),
+    ),
+    'primary key' => array('id'),
+    'unique keys' => array(
+      'access_id' => array('access_id'),
+    ),
+    'foreign keys' => array(
+      'access_id' => array(
+        'table' => 'workbench_access',
+        'columns' => array('access_id' => 'access_id'),
+      ),
+    ),
+  );
+
+  foreach (array('breadcrumb', 'expand', 'item_type') as $name){
+    $schema['workbench_menu_options_' . $name] = array(
+      'description' => st("Defines possible %name options.", array('%name' => $name)),
+      'fields' => array(
+        'id' => array(
+          'description' => st("The primary key used to represent an option."),
+          'type' => 'serial',
+          'size' => 'big',
+          'unsigned' => TRUE,
+          'not null' => TRUE,
+        ),
+        'machine_name' => array(
+          'description' => st("This is the machine-friendly name used to represent the option."),
+          'type' => 'varchar',
+          'length' => 64,
+          'not null' => TRUE,
+          'default' => '',
+        ),
+        'human_name' => array(
+          'description' => st("This is the human-friendly name used to represent the option."),
+          'type' => 'text',
+          'size' => 'normal',
+          'not null' => TRUE,
+          'default' => '',
+        ),
+        'description' => array(
+          'description' => st("This is a description the option."),
+          'type' => 'text',
+          'size' => 'medium',
+          'not null' => TRUE,
+          'default' => '',
+        ),
+      ),
+      'primary key' => array('id'),
+      'unique keys' => array(
+        'machine_name' => array('machine_name'),
+      ),
+    );
+
+    $schema['workbench_menu_' . $name . 's'] = array(
+      'description' => st("Menu properties of type $name"),
+      'fields' => array(
+        'item_id' => array(
+          'description' => st("The workbench menu id from {workbench_menu}.id."),
+          'type' => 'int',
+          'size' => 'big',
+          'unsigned' => TRUE,
+          'not null' => TRUE,
+        ),
+        $name . '_id' => array(
+          'description' => st("The options id from {" . 'workbench_menu_options_' . $name . "}.id."),
+          'type' => 'int',
+          'size' => 'big',
+          'unsigned' => TRUE,
+          'not null' => TRUE,
+        ),
+      ),
+      'foreign keys' => array(
+        'menu_id' => array(
+          'table' => 'workbench_menus',
+          'columns' => array('menu_id' => 'id'),
+        ),
+        $name . '_id' => array(
+          'table' => 'workbench_menu_options_' . $name,
+          'columns' => array($name . '_id' => 'id'),
+        ),
+      ),
+    );
+  }
+
+  $schema['workbench_menu_items'] = array(
+    'description' => st("Menus items defined in the workbench module."),
+    'fields' => array(
+      'id' => array(
+        'description' => st("The primary key used to represent a menu item."),
+        'type' => 'serial',
+        'size' => 'big',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+      ),
+      'menu_id' => array(
+        'description' => st("The workbench menu id from {workbench_menu}.id."),
+        'type' => 'int',
+        'size' => 'big',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+      ),
+      'parent_id' => array(
+        'description' => st("The workbench menu parent id from {workbench_menu_items}.id."),
+        'type' => 'int',
+        'size' => 'big',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+      ),
+      'human_name' => array(
+        'description' => st("This is the human-friendly name used to represent the menu item."),
+        'type' => 'text',
+        'size' => 'normal',
+        'not null' => TRUE,
+        'default' => '',
+      ),
+      'parent_id' => array(
+        'description' => st("The workbench menu parent id from {workbench_menu_items}.id."),
+        'type' => 'int',
+        'size' => 'big',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+      ),
+      'weight' => array(
+        'description' => st("Menu item weight within menu."),
+        'type' => 'int',
+        'size' => 'normal',
+        'not null' => TRUE,
+        'default' => 0,
+      ),
+      'active_path' => array(
+        'description' => st("This is the path in which this menu item belongs on."),
+        'type' => 'text',
+        'size' => 'normal',
+        'not null' => TRUE,
+        'default' => '',
+      ),
+      'properties' => array(
+        'description' => st("Stores additional data whose content is directly dependent on the item type."),
+        'type' => 'text',
+        'size' => 'big',
+        'serialize' => TRUE,
+        'not null' => TRUE,
+        'default' => '',
+      ),
+    ),
+    'primary key' => array('id'),
+    'foreign keys' => array(
+      'menu_id' => array(
+        'table' => 'workbench_menus',
+        'columns' => array('menu_id' => 'id'),
+      ),
+    ),
+  );
+
+  return $schema;
+}
+
+/**
+ * Implementation of hook_install().
+ */
+function workbench_menu_install() {
+  cf_error_append_history($function_history, __FUNCTION__);
+
+  try {
+    $breadcrumbs = array();
+
+    $breadcrumbs[] = array(
+      'machine_name' => 'auto',
+      'human_name' => st("Auto"),
+      'description' => st("Automatically determine the breadcrumb parent."),
+    );
+
+    $breadcrumbs[] = array(
+      'machine_name' => 'group',
+      'human_name' => st("Group"),
+      'description' => st("Use the group as the breadcrumb parent."),
+    );
+
+    $breadcrumbs[] = array(
+      'machine_name' => 'path',
+      'human_name' => st("Path"),
+      'description' => st("Use the url path to determine the breadcrumb parent."),
+    );
+
+    $breadcrumbs[] = array(
+      'machine_name' => 'none',
+      'human_name' => st("None"),
+      'description' => st("Do not show a breadcrumb parent."),
+    );
+
+    $breadcrumbs[] = array(
+        'machine_name' => 'self',
+        'human_name' => st("Self"),
+        'description' => st("Use the current page as the breadcrumb parent."),
+    );
+
+    foreach ($breadcrumbs as &$breadcrumb){
+      $query = db_insert('workbench_menu_options_breadcrumb');
+      $query->fields($breadcrumb);
+      $query->execute();
+    }
+
+
+    $expands = array();
+
+    $expands[] = array(
+      'machine_name' => 'expand_always',
+      'human_name' => st("Always Expand"),
+      'description' => st("The menu item will always be expanded."),
+    );
+
+    $expands[] = array(
+      'machine_name' => 'expand_auto',
+      'human_name' => st("Auto Expand"),
+      'description' => st("The menu item will expanded, unless told otherwise."),
+    );
+
+    $expands[] = array(
+      'machine_name' => 'expand_never',
+      'human_name' => st("Never Expand"),
+      'description' => st("The menu item will never be expanded."),
+    );
+
+    foreach ($expands as &$expand){
+      $query = db_insert('workbench_menu_options_expand');
+      $query->fields($expand);
+      $query->execute();
+    }
+
+
+    $item_type = array();
+
+    $item_type[] = array(
+      'machine_name' => 'item_link',
+      'human_name' => st("Link"),
+      'description' => st("Links to a path found on this or some other website."),
+    );
+
+    $item_type[] = array(
+      'machine_name' => 'item_label',
+      'human_name' => st("Label"),
+      'description' => st("Displays text that does not a link to anything."),
+    );
+
+    $item_type[] = array(
+      'machine_name' => 'item_file',
+      'human_name' => st("File"),
+      'description' => st("Links to a file available on this website."),
+    );
+
+    $item_type[] = array(
+      'machine_name' => 'item_menu',
+      'human_name' => st("Menu"),
+      'description' => st("Represents and loads another menu."),
+    );
+
+    $item_type[] = array(
+      'machine_name' => 'item_menu_item',
+      'human_name' => st("Menu Item"),
+      'description' => st("Represents and loads a menu item from another menu."),
+    );
+
+    foreach ($item_type as &$item_type){
+      $query = db_insert('workbench_menu_options_item_type');
+      $query->fields($item_type);
+      $query->execute();
+    }
+  }
+  catch (Exception $e) {
+    cf_error_on_query_execution($function_history, $e);
+    throw $e;
+  }
+}
+
+/**
+ * Implementation of hook_enable().
+ */
+function workbench_menu_enable() {
+  if (variable_get('workbench_access', 'taxonomy') != 'taxonomy') {
+    return;
+  }
+
+  workbench_access_reset_tree();
+  $wa = workbench_access_get_active_tree();
+
+  try {
+    foreach ($wa['active'] as $access_id => &$value){
+      if (!is_numeric($access_id)) continue;
+
+      $query = db_select('workbench_menus', 'wm');
+      $query->fields('wm');
+      $query->condition('wm.access_id', $access_id);
+
+      $records = (array) $query->execute()->fetchAll();
+
+      if (empty($records)){
+        $query = db_insert('workbench_menus');
+        $query->fields(array('access_id' => $access_id, 'path' => ''));
+        $query->execute();
+      }
+    }
+  }
+  catch (Exception $e) {
+    cf_error_on_query_execution($function_history, $e);
+    throw $e;
+  }
+}

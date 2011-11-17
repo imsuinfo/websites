@@ -1,0 +1,14 @@
+name = "Workbench Menu"
+description = "An alternative menu and breadcrumb system design to utilize the workbench access system."
+package = Workbench
+core = 7.x
+
+dependencies[] = cf
+dependencies[] = taxonomy
+dependencies[] = workbench_access
+
+files[] = workbench_menu.install
+files[] = workbench_menu.module
+files[] = includes/workbench_menu.css
+files[] = includes/workbench_menu_admin.css
+files[] = includes/workbench_menu.admin.inc
