@@ -29,6 +29,11 @@ function workbench_menu_permission() {
     'description' => t("Grants permissions to alter any workbench menus in which a user is in the workbench access section associated with that menu."),
   );
 
+  $permissions['change workbench menu path'] = array(
+    'title' => t("Change Workbench Menu Path"),
+    'description' => t("Grants permissions to alter the menu path for any workbench menus in which a user is able to edit."),
+  );
+
   $permissions['administer workbench menu'] = array(
     'title' => t("Administer Workbench Menu"),
     'description' => t("Grants permissions to alter all workbench menus and perform administrative tasks."),

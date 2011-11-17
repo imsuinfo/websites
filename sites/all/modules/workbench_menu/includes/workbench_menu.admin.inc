@@ -131,6 +131,11 @@ function workbench_menu_edit_settings_form($form, &$form_state, $access_type, $a
     '#description' => t("Specify a relative url path in which this menu will be displayed on. Must not begin with a /."),
   );
 
+  if (!user_access('change workbench menu path')){
+    $form['path']['#disabled'] = TRUE;
+  }
+
+
   workbench_menu_build_item_editing_form($form, 'admin/workbench/menus/taxonomy/' . $access_type_id, $items, $function_history);
 
   $form['workbench_access'] = array(
