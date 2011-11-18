@@ -143,7 +143,7 @@ function workbench_menu_workbench_access_delete($section){
     }
 
     foreach ($records as &$record){
-      foreach (array('breadcrumb', 'expand', 'item_type') as $name){
+      foreach (array('expand', 'item_type') as $name){
         $query = db_delete('workbench_menu_' . $name . 's', 'wmn');
         $query->condition('wmn.item_id', $record->id);
         $query->execute();
@@ -620,7 +620,6 @@ function workbench_menu_block_view_recursively_build_menu(&$item, $variables, ar
  * @param type
  *   A string representing the type of option to load.
  *   Known types are:
- *   - breadcrumb
  *   - expand
  *   - position
  *   - item_type
@@ -729,7 +728,6 @@ function workbench_menu_get_options($type, $option = NULL, array $function_histo
  * @param type
  *   A string representing the type of option to load.
  *   Known types are:
- *   - breadcrumb
  *   - expand
  *   - position
  *   - item_type
@@ -1081,7 +1079,7 @@ function workbench_menu_save_menus($menus, array $function_history = array()){
           drupal_write_record('workbench_menu_items', $record);
         }
 
-        foreach (array('breadcrumb', 'expand', 'item_type') as $name){
+        foreach (array('expand', 'item_type') as $name){
           $query = db_delete('workbench_menu_options_' . $name);
           $query->condition($name . '_id', $menu_item['id']);
           $query->execute();
@@ -1264,7 +1262,7 @@ function workbench_menu_get_load_menu_items($conditions = array(), $keyed = NULL
 
       $menu_item->properties = unserialize($menu_item->properties);
 
-      foreach (array('breadcrumb', 'expand', 'item_type') as $name){
+      foreach (array('expand', 'item_type') as $name){
         $results = array();
 
         $query = db_select('workbench_menu_options_' . $name, 'wmon');

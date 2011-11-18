@@ -43,7 +43,7 @@ function workbench_menu_schema() {
     ),
   );
 
-  foreach (array('breadcrumb', 'expand', 'item_type') as $name){
+  foreach (array('expand', 'item_type') as $name){
     $schema['workbench_menu_options_' . $name] = array(
       'description' => st("Defines possible %name options.", array('%name' => $name)),
       'fields' => array(
@@ -191,46 +191,6 @@ function workbench_menu_schema() {
  */
 function workbench_menu_install() {
   cf_error_append_history($function_history, __FUNCTION__);
-
-  try {
-    $breadcrumbs = array();
-
-    $breadcrumbs[] = array(
-      'machine_name' => 'auto',
-      'human_name' => st("Auto"),
-      'description' => st("Automatically determine the breadcrumb parent."),
-    );
-
-    $breadcrumbs[] = array(
-      'machine_name' => 'group',
-      'human_name' => st("Group"),
-      'description' => st("Use the group as the breadcrumb parent."),
-    );
-
-    $breadcrumbs[] = array(
-      'machine_name' => 'path',
-      'human_name' => st("Path"),
-      'description' => st("Use the url path to determine the breadcrumb parent."),
-    );
-
-    $breadcrumbs[] = array(
-      'machine_name' => 'none',
-      'human_name' => st("None"),
-      'description' => st("Do not show a breadcrumb parent."),
-    );
-
-    $breadcrumbs[] = array(
-        'machine_name' => 'self',
-        'human_name' => st("Self"),
-        'description' => st("Use the current page as the breadcrumb parent."),
-    );
-
-    foreach ($breadcrumbs as &$breadcrumb){
-      $query = db_insert('workbench_menu_options_breadcrumb');
-      $query->fields($breadcrumb);
-      $query->execute();
-    }
-
 
     $expands = array();
 

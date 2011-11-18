@@ -1240,7 +1240,7 @@ function workbench_menu_admin_item_settings_edit_form_submit($form, &$form_state
       $results = $query->execute()->fetchAll();
     }
 
-    foreach (array('breadcrumb', 'expand', 'item_type') as $name){
+    foreach (array('expand', 'item_type') as $name){
       if (!empty($existing)){
         $query = db_delete('workbench_menu_' . $name . 's');
         $query->condition('item_id', $item_id);
@@ -1359,7 +1359,7 @@ function workbench_menu_admin_item_settings_delete_form_submit($form, &$form_sta
     $query->condition('id', $form_state['values']['item_id']);
     $query->execute();
 
-    foreach (array('breadcrumb', 'expand', 'item_type') as $name){
+    foreach (array('expand', 'item_type') as $name){
       $query = db_delete('workbench_menu_' . $name . 's');
       $query->condition('item_id', $form_state['values']['item_id']);
       $query->execute();
