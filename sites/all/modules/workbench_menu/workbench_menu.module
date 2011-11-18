@@ -286,7 +286,8 @@ function workbench_menu_block_view($delta = ''){
       $item_variables['complete_path'] = implode('/', $path_parts);
       $item_variables['current_trail'] = &$breadcrumbs;
       $item_variables['trail_path'] = '';
-      $item_variables['loaded_menus'] = array($menu->id => &$menu);
+      $item_variables['loaded_menus'] = array($menu->access_id => &$menu);
+      $item_variables['process_children'] = TRUE;
 
       foreach ($menu->items['nested'] as &$item){
         $list_items = workbench_menu_block_view_recursively_build_menu($item, $item_variables, $function_history);
@@ -359,6 +360,7 @@ function workbench_menu_block_view_recursively_build_menu(&$item, $variables, ar
   $type = '';
   foreach ($item['item']->item_type as &$t){
     $type = $t->machine_name;
+    break;
   }
 
   $list_items = array();
@@ -449,7 +451,7 @@ function workbench_menu_block_view_recursively_build_menu(&$item, $variables, ar
     }
   }
 
-  if ($type != 'item_menu' && $type != 'item_menu_item'){
+  if ($type != 'item_menu' && $type != 'item_menu_item' || (($type == 'item_menu' || $type == 'item_menu_item') && !$expand_children)){
     $variables['current_trail'][] = l(t($item['item']->human_name), $variables['trail_path']);
     $variables['even'] = !$variables['even'];
     $variables['local_even'] = !$variables['local_even'];
@@ -464,7 +466,7 @@ function workbench_menu_block_view_recursively_build_menu(&$item, $variables, ar
   $item_classes .= ' local_row_' . $variables['current'];
   $item_classes .= ' depth_' . $variables['depth'];
 
-  if (!empty($item['children'])){
+  if (!empty($item['children']) && $variables['process_children']){
     if ($expand_children){
       $child_variables = array();
       $active_child = FALSE;
@@ -482,6 +484,7 @@ function workbench_menu_block_view_recursively_build_menu(&$item, $variables, ar
       $child_variables['current_trail'] = &$variables['current_trail'];
       $child_variables['trail_path'] = $variables['trail_path'];
       $child_variables['loaded_menus'] = &$variables['loaded_menus'];
+      $child_variables['process_children'] = TRUE;
 
       $list_item['children'] = array();
 
@@ -615,45 +618,45 @@ function workbench_menu_block_view_recursively_build_menu(&$item, $variables, ar
       break;
 
     case 'item_menu':
-      // under no circumstances should a menu be recursively processed more than once.
-      if (array_key_exists($item['item']->properties['menu'], $variables['loaded_menus'])){
-        break;
-      }
-
       $other_menus = (array) workbench_menu_get_menus(array('access_id' => $item['item']->properties['menu']), 'id', $function_history);
       $other_menu = array_pop($other_menus);
-      $variables['loaded_menus'][$other_menu->id] = &$other_menu;
 
+      // under no circumstances should a menu be recursively processed more than once.
+      if (array_key_exists($other_menu->access_id, $variables['loaded_menus'])){
+        return array();
+      }
+
+      $variables['loaded_menus'][$other_menu->access_id] = &$other_menu;
       $item_variables['menus_processed'][] = $item['item']->properties['menu'];
 
       // recursively walk through the other menu
-      if ($expand_children){
-        $other_current = 0;
-        $child_variables = array();
-        $child_variables['local_even'] = TRUE;
-        $child_variables['even'] = &$variables['even'];
-        $child_variables['row'] = &$variables['row'];
-        $child_variables['total'] =  count($other_menu->items['flat']);
-        $child_variables['current'] = &$other_current;
-        $child_variables['depth'] = $variables['depth'];
-        $child_variables['menu'] = &$other_menu;
-        $child_variables['reverse_path'] = $variables['reverse_path'];
-        $child_variables['active'] = &$active_child;
-        $child_variables['complete_path'] = &$variables['complete_path'];
-        $child_variables['current_trail'] = &$variables['current_trail'];
-        $child_variables['trail_path'] = $variables['trail_path'];
-        $child_variables['loaded_menus'] = &$variables['loaded_menus'];
+      $other_current = 0;
+      $child_variables = array();
+      $child_variables['local_even'] = TRUE;
+      $child_variables['even'] = &$variables['even'];
+      $child_variables['row'] = &$variables['row'];
+      $child_variables['total'] =  count($other_menu->items['flat']);
+      $child_variables['current'] = &$other_current;
+      $child_variables['depth'] = $variables['depth'];
+      $child_variables['menu'] = &$other_menu;
+      $child_variables['reverse_path'] = $variables['reverse_path'];
+      $child_variables['active'] = FALSE;
+      $child_variables['complete_path'] = &$variables['complete_path'];
+      $child_variables['current_trail'] = &$variables['current_trail'];
+      $child_variables['trail_path'] = $variables['trail_path'];
+      $child_variables['loaded_menus'] = &$variables['loaded_menus'];
+      $child_variables['process_children'] = $expand_children;
 
-        foreach ($other_menu->items['nested'] as &$item){
-          $child_items = workbench_menu_block_view_recursively_build_menu($item, $child_variables, $function_history);
+      foreach ($other_menu->items['nested'] as &$child){
+        $child_items = workbench_menu_block_view_recursively_build_menu($child, $child_variables, $function_history);
 
-          if (!empty($child_items)){
-            foreach ($child_items as &$child_item){
-              $list_items[] = &$child_item;
-            }
+        if (!empty($child_items)){
+          foreach ($child_items as &$child_item){
+            $list_items[] = &$child_item;
           }
         }
       }
+
       return $list_items;
   }
 
