@@ -33,10 +33,18 @@ function workbench_menu_edit_settings($access_type = NULL, $access_type_id = NUL
   $output = '<h2>' . t("Menus") . '</h2>';
   $output .= '<p>' . t("The following menus are currently available for editing.");
 
-  $rows = array();
-  foreach ($active['tree'] as $access_id => $section) {
+  $sorted = array();
+
+  foreach ($active['tree'] as $access_id => &$section){
     if (!is_numeric($access_id)) continue;
 
+    $sorted[$access_id] = &$section['name'];
+  }
+
+  asort($sorted);
+
+  $rows = array();
+  foreach ($sorted as $access_id => &$section_name) {
     if (!array_key_exists($access_id, $access)){
       continue;
     }
@@ -45,7 +53,7 @@ function workbench_menu_edit_settings($access_type = NULL, $access_type_id = NUL
       continue;
     }
 
-    $rows[] = array(l($section['name'], 'admin/workbench/menus/' . $active['access_scheme']['access_type'] . '/' . $access_id));
+    $rows[] = array(l($section_name, 'admin/workbench/menus/' . $active['access_scheme']['access_type'] . '/' . $access_id));
   }
 
   $header = array(t("Menu Name"));
