@@ -286,12 +286,15 @@ function workbench_menu_block_view($delta = ''){
       $item_variables['complete_path'] = implode('/', $path_parts);
       $item_variables['current_trail'] = &$breadcrumbs;
       $item_variables['trail_path'] = '';
+      $item_variables['loaded_menus'] = array($menu->id => &$menu);
 
       foreach ($menu->items['nested'] as &$item){
-        $list_item = workbench_menu_block_view_recursively_build_menu($item, $item_variables, $function_history);
+        $list_items = workbench_menu_block_view_recursively_build_menu($item, $item_variables, $function_history);
 
-        if (!empty($list_item)){
-          $list['items'][] = $list_item;
+        if (!empty($list_items)){
+          foreach ($list_items as &$list_item){
+            $list['items'][] = $list_item;
+          }
         }
       }
 
@@ -358,6 +361,7 @@ function workbench_menu_block_view_recursively_build_menu(&$item, $variables, ar
     $type = $t->machine_name;
   }
 
+  $list_items = array();
   $list_item = array();
   $expand_children = TRUE;
   $expand_auto = FALSE;
@@ -366,7 +370,6 @@ function workbench_menu_block_view_recursively_build_menu(&$item, $variables, ar
   $current_path = '';
   $active_trail = FALSE;
   $active = FALSE;
-  $list_item = array();
 
   foreach ($item['item']->expand as &$expand){
     // if the item has no visibility, then..
@@ -446,12 +449,13 @@ function workbench_menu_block_view_recursively_build_menu(&$item, $variables, ar
     }
   }
 
-  // @todo there are current cases where the trail path may not have a link
-  $variables['current_trail'][] = l(t($item['item']->human_name), $variables['trail_path']);
-  $variables['even'] = !$variables['even'];
-  $variables['local_even'] = !$variables['local_even'];
-  $variables['current']++;
-  $variables['row']++;
+  if ($type != 'item_menu' && $type != 'item_menu_item'){
+    $variables['current_trail'][] = l(t($item['item']->human_name), $variables['trail_path']);
+    $variables['even'] = !$variables['even'];
+    $variables['local_even'] = !$variables['local_even'];
+    $variables['current']++;
+    $variables['row']++;
+  }
 
   $item_classes .= ' workbench_menu-menu_item-type-' . $type;
   $item_classes .= ' ' . ($variables['even'] ? 'even' : 'odd');
@@ -477,6 +481,7 @@ function workbench_menu_block_view_recursively_build_menu(&$item, $variables, ar
       $child_variables['complete_path'] = &$variables['complete_path'];
       $child_variables['current_trail'] = &$variables['current_trail'];
       $child_variables['trail_path'] = $variables['trail_path'];
+      $child_variables['loaded_menus'] = &$variables['loaded_menus'];
 
       $list_item['children'] = array();
 
@@ -489,7 +494,9 @@ function workbench_menu_block_view_recursively_build_menu(&$item, $variables, ar
         }
 
         if (!empty($child_lists)){
-          $list_item['children'][] = $child_lists;
+          foreach ($child_lists as &$child_list){
+            $list_item['children'][] = &$child_list;
+          }
         }
       }
 
@@ -606,12 +613,58 @@ function workbench_menu_block_view_recursively_build_menu(&$item, $variables, ar
 
       $list_item['data'] = $prepend . '<a' . $tags . ' href="' . check_url($url_prefix . $item['item']->properties['file']) . '">' . check_plain($item['item']->human_name) . '</a>' . $append;
       break;
+
+    case 'item_menu':
+      // under no circumstances should a menu be recursively processed more than once.
+      if (array_key_exists($item['item']->properties['menu'], $variables['loaded_menus'])){
+        break;
+      }
+
+      $other_menus = (array) workbench_menu_get_menus(array('access_id' => $item['item']->properties['menu']), 'id', $function_history);
+      $other_menu = array_pop($other_menus);
+      $variables['loaded_menus'][$other_menu->id] = &$other_menu;
+
+      $item_variables['menus_processed'][] = $item['item']->properties['menu'];
+
+      // recursively walk through the other menu
+      if ($expand_children){
+        $other_current = 0;
+        $child_variables = array();
+        $child_variables['local_even'] = TRUE;
+        $child_variables['even'] = &$variables['even'];
+        $child_variables['row'] = &$variables['row'];
+        $child_variables['total'] =  count($other_menu->items['flat']);
+        $child_variables['current'] = &$other_current;
+        $child_variables['depth'] = $variables['depth'];
+        $child_variables['menu'] = &$other_menu;
+        $child_variables['reverse_path'] = $variables['reverse_path'];
+        $child_variables['active'] = &$active_child;
+        $child_variables['complete_path'] = &$variables['complete_path'];
+        $child_variables['current_trail'] = &$variables['current_trail'];
+        $child_variables['trail_path'] = $variables['trail_path'];
+        $child_variables['loaded_menus'] = &$variables['loaded_menus'];
+
+        foreach ($other_menu->items['nested'] as &$item){
+          $child_items = workbench_menu_block_view_recursively_build_menu($item, $child_variables, $function_history);
+
+          if (!empty($child_items)){
+            foreach ($child_items as &$child_item){
+              $list_items[] = &$child_item;
+            }
+          }
+        }
+      }
+      return $list_items;
   }
 
-  $list_item['id'] = array('id' => 'workbench_menu-menu_item_' . check_plain($item['item']->id));
-  $list_item['class'] = array('class' => $item_classes);
+  if (!empty($list_item)){
+    $list_item['id'] = array('id' => 'workbench_menu-menu_' . check_plain($variables['menu']->id) .'-item_' . check_plain($item['item']->id));
+    $list_item['class'] = array('class' => $item_classes);
 
-  return $list_item;
+    $list_items[] = &$list_item;
+  }
+
+  return $list_items;
 }
 
 /**
@@ -771,6 +824,42 @@ function workbench_menu_get_options_list($type, $options = NULL, array $function
 }
 
 /**
+ * Obtain a list of available menus.
+ *
+ * @param $function_history (optional)
+ *   An array of function names, ie: array('0' => 'my_function_name').
+ *
+ * @return
+ *  An array of options with the menus taxonomy id as the key and the taxonomy human name as the value.
+ */
+function workbench_menu_get_menus_options_list(array $function_history = array()){
+  cf_error_append_history($function_history, __FUNCTION__);
+
+  $options_list = &drupal_static(__FUNCTION__, NULL);
+
+  if (isset($options_list)){
+    return $options_list;
+  }
+
+  $tree = workbench_access_get_active_tree();
+  $options_list = array();
+
+  foreach ($tree['active'] as $key => &$active){
+    if (!is_numeric($key)) unset($tree['active'][$key]);
+  }
+
+  $terms = taxonomy_term_load_multiple(array_keys($tree['active']));
+
+  foreach ($terms as &$term){
+    $options_list[$term->tid] = $term->name;
+  }
+
+  asort($options_list);
+
+  return $options_list;
+}
+
+/**
  * Obtains the menus associated with a given path.
  *
  * @param path
@@ -797,7 +886,7 @@ function workbench_menu_get_menus_at_path($path, array $function_history = array
     $path_string .= '/';
   }
 
-  $menus = (array) workbench_menu_get_load_menus(array('path' => $matches), 'id', $function_history);
+  $menus = (array) workbench_menu_get_menus(array('path' => $matches), 'id', $function_history);
 
   return $menus;
 }
@@ -830,7 +919,7 @@ function workbench_menu_get_menus_at_node($node_or_nid, array $function_history 
     return array();
   }
 
-  $menus = (array) workbench_menu_get_load_menus(array('access_id' => $node->workbench_access), 'id', $function_history);
+  $menus = (array) workbench_menu_get_menus(array('access_id' => $node->workbench_access), 'id', $function_history);
 
   return $menus;
 }
@@ -853,7 +942,7 @@ function workbench_menu_get_menus_at_node($node_or_nid, array $function_history 
  * @return
  *   An array of menu objects for the given node.
  */
-function workbench_menu_get_load_menus($conditions = array(), $keyed = NULL, array $function_history = array()){
+function workbench_menu_get_menus($conditions = array(), $keyed = NULL, array $function_history = array()){
   cf_error_append_history($function_history, __FUNCTION__);
 
   if (!is_array($conditions)){
@@ -1005,7 +1094,7 @@ function workbench_menu_save_menus($menus, array $function_history = array()){
     return TRUE;
   }
 
-  $static_menus = &drupal_static('workbench_menu_get_load_menus', NULL);
+  $static_menus = &drupal_static('workbench_menu_get_menus', NULL);
 
   if (is_null($static_menus)){
     if ($menu_cache = cache_get('workbench_menu_cache_menus')){

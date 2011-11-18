@@ -98,7 +98,7 @@ function workbench_menu_edit_settings_form($form, &$form_state, $access_type, $a
   $items = array();
 
   // the menu edit form should always pull the latest data from the database
-  $menus = (array) workbench_menu_get_load_menus(array('access_id' => $access_type_id, 'reset' => TRUE), NULL, $function_history);
+  $menus = (array) workbench_menu_get_menus(array('access_id' => $access_type_id, 'reset' => TRUE), NULL, $function_history);
 
   if (!empty($menus)){
     $menu = array_pop($menus);
@@ -360,7 +360,7 @@ function workbench_menu_admin_settings_form($form, &$form_state, $access_type, $
   $items = array();
 
   // the menu edit form should always pull the latest data from the database
-  $menus = (array) workbench_menu_get_load_menus(array('access_id' => $access_type_id, 'reset' => TRUE), NULL, $function_history);
+  $menus = (array) workbench_menu_get_menus(array('access_id' => $access_type_id, 'reset' => TRUE), NULL, $function_history);
 
   if (!empty($menus)){
     $menu = array_pop($menus);
@@ -624,6 +624,10 @@ function theme_workbench_menu_admin_settings_form($variables){
     if (!empty($item['item']->item_type)){
       $value = array_pop($item['item']->item_type);
       $type = $value->human_name;
+
+      if ($value->machine_name == 'item_menu' || $value->machine_name == 'item_menu_item'){
+        $row['class'][] = 'tabledrag-leaf';
+      }
     }
 
     $row['data'][] = $name;
@@ -744,6 +748,7 @@ function workbench_menu_admin_item_settings_form_settings($item, $menu, array $f
   $defaults['properties']['disabled'] = FALSE;
   $defaults['properties']['file'] = '';
   $defaults['properties']['file_type'] = 'file_type_file';
+  $defaults['properties']['menu'] = NULL;
 
   if (is_object($item)){
     $item_id = &$item->id;
@@ -787,6 +792,10 @@ function workbench_menu_admin_item_settings_form_settings($item, $menu, array $f
   $available['parents'] = workbench_menu_get_load_menu_items_select_list_options(array('menu_id' => $menu->id, 'reset' => TRUE), 'id', $function_history);
   $available['item_types'] = workbench_menu_get_options_list('item_type', NULL, $function_history);
   $available['expand'] = workbench_menu_get_options_list('expand', NULL, $function_history);
+  $available['menus'] = workbench_menu_get_menus_options_list($function_history);
+
+  // do not show current in the possible menu choices.
+  unset($available['menus'][$menu->access_id]);
 
   $available['file_types'] = array(
     'base' => t("Base"),
@@ -897,6 +906,15 @@ function workbench_menu_admin_item_settings_form_settings($item, $menu, array $f
     '#maxlength' => 1024,
   );
 
+  $form['settings']['menu'] = array(
+    '#type' => 'select',
+    '#title' => t("Menu"),
+    '#options' => $available['menus'],
+    '#default_value' => $defaults['properties']['menu'],
+    '#description' => t("Load another menu and attach at this location."),
+    '#dependency' => array('edit-settings-item-type' => array('item_menu')),
+  );
+
   $form['settings']['file_type'] = array(
     '#type' => 'select',
     '#title' => t("File Type"),
@@ -913,6 +931,7 @@ function workbench_menu_admin_item_settings_form_settings($item, $menu, array $f
     '#default_value' => $defaults['expand'],
     '#description' => t("Define the default behavior for when the item should have its child items shown."),
   );
+
 
   return $form;
 }
@@ -934,7 +953,7 @@ function workbench_menu_admin_item_settings_add_form($form, &$form_state, $acces
   cf_error_append_history($function_history, __FUNCTION__);
 
   $destination = isset($_GET['destination']) ? $_GET['destination'] : $return_destination;
-  $menus = (array) workbench_menu_get_load_menus(array('reset' => TRUE, 'access_id' => $access_type_id), 'id', $function_history);
+  $menus = (array) workbench_menu_get_menus(array('reset' => TRUE, 'access_id' => $access_type_id), 'id', $function_history);
 
   if (empty($menus)){
     drupal_access_denied();
@@ -1048,7 +1067,7 @@ function workbench_menu_admin_item_settings_edit_form($form, &$form_state, $acce
 
   $term = taxonomy_term_load($access_type_id);
   $destination = isset($_GET['destination']) ? $_GET['destination'] : $return_destination;
-  $menus = (array) workbench_menu_get_load_menus(array('reset' => TRUE, 'access_id' => $access_type_id), 'id', $function_history);
+  $menus = (array) workbench_menu_get_menus(array('reset' => TRUE, 'access_id' => $access_type_id), 'id', $function_history);
 
   if (empty($menus)){
     drupal_access_denied();
@@ -1168,6 +1187,8 @@ function workbench_menu_admin_item_settings_edit_form_validate($form, &$form_sta
       break;
 
     case 'item_menu':
+      break;
+
     case 'item_menu_item':
       form_set_error('settings][url', t("The item type '%type' is not yet supported.", array('%type' => $form['settings']['settings']['item_type']['#options'][$item_type])));
       break;
@@ -1196,7 +1217,7 @@ function workbench_menu_admin_item_settings_edit_form_submit($form, &$form_state
 
   $properties = array();
 
-  foreach (array('url', 'disabled', 'file', 'file_type') as $property){
+  foreach (array('url', 'disabled', 'file', 'file_type', 'menu') as $property){
     if (isset($form_state['values']['settings'][$property])){
       $properties[$property] = &$form_state['values']['settings'][$property];
     }
