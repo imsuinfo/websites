@@ -1140,8 +1140,10 @@ function workbench_menu_admin_item_settings_edit_form_validate($form, &$form_sta
   $item_type_name = &$form['settings']['settings']['item_type']['#options'][$item_type];
 
   if (isset($form_state['values']['settings']['parent_id'])){
-    if ($form_state['values']['item_id'] === $form_state['values']['settings']['parent_id']) {
-      form_set_error('settings][parent_id', t("The menu item cannot be its own parent."));
+    if (isset($form_state['values']['item_id'])){
+      if ($form_state['values']['item_id'] === $form_state['values']['settings']['parent_id']) {
+        form_set_error('settings][parent_id', t("The menu item cannot be its own parent."));
+      }
     }
 
     $items = (array) workbench_menu_get_load_menu_items(array('id' => $form_state['values']['settings']['parent_id']), 'id', $function_history);
