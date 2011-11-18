@@ -647,12 +647,14 @@ function workbench_menu_block_view_recursively_build_menu(&$item, $variables, ar
       $child_variables['loaded_menus'] = &$variables['loaded_menus'];
       $child_variables['process_children'] = $expand_children;
 
-      foreach ($other_menu->items['nested'] as &$child){
-        $child_items = workbench_menu_block_view_recursively_build_menu($child, $child_variables, $function_history);
+      if (!empty($other_menu->items['nested'])){
+        foreach ($other_menu->items['nested'] as &$child){
+          $child_items = workbench_menu_block_view_recursively_build_menu($child, $child_variables, $function_history);
 
-        if (!empty($child_items)){
-          foreach ($child_items as &$child_item){
-            $list_items[] = &$child_item;
+          if (!empty($child_items)){
+            foreach ($child_items as &$child_item){
+              $list_items[] = &$child_item;
+            }
           }
         }
       }
