@@ -192,6 +192,7 @@ function workbench_menu_schema() {
 function workbench_menu_install() {
   cf_error_append_history($function_history, __FUNCTION__);
 
+  try {
     $expands = array();
 
     $expands[] = array(
