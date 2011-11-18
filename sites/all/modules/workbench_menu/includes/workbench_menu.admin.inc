@@ -1137,10 +1137,36 @@ function workbench_menu_admin_item_settings_edit_form_validate($form, &$form_sta
   cf_error_append_history($function_history, __FUNCTION__);
 
   $item_type = &$form_state['values']['settings']['item_type'];
+  $item_type_name = &$form['settings']['settings']['item_type']['#options'][$item_type];
 
-  if (isset($form_state['values']['item_id'])){
+  if (isset($form_state['values']['settings']['parent_id'])){
     if ($form_state['values']['item_id'] === $form_state['values']['settings']['parent_id']) {
       form_set_error('settings][parent_id', t("The menu item cannot be its own parent."));
+    }
+
+    $items = (array) workbench_menu_get_load_menu_items(array('id' => $form_state['values']['settings']['parent_id']), 'id', $function_history);
+
+    if (empty($items)){
+      form_set_error('settings][parent_id', t("The specified item parent is invalid."));
+    }
+    else {
+      $item = array_pop($items['flat']);
+
+      $type = '';
+
+      foreach ($item['item']->item_type as &$t){
+        $type = $t->machine_name;
+        break;
+      }
+
+      if (empty($type)){
+        form_set_error('settings][parent_id', t("The specified item parent is invalid."));
+      }
+      else {
+        if ($type == 'item_menu' || $type == 'item_menu_item'){
+          form_set_error('settings][parent_id', t("The items of the type %type cannot be used as item parents.", array('%type' => $form['settings']['settings']['item_type']['#options'][$type])));
+        }
+      }
     }
   }
 
@@ -1162,7 +1188,7 @@ function workbench_menu_admin_item_settings_edit_form_validate($form, &$form_sta
   switch ($item_type){
     case 'item_link':
       if (empty($form_state['values']['settings']['url'])){
-        form_set_error('settings][url', t("The URL is required for an item type of %item.", array('%item' => $form['settings']['settings']['item_type']['#options'][$item_type])));
+        form_set_error('settings][url', t("The URL is required for an item type of %type.", array('%type' => $item_type_name)));
       }
       else if ($form_state['values']['settings']['url'] !== '<top>'){
         if (!valid_url($form_state['values']['settings']['url'], TRUE)){
@@ -1175,7 +1201,7 @@ function workbench_menu_admin_item_settings_edit_form_validate($form, &$form_sta
 
     case 'item_file':
       if (empty($form_state['values']['settings']['file'])){
-        form_set_error('settings][file', t("The file is required for an item type of %item.", array('%item' => $form['settings']['settings']['item_type']['#options'][$item_type])));
+        form_set_error('settings][file', t("The file is required for an item type of %item.", array('%item' => $item_type_name)));
       }
 
       if (!valid_url($form_state['values']['settings']['file'], TRUE)){
@@ -1183,14 +1209,17 @@ function workbench_menu_admin_item_settings_edit_form_validate($form, &$form_sta
           form_set_error('settings][file', t("'%file' is not a valid URL.", array('%file' => $form_state['values']['settings']['file'])));
         }
       }
-
       break;
 
     case 'item_menu':
+      if (empty($form_state['values']['settings']['menu'])){
+        form_set_error('settings][file', t("The menu is required for an item type of %type.", array('%type' => $item_type_name)));
+      }
+
       break;
 
     case 'item_menu_item':
-      form_set_error('settings][url', t("The item type '%type' is not yet supported.", array('%type' => $form['settings']['settings']['item_type']['#options'][$item_type])));
+      form_set_error('settings][url', t("The item type '%type' is not yet supported.", array('%type' => $item_type_name)));
       break;
   }
 }
