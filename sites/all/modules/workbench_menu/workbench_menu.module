@@ -269,14 +269,14 @@ function workbench_menu_block_view($delta = ''){
       $depth++;
     }
 
-    if (empty($menu->items['nested'])){
-      // when at the top-level path for some group, provide that group path as a link instead of using an empty breadcrumb.
-      // @todo provide an administrative interface for defining how things like this can be handled.
-      // @todo handle multiple menus that may conflict with each other for assigning the breadcrumb
-      if ($path == $menu->path){
-        $breadcrumbs = array(l(t($menu->taxonomy->name), $menu->path));
-      }
+    // when at the top-level path for some group, provide that group path as a link instead of using an empty breadcrumb.
+    // @todo provide an administrative interface for defining how things like this can be handled.
+    // @todo handle multiple menus that may conflict with each other for assigning the breadcrumb
+    if ($path == $menu->path){
+      $breadcrumbs = array(l(t($menu->taxonomy->name), $menu->path));
+    }
 
+    if (empty($menu->items['nested'])){
       continue;
     }
 
@@ -298,6 +298,7 @@ function workbench_menu_block_view($delta = ''){
     $item_variables['trail_path'] = '';
     $item_variables['loaded_menus'] = array($menu->access_id => &$menu);
     $item_variables['process_children'] = TRUE;
+    $item_variables['process_breadcrumb'] = TRUE;
 
     foreach ($menu->items['nested'] as &$item){
       $list_items = workbench_menu_block_view_recursively_build_menu($item, $item_variables, $function_history);
@@ -307,13 +308,6 @@ function workbench_menu_block_view($delta = ''){
           $list['items'][] = $list_item;
         }
       }
-    }
-
-    // when at the top-level path for some group, provide that group path as a link instead of using an empty breadcrumb.
-    // @todo provide an administrative interface for defining how things like this can be handled.
-    // @todo handle multiple menus that may conflict with each other for assigning the breadcrumb
-    if ($path == $menu->path){
-      $breadcrumbs = array(l(t($menu->taxonomy->name), $menu->path));
     }
 
     $menu_even = !$menu_even;
@@ -343,7 +337,7 @@ function workbench_menu_block_view($delta = ''){
   }
 
   if (!empty($breadcrumbs)){
-    drupal_set_breadcrumb($breadcrumbs);
+    drupal_set_breadcrumb(array_reverse($breadcrumbs));
   }
 
   if (empty($menu_markup)){
@@ -466,7 +460,6 @@ function workbench_menu_block_view_recursively_build_menu(&$item, $variables, ar
   }
 
   if ($type != 'item_menu' && $type != 'item_menu_item' || (($type == 'item_menu' || $type == 'item_menu_item') && !$expand_children)){
-    $variables['current_trail'][] = l(t($item['item']->human_name), $variables['trail_path']);
     $variables['even'] = !$variables['even'];
     $variables['local_even'] = !$variables['local_even'];
     $variables['current']++;
@@ -499,6 +492,7 @@ function workbench_menu_block_view_recursively_build_menu(&$item, $variables, ar
       $child_variables['trail_path'] = $variables['trail_path'];
       $child_variables['loaded_menus'] = &$variables['loaded_menus'];
       $child_variables['process_children'] = TRUE;
+      $child_variables['process_breadcrumb'] = TRUE;
 
       $list_item['children'] = array();
 
@@ -528,18 +522,23 @@ function workbench_menu_block_view_recursively_build_menu(&$item, $variables, ar
 
   if ($active_trail){
     $item_classes .= ' active-trail';
+
+    if ($variables['process_breadcrumb']){
+      $variables['current_trail'][] = l(t($item['item']->human_name), $variables['trail_path']);
+    }
   }
   else {
-    array_pop($variables['current_trail']);
-
     if ($expand_auto){
       $expand_children = FALSE;
     }
   }
 
   if ($active){
+    if ($active_trail && $variables['process_breadcrumb']){
+      array_pop($variables['current_trail']);
+    }
+
     $item_classes .= ' active';
-    array_pop($variables['current_trail']);
   }
 
   if (!empty($list_item['children'])){
@@ -660,6 +659,7 @@ function workbench_menu_block_view_recursively_build_menu(&$item, $variables, ar
       $child_variables['trail_path'] = $variables['trail_path'];
       $child_variables['loaded_menus'] = &$variables['loaded_menus'];
       $child_variables['process_children'] = $expand_children;
+      $child_variables['process_breadcrumb'] = FALSE;
 
       if (!empty($other_menu->items['nested'])){
         foreach ($other_menu->items['nested'] as &$child){
