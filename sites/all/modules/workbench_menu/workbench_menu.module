@@ -1348,7 +1348,9 @@ function workbench_menu_get_load_menu_items($conditions = array(), $keyed = NULL
 
   if (!empty($menu_items)){
     // use a separate queries to load all many-to-many relationships
-    foreach ($menu_items as $id => &$menu_item){
+    foreach ($menu_items as $menu_item_key => &$menu_item){
+      $id = $menu_item->id;
+
       if (!isset($sorted_menu_items['flat'][$id])){
         $sorted_menu_items['flat'][$id] = array();
         $sorted_menu_items['flat'][$id]['children'] = array();

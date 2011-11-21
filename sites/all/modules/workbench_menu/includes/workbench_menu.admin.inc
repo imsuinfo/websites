@@ -1161,21 +1161,25 @@ function workbench_menu_admin_item_settings_edit_form_validate($form, &$form_sta
         form_set_error('settings][parent_id', t("The specified item parent is invalid."));
       }
       else {
-        $item = array_pop($items['flat']);
-
-        $type = '';
-
-        foreach ($item['item']->item_type as &$t){
-          $type = $t->machine_name;
-          break;
-        }
-
-        if (empty($type)){
+        if (!isset($items['flat'][$form_state['values']['settings']['parent_id']])){
           form_set_error('settings][parent_id', t("The specified item parent is invalid."));
         }
         else {
-          if ($type == 'item_menu' || $type == 'item_menu_item'){
-            form_set_error('settings][parent_id', t("The items of the type %type cannot be used as item parents.", array('%type' => $form['settings']['settings']['item_type']['#options'][$type])));
+          $item = &$items['flat'][$form_state['values']['settings']['parent_id']];
+          $type = '';
+
+          foreach ($item['item']->item_type as &$t){
+            $type = $t->machine_name;
+            break;
+          }
+
+          if (empty($type)){
+            form_set_error('settings][parent_id', t("The specified item parent is invalid."));
+          }
+          else {
+            if ($type == 'item_menu' || $type == 'item_menu_item'){
+              form_set_error('settings][parent_id', t("The items of the type %type cannot be used as item parents.", array('%type' => $form['settings']['settings']['item_type']['#options'][$type])));
+            }
           }
         }
       }
@@ -1227,7 +1231,6 @@ function workbench_menu_admin_item_settings_edit_form_validate($form, &$form_sta
       if (empty($form_state['values']['settings']['menu'])){
         form_set_error('settings][file', t("The menu is required for an item type of %type.", array('%type' => $item_type_name)));
       }
-
       break;
 
     case 'item_menu_item':
