@@ -269,71 +269,85 @@ function workbench_menu_block_view($delta = ''){
       $depth++;
     }
 
-    if (!empty($menu->items['nested'])){
-      $list = array();
-      $list['items'] = array();
-      $list['type'] = 'ul';
-
-      $item_variables = array();
-      $item_variables['even'] = TRUE;
-      $item_variables['local_even'] = TRUE;
-      $item_variables['total'] = count($menu->items['flat']);
-      $item_variables['current'] = 0;
-      $item_variables['row'] = 0;
-      $item_variables['depth'] = 0;
-      $item_variables['menu'] = &$menu;
-      $item_variables['reverse_path'] = $reversed_path_parts;
-      $item_variables['complete_path'] = implode('/', $path_parts);
-      $item_variables['current_trail'] = &$breadcrumbs;
-      $item_variables['trail_path'] = '';
-      $item_variables['loaded_menus'] = array($menu->access_id => &$menu);
-      $item_variables['process_children'] = TRUE;
-
-      foreach ($menu->items['nested'] as &$item){
-        $list_items = workbench_menu_block_view_recursively_build_menu($item, $item_variables, $function_history);
-
-        if (!empty($list_items)){
-          foreach ($list_items as &$list_item){
-            $list['items'][] = $list_item;
-          }
-        }
-      }
-
+    if (empty($menu->items['nested'])){
       // when at the top-level path for some group, provide that group path as a link instead of using an empty breadcrumb.
       // @todo provide an administrative interface for defining how things like this can be handled.
+      // @todo handle multiple menus that may conflict with each other for assigning the breadcrumb
       if ($path == $menu->path){
         $breadcrumbs = array(l(t($menu->taxonomy->name), $menu->path));
       }
 
-      $menu_even = !$menu_even;
-      $menu_current++;
-
-      $menu_classes = 'workbench_menu-menu menu';
-      $menu_classes .= ' workbench_menu-menu-' . ($menu_even ? 'even even' : 'odd odd');
-      $menu_classes .= ' workbench_menu-menu-row_' . $menu_current;
-
-      $menu_wrapper_classes = 'workbench_menu-menu_wrapper';
-      $menu_wrapper_classes .= ' workbench_menu-menu_wrapper-' . ($menu_even ? 'even' : 'odd');
-      $menu_wrapper_classes .= ' workbench_menu-menu_wrapper-row_' . $menu_current;
-
-      if ($menu_current == 1){
-        $menu_classes .= ' workbench_menu-menu-first';
-        $menu_wrapper_classes .= ' workbench_menu-menu_wrapper-first first';
-      }
-
-      if ($menu_current == $menu_total){
-        $menu_classes .= ' workbench_menu-menu-last';
-        $menu_wrapper_classes .= ' workbench_menu-menu_wrapper-last last';
-      }
-
-      $list['attributes'] = array('id' => 'workbench_menu-menu_' . check_plain($menu->id), 'class' => $menu_classes);
-
-      $menu_markup .= '<div id="workbench_menu-menu_wrapper-' . check_plain($menu->id) . '" class="' . $menu_wrapper_classes . '">' . theme('item_list', $list) . '</div>';
+      continue;
     }
+
+    $list = array();
+    $list['items'] = array();
+    $list['type'] = 'ul';
+
+    $item_variables = array();
+    $item_variables['even'] = TRUE;
+    $item_variables['local_even'] = TRUE;
+    $item_variables['total'] = count($menu->items['flat']);
+    $item_variables['current'] = 0;
+    $item_variables['row'] = 0;
+    $item_variables['depth'] = 0;
+    $item_variables['menu'] = &$menu;
+    $item_variables['reverse_path'] = $reversed_path_parts;
+    $item_variables['complete_path'] = implode('/', $path_parts);
+    $item_variables['current_trail'] = &$breadcrumbs;
+    $item_variables['trail_path'] = '';
+    $item_variables['loaded_menus'] = array($menu->access_id => &$menu);
+    $item_variables['process_children'] = TRUE;
+
+    foreach ($menu->items['nested'] as &$item){
+      $list_items = workbench_menu_block_view_recursively_build_menu($item, $item_variables, $function_history);
+
+      if (!empty($list_items)){
+        foreach ($list_items as &$list_item){
+          $list['items'][] = $list_item;
+        }
+      }
+    }
+
+    // when at the top-level path for some group, provide that group path as a link instead of using an empty breadcrumb.
+    // @todo provide an administrative interface for defining how things like this can be handled.
+    // @todo handle multiple menus that may conflict with each other for assigning the breadcrumb
+    if ($path == $menu->path){
+      $breadcrumbs = array(l(t($menu->taxonomy->name), $menu->path));
+    }
+
+    $menu_even = !$menu_even;
+    $menu_current++;
+
+    $menu_classes = 'workbench_menu-menu menu';
+    $menu_classes .= ' workbench_menu-menu-' . ($menu_even ? 'even even' : 'odd odd');
+    $menu_classes .= ' workbench_menu-menu-row_' . $menu_current;
+
+    $menu_wrapper_classes = 'workbench_menu-menu_wrapper';
+    $menu_wrapper_classes .= ' workbench_menu-menu_wrapper-' . ($menu_even ? 'even' : 'odd');
+    $menu_wrapper_classes .= ' workbench_menu-menu_wrapper-row_' . $menu_current;
+
+    if ($menu_current == 1){
+      $menu_classes .= ' workbench_menu-menu-first';
+      $menu_wrapper_classes .= ' workbench_menu-menu_wrapper-first first';
+    }
+
+    if ($menu_current == $menu_total){
+      $menu_classes .= ' workbench_menu-menu-last';
+      $menu_wrapper_classes .= ' workbench_menu-menu_wrapper-last last';
+    }
+
+    $list['attributes'] = array('id' => 'workbench_menu-menu_' . check_plain($menu->id), 'class' => $menu_classes);
+
+    $menu_markup .= '<div id="workbench_menu-menu_wrapper-' . check_plain($menu->id) . '" class="' . $menu_wrapper_classes . '">' . theme('item_list', $list) . '</div>';
   }
 
   if (!empty($breadcrumbs)){
     drupal_set_breadcrumb($breadcrumbs);
+  }
+
+  if (empty($menu_markup)){
+    return array();
   }
 
   $block = array();
