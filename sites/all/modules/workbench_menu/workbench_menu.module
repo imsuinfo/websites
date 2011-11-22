@@ -381,7 +381,7 @@ function workbench_menu_block_view_recursively_build_menu(&$item, $variables, ar
   $active_trail = FALSE;
   $active = FALSE;
   $node_path_alias = '';
-  $node_path_alias_relative = '';
+  $outside_link = FALSE;
 
   foreach ($item['item']->expand as &$expand){
     // if the item has no visibility, then..
@@ -401,7 +401,14 @@ function workbench_menu_block_view_recursively_build_menu(&$item, $variables, ar
     if ($matched > 0 && !empty($matches[1])){
       $new_path = path_load(array('source' => 'node/' . $matches[1]));
       $node_path_alias = '/' . $new_path['alias'];
-      $node_path_alias_relative = $new_path['alias'];
+
+      if (preg_match('@^' . $variables['menu']->path . '/@', $new_path['alias']) == 0){
+        $item['item']->active_path = '/' . $new_path['alias'];
+        $outside_link = TRUE;
+      }
+      else {
+        $item['item']->active_path = '/' . preg_replace('@^' . $variables['menu']->path . '/@', '', $new_path['alias']);
+      }
     }
 
     unset($matched);
@@ -464,7 +471,13 @@ function workbench_menu_block_view_recursively_build_menu(&$item, $variables, ar
       }
     }
     else {
-      $current_path = $variables['menu']->path . $item['item']->active_path;
+      if ($outside_link){
+        $current_path = preg_replace('@^/@', '', $item['item']->active_path);
+      }
+      else {
+        $current_path = $variables['menu']->path . $item['item']->active_path;
+      }
+
       $variables['trail_path'] = $current_path;
 
       if ($current_path == $variables['complete_path']){
@@ -540,12 +553,7 @@ function workbench_menu_block_view_recursively_build_menu(&$item, $variables, ar
     $item_classes .= ' active-trail';
 
     if ($variables['process_breadcrumb']){
-      if (empty($node_path_alias_relative)){
-        $variables['current_trail'][] = l(t($item['item']->human_name), $variables['trail_path']);
-      }
-      else {
-        $variables['current_trail'][] = l(t($item['item']->human_name), $node_path_alias_relative);
-      }
+      $variables['current_trail'][] = l(t($item['item']->human_name), $variables['trail_path']);
     }
   }
   else {
