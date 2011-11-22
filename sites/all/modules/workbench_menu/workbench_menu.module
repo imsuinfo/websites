@@ -380,6 +380,8 @@ function workbench_menu_block_view_recursively_build_menu(&$item, $variables, ar
   $current_path = '';
   $active_trail = FALSE;
   $active = FALSE;
+  $node_path_alias = '';
+  $node_path_alias_relative = '';
 
   foreach ($item['item']->expand as &$expand){
     // if the item has no visibility, then..
@@ -391,6 +393,20 @@ function workbench_menu_block_view_recursively_build_menu(&$item, $variables, ar
     }
 
     break;
+  }
+
+  if ($type == 'item_link'){
+    $matched = preg_match('@^/node/(\d+)@', $item['item']->properties['url'], $matches);
+
+    if ($matched > 0 && !empty($matches[1])){
+      $new_path = path_load(array('source' => 'node/' . $matches[1]));
+      $node_path_alias = '/' . $new_path['alias'];
+      $node_path_alias_relative = $new_path['alias'];
+    }
+
+    unset($matched);
+    unset($matches);
+    unset($new_path);
   }
 
   if (!empty($item['item']->active_path)){
@@ -524,7 +540,12 @@ function workbench_menu_block_view_recursively_build_menu(&$item, $variables, ar
     $item_classes .= ' active-trail';
 
     if ($variables['process_breadcrumb']){
-      $variables['current_trail'][] = l(t($item['item']->human_name), $variables['trail_path']);
+      if (empty($node_path_alias_relative)){
+        $variables['current_trail'][] = l(t($item['item']->human_name), $variables['trail_path']);
+      }
+      else {
+        $variables['current_trail'][] = l(t($item['item']->human_name), $node_path_alias_relative);
+      }
     }
   }
   else {
@@ -568,6 +589,7 @@ function workbench_menu_block_view_recursively_build_menu(&$item, $variables, ar
       $prepend = '';
       $append = '';
       $tags = '';
+      $matches = array();
 
       if ($active || $active_trail){
         $tags .= ' class="';
@@ -582,19 +604,26 @@ function workbench_menu_block_view_recursively_build_menu(&$item, $variables, ar
         $list_item['data'] = $prepend . '<a' . $tags . ' href="' . check_url('/' . $variables['menu']->path) . '">' . check_plain($item['item']->human_name) . '</a>';
       }
       else {
-        if (valid_url($item['item']->properties['url'], TRUE)){
-          $parsed_url = parse_url($item['item']->properties['url']);
+        if (empty($node_path_alias)){
+          $url = &$item['item']->properties['url'];
+        }
+        else {
+          $url = &$node_path_alias;
+        }
+
+        if (valid_url($url, TRUE)){
+          $parsed_url = parse_url($url);
           $remote_url = check_plain($parsed_url['host']);
           $prepend .= '<div class="workbench_menu-menu_item-icon workbench_menu-menu_item-icon_external"></div>';
           $tags .= ' title="' . t("This links to the external website: !remote_url.", array('!remote_url' => $remote_url)) . '"';
         }
         else {
-          if (preg_match('@^(/|#)@', $item['item']->properties['url']) === 0){
+          if (preg_match('@^(/|#)@', $url) === 0){
             $url_prefix = '/' . $variables['menu']->path . '/';
           }
         }
 
-        $list_item['data'] = $prepend . '<a' . $tags . ' href="' . check_url($url_prefix . $item['item']->properties['url']) . '">' . check_plain($item['item']->human_name) . '</a>' . $append;
+        $list_item['data'] = $prepend . '<a' . $tags . ' href="' . check_url($url_prefix . $url) . '">' . check_plain($item['item']->human_name) . '</a>' . $append;
       }
       break;
 
