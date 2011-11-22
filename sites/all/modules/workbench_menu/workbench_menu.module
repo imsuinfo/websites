@@ -553,7 +553,12 @@ function workbench_menu_block_view_recursively_build_menu(&$item, $variables, ar
     $item_classes .= ' active-trail';
 
     if ($variables['process_breadcrumb']){
-      $variables['current_trail'][] = l(t($item['item']->human_name), $variables['trail_path']);
+      if ($type == 'item_label'){
+        $variables['current_trail'][] = t($item['item']->human_name);
+      }
+      else {
+        $variables['current_trail'][] = l(t($item['item']->human_name), $variables['trail_path']);
+      }
     }
   }
   else {
