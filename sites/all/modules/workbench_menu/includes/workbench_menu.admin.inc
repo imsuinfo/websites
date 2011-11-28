@@ -1213,7 +1213,7 @@ function workbench_menu_admin_item_settings_edit_form_validate($form, &$form_sta
       // be user-friendly and allow normal whitespaces on insert.
       $form_state['values']['settings']['active_path'] = preg_replace('/ /', '%20', $form_state['values']['settings']['active_path']);
 
-      if (valid_url($form_state['values']['settings']['url'], TRUE)){
+      if (valid_url($form_state['values']['settings']['active_path'], TRUE)){
         form_set_error('settings][active_path', t("The active path cannot be a full URL."));
       }
       else if (!valid_url($form_state['values']['settings']['active_path'])){
@@ -1249,7 +1249,7 @@ function workbench_menu_admin_item_settings_edit_form_validate($form, &$form_sta
       }
       else {
         // be user-friendly and allow normal whitespaces on insert.
-        $form_state['values']['settings']['url'] = preg_replace('/ /', '%20', $form_state['values']['settings']['url']);
+        $form_state['values']['settings']['file'] = preg_replace('/ /', '%20', $form_state['values']['settings']['file']);
 
         if (!valid_url($form_state['values']['settings']['file'], TRUE)){
           if (!valid_url($form_state['values']['settings']['file'])){
