@@ -927,6 +927,8 @@ function workbench_menu_get_menus_options_list(array $function_history = array()
 
 /**
  * Obtains the menus associated with a given path.
+ * This matches against the menus that are the depest-level children of a given path.
+ * That is, if there exist menus at /a/, /a/b/, and /a/b/c/ and the current path is /a/b/d, then only the menu at path /a/b/ is returned.
  *
  * @param path
  *   A path string.
@@ -952,7 +954,30 @@ function workbench_menu_get_menus_at_path($path, array $function_history = array
     $path_string .= '/';
   }
 
-  $menus = (array) workbench_menu_get_menus(array('path' => $matches), 'id', $function_history);
+  $all_menus = (array) workbench_menu_get_menus(array('path' => $matches), 'id', $function_history);
+  $menus = array();
+
+  // look for the deepest path and only return those menus.
+  if (!empty($all_menus)){
+    $path_string = '';
+    $matched = FALSE;
+
+    // @todo: also consider adding a weight system so that users can control the order for multiple menus that appear at the same path.
+    while (!empty($parts)){
+      foreach ($all_menus as $menu_id => &$menu){
+        $path_string = implode('/', $parts);
+
+        if (preg_match('@^' . $path_string . '@', $menu->path) > 0){
+          $matched = TRUE;
+          $menus[$menu_id] = $menu;
+        }
+      }
+
+      if ($matched) break;
+
+      array_pop($parts);
+    }
+  }
 
   return $menus;
 }
