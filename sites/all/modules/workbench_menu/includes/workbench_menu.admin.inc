@@ -113,6 +113,9 @@ function workbench_menu_edit_settings_form($form, &$form_state, $access_type, $a
 
     if (property_exists($menu, 'path')){
       $default_path = &$menu->path;
+
+      // be user-friendly and show normal spaces instead of %20.
+      $default_path = preg_replace('/%20/', ' ', $default_path);
     }
 
     if (property_exists($menu, 'items')){
@@ -375,6 +378,9 @@ function workbench_menu_admin_settings_form($form, &$form_state, $access_type, $
 
     if (property_exists($menu, 'path')){
       $default_path = &$menu->path;
+
+      // be user-friendly and show normal spaces instead of %20.
+      $default_path = preg_replace('/%20/', ' ', $default_path);
     }
 
     if (property_exists($menu, 'items')){
@@ -440,6 +446,9 @@ function workbench_menu_admin_settings_form_validate($form, &$form_state) {
   cf_error_append_history($function_history, __FUNCTION__);
 
   if (!empty($form_state['values']['path'])) {
+    // be user-friendly and allow normal whitespaces on insert.
+    $form_state['values']['path'] = preg_replace('/ /', '%20', $form_state['values']['path']);
+
     if (!valid_url($form_state['values']['path'], FALSE)){
       form_set_error('path', t("The specified path is not a valid url path."));
     }
@@ -775,6 +784,9 @@ function workbench_menu_admin_item_settings_form_settings($item, $menu, array $f
 
     if (property_exists($item, 'active_path') && is_string($item->active_path)){
       $defaults['active_path'] = $item->active_path;
+
+      // be user-friendly and show normal spaces instead of %20.
+      $defaults['active_path'] = preg_replace('/%20/', ' ', $defaults['active_path']);
     }
 
     if (property_exists($item, 'item_type') && is_array($item->item_type)){
@@ -793,6 +805,11 @@ function workbench_menu_admin_item_settings_form_settings($item, $menu, array $f
       foreach ($item->properties as $key => &$value){
         $defaults['properties'][$key] = $value;
       }
+    }
+
+    if (!empty($defaults['properties']['url'])){
+      // be user-friendly and show normal spaces instead of %20.
+      $defaults['properties']['url'] = preg_replace('/%20/', ' ', $defaults['properties']['url']);
     }
   }
 
@@ -1188,6 +1205,9 @@ function workbench_menu_admin_item_settings_edit_form_validate($form, &$form_sta
 
   if (!empty($form_state['values']['settings']['active_path'])){
     if ($form_state['values']['settings']['active_path'] !== '<top>'){
+      // be user-friendly and allow normal whitespaces on insert.
+      $form_state['values']['settings']['active_path'] = preg_replace('/ /', '%20', $form_state['values']['settings']['active_path']);
+
       if (valid_url($form_state['values']['settings']['url'], TRUE)){
         form_set_error('settings][active_path', t("The active path cannot be a full URL."));
       }
@@ -1207,6 +1227,9 @@ function workbench_menu_admin_item_settings_edit_form_validate($form, &$form_sta
         form_set_error('settings][url', t("The URL is required for an item type of %type.", array('%type' => $item_type_name)));
       }
       else if ($form_state['values']['settings']['url'] !== '<top>'){
+        // be user-friendly and allow normal whitespaces on insert.
+        $form_state['values']['settings']['url'] = preg_replace('/ /', '%20', $form_state['values']['settings']['url']);
+
         if (!valid_url($form_state['values']['settings']['url'], TRUE)){
           if (!valid_url($form_state['values']['settings']['url'])){
             form_set_error('settings][url', t("'%url' is not a valid URL.", array('%url' => $form_state['values']['settings']['url'])));
@@ -1219,10 +1242,14 @@ function workbench_menu_admin_item_settings_edit_form_validate($form, &$form_sta
       if (empty($form_state['values']['settings']['file'])){
         form_set_error('settings][file', t("The file is required for an item type of %item.", array('%item' => $item_type_name)));
       }
+      else {
+        // be user-friendly and allow normal whitespaces on insert.
+        $form_state['values']['settings']['url'] = preg_replace('/ /', '%20', $form_state['values']['settings']['url']);
 
-      if (!valid_url($form_state['values']['settings']['file'], TRUE)){
-        if (!valid_url($form_state['values']['settings']['file'])){
-          form_set_error('settings][file', t("'%file' is not a valid URL.", array('%file' => $form_state['values']['settings']['file'])));
+        if (!valid_url($form_state['values']['settings']['file'], TRUE)){
+          if (!valid_url($form_state['values']['settings']['file'])){
+            form_set_error('settings][file', t("'%file' is not a valid URL.", array('%file' => $form_state['values']['settings']['file'])));
+          }
         }
       }
       break;
