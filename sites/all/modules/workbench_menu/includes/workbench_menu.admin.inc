@@ -1261,12 +1261,12 @@ function workbench_menu_admin_item_settings_edit_form_validate($form, &$form_sta
 
     case 'item_menu':
       if (empty($form_state['values']['settings']['menu'])){
-        form_set_error('settings][file', t("The menu is required for an item type of %type.", array('%type' => $item_type_name)));
+        form_set_error('settings][menu', t("The menu is required for an item type of %type.", array('%type' => $item_type_name)));
       }
       break;
 
     case 'item_menu_item':
-      form_set_error('settings][url', t("The item type '%type' is not yet supported.", array('%type' => $item_type_name)));
+      form_set_error('settings][item_type', t("The item type '%type' is not yet supported.", array('%type' => $item_type_name)));
       break;
   }
 }
