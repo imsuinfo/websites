@@ -137,7 +137,7 @@ function genesis_mcneese_cf_theme_get_variables_alter(&$cf, $variables){
   $cf['meta']['name']['description'] = 'McNeese State University Website';
   $cf['meta']['name']['distribution'] = 'web';
 
-  foreach (array('sidebar_both', 'sidebar_left', 'sidebar_right', 'sidebar_none') as $key){
+  foreach (array('sidebar_both', 'sidebar_left', 'sidebar_right', 'sidebar_none', 'in_ie_compatibility_mode') as $key){
     $cf['is'][$key] = FALSE;
     $cf['is_data'][$key] = array();
   }
