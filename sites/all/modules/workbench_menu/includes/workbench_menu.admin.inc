@@ -811,6 +811,11 @@ function workbench_menu_admin_item_settings_form_settings($item, $menu, array $f
       // be user-friendly and show normal spaces instead of %20.
       $defaults['properties']['url'] = preg_replace('/%20/', ' ', $defaults['properties']['url']);
     }
+
+    if (!empty($defaults['properties']['file'])){
+      // be user-friendly and show normal spaces instead of %20.
+      $defaults['properties']['file'] = preg_replace('/%20/', ' ', $defaults['properties']['file']);
+    }
   }
 
   $available = array();
