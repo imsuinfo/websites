@@ -828,6 +828,7 @@ function workbench_menu_admin_item_settings_form_settings($item, $menu, array $f
   unset($available['menus'][$menu->access_id]);
 
   $available['file_types'] = array(
+    'audio' => t("Audio"),
     'base' => t("Base"),
     'excel' => t("Excel"),
     'external' => t("External File"),
@@ -835,6 +836,7 @@ function workbench_menu_admin_item_settings_form_settings($item, $menu, array $f
     'flash' => t("Flash"),
     'image' => t("Image"),
     'impress' => t("Impress"),
+    'mail' => t("Mail"),
     'math' => t("Math"),
     'pdf' => t("PDF"),
     'powerpoint' => t("Powerpoint"),

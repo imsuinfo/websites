@@ -71,3 +71,11 @@
 .workbench_menu-menu_item-icon_writer {
   background-image: url(../images/icon_writer.png);
 }
+
+.workbench_menu-menu_item-icon_audio {
+  background-image: url(../images/icon_audio.png);
+}
+
+.workbench_menu-menu_item-icon_mail {
+  background-image: url(../images/icon_mail.png);
+}

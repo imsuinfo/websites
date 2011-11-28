@@ -57,3 +57,11 @@ div.workbench_menu-manage_menu-menu_items-add_item_link {
 #edit-settings-file-type option[value="writer"] {
   background-image: url(../images/icon_writer.png);
 }
+
+#edit-settings-file-type option[value="audio"] {
+  background-image: url(../images/icon_audio.png);
+}
+
+#edit-settings-file-type option[value="mail"] {
+  background-image: url(../images/icon_mail.png);
+}
