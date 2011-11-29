@@ -401,14 +401,25 @@ function workbench_menu_block_view_recursively_build_menu(&$item, $variables, ar
 
     if ($matched > 0 && !empty($matches[1])){
       $new_path = path_load(array('source' => 'node/' . $matches[1]));
-      $node_path_alias = '/' . $new_path['alias'];
+      $parsed_url = parse_url($item['item']->properties['url']);
+      $additional_path = '';
+
+      if (!empty($parsed_url['query'])){
+        $additional_path .= '?' . $parsed_url['query'];
+      }
+
+      if (!empty($parsed_url['fragment'])){
+        $additional_path .= '#' . $parsed_url['fragment'];
+      }
+
+      $node_path_alias = '/' . $new_path['alias'] . $additional_path;
 
       if (preg_match('@^' . $variables['menu']->path . '/@', $new_path['alias']) == 0){
-        $item['item']->active_path = '/' . $new_path['alias'];
+        $item['item']->active_path = '/' . $new_path['alias'] . $additional_path;
         $outside_link = TRUE;
       }
       else {
-        $item['item']->active_path = '/' . preg_replace('@^' . $variables['menu']->path . '/@', '', $new_path['alias']);
+        $item['item']->active_path = '/' . preg_replace('@^' . $variables['menu']->path . '/@', '', $new_path['alias']) . $additional_path;
       }
     }
 
