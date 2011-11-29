@@ -984,6 +984,7 @@ function workbench_menu_admin_item_settings_form_settings($item, $menu, array $f
 function workbench_menu_admin_item_settings_add_form($form, &$form_state, $access_type, $access_type_id, $return_destination){
   cf_error_append_history($function_history, __FUNCTION__);
 
+  $term = taxonomy_term_load($access_type_id);
   $destination = isset($_GET['destination']) ? $_GET['destination'] : $return_destination;
   $menus = (array) workbench_menu_get_menus(array('reset' => TRUE, 'access_id' => $access_type_id), 'id', $function_history);
 
@@ -1007,6 +1008,11 @@ function workbench_menu_admin_item_settings_add_form($form, &$form_state, $acces
   $form['menu_id'] = array(
     '#type' => 'value',
     '#value' => $menu->id,
+  );
+
+  $form['menu_human_name'] = array(
+    '#type' => 'value',
+    '#value' => $term->name,
   );
 
   $form['redirect_to'] = array(
@@ -1134,7 +1140,17 @@ function workbench_menu_admin_item_settings_edit_form($form, &$form_state, $acce
 
   $form['menu_id'] = array(
     '#type' => 'value',
-    '#value' => $item->menu_id,
+    '#value' => $menu->id,
+  );
+
+  $form['item_human_name'] = array(
+    '#type' => 'value',
+    '#value' => $item->human_name,
+  );
+
+  $form['menu_human_name'] = array(
+    '#type' => 'value',
+    '#value' => $term->name,
   );
 
   $form['redirect_to'] = array(
@@ -1293,6 +1309,15 @@ function workbench_menu_admin_item_settings_edit_form_submit($form, &$form_state
     $item_id = NULL;
   }
 
+  $user = cf_get_user(FALSE, $function_history);
+
+  if (is_null($item_id)){
+    watchdog('workbench_menu', "The user %user has added a new item %item to the menu %menu (%menu_id)", array('%user' => $user->name, '%item' => $form_state['values']['settings']['human_name'], '%menu' => $form_state['values']['menu_human_name'], '%menu_id' => $form_state['values']['menu_id']), WATCHDOG_INFO);
+  }
+  else {
+    watchdog('workbench_menu', "The user %user has changed the item %item (%item_id) from the menu %menu (%menu_id)", array('%user' => $user->name, '%item' => $form_state['values']['item_human_name'], '%item_id' => $form_state['values']['item_id'], '%menu' => $form_state['values']['menu_human_name'], '%menu_id' => $form_state['values']['menu_id']), WATCHDOG_INFO);
+  }
+
   $properties = array();
 
   foreach (array('url', 'disabled', 'file', 'file_type', 'menu') as $property){
@@ -1426,6 +1451,21 @@ function workbench_menu_admin_item_settings_delete_form($form, &$form_state, $ac
     '#value' => $item->id,
   );
 
+  $form['menu_id'] = array(
+    '#type' => 'value',
+    '#value' => $item->menu_id,
+  );
+
+  $form['item_human_name'] = array(
+    '#type' => 'value',
+    '#value' => $item->human_name,
+  );
+
+  $form['menu_human_name'] = array(
+    '#type' => 'value',
+    '#value' => $term->name,
+  );
+
   $form['redirect_to'] = array(
     '#type' => 'value',
     '#value' => $destination,
@@ -1452,6 +1492,8 @@ function workbench_menu_admin_item_settings_delete_form_submit($form, &$form_sta
   cf_error_append_history($function_history, __FUNCTION__);
 
   $transaction = db_transaction();
+
+  watchdog('workbench_menu', "The user %user has deleted the item %item (%item_id) from the menu %menu (%menu_id)", array('%user' => $user->name, '%item' => $form_state['values']['item_human_name'], '%item_id' => $form_state['values']['item_id'], '%menu' => $form_state['values']['menu_human_name'], '%menu_id' => $form_state['values']['menu_id']), WATCHDOG_INFO);
 
   try {
     $query = db_delete('workbench_menu_items');
