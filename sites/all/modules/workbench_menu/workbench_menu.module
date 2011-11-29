@@ -283,13 +283,14 @@ function workbench_menu_block_view($delta = ''){
     $list = array();
     $list['items'] = array();
     $list['type'] = 'ul';
+    $row_number = 0;
 
     $item_variables = array();
     $item_variables['even'] = TRUE;
     $item_variables['local_even'] = TRUE;
     $item_variables['total'] = count($menu->items['flat']);
     $item_variables['current'] = 0;
-    $item_variables['row'] = 0;
+    $item_variables['row'] = &$row_number;
     $item_variables['depth'] = 0;
     $item_variables['menu'] = &$menu;
     $item_variables['reverse_path'] = $reversed_path_parts;
