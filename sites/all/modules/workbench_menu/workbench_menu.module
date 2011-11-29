@@ -269,13 +269,6 @@ function workbench_menu_block_view($delta = ''){
       $depth++;
     }
 
-    // when at the top-level path for some group, provide that group path as a link instead of using an empty breadcrumb.
-    // @todo provide an administrative interface for defining how things like this can be handled.
-    // @todo handle multiple menus that may conflict with each other for assigning the breadcrumb
-    if ($path == $menu->path){
-      $breadcrumbs = array(l(t($menu->taxonomy->name), $menu->path));
-    }
-
     if (empty($menu->items['nested'])){
       continue;
     }
@@ -310,6 +303,11 @@ function workbench_menu_block_view($delta = ''){
         }
       }
     }
+
+    // when at the top-level path for some group, provide that group path as a link instead of using an empty breadcrumb.
+    // @todo provide an administrative interface for defining how things like this can be handled.
+    // @todo handle multiple menus that may conflict with each other for assigning the breadcrumb
+    $breadcrumbs[] = l(t($menu->taxonomy->name), $menu->path);
 
     $menu_even = !$menu_even;
     $menu_current++;
@@ -564,7 +562,7 @@ function workbench_menu_block_view_recursively_build_menu(&$item, $variables, ar
   if ($active_trail){
     $item_classes .= ' active-trail';
 
-    if ($variables['process_breadcrumb']){
+    if ($variables['process_breadcrumb'] && $item['item']->active_path != '<top>'){
       if ($type == 'item_label'){
         $variables['current_trail'][] = t($item['item']->human_name);
       }
