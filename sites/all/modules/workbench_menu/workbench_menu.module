@@ -496,6 +496,10 @@ function workbench_menu_block_view_recursively_build_menu(&$item, $variables, ar
         $variables['active'] = TRUE;
       }
     }
+
+    if ($item['item']->active_path == '<top>'){
+      $item_classes .= ' workbench_menu-menu_item-menu_top';
+    }
   }
 
   if ($type != 'item_menu' && $type != 'item_menu_item' || (($type == 'item_menu' || $type == 'item_menu_item') && !$expand_children)){
