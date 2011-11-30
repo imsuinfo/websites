@@ -10,7 +10,7 @@ div#container {
   background-color: #ffffff;
 }
 
-body#genesis_mcneese-body.is-maintenance div#container {
+body.genesis_mcneese-body.is-maintenance div#container {
   -moz-border-radius-bottomright: 10px;
   -moz-border-radius-bottomleft: 10px;
 

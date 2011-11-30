@@ -3,14 +3,14 @@
   vertical-align: top;
 }
 
-body#genesis_mcneese-body {
+body.genesis_mcneese-body {
   position: relative;
   font-family: Arial, Helvetica, sans-serif;
 
   background-color: #ffffff;
 }
 
-body#genesis_mcneese-body {
+body.genesis_mcneese-body {
   background-color: #dadada;
 }
 

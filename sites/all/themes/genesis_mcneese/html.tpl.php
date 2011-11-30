@@ -10,7 +10,7 @@
   <!--(end_head)-->
 </head>
 
-<body id="genesis_mcneese-body" class="<?php print($cf['markup_css']['body']['class']); ?>" <?php print($attributes);?>>
+<body id="genesis_mcneese-body" class="genesis_mcneese-body <?php print($cf['markup_css']['body']['class']); ?>" <?php print($attributes);?>>
   <?php if (!$cf['is']['overlay']){ ?>
     <span>
       <div id="genesis_mcneese-skip_nav">
