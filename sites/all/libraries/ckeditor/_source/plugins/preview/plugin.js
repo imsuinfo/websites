@@ -44,7 +44,7 @@ For licensing, see LICENSE.html or http://ckeditor.com/license
 
 				sHTML =
 					editor.config.docType +
-					'<html id="ckeditor-wysiwygarea" dir="' + editor.config.contentsLangDirection + '">' +
+					'<html dir="' + editor.config.contentsLangDirection + '">' +
 					'<head>' +
 					baseTag +
 					'<title>' + editor.lang.preview + '</title>' +
@@ -84,9 +84,13 @@ For licensing, see LICENSE.html or http://ckeditor.com/license
 
 			if ( !isCustomDomain )
 			{
-				oWindow.document.open();
-				oWindow.document.write( sHTML );
-				oWindow.document.close();
+				var doc = oWindow.document;
+				doc.open();
+				doc.write( sHTML );
+				doc.close();
+
+				// Chrome will need this to show the embedded. (#8016)
+				CKEDITOR.env.webkit && setTimeout( function() { doc.body.innerHTML += ''; }, 0 );
 			}
 		}
 	};
