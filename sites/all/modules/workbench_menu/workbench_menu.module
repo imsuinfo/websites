@@ -277,6 +277,7 @@ function workbench_menu_block_view($delta = ''){
     $list['items'] = array();
     $list['type'] = 'ul';
     $row_number = 0;
+    $active_item = NULL;
 
     $item_variables = array();
     $item_variables['even'] = TRUE;
@@ -286,6 +287,7 @@ function workbench_menu_block_view($delta = ''){
     $item_variables['row'] = &$row_number;
     $item_variables['depth'] = 0;
     $item_variables['menu'] = &$menu;
+    $item_variables['active_item'] = &$active_item;
     $item_variables['reverse_path'] = $reversed_path_parts;
     $item_variables['complete_path'] = implode('/', $path_parts);
     $item_variables['current_trail'] = &$breadcrumbs;
@@ -307,7 +309,17 @@ function workbench_menu_block_view($delta = ''){
     // when at the top-level path for some group, provide that group path as a link instead of using an empty breadcrumb.
     // @todo provide an administrative interface for defining how things like this can be handled.
     // @todo handle multiple menus that may conflict with each other for assigning the breadcrumb
-    $breadcrumbs[] = l(t($menu->taxonomy->name), $menu->path);
+    if (!is_object($active_item) || $active_item->menu_id == $menu->id){
+      $breadcrumbs[] = l(t($menu->taxonomy->name), $menu->path);
+    }
+    else {
+      $breadcrumb_menus = (array) workbench_menu_get_menus(array('id' => $active_item->menu_id), 'id', $function_history);
+      $breadcrumb_menu = array_pop($breadcrumb_menus);
+      $breadcrumbs[] = l(t($breadcrumb_menu->taxonomy->name), $breadcrumb_menu->path);
+
+      unset($breadcrumb_menus);
+      unset($breadcrumb_menu);
+    }
 
     $menu_even = !$menu_even;
     $menu_current++;
@@ -437,7 +449,7 @@ function workbench_menu_block_view_recursively_build_menu(&$item, $variables, ar
 
             if (empty($variables['reverse_path']) || empty($item['children'])){
               $active = TRUE;
-              $variables['active'] = TRUE;
+              $variables['active_item'] = $item['item'];
             }
           }
           else {
@@ -459,7 +471,7 @@ function workbench_menu_block_view_recursively_build_menu(&$item, $variables, ar
 
                   if (empty($variables['reverse_path']) || empty($item['children'])){
                     $active = TRUE;
-                    $variables['active'] = TRUE;
+                    $variables['active_item'] = $item['item'];
                   }
 
                   break;
@@ -493,7 +505,7 @@ function workbench_menu_block_view_recursively_build_menu(&$item, $variables, ar
       if ($current_path == $variables['complete_path']){
         $active_trail = TRUE;
         $active = TRUE;
-        $variables['active'] = TRUE;
+        $variables['active_item'] = $item['item'];
       }
     }
 
@@ -519,7 +531,7 @@ function workbench_menu_block_view_recursively_build_menu(&$item, $variables, ar
   if (!empty($item['children']) && $variables['process_children']){
     if ($expand_children){
       $child_variables = array();
-      $active_child = FALSE;
+      $active_child_item = NULL;
       $current = 0;
       $child_variables['local_even'] = TRUE;
       $child_variables['even'] = &$variables['even'];
@@ -528,8 +540,8 @@ function workbench_menu_block_view_recursively_build_menu(&$item, $variables, ar
       $child_variables['current'] = &$current;
       $child_variables['depth'] = $variables['depth'] + 1;
       $child_variables['menu'] = &$variables['menu'];
+      $child_variables['active_item'] = &$active_child_item;
       $child_variables['reverse_path'] = $variables['reverse_path'];
-      $child_variables['active'] = &$active_child;
       $child_variables['complete_path'] = &$variables['complete_path'];
       $child_variables['current_trail'] = &$variables['current_trail'];
       $child_variables['trail_path'] = $variables['trail_path'];
@@ -542,9 +554,9 @@ function workbench_menu_block_view_recursively_build_menu(&$item, $variables, ar
       foreach ($item['children'] as &$child){
         $child_lists = workbench_menu_block_view_recursively_build_menu($child, $child_variables, $function_history);
 
-        if ($child_variables['active']){
+        if (is_object($active_child_item)){
           $active_trail = TRUE;
-          $variables['active'] = TRUE;
+          $variables['active_item'] = $active_child_item;
         }
 
         if (!empty($child_lists)){
@@ -713,8 +725,8 @@ function workbench_menu_block_view_recursively_build_menu(&$item, $variables, ar
       $child_variables['current'] = &$other_current;
       $child_variables['depth'] = $variables['depth'];
       $child_variables['menu'] = &$other_menu;
+      $child_variables['active_item'] = &$variables['active_item'];
       $child_variables['reverse_path'] = $variables['reverse_path'];
-      $child_variables['active'] = FALSE;
       $child_variables['complete_path'] = &$variables['complete_path'];
       $child_variables['current_trail'] = &$variables['current_trail'];
       $child_variables['trail_path'] = $variables['trail_path'];
