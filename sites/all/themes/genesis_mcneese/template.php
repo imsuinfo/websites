@@ -64,10 +64,10 @@ function genesis_mcneese_preprocess_page(&$vars) {
     $vars['cf'] = cf_theme_get_variables($vars);
   }
 
-  $keys_to_render = array('logo', 'title_prefix', 'title_suffix', 'side_links', 'action_links');
+  $keys_to_render = array('logo', 'title_prefix', 'title_suffix', 'side_links', 'action_links', 'sidenote');
   cf_theme_render_variables($vars, $keys_to_render);
 
-  $keys_to_render = array('leaderboard', 'primary_links', 'header', 'help', 'sidenote', 'secondary_content', 'sidebar_first', 'highlighted', 'content', 'sidebar_second', 'tertiary_content', 'footer', 'subboard');
+  $keys_to_render = array('leaderboard', 'primary_links', 'header', 'help', 'secondary_content', 'sidebar_first', 'highlighted', 'content', 'sidebar_second', 'tertiary_content', 'footer', 'subboard');
   cf_theme_render_variables($vars, $keys_to_render, 'page');
 
   genesis_mcneese_process_variables($vars);
@@ -161,8 +161,6 @@ function genesis_mcneese_cf_theme_get_variables_alter(&$cf, $variables){
     $cf['show']['breadcrumb'] = TRUE;
   }
 
-  $cf['show']['sidenote'] = FALSE;
-  $cf['data']['sidenote'] = array('content' => '');
   $cf['show']['subboard_image'] = FALSE;
   $cf['data']['subboard_image'] = array('content' => '', 'css' => '');
 
