@@ -486,8 +486,11 @@ div#sidebar-first div.block-workbench-menu {
   padding-bottom: 15px;
 }
 
-div#sidebar-first div.block-workbench-menu li.workbench_menu-menu_item-type-item_label {
+div#sidebar-first div.block-workbench-menu li.workbench_menu-menu_item-type-item_label.depth_0 {
   font-weight: bold;
+}
+
+div#sidebar-first div.block-workbench-menu li.workbench_menu-menu_item-type-item_label {
   color: #00477f;
 }
 
@@ -520,10 +523,14 @@ div#sidebar-first div.block-workbench-menu a {
   padding: 2px 4px;
 }
 
-div#sidebar-first div.block-menu div.content ul.menu,
-div#sidebar-first div.block-workbench-menu div.content ul.menu {
+div#sidebar-first ul.menu li.workbench_menu-menu_item-menu_top.depth_0 {
+  margin-top: 15px;
   padding-top: 15px;
   border-top: 1px solid #888888;
+}
+
+div#sidebar-first ul.menu li.workbench_menu-menu_item-menu_top.depth_0.first {
+  margin-top: 0;
 }
 
 div#sidebar-first div.block-menu div.content ul.menu ul.menu,
@@ -557,8 +564,8 @@ div#sidebar-first div.block-workbench-menu div.content ul.menu li ul.menu li.exp
   list-style-image: url(../images/singlearrow_down.png);
 }
 
-div#sidebar-first div.block-menu div.content ul.menu li ul.menu li a.active-trail.active,
-div#sidebar-first div.block-workbench-menu div.content ul.menu li ul.menu li a.active-trail.active {
+div#sidebar-first div.block-menu div.content ul.menu li ul.menu li > .active-trail.active,
+div#sidebar-first div.block-workbench-menu div.content ul.menu li ul.menu li > .active-trail.active {
   color: #fad703;
   background-color: #00335b;
 }
