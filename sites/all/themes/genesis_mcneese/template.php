@@ -335,6 +335,7 @@ function genesis_mcneese_cf_theme_get_variables_alter(&$cf, $variables){
   if ($cf['is']['node']) {
     if (is_object($cf['is_data']['node']['object'])){
       $cf['show']['sidenote'] = TRUE;
+      $cf['data']['sidenote']['content'] = '';
 
       if (property_exists($cf['is_data']['node']['object'], 'field_group') && !empty($cf['is_data']['node']['object']->field_group)){
         $cf['data']['sidenote']['content'] = '<div class="sidenote-item_wrapper">' . views_embed_view('subtitle_information', 'default', $variables['node']->nid) . '</div>';
