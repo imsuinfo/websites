@@ -24,6 +24,7 @@ div#block-search-form form#search-block-form .form-item-search-block-form {
 }
 
 
+
 /**
  * Workaround calendar structural display to show all of the text.
  */
@@ -57,6 +58,8 @@ div#block-search-form form#search-block-form .form-item-search-block-form {
   text-align: center;
 }
 
+
+
 /**
  * Workaround calendar coloring issue
  * The default color #f4f4f4 is perceived to be too bright on some screens.
@@ -74,6 +77,16 @@ div#block-search-form form#search-block-form .form-item-search-block-form {
 .calendar-calendar .week-view .full td.multi-day .inner .weekview .cutoff {
   background: none repeat scroll 0 0 #6384b8;
   color: #ffffff;
+}
+
+
+
+/**
+ * Workaround calendar dayview display issue
+ * There is a 'cutoff' field that provides no apparent functionality and makes the look and feel ugly, so remove it.
+ */
+.calendar-calendar .day-view .full td.multi-day div.dayview .cutoff {
+  display: none;
 }
 
 
