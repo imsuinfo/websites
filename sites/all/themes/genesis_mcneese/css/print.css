@@ -49,12 +49,12 @@ div#breadcrumb div.breadcrumb {
   display: none;
 }
 
-div#breadcrumb div.subtitle {
+div#breadcrumb div.sidenote {
   display: block;
 
   margin-bottom: 5px;
 }
 
-div#breadcrumb div.subtitle .views-field-field-group {
+div#breadcrumb div.sidenote .views-field-field-group {
   display: none;
 }

@@ -19,7 +19,7 @@ function genesis_mcneese_preprocess_maintenance_page(&$vars) {
   $keys_to_render = array('logo', 'title_prefix', 'title_suffix', 'side_links', 'action_links');
   cf_theme_render_variables($vars, $keys_to_render);
 
-  $keys_to_render = array('leaderboard', 'primary_links', 'header', 'help', 'secondary_content', 'sidebar_first', 'highlighted', 'content', 'sidebar_second', 'tertiary_content', 'footer', 'action_links', 'subboard');
+  $keys_to_render = array('leaderboard', 'primary_links', 'header', 'help', 'sidenote', 'secondary_content', 'sidebar_first', 'highlighted', 'content', 'sidebar_second', 'tertiary_content', 'footer', 'action_links', 'subboard');
   cf_theme_render_variables($vars, $keys_to_render);
 
   genesis_mcneese_process_variables($vars);
@@ -67,7 +67,7 @@ function genesis_mcneese_preprocess_page(&$vars) {
   $keys_to_render = array('logo', 'title_prefix', 'title_suffix', 'side_links', 'action_links');
   cf_theme_render_variables($vars, $keys_to_render);
 
-  $keys_to_render = array('leaderboard', 'primary_links', 'header', 'help', 'secondary_content', 'sidebar_first', 'highlighted', 'content', 'sidebar_second', 'tertiary_content', 'footer', 'subboard');
+  $keys_to_render = array('leaderboard', 'primary_links', 'header', 'help', 'sidenote', 'secondary_content', 'sidebar_first', 'highlighted', 'content', 'sidebar_second', 'tertiary_content', 'footer', 'subboard');
   cf_theme_render_variables($vars, $keys_to_render, 'page');
 
   genesis_mcneese_process_variables($vars);
@@ -161,8 +161,8 @@ function genesis_mcneese_cf_theme_get_variables_alter(&$cf, $variables){
     $cf['show']['breadcrumb'] = TRUE;
   }
 
-  $cf['show']['subtitle'] = FALSE;
-  $cf['data']['subtitle'] = array('content' => '');
+  $cf['show']['sidenote'] = FALSE;
+  $cf['data']['sidenote'] = array('content' => '');
   $cf['show']['subboard_image'] = FALSE;
   $cf['data']['subboard_image'] = array('content' => '', 'css' => '');
 
@@ -332,9 +332,9 @@ function genesis_mcneese_cf_theme_get_variables_alter(&$cf, $variables){
   // FIXME: this should be moved to cf_www
   // If the page is part of a group content type, then display the group_image view.
   if ($cf['is']['node']) {
-    if (property_exists($cf['is_data']['node']['object'], 'field_group') && !empty($cf['is_data']['node']['object']->field_group)){
-      $cf['show']['subtitle'] = TRUE;
-      $cf['data']['subtitle']['content'] = views_embed_view('subtitle_information', 'default', $variables['node']->nid);
+    if ($cf['is']['logged_in'] && is_object($cf['is_data']['node']['object'])){
+      $cf['show']['sidenote'] = TRUE;
+      $cf['data']['sidenote']['content'] = '<span class="sidenote-node_id-label">' . t("Node") . '</span> <span class="sidenote-node_id-number">' . check_plain($cf['is_data']['node']['object']->nid) . '</span>';
     }
 
     if (property_exists($cf['is_data']['node']['object'], 'field_group_image_show') && !empty($cf['is_data']['node']['object']->field_group_image_show)){

@@ -702,7 +702,7 @@ div#breadcrumb {
 }
 
 div#breadcrumb div.breadcrumb,
-div#breadcrumb div.subtitle {
+div#breadcrumb div.sidenote {
   display: inline-block;
 
   padding-bottom: 0;
@@ -712,7 +712,7 @@ div#breadcrumb div.breadcrumb {
   padding-left: 3px;
 }
 
-div#breadcrumb div.subtitle {
+div#breadcrumb div.sidenote {
   float: right;
 
   padding-right: 3px;
