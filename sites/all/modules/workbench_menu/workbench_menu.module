@@ -295,6 +295,7 @@ function workbench_menu_block_view($delta = ''){
     $item_variables['loaded_menus'] = array($menu->access_id => &$menu);
     $item_variables['process_children'] = TRUE;
     $item_variables['process_breadcrumb'] = TRUE;
+    $item_variables['process_active'] = TRUE;
 
     foreach ($menu->items['nested'] as &$item){
       $list_items = workbench_menu_block_view_recursively_build_menu($item, $item_variables, $function_history);
@@ -530,6 +531,12 @@ function workbench_menu_block_view_recursively_build_menu(&$item, $variables, ar
     }
   }
 
+  if ($active && !$variables['process_active']){
+    $active = FALSE;
+    $active_trail = FALSE;
+    $variables['active_item'] = NULL;
+  }
+
   if ($type != 'item_menu' && $type != 'item_menu_item' || (($type == 'item_menu' || $type == 'item_menu_item') && !$expand_children)){
     $variables['even'] = !$variables['even'];
     $variables['local_even'] = !$variables['local_even'];
@@ -564,6 +571,7 @@ function workbench_menu_block_view_recursively_build_menu(&$item, $variables, ar
       $child_variables['loaded_menus'] = &$variables['loaded_menus'];
       $child_variables['process_children'] = TRUE;
       $child_variables['process_breadcrumb'] = TRUE;
+      $child_variables['process_active'] = TRUE;
 
       $list_item['children'] = array();
 
@@ -738,6 +746,7 @@ function workbench_menu_block_view_recursively_build_menu(&$item, $variables, ar
       $child_variables['loaded_menus'] = &$variables['loaded_menus'];
       $child_variables['process_children'] = $expand_children;
       $child_variables['process_breadcrumb'] = FALSE;
+      $child_variables['process_active'] = FALSE;
 
       if (!empty($other_menu->items['nested'])){
         foreach ($other_menu->items['nested'] as &$child){
