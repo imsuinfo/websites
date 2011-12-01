@@ -393,6 +393,9 @@ function workbench_menu_block_view_recursively_build_menu(&$item, $variables, ar
   $active = FALSE;
   $node_path_alias = '';
   $outside_link = FALSE;
+  $tags = '';
+  $item_active_path_is_top = FALSE;
+  $item_active_path = $item['item']->active_path;
 
   foreach ($item['item']->expand as &$expand){
     // if the item has no visibility, then..
@@ -404,6 +407,11 @@ function workbench_menu_block_view_recursively_build_menu(&$item, $variables, ar
     }
 
     break;
+  }
+
+  if ($item_active_path == '<top>'){
+    $item_active_path_is_top = TRUE;
+    $item_classes .= ' workbench_menu-menu_item-menu_top';
   }
 
   if ($type == 'item_link'){
@@ -425,11 +433,11 @@ function workbench_menu_block_view_recursively_build_menu(&$item, $variables, ar
       $node_path_alias = '/' . $new_path['alias'] . $additional_path;
 
       if (preg_match('@^' . $variables['menu']->path . '/@', $new_path['alias']) == 0){
-        $item['item']->active_path = '/' . $new_path['alias'] . $additional_path;
+        $item_active_path = '/' . $new_path['alias'] . $additional_path;
         $outside_link = TRUE;
       }
       else {
-        $item['item']->active_path = '/' . preg_replace('@^' . $variables['menu']->path . '/@', '', $new_path['alias']) . $additional_path;
+        $item_active_path = '/' . preg_replace('@^' . $variables['menu']->path . '/@', '', $new_path['alias']) . $additional_path;
       }
     }
 
@@ -438,13 +446,13 @@ function workbench_menu_block_view_recursively_build_menu(&$item, $variables, ar
     unset($new_path);
   }
 
-  if (!empty($item['item']->active_path)){
-    if (preg_match('@^/@i', $item['item']->active_path) == 0){
+  if (!empty($item_active_path)){
+    if (preg_match('@^/@i', $item_active_path) == 0){
       if (!empty($variables['reverse_path'])){
         $current_path = array_pop($variables['reverse_path']);
 
         if (!empty($current_path)){
-          if ($current_path == $item['item']->active_path){
+          if ($current_path == $item_active_path){
             $active_trail = TRUE;
 
             if (empty($variables['reverse_path']) || empty($item['children'])){
@@ -460,7 +468,7 @@ function workbench_menu_block_view_recursively_build_menu(&$item, $variables, ar
               foreach ($variables['reverse_path'] as &$path_part){
                 $combined_path .= $path_part;
 
-                if ($combined_path == $item['item']->active_path){
+                if ($combined_path == $item_active_path){
                   $active_trail = TRUE;
 
                   $count = 0;
@@ -484,20 +492,32 @@ function workbench_menu_block_view_recursively_build_menu(&$item, $variables, ar
           }
         }
       }
+      else {
+        if ($item_active_path_is_top){
+          if ($variables['complete_path'] == $variables['menu']->path){
+            $active_trail = TRUE;
 
-      if ($item['item']->active_path == '<top>'){
+            if (empty($variables['reverse_path']) || empty($item['children'])){
+              $active = TRUE;
+              $variables['active_item'] = $item['item'];
+            }
+          }
+        }
+      }
+
+      if ($item_active_path_is_top){
         $variables['trail_path'] .= $variables['menu']->path;
       }
       else {
-        $variables['trail_path'] .= '/' . $item['item']->active_path;
+        $variables['trail_path'] .= '/' . $item_active_path;
       }
     }
     else {
       if ($outside_link){
-        $current_path = preg_replace('@^/@', '', $item['item']->active_path);
+        $current_path = preg_replace('@^/@', '', $item_active_path);
       }
       else {
-        $current_path = $variables['menu']->path . $item['item']->active_path;
+        $current_path = $variables['menu']->path . $item_active_path;
       }
 
       $variables['trail_path'] = $current_path;
@@ -507,10 +527,6 @@ function workbench_menu_block_view_recursively_build_menu(&$item, $variables, ar
         $active = TRUE;
         $variables['active_item'] = $item['item'];
       }
-    }
-
-    if ($item['item']->active_path == '<top>'){
-      $item_classes .= ' workbench_menu-menu_item-menu_top';
     }
   }
 
@@ -578,7 +594,7 @@ function workbench_menu_block_view_recursively_build_menu(&$item, $variables, ar
   if ($active_trail){
     $item_classes .= ' active-trail';
 
-    if ($variables['process_breadcrumb'] && $item['item']->active_path != '<top>'){
+    if ($variables['process_breadcrumb'] && !$item_active_path_is_top){
       if ($type == 'item_label'){
         $variables['current_trail'][] = t($item['item']->human_name);
       }
@@ -614,9 +630,18 @@ function workbench_menu_block_view_recursively_build_menu(&$item, $variables, ar
     $item_classes .= ' leaf';
   }
 
+  if ($active || $active_trail){
+    $tags .= ' class="';
+
+    if ($active_trail) $tags .= 'active-trail';
+    if ($active) $tags .= ' active';
+
+    $tags .= '"';
+  }
+
   switch ($type){
     case 'item_label':
-      $list_item['data'] = '<span>' . check_plain($item['item']->human_name) . '</span>';
+      $list_item['data'] = '<span' . $tags . '>' . check_plain($item['item']->human_name) . '</span>';
 
       if (isset($item['item']->properties['disabled']) && $item['item']->properties['disabled']){
         $item_classes .= ' disabled';
@@ -627,17 +652,7 @@ function workbench_menu_block_view_recursively_build_menu(&$item, $variables, ar
       $url_prefix = '';
       $prepend = '';
       $append = '';
-      $tags = '';
       $matches = array();
-
-      if ($active || $active_trail){
-        $tags .= ' class="';
-
-        if ($active_trail) $tags .= 'active-trail';
-        if ($active) $tags .= ' active';
-
-        $tags .= '"';
-      }
 
       if ($item['item']->properties['url'] == '<top>'){
         $list_item['data'] = $prepend . '<a' . $tags . ' href="' . check_url('/' . $variables['menu']->path) . '">' . check_plain($item['item']->human_name) . '</a>';
@@ -675,16 +690,6 @@ function workbench_menu_block_view_recursively_build_menu(&$item, $variables, ar
       $url_prefix = '';
       $prepend = '';
       $append = '';
-      $tags = '';
-
-      if ($active || $active_trail){
-        $tags .= ' class="';
-
-        if ($active_trail) $tags .= 'active-trail';
-        if ($active) $tags .= ' active';
-
-        $tags .= '"';
-      }
 
       $icon = check_plain($item['item']->properties['file_type']);
       $filename = check_plain(rawurldecode(basename($item['item']->properties['file'])));
