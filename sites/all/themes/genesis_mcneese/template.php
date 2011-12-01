@@ -333,9 +333,16 @@ function genesis_mcneese_cf_theme_get_variables_alter(&$cf, $variables){
   // FIXME: this should be moved to cf_www
   // If the page is part of a group content type, then display the group_image view.
   if ($cf['is']['node']) {
-    if ($cf['is']['logged_in'] && is_object($cf['is_data']['node']['object'])){
+    if (is_object($cf['is_data']['node']['object'])){
       $cf['show']['sidenote'] = TRUE;
-      $cf['data']['sidenote']['content'] = '<span class="sidenote-node_id-label">' . t("Node") . '</span> <span class="sidenote-node_id-number">' . check_plain($cf['is_data']['node']['object']->nid) . '</span>';
+
+      if (property_exists($cf['is_data']['node']['object'], 'field_group') && !empty($cf['is_data']['node']['object']->field_group)){
+        $cf['data']['sidenote']['content'] = '<div class="sidenote-item_wrapper">' . views_embed_view('subtitle_information', 'default', $variables['node']->nid) . '</div>';
+      }
+
+      if ($cf['is']['logged_in']){
+        $cf['data']['sidenote']['content'] .= '<div class="sidenote-item_wrapper"><span class="sidenote-node_id-label">' . t("Node") . '</span> <span class="sidenote-node_id-number">' . check_plain($cf['is_data']['node']['object']->nid) . '</span></div>';
+      }
     }
 
     if (property_exists($cf['is_data']['node']['object'], 'field_group_image_show') && !empty($cf['is_data']['node']['object']->field_group_image_show)){
