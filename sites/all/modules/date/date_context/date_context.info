@@ -7,3 +7,9 @@ dependencies[] = date
 dependencies[] = context
 
 files[] = date_context.module
+; Information added by drupal.org packaging script on 2011-11-29
+version = "7.x-2.0-alpha5"
+core = "7.x"
+project = "date"
+datestamp = "1322563238"
+
