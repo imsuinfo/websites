@@ -394,7 +394,7 @@ function workbench_menu_block_view_recursively_build_menu(&$item, $variables, ar
   $active = FALSE;
   $node_path_alias = '';
   $outside_link = FALSE;
-  $tags = '';
+  $tags = array('class' => array());
   $item_active_path_is_top = FALSE;
   $item_active_path = $item['item']->active_path;
 
@@ -552,10 +552,11 @@ function workbench_menu_block_view_recursively_build_menu(&$item, $variables, ar
   $item_classes .= ' depth_' . $variables['depth'];
 
   if (!empty($item['children']) && $variables['process_children']){
+    $child_variables = array();
+    $active_child_item = NULL;
+    $current = 0;
+
     if ($expand_children){
-      $child_variables = array();
-      $active_child_item = NULL;
-      $current = 0;
       $child_variables['local_even'] = TRUE;
       $child_variables['even'] = &$variables['even'];
       $child_variables['row'] = &$variables['row'];
@@ -571,31 +572,58 @@ function workbench_menu_block_view_recursively_build_menu(&$item, $variables, ar
       $child_variables['loaded_menus'] = &$variables['loaded_menus'];
       $child_variables['process_children'] = TRUE;
       $child_variables['process_breadcrumb'] = TRUE;
-      $child_variables['process_active'] = TRUE;
+      $child_variables['process_active'] = $variables['process_active'];
+    }
+    else {
+      $child_variables['local_even'] = TRUE;
+      $child_variables['even'] = $variables['even'];
+      $child_variables['row'] = $variables['row'];
+      $child_variables['total'] = count($item['children']);
+      $child_variables['current'] = $current;
+      $child_variables['depth'] = $variables['depth'] + 1;
+      $child_variables['menu'] = &$variables['menu'];
+      $child_variables['active_item'] = &$active_child_item;
+      $child_variables['reverse_path'] = $variables['reverse_path'];
+      $child_variables['complete_path'] = &$variables['complete_path'];
+      $child_variables['current_trail'] = &$variables['current_trail'];
+      $child_variables['trail_path'] = $variables['trail_path'];
+      $child_variables['loaded_menus'] = &$variables['loaded_menus'];
+      $child_variables['process_children'] = TRUE;
+      $child_variables['process_breadcrumb'] = TRUE;
+      $child_variables['process_active'] = $variables['process_active'];
+    }
 
-      $list_item['children'] = array();
+    $list_item['children'] = array();
 
-      foreach ($item['children'] as &$child){
-        $child_lists = workbench_menu_block_view_recursively_build_menu($child, $child_variables, $function_history);
+    foreach ($item['children'] as &$child){
+      $child_lists = workbench_menu_block_view_recursively_build_menu($child, $child_variables, $function_history);
 
-        if (is_object($active_child_item)){
-          $active_trail = TRUE;
-          $variables['active_item'] = $active_child_item;
-        }
+      if (is_object($active_child_item)){
+        $active_trail = TRUE;
+        $variables['active_item'] = $active_child_item;
 
-        if (!empty($child_lists)){
-          foreach ($child_lists as &$child_list){
-            $list_item['children'][] = &$child_list;
+        // if the children are not expanded, then just mark the visible menu item as active with css.
+        // just do not make it actually active or the breadcrumb paths will not work properly.
+        if (!$expand_children){
+          if (!in_array('active', $tags['class'])){
+            $tags['class'][] = 'active';
+            $item_classes .= ' active';
           }
         }
       }
 
-      if (empty($list_item['children'])){
-        unset($list_item['children']);
+      if (!empty($child_lists)){
+        foreach ($child_lists as &$child_list){
+          $list_item['children'][] = &$child_list;
+        }
       }
-      else {
-        $item_classes .= ' menu';
-      }
+    }
+
+    if (empty($list_item['children'])){
+      unset($list_item['children']);
+    }
+    else {
+      $item_classes .= ' menu';
     }
   }
 
@@ -639,17 +667,22 @@ function workbench_menu_block_view_recursively_build_menu(&$item, $variables, ar
   }
 
   if ($active || $active_trail){
-    $tags .= ' class="';
-
-    if ($active_trail) $tags .= 'active-trail';
-    if ($active) $tags .= ' active';
-
-    $tags .= '"';
+    if ($active_trail) $tags['class'][] = 'active-trail';
+    if ($active) $tags['class'][] = 'active';
   }
 
   switch ($type){
     case 'item_label':
-      $list_item['data'] = '<span' . $tags . '>' . check_plain($item['item']->human_name) . '</span>';
+      $tag_string = '';
+      if (!empty($tags)){
+        foreach ($tags as $key => &$value){
+          if (!empty($value)){
+            $tag_string .= ' ' . $key . '="' . implode(' ', $value) . '"';
+          }
+        }
+      }
+
+      $list_item['data'] = '<span' . $tag_string . '>' . check_plain($item['item']->human_name) . '</span>';
 
       if (isset($item['item']->properties['disabled']) && $item['item']->properties['disabled']){
         $item_classes .= ' disabled';
@@ -661,9 +694,16 @@ function workbench_menu_block_view_recursively_build_menu(&$item, $variables, ar
       $prepend = '';
       $append = '';
       $matches = array();
+      $tag_string = '';
 
       if ($item['item']->properties['url'] == '<top>'){
-        $list_item['data'] = $prepend . '<a' . $tags . ' href="' . check_url('/' . $variables['menu']->path) . '">' . check_plain($item['item']->human_name) . '</a>';
+        if (!empty($tags)){
+          if (!empty($value)){
+            $tag_string .= ' ' . $key . '="' . implode(' ', $value) . '"';
+          }
+        }
+
+        $list_item['data'] = $prepend . '<a' . $tag_string . ' href="' . check_url('/' . $variables['menu']->path) . '">' . check_plain($item['item']->human_name) . '</a>';
       }
       else {
         if (empty($node_path_alias)){
@@ -677,20 +717,28 @@ function workbench_menu_block_view_recursively_build_menu(&$item, $variables, ar
           $parsed_url = parse_url($url);
           $remote_url = check_plain($parsed_url['host']);
           $prepend .= '<div class="workbench_menu-menu_item-icon workbench_menu-menu_item-icon_external"></div>';
-          $tags .= ' title="' . t("This links to the external website: !remote_url.", array('!remote_url' => $remote_url)) . '"';
+          $tags['title'] = array(t("This links to the external website: !remote_url.", array('!remote_url' => $remote_url)));
         }
         else {
           $matches = array();
           if (preg_match('/^mailto:(.*)/', $url, $matches) > 0){
             $prepend .= '<div class="workbench_menu-menu_item-icon workbench_menu-menu_item-icon_mail"></div>';
-            $tags .= ' title="' . t("Send an e-mail to: !email_address.", array('!email_address' => check_plain($matches[1]))) . '"';
+            $tags['title'] = array(t("Send an e-mail to: !email_address.", array('!email_address' => check_plain($matches[1]))));
           }
           else if (preg_match('@^(/|#)@', $url) === 0){
             $url_prefix = '/' . $variables['menu']->path . '/';
           }
         }
 
-        $list_item['data'] = $prepend . '<a' . $tags . ' href="' . check_url($url_prefix . $url) . '">' . check_plain($item['item']->human_name) . '</a>' . $append;
+        if (!empty($tags)){
+          foreach ($tags as $key => &$value){
+            if (!empty($value)){
+              $tag_string .= ' ' . $key . '="' . implode(' ', $value) . '"';
+            }
+          }
+        }
+
+        $list_item['data'] = $prepend . '<a' . $tag_string . ' href="' . check_url($url_prefix . $url) . '">' . check_plain($item['item']->human_name) . '</a>' . $append;
       }
       break;
 
@@ -698,6 +746,7 @@ function workbench_menu_block_view_recursively_build_menu(&$item, $variables, ar
       $url_prefix = '';
       $prepend = '';
       $append = '';
+      $tag_string = '';
 
       $icon = check_plain($item['item']->properties['file_type']);
       $filename = check_plain(rawurldecode(basename($item['item']->properties['file'])));
@@ -706,14 +755,22 @@ function workbench_menu_block_view_recursively_build_menu(&$item, $variables, ar
         $parsed_url = parse_url($item['item']->properties['file']);
         $remote_url = check_plain($parsed_url['host']);
         $prepend .= '<div class="workbench_menu-menu_item-icon workbench_menu-menu_item-icon_' . $icon. '"></div>';
-        $tags .= ' title="' . t("Download !filename from the external website: !remote_url.", array('!filename' => $filename, '!remote_url' => $remote_url)) . '"';
+        $tags['title'] = array(t("Download !filename from the external website: !remote_url.", array('!filename' => $filename, '!remote_url' => $remote_url)));
       }
       else {
         $prepend .= '<div class="workbench_menu-menu_item-icon workbench_menu-menu_item-icon_' . $icon. '"></div>';
-        $tags .= ' title="' . t("Download !filename.", array('!filename' => $filename)) . '"';
+        $tags['title'] = array(t("Download !filename.", array('!filename' => $filename)));
       }
 
-      $list_item['data'] = $prepend . '<a' . $tags . ' href="' . check_url($url_prefix . $item['item']->properties['file']) . '">' . check_plain($item['item']->human_name) . '</a>' . $append;
+      if (!empty($tags)){
+        foreach ($tags as $key => &$value){
+          if (!empty($value)){
+            $tag_string .= ' ' . $key . '="' . implode(' ', $value) . '"';
+          }
+        }
+      }
+
+      $list_item['data'] = $prepend . '<a' . $tag_string . ' href="' . check_url($url_prefix . $item['item']->properties['file']) . '">' . check_plain($item['item']->human_name) . '</a>' . $append;
       break;
 
     case 'item_menu':
