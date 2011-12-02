@@ -486,6 +486,10 @@ div#sidebar-first div.block-workbench-menu {
   padding-bottom: 15px;
 }
 
+div#sidebar-first div.block-workbench-menu li.workbench_menu-menu_item {
+  word-wrap: break-word;
+}
+
 div#sidebar-first div.block-workbench-menu li.workbench_menu-menu_item-type-item_label.depth_0 {
   font-weight: bold;
 }
