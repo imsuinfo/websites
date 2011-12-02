@@ -18,7 +18,12 @@
  *  An array of variables to be provided to the calling theme.
  */
 function cf_theme_get_variables(array &$variables, array $function_history = array()){
-  $cf = array();
+  $cf = &drupal_static(__FUNCTION__, array());
+
+  if (!empty($cf)){
+    return $cf;
+  }
+
   $cf['css'] = array();
   $cf['meta'] = array('charset' => 'UTF-8', 'content' => NULL, 'http-equiv' => array(), 'name' => array());
   $cf['agent'] = array('machine_name' => 'unknown', 'human_name' => 'unknown', 'major_version' => 'unknown', 'engine' => 'unknown', 'raw' => '');
