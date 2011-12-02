@@ -13,7 +13,8 @@ div#local-tasks,
 div.view-master-calendar div.feed-icon,
 div#page-title-area div.add-or-remove-shortcuts,
 div#breadcrumb,
-div#block-workbench-block {
+div#block-workbench-block,
+div#block-content_easement_unpublished_message-block {
   display: none;
 }
 
