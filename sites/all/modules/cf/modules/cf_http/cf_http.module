@@ -61,13 +61,13 @@ function cf_http_get_response($server, $path, $port = 80, array $function_histor
   if (!$fp) {
     return $results;
   } else {
-    fwrite($fp, 'GET ' . $path . ' HTTP/1.1' . "\r\n" . 'Host: ' . $server . "\r\n" . 'Connection: Close' . "\r\n\r\n");
+    fwrite($fp, 'GET ' . $path . ' HTTP/1.1' . "\r\n" . 'Host: ' . $server . "\r\n" . 'Accept-Encoding: deflate' . "\r\n"  . 'Connection: Close' . "\r\n\r\n");
     stream_set_timeout($fp, 4);
 
     $results['is_local'] = stream_is_local($fp);
 
     while(!feof($fp)){
-      $results['response'] .= fgets($fp, 768);
+      $results['response'] .= fgets($fp, 8192);
 
       $info = stream_get_meta_data($fp);
 
@@ -259,7 +259,8 @@ function cf_http_parse_response($http_response, array $function_history = array(
 
   // remove some additional trash not removed by the original function
   $results['document'] = preg_replace("/^[[:alnum:]]+\r\n/i", '', $results['document']);
-  $results['document'] = preg_replace('/<\/html>.*/i', '</html>', $results['document']);
+  $results['document'] = preg_replace("/\r\n0$/i", '', $results['document']);
+
   $results['parsed'] = TRUE;
 
   return $results;
