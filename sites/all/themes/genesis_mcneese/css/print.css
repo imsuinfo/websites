@@ -20,6 +20,16 @@ div#block-content_easement_unpublished_message-block {
 
 
 
+/*** Hrjobs ***/
+div.path-node_3173 h1#page-title,
+div.path-node_3174 h1#page-title,
+div.path-node_3175 h1#page-title,
+div.path-node_3176 h1#page-title {
+  display: none;
+}
+
+
+
 /*** Print CSS ***/
 @page {
   margin: 2cm 1.5cm;

@@ -979,3 +979,13 @@ div#genesis_mcneese-skip_nav a:focus {
   border: 2px outset #000000;
   overflow: visible;
 }
+
+
+
+/*** Hrjobs ***/
+div.path-node_3173 .opportunity-tailer_information,
+div.path-node_3174 .opportunity-tailer_information,
+div.path-node_3175 .opportunity-tailer_information,
+div.path-node_3176 .opportunity-tailer_information {
+  display: none;
+}
