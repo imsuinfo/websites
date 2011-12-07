@@ -162,7 +162,7 @@
               </div>
             <?php } ?>
 
-            <?php if ($cf['show']['breadcrumb'] || $cf['show']['subtitle']){ ?>
+            <?php if ($cf['show']['breadcrumb'] || $cf['show']['sidenote']){ ?>
               <div id="breadcrumb">
                 <?php if ($cf['show']['breadcrumb']){ ?>
                   <!--(begin_breadcrumb)-->
@@ -170,10 +170,10 @@
                   <!--(end_breadcrumb)-->
                 <?php } ?>
 
-                <?php if ($cf['show']['subtitle']){ ?>
-                  <!--(begin_subtitle)-->
-                  <div class="subtitle"><?php print($cf['data']['subtitle']['content']);?></div>
-                  <!--(end_subtitle)-->
+                <?php if ($cf['show']['sidenote']){ ?>
+                  <!--(begin_sidenote)-->
+                  <div class="sidenote"><?php print($cf['data']['sidenote']['content']); ?></div>
+                  <!--(end_sidenote)-->
                 <?php } ?>
               </div>
             <?php } ?>
