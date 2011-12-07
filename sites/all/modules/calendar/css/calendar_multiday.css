@@ -761,7 +761,6 @@ table.calendar-legend tr.even .stripe {
 }
 
 .view .date-nav-wrapper ul {
-  position: absolute;
   top: 8px ;
   line-height: inherit;
   z-index: 1;
