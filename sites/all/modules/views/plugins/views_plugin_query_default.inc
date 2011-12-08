@@ -714,7 +714,7 @@ class views_plugin_query_default extends views_plugin_query {
   function add_field($table, $field, $alias = '', $params = array()) {
     // We check for this specifically because it gets a special alias.
     if ($table == $this->base_table && $field == $this->base_field && empty($alias)) {
-      //$alias = $this->base_field;
+      $alias = $this->base_field;
     }
 
     if ($table && empty($this->table_queue[$table])) {
@@ -1208,7 +1208,20 @@ class views_plugin_query_default extends views_plugin_query {
     $this->has_aggregate = FALSE;
     $non_aggregates = array();
 
-    list($non_aggregates) = $this->compile_fields($fields_array, $query);
+    $this->compile_fields($fields_array, $query);
+
+    foreach ($fields_array as $field){
+      if (!empty($field['table'])){
+        $name = $field['table'] . '.' . $field['field'];
+      }
+      else {
+        $name = $field['field'];
+      }
+
+      if (!in_array($name, $non_aggregates)){
+        $non_aggregates[] = $name;
+      }
+    }
 
     if (count($this->having)) {
       $this->has_aggregate = TRUE;
