@@ -23,6 +23,8 @@ function killfile_views_data() {
     'users' => array('left_field' => 'uid', 'field' => 'uid'),
   );
 
+  $data['killfile_nodes']['table']['entity type'] = 'node';
+
   $data['killfile_nodes']['nid'] = array(
     'title'    => t("Node"),
     'help'     => t("The killfiled node."),
