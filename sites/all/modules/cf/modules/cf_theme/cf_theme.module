@@ -168,8 +168,7 @@ function cf_theme_get_variables(array &$variables, array $function_history = arr
   // set frontpage defaults
   if (drupal_is_front_page()) {
     $cf['is']['front'] = TRUE;
-    $cf['meta']['name']['googlebot'] = 'noarchive,noindex';
-    $cf['meta']['name']['robots'] = 'NOARCHIVE,NOINDEX,FOLLOW';
+    $cf['meta']['name']['robots'] = 'INDEX,FOLLOW';
   }
 
   if (!empty($variables['is_admin'])){
