@@ -147,13 +147,13 @@ class views_handler_field_field extends views_handler_field {
     }
     else {
       $this->field_alias = $this->query->add_field($this->base_table_alias, $entity_info['entity keys']['revision'], '', $params);
-      $this->aliases['entity id'] = $this->query->add_field($this->base_table_alias, $entity_info['entity keys']['id'], '', $params);
+      $this->aliases['entity_id'] = $this->query->add_field($this->base_table_alias, $entity_info['entity keys']['id'], '', $params);
     }
 
 
     // The alias needs to be unique, so we use both the field table and the entity type.
     $entity_type_alias = $this->definition['table'] . '_' . $entity_type . '_entity_type';
-    $this->aliases['entity_type'] = $this->query->add_field(NULL, "'$entity_type'", $entity_type_alias);
+    $this->aliases['entity_type'] = $this->query->add_field($this->definition['table'], 'entity_type', $entity_type_alias);
 
     $fields = $this->additional_fields;
     // We've already added entity_type, so we can remove it from the list.
@@ -166,7 +166,7 @@ class views_handler_field_field extends views_handler_field {
       // Add the fields that we're actually grouping on.
       $options = array();
 
-      if ($this->options['group_column'] != 'entity id') {
+      if ($this->options['group_column'] != 'entity_id') {
         $options = array($this->options['group_column'] => $this->options['group_column']);
       }
 
@@ -520,7 +520,7 @@ class views_handler_field_field extends views_handler_field {
     // With "field API" fields, the column target of the grouping function
     // and any additional grouping columns must be specified.
     $group_columns = array(
-      'entity id' => t('Entity ID'),
+      'entity_id' => t('Entity ID'),
     ) + drupal_map_assoc(array_keys($this->field_info['columns']), 'ucfirst');
 
     $form['group_column'] = array(
@@ -569,7 +569,7 @@ class views_handler_field_field extends views_handler_field {
           }
           else {
             $revision_id = $object->{$this->field_alias};
-            $entity_id = $object->{$this->aliases['entity id']};
+            $entity_id = $object->{$this->aliases['entity_id']};
             $entities_by_type[$entity_type][$key] = array($entity_id, $revision_id);
           }
         }
@@ -577,6 +577,8 @@ class views_handler_field_field extends views_handler_field {
 
       // Load the entities.
       foreach ($entities_by_type as $entity_type => $entity_ids) {
+        if (empty($entity_type)) continue;
+
         $entity_info = entity_get_info($entity_type);
         if (empty($this->definition['is revision'])) {
           $entities = entity_load($entity_type, $entity_ids);
