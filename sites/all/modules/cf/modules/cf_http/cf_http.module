@@ -58,10 +58,12 @@ function cf_http_get_response($server, $path, $port = 80, array $function_histor
 
   $fp = fsockopen($server, $port, $errno, $errstr, 8);
 
+  $server_address = preg_replace('@^\w+://@i', '', $server);
+
   if (!$fp) {
     return $results;
   } else {
-    fwrite($fp, 'GET ' . $path . ' HTTP/1.1' . "\r\n" . 'Host: ' . $server . "\r\n" . 'Accept-Encoding: deflate' . "\r\n"  . 'Connection: Close' . "\r\n\r\n");
+    fwrite($fp, 'GET ' . $path . ' HTTP/1.1' . "\r\n" . 'Host: ' . $server_address . "\r\n" . 'Accept-Encoding: deflate' . "\r\n"  . 'Connection: Close' . "\r\n\r\n");
     stream_set_timeout($fp, 4);
 
     $results['is_local'] = stream_is_local($fp);
