@@ -153,7 +153,7 @@ class views_handler_field_field extends views_handler_field {
 
     // The alias needs to be unique, so we use both the field table and the entity type.
     $entity_type_alias = $this->definition['table'] . '_' . $entity_type . '_entity_type';
-    $this->aliases['entity_type'] = $this->query->add_field($this->definition['table'], 'entity_type', $entity_type_alias);
+    $this->aliases['entity_type'] = $this->query->add_field(NULL, "'$entity_type'", $entity_type_alias);
 
     $fields = $this->additional_fields;
     // We've already added entity_type, so we can remove it from the list.

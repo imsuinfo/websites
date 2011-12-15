@@ -1215,6 +1215,11 @@ class views_plugin_query_default extends views_plugin_query {
         $name = $field['table'] . '.' . $field['field'];
       }
       else {
+        // Ignore SELECT variables, they cannot be used inside of GROUP BY statements as they are not part of any column.
+        if (preg_match("/^'.*'$/i", $field['field']) > 0){
+          continue;
+        }
+
         $name = $field['field'];
       }
 
