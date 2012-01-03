@@ -8,13 +8,13 @@
 /**
  * Set up so it can be used as an API to create default calendars for
  * specific date fields.
- * 
+ *
  * Use variable_set() to establish criteria for default calendars.
- * Set the variable in custom modules or in settings. 
- * 
+ * Set the variable in custom modules or in settings.
+ *
  * Example: Add a new default calendar to custom
  * calendars that are already configured:
- *  
+ *
  * $options = variable_get('calendar_default_view_options', array());
  * $option = array(
  *   'name' => 'example_event',
@@ -25,7 +25,7 @@
  *   );
  * $options[] = $option;
  * variable_set('calendar_default_view_options', $options);
- * 
+ *
 */
 function calendar_views_default_views() {
   $views = array();
@@ -34,7 +34,7 @@ function calendar_views_default_views() {
   $view = calendar_views_construct();
   $views[$view->name] = $view;
 
-  // Then see if there are any custom calendars to be created 
+  // Then see if there are any custom calendars to be created
   // using variable_get().
   $calendar_options = variable_get('calendar_default_view_options', array());
   foreach ((array) $calendar_options as $calendar_option) {
@@ -45,31 +45,31 @@ function calendar_views_default_views() {
 }
 
 /**
- * 
+ *
  * Construct a default calendar to match specified options.
- * Views calls it without options, so the basic 
+ * Views calls it without options, so the basic
  * default view will use the default values.
- * 
- * @param $options: an optional array of options to 
+ *
+ * @param $options: an optional array of options to
  * create default calendars.
- * 
+ *
  * Possible options include:
- * @param string $name:           
+ * @param string $name:
  *   The view name, if empty, defaults to 'calendar'.
- * @param string $description:           
+ * @param string $description:
  *   The view description, if empty, defaults to generic description.
- * @param string $path:           
+ * @param string $path:
  *   The view url, if empty, defaults to 'calendar'.
- * @param array  $types:          
- *   Array of content types to limit the calendar to those types.  
+ * @param array  $types:
+ *   Array of content types to limit the calendar to those types.
  *   If empty, defaults to no type filter.
- * @param array  $date_fields:    
+ * @param array  $date_fields:
  *   Date fields used to filter the calendar.
  *   If empty, defaults to array('changed') for node.changed.
- * @param array  $display_fields: 
+ * @param array  $display_fields:
  *   Fields to display in the calendar.
  *   If empty, defaults to title and date fields.
- * 
+ *
  * @return the default calendar array.
  */
 function calendar_views_construct($options = NULL) {
@@ -256,20 +256,6 @@ $handler->display->display_options['filters']['status']['field'] = 'status';
 $handler->display->display_options['filters']['status']['value'] = 1;
 $handler->display->display_options['filters']['status']['group'] = 0;
 $handler->display->display_options['filters']['status']['expose']['operator'] = FALSE;
-$handler->display->display_options['arguments']['date_argument']['id'] = 'date_argument';
-$handler->display->display_options['arguments']['date_argument']['table'] = 'node';
-$handler->display->display_options['arguments']['date_argument']['field'] = 'date_argument';
-$handler->display->display_options['arguments']['date_argument']['default_action'] = 'default';
-$handler->display->display_options['arguments']['date_argument']['default_argument_type'] = 'date';
-$handler->display->display_options['arguments']['date_argument']['default_argument_skip_url'] = 0;
-$handler->display->display_options['arguments']['date_argument']['summary']['format'] = 'default_summary';
-$handler->display->display_options['arguments']['date_argument']['year_range'] = '-3:+3';
-$handler->display->display_options['arguments']['date_argument']['granularity'] = 'month';
-$handler->display->display_options['arguments']['date_argument']['add_delta'] = 'yes';
-$handler->display->display_options['arguments']['date_argument']['date_fields'] = drupal_map_assoc($aliases);
-$handler->display->display_options['arguments']['date_argument']['date_method'] = 'OR';
-$handler->display->display_options['arguments']['date_argument']['date_group'] = 'date';
-
 
 /* Display: Month */
 $handler = $view->new_display('page', 'Month', 'page_1');
