@@ -459,23 +459,6 @@ div#block-content_easement_unpublished_message-block div.content-easement-unpubl
 
 
 /*** Content - home page ***/
-div.view-display-id-front_page_featured {
-  max-height: 379px;
-  overflow: hidden;
-}
-
-a.msu-caption-title {
-  text-decoration: none;
-}
-
-a.msu-caption-title:focus,
-a.msu-caption-title:active,
-a.msu-caption-title:hover {
-  color: #ffffff;
-
-  text-decoration: underline;
-}
-
 div#front_page_columns {
   position: relative;
   background-color: #25567d;
