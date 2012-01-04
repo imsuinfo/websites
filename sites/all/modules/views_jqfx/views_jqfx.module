@@ -1,6 +1,4 @@
 <?php
-// $Id$
-
 /**
  * @file
  * Provides jQFX style options for Views.
@@ -48,8 +46,11 @@ function views_jqfx_help($path, $arg) {
  */
 function template_preprocess_views_jqfx(&$vars) {
   $options = $vars['options'];
-  if (in_array($options['jqfx_type'], array('singleframe', 'cycle', 'imageflow', 'thumbnailhover', 'menu', 'ddblock', 'slider'))) {
-    $options['mode'] = 'views_jqfx_' . $options['jqfx_type'];
+  if (isset($options['jqfx_type'])) {
+    if (in_array($options['jqfx_type'], array('cloudcarousel', 'cycle', 'galleria', 'imageflow', 'nivoslider'))) {
+      $options['mode'] = 'views_jqfx_' . $options['jqfx_type'];
+    }
   }
+  else $options['jqfx_type'] = NULL;
   $vars['jqfx'] = theme($options['jqfx_type'], array('view' => $vars['view'], 'options' => $options, 'rows' => $vars['rows'], 'title' => $vars['title']));
 }

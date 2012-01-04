@@ -1,6 +1,4 @@
 <?php
-// $Id$
-
 /**
  * @file
  * Contains the list style plugin.
@@ -47,16 +45,14 @@ class views_jqfx_plugin_style_jqfx extends views_plugin_style_list {
         &$this,
       );
       foreach (module_implements('views_jqfx_jqfx_type_form') as $module) {
+        ctools_include('dependent');
         $form[$module] = array(
           '#type' => 'fieldset',
-          '#title' => t('!module options', array('!module' => $modules[$module])),
+          '#title' => check_plain(t('!module options', array('!module' => $modules[$module]))),
           '#collapsible' => TRUE,
           '#attributes' => array('class' => array($module)),
-          '#states' => array(
-            'visible' => array(
-              ':input[name="style_options[jqfx_type]"]' => array('value' => $module),
-            ),
-          ),
+          '#process' => array('ctools_dependent_process'),
+          '#dependency' => array(':input[name="style_options[jqfx_type]"]' => array($module)),
         );
         $function = $module . '_views_jqfx_jqfx_type_form';
         call_user_func_array($function, $arguments);

@@ -1,6 +1,4 @@
 <?php
-// $Id$
-
 /**
  * @file
  * Defines the View Style Plugins for the Views jQFX module.
