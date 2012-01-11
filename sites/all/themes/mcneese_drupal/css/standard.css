@@ -749,11 +749,15 @@ div.description,
   margin-left: 10px;
   line-height: 1.231em;
   font-size: 12px;
-  color: #666666;
+  color: #505050;
 }
 
 ul.tips li {
   margin: 2px 0 2px 1px;
+}
+
+.error > div.description {
+  color: #662222;
 }
 
 
