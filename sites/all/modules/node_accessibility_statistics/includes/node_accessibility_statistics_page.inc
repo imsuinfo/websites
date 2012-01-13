@@ -1,15 +1,25 @@
 <?php
 
 /**
- * Displays accessibility statistical information derived from nodes on the entire system.
+ * @file
+ * Defines statistics page functions.
+ */
+
+/**
+ * Displays accessibility statistical information.
+ *
+ * This information is derived from nodes on the entire system.
  *
  * @param $statistics_type
  *   One of the following allowed strings:
  *   - 'all' No restrictions on loading of problems.
  *   - 'live' Restrict loading of problems to live content (active revision).
- *   - 'unlive' Restrict loading of problems to non-live content (active revision).
- *   - 'published' Restrict loading of problems to published content (active revision).
- *   - 'unpublished' Restrict loading of problems to unpublished content (active revision).
+ *   - 'unlive' Restrict loading of problems to non-live content (active
+ *     revision).
+ *   - 'published' Restrict loading of problems to published content (active
+ *     revision).
+ *   - 'unpublished' Restrict loading of problems to unpublished content
+ *     (active revision).
  *
  */
 function node_accessibility_statistics_page($statistics_type = 'all') {
@@ -20,8 +30,8 @@ function node_accessibility_statistics_page($statistics_type = 'all') {
   $title = "All Content";
   $statistics_type_path = '';
 
-  if (is_string($statistics_type)){
-    switch ($statistics_type){
+  if (is_string($statistics_type)) {
+    switch ($statistics_type) {
       case 'live':
         $conditions['live_only'] = TRUE;
         $title = "Live Content";
@@ -49,8 +59,8 @@ function node_accessibility_statistics_page($statistics_type = 'all') {
   $static_variables = &drupal_static(__FUNCTION__, array());
   $save_cache = FALSE;
 
-  if (empty($static_variables)){
-    if ($cache = cache_get('node_accessibility_statistics_page')){
+  if (empty($static_variables)) {
+    if ($cache = cache_get('node_accessibility_statistics_page')) {
       $static_variables = $cache->data;
     }
     else {
@@ -58,22 +68,22 @@ function node_accessibility_statistics_page($statistics_type = 'all') {
     }
   }
 
-  if (!isset($static_variables[$statistics_type]['major_problems'])){
+  if (!isset($static_variables[$statistics_type]['major_problems'])) {
     $static_variables[$statistics_type]['major_problems'] = NULL;
     $save_cache = TRUE;
   }
 
-  if (!isset($static_variables[$statistics_type]['minor_problems'])){
+  if (!isset($static_variables[$statistics_type]['minor_problems'])) {
     $static_variables[$statistics_type]['minor_problems'] = NULL;
     $save_cache = TRUE;
   }
 
-  if (!isset($static_variables[$statistics_type]['grand_total'])){
+  if (!isset($static_variables[$statistics_type]['grand_total'])) {
     $static_variables[$statistics_type]['grand_total'] = 0;
     $save_cache = TRUE;
   }
 
-  if (!isset($static_variables[$statistics_type]['statistics'])){
+  if (!isset($static_variables[$statistics_type]['statistics'])) {
     $static_variables[$statistics_type]['statistics'] = array(
       '#collapsible' => TRUE,
       '#collapsed' => FALSE,
@@ -118,7 +128,7 @@ function node_accessibility_statistics_page($statistics_type = 'all') {
     '#weight' => -100,
   );
 
-  if ($save_cache){
+  if ($save_cache) {
     $problems = (array) node_accessibility_load_problems($conditions, NULL, $function_history);
     $tests = quail_api_load_tests(array(), 'id', $function_history);
     $plot_data = array();
@@ -130,32 +140,32 @@ function node_accessibility_statistics_page($statistics_type = 'all') {
     $major_problems = array();
     $minor_problems = array();
 
-    foreach ($display_levels as $key => &$value){
+    foreach ($display_levels as $key => &$value) {
       if (empty($value['id'])) continue;
 
       $information[$value['id']] = array('total' => 0);
     }
 
-    foreach ($problems as $problem_key => &$problem_data){
+    foreach ($problems as $problem_key => &$problem_data) {
       if (!is_object($problem_data)) continue;
 
       $test = $tests[$problem_data->test_id];
 
-      if ($test->severity == 1){
+      if ($test->severity == 1) {
         $problems = &$major_problems;
       }
-      else if ($test->severity == 2){
+      else if ($test->severity == 2) {
         $problems = &$minor_problems;
       }
       else {
         continue;
       }
 
-      if (!isset($information[$test->severity])){
+      if (!isset($information[$test->severity])) {
         $information[$test->severity] = array('total' => 0);
       }
 
-      if (!isset($problems[$test->machine_name])){
+      if (!isset($problems[$test->machine_name])) {
         $problems[$test->machine_name]['problem_machine_name'] = $test->machine_name;
         $problems[$test->machine_name]['problem_human_name'] = $test->human_name;
         $problems[$test->machine_name]['severity_human_name'] = $display_levels[$test->severity]['human_name'];
@@ -165,7 +175,7 @@ function node_accessibility_statistics_page($statistics_type = 'all') {
         $problems[$test->machine_name]['title_block'] = 'h4';
       }
 
-      if (!isset($information[$test->severity][$test->machine_name])){
+      if (!isset($information[$test->severity][$test->machine_name])) {
         $information[$test->severity][$test->machine_name] = array();
         $information[$test->severity][$test->machine_name]['body'] = array();
         $information[$test->severity][$test->machine_name]['body']['title'] = $test->human_name;
@@ -184,22 +194,22 @@ function node_accessibility_statistics_page($statistics_type = 'all') {
       $grand_total++;
     }
 
-    foreach (array('problem_distribution') as $type_name){
+    foreach (array('problem_distribution') as $type_name) {
       $plot = new phplot_api_plot('pie', $function_history);
       $data = array();
       $theme_settings = array();
       $theme_settings['plot_rows'] = array();
       $total = 0;
 
-      switch ($type_name){
+      switch ($type_name) {
         case 'problem_distribution':
           $theme_settings['plot_human_name'] = t("Problem Distribution");
           break;
       }
 
-      foreach ($information as $display_level => &$value){
-         if ($type_name == 'problem_distribution'){
-           if ($display_levels[$display_level]['machine_name'] == 'quail_test_suggestion'){
+      foreach ($information as $display_level => &$value) {
+         if ($type_name == 'problem_distribution') {
+           if ($display_levels[$display_level]['machine_name'] == 'quail_test_suggestion') {
              continue;
            }
          }
@@ -218,7 +228,7 @@ function node_accessibility_statistics_page($statistics_type = 'all') {
         $theme_settings['plot_rows'][] = $theme_setting;
       }
 
-      if ($total > 0){
+      if ($total > 0) {
         $no_statistics = FALSE;
         $theme_settings['total_human_name'] = t("Total");
         $theme_settings['total_value'] = '' . $total;
@@ -254,7 +264,7 @@ function node_accessibility_statistics_page($statistics_type = 'all') {
 
         $theme_settings['image_url'] = $plot_file_path;
 
-        foreach ($theme_settings['plot_rows'] as $key => &$row){
+        foreach ($theme_settings['plot_rows'] as $key => &$row) {
           $row['value'] = $row['value'] . ' (' . round((($row['value']) / $total) * 100) . '%)';
         }
 
@@ -265,7 +275,7 @@ function node_accessibility_statistics_page($statistics_type = 'all') {
       }
     }
 
-    foreach (array('major_problems', 'minor_problems') as $type_name){
+    foreach (array('major_problems', 'minor_problems') as $type_name) {
       $plot = new phplot_api_plot('bars', $function_history);
       $data = array();
       $display_level = 0;
@@ -279,7 +289,7 @@ function node_accessibility_statistics_page($statistics_type = 'all') {
       $theme_settings = array();
       $theme_settings['plot_rows'] = array();
 
-      switch ($type_name){
+      switch ($type_name) {
         case 'major_problems':
           $theme_settings['plot_human_name'] = t("Major Problems");
           $display_level = 1;
@@ -291,8 +301,8 @@ function node_accessibility_statistics_page($statistics_type = 'all') {
           break;
       }
 
-      if (!empty($information[$display_level])){
-        foreach ($information[$display_level] as $problem => &$value){
+      if (!empty($information[$display_level])) {
+        foreach ($information[$display_level] as $problem => &$value) {
           if ($problem == 'total') continue;
 
           $total += $value['total'];
@@ -313,7 +323,7 @@ function node_accessibility_statistics_page($statistics_type = 'all') {
         }
       }
 
-      if ($total > 0){
+      if ($total > 0) {
         $no_statistics = FALSE;
         $theme_settings['total_human_name'] = t("Total");
         $theme_settings['total_value'] = '' . $total;
@@ -351,7 +361,7 @@ function node_accessibility_statistics_page($statistics_type = 'all') {
         $plot->set_data('tick_position_x', 'none');
 
         // draw x ticks every 20 units for large plots
-        if ($total > 100){
+        if ($total > 100) {
           $plot->set_data('tick_increment_x', 20);
         }
 
@@ -377,20 +387,20 @@ function node_accessibility_statistics_page($statistics_type = 'all') {
       }
     }
 
-    if ($grand_total == 0){
+    if ($grand_total == 0) {
       $statistics['#description'] = t("There are no accessibility statistics available.");
     }
 
-    if ($save_cache){
+    if ($save_cache) {
       cache_set('node_accessibility_statistics_page', $static_variables, 'cache', CACHE_TEMPORARY);
     }
   }
 
-  if (count($major_problems) == 0){
+  if (count($major_problems) == 0) {
     $form['major_problems']['node_accessibility_statistics-header']['#markup'] .= '<div class="accessibility_problems-major_problems-description">' . t("There are no major problems detected.") . '</div>';
   }
   else {
-    foreach ($major_problems as $machine_name => &$problem){
+    foreach ($major_problems as $machine_name => &$problem) {
       $form['major_problems'][$machine_name] = array(
         '#type' => 'markup',
         '#markup' => theme('node_accessibility_statistics_problem_details', $problem),
@@ -398,11 +408,11 @@ function node_accessibility_statistics_page($statistics_type = 'all') {
     }
   }
 
-  if (count($minor_problems) == 0){
+  if (count($minor_problems) == 0) {
     $form['minor_problems']['node_accessibility_statistics-header']['#markup'] .=  '<div class="accessibility_problems-minor_problems-description">' . t("There are no minor problems detected.") . '</div>';
   }
   else {
-    foreach ($minor_problems as $machine_name => &$problem){
+    foreach ($minor_problems as $machine_name => &$problem) {
       $form['minor_problems'][$machine_name] = array(
         '#type' => 'markup',
         '#markup' => theme('node_accessibility_statistics_problem_details', $problem),
@@ -429,7 +439,7 @@ function node_accessibility_statistics_page_problem($machine_name, $statistics_t
   cf_error_append_history($function_history, __FUNCTION__);
   $form = array();
 
-  if (!is_string($machine_name)){
+  if (!is_string($machine_name)) {
     cf_error_not_string($function_history, 'machine_name');
     return $form;
   }
@@ -437,8 +447,8 @@ function node_accessibility_statistics_page_problem($machine_name, $statistics_t
   $conditions = array();
   $title = "All";
 
-  if (is_string($statistics_type)){
-    switch ($statistics_type){
+  if (is_string($statistics_type)) {
+    switch ($statistics_type) {
       case 'live':
         $conditions['live_only'] = TRUE;
         $title = "Live";
@@ -466,10 +476,10 @@ function node_accessibility_statistics_page_problem($machine_name, $statistics_t
   static $problem_description = NULL;
   static $problem_table = NULL;
 
-  if (is_null($problem_description) || is_null($problem_table)){
+  if (is_null($problem_description) || is_null($problem_table)) {
     $test_information = (array) quail_api_load_tests(array('machine_name' => $machine_name), NULL, $function_history);
 
-    if (count($test_information) == 0){
+    if (count($test_information) == 0) {
       return $form;
     }
 
@@ -493,10 +503,10 @@ function node_accessibility_statistics_page_problem($machine_name, $statistics_t
     $problem_description['explanation'] = $problem_information->description;
     $problem_description['listing_link'] = FALSE;
 
-    if (isset($_GET['order'])){
+    if (isset($_GET['order'])) {
       $conditions['sort_by'] = strtolower($_GET['order']);
 
-      switch ($conditions['sort_by']){
+      switch ($conditions['sort_by']) {
         case 'id':
         case 'nid':
         case 'vid':
@@ -513,7 +523,7 @@ function node_accessibility_statistics_page_problem($machine_name, $statistics_t
       }
     }
 
-    if (isset($_GET['sort'])){
+    if (isset($_GET['sort'])) {
       $conditions['sort_order'] = strtoupper($_GET['sort']);
     }
 
@@ -546,12 +556,12 @@ function node_accessibility_statistics_page_problem($machine_name, $statistics_t
     $problem_table['summary'] = t("All accessibility problems that fall under the category: %problem", array('%problem' => $problem_information->human_name));
     $problem_table['rows'] = array();
 
-    foreach ($problems as $key => $problem){
+    foreach ($problems as $key => $problem) {
       $row = array();
 
       $markup_format = 'full_html';
 
-      if (isset($node_type_settings[$problem->type]->format)){
+      if (isset($node_type_settings[$problem->type]->format)) {
         $markup_format = $node_type_settings[$problem->type]->format;
       }
 

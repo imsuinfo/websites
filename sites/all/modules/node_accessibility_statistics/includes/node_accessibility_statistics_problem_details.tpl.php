@@ -2,7 +2,9 @@
 
 /**
  * @file
- * Default theme implementation to display details about a node accessibility statistics problem.
+ * Default theme implementation.
+ *
+ * Displays details about a node accessibility statistics problem.
  *
  * Available Variables:
  *
@@ -12,14 +14,16 @@
  * - $severity_human_name: The human-friendly severity name.
  * - $total: The total number of issues detected that match this problem.
  * - $explanation: A detailed explanation of the problem.
- * - $statistics_type_path: A path appended onto the problem link to restrict the displayed problems to a specific type.
+ * - $statistics_type_path: A path appended onto the problem link to restrict
+ *   the displayed problems to a specific type.
  *
  * Styling Variables:
  * - $base_class: A generated, generic, css class.
  * - $specific_class: A generated, somewhat unique, css class.
  * - $id: The unique id representing the problem.
  * - $title_block: The type of block in which the title is.
- * - $listing_link: A boolean that designates whether or not to show/hide the listing link.
+ * - $listing_link: A boolean that designates whether or not to show/hide the
+ *   listing link.
  */
 ?>
 <div class="<?php print($base_class . '-wrapper ' . $specific_class . '-wrapper');?>">
@@ -40,7 +44,7 @@
         <?php print($explanation); ?>
       </div>
     </li>
-    <?php if ($listing_link){ ?>
+    <?php if ($listing_link) { ?>
       <li class="<?php print($base_class . 'listing ' . $specific_class . '-listing'); ?>">
         <a class="<?php print($base_class . 'listing-link ' . $specific_class . '-listing-link'); ?>" href="/admin/content/accessibility/node_statistics/problem/<?php print($problem_machine_name . $statistics_type_path); ?>"><?php print(t("View listing of all issues for the %problem report.", array('%problem' => $problem_machine_name))); ?></a>
       </li>
