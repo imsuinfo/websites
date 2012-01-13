@@ -1,6 +1,11 @@
 <?php
 
 /**
+ * @file
+ * Install file for node accessibility.
+ */
+
+/**
  * Implementation of hook_schema().
  */
 function node_accessibility_schema() {
@@ -118,6 +123,15 @@ function node_accessibility_schema() {
       ),
     ),
   );
+
+  // workaround mysql's violation of the SQL standard in a way that does not break standards-compliant databases.
+  // @see https://dev.mysql.com/doc/refman/5.6/en/data-type-defaults.html
+  // @see https://bugs.mysql.com/bug.php?id=25520
+  // @see https://drupal.org/node/1401782
+  // @see https://drupal.org/node/143881
+  if (db_driver() == 'mysql') {
+    unset($schema['node_accessibility_problems']['fields']['element']['default']);
+  }
 
   return $schema;
 }

@@ -2,7 +2,7 @@
 
 /**
  * @file
- * Default theme implementation to display node information in the accessibility tab page.
+ * Default theme implementation to display node accessibility information.
  *
  * Available Variables:
  *

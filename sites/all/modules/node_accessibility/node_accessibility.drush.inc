@@ -1,6 +1,11 @@
 <?php
 
 /**
+ * @file
+ * Defines the accessibilty page drush functions.
+ */
+
+/**
  * Implements hook_drush_command().
  */
 function node_accessibility_drush_command() {
@@ -53,7 +58,8 @@ function node_accessibility_drush_command_add_alias(&$items, $command, $alias) {
 /**
  * Implements hook_drush_help().
  *
- * This function is called whenever a drush user calls 'drush help <name-of-your-command>'
+ * This function is called whenever a drush user calls
+ * 'drush help <name-of-your-command>'
  *
  * @param
  *   A string with the help section (prepend with 'drush:')
@@ -92,7 +98,7 @@ function node_accessibility_drush_help($section) {
       $info['options'] = "Options";
       $info['examples'] = "Examples";
 
-      foreach ($info as $key => $value){
+      foreach ($info as $key => $value) {
         $out .= "\n\n$value:";
 
         if (isset($command_info[$key])) {
@@ -123,15 +129,15 @@ function node_accessibility_drush_callback_validate() {
   $revisions = TRUE;
   $chunk_size = drush_get_option('chunk');
 
-  if (is_null(drush_get_option('delete'))){
+  if (is_null(drush_get_option('delete'))) {
     $delete = FALSE;
   }
 
-  if (is_null(drush_get_option('revisions'))){
+  if (is_null(drush_get_option('revisions'))) {
     $revisions = FALSE;
   }
 
-  if (empty($chunk_size) || !is_numeric($chunk_size)){
+  if (empty($chunk_size) || !is_numeric($chunk_size)) {
     $chunk_size = 256;
   }
 
@@ -142,7 +148,7 @@ function node_accessibility_drush_callback_validate() {
     $user = user_load($uid);
   }
 
-  if (drush_get_option('all')){
+  if (drush_get_option('all')) {
     $query = db_select('node', 'n');
     $query->fields('n', array('nid'));
 
@@ -156,7 +162,7 @@ function node_accessibility_drush_callback_validate() {
   else {
     $node_type = drush_get_option('type');
 
-    if (empty($node_type)){
+    if (empty($node_type)) {
       $nids = array_filter(func_get_args(), 'is_numeric');
     }
     else {
@@ -173,7 +179,7 @@ function node_accessibility_drush_callback_validate() {
     }
   }
 
-  foreach ($rows as $row){
+  foreach ($rows as $row) {
     $nids[] = $row->nid;
   }
 
@@ -183,29 +189,29 @@ function node_accessibility_drush_callback_validate() {
   $total_nodes = count($nids);
   $current_count = 0;
 
-  if ($delete){
+  if ($delete) {
     drush_print("Now deleting validation results for " . $total_nodes . " nodes in chunks of " . $chunk_size .  ".");
   }
   else {
     drush_print("Now validating " . $total_nodes . " nodes in chunks of " . $chunk_size .  ".");
   }
 
-  while ($current_count < $total_nodes){
+  while ($current_count < $total_nodes) {
     $current_nids = array();
     $counter = 0;
 
-    if ($current_count + $chunk_size > $total_nodes){
+    if ($current_count + $chunk_size > $total_nodes) {
       $chunk_size = $total_nodes - $current_count;
     }
 
-    while ($counter < $chunk_size){
+    while ($counter < $chunk_size) {
       $current_nids[] = array_pop($nids);
       $counter++;
     }
 
-    if ($delete){
-      foreach ($current_nids as $nid){
-        if ($revisions){
+    if ($delete) {
+      foreach ($current_nids as $nid) {
+        if ($revisions) {
           $vid = NULL;
           $vid_string = "all";
         }
@@ -227,7 +233,7 @@ function node_accessibility_drush_callback_validate() {
     else {
       $vids = array();
 
-      if ($revisions){
+      if ($revisions) {
         $query = db_select('node_revision', 'nr');
 
         $query->fields('nr');
@@ -236,12 +242,12 @@ function node_accessibility_drush_callback_validate() {
 
         $results = (array) $executed->fetchAll();
 
-        foreach ($results as $key => &$value){
-          if (!is_array($vids[$value->nid])){
+        foreach ($results as $key => &$value) {
+          if (!is_array($vids[$value->nid])) {
             $vids[$value->nid] = array();
           }
 
-          if (!in_array($value->vid, $vids[$value->nid])){
+          if (!in_array($value->vid, $vids[$value->nid])) {
             $vids[$value->nid][] = $value->vid;
           }
         }
@@ -255,29 +261,29 @@ function node_accessibility_drush_callback_validate() {
       else {
         $methods = quail_api_get_validation_methods(NULL, $function_history);
 
-        foreach ($current_nids as $nid){
+        foreach ($current_nids as $nid) {
           $node = node_load($nid);
           $database = isset($methods[$node->accessibility['method']]['database']) ? $methods[$node->accessibility['method']]['database'] : FALSE;
 
-          if (empty($vids[$nid])){
+          if (empty($vids[$nid])) {
             $vids[$nid] = array($node->vid);
           }
 
-          foreach ($vids[$nid] as $vid){
-            if (isset($results[$nid][$vid]['report'])){
+          foreach ($vids[$nid] as $vid) {
+            if (isset($results[$nid][$vid]['report'])) {
               $reports = &$results[$nid][$vid]['report'];
 
-              if ($database && !empty($reports)){
+              if ($database && !empty($reports)) {
                 $no_failures = TRUE;
 
-                foreach($reports as $severity => $severity_results){
-                  if (isset($severity_results['total']) && $severity_results['total'] > 0){
+                foreach ($reports as $severity => $severity_results) {
+                  if (isset($severity_results['total']) && $severity_results['total'] > 0) {
                     $no_failures = FALSE;
                     break;
                   }
                 }
 
-                if ($no_failures){
+                if ($no_failures) {
                   node_accessibility_delete_node_problems($nid, $vid, $function_history);
                 }
                 else {

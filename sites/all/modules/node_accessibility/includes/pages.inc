@@ -1,6 +1,11 @@
 <?php
 
 /**
+ * @file
+ * Defines the accessibilty page functions.
+ */
+
+/**
  * Provides the accessibility tab page.
  */
 function node_accessibility_accessibility_tab_page($form, &$form_state, $node, $vid = NULL) {
@@ -21,20 +26,20 @@ function node_accessibility_accessibility_tab_page($form, &$form_state, $node, $
 
   $vids = array();
 
-  if (is_numeric($vid)){
+  if (is_numeric($vid)) {
     $vids[$node->nid] = array($vid);
   }
 
-  if (isset($form_state['perform_validation'])){
+  if (isset($form_state['perform_validation'])) {
     $perform_validation = TRUE;
   }
 
-  if (property_exists($node, 'accessibility') && is_array($node->accessibility)){
-    if (!empty($node->accessibility['format'])){
+  if (property_exists($node, 'accessibility') && is_array($node->accessibility)) {
+    if (!empty($node->accessibility['format'])) {
       $markup_format = $node->accessibility['format'];
     }
 
-    if (!empty($node->accessibility['method']) && !empty($methods[$node->accessibility['method']])){
+    if (!empty($node->accessibility['method']) && !empty($methods[$node->accessibility['method']])) {
       $automatic = $methods[$node->accessibility['method']]['automatic'];
       $database = $methods[$node->accessibility['method']]['database'];
     }
@@ -59,7 +64,7 @@ function node_accessibility_accessibility_tab_page($form, &$form_state, $node, $
     '#title' => t("Accessibility Validation Results"),
   );
 
-  foreach ($display_levels as $severity => $severity_settings){
+  foreach ($display_levels as $severity => $severity_settings) {
     $form['accessibility_validation_results'][$severity_settings['machine_name']] = array(
       '#type' => 'fieldset',
       '#title' =>  $severity_settings['human_name'],
@@ -69,10 +74,10 @@ function node_accessibility_accessibility_tab_page($form, &$form_state, $node, $
     );
   }
 
-  if ($automatic || $perform_validation){
+  if ($automatic || $perform_validation) {
     $results = node_accessibility_perform_validation(array($node), $vids, NULL, NULL, $function_history);
 
-    if (isset($results[$node->nid][$node->vid]['report'])){
+    if (isset($results[$node->nid][$node->vid]['report'])) {
       $reports = $results[$node->nid][$node->vid]['report'];
     }
     else {
@@ -81,17 +86,17 @@ function node_accessibility_accessibility_tab_page($form, &$form_state, $node, $
 
     unset($results);
 
-    if ($database && !empty($reports)){
+    if ($database && !empty($reports)) {
       $no_failures = TRUE;
 
-      foreach($reports as $severity => $severity_results){
-        if (isset($severity_results['total']) && $severity_results['total'] > 0){
+      foreach ($reports as $severity => $severity_results) {
+        if (isset($severity_results['total']) && $severity_results['total'] > 0) {
           $no_failures = FALSE;
           break;
         }
       }
 
-      if ($no_failures){
+      if ($no_failures) {
         node_accessibility_delete_node_problems($node->nid, $node->vid, $function_history);
       }
       else {
@@ -99,12 +104,12 @@ function node_accessibility_accessibility_tab_page($form, &$form_state, $node, $
       }
     }
   }
-  else if ($database){
+  else if ($database) {
     $reports = node_accessibility_restructure_results($node->nid, $node->vid, $display_levels, $function_history);
   }
 
-  if (!empty($reports)){
-    foreach($reports as $severity => $severity_results){
+  if (!empty($reports)) {
+    foreach ($reports as $severity => $severity_results) {
       $form['accessibility_validation_results'][$display_levels[$severity]['machine_name']]['markup'] = array(
         '#type' => 'markup',
         '#markup' => theme('quail_api_results', array('severity_id' => $severity, 'severity_array' => $display_levels[$severity], 'severity_results' => $severity_results, 'markup_format' => $markup_format, 'display_title' => FALSE)),
@@ -112,7 +117,7 @@ function node_accessibility_accessibility_tab_page($form, &$form_state, $node, $
     }
   }
   else {
-    foreach ($display_levels as $severity => $severity_settings){
+    foreach ($display_levels as $severity => $severity_settings) {
       $form['accessibility_validation_results'][$severity_settings['machine_name']]['markup'] = array(
         '#type' => 'markup',
         '#markup' => theme('quail_api_results', array('severity_id' => $severity, 'severity_array' => $display_levels[$severity], 'severity_results' => array('total' => 0), 'markup_format' => $markup_format, 'display_title' => FALSE)),
@@ -122,7 +127,7 @@ function node_accessibility_accessibility_tab_page($form, &$form_state, $node, $
 
   $form['actions'] = array('#type' => 'actions');
 
-  if (!$automatic){
+  if (!$automatic) {
     $form['actions']['submit'] = array(
       '#type' => 'submit',
       '#value' => t("Validate"),
@@ -175,9 +180,10 @@ function node_accessibility_accessibility_tab_page($form, &$form_state, $node, $
 
 /**
  * Provides the accessibility tab page validation button submit.
+ *
  * This is a stub function.
  */
-function node_accessibility_accessibility_tab_page_submit($form, &$form_state){
+function node_accessibility_accessibility_tab_page_submit($form, &$form_state) {
   $form_state['perform_validation'] = TRUE;
   $form_state['rebuild'] = TRUE;
 }

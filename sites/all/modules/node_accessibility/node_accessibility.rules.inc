@@ -1,6 +1,11 @@
 <?php
 
 /**
+ * @file
+ * Rules integration file for node accessibility.
+ */
+
+/**
  * Implements hook_rules_file_info().
  */
 function node_accessibility_rules_file_info() {
@@ -14,9 +19,9 @@ function node_accessibility_rules_file_info() {
  * Implements hook_rules_condition_info().
  */
 function node_accessibility_rules_condition_info() {
-   $items = array();
+  $items = array();
 
-   $items['content_is_using_node_accessibility'] = array(
+  $items['content_is_using_node_accessibility'] = array(
     'group' => t("Node"),
     'label' => t("Content is using accessibility validation"),
     'base' => 'node_accessibility_rules_condition_content_is_using_node_accessibility',
@@ -101,14 +106,14 @@ function node_accessibility_rules_action_info() {
 /**
  * Action: Delete accessibility validation statistics for a node.
  *
- * $param $node
- *   A node object
+ * $param object $node
+ *   A node object.
  */
 function node_accessibility_delete_rules_action($node) {
   $function_history = array();
   cf_error_append_history($function_history, __FUNCTION__);
 
-  if (!is_object($node)){
+  if (!is_object($node)) {
     cf_error_invalid_object($function_history, 'node');
     return array('node' => $node);
   }
@@ -121,24 +126,25 @@ function node_accessibility_delete_rules_action($node) {
 /**
  * Action: Perform accessibility validation on a node.
  *
- * $param $node
- *   A node object
+ * $param object $node
+ *   A node object.
  *
  * @return
- *   An array containing the node object stored in the key called 'node' and the validation results (if any) stored in the key called 'results'.
+ *   An array containing the node object stored in the key called 'node' and the
+ *   validation results (if any) stored in the key called 'results'.
  */
 function node_accessibility_validate_rules_action($node) {
   $function_history = array();
   cf_error_append_history($function_history, __FUNCTION__);
 
-  if (!is_object($node)){
+  if (!is_object($node)) {
     cf_error_invalid_object($function_history, 'node');
     return array('node' => $node);
   }
 
   $results = actions_do('node_accessibility_validate_action', $node);
 
-  if (!isset($results['node_accessibility_validate_action'])){
+  if (!isset($results['node_accessibility_validate_action'])) {
     return array('node' => $node, 'validation_results' => $results['node_accessibility_validate_action']);
   }
 
@@ -148,11 +154,12 @@ function node_accessibility_validate_rules_action($node) {
 /**
  * Condition: Check if the content is using accessibility validation.
  *
- * @param $node
- *   A node object
+ * @param object $node
+ *   A node object.
  *
- * @return
- *   TRUE/FALSE depending on if the content is using node accessibility validation.
+ * @return bool
+ *   TRUE/FALSE depending on if the content is using node accessibility
+ *   validation.
  */
 function node_accessibility_rules_condition_content_is_using_node_accessibility($node) {
   if (!is_object($node)) {
@@ -168,11 +175,12 @@ function node_accessibility_rules_condition_content_is_using_node_accessibility(
 /**
  * Condition: Check if the content is requiring accessibility validation.
  *
- * @param $node
- *   A node object
+ * @param object $node
+ *   A node object.
  *
- * @return
- *   TRUE/FALSE depending on if the content is requiring node accessibility validation.
+ * @return bool
+ *   TRUE/FALSE depending on if the content is requiring node accessibility
+ *   validation.
  */
 function node_accessibility_rules_condition_content_is_requiring_node_accessibility_validation($node) {
   if (!is_object($node)) {

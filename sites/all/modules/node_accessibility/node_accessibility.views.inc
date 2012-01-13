@@ -1,6 +1,11 @@
 <?php
 
 /**
+ * @file
+ * Views integration file for node accessibility.
+ */
+
+/**
  * Implementation of hook_views_handlers().
  */
 function node_accessibility_views_handlers() {
