@@ -8,35 +8,49 @@ function cf_menu_accessibility_page() {
 
   drupal_set_title(t("Content Accessibility"), PASS_THROUGH);
 
-  $results = db_query("SELECT * FROM {menu_router} AS mr INNER JOIN {menu_links} AS ml ON mr.path = ml.router_path WHERE mr.path LIKE 'admin/content/accessibility/%' AND NOT mr.path LIKE 'admin/content/accessibility/%/%'", array(), array('fetch' => PDO::FETCH_ASSOC));
+  $query = db_select('menu_router', 'mr');
+  $query->innerjoin('menu_links',  'ml', 'mr.path = ml.router_path');
 
-  if ($results){
-    $available_paths = $results->fetchAll();
+  $query->fields('mr');
+  $query->fields('ml');
+  $query->orderBy('mr.weight', 'ASC');
+  $query->orderBy('ml.link_title', 'ASC');
+  $query->distinct();
+
+  $query->condition('mr.path', 'admin/content/accessibility/%', 'LIKE');
+  $query->condition('mr.path', 'admin/content/accessibility/%/%', 'NOT LIKE');
+  $query->condition('ml.plid', 0, '<>');
+
+  $executed = $query->execute();
+
+  if ($executed){
+    $available_paths = $executed->fetchAll();
 
     foreach ($available_paths as $key => $value){
-      _menu_link_translate($value);
+      $block = get_object_vars($value);
+
+      _menu_link_translate($block);
 
       // The link description, either derived from 'description' in hook_menu()
       // or customized via menu module is used as title attribute.
-      if (!empty($value['localized_options']['attributes']['title'])) {
-        $value['description'] = $value['localized_options']['attributes']['title'];
-        unset($value['localized_options']['attributes']['title']);
+      if (!empty($block['block']['attributes']['title'])) {
+        $block['description'] = $value['localized_options']['attributes']['title'];
+        unset($block['localized_options']['attributes']['title']);
       }
 
-      $block = $value;
-      $block['title'] = l($value['link_title'], $value['router_path']);
+      $block['title'] = l($block['link_title'], $block['router_path']);
       $block['content'] = '';
 
       $compact = system_admin_compact_mode();
 
-      if (isset($value['description'])){
+      if (isset($block['description'])){
         $style='';
 
         if ($compact) {
           $style = " style='display: none;'";
         }
 
-        $block['content'] .= '<div' . $style . '>' . filter_xss_admin($value['description']) . '</div>';
+        $block['content'] .= '<div' . $style . '>' . filter_xss_admin($block['description']) . '</div>';
       }
 
       if (!empty($block['content'])) {
@@ -45,7 +59,7 @@ function cf_menu_accessibility_page() {
 
       // Prepare for sorting as in function _menu_tree_check_access().
       // The weight is offset so it is always positive, with a uniform 5-digits.
-      $blocks[(50000 + $value['weight']) . ' ' . $value['title'] . ' ' . $value['mlid']] = $block;
+      $blocks[(50000 + $block['weight']) . ' ' . $block['title'] . ' ' . $block['mlid']] = $block;
     }
   }
 
