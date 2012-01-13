@@ -83,11 +83,12 @@ A list of issues have been reported upstream at <code.google.com/p/quail-lib/iss
 - <code.google.com/p/quail-lib/issues/detail?id=34>
 - <code.google.com/p/quail-lib/issues/detail?id=35>
 
-There have been more issues that I got tired of reporting them when there is no upstream activity.
+There have been more issues but I got tired of reporting them when there is no upstream activity.
+All of the bugfixes have been rolled into a single patch called quail-bug_fixes.patch.
 
 The following (optional) patches have been provided to help reduce the number of false positives produced by the quail library:
 - quail-reduce-pNotUsedAsHeader-false_positives.patch
   - I have found that the pNotUsedAsHeader has a tendency to improperly mark a significant amount of bold sentences as headers.
-  - This patch is an attemp to reduce the number of false-positives by throwing out text that ends in a period.
+  - This patch is an attempt to reduce the number of false-positives by throwing out text that ends in a period.
   - Such cases are more likely to be sentences rather than headers.
 

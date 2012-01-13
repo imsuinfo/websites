@@ -7,9 +7,11 @@
 
 /**
  * An array reporter that generates a nested array of tests and report objects.
+ *
  * The quail library will look for a function called "report$name_of_reporter".
  * Therefore, 'quail_api_reporter' must be used as the name of this reporter.
- * This file must also be included before calling quail(), otherwise this reporter will not be found by the quail library.
+ * This file must also be included before calling quail(), otherwise this
+ * reporter will not be found by the quail library.
  */
 class reportQuail_api extends quailReporter {
   protected $quail_api_report = array();
@@ -57,14 +59,14 @@ class reportQuail_api extends quailReporter {
    * @param $test
    *   An array containing the unprocessed test results associated with the given $test_name
    */
-  protected function get_test_results($test_name, $test){
+  protected function get_test_results($test_name, $test) {
     $severity = $this->guideline->getSeverity($test_name);
 
-    if (!isset($this->quail_api_report['report'][$severity])){
+    if (!isset($this->quail_api_report['report'][$severity])) {
       $this->quail_api_report['report'][$severity] = array('total' => 0);
     }
 
-    if (!isset($this->quail_api_report['report'][$severity][$test_name])){
+    if (!isset($this->quail_api_report['report'][$severity][$test_name])) {
       $this->quail_api_report['report'][$severity][$test_name] = array('total' => 0);
       $this->quail_api_report['report'][$severity][$test_name]['title'] = $this->translation[$test_name];
 
@@ -82,7 +84,7 @@ class reportQuail_api extends quailReporter {
         }
       }
 
-      if ($this->quail_api_report['report'][$severity][$test_name]['total'] == 0){
+      if ($this->quail_api_report['report'][$severity][$test_name]['total'] == 0) {
         unset($this->quail_api_report['report'][$severity][$test_name]);
       }
     }

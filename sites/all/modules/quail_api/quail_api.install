@@ -73,9 +73,19 @@ function quail_api_schema() {
         'default' => '',
       ),
     ),
-    'primary keys' => array('id'),
+    'primary key' => array('id'),
     'unique keys' => array('machine_name' => array('machine_name')),
   );
+
+  // workaround mysql's violation of the SQL standard in a way that does not break standards-compliant databases.
+  // @see https://dev.mysql.com/doc/refman/5.6/en/data-type-defaults.html
+  // @see https://bugs.mysql.com/bug.php?id=25520
+  // @see https://drupal.org/node/1401782
+  // @see https://drupal.org/node/143881
+  if (db_driver() == 'mysql') {
+    unset($schema['quail_api_tests']['fields']['human_name']['default']);
+    unset($schema['quail_api_tests']['fields']['description']['default']);
+  }
 
   return $schema;
 }
@@ -86,7 +96,7 @@ function quail_api_schema() {
 function quail_api_disable() {
   cf_error_append_history($function_history, __FUNCTION__);
 
-  if (function_exists('quail_api_reset_cache')){
+  if (function_exists('quail_api_reset_cache')) {
     quail_api_reset_cache($function_history);
   }
 }

@@ -6,7 +6,9 @@
  */
 
 /**
- * A handler for the quail_api_node problem "element" field that is otherwise called a problem snippet.
+ * A handler for the quail_api_node problem "element" field.
+ *
+ * This "element" field is called otherwise called a problem snippet.
  */
 class quail_api_handler_field_markup extends views_handler_field {
   function option_definition() {
@@ -23,7 +25,7 @@ class quail_api_handler_field_markup extends views_handler_field {
     $filter_formats = filter_formats();
     $formatters = array();
 
-    foreach ((array) $filter_formats as $filter_format => $filter_format_settings){
+    foreach ((array) $filter_formats as $filter_format => $filter_format_settings) {
       $formatters[$filter_format] = $filter_format_settings->name;
     }
 
@@ -42,7 +44,7 @@ class quail_api_handler_field_markup extends views_handler_field {
 
     $this->format = $format;
 
-    if (empty($format)){
+    if (empty($format)) {
       return $this->sanitize_value($values);
     }
 

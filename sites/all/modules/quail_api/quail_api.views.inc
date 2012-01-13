@@ -6,7 +6,7 @@
  */
 
 /**
- * Implementation of hook_views_handlers().
+ * Implements hook_views_handlers().
  */
 function quail_api_views_handlers() {
   return array(
@@ -18,7 +18,7 @@ function quail_api_views_handlers() {
 }
 
 /**
- * Implements hook_views_data()
+ * Implements hook_views_data().
  */
 function quail_api_views_data() {
   $data['quail_api_tests']['table']['group'] = t("Accessibility Validation Test");

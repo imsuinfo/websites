@@ -5,11 +5,15 @@
  * Contains quail guideline class objects for the quail api.
  *
  * The guidelines here are modified versions provided by quail.
- * They are intended to be used against indidivual snippets of html and not an entire page.
+ * They are intended to be used against indidivual snippets of html and not an
+ * entire page.
  *
- * The quail library will look for guidelines by searching for a function called "${name_ofguideline}Guideline".
- * Therefore, for a class of quail_api_allGuideline, the name of the guideline is 'quail_api_all'.
- * This file must also be included before calling quail(), otherwise this guideline will not be found by the quail library.
+ * The quail library will look for guidelines by searching for a function
+ * called "${name_ofguideline}Guideline".
+ * Therefore, for a class of quail_api_allGuideline, the name of the guideline
+ * is 'quail_api_all'.
+ * This file must also be included before calling quail(), otherwise this
+ * guideline will not be found by the quail library.
  *
  * Tags that have been removed are:
  *   documentHasTitleElement
@@ -21,7 +25,8 @@
 
 /**
  * All known tests are performed here, except for the removed tests.
- * - this is intended to be used on html snippets only, not an entire document.
+ *
+ * This is intended to be used on html snippets only, not an entire document.
  */
 class Quail_api_allGuideline extends quailGuideline {
   var $tests = array(
@@ -175,8 +180,9 @@ class Quail_api_allGuideline extends quailGuideline {
 }
 
 /**
- * Section 508 Guideline
- * - this is intended to be used on html snippets only, not an entire document.
+ * Section 508 Guideline.
+ *
+ * This is intended to be used on html snippets only, not an entire document.
  */
 class Quail_api_section508Guideline extends quailGuideline {
 
@@ -234,8 +240,9 @@ class Quail_api_section508Guideline extends quailGuideline {
 }
 
 /**
- * WCAG 1.0 Level A Guideline
- * - this is intended to be used on html snippets only, not an entire document
+ * WCAG 1.0 Level A Guideline.
+ *
+ * This is intended to be used on html snippets only, not an entire document.
  */
 class Quail_api_wcag1aGuideline extends quailGuideline {
   var $tests = array(
@@ -291,8 +298,9 @@ class Quail_api_wcag1aGuideline extends quailGuideline {
 }
 
 /**
- * WCAG 1.0 Level AA Guideline
- * - this is intended to be used on html snippets only, not an entire document.
+ * WCAG 1.0 Level AA Guideline.
+ *
+ * This is intended to be used on html snippets only, not an entire document.
  */
 class Quail_api_wcag1aaGuideline extends quailGuideline {
   var $tests = array(
@@ -391,8 +399,9 @@ class Quail_api_wcag1aaGuideline extends quailGuideline {
 }
 
 /**
- * WCAG 1.0 Level AAA Guideline
- * - this is intended to be used on html snippets only, not an entire document.
+ * WCAG 1.0 Level AAA Guideline.
+ *
+ * This is intended to be used on html snippets only, not an entire document.
  */
 class Quail_api_wcag1aaaGuideline extends quailGuideline {
   var $tests = array(
@@ -514,8 +523,9 @@ class Quail_api_wcag1aaaGuideline extends quailGuideline {
 }
 
 /**
- * WCAG 2.0 Level A Guideline
- * - this is intended to be used on html snippets only, not an entire document.
+ * WCAG 2.0 Level A Guideline.
+ *
+ * This is intended to be used on html snippets only, not an entire document.
  */
 class Quail_api_wcag2aGuideline extends quailGuideline {
   var $tests = array(
@@ -630,8 +640,9 @@ class Quail_api_wcag2aGuideline extends quailGuideline {
 }
 
 /**
- * WCAG 2.0 Level AA Guideline
- * - this is intended to be used on html snippets only, not an entire document.
+ * WCAG 2.0 Level AA Guideline.
+ *
+ * This is intended to be used on html snippets only, not an entire document.
  */
 class Quail_api_wcag2aaGuideline extends quailGuideline {
   var $tests = array(
@@ -770,8 +781,9 @@ class Quail_api_wcag2aaGuideline extends quailGuideline {
 }
 
 /**
- * WCAG 2.0 Level AAA Guideline
- * - this is intended to be used on html snippets only, not an entire document.
+ * WCAG 2.0 Level AAA Guideline.
+ *
+ * This is intended to be used on html snippets only, not an entire document.
  */
 class Quail_api_wcag2aaaGuideline extends quailGuideline {
   var $tests = array(

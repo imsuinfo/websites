@@ -2,7 +2,10 @@
 
 /**
  * @file
- * Default theme implementation to display the validation results of a single validation problem or suggestion.
+ * Default theme implementation to display the validation results.
+ *
+ * This displays validation results of a single validation problem
+ * or suggestion.
  *
  * Available Variables:
  *
