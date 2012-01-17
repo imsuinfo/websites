@@ -1,20 +1,16 @@
 <?php
 
-
-
 /**
  * Implements hook_menu().
  *
- * Why:
- *   There is no catch-all location for content accessibility related tasks.
- *   Accessibility specific information seems to better fall under the content category than the structure or the configuration categories.
+ * @see: cf_menu_accessibility_page()
  */
 function cf_menu_menu() {
   $items = array();
 
   $accessibility_page = variable_get('cf_menu_accessibility_page', TRUE);
 
-  if ($accessibility_page){
+  if ($accessibility_page) {
     $items['admin/content/accessibility'] = array(
       'title' => "Accessibility",
       'description' => "Content accessibility administrative pages.",
@@ -36,13 +32,13 @@ function cf_menu_menu() {
  * @see cf_permission()
  */
 function cf_menu_cf_permission_alter(&$permissions) {
-  if (!is_array($permissions)){
+  if (!is_array($permissions)) {
     $permissions = array();
   }
 
   $accessibility_page = variable_get('cf_menu_accessibility_page', TRUE);
 
-  if ($accessibility_page){
+  if ($accessibility_page) {
     $permissions['view content accessibility administration page'] = array(
       'title' => t("View Content Accessibility Administration Page"),
       'description' => t("Grants permissions to view the content accessibility administration page."),
@@ -60,17 +56,19 @@ function cf_menu_cf_permission_alter(&$permissions) {
  * Implements hook_query_TAG_alter().
  *
  * Why:
- *   The drupal menu core prevents administrators from seeing the unpublished nodes in the admin menu.
+ *   The drupal menu core prevents administrators from seeing the unpublished
+ *   nodes in the admin menu.
  *   See: http://drupal.org/node/460408#comment-4367202
  *
  * Errata:
- *   This requires a patch against drupal core function (drupal-7.x-add_menu_tree_check_access-1.patch).
+ *   This requires a patch against drupal core function
+ *   (drupal-7.x-add_menu_tree_check_access-1.patch).
  */
 function cf_menu_query_menu_tree_check_access_alter(&$query) {
   if (user_access('view unpublished content in menu')) {
     $where =& $query->conditions();
 
-    foreach ($where as $key => &$value){
+    foreach ($where as $key => &$value) {
       if ($value['field'] == 'n.status') unset($where[$key]);
     }
   }

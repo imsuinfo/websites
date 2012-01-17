@@ -1,7 +1,21 @@
 <?php
 
 /**
- * Displays the content accessibility menu page which presents links to content easement management pages.
+ * @file
+ * This file defines the menu page functions used by hook_menu().
+ */
+
+/**
+ * Displays the content accessibility menu page.
+ *
+ * This page presents links to content easement management pages.
+ *
+ * Why:
+ *   There is no catch-all location for content accessibility related tasks.
+ *   Accessibility specific information seems to better fall under the content
+ *   category than the structure or the configuration categories.
+ *
+ * @see cf_menu_menu()
  */
 function cf_menu_accessibility_page() {
   $blocks = array();
@@ -23,10 +37,10 @@ function cf_menu_accessibility_page() {
 
   $executed = $query->execute();
 
-  if ($executed){
+  if ($executed) {
     $available_paths = $executed->fetchAll();
 
-    foreach ($available_paths as $key => $value){
+    foreach ($available_paths as $key => $value) {
       $block = get_object_vars($value);
 
       _menu_link_translate($block);
@@ -43,7 +57,7 @@ function cf_menu_accessibility_page() {
 
       $compact = system_admin_compact_mode();
 
-      if (isset($block['description'])){
+      if (isset($block['description'])) {
         $style='';
 
         if ($compact) {
