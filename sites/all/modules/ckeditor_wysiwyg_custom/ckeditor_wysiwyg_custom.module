@@ -1,7 +1,7 @@
 <?php
 
 function ckeditor_wysiwyg_custom_wysiwyg_editor_settings_alter(&$settings, $context) {
-  if ($context['profile']->editor == 'ckeditor') {
+  if (isset($context['profile']) && is_object($context['profile']) && $context['profile']->editor == 'ckeditor') {
     $full_toolbar = array();
     $full_toolbar[] = array('Source', 'Maximize',  'ShowBlocks');
     $full_toolbar[] = array('Templates', 'Preview');
@@ -13,7 +13,7 @@ function ckeditor_wysiwyg_custom_wysiwyg_editor_settings_alter(&$settings, $cont
     $full_toolbar[] = array('Bold', 'Italic', 'Underline', 'Strike', '-', 'Subscript', 'Superscript');
     $full_toolbar[] = array('NumberedList', 'BulletedList', '-', 'Outdent', 'Indent', 'Blockquote');
     $full_toolbar[] = array('JustifyLeft', 'JustifyCenter', 'JustifyRight', 'JustifyBlock', '-', 'BidiRtl', 'BidiLtr');
-    $full_toolbar[] = array('Linkit', 'Unlink', 'Anchor');
+    $full_toolbar[] = array('linkit', 'Unlink', 'Anchor');
     $full_toolbar[] = '/';
     $full_toolbar[] = array('Format', 'Font', 'FontSize', 'Styles');
     $full_toolbar[] = array('TextColor', 'BGColor');
