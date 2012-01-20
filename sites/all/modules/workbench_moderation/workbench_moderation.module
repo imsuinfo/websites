@@ -1743,6 +1743,8 @@ function workbench_moderation_messages($context, $node = NULL) {
     drupal_static('_node_revision_access', array(), TRUE);
 
     // Add a moderation form.
+// @fixme: for unknown reasons this block of codes is crashing during the drupal_render() process and is therefore disabled until such time a solution is found.
+/*
     if ($revision_current && !$revision_published && _workbench_moderation_access('update', $node) && $moderate_form = drupal_get_form('workbench_moderation_moderate_form', $node, "node/{$node->nid}/current-revision")) {
       if ($moderate_form = drupal_render($moderate_form)) {
         $info_block_messages[] = array(
@@ -1751,6 +1753,7 @@ function workbench_moderation_messages($context, $node = NULL) {
         );
       }
     }
+*/
 
     // Add an unpublish link.
     $next_states = workbench_moderation_states_next(workbench_moderation_state_published(), $user, $node->type);
