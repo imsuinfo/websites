@@ -30,6 +30,27 @@ function workbench_menu_schema() {
         'not null' => TRUE,
         'default' => '',
       ),
+      'weight' => array(
+        'description' => st("Menu weight."),
+        'type' => 'int',
+        'size' => 'normal',
+        'not null' => TRUE,
+        'default' => 0,
+      ),
+      'show_parents' => array(
+        'description' => st("A boolean defining whether or not the parents should be visible."),
+        'type' => 'int',
+        'size' => 'tiny',
+        'not null' => TRUE,
+        'default' => TRUE,
+      ),
+      'breadcrumb_name' => array(
+        'description' => st("An optional custom breadcrumb name to use instead of the taxonomy term name."),
+        'type' => 'text',
+        'size' => 'normal',
+        'not null' => TRUE,
+        'default' => '',
+      ),
     ),
     'primary key' => array('id'),
     'unique keys' => array(
@@ -43,7 +64,7 @@ function workbench_menu_schema() {
     ),
   );
 
-  foreach (array('expand', 'item_type') as $name){
+  foreach (array('expand', 'item_type') as $name) {
     $schema['workbench_menu_options_' . $name] = array(
       'description' => st("Defines possible %name options.", array('%name' => $name)),
       'fields' => array(
@@ -213,7 +234,7 @@ function workbench_menu_install() {
       'description' => st("The menu item will never be expanded."),
     );
 
-    foreach ($expands as &$expand){
+    foreach ($expands as &$expand) {
       $query = db_insert('workbench_menu_options_expand');
       $query->fields($expand);
       $query->execute();
@@ -252,7 +273,7 @@ function workbench_menu_install() {
       'description' => st("Represents and loads a menu item from another menu."),
     );
 
-    foreach ($item_type as &$item_type){
+    foreach ($item_type as &$item_type) {
       $query = db_insert('workbench_menu_options_item_type');
       $query->fields($item_type);
       $query->execute();
@@ -276,7 +297,7 @@ function workbench_menu_enable() {
   $wa = workbench_access_get_active_tree();
 
   try {
-    foreach ($wa['active'] as $access_id => &$value){
+    foreach ($wa['active'] as $access_id => &$value) {
       if (!is_numeric($access_id)) continue;
 
       $query = db_select('workbench_menus', 'wm');
@@ -285,7 +306,7 @@ function workbench_menu_enable() {
 
       $records = (array) $query->execute()->fetchAll();
 
-      if (empty($records)){
+      if (empty($records)) {
         $query = db_insert('workbench_menus');
         $query->fields(array('access_id' => $access_id, 'path' => ''));
         $query->execute();

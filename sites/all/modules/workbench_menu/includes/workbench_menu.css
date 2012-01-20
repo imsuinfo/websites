@@ -1,4 +1,4 @@
-.workbench_menu-menu_item-icon {
+.menu_item-icon {
   float: right;
 
   width: 16px;
@@ -14,15 +14,15 @@
   padding-right: 2px;
 }
 
-.workbench_menu-menu_item-icon_base {
+.menu_item-icon_base {
   background-image: url(../images/icon_base.png);
 }
 
-.workbench_menu-menu_item-icon_excel {
+.menu_item-icon_excel {
   background-image: url(../images/icon_excel.png);
 }
 
-.workbench_menu-menu_item-icon_external {
+.menu_item-icon_external {
   background-image: url(../images/icon_external.png);
 
   width: 12px;
@@ -36,46 +36,46 @@
   padding-right: 4px;
 }
 
-.workbench_menu-menu_item-icon_file {
+.menu_item-icon_file {
   background-image: url(../images/icon_file.png);
 }
 
-.workbench_menu-menu_item-icon_flash {
+.menu_item-icon_flash {
   background-image: url(../images/icon_flash.png);
 }
 
-.workbench_menu-menu_item-icon_image {
+.menu_item-icon_image {
   background-image: url(../images/icon_image.png);
 }
 
-.workbench_menu-menu_item-icon_impress {
+.menu_item-icon_impress {
   background-image: url(../images/icon_impress.png);
 }
 
-.workbench_menu-menu_item-icon_math {
+.menu_item-icon_math {
   background-image: url(../images/icon_math.png);
 }
 
-.workbench_menu-menu_item-icon_pdf {
+.menu_item-icon_pdf {
   background-image: url(../images/icon_pdf.png);
 }
 
-.workbench_menu-menu_item-icon_powerpoint {
+.menu_item-icon_powerpoint {
   background-image: url(../images/icon_powerpoint.png);
 }
 
-.workbench_menu-menu_item-icon_word {
+.menu_item-icon_word {
   background-image: url(../images/icon_word.png);
 }
 
-.workbench_menu-menu_item-icon_writer {
+.menu_item-icon_writer {
   background-image: url(../images/icon_writer.png);
 }
 
-.workbench_menu-menu_item-icon_audio {
+.menu_item-icon_audio {
   background-image: url(../images/icon_audio.png);
 }
 
-.workbench_menu-menu_item-icon_mail {
+.menu_item-icon_mail {
   background-image: url(../images/icon_mail.png);
 }
