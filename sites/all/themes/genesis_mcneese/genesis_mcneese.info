@@ -29,3 +29,4 @@ regions[sidebar_second]     = Sidebar Right
 regions[tertiary_content]   = Tertiary
 regions[footer]             = Footer
 regions[page_bottom]        = Page Bottom
+regions[hidden]             = Hidden
