@@ -15,8 +15,7 @@ function node_accessibility_accessibility_tab_page($form, &$form_state, $node, $
   drupal_set_title(t("Accessibility Information for %title", array('%title' => $node->title)), PASS_THROUGH);
 
   $form = array();
-
-  $results = array();
+  $reports = array();
   $display_levels = quail_api_get_display_levels(NULL, $function_history);
   $methods = quail_api_get_validation_methods(NULL, $function_history);
   $markup_format = 'full_html';
@@ -79,9 +78,6 @@ function node_accessibility_accessibility_tab_page($form, &$form_state, $node, $
 
     if (isset($results[$node->nid][$node->vid]['report'])) {
       $reports = $results[$node->nid][$node->vid]['report'];
-    }
-    else {
-      $reports = array();
     }
 
     unset($results);
