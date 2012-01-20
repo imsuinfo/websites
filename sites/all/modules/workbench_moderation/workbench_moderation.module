@@ -478,10 +478,7 @@ function _workbench_moderation_moderate_access($node, $state) {
 
   $my_revision = $node->workbench_moderation['my_revision'];
   $next_states = workbench_moderation_states_next($my_revision->state, $user, $node->type);
-  $access = node_access('update', $node, $user)       // the user can edit the node
-          && $my_revision->current                    // this is the current revision (no branching the revision history)
-          && (!empty($next_states))                   // there are next states the user may transition to
-          && isset($next_states[$state]);             // this state is in the available next states
+  $access = $my_revision->current;
 
   // Allow other modules to change our rule set.
   $op = 'moderate';
