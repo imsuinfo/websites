@@ -470,150 +470,100 @@ html#ckeditor-wysiwygarea body.cke_show_blocks h6 {
 }
 
 
-/*** Menu - Sidebar **/
-div#sidebar-first div.region-sidebar-first {
-  border-bottom: 1px solid #888888;
-}
 
-div#sidebar-first div.block-menu,
-div#sidebar-first div.block-workbench-menu {
+/*** Menu - Workbench Menu **/
+.block-workbench-menu {
   position: relative;
 
   letter-spacing: 1.4px;
   font-family: Arial,Helvetica,Sans-Serif,Sans;
   font-size: 12px;
 
-  padding-bottom: 15px;
+  border-bottom: 1px solid #888888;
 }
 
-div#sidebar-first div.block-workbench-menu li.workbench_menu-menu_item {
+.block-workbench-menu .menu_item-container > .menu_item-wrapper > .menu_item {
   word-wrap: break-word;
 }
 
-div#sidebar-first div.block-workbench-menu li.workbench_menu-menu_item-type-item_label.depth_0 {
+.block-workbench-menu .menu_item-container > .menu_item-wrapper > .menu_item.depth_0 {
   font-weight: bold;
 }
 
-div#sidebar-first div.block-workbench-menu li.workbench_menu-menu_item-type-item_label {
+.block-workbench-menu .menu_item-container > .menu_item-wrapper > .menu_item-type-item_label {
   color: #00477f;
 }
 
-div#sidebar-first div.block-workbench-menu li.workbench_menu-menu_item-type-item_label span {
+.block-workbench-menu .menu_item-container > .menu_item-wrapper > .menu_item-type-item_label {
   padding: 2px 4px;
 }
 
-div#sidebar-first div.block-workbench-menu li.workbench_menu-menu_item-type-item_label.disabled {
+.block-workbench-menu .menu_item-container > .menu_item-wrapper > .menu_item-type-item_label.disabled {
   color: #a0a0a0;
 }
 
-div#sidebar-first div.block-workbench-menu li.workbench_menu-menu_item-type-item_label.leaf {
+.block-workbench-menu .menu_item-container > .menu_item-wrapper > .menu_item-type-item_label.leaf {
   font-weight: normal;
 }
 
-div#sidebar-first div.block-menu a,
-div#sidebar-first div.block-menu a:visited,
-div#sidebar-first div.block-workbench-menu a,
-div#sidebar-first div.block-workbench-menu a:visited {
+.block-workbench-menu a,
+.block-workbench-menu a:visited {
   font-size: 12px;
   color: #00477f;
 
   text-decoration: none;
 }
 
-div#sidebar-first div.block-menu a,
-div#sidebar-first div.block-workbench-menu a {
+.block-workbench-menu a {
   display: block;
 
   padding: 2px 4px;
 }
 
-div#sidebar-first ul.menu li.workbench_menu-menu_item-menu_top.depth_0 {
-  margin-top: 15px;
-  padding-top: 15px;
+.block-workbench-menu .workbench_menu {
+  padding: 13px 0 10px 0;
   border-top: 1px solid #888888;
 }
 
-div#sidebar-first ul.menu li.workbench_menu-menu_item-menu_top.depth_0.first {
-  margin-top: 0;
-}
-
-div#sidebar-first div.block-menu div.content ul.menu ul.menu,
-div#sidebar-first div.block-workbench-menu div.content ul.menu ul.menu {
-  border: 0;
-  padding: 0;
-
-  margin-left: 18px;
-}
-
-div#sidebar-first div.block-menu div.content ul.menu li,
-div#sidebar-first div.block-workbench-menu div.content ul.menu li {
+.block-workbench-menu .workbench_menu > .menu_item-container {
   padding-left: 0;
   padding-right: 0;
   margin-left: 0;
 }
 
-div#sidebar-first div.block-menu div.content ul.menu li ul.menu li,
-div#sidebar-first div.block-workbench-menu div.content ul.menu li ul.menu li {
-  padding-left: 0;
-  padding-right: 0;
-  margin-left: 0;
-
+div.block-workbench-menu ul.workbench_menu li.menu_item-container {
   list-style-image: url(../images/singlearrow_right.png);
 }
 
-div#sidebar-first div.block-menu div.content ul.menu li.expanded,
-div#sidebar-first div.block-menu div.content ul.menu li ul.menu li.expanded,
-div#sidebar-first div.block-workbench-menu div.content ul.menu li.expanded,
-div#sidebar-first div.block-workbench-menu div.content ul.menu li ul.menu li.expanded {
+div.block-workbench-menu ul.workbench_menu li.menu_item-container.expanded {
   list-style-image: url(../images/singlearrow_down.png);
 }
 
-div#sidebar-first div.block-menu div.content ul.menu li ul.menu li > .active-trail.active,
-div#sidebar-first div.block-workbench-menu div.content ul.menu li ul.menu li > .active-trail.active {
+div.block-workbench-menu .menu_item-container .menu_item-container > .menu_item-wrapper > .active.active-trail {
   color: #fad703;
   background-color: #00335b;
 }
 
-div#sidebar-first div.block-menu div.content ul.menu li a:focus,
-div#sidebar-first div.block-menu div.content ul.menu li a:active,
-div#sidebar-first div.block-menu div.content ul.menu li a:hover,
-div#sidebar-first div.block-menu div.content ul.menu li ul.menu li a.active-trail.active:focus,
-div#sidebar-first div.block-menu div.content ul.menu li ul.menu li a.active-trail.active:active,
-div#sidebar-first div.block-menu div.content ul.menu li ul.menu li a.active-trail.active:hover,
-div#sidebar-first div.block-workbench-menu div.content ul.menu li a:focus,
-div#sidebar-first div.block-workbench-menu div.content ul.menu li a:active,
-div#sidebar-first div.block-workbench-menu div.content ul.menu li a:hover,
-div#sidebar-first div.block-workbench-menu div.content ul.menu li ul.menu li a.active-trail.active:focus,
-div#sidebar-first div.block-workbench-menu div.content ul.menu li ul.menu li a.active-trail.active:active,
-div#sidebar-first div.block-workbench-menu div.content ul.menu li ul.menu li a.active-trail.active:hover {
+div.block-workbench-menu ul.workbench_menu li a:focus,
+div.block-workbench-menu ul.workbench_menu li a:active,
+div.block-workbench-menu ul.workbench_menu li a:hover,
+div.block-workbench-menu .menu_item-container .menu_item-container > .menu_item-wrapper > .active.active-trail:focus,
+div.block-workbench-menu .menu_item-container .menu_item-container > .menu_item-wrapper > .active.active-trail:active,
+div.block-workbench-menu .menu_item-container .menu_item-container > .menu_item-wrapper > .active.active-trail:hover {
   color: #ffffff;
   background-color: #00335b;
 }
 
-div#sidebar-first div.block-menu div.content ul.menu li a,
-div#sidebar-first div.block-menu div.content ul.menu li a:visited,
-div#sidebar-first div.block-menu div.content ul.menu li a:focus,
-div#sidebar-first div.block-menu div.content ul.menu li a:active,
-div#sidebar-first div.block-menu div.content ul.menu li a:hover,
-div#sidebar-first div.block-workbench-menu div.content ul.menu li a,
-div#sidebar-first div.block-workbench-menu div.content ul.menu li a:visited,
-div#sidebar-first div.block-workbench-menu div.content ul.menu li a:focus,
-div#sidebar-first div.block-workbench-menu div.content ul.menu li a:active,
-div#sidebar-first div.block-workbench-menu div.content ul.menu li a:hover {
+div.block-workbench-menu ul.workbench_menu > li.menu_item-wrapper > a,
+div.block-workbench-menu ul.workbench_menu > li.menu_item-wrapper > a:visited,
+div.block-workbench-menu ul.workbench_menu > li.menu_item-wrapper > a:focus,
+div.block-workbench-menu ul.workbench_menu > li.menu_item-wrapper > a:active,
+div.block-workbench-menu ul.workbench_menu > li.menu_item-wrapper > a:hover {
   font-weight: bold;
 }
 
-div#sidebar-first div.block-menu div.content ul.menu li ul.menu li a,
-div#sidebar-first div.block-menu div.content ul.menu li ul.menu li a:visited
-div#sidebar-first div.block-menu div.content ul.menu li ul.menu li a:focus,
-div#sidebar-first div.block-menu div.content ul.menu li ul.menu li a:active,
-div#sidebar-first div.block-menu div.content ul.menu li ul.menu li a:hover,
-div#sidebar-first div.block-workbench-menu div.content ul.menu li ul.menu li a,
-div#sidebar-first div.block-workbench-menu div.content ul.menu li ul.menu li a:visited
-div#sidebar-first div.block-workbench-menu div.content ul.menu li ul.menu li a:focus,
-div#sidebar-first div.block-workbench-menu div.content ul.menu li ul.menu li a:active,
-div#sidebar-first div.block-workbench-menu div.content ul.menu li ul.menu li a:hover {
-  font-weight: normal;
+div.block-workbench-menu ul.workbench_menu > li.menu_item-container .item-list ul.menu_item-container {
+  margin: 0;
 }
 
 
