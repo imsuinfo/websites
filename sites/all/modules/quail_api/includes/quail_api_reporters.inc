@@ -27,7 +27,7 @@ class reportQuail_api extends quailReporter {
   public function getReport() {
     $this->generate_report();
 
-    return $this->quail_api_report;;
+    return $this->quail_api_report;
   }
 
   /**
@@ -62,6 +62,10 @@ class reportQuail_api extends quailReporter {
   protected function get_test_results($test_name, $test) {
     $severity = $this->guideline->getSeverity($test_name);
 
+    if (!isset($this->quail_api_report['total'])){
+      $this->quail_api_report['total'] = 0;
+    }
+
     if (!isset($this->quail_api_report['report'][$severity])) {
       $this->quail_api_report['report'][$severity] = array('total' => 0);
     }
@@ -77,6 +81,7 @@ class reportQuail_api extends quailReporter {
     if (is_array($test)) {
       foreach ($test as $problem_id => $problem) {
         if (is_object($problem)) {
+          $this->quail_api_report['total']++;
           $this->quail_api_report['report'][$severity]['total']++;
           $this->quail_api_report['report'][$severity][$test_name]['total']++;
           $this->get_test_results_array($severity, $test_name, $problem_id, $problem);
