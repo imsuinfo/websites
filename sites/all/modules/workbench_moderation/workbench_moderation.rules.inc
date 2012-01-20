@@ -36,6 +36,16 @@ function workbench_moderation_rules_condition_info() {
     'access callback' => 'rules_node_integration_access',
   );
 
+  $items['content_is_current_revision'] = array(
+    'group' => t("Node"),
+    'label' => t("Content is current revision"),
+    'base' => 'workbench_moderation_rules_condition_content_is_current_revision',
+    'parameter' => array(
+      'node' => array('type' => 'node', 'label' => t("Content")),
+    ),
+    'access callback' => 'rules_node_integration_access',
+  );
+
   $items['contents_current_state'] = array(
     'group' => t("Node"),
     'label' => t("Contents current moderation state"),
@@ -167,6 +177,23 @@ function workbench_access_rules_condition_content_is_using_workbench_moderation(
  *   TRUE/FALSE depending on if the content is live revision.
  */
 function workbench_moderation_rules_condition_content_is_live_revision($node) {
+  if (!is_object($node)) {
+    return FALSE;
+  }
+
+  return workbench_moderation_node_is_live($node);
+}
+
+/**
+ * Condition: Check if the content is current revision
+ *
+ * @param $node
+ *   A node object
+ *
+ * @return
+ *   TRUE/FALSE depending on if the content is current revision.
+ */
+function workbench_moderation_rules_condition_content_is_current_revision($node) {
   if (!is_object($node)) {
     return FALSE;
   }

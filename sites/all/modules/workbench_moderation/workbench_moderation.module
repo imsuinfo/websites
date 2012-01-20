@@ -1135,9 +1135,34 @@ function workbench_moderation_node_live_load($node) {
   }
 }
 
-
 /**
  * Utility function to determine if this node is in the live state.
+ *
+ * @param $node
+ *   The node being acted upon.
+ *
+ * @return
+ *   Boolean TRUE if the revision is live. FALSE if not.
+ */
+function workbench_moderation_node_is_live($node) {
+  if (isset($node->workbench_moderation['published']->vid)) {
+    if ($node->vid == $node->workbench_moderation['published']->vid) {
+      return TRUE;
+    }
+    return FALSE;
+  }
+  else if (isset($node->workbench_moderation['current']->vid)) {
+    if ($node->vid == $node->workbench_moderation['current']->vid) {
+      return TRUE;
+    }
+    return FALSE;
+  }
+  // If not set, then TRUE.
+  return TRUE;
+}
+
+/**
+ * Utility function to determine if this node is in the current state.
  *
  * @param $node
  *   The node being acted upon.
@@ -1146,8 +1171,8 @@ function workbench_moderation_node_live_load($node) {
  *   Boolean TRUE if this is the current revision. FALSE if not.
  */
 function workbench_moderation_node_is_current($node) {
-  if (isset($node->workbench_moderation['published']->vid) && isset($node->workbench_moderation['current']->vid)) {
-    if ($node->workbench_moderation['published']->vid == $node->workbench_moderation['current']->vid) {
+  if (isset($node->workbench_moderation['current']->vid)) {
+    if ($node->vid == $node->workbench_moderation['current']->vid) {
       return TRUE;
     }
     return FALSE;
