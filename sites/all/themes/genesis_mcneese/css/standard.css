@@ -171,6 +171,8 @@ div#local-tasks ul.primary {
 
   margin: 0;
   padding: 2px 0 2px 8px;
+
+  overflow-x: auto;
 }
 
 div#local-tasks ul.primary li {
