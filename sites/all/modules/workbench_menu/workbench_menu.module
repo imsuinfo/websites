@@ -698,7 +698,7 @@ function workbench_menu_build_menu_item($menu, $item, &$variables, array $functi
             $settings[$item['item']->id]['attributes']['title'] = array(t("Send an e-mail to: !email_address.", array('!email_address' => check_plain($matches[1]))));
           }
           else if (preg_match('@^(/|#)@', $link_path) === 0) {
-            $link_path = '/' . $variables['menu']->path . '/' . $link_path;
+            $link_path = '/' . $menu->path . '/' . $link_path;
           }
         }
       }
