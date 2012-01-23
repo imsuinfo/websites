@@ -299,29 +299,29 @@ function workbench_menu_block_view($delta = '') {
   while (!empty($path_tree) && $show_parents) {
     $current_path = array_pop($path_tree);
 
-    if (!empty($menus_cached[$current_path]['structure'])) {
-      if ($assign_breadcrumbs) {
-        while (!empty($path_tree2)) {
-          $current_path2 = array_pop($path_tree2);
+    if ($assign_breadcrumbs) {
+      while (!empty($path_tree2)) {
+        $current_path2 = array_pop($path_tree2);
 
-          if (!empty($breadcrumbs_cached[$current_path2])) {
-            $bc = $breadcrumbs_cached[$current_path2];
+        if (!empty($breadcrumbs_cached[$current_path2])) {
+          $bc = $breadcrumbs_cached[$current_path2];
 
-            // always show the topmost breadcrumb even when on the top-level path.
-            // (this is different from normal-breadcrumb behavior and is intentional.)
-            // @todo: look into providing an option for users to control this behavior.
-            if (count($bc) > 1) {
-              array_pop($bc);
-            }
-
-            drupal_set_breadcrumb($bc);
-            break;
+          // always show the topmost breadcrumb even when on the top-level path.
+          // (this is different from normal-breadcrumb behavior and is intentional.)
+          // @todo: look into providing an option for users to control this behavior.
+          if (count($bc) > 1) {
+            array_pop($bc);
           }
-        }
 
-        $assign_breadcrumbs = FALSE;
+          drupal_set_breadcrumb($bc);
+          break;
+        }
       }
 
+      $assign_breadcrumbs = FALSE;
+    }
+
+    if (!empty($menus_cached[$current_path]['structure'])) {
       $data = workbench_menu_render_menus($menus_cached[$current_path], $path_string, $show_parents, $menu_depth, $function_history);
 
       foreach ($data as $key => &$value) {
@@ -392,10 +392,7 @@ function workbench_menu_build_menus($path_string, &$menus_processed, &$breadcrum
   $built_menus['menus'] = array();
 
   foreach ($menus as $menu_id => &$menu) {
-    if (empty($menu->items['nested'])) {
-      $menu_total--;
-      continue;
-    }
+    $menus_processed[$menu->access_id] = NULL;
 
     $built_menu = array();
     $built_menu['structure'] = array();
@@ -427,6 +424,11 @@ function workbench_menu_build_menus($path_string, &$menus_processed, &$breadcrum
 
     $top_level = array(l($menu_name, $menu->path));
     $breadcrumbs[$menu->path] = $top_level;
+
+    if (empty($menu->items['nested'])) {
+      $menu_total--;
+      continue;
+    }
 
     foreach ($menu->items['nested'] as &$item) {
       $variables['parent_path'] = $menu->path;
@@ -527,7 +529,7 @@ function workbench_menu_build_menu_item($menu, $item, &$variables, array $functi
 
   // menu item menus are other menus embedded inside the current menu.
   if ($settings[$item['item']->id]['type'] == 'item_menu') {
-    if ($menu->access_id == $item['item']->properties['menu'] || isset($variables['menus_processed'][$item['item']->properties['menu']])) {
+    if ($menu->access_id == $item['item']->properties['menu'] || array_key_exists($item['item']->properties['menu'], $variables['menus_processed'])) {
       return array('structure' => array(), 'settings' => array());
     }
 
@@ -536,12 +538,13 @@ function workbench_menu_build_menu_item($menu, $item, &$variables, array $functi
 
     // @todo handle error case where menu is not found.
 
+    $variables['menus_processed'][$item_menu->access_id] = NULL;
+
     $breadcrumbs_temporary = FALSE;
     $built_menus = workbench_menu_build_menus($item_menu->path, $variables['menus_processed'], $breadcrumbs_temporary, $function_history);
     $data = array();
     $data['structure'] = $built_menus['structure'][$item_menu->weight][$item_menu->id]['structure'];
     $data['settings'] = $built_menus['structure'][$item_menu->weight][$item_menu->id]['settings'];
-    $variables['menus_processed'][$item_menu->access_id] = NULL;
 
     return $data;
   }
@@ -560,6 +563,20 @@ function workbench_menu_build_menu_item($menu, $item, &$variables, array $functi
     $item_menu_item_variables['menus_processed'] = $variables['menus_processed'];
     $item_menu_item_variables['parent_path'] = $item_menu->path;
     $item_menu_item_variables['menu_path'] = $item_menu->path;
+
+    if (empty($menu->breadcrumb_name)) {
+      $item_menu_item_variables['breadcrumbs'] = array(l($item_menu->taxonomy->name, $item_menu->path));
+    }
+    else {
+      $item_menu_item_variables['breadcrumbs'] = array(l($item_menu->breadcrumb_name, $item_menu->path));
+    }
+
+    if ($variables['breadcrumbs_all'] === FALSE){
+      $item_menu_item_variables['breadcrumbs_all'] = FALSE;
+    }
+    else {
+      $item_menu_item_variables['breadcrumbs_all'] = &$breadcrumbs;
+    }
 
     $history_stack = array();
     $current_stack = array_reverse($item_menu->items['nested'], TRUE);
