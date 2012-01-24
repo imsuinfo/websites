@@ -490,13 +490,13 @@ html#ckeditor-wysiwygarea body.cke_show_blocks h6 {
   font-weight: bold;
 }
 
-.block-workbench-menu .workbench_menu > .menu_item-container.depth_0 {
+.block-workbench-menu .workbench_menu > .menu_item-container.menu_item-menu_top.depth_0 {
   border-top: 1px solid #888888;
   margin: 10px 0 0 0;
   padding: 10px 0 2px 0;
 }
 
-.block-workbench-menu .workbench_menu > .menu_item-container.depth_0.first {
+.block-workbench-menu .workbench_menu > .menu_item-container.menu_item-menu_top.depth_0.first {
   border-top: 0;
   margin: 0;
   padding: 0;
