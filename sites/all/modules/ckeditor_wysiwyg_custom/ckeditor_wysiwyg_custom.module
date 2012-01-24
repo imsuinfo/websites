@@ -43,6 +43,9 @@ function ckeditor_wysiwyg_custom_wysiwyg_editor_settings_alter(&$settings, $cont
     // http://docs.cksource.com/ckeditor_api/symbols/CKEDITOR.config.html#.enterMode
     $settings['enterMode'] = 2;
 
+    // http://docs.cksource.com/ckeditor_api/symbols/CKEDITOR.config.html#.shiftEnterMode
+    $settings['shiftEnterMode'] = 1;
+
     // http://docs.cksource.com/ckeditor_api/symbols/CKEDITOR.config.html#.fillEmptyBlocks
     $settings['fillEmptyBlocks'] = FALSE;
 
