@@ -20,6 +20,7 @@ function killfile_views_data() {
 
   $data['killfile_nodes']['table']['join'] = array(
     'node'  => array('left_field' => 'nid', 'field' => 'nid'),
+    'node_revision'  => array('left_field' => 'vid', 'field' => 'vid'),
     'users' => array('left_field' => 'uid', 'field' => 'uid'),
   );
 
@@ -34,6 +35,18 @@ function killfile_views_data() {
       'field'      => 'nid',
       'handler'    => 'views_handler_relationship',
       'label'      => t("Killfiled Node"),
+    ),
+  );
+
+  $data['killfile_nodes']['vid'] = array(
+    'title'    => t("Node Revision"),
+    'help'     => t("The killfiled node revision."),
+    'relationship' => array(
+      'base'       => 'node_revision',
+      'base field' => 'vid',
+      'field'      => 'vid',
+      'handler'    => 'views_handler_relationship',
+      'label'      => t("Killfiled Revision"),
     ),
   );
 
