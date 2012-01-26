@@ -125,6 +125,11 @@ function workbench_moderation_rules_action_info() {
         'options list' => 'workbench_moderation_state_labels',
         'restriction' => 'input',
       ),
+      'force_transition' => array(
+        'type' => 'boolean',
+        'label' => t("Force transition"),
+        'restriction' => 'input',
+      ),
     ),
   );
 
@@ -237,9 +242,9 @@ function workbench_moderation_rules_condition_contents_current_state($node, $mod
  * @return
  *   An array containing the node object stored in the key called 'node'.
  */
-function workbench_moderation_set_state_rules_action($node, $moderation_state) {
+function workbench_moderation_set_state_rules_action($node, $moderation_state, $force_transition) {
   if (is_object($node) && !empty($moderation_state)){
-    actions_do('workbench_moderation_set_state_action', $node, array('state' => $moderation_state));
+    actions_do('workbench_moderation_set_state_action', $node, array('state' => $moderation_state, 'force_transition' => $force_transition));
   }
 
   return array('node' => $node);
