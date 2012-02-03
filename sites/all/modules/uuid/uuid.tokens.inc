@@ -45,6 +45,8 @@ function uuid_token_info() {
  * Implements hook_tokens().
  */
 function uuid_tokens($type, $tokens, array $data = array(), array $options = array()) {
+  $replacements = array();
+
   switch ($type) {
     case 'node':
       $node = $data['node'];
