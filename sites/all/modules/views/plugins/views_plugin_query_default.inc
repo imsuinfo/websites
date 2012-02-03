@@ -1169,8 +1169,6 @@ class views_plugin_query_default extends views_plugin_query {
   function query($get_count = FALSE) {
     // Check query distinct value.
     if (empty($this->no_distinct) && $this->distinct && !empty($this->fields)) {
-      $base_field_alias = $this->add_field($this->base_table, $this->base_field);
-      $this->add_groupby($base_field_alias);
       $distinct = TRUE;
     }
 
