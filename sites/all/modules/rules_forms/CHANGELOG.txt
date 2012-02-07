@@ -1,0 +1,21 @@
+-------------
+ 7.x-1.x-dev
+-------------
+- #1383188 patch by mrfelton: Improvements for the "Set multiple value element options"
+  action. Added a method for setting key|value pairs.
+- #1249694 by jordojuice: Improve usability of element ID system. Added a method of
+  selecting form elements from within the Rules interface.
+- #1428020 by jordojuice: Remove the "Create a new form element" action.
+- #1261806 by jordojuice: Add a user interface to support the new interface for form
+  element attributes. This is an aid to help users determine what settings exist on
+  specific form elements via the interface and to identify form elements.
+- #1429072: Backport changes to 1.x.
+- #1429090: Redirect user to activated form upon intial activation of form events.
+  Also cleaned up the interface of the set weight action.
+- #1429108: Fixed invalid argument being passed to the Set multiple options action.
+- #1361926 by jordojuice: Redirect action not working in certain cases. This action
+  was redesigned to work faster and is much more reliable.
+- #1362856: Made prefix/suffix html fields optional so only one can be used if necessary.
+- #1293888 by myfamily: Fixed bug in form element value condition where it failed when
+  applied to checkbox elements. The condition was rewritten to provide a unique interface
+  based on the type of field being checked.

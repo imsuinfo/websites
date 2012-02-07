@@ -14,5 +14,22 @@ function rules_forms_install() {
   db_query("UPDATE {system} SET weight = 20 WHERE name = 'rules_forms'");
 
   // Notify the user of configuration requirements for Rules Forms.
-  drupal_set_message(t('You may now <a href="!rules_forms_settings">enable Rules Forms rules</a> for individual forms. For more information please consult the documentation in README.txt in your Rules Forms Support module folder.', array('!rules_forms_settings' => url(RULES_FORMS_ADMIN_PATH))), 'status');
+  drupal_set_message(st('You may now <a href="!rules_forms_settings">enable Rules Forms rules</a> '.
+                        'for individual forms. For more information please consult the documentation '.
+                        'in README.txt in your Rules forms support module folder.',
+                        array('!rules_forms_settings' => url(RULES_FORMS_ADMIN_PATH))), 'status');
+}
+
+/**
+ * Implements hook_uninstall().
+ */
+function rules_forms_uninstall() {
+  variable_del('rules_forms_event_info');
+}
+
+/**
+ * Deletes the old variable.
+ */
+function rules_forms_update_7101() {
+  variable_del('rules_forms_events');
 }
