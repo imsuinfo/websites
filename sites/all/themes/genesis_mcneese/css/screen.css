@@ -11,11 +11,8 @@ div#container {
 }
 
 body.genesis_mcneese-body.is-maintenance div#container {
-  -moz-border-radius-bottomright: 10px;
-  -moz-border-radius-bottomleft: 10px;
-
-  -webkit-border-bottom-right-radius: 10px;
-  -webkit-border-bottom-left-radius: 10px;
+  border-bottom-left-radius: 10px;
+  border-bottom-right-radius: 10px;
 }
 
 div.region-help {
@@ -313,9 +310,8 @@ div#block-search-form form#search-block-form div.form-actions {
   max-height: 24px;
   overflow: hidden;
 
-  -moz-border-radius: 0;
+  border-radius: 0;
   -moz-outline-radius: 0;
-  -webkit-border-radius: 0;
 }
 
 
@@ -361,11 +357,8 @@ div#block-menu-menu-primary-navigation div.block-inner div.content ul.menu li a 
   text-decoration: none;
 
   padding: 10px 9px 0px 9px;
-  -moz-border-radius-topleft: 5px;
-  -moz-border-radius-topright: 5px;
-
-  -webkit-border-top-left-radius: 5px;
-  -webkit-border-top-right-radius: 5px;
+  border-top-left-radius: 5px;
+  border-top-right-radius: 5px;
 }
 
 div#block-menu-menu-primary-navigation div.block-inner div.content ul.menu li a:focus,
@@ -590,11 +583,8 @@ div#block-menu-menu-secondary-navigation {
   min-height: 25px;
   max-height: 25px;
 
-  -moz-border-radius-bottomright: 5px;
-  -moz-border-radius-bottomleft: 5px;
-
-  -webkit-border-bottom-right-radius: 5px;
-  -webkit-border-bottom-left-radius: 5px;
+  border-bottom-left-radius: 5px;
+  border-bottom-right-radius: 5px;
 
   margin-bottom: 5px;
 }
@@ -606,8 +596,7 @@ div#block-menu-menu-secondary-navigation ul.menu li.first a:visited,
 div#block-menu-menu-secondary-navigation ul.menu li.first a:focus,
 div#block-menu-menu-secondary-navigation ul.menu li.first a:hover,
 div#block-menu-menu-secondary-navigation ul.menu li.first a:active {
-  -moz-border-radius-bottomleft: 5px;
-  -webkit-border-bottom-left-radius: 5px;
+  border-bottom-left-radius: 5px;
 }
 
 div#block-menu-menu-secondary-navigation ul.menu li.leaf {
@@ -713,8 +702,7 @@ div#breadcrumb .views-field-field-event-datetime .field-content {
   padding-right: 3px;
   margin: 0px 2px;
 
-  -moz-border-radius: 3px 3px 3px 3px;
-  -webkit-border-radius: 3px 3px 3px 3px;
+  border-radius: 3px;
 }
 
 
@@ -793,9 +781,6 @@ div#main-content div.local-tasks ul.primary li.active a {
   border-style: solid;
   border-color: #a6a7a2;
   border-radius: 8px 8px 0 0;
-  -moz-border-radius: 8px 8px 0 0;
-  -webkit-border-top-left-radius: 8px;
-  -webkit-border-top-right-radius: 8px;
 }
 
 div#main-content div.local-tasks ul.primary li.active a,
@@ -840,8 +825,6 @@ div#main-content div.local-tasks ul.secondary li.active a,
 div#main-content div.local-tasks ul.secondary li.active a.active {
   padding: 2px 10px;
   border-radius: 7px;
-  -moz-border-radius: 7px;
-  -webkit-border-radius: 7px;
 }
 
 div#main-content div.local-tasks ul.secondary li a:hover,
