@@ -1,0 +1,210 @@
+<?php
+
+class RulesFormsTestCase extends DrupalWebTestCase {
+
+  protected $privileged_user;
+
+  public static function getInfo() {
+    return array(
+      'name' => 'Rules forms tests',
+      'description' => 'Tests the Rules forms interface and rules.',
+      'group' => 'Rules forms',
+    );
+  }
+
+  public function setUp() {
+    parent::setUp('rules_forms', 'rules');
+    RulesLog::logger()->clear();
+    variable_set('rules_debug_log', 1);
+    $this->privileged_user = $this->drupalCreateUser(array(
+      'administer nodes',
+      'access content',
+      'create article content',
+      'administer rules forms rules',
+      'administer rules forms',
+    ));
+    $this->drupalLogin($this->privileged_user);
+  }
+
+  private function enableNodeForm() {
+    $this->drupalGet(RULES_FORMS_ADMIN_PATH);
+    $edit = array();
+    $edit['enable_form_activation_message'] = 1;
+    $this->drupalPost(RULES_FORMS_ADMIN_PATH, $edit, t('Save settings'));
+    $this->drupalGet('node/add/article');
+    $this->clickLink('article_node_form');
+    $edit = array();
+    $edit['form_id_label'] = 'Article node form';
+    $this->drupalPost('admin/config/workflow/rules/forms/article_node_form/activate/node%25252Fadd%25252Farticle', $edit, t('Activate'));
+  }
+
+  public function testInterface() {
+    $this->drupalGet(RULES_FORMS_ADMIN_PATH);
+    $this->assertNoText(t('Forms where events are activated'), t('No forms are activated yet.'));
+    $this->assertNoText(t('Form elements'));
+
+    // Activate form event messages.
+    $edit = array();
+    $edit['enable_form_activation_message'] = 1;
+    $this->drupalPost(RULES_FORMS_ADMIN_PATH, $edit, t('Save settings'));
+    $this->assertText(t('The settings have been saved.'));
+    $this->drupalGet(RULES_FORMS_ADMIN_PATH);
+    $this->assertFieldChecked('edit-enable-form-activation-message');
+
+    $this->drupalGet('node/add/article');
+    $this->assertLink('article_node_form', 0, t('Article node form activation link is displayed.'));
+
+    // Activate the form.
+    $this->clickLink('article_node_form');
+    $this->assertText(t('Custom form label'));
+
+    $edit = array();
+    $edit['form_id_label'] = 'Article node form';
+    $this->drupalPost('admin/config/workflow/rules/forms/article_node_form/activate/node%25252Fadd%25252Farticle', $edit, t('Activate'));
+    $this->assertText('article_node_form '. t('has been activated.'));
+
+    // Ensure that the newly activated form is shown in administration.
+    $this->drupalGet(RULES_FORMS_ADMIN_PATH);
+    $this->assertText(t('Forms where events are activated'), t('Forms have been activated.'));
+    $this->assertFieldByName('form_events[article_node_form]');
+    $this->assertFieldByName('reset_form');
+
+    $this->drupalGet('node/add/article');
+    $form_events = variable_get('rules_forms_event_info', array());
+    $this->assertTrue(!empty($form_events['article_node_form']), t('Article node for was activated.'));
+    $this->assertTrue(!empty($form_events['article_node_form']['path']), t('Article node form path was stored.'));
+    $this->assertTrue(!empty($form_events['article_node_form']['elements']), t('Article node form elements were stored.'));
+
+    // Deactivate events for the form.
+    $edit = array();
+    $edit['form_events[article_node_form]'] = 1;
+    $this->drupalPost(RULES_FORMS_ADMIN_PATH, $edit, t('Deactivate events'));
+    $this->drupalGet(RULES_FORMS_ADMIN_PATH);
+    $this->assertNoFieldByName('form_events[article_node_form]');
+    $this->assertNoFieldByName('reset_form');
+
+    // Deactivate form event messages.
+    $edit = array();
+    $edit['enable_form_activation_message'] = FALSE;
+    $this->drupalPost(RULES_FORMS_ADMIN_PATH, $edit, t('Save settings'));
+    $this->drupalGet(RULES_FORMS_ADMIN_PATH);
+    $this->assertNoFieldChecked('edit-enable-form-activation-message');
+  }
+
+  public function testElementValueCondition() {
+    // Test the condition with a regular value in the field.
+    $form = array();
+    $form['test'] = array('#type' => 'textfield', '#value' => 'tset');
+    $form = new ArrayObject($form);
+    $form_state = new ArrayObject(array());
+
+    $condition1 = rules_condition('rules_forms_element_value', array('element' => 'textfield:test', 'value' => 'tset'));
+    $result1 = $condition1->executeByArgs(array('form' => $form, 'form_state' => $form_state));
+    $this->assertTrue($result1, t('Element values are equal.'));
+
+    $condition2 = rules_condition('rules_forms_element_value', array('element' => 'textfield:test', 'value' => 'test'));
+    $result2 = $condition2->executeByArgs(array('form' => $form, 'form_state' => $form_state));
+    $this->assertFalse($result2, t('Element values are not equal.'));
+
+    // Test the condition with a default value in the field.
+    $form = array();
+    $form['test'] = array('#type' => 'textfield', '#default_value' => 'tset');
+    $form = new ArrayObject($form);
+    $form_state = new ArrayObject(array());
+    
+    $condition1 = rules_condition('rules_forms_element_value', array('element' => 'textfield:test', 'value' => 'tset'));
+    $result1 = $condition1->executeByArgs(array('form' => $form, 'form_state' => $form_state));
+    $this->assertTrue($result1, t('Element values are equal.'));
+    
+    $condition2 = rules_condition('rules_forms_element_value', array('element' => 'textfield:test', 'value' => 'test'));
+    $result2 = $condition2->executeByArgs(array('form' => $form, 'form_state' => $form_state));
+    $this->assertFalse($result2, t('Element values are not equal.'));
+  }
+
+  public function testSetTitleAction() {
+    $form = array();
+    $form['test'] = array('#type' => 'textfield', '#title' => 'tset');
+    $form = new ArrayObject($form);
+    $action = rules_action('rules_forms_set_title', array('element' => 'textfield:test', 'title' => 'test'));
+    $action->executeByArgs(array('form' => $form));
+    $this->assertEqual($form['test']['#title'], 'test');
+  }
+
+  public function testSetDescriptionAction() {
+    $form = array();
+    $form['test'] = array('#type' => 'textfield', '#description' => 'tset');
+    $form = new ArrayObject($form);
+    $action = rules_action('rules_forms_set_description', array('element' => 'textfield:test', 'description' => 'test'));
+    $action->executeByArgs(array('form' => $form));
+    $this->assertEqual($form['test']['#description'], 'test');
+  }
+
+  public function testHideAction() {
+    $form = array();
+    $form['test'] = array('#type' => 'textfield', '#access' => FALSE);
+    $form = new ArrayObject($form);
+    $action = rules_action('rules_forms_set_access', array('element' => 'textfield:test', 'access' => 1));
+    $action->executeByArgs(array('form' => $form));
+    $this->assertFalse($form['test']['#access']);
+  }
+
+  public function testSetDisabledAction() {
+    $form = array();
+    $form['test'] = array('#type' => 'textfield', '#disabled' => FALSE);
+    $form = new ArrayObject($form);
+    $action = rules_action('rules_forms_set_disabled', array('element' => 'textfield:test', 'disabled' => 1));
+    $action->executeByArgs(array('form' => $form));
+    $this->assertTrue($form['test']['#disabled']);
+  }
+
+  public function testSetRequiredAction() {
+    $form = array();
+    $form['test'] = array('#type' => 'textfield', '#required' => FALSE);
+    $form = new ArrayObject($form);
+    $action = rules_action('rules_forms_set_required', array('element' => 'textfield:test', 'require' => 1));
+    $action->executeByArgs(array('form' => $form));
+    $this->assertTrue($form['test']['#required']);
+  }
+
+  public function testSetOptionsAction() {
+    $form = array();
+    $form['test'] = array('#type' => 'textfield', '#options' => array('first' => 'tset'));
+    $form = new ArrayObject($form);
+    $action = rules_action('rules_forms_set_options', array('element' => 'textfield:test', 'options' => 'first|test'. "\r\n" .'second|tset'));
+    $action->executeByArgs(array('form' => $form));
+    $this->assertEqual($form['test']['#options'], array('first' => 'test', 'second' => 'tset'));
+  }
+
+  public function testSetDefaultAction() {
+    $form = array();
+    $form['test'] = array('#type' => 'textfield', '#default_value' => 'tset');
+    $form = new ArrayObject($form);
+    $action = rules_action('rules_forms_set_default', array('element' => 'textfield:test', 'value' => 'test'));
+    $action->executeByArgs(array('form' => $form));
+    $this->assertEqual($form['test']['#default_value'], 'test');
+  }
+
+  public function testSetWeightAction() {
+    $form = array();
+    $form['test'] = array('#type' => 'textfield', '#weight' => 0);
+    $form = new ArrayObject($form);
+    $action = rules_action('rules_forms_set_weight', array('element' => 'textfield:test', 'weight' => 20));
+    $action->executeByArgs(array('form' => $form));
+    $this->assertEqual($form['test']['#weight'], 20);
+  }
+
+  public function testSetPrefixSuffixAction() {
+    $form = array();
+    $form['test'] = array(
+      '#type' => 'textfield',
+      '#prefix' => 'tset',
+      '#suffix' => 'test',
+    );
+    $form = new ArrayObject($form);
+    $action = rules_action('rules_forms_set_prefix_suffix', array('element' => 'textfield:test', 'prefix' => '<div id="test">', 'suffix' => '</div>'));
+    $action->executeByArgs(array('form' => $form));
+    $this->assertEqual($form['test']['#prefix'], '<div id="test">');
+    $this->assertEqual($form['test']['#suffix'], '</div>');
+  }
+
+}

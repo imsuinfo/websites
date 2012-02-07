@@ -45,6 +45,8 @@ function rules_forms_admin_events($form, &$form_state) {
     $form['active_forms'] = array(
       '#type' => 'fieldset',
       '#title' => t('Active forms'),
+      '#collapsible' => TRUE,
+      '#collapsed' => TRUE,
     );
     $form['active_forms']['form_events'] = array(
       '#type' => 'checkboxes',
@@ -56,6 +58,24 @@ function rules_forms_admin_events($form, &$form_state) {
       '#type' => 'submit',
       '#value' => t('Deactivate events'),
       '#submit' => array('rules_forms_events_deactivate_submit'),
+    );
+    $form['form_elements'] = array(
+      '#type' => 'fieldset',
+      '#title' => t('Form elements'),
+      '#collapsible' => TRUE,
+      '#collapsed' => TRUE,
+      '#description' => t('Rules forms support stores information about the elements native to active '.
+                          'forms. To rebuild the stored information about a form, select a form the select list below.'),
+    );
+    $form['form_elements']['reset_form'] = array(
+      '#type' => 'select',
+      '#title' => t('Form elements'),
+      '#options' => $options,
+    );
+    $form['form_elements']['reset_elements'] = array(
+      '#type' => 'submit',
+      '#value' => t('Rebuild form elements'),
+      '#submit' => array('rules_forms_elements_rebuild'),
     );
   }
   else {
@@ -86,6 +106,19 @@ function rules_forms_events_deactivate_submit($form_id, $form_state) {
   variable_set('rules_forms_event_info', $form_events);
   rules_clear_cache();
   drupal_set_message(t('The event settings have been saved.'));
+}
+
+/**
+ * Submit handler to rebuild form elements.
+ */
+function rules_forms_elements_rebuild($form_id, $form_state) {
+  $form_events = variable_get('rules_forms_event_info');
+  $form_events[$form_state['values']['reset_form']]['reset'] = TRUE;
+  variable_set('rules_forms_event_info', $form_events);
+  drupal_set_message('Please revisit the form in order for Rules Forms to rebuild form element information.');
+  if (isset($form_events[$form_state['values']['reset_form']]['path'])) {
+    drupal_goto($form_events[$form_state['values']['reset_form']]['path']);
+  }
 }
 
 /**
@@ -133,10 +166,12 @@ function rules_forms_activate_form($form, &$form_state, $form_id_activate, $form
  * Submit handler for activation of a form.
  */
 function rules_forms_activate_form_submit($form, &$form_state) {
+  $path = urldecode($form_state['form_page']);
   $form_events = variable_get('rules_forms_event_info', array());
   $form_events[$form_state['form_id_activate']] = array(
     'label' => $form_state['values']['form_id_label'],
     'elements' => array(),
+    'path' => $path,
   );
 
   // Save the form information and force Rules to rebuild its cache.
@@ -145,6 +180,5 @@ function rules_forms_activate_form_submit($form, &$form_state) {
   drupal_set_message(t("%form has been activated.", array('%form' => $form_state['form_id_activate'])));
 
   // Redirect the user back to the form that was activated.
-  $form_page = urldecode($form_state['form_page']);
-  $form_state['redirect'] = $form_page;
+  $form_state['redirect'] = $path;
 }

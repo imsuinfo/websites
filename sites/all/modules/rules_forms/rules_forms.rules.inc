@@ -121,6 +121,30 @@ function rules_forms_rules_condition_info() {
       'form_alter' => 'rules_forms_action_set_attribute_form_alter',
     ),
   );
+  $conditions['rules_forms_element_changed'] = array(
+    'label' => t('Form element value has changed'),
+    'group' => 'Rules forms',
+    'parameter' => array(
+      'form' => array(
+        'type' => 'form',
+        'label' => t('Form'),
+      ),
+      'form_state' => array(
+        'type' => 'form_state',
+        'label' => t('Form state'),
+      ),
+      'element' => array(
+        'type' => 'form_element',
+        'label' => t('Form element'),
+        'description' => t('The form element to be targeted.'),
+      ),
+    ),
+    'base' => 'rules_forms_condition_element_changed',
+    'callbacks' => array(
+      'access' => 'rules_forms_integration_access',
+      'form_alter' => 'rules_forms_action_set_attribute_form_alter',
+    ),
+  );
   return $conditions;
 }
 
@@ -128,18 +152,21 @@ function rules_forms_rules_condition_info() {
  * Implements hook_rules_action_info().
  */
 function rules_forms_rules_action_info() {
+  $element_params = array(
+    'form' => array('type' => 'form', 'label' => t('Form')),
+    'element' => array(
+      'type' => 'form_element',
+      'label' => t('Form element'),
+      'restriction' => 'input',
+      'description' => t('The form element to be targeted.'),
+    ),
+  );
+
   $actions = array();
   $actions['rules_forms_set_title'] = array(
     'label' => t('Set the title of an element in the form'),
     'group' => 'Rules forms',
-    'parameter' => array(
-      'form' => array('type' => 'form', 'label' => t('Form')),
-      'element' => array(
-        'type' => 'form_element',
-        'label' => t('Form element'),
-        'restriction' => 'input',
-        'description' => t('The form element to be targeted.'),
-      ),
+    'parameter' => $element_params + array(
       'title' => array(
         'type' => 'text',
         'label' => t('Title'),
@@ -155,15 +182,8 @@ function rules_forms_rules_action_info() {
   $actions['rules_forms_set_description'] = array(
     'label' => t('Set the description of an element in the form'),
     'group' => 'Rules forms',
-    'parameter' => array(
-      'form' => array('type' => 'form', 'label' => t('Form')),
-      'element' => array(
-        'type' => 'form_element',
-        'label' => t('Form element'),
-        'restriction' => 'input',
-        'description' => t('The form element to be targeted.'),
-      ),
-      'title' => array(
+    'parameter' => $element_params + array(
+      'description' => array(
         'type' => 'text',
         'label' => t('Description'),
         'optional' => TRUE,
@@ -178,14 +198,7 @@ function rules_forms_rules_action_info() {
   $actions['rules_forms_set_access'] = array(
     'label' => t('Hide an element in the form'),
     'group' => 'Rules forms',
-    'parameter' => array(
-      'form' => array('type' => 'form', 'label' => t('Form')),
-      'element' => array(
-        'type' => 'form_element',
-        'label' => t('Form element'),
-        'restriction' => 'input',
-        'description' => t('The form element to be targeted.'),
-      ),
+    'parameter' => $element_params + array(
       'access' => array(
         'type' => 'boolean',
         'label' => t('Hide'),
@@ -202,15 +215,8 @@ function rules_forms_rules_action_info() {
   $actions['rules_forms_set_disabled'] = array(
     'label' => t('Disable an element in the form'),
     'group' => 'Rules forms',
-    'parameter' => array(
-      'form' => array('type' => 'form', 'label' => t('Form')),
-      'element' => array(
-        'type' => 'form_element',
-        'label' => t('Form element'),
-        'restriction' => 'input',
-        'description' => t('The form element to be targeted.'),
-      ),
-      'access' => array(
+    'parameter' => $element_params + array(
+      'disabled' => array(
         'type' => 'boolean',
         'label' => t('Disable'),
         'optional' => TRUE,
@@ -226,14 +232,7 @@ function rules_forms_rules_action_info() {
   $actions['rules_forms_set_required'] = array(
     'label' => t('Require an element in the form'),
     'group' => 'Rules forms',
-    'parameter' => array(
-      'form' => array('type' => 'form', 'label' => t('Form')),
-      'element' => array(
-        'type' => 'form_element',
-        'label' => t('Form element'),
-        'restriction' => 'input',
-        'description' => t('The form element to be targeted.'),
-      ),
+    'parameter' => $element_params + array(
       'require' => array(
         'type' => 'boolean',
         'label' => t('Required'),
@@ -250,15 +249,8 @@ function rules_forms_rules_action_info() {
   $actions['rules_forms_set_options'] = array(
     'label' => t('Set multiple value options of an element in the form'),
     'group' => 'Rules forms',
-    'parameter' => array(
-      'form' => array('type' => 'form', 'label' => t('Form')),
-      'element' => array(
-        'type' => 'form_element',
-        'label' => t('Form element'),
-        'restriction' => 'input',
-        'description' => t('The form element to be targeted.'),
-      ),
-      'access' => array(
+    'parameter' => $element_params + array(
+      'options' => array(
         'type' => 'text',
         'label' => t('Options'),
         'description' => t('<strong>Key-value pairs MUST be specified as "safe_key|Some readable option"</strong>. Use of only alphanumeric characters and underscores is recommended in keys. One option per line.'),
@@ -274,17 +266,12 @@ function rules_forms_rules_action_info() {
   $actions['rules_forms_set_default'] = array(
     'label' => t('Set the default value of an element in the form'),
     'group' => 'Rules forms',
-    'parameter' => array(
-      'form' => array('type' => 'form', 'label' => t('Form')),
-      'element' => array(
-        'type' => 'form_element',
-        'label' => t('Form element'),
-        'restriction' => 'input',
-        'description' => t('The form element to be targeted.'),
-      ),
+    'parameter' => $element_params + array(
       'value' => array(
-        'type' => 'text',
-        'label' => t('Value'),
+        'type' => 'form_value',
+        'label' => t('Value(s)'),
+        'optional' => TRUE,
+        'description' => t('Value(s) to assign to the form element. If the form element allows multiple values, enter one value per line.'),
       ),
     ),
     'base' => 'rules_forms_action_set_default',
@@ -296,14 +283,7 @@ function rules_forms_rules_action_info() {
   $actions['rules_forms_set_weight'] = array(
     'label' => t('Adjust weight of an element in the form'),
     'group' => 'Rules forms',
-    'parameter' => array(
-      'form' => array('type' => 'form', 'label' => t('Form')),
-      'element' => array(
-        'type' => 'form_element',
-        'label' => t('Form element'),
-        'restriction' => 'input',
-        'description' => t('The form element to be targeted.'),
-      ),
+    'parameter' => $element_params + array(
       'weight' => array(
         'type' => 'integer',
         'label' => t('Element weight'),
@@ -320,14 +300,7 @@ function rules_forms_rules_action_info() {
   $actions['rules_forms_set_prefix_suffix'] = array(
     'label' => t('Insert HTML into the prefix/suffix of an element in the form'),
     'group' => 'Rules forms',
-    'parameter' => array(
-      'form' => array('type' => 'form', 'label' => t('Form')),
-      'element' => array(
-        'type' => 'form_element',
-        'label' => t('Form element'),
-        'restriction' => 'input',
-        'description' => t('The form element to be targeted.'),
-      ),
+    'parameter' => $element_params + array(
       'prefix' => array(
         'type' => 'text',
         'label' => t('Prefixed HTML'),
@@ -350,14 +323,7 @@ function rules_forms_rules_action_info() {
   $actions['rules_forms_set_error'] = array(
     'label' => t('Set an error on the form'),
     'group' => 'Rules forms',
-    'parameter' => array(
-      'form' => array('type' => 'form', 'label' => t('Form')),
-      'element' => array(
-        'type' => 'form_element',
-        'label' => t('Form element'),
-        'restriction' => 'input',
-        'description' => t('The form element to be targeted.'),
-      ),
+    'parameter' => $element_params + array(
       'message' => array(
         'type' => 'text',
         'label' => t('Message'),

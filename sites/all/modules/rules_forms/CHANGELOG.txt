@@ -1,6 +1,16 @@
--------------
- 7.x-1.x-dev
--------------
+---------------
+ 7.x-1.0-beta8
+---------------
+- #766826 patch by jordojuice: Add condition: Field value has changed.
+- #1429558 patch by jordojuice: Redesign the way form elements are evaluated and reset.
+- #1429558 patch by jordojuice: Select lists being improperly filtered out of actions.
+- Improved the 'Set default value' action to provide a value field based on the field type.
+- #1429700 patch by jordojuice: Element inspection descriptions are displayed in vertical
+  tabs instead of near the form element itself when the element is in vertical tabs.
+
+---------------
+ 7.x-1.0-beta7
+---------------
 - #1383188 patch by mrfelton: Improvements for the "Set multiple value element options"
   action. Added a method for setting key|value pairs.
 - #1249694 by jordojuice: Improve usability of element ID system. Added a method of

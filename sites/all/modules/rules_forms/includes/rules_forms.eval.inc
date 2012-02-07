@@ -33,6 +33,25 @@ function rules_forms_condition_element_value($form, $form_state, $element, $valu
 }
 
 /**
+ * Condition: Form element value has changed.
+ */
+function rules_forms_condition_element_changed($form, $form_state, $element) {
+  $form_id = isset($form['#id']) ? str_replace('-', '_', $form['#id']) : '';
+
+  if (isset($_SESSION['rules_forms_form_'. $form_id .'_values'])) {
+    // Get the build form values and the element name being validated.
+    $element_name = substr($element, strpos($element, ':') + 1);
+    $build_values = $_SESSION['rules_forms_form_'. $form_id .'_values'];
+
+    // Ensure that form values are set. This will prevent the condition from being evaluated during build.
+    if (isset($build_values[$element]) && isset($form_state['values']) && isset($form_state['values'][$element_name])) {
+      return $build_values[$element] !== $form_state['values'][$element_name];
+    }
+  }
+  return FALSE;
+}
+
+/**
  * Returns TRUE if both arrays contain the same values, regardless of their keys
  * and value ordering.
  */
@@ -158,7 +177,7 @@ function rules_forms_action_set_error($form, $element, $message) {
 function rules_forms_action_set_options_validate($element) {
   // Check for duplicate key values to prevent unexpected data loss. Require
   // all options to include a safe_key.
-  $lines = explode("\n", trim($element->settings['access']));
+  $lines = explode("\n", trim($element->settings['options']));
   $existing_keys = array();
   $duplicate_keys = array();
   $missing_keys = array();

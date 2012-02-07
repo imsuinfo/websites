@@ -51,18 +51,17 @@ class RulesFormsDataElement extends RulesFormsDataUI {
    */
   private static $_attributes = array(
     'access' => 'all',
-    'attributes' => 'all',
-    'disabled' => array('textfield', 'textarea', 'checkbox', 'checkboxes', 'radio', 'radios', 'button', 'submit'),
-    'default' => array('textfield', 'textarea', 'checkbox', 'checkboxes', 'radio', 'radios'),
-    'description' => array('textfield', 'textarea', 'checkbox', 'checkboxes', 'radio', 'radios', 'item'),
+    'changed' => 'all', // Allows the value changed condition to use this form.
+    'disabled' => array('textfield', 'textarea', 'checkbox', 'checkboxes', 'radio', 'radios', 'select', 'button', 'submit'),
+    'default' => array('textfield', 'textarea', 'checkbox', 'checkboxes', 'radio', 'radios', 'select'),
+    'description' => array('textfield', 'textarea', 'checkbox', 'checkboxes', 'radio', 'radios', 'select', 'item'),
     'error' => 'all', // Allows an error to be set on any form element.
-    'multiple' => array('select'),
     'options' => array('select', 'checkboxes'),
-    'required' => array('textfield', 'textarea', 'checkbox', 'checkboxes', 'radio', 'radios'),
+    'required' => array('textfield', 'textarea', 'checkbox', 'checkboxes', 'radio', 'radios', 'select'),
     'suffix' => 'all', // Note: This applies to prefix/suffix action.
-    'title' => array('textfield', 'textarea', 'checkbox', 'checkboxes', 'radio', 'radios', 'item'),
+    'title' => array('textfield', 'textarea', 'checkbox', 'checkboxes', 'radio', 'radios', 'select', 'item'),
     'weight' => 'all',
-    'value' => 'all',
+    'value' => 'all', // Allows the element has value condition to use this form.
   );
 
   /**
@@ -96,6 +95,9 @@ class RulesFormsDataElement extends RulesFormsDataUI {
 
 }
 
+/**
+ * Provides a form for the value in Condition: Element has value.
+ */
 class RulesFormsDataValue extends RulesFormsDataUI {
 
   /**
