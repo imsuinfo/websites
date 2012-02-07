@@ -580,7 +580,8 @@ img#front_page_columns-transparent-spotlight {
   background-color: #ffffff;
 }
 
-div#front_page_columns-news > div.view-id-front_page > div.view-content > div.views-row > div.views-field-nothing {
+div#front_page_columns-news > div.view-id-front_page > div.view-content > div.views-row > div.views-field-nothing,
+div#front_page_columns-news > div.view-id-front_page_preview > div.view-content > div.views-row > div.views-field-nothing {
   min-height: 170px;
 }
 
