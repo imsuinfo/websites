@@ -1034,6 +1034,7 @@ function workbench_menu_admin_item_settings_form_settings($item, $menu, array $f
     'math' => t("Math"),
     'pdf' => t("PDF"),
     'powerpoint' => t("Powerpoint"),
+    'webdocument' => t("Web Document"),
     'word' => t("Word"),
     'writer' => t("Writer"),
   );

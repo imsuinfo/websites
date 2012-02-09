@@ -50,6 +50,10 @@ div.workbench_menu-manage_menu-menu_items-add_item_link {
   background-image: url(../images/icon_powerpoint.png);
 }
 
+#edit-settings-file-type option[value="webdocument"] {
+  background-image: url(../images/icon_webdocument.png);
+}
+
 #edit-settings-file-type option[value="word"] {
   background-image: url(../images/icon_word.png);
 }

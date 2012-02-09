@@ -64,6 +64,10 @@
   background-image: url(../images/icon_powerpoint.png);
 }
 
+.menu_item-icon_webdocument {
+  background-image: url(../images/icon_webdocument.png);
+}
+
 .menu_item-icon_word {
   background-image: url(../images/icon_word.png);
 }

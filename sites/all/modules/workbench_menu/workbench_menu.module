@@ -527,6 +527,13 @@ function workbench_menu_build_menu_item($menu, $item, &$variables, array $functi
 
   $active_path = $item['item']->active_path;
 
+  $alter_settings = array();
+  $alter_settings['menu'] = clone($menu);
+  $alter_settings['item'] = $item;
+  $alter_settings['settings'] = &$settings[$item['item']->id];
+  $alter_settings['active_path'] = $active_path;
+  $alter_settings['variables'] = &$variables;
+
   // menu item menus are other menus embedded inside the current menu.
   if ($settings[$item['item']->id]['type'] == 'item_menu') {
     if ($menu->access_id == $item['item']->properties['menu'] || array_key_exists($item['item']->properties['menu'], $variables['menus_processed'])) {
@@ -606,6 +613,7 @@ function workbench_menu_build_menu_item($menu, $item, &$variables, array $functi
     unset($current_stack);
 
     if (is_null($item_menu_item)) {
+      drupal_alter(__FUNCTION__, $alter_settings);
       return array('structure' => array(), 'settings' => $settings);
     }
 
@@ -714,26 +722,69 @@ function workbench_menu_build_menu_item($menu, $item, &$variables, array $functi
 
   if ($settings[$item['item']->id]['type'] == 'item_file') {
     $icon = check_plain($item['item']->properties['file_type']);
-    $filename = check_plain(rawurldecode(basename($item['item']->properties['file'])));
+    $filename = '';
+    $link_path = '';
 
-    if (valid_url($item['item']->properties['file'], TRUE)) {
-      $parsed_url = parse_url($item['item']->properties['file']);
-      $remote_url = check_plain($parsed_url['host']);
+    $matches = array();
+    $matched = preg_match('@^/node/(\d+)(/.*|$|\?.*|#.*)@', $item['item']->properties['file'], $matches);
 
-      $settings[$item['item']->id]['prefix'] = '<div class="' . $wmi_css . '-icon ' . $wmi_css . '-icon_' . $icon . '"></div>';
-      $settings[$item['item']->id]['attributes']['title'] = array(t("Download !filename from the external website: !remote_url.", array('!filename' => $filename, '!remote_url' => $remote_url)));
-      $settings[$item['item']->id]['attributes']['class'][] = $wmi_css . '-external_url';
+    if ($matched > 0) {
+      $path_alias = drupal_get_path_alias('node/' . $matches[1] . $matches[2]);
+      $parsed_url = parse_url($path_alias);
+
+      if (!empty($parsed_url['path'])) {
+        $link_path = '/' . $parsed_url['path'];
+        $active_path = $parsed_url['path'];
+
+        $path_node = node_load($matches[1]);
+        if (is_object($path_node)){
+          $filename = $path_node->title;
+          unset($path_node);
+        }
+        else {
+          $filename = $data['settings'][$item_menu_item['item']->id]['label'];
+        }
+      }
+
+      if (!empty($parsed_url['query'])) {
+        $link_path .= '?' . $parsed_url['query'];
+      }
+
+      if (!empty($parsed_url['fragment'])) {
+        $link_path .= '#' . $parsed_url['fragment'];
+      }
+    }
+
+    if (empty($link_path)) {
+      $link_path = $item['item']->properties['file'];
+      $filename = check_plain(rawurldecode(basename($link_path)));
+
+      if (valid_url($link_path, TRUE)) {
+        $parsed_url = parse_url($link_path);
+        $remote_url = check_plain($parsed_url['host']);
+
+        $settings[$item['item']->id]['prefix'] = '<div class="' . $wmi_css . '-icon ' . $wmi_css . '-icon_' . $icon . '"></div>';
+        $settings[$item['item']->id]['attributes']['title'] = array(t("Download !filename from the external website: !remote_url.", array('!filename' => $filename, '!remote_url' => $remote_url)));
+        $settings[$item['item']->id]['attributes']['class'][] = $wmi_css . '-external_url';
+      }
+      else {
+        $settings[$item['item']->id]['prefix'] .= '<div class="' . $wmi_css . '-icon ' . $wmi_css . '-icon_' . $icon . '"></div>';
+        $settings[$item['item']->id]['attributes']['title'] = array(t("Download !filename.", array('!filename' => $filename)));
+      }
     }
     else {
       $settings[$item['item']->id]['prefix'] .= '<div class="' . $wmi_css . '-icon ' . $wmi_css . '-icon_' . $icon . '"></div>';
-      $settings[$item['item']->id]['attributes']['title'] = array(t("Download !filename.", array('!filename' => $filename)));
+      $settings[$item['item']->id]['attributes']['title'] = array(t("View or Download: !filename.", array('!filename' => $filename)));
     }
 
-    $settings[$item['item']->id]['attributes']['href'] = array(check_url($item['item']->properties['file']));
+    $settings[$item['item']->id]['attributes']['href'] = array(check_url($link_path));
     $settings[$item['item']->id]['postfix'] = '';
 
     unset($icon);
     unset($filename);
+    unset($matches);
+    unset($matched);
+    unset($link_path);
   }
 
   if ($item['item']->active_path == '<top>') {
@@ -804,6 +855,9 @@ function workbench_menu_build_menu_item($menu, $item, &$variables, array $functi
       }
     }
   }
+
+  // @todo: write the api for this alter function
+  drupal_alter(__FUNCTION__, $alter_settings);
 
   $built_menu['structure'] = $structure;
   $built_menu['settings'] = $settings;
@@ -951,6 +1005,9 @@ function workbench_menu_render_menu_item(&$variables, $path_current, array $func
   $list['class'] = array();
   $list['children'] = array();
 
+  $alter_settings = array();
+  $alter_settings['variables'] = $variables;
+
   if ($variables['settings'][$variables['id']]['active_path'] == $path_current) {
     $variables['trail_is_active'] = TRUE;
     $variables['settings'][$variables['id']]['attributes']['class'][] = 'active';
@@ -1067,6 +1124,9 @@ function workbench_menu_render_menu_item(&$variables, $path_current, array $func
   $variables['count_item_local']++;
 
   if (empty($list['children'])) unset($list['children']);
+
+  // @todo: write the api for this alter function
+  drupal_alter(__FUNCTION__, $alter_settings);
 
   $id = implode(' ', $variables['settings'][$variables['id']]['attributes']['id']);
   $list['id'] = array('id' => $id . '-container');
@@ -1966,19 +2026,31 @@ function workbench_menu_clear_cache_at_path($path, $function_history) {
   $menu_cache_id = 'workbench_menu-menus_at-' . $parts[0];
   $breadcrumb_cache_id = 'workbench_menu-breadcrumbs_at-' . $parts[0];
 
-  if ($cached_menu = cache_get($menu_cache_id, 'cache_menu')) {
-    $menus_cached = $cached_menu->data;
+  $cached_menu = cache_get($menu_cache_id, 'cache_menu');
+  $cached_breadcrumb = cache_get($breadcrumb_cache_id, 'cache_menu');
 
-    unset($menus_cached[$path]);
+  while (!empty($parts)){
+    $subpath = implode('/', $parts);
+    $part = array_pop($parts);
 
+    if (empty($part)) continue;
+
+    if ($cached_menu) {
+      $menus_cached = $cached_menu->data;
+      unset($menus_cached[$subpath]);
+    }
+
+    if ($cached_breadcrumb) {
+      $breadcrumbs_cached = $cached_breadcrumb->data;
+      unset($breadcrumbs_cached[$subpath]);
+    }
+  }
+
+  if ($cached_menu) {
     cache_set($menu_cache_id, $menus_cached, 'cache_menu');
   }
 
-  if ($cached_breadcrumb = cache_get($breadcrumb_cache_id, 'cache_menu')) {
-    $breadcrumbs_cached = $cached_breadcrumb->data;
-
-    unset($breadcrumbs_cached[$path]);
-
+  if ($cached_breadcrumb) {
     cache_set($menu_cache_id, $breadcrumbs_cached, 'cache_menu');
   }
 }
