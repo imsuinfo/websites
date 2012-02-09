@@ -1,0 +1,122 @@
+.document header {
+  margin-bottom: 15px;
+  text-align: center;
+}
+
+.document .block {
+  display: block;
+}
+
+.document .inline-block {
+  display: block;
+}
+
+.document .inline {
+  display: block;
+}
+
+.document .clear {
+  clear: both;
+}
+
+.document .clear-none {
+  clear: none;
+}
+
+.document .clear-left {
+  clear: left;
+}
+
+.document .clear-right {
+  clear: right;
+}
+
+.document .float-none {
+  float: none;
+}
+
+.document .float-left {
+  float: left;
+}
+
+.document .float-right {
+  float: right;
+}
+
+.document .separated {
+  margin: 15px 0;
+}
+
+.document .separated-alt {
+  padding: 15px 0;
+}
+
+.document p {
+  margin: 0px;
+  text-indent: 0.5in;
+}
+
+.document ul,
+.document ol,
+.document dl {
+  margin: 0;
+}
+
+.document dd {
+  margin: 0 20px;
+}
+
+.document figure {
+  margin: 15px;
+}
+
+.document pre {
+  display: inline;
+}
+
+.document .center {
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.document .shift_right {
+  margin-left: 15px;
+}
+
+.document .image {
+  background-color: #f0f0f0;
+
+  border: 1px outset;
+  padding: 3px;
+}
+
+.document .for_example:before {
+  background-color: #00477f;
+  color: #ffffff;
+
+  counter-increment: example_count;
+  content: 'Example ' counter(example_count);
+
+  font-weight: bold;
+  font-family: monospace;
+
+  line-height: 1em;
+  letter-spacing: 2px;
+
+  position: absolute;
+  left: -10px;
+  top: -10px;
+
+  border: 1px solid #000000;
+  padding: 3px;
+}
+
+.document .for_example {
+  position: relative;
+
+  background-color: #e3ea9a;
+
+  border: 1px solid #00477f;
+  margin: 10px 15px;
+  padding: 10px;
+}

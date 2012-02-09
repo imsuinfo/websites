@@ -1,0 +1,56 @@
+.document a,
+.document a:visited {
+  color: #0000ff;
+}
+
+.document a:hover {
+  color: #616e07;
+}
+
+.document a:active {
+  color: #aa0000;
+}
+
+.document .reference,
+.document figcaption {
+  text-transform: small;
+  font-family: monospace;
+  font-weight: bolder;
+}
+
+.document.double_space,
+.document .double_space {
+  line-height: 2em;
+}
+
+.document figure > * {
+  text-indent: 0;
+}
+
+.document figure > img {
+  display: block;
+}
+
+.document dfn {
+  color: #004274;
+}
+
+.document dt {
+  font-weight: bolder;
+}
+
+.document .strong {
+  font-weight: bolder;
+}
+
+.document .align_left {
+  text-align: left;
+}
+
+.document .align_center {
+  text-align: center;
+}
+
+.document .align_right {
+  text-align: right;
+}

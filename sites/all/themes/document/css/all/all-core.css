@@ -1,0 +1,4 @@
+.document aside#document-message_region .messages {
+  max-height: 100px;
+  overflow-y: auto;
+}

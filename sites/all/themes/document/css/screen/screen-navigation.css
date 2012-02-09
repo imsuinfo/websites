@@ -1,0 +1,104 @@
+.document nav#document-navigation {
+  background-image: url(../../images/navigation.png);
+  background-repeat:  no-repeat;
+  background-position: 0 0;
+
+  top: 5px;
+  left: 1px;
+  position: fixed;
+  overflow-x: hidden;
+  overflow-y: hidden;
+
+  width: 32px;
+  height: 32px;
+  min-height: 32px;
+
+  transition: all 0.25s;
+  -moz-transition: all 0.25s;
+  -webkit-transition: all 0.25s;
+  -o-transition: all 0.25s;
+}
+
+.document.is-logged_in nav#document-navigation {
+  top: 50px;
+}
+
+.document.toolbar-drawer nav#document-navigation {
+  top: 80px;
+}
+
+.document nav#document-navigation:hover,
+.document nav#document-navigation:active,
+.document nav#document-navigation:focus {
+  background-color: #cdedb9;
+  background-position: 4px 4px;
+
+  min-width: 250px;
+  width: auto;
+
+  min-height: 200px;
+  max-height: 400px;
+  height: auto;
+
+  padding: 0 4px 4px 4px;
+
+  z-index: 100;
+
+  overflow-x: hidden;
+  overflow-y: auto;
+  word-wrap: break-word;
+
+  border: 1px ridge #000000;
+}
+
+.document nav#document-navigation > * {
+  visibility: hidden;
+}
+
+.document nav#document-navigation:hover > *,
+.document nav#document-navigation:active > *,
+.document nav#document-navigation:focus > * {
+  visibility: visible;
+}
+
+.document nav#document-navigation:hover > h2,
+.document nav#document-navigation:active > h2,
+.document nav#document-navigation:focus > h2 {
+  font-size: 18px;
+
+  text-align: left;
+  text-justify: left;
+  text-transform: none;
+
+  line-height: 32px;
+
+  padding-left: 38px;
+}
+
+.document nav#document-navigation:hover > ol,
+.document nav#document-navigation:active > ol,
+.document nav#document-navigation:focus > ol,
+.document nav#document-navigation:hover > ul,
+.document nav#document-navigation:active > ul,
+.document nav#document-navigation:focus > ul {
+  margin-left: 0px;
+}
+
+.document nav#document-navigation a,
+.document nav#document-navigation a:visited {
+  text-decoration: none;
+}
+
+.document nav#document-navigation a:hover,
+.document nav#document-navigation a:focus {
+  font-weight: bolder;
+  text-decoration: underline;
+}
+
+.document nav#document-navigation a:active {
+  color: #cc0000;
+
+  font-weight: bolder;
+  text-decoration: underline
+}
+

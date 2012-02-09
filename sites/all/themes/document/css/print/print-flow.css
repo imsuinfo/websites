@@ -1,0 +1,73 @@
+@page {
+  @top-left-corner {
+    content: 'Page Title';
+  }
+}
+
+@page {
+  @top-right-corner {
+    content: 'McNeese State University';
+  }
+}
+
+@page {
+  @bottom-left {
+    content: counter(page) ' of ' counter(pages);
+  }
+}
+
+@page {
+  @bottom-right {
+    content: 'timestamp';
+  }
+}
+
+.document {
+  width: 792px;
+  min-width: 792px;
+  max-width: 792px;
+
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.document header,
+.document header > hgroup {
+  page-break-before: avoid;
+}
+
+.document .for_example {
+  page-break-inside: avoid;
+}
+
+.document .break_before-always {
+  page-break-before: always;
+}
+
+.document .break_before-left {
+  page-break-before: left;
+}
+
+.document .break_before-right {
+  page-break-before: right;
+}
+
+.document .break_before-avoid {
+  page-break-before: avoid;
+}
+
+.document .break_after-always {
+  page-break-after: always;
+}
+
+.document .break_after-left {
+  page-break-after: left;
+}
+
+.document .break_after-right {
+  page-break-after: right;
+}
+
+.document .break_after-avoid {
+  page-break-after: avoid;
+}
