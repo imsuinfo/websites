@@ -24,11 +24,19 @@
  * 
  */
 //dsm('Display: '. $display_type .': '. $min_date_formatted .' to '. $max_date_formatted);
+$params = array(
+  'view' => $view,
+  'granularity' => 'week',
+  'link' => FALSE,
+);
 ?>
 
 <div class="calendar-calendar"><div class="week-view">
   <div id="header-container">
   <table class="full">
+  <caption>
+    <?php print theme('date_nav_title', $params) ?>
+  </caption>
   <tbody>
     <tr class="holder"><td class="calendar-time-holder"></td><td class="calendar-day-holder"></td><td class="calendar-day-holder"></td><td class="calendar-day-holder"></td><td class="calendar-day-holder"></td><td class="calendar-day-holder"></td><td class="calendar-day-holder"></td><td class="calendar-day-holder"></td><td class="calendar-day-holder margin-right"></td></tr>
     <tr>
@@ -163,6 +171,9 @@
     </script>
     <?php endif; ?>
     <table class="full">
+      <caption>
+        <?php print theme('date_nav_title', $params) ?>
+      </caption>
       <tbody>
         <tr class="holder"><td class="calendar-time-holder"></td><td class="calendar-day-holder"></td><td class="calendar-day-holder"></td><td class="calendar-day-holder"></td><td class="calendar-day-holder"></td><td class="calendar-day-holder"></td><td class="calendar-day-holder"></td><td class="calendar-day-holder"></td></tr>
         <tr>

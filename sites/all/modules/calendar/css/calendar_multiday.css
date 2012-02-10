@@ -872,3 +872,14 @@ ul.calendar-links,
   margin:0;
   padding:0;
 }
+
+/**
+ * Hide captions
+ **/
+.calendar-calendar table > caption {
+  visibility: hidden;
+  width: 0;
+  height: 0;
+  margin: 0;
+  padding: 0;
+}

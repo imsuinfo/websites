@@ -18,9 +18,17 @@
  * 
  */
 //dsm('Display: '. $display_type .': '. $min_date_formatted .' to '. $max_date_formatted);
+$params = array(
+  'view' => $view,
+  'granularity' => 'month',
+  'link' => FALSE,
+);
 ?>
 <div class="calendar-calendar"><div class="month-view">
 <table class="full">
+  <caption>
+    <?php print theme('date_nav_title', $params) ?>
+  </caption>
   <thead>
     <tr>
       <?php foreach ($day_names as $cell): ?>

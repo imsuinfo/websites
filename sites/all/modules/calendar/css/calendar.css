@@ -402,3 +402,14 @@ table.calendar-legend tr.even .stripe {
 .calendar-calendar td.future {}
 .calendar-calendar td.has-events {}
 .calendar-calendar td.has-no-events {}
+
+/**
+ * Hide captions
+ **/
+.calendar-calendar table > caption {
+  visibility: hidden;
+  width: 0;
+  height: 0;
+  margin: 0;
+  padding: 0;
+}

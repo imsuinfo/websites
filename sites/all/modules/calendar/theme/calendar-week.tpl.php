@@ -27,10 +27,18 @@
 //dsm($rows);
 //dsm($items);
 $index = 0;
+$params = array(
+  'view' => $view,
+  'granularity' => 'week',
+  'link' => FALSE,
+);
 ?>
 
 <div class="calendar-calendar"><div class="week-view">
 <table class="full">
+  <caption>
+    <?php print theme('date_nav_title', $params) ?>
+  </caption>
   <thead>
     <tr>
       <?php if($by_hour_count > 0 || !empty($start_times)) :?>

@@ -12,10 +12,18 @@
  * 
  */
 //dsm('Display: '. $display_type .': '. $min_date_formatted .' to '. $max_date_formatted);
+$params = array(
+  'view' => $view,
+  'granularity' => 'year',
+  'link' => FALSE,
+);
 ?>
 
 <div class="calendar-calendar"><div class="year-view">
 <table <?php if ($mini): ?> class="mini"<?php endif; ?>>
+  <caption>
+    <?php print theme('date_nav_title', $params) ?>
+  </caption>
   <tbody>
     <tr><td><?php print $months[1] ?></td><td><?php print $months[2] ?></td><td><?php print $months[3] ?></td></tr>  
     <tr><td><?php print $months[4] ?></td><td><?php print $months[5] ?></td><td><?php print $months[6] ?></td></tr>  

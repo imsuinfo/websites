@@ -28,9 +28,17 @@
  * evenly over the remaining 90% of the table.
  */
 //dsm('Display: '. $display_type .': '. $min_date_formatted .' to '. $max_date_formatted);
+$params = array(
+  'view' => $view,
+  'granularity' => 'day',
+  'link' => FALSE,
+);
 ?>
 <div class="calendar-calendar"><div class="day-view">
 <table class="full">
+  <caption>
+    <?php print theme('date_nav_title', $params) ?>
+  </caption>
   <col width="<?php print $first_column_width?>"></col>
   <thead>
     <?php foreach ($columns as $column): ?>

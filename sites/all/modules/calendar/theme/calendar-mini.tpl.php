@@ -23,16 +23,14 @@ $params = array(
 );
 ?>
 <div class="calendar-calendar"><div class="month-view">
-<?php if ($show_title): ?>
-<div class="date-nav-wrapper clear-block">
-  <div class="date-nav">
-    <div class="date-heading">
-      <?php print theme('date_nav_title', $params) ?>
-    </div>
-  </div>
-</div> 
-<?php endif; ?> 
 <table class="mini">
+  <caption class="date-nav-wrapper clear-block">
+    <div class="date-nav">
+      <div class="date-heading">
+        <?php print theme('date_nav_title', $params) ?>
+      </div>
+    </div>
+  </caption>
   <thead>
     <tr>
       <?php foreach ($day_names as $cell): ?>
