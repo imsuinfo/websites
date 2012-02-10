@@ -227,11 +227,6 @@
   padding: 1px 2px 0px 2px;
 }
 
-.calendar-calendar .day-view .full td.multi-day div.dayview,
-.calendar-calendar .week-view .full td.multi-day div.weekview {
-  height: 22px !important;
-}
-
 .calendar-calendar .day-view .full td.multi-day .calendar.dayview .contents div,
 .calendar-calendar .week-view .full td.multi-day .calendar.weekview .contents div {
   float: left;
