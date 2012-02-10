@@ -17,10 +17,3 @@ files[] = includes/calendar.views_template.inc
 files[] = theme/theme.inc
 files[] = theme/calendar-style.tpl.php
 files[] = theme/calendar-row-node.tpl.php
-
-; Information added by drupal.org packaging script on 2011-12-31
-version = "7.x-3.0-alpha2"
-core = "7.x"
-project = "calendar"
-datestamp = "1325346037"
-

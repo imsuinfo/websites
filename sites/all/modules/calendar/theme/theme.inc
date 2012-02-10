@@ -264,7 +264,11 @@ function template_preprocess_calendar_day(&$vars) {
     foreach ($grouped_items[$start_time]['values'] as $column => &$items) {
       foreach ($items as $index => &$item) {
         if ($display_overlap) {
-          if ($view->style_options['groupby_times'] == 'half'){
+          if (!isset($view->style_options['groupby_times'])){
+            $item->class = '';
+            continue;
+          }
+          else if ($view->style_options['groupby_times'] == 'half'){
             $group_time = 30;
             $divisor = 7.5;
           }
@@ -473,7 +477,11 @@ function template_preprocess_calendar_week(&$vars) {
       foreach ($grouped_items[$start_time]['values'] as $wday => &$items) {
         foreach ($items as &$item) {
           if ($display_overlap) {
-            if ($view->style_options['groupby_times'] == 'half'){
+            if (!isset($view->style_options['groupby_times'])){
+              $item->class = '';
+              continue;
+            }
+            else if ($view->style_options['groupby_times'] == 'half'){
               $group_time = 30;
               $divisor = 7.5;
             }
