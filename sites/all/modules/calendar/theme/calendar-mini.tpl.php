@@ -24,7 +24,7 @@ $params = array(
 ?>
 <div class="calendar-calendar"><div class="month-view">
 <table class="mini">
-  <caption class="date-nav-wrapper clear-block">
+  <caption class="date-nav-wrapper clear-block <?php if (!$show_title){ print("hidden"); } ?>">
     <div class="date-nav">
       <div class="date-heading">
         <?php print theme('date_nav_title', $params) ?>

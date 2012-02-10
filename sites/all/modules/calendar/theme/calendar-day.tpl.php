@@ -36,7 +36,7 @@ $params = array(
 ?>
 <div class="calendar-calendar"><div class="day-view">
 <table class="full">
-  <caption>
+  <caption class="hidden">
     <?php print theme('date_nav_title', $params) ?>
   </caption>
   <col width="<?php print $first_column_width?>"></col>

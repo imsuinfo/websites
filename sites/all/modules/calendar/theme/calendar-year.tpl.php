@@ -21,7 +21,7 @@ $params = array(
 
 <div class="calendar-calendar"><div class="year-view">
 <table <?php if ($mini): ?> class="mini"<?php endif; ?>>
-  <caption>
+  <caption class="hidden">
     <?php print theme('date_nav_title', $params) ?>
   </caption>
   <tbody>

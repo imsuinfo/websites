@@ -406,7 +406,7 @@ table.calendar-legend tr.even .stripe {
 /**
  * Hide captions
  **/
-.calendar-calendar table > caption {
+.calendar-calendar table > caption.hidden {
   visibility: hidden;
   width: 0;
   height: 0;

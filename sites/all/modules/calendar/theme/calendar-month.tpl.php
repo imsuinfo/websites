@@ -26,7 +26,7 @@ $params = array(
 ?>
 <div class="calendar-calendar"><div class="month-view">
 <table class="full">
-  <caption>
+  <caption class="hidden">
     <?php print theme('date_nav_title', $params) ?>
   </caption>
   <thead>
