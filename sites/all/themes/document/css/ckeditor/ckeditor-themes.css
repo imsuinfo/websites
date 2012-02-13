@@ -1,0 +1,18 @@
+#ckeditor-wysiwygarea-node_information-wrapper > .document-node_information-group {
+  padding: 8px 0;
+  margin: 2px 0;
+}
+
+#ckeditor-wysiwygarea-node_information-item-wrapper > .document-node_information-item-label {
+  display: inline-block;
+
+  font-weight: bolder;
+}
+
+#ckeditor-wysiwygarea-node_information-item-wrapper > .document-node_information-item-label:after {
+  content: ':';
+}
+
+#ckeditor-wysiwygarea-node_information-item-wrapper > .document-node_information-item-value {
+  display: inline-block;
+}

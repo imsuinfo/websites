@@ -1,0 +1,56 @@
+#ckeditor-wysiwygarea a,
+#ckeditor-wysiwygarea a:visited {
+  color: #0000ff;
+}
+
+#ckeditor-wysiwygarea a:hover {
+  color: #616e07;
+}
+
+#ckeditor-wysiwygarea a:active {
+  color: #aa0000;
+}
+
+#ckeditor-wysiwygarea .reference,
+#ckeditor-wysiwygarea figcaption {
+  text-transform: small;
+  font-family: monospace;
+  font-weight: bolder;
+}
+
+#ckeditor-wysiwygarea.double_space,
+#ckeditor-wysiwygarea .double_space {
+  line-height: 2em;
+}
+
+#ckeditor-wysiwygarea figure > * {
+  text-indent: 0;
+}
+
+#ckeditor-wysiwygarea figure > img {
+  display: block;
+}
+
+#ckeditor-wysiwygarea dfn {
+  color: #004274;
+}
+
+#ckeditor-wysiwygarea dt {
+  font-weight: bolder;
+}
+
+#ckeditor-wysiwygarea .strong {
+  font-weight: bolder;
+}
+
+#ckeditor-wysiwygarea .align_left {
+  text-align: left;
+}
+
+#ckeditor-wysiwygarea .align_center {
+  text-align: center;
+}
+
+#ckeditor-wysiwygarea .align_right {
+  text-align: right;
+}

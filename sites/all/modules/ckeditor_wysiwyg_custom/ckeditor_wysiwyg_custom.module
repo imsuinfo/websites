@@ -25,20 +25,53 @@ function ckeditor_wysiwyg_custom_wysiwyg_editor_settings_alter(&$settings, $cont
     // provide a hook for modules to add their own css
     $settings['contentsCss'] = array();
 
-    // load drupal cores system css
-    $system_theme_path = drupal_get_path('module', 'system') . '/';
-    $settings['contentsCss'][] = $system_theme_path . 'system.base.css';
-    $settings['contentsCss'][] = $system_theme_path . 'system.menus.css';
-    $settings['contentsCss'][] = $system_theme_path . 'system.messages.css';
-    $settings['contentsCss'][] = $system_theme_path . 'system.theme.css';
-
     // TODO: This is temporarily hard-coded to the genesis_mcneese theme, write a drupal_invoke_all(..) hook for themes to implement
-    $theme_path = drupal_get_path('theme', 'genesis_mcneese') . '/css/';
-    $settings['contentsCss'][] = $theme_path . 'reset.css';
-    $settings['contentsCss'][] = $theme_path . 'standard.css';
-    $settings['contentsCss'][] = $theme_path . 'common.css';
-    $settings['contentsCss'][] = $theme_path . 'workaround.css';
-    $settings['contentsCss'][] = $theme_path . 'screen.css';
+    $theme_target = 'normal';
+    $current_path = current_path();
+
+    $matches = array();
+    $matched = preg_match('@^node/add/document($|/$|\?.*)@', $current_path, $matches);
+
+    if ($matched > 0){
+      $theme_target = 'document';
+    }
+    else {
+      $matches = array();
+      $matched = preg_match('@^node/(\d+)(/.*|$|\?.*|#.*)@', $current_path, $matches);
+
+      if ($matched > 0 && !empty($matches[1])){
+        $node = node_load($matches[1]);
+
+        if (is_object($node) && $node->type == 'document'){
+          $theme_target = 'document';
+        }
+      }
+    }
+
+    if ($theme_target == 'normal'){
+      // load drupal cores system css
+      $system_theme_path = drupal_get_path('module', 'system') . '/';
+      $settings['contentsCss'][] = $system_theme_path . 'system.base.css';
+      $settings['contentsCss'][] = $system_theme_path . 'system.menus.css';
+      $settings['contentsCss'][] = $system_theme_path . 'system.messages.css';
+      $settings['contentsCss'][] = $system_theme_path . 'system.theme.css';
+
+      $theme_path = drupal_get_path('theme', 'genesis_mcneese') . '/css/';
+      $settings['contentsCss'][] = $theme_path . 'reset.css';
+      $settings['contentsCss'][] = $theme_path . 'standard.css';
+      $settings['contentsCss'][] = $theme_path . 'common.css';
+      $settings['contentsCss'][] = $theme_path . 'workaround.css';
+      $settings['contentsCss'][] = $theme_path . 'screen.css';
+    }
+    else if ($theme_target == 'document') {
+      $theme_path = drupal_get_path('theme', 'document') . '/css/';
+      $settings['contentsCss'][] = $theme_path . 'ckeditor/ckeditor-reset.css';
+      $settings['contentsCss'][] = $theme_path . 'ckeditor/ckeditor-flow.css';
+      $settings['contentsCss'][] = $theme_path . 'ckeditor/ckeditor-text.css';
+      $settings['contentsCss'][] = $theme_path . 'ckeditor/ckeditor-core.css';
+      $settings['contentsCss'][] = $theme_path . 'ckeditor/ckeditor-modules.css';
+      $settings['contentsCss'][] = $theme_path . 'ckeditor/ckeditor-themes.css';
+    }
 
     // http://docs.cksource.com/ckeditor_api/symbols/CKEDITOR.config.html#.enterMode
     $settings['enterMode'] = 2;

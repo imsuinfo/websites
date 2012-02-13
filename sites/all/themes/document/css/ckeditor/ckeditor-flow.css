@@ -1,0 +1,122 @@
+#ckeditor-wysiwygarea header {
+  margin-bottom: 15px;
+  text-align: center;
+}
+
+#ckeditor-wysiwygarea .block {
+  display: block;
+}
+
+#ckeditor-wysiwygarea .inline-block {
+  display: block;
+}
+
+#ckeditor-wysiwygarea .inline {
+  display: block;
+}
+
+#ckeditor-wysiwygarea .clear {
+  clear: both;
+}
+
+#ckeditor-wysiwygarea .clear-none {
+  clear: none;
+}
+
+#ckeditor-wysiwygarea .clear-left {
+  clear: left;
+}
+
+#ckeditor-wysiwygarea .clear-right {
+  clear: right;
+}
+
+#ckeditor-wysiwygarea .float-none {
+  float: none;
+}
+
+#ckeditor-wysiwygarea .float-left {
+  float: left;
+}
+
+#ckeditor-wysiwygarea .float-right {
+  float: right;
+}
+
+#ckeditor-wysiwygarea .separated {
+  margin: 15px 0;
+}
+
+#ckeditor-wysiwygarea .separated-alt {
+  padding: 15px 0;
+}
+
+#ckeditor-wysiwygarea p {
+  margin: 0px;
+  text-indent: 0.5in;
+}
+
+#ckeditor-wysiwygarea ul,
+#ckeditor-wysiwygarea ol,
+#ckeditor-wysiwygarea dl {
+  margin: 0;
+}
+
+#ckeditor-wysiwygarea dd {
+  margin: 0 20px;
+}
+
+#ckeditor-wysiwygarea figure {
+  margin: 15px;
+}
+
+#ckeditor-wysiwygarea pre {
+  display: inline;
+}
+
+#ckeditor-wysiwygarea .center {
+  margin-left: auto;
+  margin-right: auto;
+}
+
+#ckeditor-wysiwygarea .shift_right {
+  margin-left: 15px;
+}
+
+#ckeditor-wysiwygarea .image {
+  background-color: #f0f0f0;
+
+  border: 1px outset;
+  padding: 3px;
+}
+
+#ckeditor-wysiwygarea .for_example:before {
+  background-color: #00477f;
+  color: #ffffff;
+
+  counter-increment: example_count;
+  content: 'Example ' counter(example_count);
+
+  font-weight: bold;
+  font-family: monospace;
+
+  line-height: 1em;
+  letter-spacing: 2px;
+
+  position: absolute;
+  left: -10px;
+  top: -10px;
+
+  border: 1px solid #000000;
+  padding: 3px;
+}
+
+#ckeditor-wysiwygarea .for_example {
+  position: relative;
+
+  background-color: #e3ea9a;
+
+  border: 1px solid #00477f;
+  margin: 10px 15px;
+  padding: 10px;
+}
