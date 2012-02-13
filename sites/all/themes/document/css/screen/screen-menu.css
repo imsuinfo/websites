@@ -1,4 +1,4 @@
-.document aside#document-website_menu_region {
+.document nav#document-website_menu_region {
   background-image: url(../../images/menu.png);
   background-repeat:  no-repeat;
   background-position: 0 0;
@@ -19,17 +19,17 @@
   -o-transition: all 0.25s;
 }
 
-.document.is-logged_in aside#document-website_menu_region {
+.document.is-logged_in nav#document-website_menu_region {
   top: 100px;
 }
 
-.document.toolbar-drawer aside#document-website_menu_region {
+.document.toolbar-drawer nav#document-website_menu_region {
   top: 130px;
 }
 
-.document aside#document-website_menu_region:hover,
-.document aside#document-website_menu_region:active,
-.document aside#document-website_menu_region:focus {
+.document nav#document-website_menu_region:hover,
+.document nav#document-website_menu_region:active,
+.document nav#document-website_menu_region:focus {
   background-color: #c2d6ed;
   background-position: 4px 4px;
 
@@ -51,19 +51,19 @@
   border: 1px ridge #000000;
 }
 
-.document aside#document-website_menu_region > * {
+.document nav#document-website_menu_region > * {
   visibility: hidden;
 }
 
-.document aside#document-website_menu_region:hover > *,
-.document aside#document-website_menu_region:active > *,
-.document aside#document-website_menu_region:focus > * {
+.document nav#document-website_menu_region:hover > *,
+.document nav#document-website_menu_region:active > *,
+.document nav#document-website_menu_region:focus > * {
   visibility: visible;
 }
 
-.document aside#document-website_menu_region:hover > h2,
-.document aside#document-website_menu_region:active > h2,
-.document aside#document-website_menu_region:focus > h2 {
+.document nav#document-website_menu_region:hover > h2,
+.document nav#document-website_menu_region:active > h2,
+.document nav#document-website_menu_region:focus > h2 {
   font-size: 18px;
 
   text-align: left;
@@ -75,27 +75,27 @@
   padding-left: 38px;
 }
 
-.document aside#document-website_menu_region:hover > ol,
-.document aside#document-website_menu_region:active > ol,
-.document aside#document-website_menu_region:focus > ol,
-.document aside#document-website_menu_region:hover > ul,
-.document aside#document-website_menu_region:active > ul,
-.document aside#document-website_menu_region:focus > ul {
+.document nav#document-website_menu_region:hover > ol,
+.document nav#document-website_menu_region:active > ol,
+.document nav#document-website_menu_region:focus > ol,
+.document nav#document-website_menu_region:hover > ul,
+.document nav#document-website_menu_region:active > ul,
+.document nav#document-website_menu_region:focus > ul {
   margin-left: 0px;
 }
 
-.document aside#document-website_menu_region a,
-.document aside#document-website_menu_region a:visited {
+.document nav#document-website_menu_region a,
+.document nav#document-website_menu_region a:visited {
   text-decoration: none;
 }
 
-.document aside#document-website_menu_region a:hover,
-.document aside#document-website_menu_region a:focus {
+.document nav#document-website_menu_region a:hover,
+.document nav#document-website_menu_region a:focus {
   font-weight: bolder;
   text-decoration: underline;
 }
 
-.document aside#document-website_menu_region a:active {
+.document nav#document-website_menu_region a:active {
   color: #cc0000;
 
   font-weight: bolder;

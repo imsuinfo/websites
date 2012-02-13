@@ -240,5 +240,5 @@ function document_cf_theme_get_variables_alter(&$cf, $variables){
 function document_workbench_menu_render_menu_item_alter($arguments){
   $variables = &$arguments['variables'];
 
-  $variables['settings'][$variables['id']]['attributes']['tabindex'] = array('1');
+  $variables['settings'][$variables['id']]['attributes']['tabindex'] = array('3');
 }

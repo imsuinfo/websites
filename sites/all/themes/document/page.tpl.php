@@ -9,14 +9,12 @@
     <!--(end_messages)-->
   </aside>
 <?php if ($cf['show']['page']['website_menu']){ ?>
-  <aside id='document-website_menu_region' tabindex="3">
+  <nav id='document-website_menu_region' tabindex="3">
     <!--(begin_website_menu)-->
     <h2>Website Menu</h2>
-    <div>
-      <?php if ($cf['show']['page']['website_menu']) print($page['website_menu']); ?>
-    </div>
+    <?php if ($cf['show']['page']['website_menu']) print($page['website_menu']); ?>
     <!--(end_website_menu)-->
-  </aside>
+  </nav>
 <?php } ?>
 <?php if ($cf['show']['editing']){ ?>
   <aside id='document-editing_region' tabindex="4">
