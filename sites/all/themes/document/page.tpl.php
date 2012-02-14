@@ -8,6 +8,7 @@
     </div>
     <!--(end_messages)-->
   </aside>
+<?php } ?>
 <?php if ($cf['show']['page']['website_menu']){ ?>
   <nav id='document-website_menu_region' tabindex="3">
     <!--(begin_website_menu)-->
@@ -45,7 +46,6 @@
     </div>
     <!--(end_help)-->
   </aside>
-<?php } ?>
 <?php } ?>
 <?php if ($cf['show']['node_information']){ ?>
   <aside id='document-node_information_region' tabindex="6">
