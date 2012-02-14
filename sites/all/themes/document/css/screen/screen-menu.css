@@ -3,7 +3,7 @@
   background-repeat:  no-repeat;
   background-position: 0 0;
 
-  top: 55px;
+  top: 5px;
   left: 1px;
   position: fixed;
   overflow-x: hidden;
@@ -20,11 +20,11 @@
 }
 
 .document.is-logged_in nav#document-website_menu_region {
-  top: 100px;
+  top: 50px;
 }
 
 .document.toolbar-drawer nav#document-website_menu_region {
-  top: 130px;
+  top: 80px;
 }
 
 .document nav#document-website_menu_region:hover,
