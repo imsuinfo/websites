@@ -3,6 +3,11 @@
   text-align: center;
 }
 
+.document > section > h1,
+.document > section > h2 {
+  margin-top: 30px;
+}
+
 .document .block {
   display: block;
 }
