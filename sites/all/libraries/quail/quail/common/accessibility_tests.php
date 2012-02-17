@@ -1825,7 +1825,7 @@ class documentVisualListsAreMarkedUp extends quailTest {
 	/**
 	*	@var array $list_cues Things that might be considered to be part of a list
 	*/
-	var $list_cues = array('*', '<br>*', '•', '&#8226');
+	var $list_cues = array('<br>*', '•', '&#8226');
 	
 	/**
 	*	The main check function. This is called by the parent class to actually check content
