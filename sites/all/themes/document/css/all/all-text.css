@@ -54,3 +54,110 @@
 .document .align_right {
   text-align: right;
 }
+
+.document ol.inline {
+  counter-reset: ordered_list_count;
+}
+
+.document ol.inline > li:before {
+  counter-increment: ordered_list_count;
+  content: '(' counter(ordered_list_count) ') ';
+}
+
+.document ol.inline.colon > li:before {
+  counter-increment: ordered_list_count;
+  content: counter(ordered_list_count) ': ';
+}
+
+.document ul.inline > li:last-of-type:before,
+.document ul.inline.and > li:last-of-type:before {
+  content: 'and ';
+}
+
+.document ul.inline.or > li:last-of-type:before {
+  content: 'or ';
+}
+
+.document ul.inline.and.or > li:last-of-type:before {
+  content: 'and/or ';
+}
+
+.document ol.inline > li:last-of-type:before,
+.document ol.inline.and > li:last-of-type:before {
+  content: 'and (' counter(ordered_list_count) ') ';
+}
+
+.document ol.inline.or > li:last-of-type:before {
+  content: 'or (' counter(ordered_list_count) ') ';
+}
+
+.document ol.inline.and.or > li:last-of-type:before {
+  content: 'and/or (' counter(ordered_list_count) ') ';
+}
+
+.document ol.inline.colon > li:last-of-type:before,
+.document ol.inline.colon.and > li:last-of-type:before {
+  content: 'and ' counter(ordered_list_count) ': ';
+}
+
+.document ol.inline.colon.or > li:last-of-type:before {
+  content: 'or ' counter(ordered_list_count) ': ';
+}
+
+.document ol.inline.colon.and.or > li:last-of-type:before {
+  content: 'and/or ' counter(ordered_list_count) ': ';
+}
+
+.document ul.inline > li:after,
+.document ol.inline > li:after {
+  content: ',';
+}
+
+.document ul.inline > li:last-of-type:after,
+.document ol.inline > li:last-of-type:after {
+  content: '';
+}
+
+.document ul.inline.sentence > li:last-of-type:after,
+.document ol.inline.sentence > li:last-of-type:after {
+  content: '.';
+}
+
+.document ul.inline.exclamation > li:last-of-type:after,
+.document ol.inline.exclamation > li:last-of-type:after {
+  content: '!';
+}
+
+.document ul.inline.question > li:last-of-type:after,
+.document ol.inline.question > li:last-of-type:after {
+  content: '?';
+}
+
+.document ul.inline.sentence-semicolon > li:last-of-type:after,
+.document ol.inline.sentence-semicolon > li:last-of-type:after {
+  content: ';';
+}
+
+.document .image {
+  background-color: #f0f0f0;
+}
+
+.document .for_example:before {
+  background-color: #00477f;
+  color: #ffffff;
+
+  counter-increment: example_count;
+  content: 'Example ' counter(example_count);
+
+  font-weight: bold;
+  font-family: monospace;
+
+  line-height: 1em;
+  letter-spacing: 2px;
+}
+
+.document .for_example {
+  position: relative;
+
+  background-color: #e3ea9a;
+}

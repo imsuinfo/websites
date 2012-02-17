@@ -16,7 +16,7 @@
 }
 
 .document .inline {
-  display: block;
+  display: inline;
 }
 
 .document .clear {
@@ -70,7 +70,20 @@
   margin: 0 20px;
 }
 
+.document ul.inline
+.document ol.inline {
+  padding: 0;
+}
+
+.document ul.inline > li,
+.document ol.inline > li {
+  display: inline;
+
+  padding: 0;
+}
+
 .document figure {
+  display: inline-block;
   margin: 15px;
 }
 
@@ -88,22 +101,11 @@
 }
 
 .document .image {
-  background-color: #f0f0f0;
-
   border: 1px outset;
   padding: 3px;
 }
 
 .document .for_example:before {
-  background-color: #00477f;
-  color: #ffffff;
-
-  counter-increment: example_count;
-  content: 'Example ' counter(example_count);
-
-  font-weight: bold;
-  font-family: monospace;
-
   line-height: 1em;
   letter-spacing: 2px;
 
@@ -117,8 +119,6 @@
 
 .document .for_example {
   position: relative;
-
-  background-color: #e3ea9a;
 
   border: 1px solid #00477f;
   margin: 10px 15px;
