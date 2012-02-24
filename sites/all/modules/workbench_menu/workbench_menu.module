@@ -53,6 +53,22 @@ function workbench_menu_permission() {
 }
 
 /**
+ * Implements hook_entity_info().
+ */
+function workbench_menu_entity_info() {
+  $types['workbench_menu'] = array(
+    'label' => t('Workbench menu'),
+    'base table' => 'workbench_menus',
+    'controller class' => 'WorkbenchMenuController',
+    'fieldable' => FALSE,
+    'entity keys' => array(
+      'id' => 'id',
+    ),
+  );
+  return $types;
+}
+
+/**
  * Implements hook_menu().
  */
 function workbench_menu_menu() {
