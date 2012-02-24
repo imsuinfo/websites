@@ -1496,12 +1496,12 @@ function workbench_moderation_moderate($node, $state) {
   // We do this in a shutdown function to avoid race conditions when
   // running node_save() from within a node submission.
   if (!empty($node->workbench_moderation['published'])) {
-    drupal_register_shutdown_function('workbench_moderation_store', $node);
+    drupal_register_shutdown_function('workbench_moderation_store', $node, $old_revision->state, $state);
   }
-
-
-  // Notify other modules that the state was changed.
-  module_invoke_all('workbench_moderation_transition', $node, $old_revision->state, $state);
+  else {
+    // Notify other modules that the state was changed.
+    module_invoke_all('workbench_moderation_transition', $node, $old_revision->state, $state);
+  }
 }
 
 /**
@@ -1520,7 +1520,7 @@ function workbench_moderation_moderate($node, $state) {
  * @param $node
  *   The node being saved.
  */
-function workbench_moderation_store($node) {
+function workbench_moderation_store($node, $old_state, $new_state) {
   if (!isset($node->nid)) {
     watchdog('Workbench moderation', 'Failed to save node revision: node not passed to shutdown function.', array(), WATCHDOG_NOTICE);
     return;
@@ -1540,6 +1540,9 @@ function workbench_moderation_store($node) {
 
   // Save the node.
   node_save($live_revision);
+
+  // Notify other modules that the state was changed.
+  module_invoke_all('workbench_moderation_transition', $node, $old_state, $new_state);
 }
 
 /**
