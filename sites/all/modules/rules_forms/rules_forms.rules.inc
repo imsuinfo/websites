@@ -18,7 +18,7 @@ function rules_forms_rules_file_info() {
 function rules_forms_rules_event_info() {
   $form_events = variable_get('rules_forms_event_info', array());
   $defaults = array(
-    'group' => 'Rules forms',
+    'group' => 'Rules Forms',
     'access callback' => 'rules_forms_integration_access',
   );
 
@@ -36,6 +36,21 @@ function rules_forms_rules_event_info() {
       'label' => t('@form is being validated', array('@form' => $info['label'])),
       'variables' => rules_forms_event_variables() + rules_forms_element_variables($form_id),
     );
+
+    if ($info['buttons'] && isset($info['submit'])) {
+      foreach ($info['submit'] as $element_id => $label) {
+        // Add button validate events.
+        $events['rules_forms_'. $form_id .'_button_'. str_replace(':', '_', $element_id) .'_validate'] = $defaults + array(
+          'label' => t('@form @button button is being validated', array('@form' => $info['label'], '@button' => strtolower($label))),
+          'variables' => rules_forms_event_variables() + rules_forms_element_variables($form_id),
+        );
+        // Add button submit events.
+        $events['rules_forms_'. $form_id .'_button_'. str_replace(':', '_', $element_id) .'_submit'] = $defaults + array(
+          'label' => t('@form @button button is being submitted', array('@form' => $info['label'], '@button' => strtolower($label))),
+          'variables' => rules_forms_event_variables() + rules_forms_element_variables($form_id),
+        );
+      }
+    }
   }
   return $events;
 }
@@ -93,7 +108,7 @@ function rules_forms_rules_condition_info() {
   $conditions = array();
   $conditions['rules_forms_element_value'] = array(
     'label' => t('Form element has value'),
-    'group' => 'Rules forms',
+    'group' => 'Rules Forms',
     'parameter' => array(
       'form' => array(
         'type' => 'form',
@@ -114,6 +129,12 @@ function rules_forms_rules_condition_info() {
         'optional' => TRUE,
         'description' => t('Value(s) assigned to the form element. If the form element allows multiple values, enter one value per line.'),
       ),
+      'regex' => array(
+        'type' => 'boolean',
+        'label' => t('Evaluate as regular expression'),
+        'optional' => TRUE,
+        'description' => t('Perform the data comparison using the provided value as a regular expression.'),
+      ),
     ),
     'base' => 'rules_forms_condition_element_value',
     'callbacks' => array(
@@ -123,7 +144,7 @@ function rules_forms_rules_condition_info() {
   );
   $conditions['rules_forms_element_changed'] = array(
     'label' => t('Form element value has changed'),
-    'group' => 'Rules forms',
+    'group' => 'Rules Forms',
     'parameter' => array(
       'form' => array(
         'type' => 'form',
@@ -140,6 +161,30 @@ function rules_forms_rules_condition_info() {
       ),
     ),
     'base' => 'rules_forms_condition_element_changed',
+    'callbacks' => array(
+      'access' => 'rules_forms_integration_access',
+      'form_alter' => 'rules_forms_action_set_attribute_form_alter',
+    ),
+  );
+  $conditions['rules_forms_button_clicked'] = array(
+    'label' => t('Form button was clicked'),
+    'group' => 'Rules Forms',
+    'parameter' => array(
+      'form' => array(
+        'type' => 'form',
+        'label' => t('Form'),
+      ),
+      'form_state' => array(
+        'type' => 'form_state',
+        'label' => t('Form state'),
+      ),
+      'element' => array(
+        'type' => 'form_element',
+        'label' => t('Form element'),
+        'description' => t('The form button that was clicked.'),
+      ),
+    ),
+    'base' => 'rules_forms_condition_button_clicked',
     'callbacks' => array(
       'access' => 'rules_forms_integration_access',
       'form_alter' => 'rules_forms_action_set_attribute_form_alter',
@@ -165,7 +210,7 @@ function rules_forms_rules_action_info() {
   $actions = array();
   $actions['rules_forms_set_title'] = array(
     'label' => t('Set the title of an element in the form'),
-    'group' => 'Rules forms',
+    'group' => 'Rules Forms',
     'parameter' => $element_params + array(
       'title' => array(
         'type' => 'text',
@@ -181,7 +226,7 @@ function rules_forms_rules_action_info() {
   );
   $actions['rules_forms_set_description'] = array(
     'label' => t('Set the description of an element in the form'),
-    'group' => 'Rules forms',
+    'group' => 'Rules Forms',
     'parameter' => $element_params + array(
       'description' => array(
         'type' => 'text',
@@ -197,7 +242,7 @@ function rules_forms_rules_action_info() {
   );
   $actions['rules_forms_set_access'] = array(
     'label' => t('Hide an element in the form'),
-    'group' => 'Rules forms',
+    'group' => 'Rules Forms',
     'parameter' => $element_params + array(
       'access' => array(
         'type' => 'boolean',
@@ -214,7 +259,7 @@ function rules_forms_rules_action_info() {
   );
   $actions['rules_forms_set_disabled'] = array(
     'label' => t('Disable an element in the form'),
-    'group' => 'Rules forms',
+    'group' => 'Rules Forms',
     'parameter' => $element_params + array(
       'disabled' => array(
         'type' => 'boolean',
@@ -231,7 +276,7 @@ function rules_forms_rules_action_info() {
   );
   $actions['rules_forms_set_required'] = array(
     'label' => t('Require an element in the form'),
-    'group' => 'Rules forms',
+    'group' => 'Rules Forms',
     'parameter' => $element_params + array(
       'require' => array(
         'type' => 'boolean',
@@ -248,7 +293,7 @@ function rules_forms_rules_action_info() {
   );
   $actions['rules_forms_set_options'] = array(
     'label' => t('Set multiple value options of an element in the form'),
-    'group' => 'Rules forms',
+    'group' => 'Rules Forms',
     'parameter' => $element_params + array(
       'options' => array(
         'type' => 'text',
@@ -265,7 +310,7 @@ function rules_forms_rules_action_info() {
   );
   $actions['rules_forms_set_default'] = array(
     'label' => t('Set the default value of an element in the form'),
-    'group' => 'Rules forms',
+    'group' => 'Rules Forms',
     'parameter' => $element_params + array(
       'value' => array(
         'type' => 'form_value',
@@ -282,7 +327,7 @@ function rules_forms_rules_action_info() {
   );
   $actions['rules_forms_set_weight'] = array(
     'label' => t('Adjust weight of an element in the form'),
-    'group' => 'Rules forms',
+    'group' => 'Rules Forms',
     'parameter' => $element_params + array(
       'weight' => array(
         'type' => 'integer',
@@ -299,7 +344,7 @@ function rules_forms_rules_action_info() {
   );
   $actions['rules_forms_set_prefix_suffix'] = array(
     'label' => t('Insert HTML into the prefix/suffix of an element in the form'),
-    'group' => 'Rules forms',
+    'group' => 'Rules Forms',
     'parameter' => $element_params + array(
       'prefix' => array(
         'type' => 'text',
@@ -322,11 +367,20 @@ function rules_forms_rules_action_info() {
   );
   $actions['rules_forms_set_error'] = array(
     'label' => t('Set an error on the form'),
-    'group' => 'Rules forms',
-    'parameter' => $element_params + array(
+    'group' => 'Rules Forms',
+    'parameter' =>  array(
+      'form' => array('type' => 'form', 'label' => t('Form')),
+      'element' => array(
+        'type' => 'form_element',
+        'label' => t('Form element'),
+        'restriction' => 'input',
+        'optional' => TRUE,
+        'description' => t('The form element to be targeted.'),
+      ),
       'message' => array(
         'type' => 'text',
         'label' => t('Message'),
+        'optional' => TRUE,
         'description' => t('The message that should be displayed to the user.'),
       ),
     ),
@@ -335,7 +389,7 @@ function rules_forms_rules_action_info() {
   );
   $actions['rules_forms_redirect'] = array(
     'label' => t('Set the redirect target of the form'),
-    'group' => 'Rules forms',
+    'group' => 'Rules Forms',
     'parameter' => array(
       'form_state' => array('type' => 'form_state', 'label' => t('Form state')),
       'path' => array('type' => 'text', 'label' => t('Path')),
@@ -375,20 +429,20 @@ function rules_forms_rules_data_info() {
   return array(
     'form' => array(
       'label' => t('form'),
-      'group' => 'Rules forms',
+      'group' => 'Rules Forms',
     ),
     'form_state' => array(
       'label' => t('form state'),
-      'group' => 'Rules forms',
+      'group' => 'Rules Forms',
     ),
     'form_element' => array(
       'label' => t('form element'),
-      'group' => 'Rules forms',
+      'group' => 'Rules Forms',
       'ui class' => 'RulesFormsDataElement',
     ),
     'form_value' => array(
       'label' => t('form value'),
-      'group' => 'Rules forms',
+      'group' => 'Rules Forms',
       'ui class' => 'RulesFormsDataValue',
     ),
   );

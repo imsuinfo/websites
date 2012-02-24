@@ -51,7 +51,8 @@ class RulesFormsDataElement extends RulesFormsDataUI {
    */
   private static $_attributes = array(
     'access' => 'all',
-    'changed' => 'all', // Allows the value changed condition to use this form.
+    'changed' => array('textfield', 'textarea', 'checkbox', 'checkboxes', 'radio', 'radios', 'select'),
+    'clicked' => array('button', 'submit'), // For Condition: button was clicked.
     'disabled' => array('textfield', 'textarea', 'checkbox', 'checkboxes', 'radio', 'radios', 'select', 'button', 'submit'),
     'default' => array('textfield', 'textarea', 'checkbox', 'checkboxes', 'radio', 'radios', 'select'),
     'description' => array('textfield', 'textarea', 'checkbox', 'checkboxes', 'radio', 'radios', 'select', 'item'),
@@ -61,7 +62,7 @@ class RulesFormsDataElement extends RulesFormsDataUI {
     'suffix' => 'all', // Note: This applies to prefix/suffix action.
     'title' => array('textfield', 'textarea', 'checkbox', 'checkboxes', 'radio', 'radios', 'select', 'item'),
     'weight' => 'all',
-    'value' => 'all', // Allows the element has value condition to use this form.
+    'value' => array('textfield', 'textarea', 'checkbox', 'checkboxes', 'radio', 'radios', 'select'),
   );
 
   /**
@@ -84,10 +85,14 @@ class RulesFormsDataElement extends RulesFormsDataUI {
         // Filter the elements by determining whether this attribute can be applied to them.
         if (isset(self::$_attributes[$attribute])
             && (self::$_attributes[$attribute] == 'all' || in_array($type, self::$_attributes[$attribute]))) {
-          $options[$key] = $value['label'];
+          if (!isset($options[$type])) {
+            $options[$type] = array();
+          }
+          $options[$type][$key] = $value['label'];
         }
       }
     }
+    ksort($options);
     $form = parent::defaultForm($name, $info, $settings, 'Form element');
     $form[$name]['#options'] = $options;
     return $form;

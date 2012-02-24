@@ -1,3 +1,22 @@
+-------------
+ 7.x-1.0-dev
+-------------
+- #1429988 by jordojuice: Add conditionals due to the fact that rules may break in
+  the event that form elements are limited due to a more restricted user role.
+- #1429960 by jordojuice: Add additional test cases for conditions and actions.
+- #1353696 patch by jordojuice: Support regular expressions in Condition: Element has value.
+- #1393572 patch by jordojuice: Add support for button level validate and submit events.
+- #1432094 by jordojuice: Update available attributes for form elements to reflect submit
+  and button elements.
+- #1255348 by jordojuice: Add Condition: Form button was clicked.
+- #1429960 by jordojuice: Add tests for Rules forms support events.
+
+-------------
+ 7.x-1.0-rc1
+-------------
+ - #1429954 by jordojuice: Write test cases for all forms, conditions, and actions.
+ - Fixed inconsistencies in naming of some rules.
+
 ---------------
  7.x-1.0-beta8
 ---------------
