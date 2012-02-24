@@ -1538,9 +1538,6 @@ function workbench_moderation_store($node, $old_state, $new_state) {
   $taxonomy_index_flag = &drupal_static('taxonomy_field_update', array());
   unset($taxonomy_index_flag[$node->nid]);
 
-  // Save the node.
-  node_save($live_revision);
-
   // Notify other modules that the state was changed.
   module_invoke_all('workbench_moderation_transition', $node, $old_state, $new_state);
 }
