@@ -152,8 +152,7 @@ class views_handler_field_field extends views_handler_field {
 
 
     // The alias needs to be unique, so we use both the field table and the entity type.
-    $entity_type_alias = $this->definition['table'] . '_' . $entity_type . '_entity_type';
-    $this->aliases['entity_type'] = $this->query->add_field(NULL, "'$entity_type'", $entity_type_alias);
+    $this->aliases['entity_type'] = $this->query->add_field($this->definition['table'], 'entity_type');
 
     $fields = $this->additional_fields;
     // We've already added entity_type, so we can remove it from the list.
@@ -177,6 +176,8 @@ class views_handler_field_field extends views_handler_field {
       $rkey = $this->definition['is revision'] ? 'FIELD_LOAD_REVISION' : 'FIELD_LOAD_CURRENT';
       // Go through the list and determine the actual column name from field api.
       foreach ($options as $column) {
+        if (empty($column)) continue;
+
         $name = $column;
         if (isset($this->field_info['storage']['details']['sql'][$rkey][$this->table][$column])) {
           $name = $this->field_info['storage']['details']['sql'][$rkey][$this->table][$column];
@@ -574,8 +575,10 @@ class views_handler_field_field extends views_handler_field {
       $entities_by_type = array();
       $revisions_by_type = array();
       foreach ($values as $key => $object) {
-        if (isset($object->{$this->field_alias}) && !isset($values[$key]->_field_data[$this->field_alias])) {
+        if (isset($object->{$this->field_alias}) && !isset($values[$key]->_field_data[$this->field_alias]) && isset($object->{$this->aliases['entity_type']})) {
           $entity_type = $object->{$this->aliases['entity_type']};
+          if (empty($entity_type)) continue;
+
           if (empty($this->definition['is revision'])) {
             $entity_id = $object->{$this->field_alias};
             $entities_by_type[$entity_type][$key] = $entity_id;

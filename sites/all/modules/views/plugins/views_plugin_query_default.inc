@@ -1178,7 +1178,11 @@ class views_plugin_query_default extends views_plugin_query {
      * An optimized count query includes just the base field instead of all the fields.
      * Determine of this query qualifies by checking for a groupby or distinct.
      */
-    $fields_array = $this->fields;
+    $fields_array = array();
+    if (property_exists($this, 'fields')){
+      $fields_array = $this->fields;
+    }
+
     if ($get_count && !$this->groupby) {
       foreach ($fields_array as $field) {
         if (!empty($field['distinct']) || !empty($field['function'])) {
@@ -1239,6 +1243,8 @@ class views_plugin_query_default extends views_plugin_query {
     $this->compile_fields($fields_array, $query);
 
     foreach ($fields_array as $field){
+      if (empty($field['field'])) continue;
+
       if (!empty($field['table'])){
         $name = $field['table'] . '.' . $field['field'];
       }
