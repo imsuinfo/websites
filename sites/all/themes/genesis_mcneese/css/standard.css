@@ -656,6 +656,10 @@ div#front_page_columns-events div.views-field-nothing div.event-event_date {
   padding: 0 10px 5px 10px;
 }
 
+div#front_page_columns-events div#front_page_columns-lagniappe div.views-field-nothing div.event-event_date {
+  color: #2b6491;
+}
+
 div#front_page_columns-events div.views-field-nothing div.highlight-headline,
 div#front_page_columns-events div.views-field-nothing div.event-headline {
   color: #7fbcec;
