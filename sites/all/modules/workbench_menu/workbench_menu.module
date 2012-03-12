@@ -569,6 +569,14 @@ function workbench_menu_build_menu_item($menu, $item, &$variables, array $functi
     $data['structure'] = $built_menus['structure'][$item_menu->weight][$item_menu->id]['structure'];
     $data['settings'] = $built_menus['structure'][$item_menu->weight][$item_menu->id]['settings'];
 
+    if ($settings[$item['item']->id]['expand'] != "expand_auto") {
+      foreach ($data['structure'] as $row_key => &$row_value) {
+        foreach ($row_value as $key => &$value){
+          $data['settings'][$key]['expand'] = $settings[$item['item']->id]['expand'];
+        }
+      }
+    }
+
     return $data;
   }
 
