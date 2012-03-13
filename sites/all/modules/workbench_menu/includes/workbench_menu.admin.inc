@@ -43,6 +43,8 @@ function workbench_menu_edit_settings($access_type = NULL, $access_type_id = NUL
 
   asort($sorted);
 
+  $menus = (array) workbench_menu_get_menus(array('access_id' => array_keys($sorted)), 'access_id', $function_history);
+
   $rows = array();
   foreach ($sorted as $access_id => &$section_name) {
     if (!array_key_exists($access_id, $access)) {
@@ -53,10 +55,30 @@ function workbench_menu_edit_settings($access_type = NULL, $access_type_id = NUL
       continue;
     }
 
-    $rows[] = array(l($section_name, 'admin/workbench/menus/' . $active['access_scheme']['access_type'] . '/' . $access_id));
+    $row = array();
+    $row[] = l($section_name, 'admin/workbench/menus/' . $active['access_scheme']['access_type'] . '/' . $access_id);
+
+    if (isset($menus[$access_id]) && property_exists($menus[$access_id], 'path')) {
+      $default_path = $menus[$access_id]->path;
+
+      // be user-friendly and show normal spaces instead of %20.
+      $row[] = preg_replace('/%20/', ' ', $default_path);
+    }
+    else {
+      $row[] = "";
+    }
+
+    if (isset($menus[$access_id]) && property_exists($menus[$access_id], 'id')) {
+      $row[]  = $menus[$access_id]->id;
+    }
+    else {
+      $row[] = "";
+    }
+
+    $rows[] = $row;
   }
 
-  $header = array(t("Menu Name"));
+  $header = array(t("Menu Name"), t("Menu Path"), t("Menu ID"));
   $output .= theme('table', array('header' => $header, 'rows' => $rows, 'empty' => t("There are no menus available for you to edit.")));
   $build['content']['#markup'] = $output;
   return $build;
@@ -380,27 +402,46 @@ function workbench_menu_admin_settings($access_type = NULL, $access_type_id = NU
     $output .= ' ' . t("You may <a href=\"!url\">enable or disable sections</a>.", array('!url' => url('admin/config/workbench/access/sections'))) . '</p>';
   }
 
+  $menus = (array) workbench_menu_get_menus(array('access_id' => array_keys($active['tree'])), 'access_id', $function_history);
+
   $rows = array();
   foreach ($active['tree'] as $access_id => &$section) {
     if (!isset($active['active'][$access_id])) {
       continue;
     }
 
+    $row = array();
+
     if (is_numeric($access_id)) {
-      $row = array(
-        str_repeat('- ', $section['depth'] ) . ' ' . l($section['name'], 'admin/config/workbench/access/menus/' . $active['access_scheme']['access_type'] . '/' . $access_id),
-      );
+      $row[] = str_repeat('- ', $section['depth'] ) . ' ' . l($section['name'], 'admin/config/workbench/access/menus/' . $active['access_scheme']['access_type'] . '/' . $access_id);
     }
     else {
-      $row = array(
-        str_repeat('- ', $section['depth'] ) . ' ' . $section['name'],
-      );
+      $row[] = str_repeat('- ', $section['depth'] ) . ' ' . $section['name'];
     }
+
+    if (isset($menus[$access_id]) && property_exists($menus[$access_id], 'path')) {
+      $default_path = $menus[$access_id]->path;
+
+      // be user-friendly and show normal spaces instead of %20.
+      $row[] = preg_replace('/%20/', ' ', $default_path);
+    }
+    else {
+      $row[] = "";
+    }
+
+    if (isset($menus[$access_id]) && property_exists($menus[$access_id], 'id')) {
+      $row[]  = $menus[$access_id]->id;
+    }
+    else {
+      $row[] = "";
+    }
+
+    $row[] = $access_id;
 
     $rows[] = $row;
   }
 
-  $header = array(t("Menu Name"));
+  $header = array(t("Menu Name"), t("Menu Path"), t("Menu ID"), t("Access ID"));
   $output .= theme('table', array('header' => $header, 'rows' => $rows, 'empty' => t("There are no menus available for you to edit.")));
   $build['content']['#markup'] = $output;
   return $build;
