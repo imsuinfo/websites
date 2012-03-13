@@ -7,6 +7,11 @@
   margin-top: 30px;
 }
 
+.document > section,
+.document > section {
+  clear: both;
+}
+
 .document .block {
   display: block;
 }
