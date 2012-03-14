@@ -1,3 +1,22 @@
+.document {
+  counter-reset: example_count;
+  counter-reset: section;
+}
+
+.document > section {
+  counter-increment: section;
+  counter-reset: sub_section;
+}
+
+.document > section > section {
+  counter-increment: sub_section;
+  counter-reset: sub_sub_section;
+}
+
+.document > section > section > section {
+  counter-increment: sub_sub_section;
+}
+
 .document a,
 .document a:visited {
   color: #0000ff;

@@ -1,3 +1,22 @@
+#ckeditor-wysiwygarea {
+  counter-reset: example_count;
+  counter-reset: section;
+}
+
+#ckeditor-wysiwygarea > section {
+  counter-increment: section;
+  counter-reset: sub_section;
+}
+
+#ckeditor-wysiwygarea > section > section {
+  counter-increment: sub_section;
+  counter-reset: sub_sub_section;
+}
+
+#ckeditor-wysiwygarea > section > section > section {
+  counter-increment: sub_sub_section;
+}
+
 #ckeditor-wysiwygarea a,
 #ckeditor-wysiwygarea a:visited {
   color: #0000ff;
