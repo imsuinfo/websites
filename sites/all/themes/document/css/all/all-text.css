@@ -1,6 +1,5 @@
 .document {
-  counter-reset: example_count;
-  counter-reset: section;
+  counter-reset: example_count 0 section 0;
 }
 
 .document > section {
