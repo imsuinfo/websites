@@ -65,10 +65,32 @@
   text-indent: 0.5in;
 }
 
+.document .item-list ul > li {
+  margin: 0;
+  padding: 1px 0;
+}
+
 .document ul,
 .document ol,
 .document dl {
   margin: 0;
+  padding-left: 25px;
+}
+
+.document ul > li,
+.document ol > li {
+  margin: 0;
+  padding: 1px 0;
+}
+
+.document section ul,
+.document section ol,
+.document section dl {
+  position: relative;
+  left: 25px;
+
+  margin: 0;
+  padding: 0;
 }
 
 .document dd {
