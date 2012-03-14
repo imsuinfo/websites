@@ -54,3 +54,110 @@
 #ckeditor-wysiwygarea .align_right {
   text-align: right;
 }
+
+#ckeditor-wysiwygarea ol.inline {
+  counter-reset: ordered_list_count;
+}
+
+#ckeditor-wysiwygarea ol.inline > li:before {
+  counter-increment: ordered_list_count;
+  content: '(' counter(ordered_list_count) ') ';
+}
+
+#ckeditor-wysiwygarea ol.inline.colon > li:before {
+  counter-increment: ordered_list_count;
+  content: counter(ordered_list_count) ': ';
+}
+
+#ckeditor-wysiwygarea ul.inline > li:last-of-type:before,
+#ckeditor-wysiwygarea ul.inline.and > li:last-of-type:before {
+  content: 'and ';
+}
+
+#ckeditor-wysiwygarea ul.inline.or > li:last-of-type:before {
+  content: 'or ';
+}
+
+#ckeditor-wysiwygarea ul.inline.and.or > li:last-of-type:before {
+  content: 'and/or ';
+}
+
+#ckeditor-wysiwygarea ol.inline > li:last-of-type:before,
+#ckeditor-wysiwygarea ol.inline.and > li:last-of-type:before {
+  content: 'and (' counter(ordered_list_count) ') ';
+}
+
+#ckeditor-wysiwygarea ol.inline.or > li:last-of-type:before {
+  content: 'or (' counter(ordered_list_count) ') ';
+}
+
+#ckeditor-wysiwygarea ol.inline.and.or > li:last-of-type:before {
+  content: 'and/or (' counter(ordered_list_count) ') ';
+}
+
+#ckeditor-wysiwygarea ol.inline.colon > li:last-of-type:before,
+#ckeditor-wysiwygarea ol.inline.colon.and > li:last-of-type:before {
+  content: 'and ' counter(ordered_list_count) ': ';
+}
+
+#ckeditor-wysiwygarea ol.inline.colon.or > li:last-of-type:before {
+  content: 'or ' counter(ordered_list_count) ': ';
+}
+
+#ckeditor-wysiwygarea ol.inline.colon.and.or > li:last-of-type:before {
+  content: 'and/or ' counter(ordered_list_count) ': ';
+}
+
+#ckeditor-wysiwygarea ul.inline > li:after,
+#ckeditor-wysiwygarea ol.inline > li:after {
+  content: ',';
+}
+
+#ckeditor-wysiwygarea ul.inline > li:last-of-type:after,
+#ckeditor-wysiwygarea ol.inline > li:last-of-type:after {
+  content: '';
+}
+
+#ckeditor-wysiwygarea ul.inline.sentence > li:last-of-type:after,
+#ckeditor-wysiwygarea ol.inline.sentence > li:last-of-type:after {
+  content: '.';
+}
+
+#ckeditor-wysiwygarea ul.inline.exclamation > li:last-of-type:after,
+#ckeditor-wysiwygarea ol.inline.exclamation > li:last-of-type:after {
+  content: '!';
+}
+
+#ckeditor-wysiwygarea ul.inline.question > li:last-of-type:after,
+#ckeditor-wysiwygarea ol.inline.question > li:last-of-type:after {
+  content: '?';
+}
+
+#ckeditor-wysiwygarea ul.inline.sentence-semicolon > li:last-of-type:after,
+#ckeditor-wysiwygarea ol.inline.sentence-semicolon > li:last-of-type:after {
+  content: ';';
+}
+
+#ckeditor-wysiwygarea .image {
+  background-color: #f0f0f0;
+}
+
+#ckeditor-wysiwygarea .for_example:before {
+  background-color: #00477f;
+  color: #ffffff;
+
+  counter-increment: example_count;
+  content: 'Example ' counter(example_count);
+
+  font-weight: bold;
+  font-family: monospace;
+
+  line-height: 1em;
+  letter-spacing: 2px;
+}
+
+#ckeditor-wysiwygarea .for_example {
+  position: relative;
+
+  background-color: #e3ea9a;
+}
