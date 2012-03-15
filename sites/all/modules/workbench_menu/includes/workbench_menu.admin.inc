@@ -1057,7 +1057,7 @@ function workbench_menu_admin_item_settings_form_settings($item, $menu, array $f
   $available['parents'] = workbench_menu_get_load_menu_items_select_list_options(array('menu_id' => $menu->id), 'id', $function_history);
   $available['item_types'] = workbench_menu_get_options_list('item_type', NULL, $function_history);
   $available['expand'] = workbench_menu_get_options_list('expand', NULL, $function_history);
-  $available['menus'] = workbench_menu_get_menus_options_list($function_history);
+  $available['menus'] = workbench_menu_get_menus_options_list(TRUE, TRUE, $function_history);
 
   // do not show current in the possible menu choices.
   unset($available['menus'][$menu->access_id]);
