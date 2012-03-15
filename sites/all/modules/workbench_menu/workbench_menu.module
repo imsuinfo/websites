@@ -156,38 +156,24 @@ function workbench_menu_workbench_access_delete($section) {
     return;
   }
 
-  $query = db_select('workbench_menu_items', 'wmi');
-  $query->innerjoin('workbench_menus',  'wm', 'wm.id = mni.menu_id');
-  $query->fields('wmi', array('id'));
+  $query = db_select('workbench_menus', 'wm');
+  $query->fields('wm', array('id', 'access_id'));
   $query->condition('wm.access_id', $section['access_id']);
 
-  try {
-    $records = (array) $query->execute()->fetchAll();
+  $records = (array) $query->execute()->fetchAll();
 
-    if (empty($records)) {
-      return;
-    }
+  if (empty($records)) {
+    return;
+  }
 
-    foreach ($records as &$record) {
-      foreach (array('expand', 'item_type') as $name) {
-        $query = db_delete('workbench_menu_' . $name . 's', 'wmn');
-        $query->condition('wmn.item_id', $record->id);
-        $query->execute();
-      }
-    }
-
+  foreach ($records as &$record) {
     $query = db_delete('workbench_menu_items');
-    $query->condition('item_id', $record->id);
+    $query->condition('menu_id', $record->id);
     $query->execute();
 
     $query = db_delete('workbench_menus');
-    $query->condition('access_id', $section['access_id']);
+    $query->condition('id', $record->id);
     $query->execute();
-  }
-  catch (Exception $e) {
-    cf_error_on_query_execution($function_history, $e);
-
-    return array();
   }
 }
 
@@ -1698,19 +1684,6 @@ function workbench_menu_save_menus($menus, array $function_history = array()) {
         }
         else {
           drupal_write_record('workbench_menu_items', $record);
-        }
-
-        foreach (array('expand', 'item_type') as $name) {
-          $query = db_delete('workbench_menu_options_' . $name);
-          $query->condition($name . '_id', $menu_item['id']);
-          $query->execute();
-
-          foreach ($menu_item[$name] as &$id) {
-            $record = array();
-            $record['menu_id'] = $menu_item['id'];
-            $record[$name . '_id'] = $id;
-            drupal_write_record('workbench_menu_items', $record);
-          }
         }
       }
 
