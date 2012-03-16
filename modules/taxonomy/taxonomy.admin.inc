@@ -580,6 +580,7 @@ function theme_taxonomy_overview_terms($variables) {
       $term['weight']['#attributes']['class'] = array('term-weight');
       $row[] = drupal_render($term['weight']);
       $row[] = drupal_render($term['edit']);
+      $row[] = intval($term['tid']['#value']);
       $row = array('data' => $row);
       $rows[$key] = $row;
     }
@@ -620,7 +621,7 @@ function theme_taxonomy_overview_terms($variables) {
     $rows[] = array(array('data' => $form['#empty_text'], 'colspan' => '3'));
   }
 
-  $header = array(t('Name'), t('Weight'), t('Operations'));
+  $header = array(t('Name'), t('Weight'), t('Operations'), t('Term id'));
   $output = theme('table', array('header' => $header, 'rows' => $rows, 'attributes' => array('id' => 'taxonomy')));
   $output .= drupal_render_children($form);
   $output .= theme('pager');
