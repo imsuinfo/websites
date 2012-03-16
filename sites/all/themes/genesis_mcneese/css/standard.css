@@ -1032,3 +1032,10 @@ div#columns div.view-id-more_pages div.views-field-field-headline {
 
   margin: 5px 15px 5px 15px;
 }
+
+/*** wwwdev.mcneese.edu-specific ***/
+body.at-wwwdev_mcneese_edu .mcneese_footer_block,
+body.at-wwwdev2_mcneese_edu .mcneese_footer_block,
+body.at-wwwdev3_mcneese_edu .mcneese_footer_block {
+  background-color: #dadada;
+}
