@@ -74,27 +74,13 @@
 .document ol,
 .document dl {
   margin: 0;
-  padding-left: 25px;
+  padding: 0 0 0 25px;
 }
 
 .document ul > li,
 .document ol > li {
   margin: 0;
   padding: 1px 0;
-}
-
-.document section ul,
-.document section ol,
-.document section dl {
-  position: relative;
-  left: 25px;
-
-  margin: 0;
-  padding: 0;
-}
-
-.document dd {
-  margin: 0 20px;
 }
 
 .document ul.inline
@@ -112,6 +98,16 @@
 .document figure {
   display: inline-block;
   margin: 15px;
+}
+
+.document figure.float-left {
+  margin-left: 0;
+  margin-right: 30px;
+}
+
+.document figure.float-right {
+  margin-left: 30px;
+  margin-right: 0;
 }
 
 .document pre {
