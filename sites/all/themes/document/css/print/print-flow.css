@@ -22,6 +22,11 @@
   }
 }
 
+body.document.is-logged_in,
+body.document.toolbar-drawer {
+  padding-top: 0px !important;
+}
+
 .document {
   width: 792px;
   min-width: 792px;
