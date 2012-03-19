@@ -580,7 +580,7 @@ function theme_taxonomy_overview_terms($variables) {
       $term['weight']['#attributes']['class'] = array('term-weight');
       $row[] = drupal_render($term['weight']);
       $row[] = drupal_render($term['edit']);
-      $row[] = intval($term['tid']['#value']);
+      $row[] = isset($term['tid']['#value']) ? intval($term['tid']['#value']) : '';
       $row = array('data' => $row);
       $rows[$key] = $row;
     }
