@@ -222,6 +222,7 @@ function rules_action_data_set_form_alter(&$form, &$form_state, $options, RulesA
   if (!empty($options['init']) && !isset($form_state['rules_element_step'])) {
     $form['negate']['#access'] = FALSE;
     unset($form['parameter']['value']);
+    unset($form['parameter']['language']);
     $form['submit'] = array(
       '#type' => 'submit',
       '#value' => t('Continue'),
@@ -451,6 +452,7 @@ function rules_data_condition_info() {
           'label' => t('Data to check'),
           'description' => t('The data to be checked to be empty, specified by using a data selector, e.g. "node:author:name".'),
           'allow null' => TRUE,
+          'wrapped' => TRUE,
         ),
       ),
       'group' => t('Data'),
@@ -597,7 +599,8 @@ function rules_condition_data_is_form_alter(&$form, &$form_state, $options, Rule
  * Provides configuration help for the data_is condition.
  */
 function rules_condition_data_is_help() {
-  return array('#markup' => t('Compare two data values of the same type with each other.'));}
+  return array('#markup' => t('Compare two data values of the same type with each other.'));
+}
 
 /**
  * Options list callback for condition data_is.

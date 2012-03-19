@@ -233,8 +233,12 @@ function rules_condition_data_is($data, $op, $value) {
   switch ($op) {
     default:
     case '==':
-      // In case both values evaluate to FALSE, do a type-safe comparison.
-      return (!$data && !$value) ? $data === $value : $data == $value;
+      // In case both values evaluate to FALSE, further differentiate between
+      // NULL values and values evaluating to FALSE.
+      if (!$data && !$value) {
+        return (isset($data) && isset($value)) || (!isset($data) && !isset($value));
+      }
+      return $data == $value;
     case '<':
       return $data < $value;
     case '>':
@@ -283,6 +287,20 @@ function rules_condition_data_list_contains($list, $item, $settings, $state) {
  * Condition: Data value is empty.
  */
 function rules_condition_data_is_empty($data) {
+  // Note that some primitive variables might not be wrapped at all.
+  if ($data instanceof EntityMetadataWrapper) {
+    try {
+      // We cannot use the dataAvailable() method from the wrapper because it
+      // is protected, so we catch possible exceptions with the value() method.
+      $value = $data->value();
+      return empty($value);
+    }
+    catch (EntityMetadataWrapperException $e) {
+      // An exception means that the wrapper is somehow broken and we treat
+      // that as empty.
+      return TRUE;
+    }
+  }
   return empty($data);
 }
 
