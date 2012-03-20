@@ -69,16 +69,18 @@ function workbench_menu_edit_settings($access_type = NULL, $access_type_id = NUL
     }
 
     if (isset($menus[$access_id]) && property_exists($menus[$access_id], 'id')) {
-      $row[]  = $menus[$access_id]->id;
+      $row[]  = intval($menus[$access_id]->id);
     }
     else {
       $row[] = "";
     }
 
+    $row[] = intval($access_id);
+
     $rows[] = $row;
   }
 
-  $header = array(t("Menu Name"), t("Menu Path"), t("Menu ID"));
+  $header = array(t("Menu Name"), t("Menu Path"), t("Menu ID"), t("Access ID");
   $output .= theme('table', array('header' => $header, 'rows' => $rows, 'empty' => t("There are no menus available for you to edit.")));
   $build['content']['#markup'] = $output;
   return $build;
@@ -430,13 +432,13 @@ function workbench_menu_admin_settings($access_type = NULL, $access_type_id = NU
     }
 
     if (isset($menus[$access_id]) && property_exists($menus[$access_id], 'id')) {
-      $row[]  = $menus[$access_id]->id;
+      $row[]  = intval($menus[$access_id]->id);
     }
     else {
       $row[] = "";
     }
 
-    $row[] = $access_id;
+    $row[] = intval($access_id);
 
     $rows[] = $row;
   }
