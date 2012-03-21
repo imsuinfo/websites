@@ -80,7 +80,7 @@ function workbench_menu_edit_settings($access_type = NULL, $access_type_id = NUL
     $rows[] = $row;
   }
 
-  $header = array(t("Menu Name"), t("Menu Path"), t("Menu ID"), t("Access ID");
+  $header = array(t("Menu Name"), t("Menu Path"), t("Menu ID"), t("Access ID"));
   $output .= theme('table', array('header' => $header, 'rows' => $rows, 'empty' => t("There are no menus available for you to edit.")));
   $build['content']['#markup'] = $output;
   return $build;
