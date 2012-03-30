@@ -4,9 +4,13 @@ core = 7.x
 configure = admin/config/content/linkit
 dependencies[] = ctools
 
-; Information added by drupal.org packaging script on 2012-01-05
-version = "7.x-2.1"
+
+; Our plugins interfaces and abstract implementations.
+files[] = plugins/plugin.class.php
+files[] = plugins/linkit_plugins/linkit-plugin-entity.class.php
+; Information added by drupal.org packaging script on 2012-03-27
+version = "7.x-2.2"
 core = "7.x"
 project = "linkit"
-datestamp = "1325731843"
+datestamp = "1332891645"
 
