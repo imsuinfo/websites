@@ -405,10 +405,10 @@ function _workbench_moderation_access($op, $node) {
   // The user must be able to view the moderation history.
   $access &= user_access('view moderation history');
 
-  // The user must be able to edit this node.
-  $access &= node_access('update', $node);
-
   if ($op == 'unpublish') {
+    // The user must be able to edit this node.
+    $access &= node_access('update', $node);
+
     // workbench_moderation_states_next() checks transition permissions.
     $next_states = workbench_moderation_states_next(workbench_moderation_state_published(), $user, $node->type);
     $access &= !empty($next_states);
