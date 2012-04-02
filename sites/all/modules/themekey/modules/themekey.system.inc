@@ -20,6 +20,7 @@
  * - system:query_param
  * - system:query_string
  * - system:cookie
+ * - system:http_header
  * - system:server_ip
  * - system:server_port
  * - system:server_name
@@ -69,6 +70,11 @@ function themekey_system_themekey_properties() {
 
   $attributes['system:cookie'] = array(
     'description' => t("System: Cookie - Every single cookie and its value if present will be formatted like 'COOKIE_NAME=COOKIE_VALUE'"),
+    'page cache' => THEMEKEY_PAGECACHE_UNSUPPORTED,
+  );
+
+  $attributes['system:http_header'] = array(
+    'description' => t("System: HTTP Header - Every single HTTP header and its value if present will be formatted like 'HEADER_NAME=HEADER_VALUE'"),
     'page cache' => THEMEKEY_PAGECACHE_UNSUPPORTED,
   );
 
@@ -270,6 +276,9 @@ foo
                   'dst'       => 'system:cookie',
                   'callback'  => 'themekey_dummy2cookie');
   $maps[] = array('src'       => 'system:dummy',
+                  'dst'       => 'system:http_header',
+                  'callback'  => 'themekey_dummy2http_header');
+  $maps[] = array('src'       => 'system:dummy',
                   'dst'       => 'system:post',
                   'callback'  => 'themekey_dummy2post');
   $maps[] = array('src'       => 'system:dummy',
@@ -397,6 +406,34 @@ function themekey_dummy2cookie($dummy) {
  * with the aid of another ThemeKey property (source).
  *
  * src: system:dummy
+ * dst: system:http_header
+ *
+ * @param $dummy
+ *   string containing current value of ThemeKey property system:dummy
+ *
+ * @return
+ *   array of system:http_header values
+ *   or NULL if no value could be mapped
+ */
+function themekey_dummy2http_header($dummy) {
+  $filtered_headers = array();
+  if (function_exists('apache_request_headers')) {
+    // Function apache_request_headers() is only available when PHP runs as an Apache module.
+    // P.e. when running drush, it's not available
+    foreach (apache_request_headers() as $key => $value) {
+      $filtered_headers[] = $key . (!empty($value) ? '=' . $value : '');
+    }
+  }
+  return count($filtered_headers) ? array_unique($filtered_headers) : NULL;
+}
+
+
+/**
+ * ThemeKey mapping function to set a
+ * ThemeKey property's value (destination)
+ * with the aid of another ThemeKey property (source).
+ *
+ * src: system:dummy
  * dst: system:post
  *
  * @param $dummy
@@ -492,10 +529,10 @@ function themekey_dummy2date($dummy) {
  *   string containing current value of ThemeKey property system:dummy
  *
  * @return
- *   current date as string formatted like "2009-12-24"
+ *   current month as string, three letters formatted like "Jan"
  */
 function themekey_dummy2month($dummy) {
-  return format_date(time(), 'custom', 'M', variable_get('date_default_timezone', 0));
+  return format_date(time(), 'custom', 'M', variable_get('date_default_timezone', 0), 'en');
 }
 
 
@@ -643,7 +680,7 @@ function themekey_dummy2session($dummy) {
  *   current day of the week as three letters from "Mon" through "Sun"
  */
 function themekey_dummy2day_of_week($dummy) {
-  return format_date(time(), 'custom', 'D', variable_get('date_default_timezone', 0));
+  return format_date(time(), 'custom', 'D', variable_get('date_default_timezone', 0), 'en');
 }
 
 
@@ -659,7 +696,7 @@ function themekey_dummy2day_of_week($dummy) {
 *   string containing current value of ThemeKey property system:dummy
 *
 * @return
-*   current day of the week as three letters from "Mon" through "Sun"
+*   current day of the month without leading zeros
 */
 function themekey_dummy2day_of_month($dummy) {
   return format_date(time(), 'custom', 'j', variable_get('date_default_timezone', 0));

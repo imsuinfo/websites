@@ -42,11 +42,14 @@ function themekey_rule_chain_form($form, &$form_state) {
   $operators = array(
     '=' => '=',
     '!' => '!',
+    '*' => '*',
+    '!*' => '!*',
     '<' => '<',
     '<=' => '<=',
     '>' => '>',
     '>=' => '>=',
     '~' => '~',
+    '!~' => '!~',
   );
 
   $form = array('#tree' => TRUE);
@@ -276,6 +279,18 @@ function themekey_rule_chain_form_validate(&$form, $form_state) {
             form_set_error('old_items][' . $key_1 . '][property', filter_xss(t('ThemeKey requested an unknown validator called %validator to validate property %property', array('%validator' => $validator, '%property' => $value_1['property'])), array('em')));
           }
         }
+        elseif ('~' == $value_1['operator'] || '!~' == $value_1['operator']) {
+          $rule = array(
+            'property' => $value_1['property'],
+            'wildcard' => $value_1['wildcard'],
+            'operator' => $value_1['operator'],
+            'value' => $value_1['value'],
+          );
+          $errors = themekey_validator_regex($rule);
+          foreach ($errors as $element => $msg) {
+            form_set_error('old_items][' . $key_1 . '][' . $element, filter_xss($msg, array('em')));
+          }
+        }
       }
 
       foreach ($values['old_items'] as $key_2 => $value_2) {
@@ -378,6 +393,18 @@ function themekey_rule_chain_form_validate(&$form, $form_state) {
         }
         else {
           form_set_error('new_item][property', filter_xss(t('ThemeKey requested an unknown validator called %validator to validate the property, %property', array('%validator' => $validator, '%property' => $value_1['property']))), array('em'));
+        }
+      }
+      elseif ('~' == $values['new_item']['operator'] || '!~' == $values['new_item']['operator']) {
+        $rule = array(
+                  'property' => $value_1['property'],
+                  'wildcard' => $value_1['wildcard'],
+                  'operator' => $value_1['operator'],
+                  'value' => $value_1['value'],
+        );
+        $errors = themekey_validator_regex($rule);
+        foreach ($errors as $element => $msg) {
+          form_set_error('new_item][' . $element, filter_xss($msg, array('em')));
         }
       }
     }

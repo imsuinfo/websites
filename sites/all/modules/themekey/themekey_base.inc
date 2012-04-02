@@ -25,7 +25,7 @@
 function themekey_invoke_modules($hook) {
   $return = array();
   foreach (variable_get('themekey_modules', array('node')) as $module) {
-    if (module_exists($module) && is_readable(drupal_get_path('module', 'themekey') .'/modules/themekey.' . $module .'.inc')) {
+    if (module_exists($module) && is_readable(drupal_get_path('module', 'themekey') . '/modules/themekey.' . $module .'.inc')) {
       require_once DRUPAL_ROOT . '/' . drupal_get_path('module', 'themekey') . '/modules/themekey.' . $module . '.inc';
 
       $function = 'themekey_' . $module . '_' . $hook;
@@ -361,25 +361,34 @@ function themekey_match_condition($condition, &$parameters) {
           // Supported operators for condition check:
           // smaller ('<'), greater ('>'), equal ('='), not equal ('!'), regex match ('~')
           if ($condition->operator == '<' && $single_value >= $condition->value) {
-            return FALSE;
+            return FALSE; // all values need to not match
           }
           elseif ($condition->operator == '>' && $single_value <= $condition->value) {
-            return FALSE;
+            return FALSE; // all values need to not match
           }
           elseif ($condition->operator == '<=' && $single_value > $condition->value) {
-            return FALSE;
+            return FALSE; // all values need to not match
           }
           elseif ($condition->operator == '>=' && $single_value < $condition->value) {
-            return FALSE;
+            return FALSE; // all values need to not match
           }
           elseif ($condition->operator == '=' && $single_value == $condition->value) {
             return TRUE;
           }
           elseif ($condition->operator == '!' && $single_value == $condition->value) {
-            return FALSE;
+            return FALSE; // all values need to not match
+          }
+          elseif ($condition->operator == '*' && strpos($single_value, $condition->value) !== FALSE) {
+            return TRUE;
+          }
+          elseif ($condition->operator == '!*' && strpos($single_value, $condition->value) !== FALSE) {
+            return FALSE; // all values need to not match
           }
           elseif ($condition->operator == '~' && preg_match($condition->value, $single_value)) {
             return TRUE;
+          }
+          elseif ($condition->operator == '!~' && preg_match($condition->value, $single_value)) {
+            return FALSE; // all values need to not match
           }
         }
         else {
@@ -388,7 +397,7 @@ function themekey_match_condition($condition, &$parameters) {
         }
       }
 
-      if ($condition->operator == '=' || $condition->operator == '~') {
+      if ($condition->operator == '=' || $condition->operator == '~' || $condition->operator == '*' ) {
         // no value matched
         return FALSE;
       }
