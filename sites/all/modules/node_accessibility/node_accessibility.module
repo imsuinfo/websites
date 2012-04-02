@@ -181,7 +181,36 @@ function template_preprocess_node_accessibility_information(&$variables) {
   $function_history = array();
   cf_error_append_history($function_history, __FUNCTION__);
 
+  $variables['workbench_moderation'] = FALSE;
+  $variables['published'] = t("No");
+
   drupal_add_css(drupal_get_path('module', 'node_accessibility') . '/includes/node_accessibility_information.css');
+
+  if (!isset($variables['node']) || !is_object($variables['node'])) {
+    return;
+  }
+
+  if ($variables['node']->status) {
+    $variables['published'] = t("Yes");
+  }
+
+  if (module_exists('workbench_moderation') && property_exists($variables['node'], 'workbench_moderation')) {
+    $variables['workbench_moderation'] = TRUE;
+    $variables['live'] = t("No");
+    $variables['current'] = t("No");
+
+    if (isset($variables['node']->workbench_moderation['current']) && is_object($variables['node']->workbench_moderation['current'])) {
+      if ($variables['node']->workbench_moderation['current']->vid == $variables['node']->vid) {
+        $variables['current'] = t("Yes");
+      }
+    }
+
+    if (isset($variables['node']->workbench_moderation['published']) && is_object($variables['node']->workbench_moderation['published'])) {
+      if ($variables['node']->workbench_moderation['published']->vid == $variables['node']->vid) {
+        $variables['live'] = t("Yes");
+      }
+    }
+  }
 }
 
 /**

@@ -25,7 +25,16 @@ function node_accessibility_accessibility_tab_page($form, &$form_state, $node, $
 
   $vids = array();
 
-  if (is_numeric($vid)) {
+
+  if ($vid == NULL) {
+    if (module_exists('workbench_moderation') && _workbench_moderation_access_current_draft($node)) {
+      if (property_exists($node, 'workbench_moderation') && isset($node->workbench_moderation['current'])) {
+        $node = node_load($node->workbench_moderation['current']->nid, $node->workbench_moderation['current']->vid);
+        $vids[$node->nid] = array($node->vid);
+      }
+    }
+  }
+  else if (is_numeric($vid)) {
     $vids[$node->nid] = array($vid);
   }
 

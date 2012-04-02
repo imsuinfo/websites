@@ -27,4 +27,18 @@
     <span class="node_accessibility-node_information-date-object node_accessibility-node_information-object"><?php print(t("Revision Date")); ?></span>
     <span class="node_accessibility-node_information-date-content node_accessibility-node_information-content"><?php print(format_date($node->revision_timestamp, 'short')); ?></span>
   </div>
+  <div class="node_accessibility-node_information-published node_accessibility-node_information-item">
+    <span class="node_accessibility-node_information-published-object node_accessibility-node_information-object"><?php print(t("Published")); ?></span>
+    <span class="node_accessibility-node_information-published-content node_accessibility-node_information-content"><?php print($published); ?></span>
+  </div>
+  <?php if ($workbench_moderation) { ?>
+    <div class="node_accessibility-node_information-live node_accessibility-node_information-item">
+      <span class="node_accessibility-node_information-live-object node_accessibility-node_information-object"><?php print(t("Live")); ?></span>
+      <span class="node_accessibility-node_information-live-content node_accessibility-node_information-content"><?php print($live); ?></span>
+    </div>
+    <div class="node_accessibility-node_information-current node_accessibility-node_information-item">
+      <span class="node_accessibility-node_information-current-object node_accessibility-node_information-object"><?php print(t("Current")); ?></span>
+      <span class="node_accessibility-node_information-current-content node_accessibility-node_information-content"><?php print($current); ?></span>
+    </div>
+  <?php } ?>
 </div>
