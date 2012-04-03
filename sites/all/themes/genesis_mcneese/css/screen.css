@@ -168,7 +168,7 @@ ul#search_form-top_box_links a:active {
 
 
 /*** Header - search form ***/
-div#block-search-form {
+#block-search-form {
   position: absolute;
   display: inline-block;
 
@@ -193,7 +193,7 @@ div#block-search-form {
   border-top: 0;
 }
 
-div#block-search-form > div.block-inner {
+#block-search-form > .block-inner {
   background-color: #ffffff;
 
   height: 24px;
@@ -209,11 +209,11 @@ div#block-search-form > div.block-inner {
   border: 1px solid #0f5eff;
 }
 
-div.form-item-search-block-form {
+.form-item-search-block-form {
   display: inline-block;
 }
 
-div#block-search-form div.form-item-search-block-form input.form-text {
+#block-search-form > .block-inner > .content > form .container-inline > .form-item-search-block-form > .form-search {
   display: inline-block;
 
   height: 24px;
@@ -228,29 +228,25 @@ div#block-search-form div.form-item-search-block-form input.form-text {
   vertical-align: baseline;
 }
 
-div#block-search-form form#search-block-form div.form-item-search-block-form {
+#block-search-form > .block-inner > .content > form .container-inline > .form-item-search-block-form {
   padding: 0;
   margin: 0;
 }
 
-form#search-block-form div.container-inline div.form-item-search-block-form,
-form#search-block-form div.container-inline div.form-actions {
+#block-search-form > .block-inner > .content > form .container-inline > .form-item-search-block-form,
+#block-search-form > .block-inner > .content > form .container-inline > .form-actions {
   display: inline-block;
 }
 
-form#search-block-form div.container-inline div.form-actions {
+#block-search-form > .block-inner > .content > form .container-inline > .form-actions {
   line-height: 10px;
 }
 
-div#block-search-form h2.block-title {
+#block-search-form h2.block-title {
   display: none;
 }
 
-div#block-search-form form#search-block-form input#edit-submit--1,
-div#block-search-form form#search-block-form input#edit-submit--2,
-div#block-search-form form#search-block-form input#edit-submit--3,
-div#block-search-form form#search-block-form input#edit-submit,
-div#block-search-form form#search-block-form input.form-submit {
+#block-search-form > .block-inner > .content > form .container-inline > .form-actions > .form-submit {
   background-image: url(../images/search_button.png);
   background-repeat: no-repeat;
   background-color: #00477f;
@@ -271,19 +267,17 @@ div#block-search-form form#search-block-form input.form-submit {
   padding: 0;
 }
 
-div#block-search-form {
+#block-search-form {
   width: 225px;
   min-width: 225px;
   max-width: 225px;
 }
 
-div#block-search-form div.form-item-search-block-form,
-div#block-search-form input#edit-search-block-form--1,
-div#block-search-form input#edit-search-block-form--2,
-div#block-search-form input#edit-search-block-form--3 {
-  width: 194px;
-  min-width: 194px;
-  max-width: 194px;
+#block-search-form > .block-inner > .content > form .container-inline > .form-item-search-block-form,
+#block-search-form > .block-inner > .content > form .container-inline > .form-item-search-block-form > .form-search {
+  width: 190px;
+  min-width: 190px;
+  max-width: 190px;
 
   font-family: arial, helvetica, sans-serif;
   font-size: 12px;
@@ -291,13 +285,12 @@ div#block-search-form input#edit-search-block-form--3 {
   padding-left: 3px;
 }
 
-div#block-search-form div#edit-actions {
+#block-search-form > .block-inner > .content > form .container-inline > .form-actions {
   display: inline-block;
   float: right;
 }
 
-div#block-search-form form#search-block-form div#edit-actions,
-div#block-search-form form#search-block-form div.form-actions {
+#block-search-form > .block-inner > .content > form .container-inline > .form-actions {
   padding: 0;
   margin: 2px;
 
@@ -305,9 +298,9 @@ div#block-search-form form#search-block-form div.form-actions {
   min-width: 20px;
   max-width: 20px;
 
-  height: 24px;
-  min-height: 24px;
-  max-height: 24px;
+  height: 20px;
+  min-height: 20px;
+  max-height: 20px;
   overflow: hidden;
 
   border-radius: 0;
