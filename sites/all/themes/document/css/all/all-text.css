@@ -16,6 +16,89 @@
   counter-increment: sub_sub_section;
 }
 
+.hlist {
+  list-style: none;
+}
+
+h1.hlist.start,
+h2.hlist.start,
+h3.hlist.start,
+h4.hlist.start,
+h5.hlist.start,
+h6.hlist.start {
+  counter-reset: hlist_counter_2 0;
+}
+
+h1.hlist,
+h2.hlist,
+h3.hlist,
+h4.hlist,
+h5.hlist,
+h6.hlist {
+  counter-reset: hlist_counter_2 0;
+  counter-increment: hlist_counter_1;
+}
+
+ol.hlist.start > li ol.hlist {
+  counter-reset: hlist_counter_3 0;
+}
+
+ol.hlist.start > li ol.hlist > li ol.hlist {
+  counter-reset: hlist_counter_4 0;
+}
+
+ol.hlist.start > li ol.hlist > li ol.hlist > li ol.hlist {
+  counter-reset: hlist_counter_5 0;
+}
+
+ol.hlist.start > li ol.hlist > li ol.hlist > li ol.hlist > li ol.hlist {
+  counter-reset: hlist_counter_6 0;
+}
+
+ol.hlist.start > li {
+  counter-increment: hlist_counter_2;
+}
+
+ol.hlist.start > li ol.hlist > li {
+  counter-increment: hlist_counter_3;
+}
+
+ol.hlist.start > li ol.hlist > li ol.hlist > li {
+  counter-increment: hlist_counter_4;
+}
+
+ol.hlist.start > li ol.hlist > li ol.hlist > li ol.hlist > li {
+  counter-increment: hlist_counter_5;
+}
+
+ol.hlist.start > li ol.hlist > li ol.hlist > li ol.hlist > li ol.hlist > li {
+  counter-increment: hlist_counter_6;
+}
+
+h2.hlist.start:not(.silent):before {
+  content: counter(hlist_counter_1) "." counter(hlist_counter_2) " ";
+}
+
+ol.hlist.start > li:not(.silent):before {
+  content: counter(hlist_counter_1) "." counter(hlist_counter_2) " ";
+}
+
+ol.hlist.start > li ol.hlist:not(.start) > li:not(.silent):before {
+  content: counter(hlist_counter_1) "." counter(hlist_counter_2) "." counter(hlist_counter_3) " ";
+}
+
+ol.hlist.start > li ol.hlist:not(.start) > li ol.hlist:not(.start) > li:not(.silent):before {
+  content: counter(hlist_counter_1) "." counter(hlist_counter_2) "." counter(hlist_counter_3) "." counter(hlist_counter_4) " ";
+}
+
+ol.hlist.start > li ol.hlist:not(.start) > li ol.hlist:not(.start) > li ol.hlist:not(.start) > li:not(.silent):before {
+  content: counter(hlist_counter_1) "." counter(hlist_counter_2) "." counter(hlist_counter_3) "." counter(hlist_counter_4) "." counter(hlist_counter_5) " ";
+}
+
+ol.hlist.start > li ol.hlist:not(.start) > li ol.hlist:not(.start) > li ol.hlist:not(.start) > li ol.hlist:not(.start) > li:not(.silent):before {
+  content: counter(hlist_counter_1) "." counter(hlist_counter_2) "." counter(hlist_counter_3) "." counter(hlist_counter_4) "." counter(hlist_counter_5) "." counter(hlist_counter_6) " ";
+}
+
 .document a,
 .document a:visited {
   color: #0000ff;

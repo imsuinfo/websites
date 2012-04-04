@@ -209,9 +209,12 @@ function document_cf_theme_get_variables_alter(&$cf, $variables){
 
   switch($cf['agent']['machine_name']){
     case 'ie':
-      $cf['meta']['http-equiv']['X-UA-Compatible'] = 'IE=Edge';
+      $cf['meta']['http-equiv']['X-UA-Compatible'] = 'IE=Edge; IE=9';
 
       if ($cf['agent']['major_version'] <= 8){
+        $cf['is']['unsupported'] = TRUE;
+        $cf['meta']['http-equiv']['X-UA-Compatible'] = 'IE=Edge; IE=9 IE=8';
+
         drupal_add_js(drupal_get_path('theme', 'document') . '/js/ie_html5.js', array('group' => JS_THEME, 'browsers' => array('IE' => 'lte IE 8', '!IE' => FALSE), 'weight' => 10, 'preprocess' => TRUE));
 
         if ($cf['agent']['major_version'] == 7){
@@ -219,6 +222,12 @@ function document_cf_theme_get_variables_alter(&$cf, $variables){
             $cf['is']['in_ie_compatibility_mode'] = TRUE;
           }
         }
+
+        $custom_css = array();
+        $custom_css['data'] = $cf['theme']['path'] . '/css/ie8/ie8-all.css';
+        $custom_css['options'] = array('group' => CSS_THEME, 'every_page' => TRUE, 'weight' => 2, 'media' => 'all');
+
+        drupal_add_css($custom_css['data'], (!empty($custom_css['options']) ? $custom_css['options'] : NULL));
       }
 
       break;

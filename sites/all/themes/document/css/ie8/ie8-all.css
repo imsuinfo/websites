@@ -1,0 +1,27 @@
+h2.hlist.start:before {
+  content: counter(hlist_counter_1) "." counter(hlist_counter_2) " ";
+}
+
+ol.hlist.start > li:before {
+  content: counter(hlist_counter_1) "." counter(hlist_counter_2) " ";
+}
+
+ol.hlist.start > li ol.hlist > li:before {
+  content: counter(hlist_counter_1) "." counter(hlist_counter_2) "." counter(hlist_counter_3) " ";
+}
+
+ol.hlist.start > li ol.hlist > li ol.hlist > li:before {
+  content: counter(hlist_counter_1) "." counter(hlist_counter_2) "." counter(hlist_counter_3) "." counter(hlist_counter_4) " ";
+}
+
+ol.hlist.start > li ol.hlist > li ol.hlist > li ol.hlist > li:before {
+  content: counter(hlist_counter_1) "." counter(hlist_counter_2) "." counter(hlist_counter_3) "." counter(hlist_counter_4) "." counter(hlist_counter_5) " ";
+}
+
+ol.hlist.start > li ol.hlist > li ol.hlist > li ol.hlist > li ol.hlist > li:before {
+  content: counter(hlist_counter_1) "." counter(hlist_counter_2) "." counter(hlist_counter_3) "." counter(hlist_counter_4) "." counter(hlist_counter_5) "." counter(hlist_counter_6) " ";
+}
+
+ol.hlist > li.silent:before {
+  content: none !important;
+}
