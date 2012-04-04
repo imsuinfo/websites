@@ -209,7 +209,7 @@ ul#search_form-top_box_links a:active {
   border: 1px solid #0f5eff;
 }
 
-.form-item-search-block-form {
+#block-search-form .form-item-search-block-form {
   display: inline-block;
 }
 
