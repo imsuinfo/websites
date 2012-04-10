@@ -651,7 +651,7 @@ div#breadcrumb {
 
 div#breadcrumb div.breadcrumb,
 div#breadcrumb div.sidenote {
-  display: inline-block;
+  display: block;
 
   padding-bottom: 0;
 }

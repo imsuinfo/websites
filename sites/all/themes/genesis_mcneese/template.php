@@ -408,3 +408,16 @@ function genesis_mcneese_form_search_block_form_alter(&$form, &$form_state, $for
   // If this is not removed then a number of browser, some webkit-based, some mozilla-based will have presentation problems.
   $form['actions']['submit'] = array('#type' => 'submit', '#value' => '', '#attributes' => array('title' => t("Search")));
 }
+
+/**
+ * Implements hook_breadcrumb().
+ */
+function genesis_mcneese_breadcrumb($variables) {
+  $breadcrumb = $variables['breadcrumb'];
+
+  $output = '<h2 class="element-invisible">' . t("Breadcrumbs") . '</h2>';
+  $output .= '<!--REPLACE_CUSTOM_DATA-->';
+  $output .= '<div class="breadcrumb">' . implode(' » ', $breadcrumb) . '</div>';
+
+    return $output;
+}
