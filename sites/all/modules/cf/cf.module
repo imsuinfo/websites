@@ -20,13 +20,13 @@ function cf_init() {
   $user = cf_get_user(FALSE, $function_history);
 
   foreach ($conf['role_memory_limits'] as $key => &$value) {
-    if (array_key_exists($key, $user->roles)) {
+    if (array_key_exists($key, $user->roles) && !empty($value)) {
       ini_set('memory_limit', $value);
     }
   }
 
   foreach ($conf['user_memory_limits'] as $key => &$value) {
-    if ($key == $user->uid) {
+    if ($key == $user->uid && !empty($value)) {
       ini_set('memory_limit', $value);
     }
   }
