@@ -22,7 +22,7 @@ function node_accessibility_help($path, $arg) {
  * Implements hook_quail_api_permission_alter().
  */
 function node_accessibility_quail_api_permission_alter(&$permissions) {
-  $permissions = array();
+  if (!is_array($permissions)) $permissions = array();
 
   $permissions['access node accessibility tab'] = array(
     'title' => t("Access Node Accessibility Tab"),
@@ -35,8 +35,6 @@ function node_accessibility_quail_api_permission_alter(&$permissions) {
   );
 
   // @todo: add node-specific validation permissions or at the very least node_type-specific
-
-  return $permissions;
 }
 
 /**
