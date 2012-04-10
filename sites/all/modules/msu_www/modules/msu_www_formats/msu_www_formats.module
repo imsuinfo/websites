@@ -57,6 +57,7 @@ function msu_www_formats_node_presave($node) {
     $abused_codes['&#60;'] = '&lt;';
     $abused_codes['&#62;'] = '&gt;';
     $abused_codes['&quot;'] = '"';
+    $abused_codes['&ndash;'] = '-';
     $abused_codes['&mdash;'] = '-';
     $abused_codes['&lsquo;'] = '\'';
     $abused_codes['&rsquo;'] = '\'';
