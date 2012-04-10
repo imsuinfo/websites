@@ -1,0 +1,95 @@
+<?php
+
+/**
+ * Implements hook_msu_www_permission_alter().
+ */
+function msu_www_formats_msu_www_permission_alter(&$permissions) {
+  if (!is_array($permissions)) $permissions = array();
+
+  $permissions['bypass deny abused codes'] = array(
+    'title' => t("Bypass Deny Abused Codes"),
+    'description' => t("Grants permissions to bypass the removal of abused codes for text formats in which the deny abused codes filter is enabled."),
+  );
+}
+
+/**
+ * Implements hook_msu_www_node_type_form_alter().
+ */
+function msu_www_formats_msu_www_node_type_form_alter(&$form, &$form_state, &$form_id) {
+  if (empty($form_id)) return;
+
+  $msu_www_formats_variable = variable_get('msu_www_formats_deny_abused_codes_' . $form['#node_type']->type, FALSE);
+
+  $form['msu_www']['deny_abused_codes'] = array(
+    '#type' => 'checkbox',
+    '#title' => t("Deny Abused Codes"),
+    '#default_value' => $msu_www_formats_variable,
+    '#description' => t("This enables the denial of certain html codes that have been identified as commonly abused or mis-used by end-user."),
+  );
+}
+
+/**
+ * Implements hook_msu_www_node_type_form_submit_alter().
+ */
+function msu_www_formats_msu_www_node_type_form_submit_alter($form, &$form_state) {
+  if (!isset($form['#node_type']) && !is_object($form['#node_type'])) return;
+
+  if (isset($form_state['values']['msu_www']['deny_abused_codes']) && $form_state['values']['msu_www']['deny_abused_codes']) {
+    variable_set('msu_www_formats_deny_abused_codes_' . $form['#node_type']->type, TRUE);
+  }
+  else {
+    variable_set('msu_www_formats_deny_abused_codes_' . $form['#node_type']->type, FALSE);
+  }
+}
+
+/**
+ * Implements hook_node_presave().
+ */
+function msu_www_formats_node_presave($node) {
+  $msu_www_formats_variable = variable_get('msu_www_formats_deny_abused_codes_' . $node->type, FALSE);
+
+  if ($msu_www_formats_variable && !user_access('bypass deny abused codes')) {
+    $abused_codes = array();
+
+    $abused_codes['&#34;'] = '"';
+    $abused_codes['&#38;'] = '&amp;';
+    $abused_codes['&#39;'] = '\'';
+    $abused_codes['&#60;'] = '&lt;';
+    $abused_codes['&#62;'] = '&gt;';
+    $abused_codes['&quot;'] = '"';
+    $abused_codes['&mdash;'] = '-';
+    $abused_codes['&lsquo;'] = '\'';
+    $abused_codes['&rsquo;'] = '\'';
+    $abused_codes['&ldquo;'] = '"';
+    $abused_codes['&rdquo;'] = '"';
+
+    $node_variables = array_keys(get_object_vars($node));
+
+    // at this time 'deny abused codes' is only applied to the body field (and its summary).
+    // this does not pay attention to text formats.
+    // if such flexibility is needed, then it will be added on a per-text-field basis.
+    foreach ($node->body as $language => &$language_value) {
+      foreach ($language_value as $index => &$index_value) {
+        if (!empty($index_value['summary'])) {
+          foreach ($abused_codes as $code => $replacement) {
+            $replaced = preg_replace('|' . $code . '|i', $replacement, $index_value['summary']);
+
+            if ($replaced !== FALSE) {
+              $index_value['value'] = $replaced;
+            }
+          }
+        }
+
+        if (!empty($index_value['value'])) {
+          foreach ($abused_codes as $code => $replacement) {
+            $replaced = preg_replace('|' . $code . '|i', $replacement, $index_value['value']);
+
+            if ($replaced !== FALSE) {
+              $index_value['value'] = $replaced;
+            }
+          }
+        }
+      }
+    }
+  }
+}

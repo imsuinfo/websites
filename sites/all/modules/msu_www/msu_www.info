@@ -1,0 +1,8 @@
+name = McNeese WWW
+description = "Core module for www.mcneese.edu specific code."
+core = 7.x
+package = MSU
+
+dependencies[] = cf_error
+
+files[] = msu_www.module
