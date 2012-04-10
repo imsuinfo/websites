@@ -1,5 +1,37 @@
 <?php
 
+/**
+ * Implements hook_init().
+ */
+function cf_init() {
+  cf_error_append_history($function_history, __FUNCTION__);
+
+  global $user;
+  global $conf;
+
+  if (!isset($conf['role_memory_limits']) || !is_array($conf['role_memory_limits'])) {
+    $conf['role_memory_limits'] = array();
+  }
+
+  if (!isset($conf['user_memory_limits']) || !is_array($conf['user_memory_limits'])) {
+    $conf['user_memory_limits'] = array();
+  }
+
+  $user = cf_get_user(FALSE, $function_history);
+
+  foreach ($conf['role_memory_limits'] as $key => &$value) {
+    if (array_key_exists($key, $user->roles)) {
+      ini_set('memory_limit', $value);
+    }
+  }
+
+  foreach ($conf['user_memory_limits'] as $key => &$value) {
+    if ($key == $user->uid) {
+      ini_set('memory_limit', $value);
+    }
+  }
+}
+
 
 /**
  * Implements hook_permission().
