@@ -487,7 +487,8 @@ div#front_page_columns-lagniappe {
   background-color: #ececec;
 }
 
-h3#front_page_columns-column_title-news {
+h3#front_page_columns-column_title-news,
+h3#front_page_columns-column_title-lagniappe {
   height: 20px;
   min-height: 20px;
   max-height: 20px;
@@ -504,7 +505,7 @@ h3#front_page_columns-column_title-news {
   margin-bottom: 19px;
 }
 
-div#front_page_columns-lagniappe h3#front_page_columns-column_title-news {
+div#front_page_columns-lagniappe h3#front_page_columns-column_title-lagniappe {
   color: #25567d;
   background-color: #dadada;
 
