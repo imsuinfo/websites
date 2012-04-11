@@ -14,8 +14,8 @@ files[] = includes/pages.inc
 files[] = includes/node_accessibility_handler_link_validate_node.inc
 
 ; Information added by drupal.org packaging script on 2012-04-11
-version = "7.x-1.0-beta1"
+version = "7.x-1.0-beta2"
 core = "7.x"
 project = "node_accessibility"
-datestamp = "1334162454"
+datestamp = "1334167555"
 
