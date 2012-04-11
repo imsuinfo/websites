@@ -544,11 +544,6 @@ function node_accessibility_statistics_page_problem($machine_name, $statistics_t
       'align' => 'left',
     );
     $problem_table['header'][] = array(
-      'data' => t("Line"),
-      'field' => 'line',
-      'align' => 'center',
-    );
-    $problem_table['header'][] = array(
       'data' => t("Snippet"),
       'field' => 'element',
       'align' => 'left',
@@ -565,7 +560,7 @@ function node_accessibility_statistics_page_problem($machine_name, $statistics_t
         $markup_format = $node_type_settings[$problem->type]->format;
       }
 
-      $row['data'] = array($problem->id, l($problem->title, 'node/' . $problem->nid . '/accessibility/' . $problem->vid . '/revision'), $problem->line, check_markup($problem->element, $markup_format));
+      $row['data'] = array($problem->id, l($problem->title, 'node/' . $problem->nid . '/accessibility/' . $problem->vid . '/revision'), check_markup($problem->element, $markup_format));
       $problem_table['rows'][] = $row;
       $problem_description['total']++;
     }

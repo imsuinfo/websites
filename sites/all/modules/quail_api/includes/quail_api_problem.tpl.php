@@ -21,7 +21,7 @@
 ?>
 <div class="<?php print($specific_class); ?>-wrapper <?php print($base_class); ?>-wrapper">
   <div class="<?php print($base_class); ?>-line">
-    <?php print(t("At line @line:", array('@line' => $problem_line))); ?>
+    <?php print(t("Code Snippet:")); ?>
   </div>
   <div class="<?php print($base_class); ?>-description">
     <?php print($problem_description); ?>
