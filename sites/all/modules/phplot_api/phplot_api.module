@@ -24,10 +24,11 @@ define('PHPLOT_API_FEATURE_MULTIPLE', 2);
 /**
  * Returns the expected path to the phplot library.
  *
- * @param $function_history (optional)
- *   An array of function names, ie: array('0' => 'my_function_name').
+ * @param array $function_history
+ *   (optional) An array of function names, ie:
+ *   array('0' => 'my_function_name').
  */
-function phplot_api_library_path(array $function_history = array()){
+function phplot_api_library_path(array $function_history = array()) {
   cf_error_append_history($function_history, __FUNCTION__);
 
   $library_path = libraries_get_path('phplot');
@@ -38,8 +39,9 @@ function phplot_api_library_path(array $function_history = array()){
 /**
  * Loads the quail library.
  *
- * @param $function_history (optional)
- *   An array of function names, ie: array('0' => 'my_function_name').
+ * @param array $function_history
+ *   (optional) An array of function names, ie:
+ *   array('0' => 'my_function_name').
  */
 function phplot_api_include_library(array $function_history = array()) {
   static $loaded_phplot_api_library_includes = FALSE;
@@ -66,28 +68,30 @@ function phplot_api_theme($existing, $type, $theme, $path) {
 }
 
 /**
- * Returns an array of plots that are supported by this module or extending modules.
+ * Returns an array of plots that are supported.
  *
  * The description and available plots come from:
  * - phplot.sourceforge.net/phplotdocs/conc-plottypes.html
  *
- * @param plot_type (optional)
- *   A machine name representing of the plot to load.
- *   When defined, the return value to only contain the plot that matches the given machine name.
+ * @param string|null plot_type
+ *   (optional) A machine name representing of the plot to load.
+ *   When defined, the return value to only contain the plot that matches the
+ *   given machine name.
  *   When undefined, all plots will be loaded into the plots array.
- * @param $function_history (optional)
- *   An array of function names, ie: array('0' => 'my_function_name').
+ * @param array $function_history
+ *   (optional) An array of function names, ie:
+ *   array('0' => 'my_function_name').
  *
- * @return
- *   An array of plots that are supported by this module or extending modules.
+ * @return array
+ *   An array of supported plots.
  *   The array keys are the machine names for each display level.
  */
-function phplot_api_get_plots($plot_type = NULL, array $function_history = array()){
+function phplot_api_get_plots($plot_type = NULL, array $function_history = array()) {
   static $plot_settings = NULL;
 
-  if (isset($plot_settings)){
-     if (!is_null($plot_type)){
-      if (isset($plot_settings[$plot_type])){
+  if (isset($plot_settings)) {
+     if (!is_null($plot_type)) {
+      if (isset($plot_settings[$plot_type])) {
         return $plot_settings[$plot_type];
       }
 
@@ -257,7 +261,7 @@ function phplot_api_get_plots($plot_type = NULL, array $function_history = array
 
 
   // assign globally shared values
-  foreach ($plot_settings as $key => &$value){
+  foreach ($plot_settings as $key => &$value) {
     $value['features']['background_color'] = PHPLOT_API_FEATURE_SINGLE;
     $value['features']['data_border_colors'] = PHPLOT_API_FEATURE_SINGLE;
     $value['features']['data_colors'] = PHPLOT_API_FEATURE_SINGLE;
@@ -322,8 +326,8 @@ function phplot_api_get_plots($plot_type = NULL, array $function_history = array
 
   drupal_alter('phplot_api_get_plots', $plot_settings, $plot_type, $other_arguments);
 
-  if (!is_null($plot_type)){
-    if (isset($plot_settings[$plot_type])){
+  if (!is_null($plot_type)) {
+    if (isset($plot_settings[$plot_type])) {
       return $plot_settings[$plot_type];
     }
 
@@ -335,31 +339,35 @@ function phplot_api_get_plots($plot_type = NULL, array $function_history = array
 
 /**
  * Returns a list of plot types.
+ *
  * This is only a list of the machine_name and human_name of the select lists.
  * Use this for populating select lists, radio buttons, and check boxes.
  *
- * @param plot_settings (optional)
- *   Providing a valid array of plots as returned by phplot_api_get_plots() and it will be properly converted into a plots list.
- * @param $function_history (optional)
- *   An array of function names, ie: array('0' => 'my_function_name').
+ * @param array|null plot_settings
+ *   (optional) Providing a valid array of plots as returned by
+ *   phplot_api_get_plots() and it will be properly converted into a plots list.
+ * @param array $function_history
+ *   (optional) An array of function names, ie:
+ *   array('0' => 'my_function_name').
  *
- * @return
+ * @return array
  *   An array of plots that are supported by this module or extending modules.
- *   The array keys are the plots machine name and the array value is the human name.
+ *   The array keys are the plots machine name and the array value is the human
+ *   name.
  *
  * @see phplot_api_get_plots()
  */
-function phplot_api_get_plots_list($plot_settings = NULL, array $function_history = array()){
+function phplot_api_get_plots_list($plot_settings = NULL, array $function_history = array()) {
   cf_error_append_history($function_history, __FUNCTION__);
 
-  if (is_null($plot_settings)){
+  if (is_null($plot_settings)) {
     $plot_settings = phplot_api_get_plots(NULL, $function_history);
   }
 
   $plots_list = array();
 
-  foreach ($plot_settings as $machine_name => $value){
-    if (isset($value['human_name'])){
+  foreach ($plot_settings as $machine_name => $value) {
+    if (isset($value['human_name'])) {
       $plots_list[$machine_name] = $value['human_name'];
     }
   }

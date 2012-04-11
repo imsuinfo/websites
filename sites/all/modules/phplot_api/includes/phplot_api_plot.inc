@@ -2,7 +2,9 @@
 
 /**
  * @file
- * Php class file for the phplot api project that provides the phplot_api_plot class object.
+ * Php class file for the phplot api project.
+ *
+ * This provides the phplot_api_plot class object.
  */
 
 /**
@@ -23,20 +25,20 @@ class phplot_api_plot {
   /**
    * Class Initailizer.
    *
-   * @param type
+   * @param string type
    *   A machine name string of the plot type.
    *
-   * @param function_history (optional)
-   *   An array of function names, ie: array('0' => 'my_function_name').
+   * @param array function_history
+   *   (optional) An array of function names, ie: array('0' => 'my_function_name').
    */
-  public function phplot_api_plot($type, array $function_history = array()){
+  public function phplot_api_plot($type, array $function_history = array()) {
     $this->caller_history = $function_history;
 
     $function_history = $this->history(__FUNCTION__);
 
     $this->set_type($type);
 
-    foreach ($this->settings['defaults'] as $feature => $value){
+    foreach ($this->settings['defaults'] as $feature => $value) {
       $plot_data[$feature] = $value;
     }
   }
@@ -44,25 +46,25 @@ class phplot_api_plot {
   /**
    * Returns the type of this plot.
    *
-   * @return
+   * @return string
    *   A machine name string of the plot type.
    */
-  public function get_type(){
+  public function get_type() {
     return $this->type;
   }
 
   /**
    * Returns the data assigned to this plot.
    *
-   * @param feature (optional)
-   *   A machine name string of a specific setting to get.
+   * @param string|null feature
+   *   (optional) A machine name string of a specific setting to get.
    *   If NULL, then the entire plot data array is returned.
    *
    * @return
    *   Either the entire plot data array or a specific value for a specified feature.
    */
-  public function get_data(string $feature = NULL){
-    if (is_null($feature)){
+  public function get_data(string $feature = NULL) {
+    if (is_null($feature)) {
       return $this->data;
     }
 
@@ -76,28 +78,28 @@ class phplot_api_plot {
    * @return
    *   A binary image blob.
    */
-  public function get_image(){
+  public function get_image() {
     return $this->image;
   }
 
   /**
    * Returns the image file of this plot.
    *
-   * @return
+   * @return object
    *   A file object that represents the plot image.
    */
-  public function get_file(){
+  public function get_file() {
     return $this->file;
   }
 
   /**
    * Returns the size of the legend.
    *
-   * @return
+   * @return object
    *   A file object that represents the plot image.
    */
-  public function get_legend_size(){
-    if (is_object($this->plot)){
+  public function get_legend_size() {
+    if (is_object($this->plot)) {
       return $this->plot->GetLegendSize();
     }
 
@@ -112,11 +114,11 @@ class phplot_api_plot {
    * @param y_world
    *   The Y coordinate to translate from world coordinates.
    *
-   * @return
+   * @return object
    *   A file object that represents the plot image.
    */
-  public function get_device_xy($x_world, $y_world){
-    if (is_object($this->plot)){
+  public function get_device_xy($x_world, $y_world) {
+    if (is_object($this->plot)) {
       return $this->plot->GetDeviceXY($x_world, $y_world);
     }
 
@@ -126,10 +128,10 @@ class phplot_api_plot {
   /**
    * Sets the type of this plot.
    *
-   * @param type
+   * @param string type
    *   A machine name string of the plot type.
    */
-  public function set_type($type){
+  public function set_type($type) {
     $function_history = $this->history(__FUNCTION__);
 
     $this->settings = phplot_api_get_plots($type, $function_history);
@@ -139,31 +141,32 @@ class phplot_api_plot {
   /**
    * Assign some value to a given feature.
    *
-   * @param feature
+   * @param string feature
    *   The machine name of the feature.
    * @param value
    *   Data to assign to the specified feature.
-   * @param reset (optional)
-   *   Whether or not the data should be cleared before assigning a value.
-   *   This only does something if the feature supports PHPLOT_API_FEATURE_MULTIPLE.
+   * @param bool reset
+   *   (optional) Whether or not the data should be cleared before assigning a value.
+   *   This only does something if the feature supports
+   *   PHPLOT_API_FEATURE_MULTIPLE.
    *
-   * @return
+   * @return bool
    *   TRUE is returned on success and FALSE on any failure.
    */
-  public function set_data($feature, $value, $reset = FALSE){
+  public function set_data($feature, $value, $reset = FALSE) {
     $function_history = $this->history(__FUNCTION__);
 
-    if (!cf_has_array_key($feature, $this->settings['features'], $function_history)){
+    if (!cf_has_array_key($feature, $this->settings['features'], $function_history)) {
       // @todo watchdog some error here?
       return FALSE;
     }
 
     // @todo perform data integrity checks here before assigning the value
-    if ($this->settings['features'][$feature] == PHPLOT_API_FEATURE_NONE || $this->settings['features'][$feature] == PHPLOT_API_FEATURE_SINGLE){
+    if ($this->settings['features'][$feature] == PHPLOT_API_FEATURE_NONE || $this->settings['features'][$feature] == PHPLOT_API_FEATURE_SINGLE) {
       $this->data[$feature] = $value;
     }
-    else if ($this->settings['features'][$feature] == PHPLOT_API_FEATURE_MULTIPLE){
-      if ($reset || !isset($this->data[$feature])){
+    else if ($this->settings['features'][$feature] == PHPLOT_API_FEATURE_MULTIPLE) {
+      if ($reset || !isset($this->data[$feature])) {
         $this->data[$feature] = array();
       }
 
@@ -176,25 +179,25 @@ class phplot_api_plot {
   /**
    * Assigns the object callers history.
    *
-   * @param function_history
+   * @param array   function_history
    *   An array of function names, ie: array('0' => 'my_function_name').
    */
-  public function set_history(array $function_history){
+  public function set_history(array $function_history) {
     $caller_history = $function_history;
   }
 
   /**
    * Builds the plot image file.
    */
-  public function build(){
+  public function build() {
     $function_history = $this->history(__FUNCTION__);
 
     phplot_api_include_library($function_history);
 
-    if (isset($this->data['width'])){
+    if (isset($this->data['width'])) {
       $width = $this->data['width'];
 
-      if (!is_numeric($width) || $width <= 0){
+      if (!is_numeric($width) || $width <= 0) {
         $width = NULL;
       }
     }
@@ -202,10 +205,10 @@ class phplot_api_plot {
       $width = NULL;
     }
 
-    if (isset($this->data['height'])){
+    if (isset($this->data['height'])) {
       $height = $this->data['height'];
 
-      if (!is_numeric($height) || $height <= 0){
+      if (!is_numeric($height) || $height <= 0) {
         $height = NULL;
       }
     }
@@ -214,21 +217,21 @@ class phplot_api_plot {
     }
 
     // Create a PHPlot object with the given dimensions
-    if (is_null($width) || is_null($height)){
+    if (is_null($width) || is_null($height)) {
       $this->plot = new PHPlot();
     }
     else {
       $this->plot = new PHPlot($width, $height);
     }
 
-    if (isset($this->data['data_type'])){
+    if (isset($this->data['data_type'])) {
       $this->plot->SetDataType($this->data['data_type']);
     }
 
-    if (isset($this->data['data_colors'])){
+    if (isset($this->data['data_colors'])) {
       $item = $this->data['data_colors'];
 
-      switch(count($item)){
+      switch(count($item)) {
         case 3:
           $this->plot->SetDataColors($item[0], $item[1], $item[2]);
           break;
@@ -241,61 +244,61 @@ class phplot_api_plot {
       }
     }
 
-    if (isset($this->data['data_border_colors'])){
+    if (isset($this->data['data_border_colors'])) {
       $this->plot->SetDataBorderColors($this->data['data_border_colors']);
     }
 
-    if (isset($this->data['data_values'])){
+    if (isset($this->data['data_values'])) {
       $this->plot->SetDataValues($this->data['data_values']);
     }
 
-    if (isset($this->data['data_label_angle_x'])){
+    if (isset($this->data['data_label_angle_x'])) {
       $this->plot->SetXDataLabelAngle($this->data['data_label_angle_x']);
     }
 
-    if (isset($this->data['data_label_position_x'])){
+    if (isset($this->data['data_label_position_x'])) {
       $this->plot->SetXDataLabelPos($this->data['data_label_position_x']);
     }
 
-    if (isset($this->data['data_label_type_x'])){
+    if (isset($this->data['data_label_type_x'])) {
       $this->plot->SetXDataLabelType($this->data['data_label_type_x']);
     }
 
-    if (isset($this->data['data_label_angle_y'])){
+    if (isset($this->data['data_label_angle_y'])) {
       $this->plot->SetXDataLabelAngle($this->data['data_label_angle_y']);
     }
 
-    if (isset($this->data['data_label_position_y'])){
+    if (isset($this->data['data_label_position_y'])) {
       $this->plot->SetXDataLabelPos($this->data['data_label_position_y']);
     }
 
-    if (isset($this->data['data_label_type_y'])){
+    if (isset($this->data['data_label_type_y'])) {
       $this->plot->SetXDataLabelType($this->data['data_label_type_y']);
     }
 
-    if (isset($this->data['title'])){
+    if (isset($this->data['title'])) {
       $this->plot->SetTitle($this->data['title']);
     }
 
-    if (isset($this->data['title_color'])){
+    if (isset($this->data['title_color'])) {
       $this->plot->SetTitleColor($this->data['title_color']);
     }
 
-    if (isset($this->data['title_font_size'])){
+    if (isset($this->data['title_font_size'])) {
       $this->plot->SetTitleFontSize($this->data['title_font_size']);
     }
 
-    if (isset($this->data['ttf_path'])){
+    if (isset($this->data['ttf_path'])) {
       $this->plot->SetTTFPath($this->data['ttf_path']);
     }
 
-    if (isset($this->data['ttf_default'])){
+    if (isset($this->data['ttf_default'])) {
       $this->plot->SetDefaultTTFont($this->data['ttf_default']);
     }
 
-    if (isset($this->data['ttf_font'])){
-      foreach ($this->data['ttf_font'] as $item){
-        switch(count($item)){
+    if (isset($this->data['ttf_font'])) {
+      foreach ($this->data['ttf_font'] as $item) {
+        switch(count($item)) {
           case 4:
             $this->plot->SetFontTTF($item[0], $item[1], $item[2], $item[3]);
             break;
@@ -309,14 +312,14 @@ class phplot_api_plot {
       }
     }
 
-    if (isset($this->data['background_color'])){
+    if (isset($this->data['background_color'])) {
       $this->plot->SetBackgroundColor($this->data['background_color']);
     }
 
-    if (isset($this->data['margins_pixels'])){
+    if (isset($this->data['margins_pixels'])) {
       $item = $this->data['margins_pixels'];
 
-      switch(count($item)){
+      switch(count($item)) {
         case 4:
           $this->plot->SetMarginsPixels($item[0], $item[1], $item[2], $item[3]);
           break;
@@ -332,47 +335,47 @@ class phplot_api_plot {
       }
     }
 
-    if (isset($this->data['plot_area_background_draw'])){
+    if (isset($this->data['plot_area_background_draw'])) {
       $this->plot->SetDrawPlotAreaBackground($this->data['plot_area_background_draw']);
     }
 
-    if (isset($this->data['plot_background_color'])){
+    if (isset($this->data['plot_background_color'])) {
       $this->plot->SetPlotBgColor($this->data['plot_background_color']);
     }
 
-    if (isset($this->data['precision_x'])){
+    if (isset($this->data['precision_x'])) {
       $this->plot->SetPrecisionX($this->data['precision_x']);
     }
 
-    if (isset($this->data['precision_y'])){
+    if (isset($this->data['precision_y'])) {
       $this->plot->SetPrecisionY($this->data['precision_y']);
     }
 
-    if (isset($this->data['shading'])){
+    if (isset($this->data['shading'])) {
       $this->plot->SetShading($this->data['shading']);
     }
 
-    if (isset($this->data['label_color'])){
+    if (isset($this->data['label_color'])) {
       $this->plot->SetLabelColor($this->data['label_color']);
     }
 
-    if (isset($this->data['label_type'])){
-      foreach ($this->data['label_type'] as $item){
-        if (count($item) == 2){
+    if (isset($this->data['label_type'])) {
+      foreach ($this->data['label_type'] as $item) {
+        if (count($item) == 2) {
           $this->plot->SetLabelType($item[0], $item[1]);
         }
       }
     }
 
-    if (isset($this->data['label_scale_position'])){
+    if (isset($this->data['label_scale_position'])) {
       $this->plot->SetLabelScalePosition($this->data['label_scale_position']);
     }
 
     // @todo is this a special case where if plot_area_world is an empty array it should call: $this->plot->SetPlotAreaWorld(); ?
-    if (isset($this->data['plot_area_world'])){
+    if (isset($this->data['plot_area_world'])) {
       $item = $this->data['plot_area_world'];
 
-      switch(count($item)){
+      switch(count($item)) {
         case 4:
           $this->plot->SetPlotAreaWorld($item[0], $item[1], $item[2], $item[3]);
           break;
@@ -388,19 +391,19 @@ class phplot_api_plot {
       }
     }
 
-    if (isset($this->data['plot_area_background_image'])){
+    if (isset($this->data['plot_area_background_image'])) {
       $plot_area_background_image = $this->data['plot_area_background_image'];
 
-      if (count($plot_area_background_image) == 2){
+      if (count($plot_area_background_image) == 2) {
         $this->plot->SetLabelType($plot_area_background_image[0], $plot_area_background_image[1]);
       }
     }
 
     // @todo is this a special case where if plot_area_pixels is an empty array it should call: $this->plot->SetPlotAreaPixels(); ?
-    if (isset($this->data['plot_area_pixels'])){
+    if (isset($this->data['plot_area_pixels'])) {
       $item = $this->data['plot_area_pixels'];
 
-      switch(count($item)){
+      switch(count($item)) {
         case 4:
           $this->plot->SetPlotAreaPixels($item[0], $item[1], $item[2], $item[3]);
           break;
@@ -416,36 +419,36 @@ class phplot_api_plot {
       }
     }
 
-    if (isset($this->data['image_border_color'])){
+    if (isset($this->data['image_border_color'])) {
       $this->plot->SetImageBorderColor($this->data['image_border_color']);
     }
 
-    if (isset($this->data['image_border_type'])){
+    if (isset($this->data['image_border_type'])) {
       $this->plot->SetImageBorderType($this->data['image_border_type']);
     }
 
-    if (isset($this->data['image_border_width'])){
+    if (isset($this->data['image_border_width'])) {
       $this->plot->SetImageBorderWidth($this->data['image_border_width']);
     }
 
-    if (isset($this->data['tick_color'])){
+    if (isset($this->data['tick_color'])) {
       $this->plot->SetTickColor($this->data['tick_color']);
     }
 
-    if (isset($this->data['tick_length'])){
+    if (isset($this->data['tick_length'])) {
       $this->plot->SetTickLength($this->data['tick_length']);
     }
 
-    if (isset($this->data['legend'])){
-      foreach ($this->data['legend'] as $item){
+    if (isset($this->data['legend'])) {
+      foreach ($this->data['legend'] as $item) {
         $this->plot->SetLegend($item);
       }
     }
 
-    if (isset($this->data['legend_pixels'])){
+    if (isset($this->data['legend_pixels'])) {
       $item = $this->data['legend_pixels'];
 
-      switch(count($item)){
+      switch(count($item)) {
         case 2:
           $this->plot->SetDataColors($item[0], $item[1]);
           break;
@@ -455,10 +458,10 @@ class phplot_api_plot {
       }
     }
 
-    if (isset($this->data['legend_position'])){
+    if (isset($this->data['legend_position'])) {
       $item = $this->data['legend_position'];
 
-      switch(count($item)){
+      switch(count($item)) {
         case 7:
           $this->plot->SetLegendPosition($item[0], $item[1], $item[2], $item[3], $item[4], $item[5], $item[6]);
           break;
@@ -483,14 +486,14 @@ class phplot_api_plot {
       }
     }
 
-    if (isset($this->data['legend_reverse'])){
+    if (isset($this->data['legend_reverse'])) {
       $this->plot->SetLegendReverse($this->data['legend_reverse']);
     }
 
-    if (isset($this->data['legend_style'])){
+    if (isset($this->data['legend_style'])) {
       $item = $this->data['legend_style'];
 
-      switch(count($item)){
+      switch(count($item)) {
         case 2:
           $this->plot->SetLegendStyle($item[0], $item[1]);
           break;
@@ -500,14 +503,14 @@ class phplot_api_plot {
       }
     }
 
-    if (isset($this->data['legend_use_shapes'])){
+    if (isset($this->data['legend_use_shapes'])) {
       $this->plot->SetLegendUseShapes($this->data['legend_use_shapes']);
     }
 
-    if (isset($this->data['legend_world'])){
+    if (isset($this->data['legend_world'])) {
       $item = $this->data['legend_world'];
 
-      switch(count($item)){
+      switch(count($item)) {
         case 2:
           $this->plot->SetLegendWorld($item[0], $item[1]);
           break;
@@ -517,51 +520,51 @@ class phplot_api_plot {
       }
     }
 
-    if (isset($this->data['tick_anchor_x'])){
+    if (isset($this->data['tick_anchor_x'])) {
       $this->plot->SetXTickAnchor($this->data['tick_anchor_x']);
     }
 
-    if (isset($this->data['tick_crossing_x'])){
+    if (isset($this->data['tick_crossing_x'])) {
       $this->plot->SetXTickCrossing($this->data['tick_crossing_x']);
     }
 
-    if (isset($this->data['tick_increment_x'])){
+    if (isset($this->data['tick_increment_x'])) {
       $this->plot->SetXTickIncrement($this->data['tick_increment_x']);
     }
 
-    if (isset($this->data['tick_label_position_x'])){
+    if (isset($this->data['tick_label_position_x'])) {
       $this->plot->SetXTickLabelPos($this->data['tick_label_position_x']);
     }
 
-    if (isset($this->data['tick_length_x'])){
+    if (isset($this->data['tick_length_x'])) {
       $this->plot->SetXTickLength($this->data['tick_length_x']);
     }
 
-    if (isset($this->data['tick_position_x'])){
+    if (isset($this->data['tick_position_x'])) {
       $this->plot->SetXTickPos($this->data['tick_position_x']);
     }
 
-    if (isset($this->data['tick_anchor_y'])){
+    if (isset($this->data['tick_anchor_y'])) {
       $this->plot->SetXTickAnchor($this->data['tick_anchor_y']);
     }
 
-    if (isset($this->data['tick_crossing_y'])){
+    if (isset($this->data['tick_crossing_y'])) {
       $this->plot->SetXTickCrossing($this->data['tick_crossing_y']);
     }
 
-    if (isset($this->data['tick_increment_y'])){
+    if (isset($this->data['tick_increment_y'])) {
       $this->plot->SetXTickIncrement($this->data['tick_increment_y']);
     }
 
-    if (isset($this->data['tick_label_position_y'])){
+    if (isset($this->data['tick_label_position_y'])) {
       $this->plot->SetXTickLabelPos($this->data['tick_label_position_y']);
     }
 
-    if (isset($this->data['tick_length_y'])){
+    if (isset($this->data['tick_length_y'])) {
       $this->plot->SetXTickLength($this->data['tick_length_y']);
     }
 
-    if (isset($this->data['tick_position_y'])){
+    if (isset($this->data['tick_position_y'])) {
       $this->plot->SetXTickPos($this->data['tick_position_y']);
     }
 
@@ -576,7 +579,7 @@ class phplot_api_plot {
    *
    * @see file_default_scheme()
    */
-  function create_image(){
+  function create_image() {
     // Enforce the defined type here to prevent extending modules from improperly altering this.
     $this->plot->SetPlotType($this->type);
 
@@ -592,38 +595,42 @@ class phplot_api_plot {
 
   /**
    * Saves the phplot image block to the filesystem and the drupal database.
+   *
    * The plot file is saved as a temporary file.
    *
-   * @param file_status (optional)
-   *   Define whether or not a file is permanent or temporary.
-   *   Temporary is represented by 0 (for some reason drupal core does not define a global constant for this).
+   * @param int file_status
+   *   (optional) Define whether or not a file is permanent or temporary.
+   *   Temporary is represented by 0 (for some reason drupal core does not
+   *   define a global constant for this).
    *   Permanent is represented by FILE_STATUS_PERMANENT.
    *   Temporary is the default behavior.
    *
-   * @param directory (optional)
-   *   A string defining the directory structure where the file will be saved.
+   * @param directory
+   *   (optional) A string defining the directory structure where the file will
+   *   be saved.
    *   This should not begin with a '/'.
-   * @param file_schema (optional)
-   *   The file schema to use.
+   * @param string|null file_schema
+   *   (optional) The file schema to use.
    *   - if NULL, then file_default_scheme() is used.
-   * @param $function_history (optional)
-   *   An array of function names, ie: array('0' => 'my_function_name').
+   * @param array $function_history
+   *   (optional) An array of function names, ie:
+   *   array('0' => 'my_function_name').
    *
-   * @return
+   * @return object|false
    *   The file object that was saved to the database or FALSE on error.
    *
    * @see phplot_api_build_plot()
    * @see file_default_scheme()
    */
-  function create_file($file_status = 0, $directory = 'statistics/plots', $file_schema = NULL){
+  function create_file($file_status = 0, $directory = 'statistics/plots', $file_schema = NULL) {
     $function_history = $this->history(__FUNCTION__);
 
     // @todo how does one validate the image blob?
-    if (empty($this->image)){
+    if (empty($this->image)) {
       return FALSE;
     }
 
-    if (is_null($file_schema)){
+    if (is_null($file_schema)) {
       $file_schema = file_default_scheme();
     }
 
@@ -635,10 +642,10 @@ class phplot_api_plot {
 
     file_prepare_directory($directory, FILE_MODIFY_PERMISSIONS | FILE_CREATE_DIRECTORY);
 
-    if ($file_status == 0){
+    if ($file_status == 0) {
       $filepath = file_unmanaged_save_data($this->image, $destination, FILE_EXISTS_REPLACE);
 
-      if (!file_exists($filepath)){
+      if (!file_exists($filepath)) {
         $this->file = new stdClass();
         $this->file->fid = NULL;
         $this->file->uri = $filepath;
@@ -654,7 +661,7 @@ class phplot_api_plot {
         // @todo what should be done here is to attempt to load the file object from the database and return that file object
       }
     }
-    else if ($file_status == FILE_STATUS_PERMANENT){
+    else if ($file_status == FILE_STATUS_PERMANENT) {
       $this->file = file_save_data($this->image, $destination, FILE_EXISTS_REPLACE);
 
       $filepath = $this->file->uri;
@@ -666,8 +673,8 @@ class phplot_api_plot {
   /**
    * Initializes and assigns function history.
    */
-  private function history($function_name){
-    if (empty($caller_history)){
+  private function history($function_name) {
+    if (empty($caller_history)) {
       $function_history = array();
     }
     else {
