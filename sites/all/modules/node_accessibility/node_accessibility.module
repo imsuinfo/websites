@@ -88,7 +88,7 @@ function node_accessibility_menu() {
 
   $items['node/%node/accessibility/%/revision'] = array(
     'title' => "Accessibility",
-    'load arguments' => array(3, 3),
+    'load arguments' => array(1, 3),
     'page callback' => 'drupal_get_form',
     'page arguments' => array('node_accessibility_accessibility_tab_page', 1, 3),
     'access callback' => 'node_accessibility_access_accessibility_tab',
