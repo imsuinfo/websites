@@ -6,7 +6,6 @@
 function cf_init() {
   cf_error_append_history($function_history, __FUNCTION__);
 
-  global $user;
   global $conf;
 
   if (!isset($conf['role_memory_limits']) || !is_array($conf['role_memory_limits'])) {
