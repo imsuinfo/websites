@@ -76,7 +76,7 @@ function msu_www_formats_node_presave($node) {
             $replaced = preg_replace('|' . $code . '|i', $replacement, $index_value['summary']);
 
             if ($replaced !== FALSE) {
-              $index_value['value'] = $replaced;
+              $index_value['summary'] = $replaced;
             }
           }
         }
