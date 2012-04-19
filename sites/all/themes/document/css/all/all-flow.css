@@ -395,3 +395,146 @@
 .document .list-inline_block > li.last {
   padding-right: 0;
 }
+
+
+
+/*** Content Specific Style: color_box ***/
+.document .color_box {
+  border: 1px solid;
+  padding: 2px 4px;
+}
+
+.document .color_box.color-grey {
+  border-color: #a9a9a9;
+  background-color: #eaeaea;
+}
+
+.document .color_box.color-grey.emphasis-subtle {
+  border-color: #bfbfbf;
+  background-color: #f7f7f7;
+}
+
+.document .color_box.color-grey.emphasis-obvious {
+  border-color: #8a8a8a;
+  background-color: #dbdbdb;
+}
+
+.document .color_box.color-yellow {
+  border-color: #edeebc;
+  background-color: #feffc9;
+}
+
+.document .color_box.color-yellow.emphasis-subtle {
+  border-color: #ededd3;
+  background-color: #feffe3;
+}
+
+.document .color_box.color-yellow.emphasis-obvious {
+  border-color: #edeea4;
+  background-color: #feffb0;
+}
+
+.document .color_box.color-blue {
+  border-color: #bcc3ee;
+  background-color: #c9d1ff;
+}
+
+.document .color_box.color-blue.emphasis-subtle {
+  border-color: #d3d7ed;
+  background-color: #e3e7ff;
+}
+
+.document .color_box.color-blue.emphasis-obvious {
+  border-color: #a4afee;
+  background-color: #b0bcff;
+}
+
+.document .color_box.color-red {
+  border-color: #eebfb7;
+  background-color: #ffccc4;
+}
+
+.document .color_box.color-red.emphasis-subtle {
+  border-color: #eed8d4;
+  background-color: #ffe7e3;
+}
+
+.document .color_box.color-red.emphasis-obvious {
+  border-color: #eeafa4;
+  background-color: #ffbab0;
+}
+
+.document .color_box.color-green {
+  border-color: #b7eeb7;
+  background-color: #c4ffc4;
+}
+
+.document .color_box.color-green.emphasis-subtle {
+  border-color: #d4eed4;
+  background-color: #e3ffe3;
+}
+
+.document .color_box.color-green.emphasis-obvious {
+  border-color: #a4eea4;
+  background-color: #b0ffb0;
+}
+
+.document .color_box.color-orange {
+  border-color: #eee2bc;
+  background-color: #fff0c4;
+}
+
+.document .color_box.color-orange.emphasis-subtle {
+  border-color: #eee7d4;
+  background-color: #fff8e3;
+}
+
+.document .color_box.color-orange.emphasis-obvious {
+  border-color: #eedba4;
+  background-color: #ffebb0;
+}
+
+.document .color_box.color-purple {
+  border-color: #dbb7ee;
+  background-color: #eac4ff;
+}
+
+.document .color_box.color-purple.emphasis-subtle {
+  border-color: #e5d4ee;
+  background-color: #f5e3ff;
+}
+
+.document .color_box.color-purple.emphasis-obvious {
+  border-color: #d5a4ee;
+  background-color: #e3b0ff;
+}
+
+.document .color_box.color-teal {
+  border-color: #b7eeed;
+  background-color: #c4fffe;
+}
+
+.document .color_box.color-teal.emphasis-subtle {
+  border-color: #d4eeee;
+  background-color: #e3ffff;
+}
+
+.document .color_box.color-teal.emphasis-obvious {
+  border-color: #a4eeed;
+  background-color: #b0fffe;
+}
+
+.document .color_box.color-pink {
+  border-color: #eebcea;
+  background-color: #ffc4fa;
+}
+
+.document .color_box.color-pink.emphasis-subtle {
+  border-color: #eed4ec;
+  background-color: #ffe3fd;
+}
+
+.document .color_box.color-pink.emphasis-obvious {
+  border-color: #eea4e8;
+  background-color: #ffb0f8;
+}
