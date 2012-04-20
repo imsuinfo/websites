@@ -527,7 +527,7 @@ function workbench_menu_build_menu_item($menu, $item, &$variables, array $functi
     break;
   }
 
-  $active_path = $item['item']->active_path;
+  $active_path = preg_replace('/%20/', ' ', $item['item']->active_path);
 
   $alter_settings = array();
   $alter_settings['menu'] = clone($menu);
@@ -810,6 +810,8 @@ function workbench_menu_build_menu_item($menu, $item, &$variables, array $functi
   }
 
   if (!empty($active_path)) {
+    $active_path = preg_replace('/%20/', ' ', $active_path);
+
     $settings[$item['item']->id]['active_path'] = $active_path;
 
     if ($active_path != $variables['menu_path']) {
