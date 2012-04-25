@@ -1,0 +1,30 @@
+name = API
+description = Generates and displays API documentation pages.
+package = Development
+core = 7.x
+configure = admin/config/development/api
+dependencies[] = node
+dependencies[] = ctools
+dependencies[] = gplib
+stylesheets[all][] = api.css
+stylesheets[all][] = jquery-autocomplete/jquery.autocomplete.css
+scripts[] = api.js
+scripts[] = jquery-autocomplete/jquery.autocomplete.js
+files[] = tests/api_dotdot.test
+files[] = tests/api_legacy.test
+files[] = tests/api_link_code.test
+files[] = tests/api_link_documentation.test
+files[] = tests/api_multidir.test
+files[] = tests/api_objects.test
+files[] = tests/api_queue.test
+files[] = tests/api_test_case.php
+files[] = tests/api_url_patterns.test
+files[] = tests/api_web_links.test
+files[] = tests/api_web_test.test
+
+; Information added by drupal.org packaging script on 2012-04-20
+version = "7.x-1.0-beta1"
+core = "7.x"
+project = "api"
+datestamp = "1334957471"
+
