@@ -3,14 +3,15 @@ description = Provides an easy interface for inserting links to internal content
 core = 7.x
 configure = admin/config/content/linkit
 dependencies[] = ctools
+dependencies[] = entity
 
 
 ; Our plugins interfaces and abstract implementations.
 files[] = plugins/plugin.class.php
 files[] = plugins/linkit_plugins/linkit-plugin-entity.class.php
-; Information added by drupal.org packaging script on 2012-03-27
-version = "7.x-2.2"
+; Information added by drupal.org packaging script on 2012-04-25
+version = "7.x-2.3"
 core = "7.x"
 project = "linkit"
-datestamp = "1332891645"
+datestamp = "1335381685"
 

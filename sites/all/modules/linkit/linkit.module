@@ -10,12 +10,6 @@
 define('LINKIT_DEFAULT_WEIGHT', 0);
 
 /**
- * The default profile machine name
- */
-define('LINKIT_DEFAULT_PROFILE_MACHINE_NAME', 'default');
-
-
-/**
  * Implements hook_menu().
  */
 function linkit_menu() {
@@ -249,12 +243,12 @@ function _linkit_autocomplete($search = NULL) {
 }
 
 /**
- * Perform internal autocomplete search
+ * Perform internal autocomplete search.
  *
  * @param $search_string
- *   The search string
+ *   The search string.
  * @return $results
- *   An array with the result objects
+ *   An array with the result objects.
  */
 function _linkit_autocomplete_search($search_string, $enabled_plugins) {
   $matches = array();
@@ -262,7 +256,7 @@ function _linkit_autocomplete_search($search_string, $enabled_plugins) {
     $profile = linkit_get_dashboard_profile();
 
     foreach ($enabled_plugins as $plugin) {
-      // Get an instance og the handler for this plugin.
+      // Get an instance of the handler for this plugin.
       $handler = linkit_get_plugin_handler($plugin, $profile);
       // If the handler is broken, just continue.
       if ($handler->broken()) {
@@ -270,7 +264,7 @@ function _linkit_autocomplete_search($search_string, $enabled_plugins) {
       }
       // Add the search string.
       $handler->setSearchString($search_string);
-      // Call the plugin seach metod.
+      // Call the plugin search metod.
       $results = $handler->autocomplete_callback();
       // Merge the results.
       $matches = array_merge($matches, $results);
@@ -917,19 +911,9 @@ function linkit_ctools_plugin_directory($module, $plugin) {
 function linkit_ctools_plugin_type() {
   $plugins['linkit_plugins'] = array(
     'child plugins' => TRUE,
-    'classes' => array('handler', 'entity fallback handler'),
-    'process' => 'linkit_linkit_plugins_process',
+    'classes' => array('handler'),
   );
   return $plugins;
-}
-
-/**
- * CTools callback; Process the behavoir plugins.
- */
-function linkit_linkit_plugins_process(&$plugin, $info) {
-  $plugin += array(
-    'description' => '',
-  );
 }
 
 /**

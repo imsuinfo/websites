@@ -56,7 +56,8 @@ class LinkitPluginEntity extends LinkitPlugin {
     $this->entity_info = entity_get_info($this->plugin['entity_type']);
 
     // Set bundle key name.
-    if (isset($this->entity_info['entity keys']['bundle'])) {
+    if (isset($this->entity_info['entity keys']['bundle']) &&
+      !isset($this->entity_key_bundle)) {
       $this->entity_key_bundle = $this->entity_info['entity keys']['bundle'];
     }
 
@@ -118,7 +119,7 @@ class LinkitPluginEntity extends LinkitPlugin {
 
     // If the entities by this entity should be grouped by bundle, get the
     // name and append it to the group.
-    if (isset($this->conf['group_by_bundle']) && $this->conf['group_by_bundle'] && $this->conf['bundles']) {
+    if (isset($this->conf['group_by_bundle']) && $this->conf['group_by_bundle']) {
       $bundles = $this->entity_info['bundles'];
       $bundle_name = $bundles[$entity->{$this->entity_key_bundle}]['label'];
       $group .= ' · ' . check_plain($bundle_name);
@@ -160,7 +161,11 @@ class LinkitPluginEntity extends LinkitPlugin {
     $this->query->propertyCondition($this->entity_field_label,
             '%' . db_like($this->serach_string) . '%', 'LIKE')
         ->addTag('linkit_entity_autocomplete')
-        ->addTag('linkit_' . $this->plugin['name'] . '_autocomplete');
+        ->addTag('linkit_' . $this->plugin['entity_type'] . '_autocomplete');
+
+    // Add access tag for the query.
+    // There is also a runtime access check that uses entity_access().
+    $this->query->addTag($this->plugin['entity_type'] . '_access');
 
     // Bundle check.
     if (isset($this->entity_key_bundle) && isset($this->conf['bundles']) ) {
@@ -182,10 +187,9 @@ class LinkitPluginEntity extends LinkitPlugin {
     $entities = entity_load($this->plugin['entity_type'], $ids);
 
     foreach ($entities AS $entity) {
-      // If we have the entity module enabled, we check the access againt the
-      // definded entity access callback.
-      if (module_exists('entity') && !entity_access('view', $this->plugin['entity_type'], $entity)) {
-       // continue;
+      // Check the access againt the definded entity access callback.
+      if (!entity_access('view', $this->plugin['entity_type'], $entity)) {
+        continue;
       }
 
       $matches[] = array(
