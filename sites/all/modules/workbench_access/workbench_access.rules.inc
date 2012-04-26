@@ -141,7 +141,7 @@ function workbench_access_rules_condition_content_is_using_workbench_access($nod
  *  TRUE/FALSE depending on if the nodes current section matches selected section.
  */
 function workbench_access_rules_condition_contents_current_access_section($node, $access_section) {
-  if (!is_object($node)) {
+  if (!is_object($node) || !property_exists('workbench_access_id', $node)) {
     return FALSE;
   }
 
