@@ -110,5 +110,5 @@ abstract class Sample2 implements SampleInterface {
 }
 
 /**
- * @} end samples
+ * @} end class_samples
  */

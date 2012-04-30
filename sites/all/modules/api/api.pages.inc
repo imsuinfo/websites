@@ -98,20 +98,16 @@ EOD;
  * @see api_menu()
  */
 function api_suggest($branch) {
-  $matches = array();
   $search = func_get_args();
   array_shift($search);
   $query = db_select('api_documentation', 'd')
     ->fields('d', array('title'));
   $b = $query->innerJoin('api_branch', 'b', 'd.branch_id = b.branch_id');
-  $result = $query->condition('d.title', '%' . implode('/', str_replace('_', '\_', $search)) . '%', 'LIKE')
+  $matches = $query->condition('d.title', '%' . implode('/', str_replace('_', '\_', $search)) . '%', 'LIKE')
     ->condition('b.branch_name', $branch)
     ->range(0, 10)
-    ->execute();
-
-  foreach ($result as $r) {
-    $matches[] = $r->title;
-  }
+    ->execute()
+    ->fetchCol();
   print drupal_json_output(array($search, array_values(array_unique($matches))));
 }
 
@@ -196,7 +192,7 @@ function api_search_listing($branch_name) {
     $query->fields('b', array('branch_name', 'project', 'project_title'))
       ->fields($ad)
       ->condition('b.branch_name', $branch_name)
-      ->condition($ad . '.title', '%' .str_replace(array('_', '%'), array('\_', '\%'), $search_text) . '%', 'LIKE')
+      ->condition($ad . '.title', '%' . str_replace(array('_', '%'), array('\_', '\%'), $search_text) . '%', 'LIKE')
       ->orderBy($ad . '.title', 'ASC')
       ->extend('PagerDefault')
       ->limit(50);
@@ -635,8 +631,8 @@ function api_find_references($name, $branch, $type, $count = TRUE, $exclude_did 
     // Use reference storage to find functions that call this one.
     $base_query = db_select('api_reference_storage', 'r');
     $d = $base_query->leftJoin('api_documentation', 'd', 'r.from_did = d.did');
-    $base_query->condition($d . '.branch_id', $branch_id)
-      ->condition($d . '.did', $exclude_did, '<>')
+    $base_query->condition('d.branch_id', $branch_id)
+      ->condition('d.did', $exclude_did, '<>')
       ->condition('r.object_type', array('function', 'member-class', 'computed-member'))
       ->condition('r.object_name', $name);
   }
@@ -746,7 +742,8 @@ function api_find_references($name, $branch, $type, $count = TRUE, $exclude_did 
   // Execute the query.
   if ($count) {
     // We're looking for a count here.
-    return $base_query->countQuery()->execute()->fetchField();
+    $base_query->addExpression('COUNT(*)', 'num');
+    return $base_query->execute()->fetchField();
   }
 
   // If we get here, we want to return a list.
@@ -862,13 +859,18 @@ function api_page_class($class) {
 
   // Figure out the class hierarchy, and what classes implement if this is
   // an interface.
+  // @todo Use namespaces to make sure we are using the right interface, if
+  // there are multiples with the same name. Currently we are just matching on
+  // the name in the class declaration "class A implements B" and assuming if
+  // the of name B matches $class->object_name, this class uses this interface.
   $hierarchy = api_class_hierarchy($class);
   $implements = array();
   if ($class->object_type === 'interface') {
     $query = db_select('api_reference_storage', 'ars');
     $ad = $query->innerJoin('api_documentation', 'ad', 'ad.did = ars.from_did');
     $query->fields($ad, array('did', 'branch_id', 'file_name', 'object_type', 'object_name'))
-      ->condition('ars.to_did', $class->did)
+      ->condition('ars.object_name', $class->object_name)
+      ->condition('ars.branch_id', $branch->branch_id)
       ->condition('ars.object_type', 'interface')
       ->orderBy($ad . '.object_name');
     $result = $query->execute();
@@ -882,9 +884,10 @@ function api_page_class($class) {
   $ad = $query->innerJoin('api_documentation', 'ad', 'ad.did = am.did');
   $query->fields($ad, array('branch_id', 'title', 'object_name', 'summary', 'object_type', 'file_name', 'did'));
   $ao = $query->leftJoin('api_overrides', 'ao', 'ao.did = am.did');
-  $odid = $query->addField($ao, 'overrides_did');
-  $query->condition('am.class_did', $class->did)
-    ->orderBy($ad . '.title');
+  $query
+    ->fields($ao, array('overrides_did'))
+    ->condition('am.class_did', $class->did)
+    ->orderBy('ad.title');
   $objects = api_render_listing($query->execute());
 
   $output = theme('api_class_page', array('branch' => $branch, 'object' => $class, 'documentation' => $documentation, 'implements' => $implements, 'hierarchy' => $hierarchy, 'objects' => $objects, 'code' => $code, 'related_topics' => $related_topics, 'see' => $see));
@@ -916,9 +919,10 @@ function api_page_group($group) {
   $d = $query->innerJoin('api_documentation', 'd', 'r.from_did = d.did');
   $query->fields($d, array('branch_id', 'object_name', 'title', 'summary', 'file_name', 'object_type', 'did'))
     ->condition('r.object_type', 'group')
-    ->condition('r.to_did', $group->did)
-    ->orderBy($d . '.object_name');
-  $objects = api_render_listing($query->execute());
+    ->condition('r.object_name', $group->object_name)
+    ->condition('r.branch_id', $group->branch_id)
+    ->orderBy('d.object_name');
+  $objects = api_render_listing($query->execute(), NULL, TRUE, TRUE);
 
   $output = theme('api_group_page', array('branch' => $branch, 'object' => $group, 'documentation' => $documentation, 'objects' => $objects, 'see' => $see));
   $output .= _api_add_comments($group);
@@ -1072,6 +1076,8 @@ function api_object_title_and_breadcrumb($branch, $object, $title = NULL, $objec
  *   only thing to display would be the class itself.
  */
 function api_class_hierarchy($class) {
+  $branch = api_get_branch_by_id($class->branch_id);
+
   // Keep track of whether this class has anything interesting in the
   // hierarchy.
   $interesting = FALSE;
@@ -1091,20 +1097,34 @@ function api_class_hierarchy($class) {
 
   while ($parent) {
     // Query to find the next ancestor.
+    // @todo Use namespaces. Currently we are just assuming that if the
+    // class declaration says "class A extends B", then either the name B is
+    // unique, or we make a link to search for all classes named B for the
+    // hierarchy.
     $query = db_select('api_reference_storage', 'ars');
-    $ad = $query->innerJoin('api_documentation', 'ad', 'ad.did = ars.to_did');
-    $query->fields($ad, array('did', 'branch_id', 'file_name', 'object_type', 'object_name'))
-    ->condition('ars.from_did', $parent->did)
-    ->condition('ars.object_type', 'class');
-    $parent = $query->execute()->fetchObject();
-
-    // Save in the list.
-    if ($parent) {
-      $interesting = TRUE;
+    $ad = $query->innerJoin('api_documentation', 'ad', 'ad.object_name = ars.object_name AND ad.branch_id = ars.branch_id');
+    $query
+      ->fields($ad, array('did', 'branch_id', 'file_name', 'object_type', 'object_name'))
+      ->condition('ars.from_did', $parent->did)
+      ->condition('ars.object_type', 'class')
+      ->condition('ad.object_type', 'class');
+    $results = $query->execute()->fetchAll();
+    $count = count($results);
+    if ($count < 1) {
+      break;
+    }
+    $interesting = TRUE;
+    $parent = array_pop($results);
+    if ($count == 1) {
       if (!isset($first_parent)) {
         $first_parent = $parent;
       }
       $parents[] = api_class_hierarchy_line($parent);
+    }
+    else {
+      // Multiple results. Add a line indicating a search.
+      $parents[] = l(t('Multiple classes named @classname', array('@classname' => $parent->object_name)), 'api/search/' . $branch->branch_name . '/' . check_plain($parent->object_name));
+      break;
     }
   }
 
@@ -1144,13 +1164,19 @@ function api_class_hierarchy($class) {
  *   of api_class_hierarchy_line().
  */
 function api_class_children($class) {
+  // @todo Use namespaces. Currently we are just matching on the class name,
+  // so if any class is declared as class A extends B, and B matches this
+  // class's name, we're assuming that it's the same B.
   $children = array();
   $query = db_select('api_reference_storage', 'ars');
   $ad = $query->innerJoin('api_documentation', 'ad', 'ad.did = ars.from_did');
-  $query->fields($ad, array('did', 'branch_id', 'file_name', 'object_type', 'object_name'))
-    ->condition('ars.to_did', $class->did)
+  $query
+    ->fields($ad, array('did', 'branch_id', 'file_name', 'object_type', 'object_name'))
+    ->condition('ars.object_name', $class->object_name)
+    ->condition('ars.branch_id', $class->branch_id)
+    ->condition('ad.object_type', 'class')
     ->condition('ars.object_type', 'class')
-    ->orderBy($ad . '.object_name');
+    ->orderBy('ad.object_name');
   $result = $query->execute();
   foreach ($result as $object) {
     $children[$object->did] = api_class_hierarchy_line($object);
@@ -1172,21 +1198,30 @@ function api_class_children($class) {
  *   HTML for this class in the class hierarchy.
  */
 function api_class_hierarchy_line($class, $even_if_uninteresting = TRUE) {
+  $branch = api_get_branch_by_id($class->branch_id);
+
   // See if this class implements any interfaces.
   $interfaces = array();
   $query = db_select('api_reference_storage', 'ars');
   $ref_name = $query->addField('ars', 'object_name', 'ref_name');
-  $ad = $query->leftJoin('api_documentation', 'ad', 'ad.did = ars.to_did');
+  $ad = $query->leftJoin('api_documentation', 'ad', 'ad.object_name = ars.object_name AND ad.branch_id = ars.branch_id AND ad.object_type = ars.object_type');
   $obj_name = $query->addField($ad, 'object_name', 'object_name');
-  $query->fields($ad, array('did', 'branch_id', 'file_name', 'object_type'))
+  $query
+    ->fields($ad, array('did', 'branch_id', 'file_name', 'object_type'))
     ->condition('ars.from_did', $class->did)
     ->condition('ars.object_type', 'interface')
-    ->orderBy($ad . '.object_name');
+    ->orderBy('ad.object_name');
   $result = $query->execute();
   foreach ($result as $object) {
     if (isset($object->did) && $object->did) {
       // Interface exists as an object in the database, make a link.
-      $interfaces[] = l($object->object_name, api_url($object));
+      if (!isset($interfaces[$object->object_name])) {
+        $interfaces[$object->object_name] = l($object->object_name, api_url($object));
+      }
+      else {
+        // Duplicate interface name, use a search.
+        $interfaces[$object->object_name] = l(t('Multiple interfaces named @classname', array('@classname' => $object->object_name)), 'api/search/' . $branch->branch_name . '/' . check_plain($object->object_name));
+      }
     }
     else {
       // This class was declared to implement this interface, but it didn't get
@@ -1199,10 +1234,11 @@ function api_class_hierarchy_line($class, $even_if_uninteresting = TRUE) {
   // See if this class extends another class that isn't defined in our DB.
   $extends = '';
   $query = db_select('api_reference_storage', 'ars');
-  $ad = $query->leftJoin('api_documentation', 'ad', 'ad.did = ars.to_did');
-  $did = $query->addField($ad, 'did');
-  $obj_name = $query->addField('ars', 'object_name');
-  $query->condition('ars.from_did', $class->did)
+  $ad = $query->leftJoin('api_documentation', 'ad', 'ad.object_name = ars.object_name AND ad.branch_id = ars.branch_id');
+  $query
+    ->fields($ad, array('did'))
+    ->fields('ars', array('object_name'))
+    ->condition('ars.from_did', $class->did)
     ->condition('ars.object_type', 'class')
     ->range(0, 1);
   $parent = $query->execute()->fetchObject();
@@ -1287,8 +1323,9 @@ function api_related_topics($did, $branch) {
   );
 
   $query = db_select('api_reference_storage', 'r');
-  $d = $query->innerJoin('api_documentation', 'd', "r.to_did = d.did AND d.object_type = 'group'");
-  $query->fields($d, array('branch_id', 'object_name', 'file_name', 'object_type', 'title', 'summary'))
+  $d = $query->innerJoin('api_documentation', 'd', "r.object_name = d.object_name AND r.branch_id = d.branch_id AND d.object_type = 'group'");
+  $query
+    ->fields($d, array('branch_id', 'object_name', 'file_name', 'object_type', 'title', 'summary'))
     ->condition('r.from_did', $did);
   $result = $query->execute();
 

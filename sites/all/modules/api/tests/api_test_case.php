@@ -37,7 +37,7 @@ class ApiTestCase extends DrupalWebTestCase {
    * Sets up modules for API tests, and a super-user.
    */
   function baseSetUp() {
-    DrupalWebTestCase::setUp('api', 'ctools', 'gplib', 'node', 'comment');
+    DrupalWebTestCase::setUp('api', 'ctools', 'gplib', 'node', 'comment', 'dblog');
 
     module_load_include('inc', 'api', 'api.admin');
     module_load_include('inc', 'api', 'parser');
@@ -50,6 +50,7 @@ class ApiTestCase extends DrupalWebTestCase {
       'access administration pages',
       'administer blocks',
       'administer nodes',
+      'access site reports',
     ));
     $this->drupalLogin($this->super_user);
   }

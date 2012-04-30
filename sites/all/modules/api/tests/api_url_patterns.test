@@ -24,7 +24,7 @@ class ApiURLPatternsTest extends ApiTestCase {
     return array(
       'name' => 'URL functioning',
       'description' => 'Test URLs specified in api_menu(), both old and current.',
-      'group' => 'API Module',
+      'group' => 'API module',
     );
   }
 

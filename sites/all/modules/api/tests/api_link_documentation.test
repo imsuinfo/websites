@@ -15,7 +15,7 @@ class ApiLinkDocumentationTest extends ApiTestCase {
     return array(
       'name' => 'Documentation linking',
       'description' => 'Test the api_link_documentation() function.',
-      'group' => 'API Module',
+      'group' => 'API module',
     );
   }
 

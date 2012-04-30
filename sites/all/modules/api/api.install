@@ -94,7 +94,7 @@ function api_schema() {
       ),
       'object_name' => array(
         'type' => 'varchar',
-        'length' => '127',
+        'length' => '255',
         'not null' => TRUE,
         'default' => '',
       ),
@@ -119,7 +119,7 @@ function api_schema() {
       ),
       'file_name' => array(
         'type' => 'varchar',
-        'length' => '127',
+        'length' => '255',
         'not null' => TRUE,
         'default' => '',
       ),
@@ -308,15 +308,8 @@ function api_schema() {
         'not null' => TRUE,
         'default' => 0,
       ),
-      'to_did' => array(
-        'type' => 'int',
-        'unsigned' => TRUE,
-        'not null' => TRUE,
-        'default' => 0,
-      ),
     ),
     'indexes' => array(
-      'to_did' => array('to_did'),
       'from_did' => array('from_did'),
       'object_name' => array('object_name'),
       'object_type' => array('object_type'),
@@ -345,16 +338,9 @@ function api_schema() {
         'not null' => TRUE,
         'default' => 0,
       ),
-      'root_did' => array(
-        'type' => 'int',
-        'unsigned' => TRUE,
-        'not null' => TRUE,
-        'default' => 0,
-      ),
     ),
     'indexes' => array(
       'did' => array('did'),
-      'root_did' => array('root_did'),
       'overrides_did' => array('overrides_did'),
     ),
   );
@@ -391,7 +377,7 @@ function api_enable() {
   $result = db_select('api_branch', 'b')
     ->fields('b', array('branch_name'))
     ->condition('branch_name', 'php')
-    ->range(0,1)
+    ->range(0, 1)
     ->execute()
     ->fetchCol();
 
@@ -532,7 +518,44 @@ function api_update_7103() {
   // in a bad state.
   $count = api_mark_for_reparse();
 
-  return('object_name field updated in {api_reference_storage}, and everything marked for reparse.');
+  return 'object_name field updated in {api_reference_storage}, and everything marked for reparse.';
+}
+
+/**
+ * Remove fields {api_reference_storage}.to_did and {api_overrides}.root_did.
+ */
+function api_update_7104() {
+  db_drop_index('api_reference_storage', 'to_did');
+  db_drop_field('api_reference_storage', 'to_did');
+
+  db_drop_index('api_overrides', 'root_did');
+  db_drop_field('api_overrides', 'root_did');
+
+  return 'Fields {api_reference_storage}.to_did and {api_overrides}.root_did removed';
+}
+
+/**
+ * Make two {api.documentation} fields longer.
+ */
+function api_update_7106() {
+  db_drop_index('api_documentation', 'file_name');
+  db_drop_index('api_documentation', 'object_name');
+  db_change_field('api_documentation', 'file_name', 'file_name', array(
+      'type' => 'varchar',
+      'length' => '255',
+      'not null' => TRUE,
+      'default' => '',
+    ),
+    array('indexes' => array('file_name' => array('file_name'))));
+  db_change_field('api_documentation', 'object_name', 'object_name', array(
+      'type' => 'varchar',
+      'length' => '255',
+      'not null' => TRUE,
+      'default' => '',
+    ),
+    array('indexes' => array('object_name' => array('object_name', 'branch_id', 'object_type'))));
+
+  return 'Two fields in {api_documentation} have been updated.';
 }
 
 /**

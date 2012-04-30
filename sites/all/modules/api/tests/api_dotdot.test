@@ -15,7 +15,7 @@ class ApiDotDotTestCase extends ApiTestCase {
     return array(
       'name' => 'Dot dot directories',
       'description' => 'Tests that the API module can parse files in .. directories',
-      'group' => 'API Module',
+      'group' => 'API module',
     );
   }
 

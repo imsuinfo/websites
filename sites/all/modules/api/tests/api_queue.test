@@ -16,7 +16,7 @@ class ApiQueuesTestCase extends ApiTestCase {
     return array(
       'name' => 'Parsing queue',
       'description' => 'Tests that the API parsing queue is functioning properly',
-      'group' => 'API Module',
+      'group' => 'API module',
     );
   }
 

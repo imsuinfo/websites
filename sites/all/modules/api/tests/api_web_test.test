@@ -14,7 +14,7 @@ class ApiListingPagesTestCase extends ApiWebPagesBaseTest {
     return array(
       'name' => 'Listing pages',
       'description' => 'Tests listing pages for the API module.',
-      'group' => 'API Module',
+      'group' => 'API module',
     );
   }
 
@@ -150,7 +150,7 @@ class ApiSimpleItemPagesTestCase extends ApiWebPagesBaseTest {
     return array(
       'name' => 'Simple item pages',
       'description' => 'Tests simple item pages (function, constant, etc.) for the API module.',
-      'group' => 'API Module',
+      'group' => 'API module',
     );
   }
 
@@ -413,7 +413,7 @@ class ApiComplexItemPagesTestCase extends ApiWebPagesBaseTest {
     return array(
       'name' => 'Complex item pages',
       'description' => 'Tests complex item pages (class, topic, file) for the API module.',
-      'group' => 'API Module',
+      'group' => 'API module',
     );
   }
 
@@ -671,7 +671,7 @@ class ApiAdminPagesTestCase extends ApiWebPagesBaseTest {
     return array(
       'name' => 'Admin pages',
       'description' => 'Tests admin pages for the API module.',
-      'group' => 'API Module',
+      'group' => 'API module',
     );
   }
 
@@ -690,9 +690,9 @@ class ApiAdminPagesTestCase extends ApiWebPagesBaseTest {
     $this->assertText('PHP functions', 'PHP branch title appears');
     $this->assertText($this->php_branch_info['branch_name'], 'Test PHP branch name appears');
 
-    $this->assertLink('edit', 0, 'Edit link appears');
-    $this->assertLink('edit', 1, '2nd edit link appears');
-    $this->clickLink('edit');
+    $this->assertLink(t('edit'), 0, 'Edit link appears');
+    $this->assertLink(t('edit'), 1, '2nd edit link appears');
+    $this->clickLink(t('edit'));
     $this->assertURLContains('admin/config/development/api/branches/2', 'Edit link went to the right place');
     $this->assertRaw($this->branch_info['project'], 'Project name appears on edit page');
     $this->assertRaw($this->branch_info['branch_name'], 'Branch name appears on edit page');
@@ -715,7 +715,7 @@ class ApiAdminPagesTestCase extends ApiWebPagesBaseTest {
     $this->assertText($tmp_branch_info['title'], 'Test branch title appears');
 
     // Now edit again, verify saved info is there, and set back.
-    $this->clickLink('edit');
+    $this->clickLink(t('edit'));
     $this->assertRaw($tmp_branch_info['project'], 'Project name appears on edit page');
     $this->assertRaw($tmp_branch_info['branch_name'], 'Branch name appears on edit page');
     $this->assertRaw($tmp_branch_info['project_title'], 'Project title appears on edit page');
@@ -725,9 +725,24 @@ class ApiAdminPagesTestCase extends ApiWebPagesBaseTest {
 
     // Now we should be back on the listing page. Test the reparse link.
     $this->assertTrue($this->howManyToParse() == 0, 'No files are marked to parse before clicking link');
-    $this->clickLink('reparse');
+    $this->clickLink(t('reparse'));
     $this->assertText('11 files in branch ' . $this->branch_info['branch_name'] . ' set to reparse, starting at next cron run', 'Confirmation found after clicking reparse link');
     $this->assertTrue($this->howManyToParse() == 11, '11 files are marked to parse after clicking reparse link');
+
+    // Now try creating and then deleting a branch.
+    $new_word = 'pizza';
+    $new_branch = $this->setUpBranchUI('', FALSE, array(
+        'project_title' => $new_word,
+        'project' => $new_word,
+        'branch_name' => $new_word,
+        'title' => $new_word,
+      ));
+    $this->drupalGet('admin/config/development/api/branches');
+    $this->assertRaw($new_word, 'New branch appears on the branch page');
+    $this->drupalGet('admin/config/development/api/branches/4/delete');
+    $this->drupalPost(NULL, array(), t('Delete'));
+    $this->drupalGet('admin/config/development/api/branches');
+    $this->assertNoRaw($new_word, 'After deleting, new branch info is not there');
   }
 }
 
@@ -745,7 +760,7 @@ class ApiEmptyPageLinksTestCase extends ApiWebPagesBaseTest {
     return array(
       'name' => 'Empty listing page links',
       'description' => 'Tests that links to empty listing pages are not made. Also tests multiple projects setup.',
-      'group' => 'API Module',
+      'group' => 'API module',
     );
   }
 
@@ -866,7 +881,7 @@ class ApiMultipleBranchesTest extends ApiWebPagesBaseTest {
     return array(
       'name' => 'Multiple branches functionality',
       'description' => 'Tests that the multiple-branch setup works correctly',
-      'group' => 'API Module',
+      'group' => 'API module',
     );
   }
 
@@ -1001,7 +1016,7 @@ class ApiSearchTestCase extends ApiWebPagesBaseTest {
     return array(
       'name' => 'Search',
       'description' => 'Tests search functionality for the API module.',
-      'group' => 'API Module',
+      'group' => 'API module',
     );
   }
 

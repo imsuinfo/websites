@@ -14,7 +14,7 @@ class ApiLinkCodeTest extends ApiTestCase {
     return array(
       'name' => 'Code linking',
       'description' => 'Test the api_link_code() function.',
-      'group' => 'API Module',
+      'group' => 'API module',
     );
   }
 

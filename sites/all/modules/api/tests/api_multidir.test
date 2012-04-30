@@ -15,7 +15,7 @@ class ApiMultiDirectoryTestCase extends ApiTestCase {
     return array(
       'name' => 'Multiple directories',
       'description' => 'Tests that the API module can parse files located in multiple directories in one branch',
-      'group' => 'API Module',
+      'group' => 'API module',
     );
   }
 

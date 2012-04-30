@@ -15,7 +15,7 @@ class ApiLegacyTest extends ApiTestCase {
     return array(
       'name' => 'Legacy redirects',
       'description' => 'Test legacy.inc redirect functions.',
-      'group' => 'API Module',
+      'group' => 'API module',
     );
   }
 

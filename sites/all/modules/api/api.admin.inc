@@ -455,7 +455,7 @@ function api_branch_delete_form($form, $form_state, $branch_id) {
  */
 function api_branch_delete_form_submit($form, &$form_state) {
   $dids = db_select('api_documentation', 'ad')
-    ->fields('ad', 'did')
+    ->fields('ad', array('did'))
     ->condition('branch_id', $form['#branch']->branch_id)
     ->execute()
     ->fetchCol();

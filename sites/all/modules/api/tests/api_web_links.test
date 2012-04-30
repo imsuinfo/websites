@@ -15,7 +15,7 @@ class ApiWebLinksTestCase extends ApiWebPagesBaseTest {
     return array(
       'name' => 'Web links',
       'description' => 'Tests links on web pages for the API module.',
-      'group' => 'API Module',
+      'group' => 'API module',
     );
   }
 
