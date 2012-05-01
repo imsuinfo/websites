@@ -69,7 +69,7 @@ function cf_menu_query_menu_tree_check_access_alter(&$query) {
     $where =& $query->conditions();
 
     foreach ($where as $key => &$value) {
-      if ($value['field'] == 'n.status') unset($where[$key]);
+      if (is_string($value['field']) && $value['field'] == 'n.status') unset($where[$key]);
     }
   }
 }
