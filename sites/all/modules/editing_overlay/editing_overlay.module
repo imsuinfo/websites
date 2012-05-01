@@ -40,7 +40,7 @@ function editing_overlay_init() {
   cf_error_append_history($function_history, __FUNCTION__);
 
   $mode = overlay_get_mode();
-  $user = cf_get_user(FALSE, $function_history);
+  $user = cf_current_user();
 
   $use_overlay = !isset($user->data['editing_overlay']) || $user->data['editing_overlay'];
 

@@ -99,7 +99,7 @@ function cf_node_create($form_id, $node_class, array $function_history = array()
   $node_state['values']['op'] = t('Save');
 
   if (!cf_has_array_key('name', $node_state['values'])) {
-    $current_user = cf_get_user();
+    $current_user = cf_current_user();
 
     $node_state['values']['name'] = $current_user->name;
   }

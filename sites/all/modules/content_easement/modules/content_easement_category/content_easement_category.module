@@ -249,7 +249,7 @@ function content_easement_category_get_categories(array $parameters = array(), $
     $target_user = $account;
   }
   else {
-    $target_user = cf_get_user(FALSE, $function_history);
+    $target_user = cf_current_user();
   }
 
   $query = db_select('content_easement_categories', 'cec');
@@ -397,7 +397,7 @@ function content_easement_category_get_allowed_type_mappings($parameters = array
     $target_user = $account;
   }
   else {
-    $target_user = cf_get_user(FALSE, $function_history);
+    $target_user = cf_current_user();
   }
 
   $mode_id = 'read';

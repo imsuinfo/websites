@@ -8,7 +8,7 @@ function content_easement_init() {
   cf_error_append_history($function_history, __FUNCTION__);
 
   $mode = (function_exists('overlay_get_mode') ? overlay_get_mode() : FALSE);
-  $user = cf_get_user(FALSE, $function_history);
+  $user = cf_current_user();
 
   $use_overlay = (isset($user->data['overlay']) && $user->data['overlay']);
 

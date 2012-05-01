@@ -20,7 +20,7 @@ function cf_init() {
     $conf['ip_memory_limits'] = array();
   }
 
-  $user = cf_get_user(FALSE, $function_history);
+  $user = cf_current_user();
 
   foreach ($conf['role_memory_limits'] as $key => &$value) {
     if (array_key_exists($key, $user->roles) && !empty($value)) {

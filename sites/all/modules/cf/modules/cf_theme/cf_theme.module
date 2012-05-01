@@ -46,7 +46,7 @@ function cf_theme_get_variables(array &$variables, array $function_history = arr
     $cf['is_data'][$key] = array();
   }
 
-  $user = cf_get_user();
+  $user = cf_current_user();
 
   // set the request time if it exists
   if (empty($_SERVER['REQUEST_TIME'])) {

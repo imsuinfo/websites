@@ -221,7 +221,7 @@ function killfile_delete_action($node, $author = NULL) {
     $target_user = $author;
   }
   else {
-    $target_user = cf_get_user(FALSE, $function_history);
+    $target_user = cf_current_user();
   }
 
   if (node_access('delete', $node, $target_user)) {
@@ -262,7 +262,7 @@ function killfile_undelete_action($node, $author = NULL) {
     $target_user = $author;
   }
   else {
-    $target_user = cf_get_user(FALSE, $function_history);
+    $target_user = cf_current_user();
   }
 
   if (killfile_can_undelete($node, $target_user, $function_history)) {

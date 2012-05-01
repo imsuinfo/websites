@@ -911,7 +911,7 @@ function killfile_fake_delete_nodes($nodes_or_nids, $account = NULL, array $func
   $results = array();
 
   if (!is_object($account)){
-    $acting_user = cf_get_user(FALSE, $function_history);
+    $acting_user = cf_current_user();
   }
   else {
     $acting_user = $account;
@@ -1059,7 +1059,7 @@ function killfile_undelete_nodes($nodes_or_nids, $account = NULL, array $functio
   $results = array();
 
   if (!is_object($account)){
-    $acting_user = cf_get_user(FALSE, $function_history);
+    $acting_user = cf_current_user();
   }
   else {
     $acting_user = $account;
