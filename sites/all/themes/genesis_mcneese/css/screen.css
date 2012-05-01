@@ -309,6 +309,36 @@ ul#search_form-top_box_links a:active {
 
 
 
+/*** Header - masquerade form ***/
+#block-masquerade-masquerade {
+  position: absolute;
+  display: inline-block;
+
+  top: 10px;
+  right: 270px;
+
+  overflow: hidden;
+
+  background-color: #023761;
+
+  padding: 3px;
+  border: 1px solid #065c9f;
+  border-top: 0;
+}
+
+#block-masquerade-masquerade > .block-inner > h2 {
+  font-size: 10px;
+  color: #ffffff;
+  padding: 4px;
+  margin: 0;
+}
+
+#block-masquerade-masquerade > .block-inner > .content > form > div > .form-item {
+  display: none;
+}
+
+
+
 /*** Menu - Primary Navigation ***/
 div#block-menu-menu-primary-navigation  {
   height: 35px;
