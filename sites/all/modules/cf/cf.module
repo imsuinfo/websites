@@ -16,6 +16,10 @@ function cf_init() {
     $conf['user_memory_limits'] = array();
   }
 
+  if (!isset($conf['ip_memory_limits']) || !is_array($conf['ip_memory_limits'])) {
+    $conf['ip_memory_limits'] = array();
+  }
+
   $user = cf_get_user(FALSE, $function_history);
 
   foreach ($conf['role_memory_limits'] as $key => &$value) {
@@ -26,6 +30,14 @@ function cf_init() {
 
   foreach ($conf['user_memory_limits'] as $key => &$value) {
     if ($key == $user->uid && !empty($value)) {
+      ini_set('memory_limit', $value);
+    }
+  }
+
+  $client_ip = ip_address();
+
+  foreach ($conf['ip_memory_limits'] as $key => &$value) {
+    if (!empty($value) && $key == $client_ip) {
       ini_set('memory_limit', $value);
     }
   }
