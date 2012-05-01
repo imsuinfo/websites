@@ -17,21 +17,26 @@
     <!--(end_website_menu)-->
   </nav>
 <?php } ?>
-<?php if ($cf['show']['editing']){ ?>
+<?php if ($cf['show']['editing'] ||$cf['show']['page']['editing']){ ?>
   <aside id='document-editing_region' tabindex="4">
     <!--(begin_editing)-->
     <h2>Editing</h2>
-    <?php if ($cf['show']['primary_local_tasks']){ ?>
-      <div id='document-primary_tabs'>
-        <!--(begin_primary_tabs)-->
-        <ul class='tabs primary'><?php print($primary_local_tasks); ?></ul>
-        <!--(end_primary_tabs)-->
-      </div>
+    <?php if ($cf['show']['editing']) { ?>
+      <?php if ($cf['show']['primary_local_tasks']){ ?>
+        <div id='document-primary_tabs'>
+          <!--(begin_primary_tabs)-->
+          <ul class='tabs primary'><?php print($primary_local_tasks); ?></ul>
+          <!--(end_primary_tabs)-->
+        </div>
+      <?php } ?>
+      <?php if ($cf['show']['breadcrumb']){ ?>
+        <!--(begin_breadcrumb)-->
+        <?php print($breadcrumb); ?>
+        <!--(end_breadcrumb)-->
+      <?php } ?>
     <?php } ?>
-    <?php if ($cf['show']['breadcrumb']){ ?>
-      <!--(begin_breadcrumb)-->
-      <?php print($breadcrumb); ?>
-      <!--(end_breadcrumb)-->
+    <?php if ($cf['show']['page']['editing']) { ?>
+      <?php print($page['editing']); ?>
     <?php } ?>
     <!--(end_editing)-->
   </aside>

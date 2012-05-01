@@ -110,6 +110,7 @@ regions[page_top] = Page Top
 regions[messages] = Messages
 regions[website_menu] = Website Menu
 regions[help] = Help
+regions[editing] = Editing
 regions[content] = Content
 regions[page_bottom] = Page Bottom
 regions[hidden] = Hidden

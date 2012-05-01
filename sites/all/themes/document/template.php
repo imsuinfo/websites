@@ -79,7 +79,7 @@ function document_preprocess_maintenance_page(&$vars) {
   $keys_to_render = array('messages', 'primary_local_tasks', 'secondary_local_tasks', 'action_links');
   cf_theme_render_variables($vars, $keys_to_render);
 
-  $keys_to_render = array('messages', 'website_menu', 'help', 'node_information', 'content');
+  $keys_to_render = array('messages', 'website_menu', 'help', 'node_information', 'editing', 'content');
   cf_theme_render_variables($vars, $keys_to_render);
 
   // always show the following fields
@@ -147,7 +147,7 @@ function document_preprocess_page(&$vars) {
   $keys_to_render = array('messages', 'primary_local_tasks', 'secondary_local_tasks', 'action_links');
   cf_theme_render_variables($vars, $keys_to_render);
 
-  $keys_to_render = array('messages', 'website_menu', 'help', 'node_information', 'content');
+  $keys_to_render = array('messages', 'website_menu', 'help', 'node_information', 'editing', 'content');
   cf_theme_render_variables($vars, $keys_to_render, 'page');
 
   // always show the following fields
