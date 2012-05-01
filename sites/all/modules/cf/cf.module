@@ -97,6 +97,38 @@ function cf_get_user($reset = FALSE, array $function_history = array()) {
 }
 
 /**
+ * Provide a safe way to get the current user.
+ *
+ * This is a fowards-compatible function of the 7.x-2.x versions.
+ *
+ * Why:
+ *   This is to easy to accidentally do: 'if ($user->uid = 1) {'
+ *
+ *   The global $user data may also not have contrib modules data included, so
+ *   accessing $user directly is generally not a good idea.
+ *   This function seems rather waseteful given its simplicity.
+ *   It may be better if drupal core would allow $uid to be left empty such
+ *   that the user_load() function would handle accessing the global $user->id if $uid is empty.
+ *
+ *   See: http://drupal.org/node/57287
+ *   See: http://api.drupal.org/api/drupal/developer--globals.php/global/user/7#comment-7324
+ *
+ * @param bool $reset
+ *   TRUE to reset the internal cache and load from the database.
+ *   FALSE (default) to load from the internal cache, if set.
+ * @param array $function_history
+ *   (optional) An array of function names, ie:
+ *   array('0' => 'my_function_name').
+ *
+ * @return
+ *   A copy of the global variable $user.
+ *   Changes to this variable will not be retained.
+ */
+function cf_current_user($reset = FALSE) {
+  return cf_get_user($reset);
+}
+
+/**
  * Check to see if the variable is an array and if the given key exists.
  *
  * Why:
