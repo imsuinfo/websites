@@ -17,8 +17,15 @@ function content_easement_unpublished_message_help($path, $arg = NULL) {
   $function_history = array();
   cf_error_append_history($function_history, __FUNCTION__);
 
-  if (cf_is_empty_or_non_string($function_history, 'path', $path, WATCHDOG_ERROR)){
-    return;
+  if (function_exists('cf_version_exists')) {
+    if (cf_is_empty_or_non_string('path', $path, WATCHDOG_ERROR)){
+      return;
+    }
+  }
+  else {
+    if (cf_is_empty_or_non_string($function_history, 'path', $path, WATCHDOG_ERROR)){
+      return;
+    }
   }
 
   switch ($path) {
@@ -54,6 +61,16 @@ function content_easement_unpublished_message_block_info() {
 function content_easement_unpublished_message_block_view($delta = '') {
   if (!user_access('view unpublished message')) return array();
 
+  static $unpublished_messages = NULL;
+
+  // show the message only once
+  if (!is_null($unpublished_messages)){
+    if (isset($unpublished_messages[$node->nid][$node->vid])){
+      drupal_set_message("Called again!");
+      return array();
+    }
+  }
+
   $node = menu_get_object();
 
   if (is_object($node) && property_exists($node, 'status') && $node->status == NODE_NOT_PUBLISHED){
@@ -66,6 +83,7 @@ function content_easement_unpublished_message_block_view($delta = '') {
 
     $message = t("The !type '%title' is not published.", array('!type' => '<strong>' . $node_type_name . '</strong>', '%title' => $node_title));
 
+    $block = array();
     $block['subject'] = NULL;
     $block['content'] = array(
       '#markup' => theme('container', array('element' => array('#children' => $message, '#attributes' => array('class' => 'content-easement-unpublished-message')))),
@@ -74,6 +92,7 @@ function content_easement_unpublished_message_block_view($delta = '') {
       ),
     );
 
+    $unpublished_messages[$node->nid][$node->vid] = TRUE;
     return $block;
   }
 

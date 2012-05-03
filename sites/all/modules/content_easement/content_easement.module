@@ -210,8 +210,15 @@ function content_easement_get_type_id($type) {
   $function_history = array();
   cf_error_append_history($function_history, __FUNCTION__);
 
-  if (cf_is_empty_or_non_string($function_history, 'type', $type)){
-    return FALSE;
+  if (function_exists('cf_version_exists')) {
+    if (cf_is_empty_or_non_string('type', $type)){
+      return FALSE;
+    }
+  }
+  else {
+    if (cf_is_empty_or_non_string($function_history, 'type', $type)){
+      return FALSE;
+    }
   }
 
   $record = db_query('SELECT id FROM {content_easement_types} WHERE type = :type', array(':type' => $type))->fetchObject();
@@ -235,8 +242,15 @@ function content_easement_form_node_type_form_alter(&$form, &$form_state, $form_
     return;
   }
 
-  if (cf_is_not_form_state($function_history, 'form_state', $form_state)){
-    return;
+  if (function_exists('cf_version_exists')) {
+    if (cf_is_not_form_state('form_state', $form_state)){
+      return;
+    }
+  }
+  else {
+    if (cf_is_not_form_state($function_history, 'form_state', $form_state)){
+      return;
+    }
   }
 
   $new_type = empty($form['#node_type']->type);
@@ -342,8 +356,15 @@ function content_easement_types_validate($form, &$form_state){
     return;
   }
 
-  if (cf_is_not_form_state($function_history, 'form_state', $form_state)){
-    return;
+  if (function_exists('cf_version_exists')) {
+    if (cf_is_not_form_state('form_state', $form_state)){
+      return;
+    }
+  }
+  else {
+    if (cf_is_not_form_state($function_history, 'form_state', $form_state)){
+      return;
+    }
   }
 
   $type_data = array('id' => $form['content_easement']['id']['#value'], 'type' => $form['#node_type']->type, 'new' => empty($form['#node_type']->type));
@@ -364,8 +385,15 @@ function content_easement_types_submit($form, &$form_state){
     return;
   }
 
-  if (cf_is_not_form_state($function_history, 'form_state', $form_state)){
-    return;
+  if (function_exists('cf_version_exists')) {
+    if (cf_is_not_form_state('form_state', $form_state)){
+      return;
+    }
+  }
+  else {
+    if (cf_is_not_form_state($function_history, 'form_state', $form_state)){
+      return;
+    }
   }
 
   $data = array();

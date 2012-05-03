@@ -17,8 +17,15 @@ function killfile_help($path, $arg = NULL) {
   $function_history = array();
   cf_error_append_history($function_history, __FUNCTION__);
 
-  if (cf_is_empty_or_non_string($function_history, 'path', $path, WATCHDOG_ERROR)){
-    return;
+  if (function_exists('cf_version_exists')) {
+    if (cf_is_empty_or_non_string('path', $path, WATCHDOG_ERROR)){
+      return;
+    }
+  }
+  else {
+    if (cf_is_empty_or_non_string($function_history, 'path', $path, WATCHDOG_ERROR)){
+      return;
+    }
   }
 
   switch ($path) {
@@ -135,8 +142,15 @@ function killfile_form_node_type_form_alter(&$form, &$form_state, $form_id) {
     return;
   }
 
-  if (cf_is_not_form_state($function_history, 'form_state', $form_state, WATCHDOG_ERROR)){
-    return;
+  if (function_exists('cf_version_exists')) {
+    if (cf_is_not_form_state('form_state', $form_state, WATCHDOG_ERROR)){
+      return;
+    }
+  }
+  else {
+    if (cf_is_not_form_state($function_history, 'form_state', $form_state, WATCHDOG_ERROR)){
+      return;
+    }
   }
 
   $node_type_settings_object = FALSE;
@@ -189,12 +203,23 @@ function killfile_form_alter(&$form, &$form_state, $form_id) {
     return;
   }
 
-  if (cf_is_not_form_state($function_history, 'form_state', $form_state, WATCHDOG_ERROR)){
-    return;
-  }
+  if (function_exists('cf_version_exists')) {
+    if (cf_is_not_form_state('form_state', $form_state, WATCHDOG_ERROR)){
+      return;
+    }
 
-  if (cf_is_empty_or_non_string($function_history, 'form_id', $form_id, WATCHDOG_ERROR)){
-    return;
+    if (cf_is_empty_or_non_string('form_id', $form_id, WATCHDOG_ERROR)){
+      return;
+    }
+  }
+  else {
+    if (cf_is_not_form_state($function_history, 'form_state', $form_state, WATCHDOG_ERROR)){
+      return;
+    }
+
+    if (cf_is_empty_or_non_string($function_history, 'form_id', $form_id, WATCHDOG_ERROR)){
+      return;
+    }
   }
 
   if ($form_id == 'node_delete_confirm'){
@@ -278,8 +303,15 @@ function killfile_node_undelete_submit($form, &$form_state) {
     return;
   }
 
-  if (cf_is_not_form_state($function_history, 'form_state', $form_state)){
-    return;
+  if (function_exists('cf_version_exists')) {
+    if (cf_is_not_form_state('form_state', $form_state)){
+      return;
+    }
+  }
+  else {
+    if (cf_is_not_form_state($function_history, 'form_state', $form_state)){
+      return;
+    }
   }
 
   if (!killfile_can_undelete($form['#node'], NULL, $function_history)) {
@@ -362,8 +394,15 @@ function killfile_node_access($node, $op, $account){
   $function_history = array();
   cf_error_append_history($function_history, __FUNCTION__);
 
-  if (cf_is_empty_or_non_string($function_history, 'op', $op, WATCHDOG_ERROR)){
-    return NODE_ACCESS_IGNORE;
+  if (function_exists('cf_version_exists')) {
+    if (cf_is_empty_or_non_string('op', $op, WATCHDOG_ERROR)){
+      return NODE_ACCESS_IGNORE;
+    }
+  }
+  else {
+    if (cf_is_empty_or_non_string($function_history, 'op', $op, WATCHDOG_ERROR)){
+      return NODE_ACCESS_IGNORE;
+    }
   }
 
   if (!is_object($account)){
@@ -615,8 +654,15 @@ function killfile_node_delete_confirm_submit($form, &$form_state){
     return;
   }
 
-  if (cf_is_not_form_state($function_history, 'form_state', $form_state)){
-    return;
+  if (function_exists('cf_version_exists')) {
+    if (cf_is_not_form_state('form_state', $form_state)){
+      return;
+    }
+  }
+  else {
+    if (cf_is_not_form_state($function_history, 'form_state', $form_state)){
+      return;
+    }
   }
 
   if (!array_key_exists('confirm', $form_state['values'])){
@@ -655,11 +701,18 @@ function killfile_node_type_form_validate($form, &$form_state) {
   $function_history = array();
   cf_error_append_history($function_history, __FUNCTION__);
 
-  if (cf_is_not_form_state($function_history, 'form_state', $form_state, WATCHDOG_ERROR)){
-    return;
+  if (function_exists('cf_version_exists')) {
+    if (cf_is_not_form_state('form_state', $form_state, WATCHDOG_ERROR)){
+      return;
+    }
+  }
+  else {
+    if (cf_is_not_form_state($function_history, 'form_state', $form_state, WATCHDOG_ERROR)){
+      return;
+    }
   }
 
-  if (!isset($form_state['values']['killfile']) || !cf_has_array_key('setting_options', $form_state['values']['killfile'], $function_history)){
+  if (!isset($form_state['values']['killfile']) || !cf_has_array_key('setting_options', $form_state['values']['killfile'])){
     cf_error_missing_array_key($function_history, 'form_state[\'values\'][\'killfile\']', 'setting_options');
     return;
   }
@@ -691,11 +744,18 @@ function killfile_node_type_form_submit($form, &$form_state) {
   $function_history = array();
   cf_error_append_history($function_history, __FUNCTION__);
 
-  if (cf_is_not_form_state($function_history, 'form_state', $form_state, WATCHDOG_ERROR)){
-    return;
+  if (function_exists('cf_version_exists')) {
+    if (cf_is_not_form_state('form_state', $form_state, WATCHDOG_ERROR)) {
+      return;
+    }
+  }
+  else {
+    if (cf_is_not_form_state($function_history, 'form_state', $form_state, WATCHDOG_ERROR)) {
+      return;
+    }
   }
 
-  if (!cf_has_array_key('setting_options', $form_state['values']['killfile'], $function_history)){
+  if (!cf_has_array_key('setting_options', $form_state['values']['killfile'])) {
     cf_error_missing_array_key($function_history, 'form_state[\'values\'][\'killfile\']', 'setting_options');
     return;
   }
@@ -1151,8 +1211,15 @@ function killfile_undelete_nodes($nodes_or_nids, $account = NULL, array $functio
 function killfile_is_enabled($node_type, array $function_history = array()){
   cf_error_append_history($function_history, __FUNCTION__);
 
-  if (cf_is_empty_or_non_string($function_history, 'node_type', $node_type)){
-    return FALSE;
+  if (function_exists('cf_version_exists')) {
+    if (cf_is_empty_or_non_string('node_type', $node_type)){
+      return FALSE;
+    }
+  }
+  else {
+    if (cf_is_empty_or_non_string($function_history, 'node_type', $node_type)){
+      return FALSE;
+    }
   }
 
   $node_type_settings_objects = killfile_get_node_type_settings(array($node_type), $function_history);

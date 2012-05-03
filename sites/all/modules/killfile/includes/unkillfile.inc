@@ -83,8 +83,15 @@ function killfile_unkillfile_form_submit($form, &$form_state) {
     return;
   }
 
-  if (cf_is_not_form_state($function_history, 'form_state', $form_state)){
-    return;
+  if (function_exists('cf_version_exists')) {
+    if (cf_is_not_form_state('form_state', $form_state)){
+      return;
+    }
+  }
+  else {
+    if (cf_is_not_form_state($function_history, 'form_state', $form_state)){
+      return;
+    }
   }
 
   if (isset($form_state['values']['confirm'])) {

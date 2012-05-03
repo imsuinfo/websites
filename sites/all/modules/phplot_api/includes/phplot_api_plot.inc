@@ -156,7 +156,7 @@ class phplot_api_plot {
   public function set_data($feature, $value, $reset = FALSE) {
     $function_history = $this->history(__FUNCTION__);
 
-    if (!cf_has_array_key($feature, $this->settings['features'], $function_history)) {
+    if (!cf_has_array_key($feature, $this->settings['features'])) {
       // @todo watchdog some error here?
       return FALSE;
     }

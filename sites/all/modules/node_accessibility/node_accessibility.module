@@ -358,8 +358,15 @@ function node_accessibility_node_type_form_submit($form, &$form_state) {
   $function_history = array();
   cf_error_append_history($function_history, __FUNCTION__);
 
-  if (cf_is_empty_or_non_string($function_history, 'form_state[values][type]', $form_state['values']['type'])) {
-    return;
+  if (function_exists('cf_version_exists')) {
+    if (cf_is_empty_or_non_string('form_state[values][type]', $form_state['values']['type'])) {
+      return;
+    }
+  }
+  else {
+    if (cf_is_empty_or_non_string($function_history, 'form_state[values][type]', $form_state['values']['type'])) {
+      return;
+    }
   }
 
   $node_type_settings_objects = node_accessibility_load_node_type_settings(array($form_state['values']['type']), NULL, $function_history);

@@ -7,8 +7,15 @@ function content_easement_publishing_button_help($path, $arg = NULL) {
   $function_history = array();
   cf_error_append_history($function_history, __FUNCTION__);
 
-  if (cf_is_empty_or_non_string($function_history, 'path', $path, WATCHDOG_ERROR)){
-    return;
+  if (function_exists('cf_version_exists')) {
+    if (cf_is_empty_or_non_string('path', $path, WATCHDOG_ERROR)){
+      return;
+    }
+  }
+  else {
+    if (cf_is_empty_or_non_string($function_history, 'path', $path, WATCHDOG_ERROR)){
+      return;
+    }
   }
 
   switch ($path) {
@@ -48,8 +55,15 @@ function content_easement_publishing_button_form_alter(&$form, &$form_state, $fo
     return;
   }
 
-  if (cf_is_empty_or_non_string($function_history, 'form_id', $form_id, WATCHDOG_ERROR)){
-    return;
+  if (function_exists('cf_version_exists')) {
+    if (cf_is_empty_or_non_string('form_id', $form_id, WATCHDOG_ERROR)){
+      return;
+    }
+  }
+  else {
+    if (cf_is_empty_or_non_string($function_history, 'form_id', $form_id, WATCHDOG_ERROR)){
+      return;
+    }
   }
 
   if (array_key_exists('type', $form) && cf_has_array_key('#value', $form['type'])){
@@ -275,8 +289,15 @@ function content_easement_publishing_button_node_type_form_submit($form, &$form_
   $function_history = array();
   cf_error_append_history($function_history, __FUNCTION__);
 
-  if (cf_is_empty_or_non_string($function_history, 'form_state[values][type]', $form_state['values']['type'], WATCHDOG_ERROR)){
-    return;
+  if (function_exists('cf_version_exists')) {
+    if (cf_is_empty_or_non_string('form_state[values][type]', $form_state['values']['type'], WATCHDOG_ERROR)){
+      return;
+    }
+  }
+  else {
+    if (cf_is_empty_or_non_string($function_history, 'form_state[values][type]', $form_state['values']['type'], WATCHDOG_ERROR)){
+      return;
+    }
   }
 
   $node_type_settings_objects = content_easement_publishing_button_load_node_type_settings(array($form_state['values']['type']), $function_history);

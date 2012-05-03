@@ -7,8 +7,15 @@ function content_easement_category_help($path, $arg = NULL) {
   $function_history = array();
   cf_error_append_history($function_history, __FUNCTION__);
 
-  if (cf_is_empty_or_non_string($function_history, 'path', $path)){
-    return;
+  if (function_exists('cf_version_exists')) {
+    if (cf_is_empty_or_non_string('path', $path)){
+      return;
+    }
+  }
+  else {
+    if (cf_is_empty_or_non_string($function_history, 'path', $path)){
+      return;
+    }
   }
 
   switch ($path) {
@@ -94,8 +101,15 @@ function content_easement_category_node_access($node, $op, $account){
   $function_history = array();
   cf_error_append_history($function_history, __FUNCTION__);
 
-  if (cf_is_empty_or_non_string($function_history, 'op', $op)){
-    return NODE_ACCESS_IGNORE;
+  if (function_exists('cf_version_exists')) {
+    if (cf_is_empty_or_non_string('op', $op)) {
+      return NODE_ACCESS_IGNORE;
+    }
+  }
+  else {
+    if (cf_is_empty_or_non_string($function_history, 'op', $op)) {
+      return NODE_ACCESS_IGNORE;
+    }
   }
 
   if (!is_object($account)){
@@ -123,12 +137,12 @@ function content_easement_category_node_access($node, $op, $account){
     $node_type_category_object = $query->execute()->fetchObject();
 
     if (is_object($node_type_category_object)){
-      $exclusive_crud = cf_convert_from_crud($node_type_category_object->node_exclusive_crud, $function_history);
+      $exclusive_crud = cf_convert_from_crud($node_type_category_object->node_exclusive_crud);
 
       if ($account->uid == 0){
         if (is_array($node) && $node->status == NODE_NOT_PUBLISHED) return NODE_ACCESS_IGNORE;
 
-        $anonymous_crud = cf_convert_from_crud($node_type_category_object->node_anonymous_crud, $function_history);
+        $anonymous_crud = cf_convert_from_crud($node_type_category_object->node_anonymous_crud);
 
         if (is_array($anonymous_crud)){
           if ($op == 'view' &&$anonymous_crud['read']) return NODE_ACCESS_ALLOW;
@@ -141,7 +155,7 @@ function content_easement_category_node_access($node, $op, $account){
         }
       }
       else {
-        $roles = cf_user_get_rids($account->uid, $function_history);
+        $roles = cf_user_get_rids($account->uid);
 
         $roles_object = $roles->execute()->fetchAll();
 
@@ -167,7 +181,7 @@ function content_easement_category_node_access($node, $op, $account){
             return NODE_ACCESS_IGNORE;
           }
 
-          if (cf_user_has_role($role_id, $account->uid, $function_history)){
+          if (cf_user_has_role($role_id, $account->uid)){
             return NODE_ACCESS_ALLOW;
           }
           else {
@@ -504,8 +518,8 @@ function content_easement_category_form($form, &$form_state, $category = NULL){
     }
 
     if (is_object($category)){
-      $anonymous_array = cf_convert_from_crud($category->node_anonymous_crud, $function_history);
-      $exclusive_array = cf_convert_from_crud($category->node_exclusive_crud, $function_history);
+      $anonymous_array = cf_convert_from_crud($category->node_anonymous_crud);
+      $exclusive_array = cf_convert_from_crud($category->node_exclusive_crud);
 
       $category->node_anonymous_create = $anonymous_array['create'];
       $category->node_anonymous_read   = $anonymous_array['read'];

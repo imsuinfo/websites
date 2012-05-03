@@ -7,8 +7,15 @@ function editing_overlay_help($path, $arg = NULL) {
   $function_history = array();
   cf_error_append_history($function_history, __FUNCTION__);
 
-  if (cf_is_empty_or_non_string($function_history, 'path', $path, WATCHDOG_ERROR)){
-    return;
+  if (function_exists('cf_version_exists')) {
+    if (cf_is_empty_or_non_string('path', $path, WATCHDOG_ERROR)){
+      return;
+    }
+  }
+  else {
+    if (cf_is_empty_or_non_string($function_history, 'path', $path, WATCHDOG_ERROR)){
+      return;
+    }
   }
 
   switch ($path) {
