@@ -77,6 +77,8 @@ function genesis_mcneese_preprocess_page(&$vars) {
  * Perform additional customization to the pre-preprocessed variables.
  */
 function genesis_mcneese_process_variables(&$vars){
+  global $base_path;
+
   $vars['primary_local_tasks']   = menu_primary_local_tasks();
   $vars['secondary_local_tasks'] = menu_secondary_local_tasks();
 
@@ -123,6 +125,17 @@ function genesis_mcneese_process_variables(&$vars){
   if ($vars['cf']['is']['emergency']){
     $vars['cf']['is_data']['emergency']['notice'] = check_markup($vars['cf']['is_data']['emergency']['notice'], 'full_html');
   }
+
+  // process logo
+  $vars['cf']['data']['logo']['title'] = $vars['cf']['at']['human_name'];
+  $vars['cf']['data']['logo']['alt'] = $vars['cf']['at']['human_name'];
+  $vars['cf']['data']['logo']['src'] = $base_path . path_to_theme() . '/images/web_logo.png';
+
+  if ($vars['cf']['at']['machine_name'] == 'sandbox.mcneese.edu' || $vars['cf']['at']['machine_name'] == 'sandbox') {
+    $vars['cf']['data']['logo']['title'] = 'Sandbox of ' . $vars['cf']['at']['human_name'];
+    $vars['cf']['data']['logo']['alt'] = 'Sandbox of ' . $vars['cf']['at']['human_name'];
+    $vars['cf']['data']['logo']['src'] = $base_path . path_to_theme() . '/images/sandbox.png';
+  }
 }
 
 /**
@@ -137,7 +150,7 @@ function genesis_mcneese_cf_theme_get_variables_alter(&$cf, $variables){
   $cf['meta']['name']['description'] = 'McNeese State University Website';
   $cf['meta']['name']['distribution'] = 'web';
 
-  foreach (array('sidebar_both', 'sidebar_left', 'sidebar_right', 'sidebar_none', 'in_ie_compatibility_mode') as $key){
+  foreach (array('logo_url', 'sidebar_both', 'sidebar_left', 'sidebar_right', 'sidebar_none', 'in_ie_compatibility_mode') as $key){
     $cf['is'][$key] = FALSE;
     $cf['is_data'][$key] = array();
   }
@@ -163,6 +176,9 @@ function genesis_mcneese_cf_theme_get_variables_alter(&$cf, $variables){
   else {
     $cf['show']['breadcrumb'] = TRUE;
   }
+
+  $cf['show']['logo'] = TRUE;
+  $cf['data']['logo'] = array();
 
   $cf['show']['subboard_image'] = FALSE;
   $cf['data']['subboard_image'] = array('content' => '', 'css' => '');

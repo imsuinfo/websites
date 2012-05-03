@@ -52,7 +52,7 @@
               <!--(begin_site_name)-->
               <span id="logo">
                 <a rel="home" title="Home page" href="/">
-                  <img alt="<?php print($cf['at']['human_name']); ?>" title="<?php print($cf['at']['human_name']); ?>" src="<?php print($base_path . path_to_theme());?>/images/web_logo.png">
+                  <img id="website_logo-image" alt="<?php print($cf['data']['logo']['alt']); ?>" title="<?php print($cf['data']['logo']['title']); ?>" src="<?php print($cf['data']['logo']['src']);?>">
                 </a>
               </span>
               <!--(end_site_name)-->
