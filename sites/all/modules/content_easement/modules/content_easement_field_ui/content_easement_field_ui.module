@@ -226,7 +226,7 @@ function content_easement_field_ui_menu() {
 /**
  * Add a cancel buttons to improve user experience.
  */
-function content_easement_field_ui_add_cancel_button(&$form, $link_path, $weight = 100, array $function_history = array()) {
+function content_easement_field_ui_add_cancel_button(&$form, $link_path, $weight = 100, $function_history = array()) {
   cf_error_append_history($function_history, __FUNCTION__);
 
   if (!is_array($form)){

@@ -740,7 +740,7 @@ function workbench_menu_admin_settings_form_submit($form, &$form_state) {
  *   (optional) An array of function names, ie:
  *   array('0' => 'my_function_name').
  */
-function workbench_menu_build_item_editing_form(&$form, $path_prefix, $items = array(), array $function_history = array()) {
+function workbench_menu_build_item_editing_form(&$form, $path_prefix, $items = array(), $function_history = array()) {
   cf_error_append_history($function_history, __FUNCTION__);
 
   $form['path_prefix'] = array(
@@ -773,7 +773,7 @@ function workbench_menu_build_item_editing_form(&$form, $path_prefix, $items = a
  *   (optional) An array of function names, ie:
  *   array('0' => 'my_function_name').
  */
-function workbench_menu_build_item_editing_form_recursive_nest(&$item, &$data, array $function_history = array()) {
+function workbench_menu_build_item_editing_form_recursive_nest(&$item, &$data, $function_history = array()) {
   cf_error_append_history($function_history, __FUNCTION__);
 
   $id = $item['item']->id;
@@ -974,7 +974,7 @@ function workbench_menu_admin_item_settings($access_type, $access_type_id, $oper
  * @return array|false
  *   A form array, or FALSE on error.
  */
-function workbench_menu_admin_item_settings_form_settings($item, $menu, array $function_history = array()) {
+function workbench_menu_admin_item_settings_form_settings($item, $menu, $function_history = array()) {
   cf_error_append_history($function_history, __FUNCTION__);
 
   if (!is_null($item) && !is_object($item)) {

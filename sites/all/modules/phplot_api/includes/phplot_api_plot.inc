@@ -31,7 +31,7 @@ class phplot_api_plot {
    * @param array function_history
    *   (optional) An array of function names, ie: array('0' => 'my_function_name').
    */
-  public function phplot_api_plot($type, array $function_history = array()) {
+  public function phplot_api_plot($type, $function_history = array()) {
     $this->caller_history = $function_history;
 
     $function_history = $this->history(__FUNCTION__);
@@ -182,7 +182,7 @@ class phplot_api_plot {
    * @param array   function_history
    *   An array of function names, ie: array('0' => 'my_function_name').
    */
-  public function set_history(array $function_history) {
+  public function set_history($function_history) {
     $caller_history = $function_history;
   }
 

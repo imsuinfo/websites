@@ -28,7 +28,7 @@ define('PHPLOT_API_FEATURE_MULTIPLE', 2);
  *   (optional) An array of function names, ie:
  *   array('0' => 'my_function_name').
  */
-function phplot_api_library_path(array $function_history = array()) {
+function phplot_api_library_path($function_history = array()) {
   cf_error_append_history($function_history, __FUNCTION__);
 
   $library_path = libraries_get_path('phplot');
@@ -43,7 +43,7 @@ function phplot_api_library_path(array $function_history = array()) {
  *   (optional) An array of function names, ie:
  *   array('0' => 'my_function_name').
  */
-function phplot_api_include_library(array $function_history = array()) {
+function phplot_api_include_library($function_history = array()) {
   static $loaded_phplot_api_library_includes = FALSE;
 
   if ($loaded_phplot_api_library_includes) return TRUE;
@@ -86,7 +86,7 @@ function phplot_api_theme($existing, $type, $theme, $path) {
  *   An array of supported plots.
  *   The array keys are the machine names for each display level.
  */
-function phplot_api_get_plots($plot_type = NULL, array $function_history = array()) {
+function phplot_api_get_plots($plot_type = NULL, $function_history = array()) {
   static $plot_settings = NULL;
 
   if (isset($plot_settings)) {
@@ -357,7 +357,7 @@ function phplot_api_get_plots($plot_type = NULL, array $function_history = array
  *
  * @see phplot_api_get_plots()
  */
-function phplot_api_get_plots_list($plot_settings = NULL, array $function_history = array()) {
+function phplot_api_get_plots_list($plot_settings = NULL, $function_history = array()) {
   cf_error_append_history($function_history, __FUNCTION__);
 
   if (is_null($plot_settings)) {

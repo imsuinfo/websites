@@ -380,7 +380,7 @@ function workbench_menu_block_view($delta = '') {
  *
  * @see drupal_set_breadcrumb()
  */
-function workbench_menu_build_menus($path_string, &$menus_processed, &$breadcrumbs, array $function_history = array()) {
+function workbench_menu_build_menus($path_string, &$menus_processed, &$breadcrumbs, $function_history = array()) {
   cf_error_append_history($function_history, __FUNCTION__);
 
   $menus = (array) workbench_menu_get_menus(array('path' => array($path_string)), 'id', $function_history);
@@ -488,7 +488,7 @@ function workbench_menu_build_menus($path_string, &$menus_processed, &$breadcrum
  * @see workbench_menu_get_menus()
  * @see drupal_set_breadcrumb()
  */
-function workbench_menu_build_menu_item($menu, $item, &$variables, array $function_history = array()) {
+function workbench_menu_build_menu_item($menu, $item, &$variables, $function_history = array()) {
   cf_error_append_history($function_history, __FUNCTION__);
 
   static $wmi_css = 'menu_item';
@@ -904,7 +904,7 @@ function workbench_menu_build_menu_item($menu, $item, &$variables, array $functi
  * @see workbench_menu_build_menus()
  * @see drupal_set_breadcrumb()
  */
-function workbench_menu_render_menus($built_menus, $path_current, &$show_parents, $menu_depth, array $function_history = array()) {
+function workbench_menu_render_menus($built_menus, $path_current, &$show_parents, $menu_depth, $function_history = array()) {
   $even_menu = TRUE;
   $count_menu = 0;
   $rendered = array();
@@ -1000,7 +1000,7 @@ function workbench_menu_render_menus($built_menus, $path_current, &$show_parents
  * @see workbench_menu_render_menus()
  * @see theme_item_list()
  */
-function workbench_menu_render_menu_item(&$variables, $path_current, array $function_history = array()) {
+function workbench_menu_render_menu_item(&$variables, $path_current, $function_history = array()) {
   static $wmm_css = 'menu';
   static $wmi_css = 'menu_item';
 
@@ -1195,7 +1195,7 @@ function workbench_menu_render_menu_item(&$variables, $path_current, array $func
  *   An array of supported options.
  *   The array keys are the machine names for each option.
  */
-function workbench_menu_get_options($type, $option = NULL, array $function_history = array()) {
+function workbench_menu_get_options($type, $option = NULL, $function_history = array()) {
   $options = &drupal_static(__FUNCTION__, NULL);
 
   cf_error_append_history($function_history, __FUNCTION__);
@@ -1312,7 +1312,7 @@ function workbench_menu_get_options($type, $option = NULL, array $function_histo
  *
  * @see workbench_menu_get_options()
  */
-function workbench_menu_get_options_list($type, $options = NULL, array $function_history = array()) {
+function workbench_menu_get_options_list($type, $options = NULL, $function_history = array()) {
   cf_error_append_history($function_history, __FUNCTION__);
 
   $options_list = &drupal_static(__FUNCTION__, NULL);
@@ -1355,7 +1355,7 @@ function workbench_menu_get_options_list($type, $options = NULL, array $function
  *  An array of options with the menus taxonomy id as the key and the
  *  taxonomy human name as the value.
  */
-function workbench_menu_get_menus_options_list($with_path = FALSE, $with_id = FALSE, array $function_history = array()) {
+function workbench_menu_get_menus_options_list($with_path = FALSE, $with_id = FALSE, $function_history = array()) {
   cf_error_append_history($function_history, __FUNCTION__);
 
   $options_list = &drupal_static(__FUNCTION__, NULL);
@@ -1406,7 +1406,7 @@ function workbench_menu_get_menus_options_list($with_path = FALSE, $with_id = FA
  * @return array
  *   An array of menu objects for the given path.
  */
-function workbench_menu_get_menus_at_paths($paths, array $function_history = array()) {
+function workbench_menu_get_menus_at_paths($paths, $function_history = array()) {
   cf_error_append_history($function_history, __FUNCTION__);
 
   if (is_string($paths)) {
@@ -1440,7 +1440,7 @@ function workbench_menu_get_menus_at_paths($paths, array $function_history = arr
  * @return
  *   An array of menu objects for the given node.
  */
-function workbench_menu_get_menus_at_node($node_or_nid, array $function_history = array()) {
+function workbench_menu_get_menus_at_node($node_or_nid, $function_history = array()) {
   cf_error_append_history($function_history, __FUNCTION__);
 
   if (!is_object($node_or_nid) && !is_numeric($node_or_nid)) {
@@ -1493,7 +1493,7 @@ function workbench_menu_get_menus_at_node($node_or_nid, array $function_history 
  * @return array
  *   An array of menu objects for the given node.
  */
-function workbench_menu_get_menus($conditions = array(), $keyed = NULL, array $function_history = array()) {
+function workbench_menu_get_menus($conditions = array(), $keyed = NULL, $function_history = array()) {
   cf_error_append_history($function_history, __FUNCTION__);
 
   if (!is_array($conditions)) {
@@ -1612,7 +1612,7 @@ function workbench_menu_get_menus($conditions = array(), $keyed = NULL, array $f
  * @return bool
  *   TRUE on success, FALSE otherwise.
  */
-function workbench_menu_save_menus($menus, array $function_history = array()) {
+function workbench_menu_save_menus($menus, $function_history = array()) {
   cf_error_append_history($function_history, __FUNCTION__);
 
   if (!is_array($menus)) {
@@ -1752,7 +1752,7 @@ function workbench_menu_save_menus($menus, array $function_history = array()) {
  * @return array
  *   An array of menu objects for the given node.
  */
-function workbench_menu_get_load_menu_items($conditions = array(), $keyed = NULL, array $function_history = array()) {
+function workbench_menu_get_load_menu_items($conditions = array(), $keyed = NULL, $function_history = array()) {
   cf_error_append_history($function_history, __FUNCTION__);
 
   $sorted_menu_items = array();
@@ -1920,7 +1920,7 @@ function workbench_menu_get_load_menu_items($conditions = array(), $keyed = NULL
  *
  * @see workbench_menu_get_load_menu_items()
  */
-function workbench_menu_get_load_menu_items_select_list_options($conditions = array(), $keyed = NULL, array $function_history = array()) {
+function workbench_menu_get_load_menu_items_select_list_options($conditions = array(), $keyed = NULL, $function_history = array()) {
   $options_list = &drupal_static(__FUNCTION__, NULL);
 
   if (is_null($options_list)) {
@@ -1958,7 +1958,7 @@ function workbench_menu_get_load_menu_items_select_list_options($conditions = ar
  *
  * @see workbench_menu_get_load_menu_items_select_list_options()
  */
-function workbench_menu_get_load_menu_items_select_list_options_recursive_walk(&$item, &$data, array $function_history = array()) {
+function workbench_menu_get_load_menu_items_select_list_options_recursive_walk(&$item, &$data, $function_history = array()) {
   cf_error_append_history($function_history, __FUNCTION__);
 
   if (!isset($data['depth'])) {

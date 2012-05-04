@@ -729,7 +729,7 @@ function node_accessibility_statistics_form_node_accessibility_accessibility_tab
  * @return array
  *   An array of all images associated with the node, if any.
  */
-function node_accessibility_statistics_load_plots(array $parameters = array(), $keyed = NULL, array $function_history = array()) {
+function node_accessibility_statistics_load_plots(array $parameters = array(), $keyed = NULL, $function_history = array()) {
   cf_error_append_history($function_history, __FUNCTION__);
 
   if (!is_null($keyed) && !is_string($keyed)) {
@@ -858,7 +858,7 @@ function node_accessibility_statistics_load_plots(array $parameters = array(), $
  * @return object
  *   A prepared statement object, already executed.
  */
-function node_accessibility_statistics_load_node_type_settings(array $node_types, $keyed = NULL, array $function_history = array()) {
+function node_accessibility_statistics_load_node_type_settings(array $node_types, $keyed = NULL, $function_history = array()) {
   if (count($node_types) == 0) {
     return array();
   }
@@ -928,7 +928,7 @@ function node_accessibility_statistics_load_node_type_settings(array $node_types
  *  If it succeeded, returns SAVED_NEW or SAVED_UPDATED, depending on the
  *  operation performed.
  */
-function node_accessibility_statistics_save_plots(array $plots, array $function_history = array()) {
+function node_accessibility_statistics_save_plots(array $plots, $function_history = array()) {
   cf_error_append_history($function_history, __FUNCTION__);
 
   $transaction = db_transaction();
@@ -1011,7 +1011,7 @@ function node_accessibility_statistics_save_plots(array $plots, array $function_
  * @return bool
  *   TRUE if nothing went wrong, FALSE otherwise.
  */
-function node_accessibility_statistics_delete_plots(array $plots, $keyed = NULL, array $function_history = array()) {
+function node_accessibility_statistics_delete_plots(array $plots, $keyed = NULL, $function_history = array()) {
   cf_error_append_history($function_history, __FUNCTION__);
 
   foreach ($plots as $key => &$plot) {
@@ -1036,7 +1036,7 @@ function node_accessibility_statistics_delete_plots(array $plots, $keyed = NULL,
  *   (optional) An array of function names, ie:
  *   array('0' => 'my_function_name').
  */
-function node_accessibility_statistics_reset_cache(array $function_history = array()) {
+function node_accessibility_statistics_reset_cache($function_history = array()) {
   cf_error_append_history($function_history, __FUNCTION__);
 
   drupal_static_reset('node_accessibility_statistics_page');

@@ -223,7 +223,7 @@ function template_preprocess_node_accessibility_information(&$variables) {
  * @return bool
  *   TRUE if user can make conversions using this type, FALSE otherwise.
  */
-function node_accessibility_access_accessibility_tab($node, array $function_history = array()) {
+function node_accessibility_access_accessibility_tab($node, $function_history = array()) {
   cf_error_append_history($function_history, __FUNCTION__);
 
   $access = FALSE;
@@ -538,7 +538,7 @@ function node_accessibility_operation_validate($nids) {
  * @return array
  *   An array of all test failures, if any.
  */
-function node_accessibility_perform_validation($nodes_or_nids, $vids = array(), $language = NULL, $display_level = NULL, array $function_history = array()) {
+function node_accessibility_perform_validation($nodes_or_nids, $vids = array(), $language = NULL, $display_level = NULL, $function_history = array()) {
   cf_error_append_history($function_history, __FUNCTION__);
 
   if (!is_array($nodes_or_nids)) {
@@ -666,7 +666,7 @@ function node_accessibility_node_load($nodes, $types) {
  * @return array
  *   A prepared statement object, already executed.
  */
-function node_accessibility_load_node_type_settings($node_types = array(), $keyed = NULL, array $function_history = array()) {
+function node_accessibility_load_node_type_settings($node_types = array(), $keyed = NULL, $function_history = array()) {
   if (!is_array($node_types)) {
     cf_error_invalid_array($function_history, 'node_types');
     return array();
@@ -753,7 +753,7 @@ function node_accessibility_load_node_type_settings($node_types = array(), $keye
  * @return bool
  *   TRUE on success, FALSE otherwise.
  */
-function node_accessibility_save_node_problems($nid, $vid, $reports, array $function_history = array()) {
+function node_accessibility_save_node_problems($nid, $vid, $reports, $function_history = array()) {
   cf_error_append_history($function_history, __FUNCTION__);
 
   if (!is_array($reports)) {
@@ -847,7 +847,7 @@ function node_accessibility_save_node_problems($nid, $vid, $reports, array $func
  * @return bool
  *   TRUE on success, FALSE otherwise.
  */
-function node_accessibility_delete_node_problems($nid, $vid = NULL, array $function_history = array()) {
+function node_accessibility_delete_node_problems($nid, $vid = NULL, $function_history = array()) {
   cf_error_append_history($function_history, __FUNCTION__);
 
   if (!is_numeric($nid)) {
@@ -892,7 +892,7 @@ function node_accessibility_delete_node_problems($nid, $vid = NULL, array $funct
  * @return int|false
  *   The return states of either FALSE, SAVED_NEW, or SAVED_UPDATED.
  */
-function node_accessibility_is_enabled($node_type, array $function_history = array()) {
+function node_accessibility_is_enabled($node_type, $function_history = array()) {
   cf_error_append_history($function_history, __FUNCTION__);
   $node_type_settings_objects = node_accessibility_load_node_type_settings(array($node_type), NULL, $function_history);
 
@@ -919,7 +919,7 @@ function node_accessibility_is_enabled($node_type, array $function_history = arr
  *   functionality is required for the given node type.
  *   NULL is returned if accessibility validation functionality is not enabled.
  */
-function node_accessibility_is_required($node_type, array $function_history = array()) {
+function node_accessibility_is_required($node_type, $function_history = array()) {
   cf_error_append_history($function_history, __FUNCTION__);
 
   $node_type_settings_objects = node_accessibility_load_node_type_settings(array($node_type), NULL, $function_history);
@@ -977,7 +977,7 @@ function node_accessibility_is_required($node_type, array $function_history = ar
  * @return array
  *   An array of database results.
  */
-function node_accessibility_load_problems($conditions = array(), $keyed = NULL, array $function_history = array()) {
+function node_accessibility_load_problems($conditions = array(), $keyed = NULL, $function_history = array()) {
   cf_error_append_history($function_history, __FUNCTION__);
 
   if (!is_array($conditions)) {
@@ -1150,7 +1150,7 @@ function node_accessibility_load_problems($conditions = array(), $keyed = NULL, 
  * @return int|false
  *   The return states of either FALSE, SAVED_NEW, or SAVED_UPDATED.
  */
-function node_accessibility_replace_problems($nid, $vid, $problems, array $function_history = array()) {
+function node_accessibility_replace_problems($nid, $vid, $problems, $function_history = array()) {
   cf_error_append_history($function_history, __FUNCTION__);
 
   if (!is_numeric($nid)) {
@@ -1211,7 +1211,7 @@ function node_accessibility_replace_problems($nid, $vid, $problems, array $funct
  * @return int|false
  *   The return states of either FALSE, SAVED_NEW, or SAVED_UPDATED.
  */
-function node_accessibility_save_problem($problem_data, array $function_history = array()) {
+function node_accessibility_save_problem($problem_data, $function_history = array()) {
   cf_error_append_history($function_history, __FUNCTION__);
 
   if (!is_array($problem_data)) {
@@ -1286,7 +1286,7 @@ function node_accessibility_save_problem($problem_data, array $function_history 
  *   An array of database results in a format that can be processed by the
  *   quail_api theme functions.
  */
-function node_accessibility_restructure_results($nid, $vid, $display_levels = NULL, array $function_history = array()) {
+function node_accessibility_restructure_results($nid, $vid, $display_levels = NULL, $function_history = array()) {
   cf_error_append_history($function_history, __FUNCTION__);
 
   $problems = (array) node_accessibility_load_problems(array('nid' => $nid, 'vid' => $vid), NULL, $function_history);

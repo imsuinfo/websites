@@ -256,7 +256,7 @@ function content_easement_category_manage_overview() {
  *
  * $account is the user account to base permissions off of, defaults to current user.
  */
-function content_easement_category_get_categories(array $parameters = array(), $account = NULL, array $function_history = array()) {
+function content_easement_category_get_categories(array $parameters = array(), $account = NULL, $function_history = array()) {
   cf_error_append_history($function_history, __FUNCTION__);
 
   if (is_object($account)){
@@ -339,7 +339,7 @@ function content_easement_category_get_categories(array $parameters = array(), $
  *   'type_id' get the type with this id
  *   'category_id' get the category with this id
  */
-function content_easement_category_get_type_mappings(array $parameters = array(), array $function_history = array()) {
+function content_easement_category_get_type_mappings(array $parameters = array(), $function_history = array()) {
   cf_error_append_history($function_history, __FUNCTION__);
 
   $query = db_select('content_easement_categories_type_mappings', 'cectm');
@@ -404,7 +404,7 @@ function content_easement_category_get_type_mappings(array $parameters = array()
  *
  * $account is the user account to base permissions off of, defaults to current user.
  */
-function content_easement_category_get_allowed_type_mappings($parameters = array(), $account = NULL, array $function_history = array()){
+function content_easement_category_get_allowed_type_mappings($parameters = array(), $account = NULL, $function_history = array()){
   cf_error_append_history($function_history, __FUNCTION__);
 
   if (is_object($account)){

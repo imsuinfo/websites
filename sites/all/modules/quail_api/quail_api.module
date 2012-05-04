@@ -187,7 +187,7 @@ function template_preprocess_quail_api_problem(&$variables) {
  * @return string
  *   The path to the php quail library.
  */
-function quail_api_library_path(array $function_history = array()) {
+function quail_api_library_path($function_history = array()) {
   $library_path = libraries_get_path('quail');
 
   return $library_path . '/quail/quail.php';
@@ -203,7 +203,7 @@ function quail_api_library_path(array $function_history = array()) {
  * @return bool
  *   TRUE if the php qual library was successfully loaded, FALSE otherwise.
  */
-function quail_api_include_library(array $function_history = array()) {
+function quail_api_include_library($function_history = array()) {
   $loaded_quail_api_library_includes = &drupal_static(__FUNCTION__, FALSE);
 
   cf_error_append_history($function_history, __FUNCTION__);
@@ -250,7 +250,7 @@ function quail_api_include_library(array $function_history = array()) {
  *   modules.
  *   The array keys are the machine names for each standard.
  */
-function quail_api_get_standards($standard = NULL, $target = 'snippet', array $function_history = array()) {
+function quail_api_get_standards($standard = NULL, $target = 'snippet', $function_history = array()) {
   $standards = &drupal_static(__FUNCTION__, NULL);
 
   if (!isset($standards)) {
@@ -421,7 +421,7 @@ function quail_api_get_standards($standard = NULL, $target = 'snippet', array $f
  *
  * @see quail_api_get_standards()
  */
-function quail_api_get_standards_list($standards = NULL, $target = 'snippet', array $function_history = array()) {
+function quail_api_get_standards_list($standards = NULL, $target = 'snippet', $function_history = array()) {
   cf_error_append_history($function_history, __FUNCTION__);
 
   if (is_null($standards)) {
@@ -461,7 +461,7 @@ function quail_api_get_standards_list($standards = NULL, $target = 'snippet', ar
  *   modules.
  *   The array keys are the machine names for each display level.
  */
-function quail_api_get_display_levels($display_level = NULL, array $function_history = array()) {
+function quail_api_get_display_levels($display_level = NULL, $function_history = array()) {
   $display_levels = &drupal_static(__FUNCTION__, NULL);
 
   if (!isset($display_levels)) {
@@ -558,7 +558,7 @@ function quail_api_get_display_levels($display_level = NULL, array $function_his
  *
  * @see quail_api_get_display_levels()
  */
-function quail_api_get_display_levels_list($display_levels = NULL, array $function_history = array()) {
+function quail_api_get_display_levels_list($display_levels = NULL, $function_history = array()) {
   cf_error_append_history($function_history, __FUNCTION__);
 
   if (is_null($display_levels)) {
@@ -590,7 +590,7 @@ function quail_api_get_display_levels_list($display_levels = NULL, array $functi
  * @return array
  *   An array of qual test display levels, each initialized to TRUE.
  */
-function quail_api_get_default_display_level($display_levels = NULL, array $function_history = array()) {
+function quail_api_get_default_display_level($display_levels = NULL, $function_history = array()) {
   cf_error_append_history($function_history, __FUNCTION__);
 
   if (is_null($display_levels)) {
@@ -638,7 +638,7 @@ function quail_api_get_default_display_level($display_levels = NULL, array $func
  *   extending modules.
  *   The array keys are the machine names for each display level.
  */
-function quail_api_get_validation_methods($validation_method = NULL, array $function_history = array()) {
+function quail_api_get_validation_methods($validation_method = NULL, $function_history = array()) {
   $validation_methods = &drupal_static(__FUNCTION__, NULL);
 
   if (!isset($validation_methods)) {
@@ -741,7 +741,7 @@ function quail_api_get_validation_methods($validation_method = NULL, array $func
  *   The array keys are the validation methods machine name and the array value
  *   is the human name.
  */
-function quail_api_get_validation_methods_list($validation_methods = NULL, array $function_history = array()) {
+function quail_api_get_validation_methods_list($validation_methods = NULL, $function_history = array()) {
   cf_error_append_history($function_history, __FUNCTION__);
 
   if (is_null($validation_methods)) {
@@ -777,7 +777,7 @@ function quail_api_get_validation_methods_list($validation_methods = NULL, array
  * @return array
  *   An array of validation results with the following array keys.
  */
-function quail_api_validate_markup($html, $standard, $display_level = NULL, array $function_history = array()) {
+function quail_api_validate_markup($html, $standard, $display_level = NULL, $function_history = array()) {
   cf_error_append_history($function_history, __FUNCTION__);
 
   quail_api_include_library($function_history);
@@ -830,7 +830,7 @@ function quail_api_validate_markup($html, $standard, $display_level = NULL, arra
  * @return array
  *   An array of database results.
  */
-function quail_api_load_tests($conditions = array(), $keyed = NULL, array $function_history = array()) {
+function quail_api_load_tests($conditions = array(), $keyed = NULL, $function_history = array()) {
   cf_error_append_history($function_history, __FUNCTION__);
 
   if (!is_array($conditions)) {
@@ -924,7 +924,7 @@ function quail_api_load_tests($conditions = array(), $keyed = NULL, array $funct
  * @return int|false
  *   The return states of either FALSE, SAVED_NEW, or SAVED_UPDATED.
  */
-function quail_api_save_test($test_data, array $function_history = array()) {
+function quail_api_save_test($test_data, $function_history = array()) {
   cf_error_append_history($function_history, __FUNCTION__);
 
   if (!is_array($test_data)) {
@@ -967,7 +967,7 @@ function quail_api_save_test($test_data, array $function_history = array()) {
  *   (optional) An array of function names, ie:
  *   array('0' => 'my_function_name').
  */
-function quail_api_reset_cache(array $function_history = array()) {
+function quail_api_reset_cache($function_history = array()) {
   cf_error_append_history($function_history, __FUNCTION__);
 
   drupal_static_reset('quail_api_include_library');

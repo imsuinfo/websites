@@ -798,7 +798,7 @@ function killfile_node_type_form_submit($form, &$form_state) {
  * @return
  *   A prepared statement object, already executed.
  */
-function killfile_get_node_type_settings($node_types, array $function_history = array()){
+function killfile_get_node_type_settings($node_types, $function_history = array()){
   cf_error_append_history($function_history, __FUNCTION__);
 
   if (!is_array($node_types)){
@@ -846,7 +846,7 @@ function killfile_get_node_type_settings($node_types, array $function_history = 
  * @return
  *   An array of node delete settings.
  */
-function killfile_get_node_delete_settings($nodes_or_nids, array $function_history = array()){
+function killfile_get_node_delete_settings($nodes_or_nids, $function_history = array()){
   cf_error_append_history($function_history, __FUNCTION__);
 
   if (!is_array($nodes_or_nids)){
@@ -910,7 +910,7 @@ function killfile_get_killfiled_nodes(){
  * @param $function_history
  *   (optional) array of function names, ie: array('0' => 'my_function_name')
  */
-function killfile_node_deleted_notice($node, array $function_history = array()){
+function killfile_node_deleted_notice($node, $function_history = array()){
   cf_error_append_history($function_history, __FUNCTION__);
 
   if (!is_object($node)){
@@ -960,7 +960,7 @@ function killfile_node_deleted_notice($node, array $function_history = array()){
  *   An array of booleans representing whether or not that node or nid was successfully deleted.
  *   FALSE is returned if there was a problem with one of the parameters.
  */
-function killfile_fake_delete_nodes($nodes_or_nids, $account = NULL, array $function_history = array()) {
+function killfile_fake_delete_nodes($nodes_or_nids, $account = NULL, $function_history = array()) {
   cf_error_append_history($function_history, __FUNCTION__);
 
   if (!is_array($nodes_or_nids)){
@@ -1044,7 +1044,7 @@ function killfile_fake_delete_nodes($nodes_or_nids, $account = NULL, array $func
  *   An array of booleans representing whether or not that node or nid was successfully deleted.
  *   FALSE is returned if there was a problem with one of the parameters.
  */
-function killfile_permanent_delete_nodes($nodes_or_nids, array $function_history = array()) {
+function killfile_permanent_delete_nodes($nodes_or_nids, $function_history = array()) {
   cf_error_append_history($function_history, __FUNCTION__);
 
   if (!is_array($nodes_or_nids)){
@@ -1108,7 +1108,7 @@ function killfile_permanent_delete_nodes($nodes_or_nids, array $function_history
  *   An array of booleans representing whether or not that node or nid was successfully deleted.
  *   FALSE is returned if there was a problem with one of the parameters.
  */
-function killfile_undelete_nodes($nodes_or_nids, $account = NULL, array $function_history = array()) {
+function killfile_undelete_nodes($nodes_or_nids, $account = NULL, $function_history = array()) {
   cf_error_append_history($function_history, __FUNCTION__);
 
   if (!is_array($nodes_or_nids)){
@@ -1208,7 +1208,7 @@ function killfile_undelete_nodes($nodes_or_nids, $account = NULL, array $functio
  * @return
  *   TRUE or FALSE depending on whether or not killfile functionality is enabled for the given node type.
  */
-function killfile_is_enabled($node_type, array $function_history = array()){
+function killfile_is_enabled($node_type, $function_history = array()){
   cf_error_append_history($function_history, __FUNCTION__);
 
   if (function_exists('cf_version_exists')) {
@@ -1250,7 +1250,7 @@ function killfile_is_enabled($node_type, array $function_history = array()){
  * @return
  *   TRUE or FALSE depending on whether or not a user can undelete content.
  */
-function killfile_can_undelete($node, $account = NULL, array $function_history = array()){
+function killfile_can_undelete($node, $account = NULL, $function_history = array()){
   cf_error_append_history($function_history, __FUNCTION__);
 
   if (!is_object($node)){

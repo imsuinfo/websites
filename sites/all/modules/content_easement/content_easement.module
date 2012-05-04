@@ -192,7 +192,7 @@ function content_easement_menu() {
  * To add a test against the id, try: query->condition('id', $id, '=');
  * To add a test against the type, try: query->condition('type', strtolower($type), '=');
  */
-function content_easement_get_types(array $function_history = array()) {
+function content_easement_get_types($function_history = array()) {
   $query = db_select('content_easement_types', 'cet');
 
   $query->innerjoin('node_type', 'nt', 'cet.type = nt.type');
@@ -477,7 +477,7 @@ function content_easement_node_type_delete($info) {
  * Menu callbacks that do not have node type arguments should pass an empty string as the node_type
  * The node_type can be a node object or a string
  */
-function content_easement_access($node_type = '', $account = NULL, array $function_history = array()) {
+function content_easement_access($node_type = '', $account = NULL, $function_history = array()) {
   $function_history = array();
   cf_error_append_history($function_history, __FUNCTION__);
 
