@@ -1,9 +1,13 @@
-name = CF Theme
-description = "Provides theme specific functions to be called by themes."
+name = CF 1.x Compatibility
+description = "A placeholder that must be enabled to safely transition into 7.x-2.x."
 core = 7.x
+php = 5.3
 package = Common Functionality
+
 dependencies[] = cf
-files[] = cf_theme.module
+dependencies[] = cf_error
+
+files[] = cf_1x_compatibility.module
 
 ; Information added by drupal.org packaging script on 2012-05-07
 version = "7.x-1.6"
