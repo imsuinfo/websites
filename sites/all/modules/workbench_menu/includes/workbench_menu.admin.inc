@@ -25,8 +25,6 @@ function workbench_menu_edit_settings($access_type = NULL, $access_type_id = NUL
     return drupal_get_form('workbench_menu_edit_settings_form', $access_type, $access_type_id);
   }
 
-  cf_error_append_history($function_history, __FUNCTION__);
-
   $access = workbench_access_get_access_tree();
   $active = workbench_access_get_active_tree();
 
@@ -43,7 +41,7 @@ function workbench_menu_edit_settings($access_type = NULL, $access_type_id = NUL
 
   asort($sorted);
 
-  $menus = (array) workbench_menu_get_menus(array('access_id' => array_keys($sorted)), 'access_id', $function_history);
+  $menus = (array) workbench_menu_get_menus(array('access_id' => array_keys($sorted), 'fast' => NULL), 'access_id');
 
   $rows = array();
   foreach ($sorted as $access_id => &$section_name) {
@@ -102,15 +100,16 @@ function workbench_menu_edit_settings($access_type = NULL, $access_type_id = NUL
  *   The built form array.
  */
 function workbench_menu_edit_settings_form($form, &$form_state, $access_type, $access_type_id) {
-  cf_error_append_history($function_history, __FUNCTION__);
-
   if ($access_type !== 'taxonomy') {
     drupal_access_denied();
     drupal_exit();
   }
 
   if (!is_numeric($access_type_id)) {
-    cf_error_not_numeric($function_history, 'access_type_id');
+    if (module_exists('cf_error')) {
+      cf_error::not_numeric('access_type_id');
+    }
+
     drupal_access_denied();
     drupal_exit();
   }
@@ -133,7 +132,7 @@ function workbench_menu_edit_settings_form($form, &$form_state, $access_type, $a
   $items = array();
 
   // the menu edit form should always pull the latest data from the database
-  $menus = (array) workbench_menu_get_menus(array('access_id' => $access_type_id), NULL, $function_history);
+  $menus = (array) workbench_menu_get_menus(array('access_id' => $access_type_id), NULL);
 
   if (!empty($menus)) {
     $menu = array_pop($menus);
@@ -168,7 +167,7 @@ function workbench_menu_edit_settings_form($form, &$form_state, $access_type, $a
 
   $form['settings_label']= array(
     '#type' => 'markup',
-    '#markup' => '<h2 id="workbench_menu-menus">' . t("Menu Settings for %menu Menu", array('%menu' => $menu->taxonomy->name)) . '</h2>',
+    '#markup' => '<h2 id="workbench_menu-menus">' . t("Menu Settings for %menu Menu", array('%menu' => $menu->breadcrumb_name)) . '</h2>',
     '#weight' => -100,
   );
 
@@ -235,7 +234,7 @@ function workbench_menu_edit_settings_form($form, &$form_state, $access_type, $a
     unset($form['advanced']['breadcrumb_name']);
   }
 
-  workbench_menu_build_item_editing_form($form, 'admin/workbench/menus/taxonomy/' . $access_type_id, $items, $function_history);
+  workbench_menu_build_item_editing_form($form, 'admin/workbench/menus/taxonomy/' . $access_type_id, $items);
 
   $form['workbench_access'] = array(
     '#type' => 'value',
@@ -342,8 +341,6 @@ function theme_workbench_menu_edit_settings_form($element) {
  * @see workbench_menu_admin_item_settings_delete_form()
  */
 function workbench_menu_edit_item_settings($access_type, $access_type_id, $operation = NULL, $item = NULL) {
-  cf_error_append_history($function_history, __FUNCTION__);
-
   drupal_add_css(drupal_get_path('module', 'workbench_menu') . '/includes/workbench_menu_admin.css');
 
   if ($access_type !== 'taxonomy') {
@@ -352,7 +349,10 @@ function workbench_menu_edit_item_settings($access_type, $access_type_id, $opera
   }
 
   if (!is_numeric($access_type_id)) {
-    cf_error_not_numeric($function_history, 'access_type_id');
+    if (module_exists('cf_error')) {
+      cf_error::not_numeric('access_type_id');
+    }
+
     drupal_access_denied();
     drupal_exit();
   }
@@ -393,8 +393,6 @@ function workbench_menu_admin_settings($access_type = NULL, $access_type_id = NU
     return drupal_get_form('workbench_menu_admin_settings_form', $access_type, $access_type_id);
   }
 
-  cf_error_append_history($function_history, __FUNCTION__);
-
   $active = workbench_access_get_active_tree();
 
   $output = '<h2>' . t("Menus") . '</h2>';
@@ -404,7 +402,7 @@ function workbench_menu_admin_settings($access_type = NULL, $access_type_id = NU
     $output .= ' ' . t("You may <a href=\"!url\">enable or disable sections</a>.", array('!url' => url('admin/config/workbench/access/sections'))) . '</p>';
   }
 
-  $menus = (array) workbench_menu_get_menus(array('access_id' => array_keys($active['tree'])), 'access_id', $function_history);
+  $menus = (array) workbench_menu_get_menus(array('access_id' => array_keys($active['tree']), 'fast' => NULL), 'access_id');
 
   $rows = array();
   foreach ($active['tree'] as $access_id => &$section) {
@@ -465,15 +463,16 @@ function workbench_menu_admin_settings($access_type = NULL, $access_type_id = NU
  *   The built form array.
  */
 function workbench_menu_admin_settings_form($form, &$form_state, $access_type, $access_type_id) {
-  cf_error_append_history($function_history, __FUNCTION__);
-
   if ($access_type !== 'taxonomy') {
     drupal_access_denied();
     drupal_exit();
   }
 
   if (!is_numeric($access_type_id)) {
-    cf_error_not_numeric($function_history, 'access_type_id');
+    if (module_exists('cf_error')) {
+      cf_error::not_numeric('access_type_id');
+    }
+
     drupal_access_denied();
     drupal_exit();
   }
@@ -494,7 +493,7 @@ function workbench_menu_admin_settings_form($form, &$form_state, $access_type, $
   $items = array();
 
   // the menu edit form should always pull the latest data from the database
-  $menus = (array) workbench_menu_get_menus(array('access_id' => $access_type_id), NULL, $function_history);
+  $menus = (array) workbench_menu_get_menus(array('access_id' => $access_type_id), NULL);
 
   if (!empty($menus)) {
     $menu = array_pop($menus);
@@ -529,7 +528,7 @@ function workbench_menu_admin_settings_form($form, &$form_state, $access_type, $
 
   $form['settings_label']= array(
     '#type' => 'markup',
-    '#markup' => '<h2 id="workbench_menu-menus">' . t("Menu Settings for %menu Menu", array('%menu' => $menu->taxonomy->name)) . '</h2>',
+    '#markup' => '<h2 id="workbench_menu-menus">' . t("Menu Settings for %menu Menu", array('%menu' => $menu->breadcrumb_name)) . '</h2>',
     '#weight' => -100,
   );
 
@@ -594,7 +593,7 @@ function workbench_menu_admin_settings_form($form, &$form_state, $access_type, $
     $form['advanced']['breadcrumb_name']['#disabled'] = TRUE;
   }
 
-  workbench_menu_build_item_editing_form($form, 'admin/config/workbench/access/menus/taxonomy/' . $access_type_id, $items, $function_history);
+  workbench_menu_build_item_editing_form($form, 'admin/config/workbench/access/menus/taxonomy/' . $access_type_id, $items);
 
   $form['workbench_access'] = array(
     '#type' => 'value',
@@ -644,8 +643,6 @@ function workbench_menu_admin_settings_form($form, &$form_state, $access_type, $
  *   The form state array as defined by drupals form api.
  */
 function workbench_menu_admin_settings_form_validate($form, &$form_state) {
-  cf_error_append_history($function_history, __FUNCTION__);
-
   if (!empty($form_state['values']['path'])) {
     // be user-friendly and allow normal whitespaces on insert.
     $form_state['values']['path'] = preg_replace('/ /', '%20', $form_state['values']['path']);
@@ -673,8 +670,6 @@ function workbench_menu_admin_settings_form_validate($form, &$form_state) {
  *   The form state array as defined by drupals form api.
  */
 function workbench_menu_admin_settings_form_submit($form, &$form_state) {
-  cf_error_append_history($function_history, __FUNCTION__);
-
   $menu = array();
   $menu['access_id'] = &$form_state['values']['workbench_access']['access_id'];
   $menu['path'] = &$form_state['values']['path'];
@@ -683,7 +678,7 @@ function workbench_menu_admin_settings_form_submit($form, &$form_state) {
   $menu['breadcrumb_name'] = &$form_state['values']['breadcrumb_name'];
   $menu['items'] = array();
 
-  $results = workbench_menu_save_menus(array($menu), $function_history);
+  $results = workbench_menu_save_menus(array($menu));
 
   if (!empty($form_state['values']['items'])) {
     foreach ($form_state['values']['items'] as $id => &$item) {
@@ -708,12 +703,12 @@ function workbench_menu_admin_settings_form_submit($form, &$form_state) {
   }
 
   if ($form['path']['#default_value'] != $form_state['values']['path']) {
-    workbench_menu_clear_cache_at_path($form['path']['#default_value'], $function_history);
-    workbench_menu_clear_cache_at_path($form_state['values']['path'], $function_history);
+    workbench_menu_clear_cache_at_path($form['path']['#default_value']);
+    workbench_menu_clear_cache_at_path($form_state['values']['path']);
   }
   else if (isset($form['advanced']['breadcrumb_name']['#default_value']) && $form['advanced']['breadcrumb_name']['#default_value'] != $form_state['values']['breadcrumb_name']) {
-    workbench_menu_clear_cache_at_path($form['path']['#default_value'], $function_history);
-    workbench_menu_clear_cache_at_path($form_state['values']['path'], $function_history);
+    workbench_menu_clear_cache_at_path($form['path']['#default_value']);
+    workbench_menu_clear_cache_at_path($form_state['values']['path']);
   }
 }
 
@@ -736,13 +731,8 @@ function workbench_menu_admin_settings_form_submit($form, &$form_state) {
  * @param array $items
  *   (optional) An array containing any existing items to populate
  *   the array with.
- * @param array $function_history
- *   (optional) An array of function names, ie:
- *   array('0' => 'my_function_name').
  */
-function workbench_menu_build_item_editing_form(&$form, $path_prefix, $items = array(), $function_history = array()) {
-  cf_error_append_history($function_history, __FUNCTION__);
-
+function workbench_menu_build_item_editing_form(&$form, $path_prefix, $items = array()) {
   $form['path_prefix'] = array(
     '#type' => 'value',
     '#value' => $path_prefix,
@@ -755,7 +745,7 @@ function workbench_menu_build_item_editing_form(&$form, $path_prefix, $items = a
   $data['fields'] = &$form['items'];
 
   foreach ($items['nested'] as &$nested_item) {
-    workbench_menu_build_item_editing_form_recursive_nest($nested_item, $data, $function_history);
+    workbench_menu_build_item_editing_form_recursive_nest($nested_item, $data);
   }
 }
 
@@ -769,13 +759,8 @@ function workbench_menu_build_item_editing_form(&$form, $path_prefix, $items = a
  * @param array $data
  *   An array of data globally shared between the different
  *   recursive calls.
- * @param array $function_history
- *   (optional) An array of function names, ie:
- *   array('0' => 'my_function_name').
  */
-function workbench_menu_build_item_editing_form_recursive_nest(&$item, &$data, $function_history = array()) {
-  cf_error_append_history($function_history, __FUNCTION__);
-
+function workbench_menu_build_item_editing_form_recursive_nest(&$item, &$data) {
   $id = $item['item']->id;
 
   if (!isset($data['depth'])) {
@@ -818,7 +803,7 @@ function workbench_menu_build_item_editing_form_recursive_nest(&$item, &$data, $
     $data['depth']++;
 
     foreach ($item['children'] as &$child) {
-      workbench_menu_build_item_editing_form_recursive_nest($child, $data, $function_history);
+      workbench_menu_build_item_editing_form_recursive_nest($child, $data);
     }
 
     $data['depth']--;
@@ -834,8 +819,6 @@ function workbench_menu_build_item_editing_form_recursive_nest(&$item, &$data, $
  * @see workbench_menu_build_item_editing_form()
  */
 function theme_workbench_menu_admin_settings_form($element) {
-  cf_error_append_history($function_history, __FUNCTION__);
-
   $form = &$element['form'];
 
   $table_id = 'workbench_menu-menu_items_table';
@@ -928,8 +911,6 @@ function theme_workbench_menu_admin_settings_form($element) {
  * @see workbench_menu_admin_item_settings_delete_form()
  */
 function workbench_menu_admin_item_settings($access_type, $access_type_id, $operation = NULL, $item = NULL) {
-  cf_error_append_history($function_history, __FUNCTION__);
-
   drupal_add_css(drupal_get_path('module', 'workbench_menu') . '/includes/workbench_menu_admin.css');
 
   if ($access_type !== 'taxonomy') {
@@ -938,7 +919,10 @@ function workbench_menu_admin_item_settings($access_type, $access_type_id, $oper
   }
 
   if (!is_numeric($access_type_id)) {
-    cf_error_not_numeric($function_history, 'access_type_id');
+    if (module_exists('cf_error')) {
+      cf_error::not_numeric('access_type_id');
+    }
+
     drupal_access_denied();
     drupal_exit();
   }
@@ -967,23 +951,24 @@ function workbench_menu_admin_item_settings($access_type, $access_type_id, $oper
  *   If there is no existing item, then NULL may be passed instead.
  * @param object $menu
  *   A menu object.
- * @param array $function_history
- *   (optional) An array of function names, ie:
- *   array('0' => 'my_function_name').
  *
  * @return array|false
  *   A form array, or FALSE on error.
  */
-function workbench_menu_admin_item_settings_form_settings($item, $menu, $function_history = array()) {
-  cf_error_append_history($function_history, __FUNCTION__);
-
+function workbench_menu_admin_item_settings_form_settings($item, $menu) {
   if (!is_null($item) && !is_object($item)) {
-    cf_error_invalid_variable($function_history, 'item', "Must be either a valid menu item object or NULL.");
+    if (module_exists('cf_error')) {
+      cf_error::invalid_variable('item', "Must be either a valid menu item object or NULL.");
+    }
+
     return FALSE;
   }
 
   if (!is_object($menu)) {
-    cf_error_invalid_object($function_history, 'item');
+    if (module_exists('cf_error')) {
+      cf_error::invalid_object('menu');
+    }
+
     return FALSE;
   }
 
@@ -1056,10 +1041,10 @@ function workbench_menu_admin_item_settings_form_settings($item, $menu, $functio
   }
 
   $available = array();
-  $available['parents'] = workbench_menu_get_load_menu_items_select_list_options(array('menu_id' => $menu->id), 'id', $function_history);
-  $available['item_types'] = workbench_menu_get_options_list('item_type', NULL, $function_history);
-  $available['expand'] = workbench_menu_get_options_list('expand', NULL, $function_history);
-  $available['menus'] = workbench_menu_get_menus_options_list(TRUE, TRUE, $function_history);
+  $available['parents'] = workbench_menu_get_load_menu_items_select_list_options(array('menu_id' => $menu->id), 'id');
+  $available['item_types'] = workbench_menu_get_options_list('item_type', NULL);
+  $available['expand'] = workbench_menu_get_options_list('expand', NULL);
+  $available['menus'] = workbench_menu_get_menus_options_list(TRUE, TRUE);
 
   // do not show current in the possible menu choices.
   unset($available['menus'][$menu->access_id]);
@@ -1239,11 +1224,9 @@ function workbench_menu_admin_item_settings_form_settings($item, $menu, $functio
  *   A form array for adding a new menu item.
  */
 function workbench_menu_admin_item_settings_add_form($form, &$form_state, $access_type, $access_type_id, $return_destination) {
-  cf_error_append_history($function_history, __FUNCTION__);
-
   $term = taxonomy_term_load($access_type_id);
   $destination = isset($_GET['destination']) ? $_GET['destination'] : $return_destination;
-  $menus = (array) workbench_menu_get_menus(array('access_id' => $access_type_id), 'id', $function_history);
+  $menus = (array) workbench_menu_get_menus(array('access_id' => $access_type_id, 'fast' => NULL), 'id');
 
   if (empty($menus)) {
     drupal_access_denied();
@@ -1256,11 +1239,11 @@ function workbench_menu_admin_item_settings_add_form($form, &$form_state, $acces
 
   $form['settings_label']= array(
     '#type' => 'markup',
-    '#markup' => '<h2 id="workbench_menu-menu_item_settings">' . t("Add New Item to %menu Menu", array('%menu' => $menu->taxonomy->name)) . '</h2>',
+    '#markup' => '<h2 id="workbench_menu-menu_item_settings">' . t("Add New Item to %menu Menu", array('%menu' => $menu->breadcrumb_name)) . '</h2>',
     '#weight' => -100,
   );
 
-  $form['settings'] = (array) workbench_menu_admin_item_settings_form_settings(NULL, $menu, $function_history);
+  $form['settings'] = (array) workbench_menu_admin_item_settings_form_settings(NULL, $menu);
 
   $form['menu_id'] = array(
     '#type' => 'value',
@@ -1303,8 +1286,6 @@ function workbench_menu_admin_item_settings_add_form($form, &$form_state, $acces
  * @see workbench_menu_admin_item_settings_edit_form_validate()
  */
 function workbench_menu_admin_item_settings_add_form_validate($form, &$form_state) {
-  cf_error_append_history($function_history, __FUNCTION__);
-
   return workbench_menu_admin_item_settings_edit_form_validate($form, $form_state);
 }
 
@@ -1319,8 +1300,6 @@ function workbench_menu_admin_item_settings_add_form_validate($form, &$form_stat
  * @see workbench_menu_admin_item_settings_edit_form_submit()
  */
 function workbench_menu_admin_item_settings_add_form_submit($form, &$form_state) {
-  cf_error_append_history($function_history, __FUNCTION__);
-
   return workbench_menu_admin_item_settings_edit_form_submit($form, $form_state);
 }
 
@@ -1341,21 +1320,25 @@ function workbench_menu_admin_item_settings_add_form_submit($form, &$form_state)
  *   A form array for adding a new menu item, or FALSE on error.
  */
 function workbench_menu_admin_item_settings_edit_form($form, &$form_state, $access_type, $access_type_id, $item_id, $return_destination) {
-  cf_error_append_history($function_history, __FUNCTION__);
-
   if ($access_type !== 'taxonomy') {
     drupal_access_denied();
     drupal_exit();
   }
 
   if (!is_numeric($access_type_id)) {
-    cf_error_not_numeric($function_history, 'access_type_id');
+    if (module_exists('cf_error')) {
+      cf_error::not_numeric('access_type_id');
+    }
+
     drupal_access_denied();
     drupal_exit();
   }
 
   if (!is_numeric($item_id)) {
-    cf_error_not_numeric($function_history, 'item_id');
+    if (module_exists('cf_error')) {
+      cf_error::not_numeric('item_id');
+    }
+
     drupal_access_denied();
     drupal_exit();
   }
@@ -1363,14 +1346,14 @@ function workbench_menu_admin_item_settings_edit_form($form, &$form_state, $acce
 
   $term = taxonomy_term_load($access_type_id);
   $destination = isset($_GET['destination']) ? $_GET['destination'] : $return_destination;
-  $menus = (array) workbench_menu_get_menus(array('access_id' => $access_type_id), 'id', $function_history);
+  $menus = (array) workbench_menu_get_menus(array('access_id' => $access_type_id, 'fast' => NULL), 'id');
 
   if (empty($menus)) {
     drupal_access_denied();
     drupal_exit();
   }
 
-  $items = (array) workbench_menu_get_load_menu_items(array('id' => $item_id), 'id', $function_history);
+  $items = (array) workbench_menu_get_load_menu_items(array('id' => $item_id), 'id');
 
   if (!isset($items['flat'][$item_id])) {
     drupal_access_denied();
@@ -1389,7 +1372,7 @@ function workbench_menu_admin_item_settings_edit_form($form, &$form_state, $acce
     '#weight' => -100,
   );
 
-  $form['settings'] = (array) workbench_menu_admin_item_settings_form_settings($item, $menu, $function_history);
+  $form['settings'] = (array) workbench_menu_admin_item_settings_form_settings($item, $menu);
 
   $form['item_id'] = array(
     '#type' => 'value',
@@ -1440,8 +1423,6 @@ function workbench_menu_admin_item_settings_edit_form($form, &$form_state, $acce
  *   The form state array as defined by drupals form api.
  */
 function workbench_menu_admin_item_settings_edit_form_validate($form, &$form_state) {
-  cf_error_append_history($function_history, __FUNCTION__);
-
   $item_type = &$form_state['values']['settings']['item_type'];
   $item_type_name = &$form['settings']['settings']['item_type']['#options'][$item_type];
 
@@ -1453,7 +1434,7 @@ function workbench_menu_admin_item_settings_edit_form_validate($form, &$form_sta
     }
 
     if ($form_state['values']['settings']['parent_id'] != 0) {
-      $items = (array) workbench_menu_get_load_menu_items(array('id' => $form_state['values']['settings']['parent_id']), 'id', $function_history);
+      $items = (array) workbench_menu_get_load_menu_items(array('id' => $form_state['values']['settings']['parent_id']), 'id');
 
       if (empty($items)) {
         form_set_error('settings][parent_id', t("The specified item parent is invalid."));
@@ -1579,8 +1560,6 @@ function workbench_menu_admin_item_settings_edit_form_validate($form, &$form_sta
  *   The form state array as defined by drupals form api.
  */
 function workbench_menu_admin_item_settings_edit_form_submit($form, &$form_state) {
-  cf_error_append_history($function_history, __FUNCTION__);
-
   $transaction = db_transaction();
 
   if (isset($form_state['values']['item_id'])) {
@@ -1659,7 +1638,7 @@ function workbench_menu_admin_item_settings_edit_form_submit($form, &$form_state
         $query->execute();
       }
 
-      $options = (array) workbench_menu_get_options($name, NULL, $function_history);
+      $options = (array) workbench_menu_get_options($name, NULL);
 
       if (!empty($form_state['values']['settings'][$name]) && isset($options[$form_state['values']['settings'][$name]])) {
         $record = array();
@@ -1677,7 +1656,10 @@ function workbench_menu_admin_item_settings_edit_form_submit($form, &$form_state
   }
   catch (Exception $e) {
     $transaction->rollback();
-    cf_error_on_query_execution($function_history, $e);
+
+    if (module_exists('cf_error')) {
+      cf_error::on_query_execution($e);
+    }
   }
 
   if (empty($form_state['values']['redirect_to'])) {
@@ -1704,28 +1686,32 @@ function workbench_menu_admin_item_settings_edit_form_submit($form, &$form_state
  *   A form array for adding a new menu item.
  */
 function workbench_menu_admin_item_settings_delete_form($form, &$form_state, $access_type, $access_type_id, $item_id, $return_destination) {
-  cf_error_append_history($function_history, __FUNCTION__);
-
   if ($access_type !== 'taxonomy') {
     drupal_access_denied();
     drupal_exit();
   }
 
   if (!is_numeric($access_type_id)) {
-    cf_error_not_numeric($function_history, 'access_type_id');
+    if (module_exists('cf_error')) {
+      cf_error::not_numeric('access_type_id');
+    }
+
     drupal_access_denied();
     drupal_exit();
   }
 
   if (!is_numeric($item_id)) {
-    cf_error_not_numeric($function_history, 'item_id');
+    if (module_exists('cf_error')) {
+      cf_error::not_numeric('item_id');
+    }
+
     drupal_access_denied();
     drupal_exit();
   }
 
   $term = taxonomy_term_load($access_type_id);
   $destination = isset($_GET['destination']) ? $_GET['destination'] : $return_destination;
-  $items = (array) workbench_menu_get_load_menu_items(array('id' => $item_id), 'id', $function_history);
+  $items = (array) workbench_menu_get_load_menu_items(array('id' => $item_id), 'id');
 
   if (!isset($items['flat'][$item_id])) {
     drupal_access_denied();
@@ -1777,8 +1763,6 @@ function workbench_menu_admin_item_settings_delete_form($form, &$form_state, $ac
  *   The form state array as defined by drupals form api.
  */
 function workbench_menu_admin_item_settings_delete_form_submit($form, &$form_state) {
-  cf_error_append_history($function_history, __FUNCTION__);
-
   $transaction = db_transaction();
 
   $user = cf_current_user();
@@ -1801,7 +1785,10 @@ function workbench_menu_admin_item_settings_delete_form_submit($form, &$form_sta
   }
   catch (Exception $e) {
     $transaction->rollback();
-    cf_error_on_query_execution($function_history, $e);
+
+    if (module_exists('cf_error')) {
+      cf_error::on_query_execution($e);
+    }
   }
 
   if (empty($form_state['values']['redirect_to'])) {
@@ -1821,8 +1808,6 @@ function workbench_menu_admin_item_settings_delete_form_submit($form, &$form_sta
  *   The form state array as defined by drupals form api.
  */
 function workbench_menu_reset_cache_form($form, &$form_state) {
-  cf_error_append_history($function_history, __FUNCTION__);
-
   if (empty($form_state['values']['redirect_to'])) {
     $form_state['redirect'] = 'admin/config/workbench/access/menus';
   }
@@ -1837,7 +1822,7 @@ function workbench_menu_reset_cache_form($form, &$form_state) {
   }
 
   if (!empty($form['path']['#default_value'])) {
-    workbench_menu_clear_cache_at_path($form['path']['#default_value'], $function_history);
+    workbench_menu_clear_cache_at_path($form['path']['#default_value']);
 
     drupal_set_message(t("The menu cache for the path '%path' has been reset.", array('%path' => $form['path']['#default_value'])));
   }

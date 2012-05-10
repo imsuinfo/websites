@@ -12,7 +12,7 @@ class WorkbenchMenuController extends DrupalDefaultEntityController {
 
   function attachLoad(&$queried_entities, $revision_id = FALSE) {
     $menu_ids = array_keys($queried_entities);
-    $menus = (array) workbench_menu_get_menus(array('id' => $menu_ids), 'id', $function_history);
+    $menus = (array) workbench_menu_get_menus(array('id' => $menu_ids, 'fast' => NULL), 'id');
     $queried_entities = &$menus;
 
     parent::attachLoad($queried_entities, $revision_id);

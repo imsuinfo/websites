@@ -132,6 +132,16 @@ function workbench_menu_schema() {
         ),
       ),
     );
+
+    // workaround mysql's violation of the SQL standard in a way that does not break standards-compliant databases.
+    // @see https://dev.mysql.com/doc/refman/5.6/en/data-type-defaults.html
+    // @see https://bugs.mysql.com/bug.php?id=25520
+    // @see https://drupal.org/node/1401782
+    // @see https://drupal.org/node/143881
+    if (db_driver() == 'mysql') {
+      unset($schema['workbench_menu_options_' . $name]['fields']['human_name']['default']);
+      unset($schema['workbench_menu_options_' . $name]['fields']['description']['default']);
+    }
   }
 
   $schema['workbench_menu_items'] = array(
@@ -204,6 +214,18 @@ function workbench_menu_schema() {
     ),
   );
 
+  // workaround mysql's violation of the SQL standard in a way that does not break standards-compliant databases.
+  // @see https://dev.mysql.com/doc/refman/5.6/en/data-type-defaults.html
+  // @see https://bugs.mysql.com/bug.php?id=25520
+  // @see https://drupal.org/node/1401782
+  // @see https://drupal.org/node/143881
+  if (db_driver() == 'mysql') {
+    unset($schema['workbench_menus']['fields']['breadcrumb_name']['default']);
+    unset($schema['workbench_menu_items']['fields']['human_name']['default']);
+    unset($schema['workbench_menu_items']['fields']['active_path']['default']);
+    unset($schema['workbench_menu_items']['fields']['properties']['default']);
+  }
+
   return $schema;
 }
 
@@ -211,8 +233,6 @@ function workbench_menu_schema() {
  * Implementation of hook_install().
  */
 function workbench_menu_install() {
-  cf_error_append_history($function_history, __FUNCTION__);
-
   try {
     $expands = array();
 
@@ -280,7 +300,10 @@ function workbench_menu_install() {
     }
   }
   catch (Exception $e) {
-    cf_error_on_query_execution($function_history, $e);
+    if (module_exists('cf_error')) {
+      cf_error::on_query_execution($e);
+    }
+
     throw $e;
   }
 }
@@ -314,7 +337,10 @@ function workbench_menu_enable() {
     }
   }
   catch (Exception $e) {
-    cf_error_on_query_execution($function_history, $e);
+    if (module_exists('cf_error')) {
+      cf_error::on_query_execution($e);
+    }
+
     throw $e;
   }
 }

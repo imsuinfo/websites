@@ -104,19 +104,18 @@ function workbench_menu_rules_action_info() {
  *   TRUE/FALSE depending on if the menu has a given path.
  */
 function workbench_menu_has_path_rules_condition($access_id, $path = '') {
-  $function_history = array();
-  cf_error_append_history($function_history, __FUNCTION__);
-
   if (!is_numeric($access_id)) {
     return FALSE;
   }
 
   if (!is_string($path)) {
-    cf_error_not_string($function_history, 'path');
+    if (module_exists('cf_error')) {
+      cf_error::not_string('path');
+    }
     return FALSE;
   }
 
-  $menus = (array) workbench_menu_get_menus(array('access_id' => $access_id), 'id', $function_history);
+  $menus = (array) workbench_menu_get_menus(array('access_id' => $access_id, 'fast' => NULL), 'id');
 
   if (empty($menus)) return FALSE;
 
@@ -140,20 +139,23 @@ function workbench_menu_has_path_rules_condition($access_id, $path = '') {
  *   TRUE/FALSE depending on if the menu has a given path.
  */
 function workbench_menu_has_path_by_menu_id_rules_condition($menu_id, $path = '') {
-  $function_history = array();
-  cf_error_append_history($function_history, __FUNCTION__);
-
   if (!is_numeric($menu_id)) {
-    cf_error_not_numeric($function_history, 'menu_id');
+    if (module_exists('cf_error')) {
+      cf_error::not_numeric('menu_id');
+    }
+
     return FALSE;
   }
 
   if (!is_string($path)) {
-    cf_error_not_string($function_history, 'path');
+    if (module_exists('cf_error')) {
+      cf_error::not_string('path');
+    }
+
     return FALSE;
   }
 
-  $menus = (array) workbench_menu_get_menus(array('id' => $menu_id), 'id', $function_history);
+  $menus = (array) workbench_menu_get_menus(array('id' => $menu_id, 'fast' => NULL), 'id');
 
   if (empty($menus)) return FALSE;
 
@@ -173,15 +175,15 @@ function workbench_menu_has_path_by_menu_id_rules_condition($menu_id, $path = ''
  *   A workbench menu object.
  */
 function workbench_menu_clear_cache_rules_action($menu) {
-  $function_history = array();
-  cf_error_append_history($function_history, __FUNCTION__);
-
   if (!is_object($menu)){
-    cf_error_invalid_object($function_history, 'menu');
+    if (module_exists('cf_error')) {
+      cf_error::invalid_object('menu');
+    }
+
     return;
   }
 
-  workbench_menu_clear_cache_at_path($menu->path, $function_history);
+  workbench_menu_clear_cache_at_path($menu->path);
 }
 
 /**
@@ -191,10 +193,7 @@ function workbench_menu_clear_cache_rules_action($menu) {
  *   A url path to clear.
  */
 function workbench_menu_clear_cache_at_path_rules_action($path) {
-  $function_history = array();
-  cf_error_append_history($function_history, __FUNCTION__);
-
-  workbench_menu_clear_cache_at_path($path, $function_history);
+  workbench_menu_clear_cache_at_path($path);
 }
 
 /**
@@ -207,14 +206,11 @@ function workbench_menu_clear_cache_at_path_rules_action($path) {
  *   FALSE on any failure and an array containing the menu object otherwise.
  */
 function workbench_menu_load_menu_rules_action($access_id) {
-  $function_history = array();
-  cf_error_append_history($function_history, __FUNCTION__);
-
   if (!is_numeric($access_id)) {
     return FALSE;
   }
 
-  $menus = (array) workbench_menu_get_menus(array('access_id' => $access_id), 'id', $function_history);
+  $menus = (array) workbench_menu_get_menus(array('access_id' => $access_id, 'fast' => NULL), 'id');
 
   if (empty($menus)) return FALSE;
 
@@ -236,15 +232,15 @@ function workbench_menu_load_menu_rules_action($access_id) {
  *   An array of menu objects and an empty array on any problem.
  */
 function workbench_menu_load_menus_by_path_rules_action($path) {
-  $function_history = array();
-  cf_error_append_history($function_history, __FUNCTION__);
-
   if (!is_string($path)) {
-    cf_error_not_string($function_history, 'path');
+    if (module_exists('cf_error')) {
+      cf_error::not_string('path');
+    }
+
     return array('menus' => array());
   }
 
-  $menus = (array) workbench_menu_get_menus(array('path' => $path), 'id', $function_history);
+  $menus = (array) workbench_menu_get_menus(array('path' => $path, 'fast' => NULL), 'id');
 
   return array('menus' => &$menus);
 }

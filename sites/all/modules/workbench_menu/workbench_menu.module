@@ -219,8 +219,6 @@ function workbench_menu_block_info() {
  * Implements hook_block_view().
  */
 function workbench_menu_block_view($delta = '') {
-  cf_error_append_history($function_history, __FUNCTION__);
-
   $path = request_path();
 
   if (empty($path)) {
@@ -276,7 +274,7 @@ function workbench_menu_block_view($delta = '') {
     $menu_depth++;
 
     if (empty($menus_cached[$path_string])) {
-      $menus_cached[$path_string] = (array) workbench_menu_build_menus($path_string, $menus_processed, $breadcrumbs_cached, $function_history);
+      $menus_cached[$path_string] = (array) workbench_menu_build_menus($path_string, $menus_processed, $breadcrumbs_cached);
 
       if (!empty($menus_cached[$path_string])) $save_cache = TRUE;
     }
@@ -324,7 +322,7 @@ function workbench_menu_block_view($delta = '') {
     }
 
     if (!empty($menus_cached[$current_path]['structure'])) {
-      $data = workbench_menu_render_menus($menus_cached[$current_path], $path_string, $show_parents, $menu_depth, $function_history);
+      $data = workbench_menu_render_menus($menus_cached[$current_path], $path_string, $show_parents, $menu_depth);
 
       foreach ($data as $key => &$value) {
         if (isset($menu_markup[$key])) {
@@ -369,9 +367,6 @@ function workbench_menu_block_view($delta = '') {
  *   Each array key will be the path in which a given array of
  *   breadcrumbs relate to.
  *   If FALSE, then breadcrumbs will not be populated.
- * @param array $function_history
- *   (optional) An array of function names, ie:
- *   array('0' => 'my_function_name').
  *
  * @return array
  *   An array with the following structure:
@@ -380,10 +375,8 @@ function workbench_menu_block_view($delta = '') {
  *
  * @see drupal_set_breadcrumb()
  */
-function workbench_menu_build_menus($path_string, &$menus_processed, &$breadcrumbs, $function_history = array()) {
-  cf_error_append_history($function_history, __FUNCTION__);
-
-  $menus = (array) workbench_menu_get_menus(array('path' => array($path_string)), 'id', $function_history);
+function workbench_menu_build_menus($path_string, &$menus_processed, &$breadcrumbs) {
+  $menus = (array) workbench_menu_get_menus(array('path' => array($path_string)), 'id');
 
   $menu_even = TRUE;
   $menu_total = count($menus);
@@ -405,7 +398,6 @@ function workbench_menu_build_menus($path_string, &$menus_processed, &$breadcrum
     $built_menu['weight'] = $menu->weight;
     $built_menu['show_parents'] = $menu->show_parents;
     $built_menu['breadcrumb_name'] = $menu->breadcrumb_name;
-    $built_menu['taxonomy'] = $menu->taxonomy;
 
     $variables = array();
     $variables['menus_processed'] = &$menus_processed;
@@ -417,13 +409,8 @@ function workbench_menu_build_menus($path_string, &$menus_processed, &$breadcrum
       $variables['breadcrumbs_all'] = &$breadcrumbs;
     }
 
-    if (empty($menu->breadcrumb_name)) {
-      $menu_name = $menu->taxonomy->name;
-    }
-    else {
-      $menu_name = $menu->breadcrumb_name;
-    }
 
+    $menu_name = $menu->breadcrumb_name;
     $top_level = array(l($menu_name, $menu->path));
     $breadcrumbs[$menu->path] = $top_level;
 
@@ -437,7 +424,7 @@ function workbench_menu_build_menus($path_string, &$menus_processed, &$breadcrum
       $variables['menu_path'] = $menu->path;
       $variables['breadcrumbs'] = $top_level;
 
-      $data = workbench_menu_build_menu_item($menu, $item, $variables, $function_history);
+      $data = workbench_menu_build_menu_item($menu, $item, $variables);
 
       foreach ($data['structure'] as $weight_id => &$weight_data) {
         foreach ($weight_data as $weight_data_id => $weight_data_data) {
@@ -475,10 +462,6 @@ function workbench_menu_build_menus($path_string, &$menus_processed, &$breadcrum
  *   item.
  *   It is structured such that it can be directly passed to
  *   drupal_set_breadcrumb().
- * @param array $function_history
- *   (optional) An array of function names, ie:
- *   array('0' => 'my_function_name').
- *
  *
  * @return array
  *   An array with the following structure:
@@ -488,9 +471,7 @@ function workbench_menu_build_menus($path_string, &$menus_processed, &$breadcrum
  * @see workbench_menu_get_menus()
  * @see drupal_set_breadcrumb()
  */
-function workbench_menu_build_menu_item($menu, $item, &$variables, $function_history = array()) {
-  cf_error_append_history($function_history, __FUNCTION__);
-
+function workbench_menu_build_menu_item($menu, $item, &$variables) {
   static $wmi_css = 'menu_item';
 
   $built_menu = array();
@@ -542,7 +523,7 @@ function workbench_menu_build_menu_item($menu, $item, &$variables, $function_his
       return array('structure' => array(), 'settings' => array());
     }
 
-    $item_menus = (array) workbench_menu_get_menus(array('access_id' => $item['item']->properties['menu']), 'id', $function_history);
+    $item_menus = (array) workbench_menu_get_menus(array('access_id' => $item['item']->properties['menu']), 'id');
     $item_menu = array_pop($item_menus);
 
     // @todo handle error case where menu is not found.
@@ -550,7 +531,7 @@ function workbench_menu_build_menu_item($menu, $item, &$variables, $function_his
     $variables['menus_processed'][$item_menu->access_id] = NULL;
 
     $breadcrumbs_temporary = FALSE;
-    $built_menus = workbench_menu_build_menus($item_menu->path, $variables['menus_processed'], $breadcrumbs_temporary, $function_history);
+    $built_menus = workbench_menu_build_menus($item_menu->path, $variables['menus_processed'], $breadcrumbs_temporary);
     $data = array();
     $data['structure'] = $built_menus['structure'][$item_menu->weight][$item_menu->id]['structure'];
     $data['settings'] = $built_menus['structure'][$item_menu->weight][$item_menu->id]['settings'];
@@ -568,7 +549,7 @@ function workbench_menu_build_menu_item($menu, $item, &$variables, $function_his
 
   // menu item menu items are parts of another menu embeded inside of the current menu.
   if ($settings[$item['item']->id]['type'] == 'item_menu_item') {
-    $item_menus = (array) workbench_menu_get_menus(array('id' => $item['item']->properties['menu']), 'id', $function_history);
+    $item_menus = (array) workbench_menu_get_menus(array('id' => $item['item']->properties['menu']), 'id');
     $item_menu = array_pop($item_menus);
     $item_menu_item = NULL;
 
@@ -580,13 +561,7 @@ function workbench_menu_build_menu_item($menu, $item, &$variables, $function_his
     $item_menu_item_variables['menus_processed'] = $variables['menus_processed'];
     $item_menu_item_variables['parent_path'] = $item_menu->path;
     $item_menu_item_variables['menu_path'] = $item_menu->path;
-
-    if (empty($menu->breadcrumb_name)) {
-      $item_menu_item_variables['breadcrumbs'] = array(l($item_menu->taxonomy->name, $item_menu->path));
-    }
-    else {
-      $item_menu_item_variables['breadcrumbs'] = array(l($item_menu->breadcrumb_name, $item_menu->path));
-    }
+    $item_menu_item_variables['breadcrumbs'] = array(l($item_menu->breadcrumb_name, $item_menu->path));
 
     if ($variables['breadcrumbs_all'] === FALSE){
       $item_menu_item_variables['breadcrumbs_all'] = FALSE;
@@ -627,7 +602,7 @@ function workbench_menu_build_menu_item($menu, $item, &$variables, $function_his
       return array('structure' => array(), 'settings' => $settings);
     }
 
-    $data = workbench_menu_build_menu_item($item_menu, $item_menu_item, $item_menu_item_variables, $function_history);
+    $data = workbench_menu_build_menu_item($item_menu, $item_menu_item, $item_menu_item_variables);
 
     // @todo handle error case where menu item is not found.
 
@@ -854,7 +829,7 @@ function workbench_menu_build_menu_item($menu, $item, &$variables, $function_his
         $child_variables['parent_path'] = $active_path;
       }
 
-      $data = workbench_menu_build_menu_item($menu, $child, $child_variables, $function_history);
+      $data = workbench_menu_build_menu_item($menu, $child, $child_variables);
 
       foreach ($data['structure'] as $structure_id => &$structure_data) {
         foreach ($structure_data as $structure_data_id => $structure_data_data) {
@@ -891,9 +866,6 @@ function workbench_menu_build_menu_item($menu, $item, &$variables, $function_his
  *   renderred.
  *   This is populated after renderring the given menu to tell the
  *   caller if it is okay to or not to render the parent menus.
- * @param array $function_history
- *   (optional) An array of function names,
- *   ie: array('0' => 'my_function_name').
  *
  * @return array
  *   An array with the following structure:
@@ -904,7 +876,7 @@ function workbench_menu_build_menu_item($menu, $item, &$variables, $function_his
  * @see workbench_menu_build_menus()
  * @see drupal_set_breadcrumb()
  */
-function workbench_menu_render_menus($built_menus, $path_current, &$show_parents, $menu_depth, $function_history = array()) {
+function workbench_menu_render_menus($built_menus, $path_current, &$show_parents, $menu_depth) {
   $even_menu = TRUE;
   $count_menu = 0;
   $rendered = array();
@@ -946,7 +918,7 @@ function workbench_menu_render_menus($built_menus, $path_current, &$show_parents
           $variables['id'] = &$id;
           $variables['children'] = &$children;
 
-          $list['items'][] = workbench_menu_render_menu_item($variables, $path_current, $function_history);
+          $list['items'][] = workbench_menu_render_menu_item($variables, $path_current);
         }
       }
 
@@ -989,9 +961,6 @@ function workbench_menu_render_menus($built_menus, $path_current, &$show_parents
  * @param array $path_parts
  *   An array of sub-strings derived from the $path_current variable.
  *   This is normally done via explode('/', $path_current).
- * @param array $function_history
- *   (optional) An array of function names, ie:
- *   array('0' => 'my_function_name').
  *
  * @return array
  *   A list structured in such a way that it can be directly passed
@@ -1000,7 +969,7 @@ function workbench_menu_render_menus($built_menus, $path_current, &$show_parents
  * @see workbench_menu_render_menus()
  * @see theme_item_list()
  */
-function workbench_menu_render_menu_item(&$variables, $path_current, $function_history = array()) {
+function workbench_menu_render_menu_item(&$variables, $path_current) {
   static $wmm_css = 'menu';
   static $wmi_css = 'menu_item';
 
@@ -1078,7 +1047,7 @@ function workbench_menu_render_menu_item(&$variables, $path_current, $function_h
         $child_variables['id'] = &$id;
         $child_variables['children'] = &$children;
 
-        $item = workbench_menu_render_menu_item($child_variables, $path_current, $function_history);
+        $item = workbench_menu_render_menu_item($child_variables, $path_current);
 
         $child_list[] = $item;
 
@@ -1187,26 +1156,27 @@ function workbench_menu_render_menu_item(&$variables, $path_current, $function_h
  *   (optional) Providing a valid numeric id or machine name string
  *   will cause the return value to only contain the option that
  *   matches this string or numeric id.
- * @param array $function_history
- *   (optional)An array of function names, ie:
- *   array('0' => 'my_function_name').
  *
  * @return array
  *   An array of supported options.
  *   The array keys are the machine names for each option.
  */
-function workbench_menu_get_options($type, $option = NULL, $function_history = array()) {
+function workbench_menu_get_options($type, $option = NULL) {
   $options = &drupal_static(__FUNCTION__, NULL);
 
-  cf_error_append_history($function_history, __FUNCTION__);
-
   if (!is_string($type)) {
-    cf_error_not_string($function_history, 'type');
+    if (module_exists('cf_error')) {
+      cf_error::not_string('type');
+    }
+
     return array();
   }
 
   if (!is_null($option) && !is_string($option)) {
-    cf_error_not_string($function_history, 'option');
+    if (module_exists('cf_error')) {
+      cf_error::not_string('option');
+    }
+
     return array();
   }
 
@@ -1249,7 +1219,9 @@ function workbench_menu_get_options($type, $option = NULL, $function_history = a
     $records = $query->execute()->fetchAll();
   }
   catch (Exception $e) {
-    cf_error_on_query_execution($function_history, $e);
+    if (module_exists('cf_error')) {
+      cf_error::on_query_execution($ex);
+    }
 
     return array();
   }
@@ -1301,9 +1273,6 @@ function workbench_menu_get_options($type, $option = NULL, $function_history = a
  *   (optional) Providing a valid array of options as returned by
  *   workbench_menu_get_options() and it will be properly converted
  *   into a options list.
- * @param array $function_history
- *   (optional) An array of function names, ie:
- *   array('0' => 'my_function_name').
  *
  * @return
  *  An array of supported options.
@@ -1312,9 +1281,7 @@ function workbench_menu_get_options($type, $option = NULL, $function_history = a
  *
  * @see workbench_menu_get_options()
  */
-function workbench_menu_get_options_list($type, $options = NULL, $function_history = array()) {
-  cf_error_append_history($function_history, __FUNCTION__);
-
+function workbench_menu_get_options_list($type, $options = NULL) {
   $options_list = &drupal_static(__FUNCTION__, NULL);
 
   if (isset($options_list[$type])) {
@@ -1322,7 +1289,7 @@ function workbench_menu_get_options_list($type, $options = NULL, $function_histo
   }
 
   if (is_null($options)) {
-    $options = workbench_menu_get_options($type, NULL, $function_history);
+    $options = workbench_menu_get_options($type, NULL);
   }
 
   if (!is_array($options_list)) {
@@ -1347,27 +1314,22 @@ function workbench_menu_get_options_list($type, $options = NULL, $function_histo
  *   When TRUE, this prepends the url path of the menu to help make names less ambiguous.
  * @param bool $with_id
  *   When TRUE, this prepends the id of the menu to help make names less ambiguous.
- * @param array $function_history
- *   (optional) An array of function names, ie:
- *   array('0' => 'my_function_name').
  *
  * @return array
  *  An array of options with the menus taxonomy id as the key and the
  *  taxonomy human name as the value.
  */
-function workbench_menu_get_menus_options_list($with_path = FALSE, $with_id = FALSE, $function_history = array()) {
-  cf_error_append_history($function_history, __FUNCTION__);
-
+function workbench_menu_get_menus_options_list($with_path = FALSE, $with_id = FALSE) {
   $options_list = &drupal_static(__FUNCTION__, NULL);
 
   if (isset($options_list)) {
     return $options_list;
   }
 
-  $menus = (array) workbench_menu_get_menus(array(), 'id', $function_history);
+  $menus = (array) workbench_menu_get_menus(array(), 'id');
 
   foreach ($menus as $id => &$menu) {
-    $options_list[$menu->access_id] = $menu->taxonomy->name;
+    $options_list[$menu->access_id] = $menu->breadcrumb_name;
 
     if ($with_path){
       $options_list[$menu->access_id] .= " [url:" . $menu->path . "]";
@@ -1399,16 +1361,11 @@ function workbench_menu_get_menus_options_list($with_path = FALSE, $with_id = FA
  *   'a/b/c', 'a/b/c/d').
  *   If an array is passed, the strings will be used as is without
  *   being broken down.
- * @param array $function_history
- *   (optional) An array of function names, ie:
- *   array('0' => 'my_function_name').
  *
  * @return array
  *   An array of menu objects for the given path.
  */
-function workbench_menu_get_menus_at_paths($paths, $function_history = array()) {
-  cf_error_append_history($function_history, __FUNCTION__);
-
+function workbench_menu_get_menus_at_paths($paths) {
   if (is_string($paths)) {
     $parts = explode('/', $paths);
     $matches = array();
@@ -1424,11 +1381,14 @@ function workbench_menu_get_menus_at_paths($paths, $function_history = array()) 
     $matches = &$paths;
   }
   else {
-    cf_error_invalid_variable($function_history, 'paths', "Must be a string or an array of strings.");
+    if (module_exists('cf_error')) {
+      cf_error::invalid_variable('paths', "Must be a string or an array of strings.");
+    }
+
     return array();
   }
 
-  return (array) workbench_menu_get_menus(array('path' => $matches), 'id', $function_history);
+  return (array) workbench_menu_get_menus(array('path' => $matches, 'fast' => NULL), 'id');
 }
 
 /**
@@ -1440,11 +1400,12 @@ function workbench_menu_get_menus_at_paths($paths, $function_history = array()) 
  * @return
  *   An array of menu objects for the given node.
  */
-function workbench_menu_get_menus_at_node($node_or_nid, $function_history = array()) {
-  cf_error_append_history($function_history, __FUNCTION__);
-
+function workbench_menu_get_menus_at_node($node_or_nid) {
   if (!is_object($node_or_nid) && !is_numeric($node_or_nid)) {
-    cf_error_invalid_variable($function_history, 'node_or_nid', "Must be either a node object or a number");
+    if (module_exists('cf_error')) {
+      cf_error::invalid_variable('node_or_nid', "Must be either a node object or a number.");
+    }
+
     return array();
   }
 
@@ -1463,12 +1424,12 @@ function workbench_menu_get_menus_at_node($node_or_nid, $function_history = arra
   $path_alias = drupal_get_path_alias($path_node);
 
   if ($path_alias == $path_node) {
-    $menus = (array) workbench_menu_get_menus(array('access_id' => $node->workbench_access), 'id', $function_history);
+    $menus = (array) workbench_menu_get_menus(array('access_id' => $node->workbench_access, 'fast' => NULL), 'id');
 
     return $menus;
   }
 
-  return workbench_menu_get_menus_at_paths($path_alias, $function_history);
+  return workbench_menu_get_menus_at_paths($path_alias);
 }
 
 /**
@@ -1482,6 +1443,9 @@ function workbench_menu_get_menus_at_node($node_or_nid, $function_history = arra
  *   workbench access group or an array of access ids.
  *   - path: A path string associated with a given meny or an array
  *   of path strings.
+ *   - fast: An array key whose value should be NULL. When specified, this will
+ *   perform a fast load. The fast load does not perform the additional
+ *   (expensive) operations that build the menu.
  * @param string|null $keyed
  *   (optional) A string matching one of the following: 'id',
  *   'access_id'
@@ -1493,11 +1457,12 @@ function workbench_menu_get_menus_at_node($node_or_nid, $function_history = arra
  * @return array
  *   An array of menu objects for the given node.
  */
-function workbench_menu_get_menus($conditions = array(), $keyed = NULL, $function_history = array()) {
-  cf_error_append_history($function_history, __FUNCTION__);
-
+function workbench_menu_get_menus($conditions = array(), $keyed = NULL) {
   if (!is_array($conditions)) {
-    cf_error_invalid_array($function_history, 'conditions');
+    if (module_exists('cf_error')) {
+      cf_error::invalid_array('conditions');
+    }
+
     return array();
   }
 
@@ -1546,7 +1511,10 @@ function workbench_menu_get_menus($conditions = array(), $keyed = NULL, $functio
       $records = $query->execute();
     }
     catch (Exception $e) {
-      cf_error_on_query_execution($function_history, $e);
+      if (module_exists('cf_error')) {
+        cf_error::on_query_execution($e);
+      }
+
       return array();
     }
 
@@ -1561,12 +1529,14 @@ function workbench_menu_get_menus($conditions = array(), $keyed = NULL, $functio
       $menus = (array) $query->execute()->fetchAll();
     }
     catch (Exception $e) {
-      cf_error_on_query_execution($function_history, $e);
+      if (module_exists('cf_error')) {
+        cf_error::on_query_execution($e);
+      }
     }
   }
 
   // load all menu additional menu data
-  if (!empty($menus)) {
+  if (!empty($menus) && !array_key_exists('fast', $conditions)) {
     $static_menus = &drupal_static(__FUNCTION__, NULL);
 
     if (is_null($static_menus)) {
@@ -1582,8 +1552,13 @@ function workbench_menu_get_menus($conditions = array(), $keyed = NULL, $functio
         $static_menus['menu'][$menu->id] = &$menu;
       }
 
-      $menu->items = (array) workbench_menu_get_load_menu_items(array('menu_id' => $menu->id), 'id', $function_history);
-      $menu->taxonomy = taxonomy_term_load($menu->access_id);
+      $menu->items = (array) workbench_menu_get_load_menu_items(array('menu_id' => $menu->id), 'id');
+
+      // only load the taxonomy name to get the term name if one is not already defined in the breadcrumb name.
+      if (empty($menu->breadcrumb_name)) {
+        $taxonomy = taxonomy_term_load($menu->access_id);
+        $menu->breadcrumb_name = $taxonomy->name;
+      }
 
       $static_menus['menu'][$menu->id] = $menu;
       $static_menus['access_id'][$menu->access_id] = $menu->id;
@@ -1605,18 +1580,16 @@ function workbench_menu_get_menus($conditions = array(), $keyed = NULL, $functio
  *   - 'access_id': This is the unique access_id that represents the
  *   workbench access group to save.
  *   - 'path': This is the url path string of the menu.
- * @param array $function_history
- *   (optional) An array of function names, ie:
- *   array('0' => 'my_function_name').
  *
  * @return bool
  *   TRUE on success, FALSE otherwise.
  */
-function workbench_menu_save_menus($menus, $function_history = array()) {
-  cf_error_append_history($function_history, __FUNCTION__);
-
+function workbench_menu_save_menus($menus) {
   if (!is_array($menus)) {
-    cf_error_invalid_array($function_history, 'menus');
+    if (module_exists('cf_error')) {
+      cf_error::invalid_array('menus');
+    }
+
     return FALSE;
   }
 
@@ -1630,7 +1603,10 @@ function workbench_menu_save_menus($menus, $function_history = array()) {
   try {
     foreach ($menus as $key => &$menu) {
       if (!is_array($menu)) {
-        cf_error_invalid_array($function_history, 'menus[' . $key . ']');
+        if (module_exists('cf_error')) {
+          cf_error::invalid_array('menus[' . $key . ']');
+        }
+
         continue;
       }
 
@@ -1716,7 +1692,11 @@ function workbench_menu_save_menus($menus, $function_history = array()) {
   }
   catch (Exception $e) {
     $transaction->rollback();
-    cf_error_on_query_execution($function_history, $e);
+
+    if (module_exists('cf_error')) {
+      cf_error::on_query_execution($e);
+    }
+
     return FALSE;
   }
 
@@ -1745,77 +1725,88 @@ function workbench_menu_save_menus($menus, $function_history = array()) {
  *   exactly as it was returned by the database call.
  *   When this is a valid string, the key names of the returned array
  *   will use the specified key name.
- * @param $function_history
- *   (optional) An array of function names, ie:
- *   array('0' => 'my_function_name').
  *
  * @return array
  *   An array of menu objects for the given node.
  */
-function workbench_menu_get_load_menu_items($conditions = array(), $keyed = NULL, $function_history = array()) {
-  cf_error_append_history($function_history, __FUNCTION__);
-
+function workbench_menu_get_load_menu_items($conditions = array(), $keyed = NULL) {
   $sorted_menu_items = array();
   $sorted_menu_items['flat'] = array();
   $sorted_menu_items['nested'] = array();
 
   if (!is_array($conditions)) {
-    cf_error_invalid_array($function_history, 'conditions');
+    if (module_exists('cf_error')) {
+      cf_error::invalid_array('conditions');
+    }
+
     return $sorted_menu_items;
   }
 
   $query = db_select('workbench_menu_items', 'wmi');
   $query->fields('wmi');
 
-  $query->orderBy('parent_id', 'ASC');
-  $query->orderBy('weight', 'ASC');
-  $query->orderBy('human_name', 'ASC');
-  $query->orderBy('id', 'ASC');
+  $query->orderBy('wmi.parent_id', 'ASC');
+  $query->orderBy('wmi.weight', 'ASC');
+  $query->orderBy('wmi.human_name', 'ASC');
+  $query->orderBy('wmi.id', 'ASC');
+
+  foreach (array('e' => 'expand', 'it' => 'item_type') as $key => $name) {
+    $results = array();
+    $wmo = 'wmko' . $key;
+    $wm = 'wmk' . $key;
+
+    $query->innerjoin('workbench_menu_' . $name . 's',  $wm, 'wmi.id = ' . $wm . '.item_id');
+    $query->innerjoin('workbench_menu_options_' . $name,  $wmo, $wm . '.' . $name . '_id = ' . $wmo . '.id');
+    $query->addField($wmo, 'id', $name . '_id');
+    $query->addField($wmo, 'machine_name', $name . '_machine_name');
+    $query->addField($wmo, 'human_name', $name . '_human_name');
+    $query->addField($wmo, 'description', $name . '_description');
+  }
 
   $and = db_and();
 
   if (isset($conditions['id'])) {
     if (is_numeric($conditions['id'])) {
-      $and->condition('id', $conditions['id']);
+      $and->condition('wmi.id', $conditions['id']);
     }
     else if (is_array($conditions['id']) && !empty($conditions['id'])) {
-      $and->condition('id', $conditions['id'], 'IN');
+      $and->condition('wmi.id', $conditions['id'], 'IN');
     }
   }
 
   if (isset($conditions['menu_id'])) {
     if (is_numeric($conditions['menu_id'])) {
-      $and->condition('menu_id', $conditions['menu_id']);
+      $and->condition('wmi.menu_id', $conditions['menu_id']);
     }
     else if (is_array($conditions['menu_id']) && !empty($conditions['menu_id'])) {
-      $and->condition('menu_id', $conditions['menu_id'], 'IN');
+      $and->condition('wmi.menu_id', $conditions['menu_id'], 'IN');
     }
   }
 
   if (isset($conditions['parent_id'])) {
     if (is_numeric($conditions['parent_id'])) {
-      $and->condition('parent_id', $conditions['parent_id']);
+      $and->condition('wmi.parent_id', $conditions['parent_id']);
     }
     else if (is_array($conditions['parent_id']) && !empty($conditions['parent_id'])) {
-      $and->condition('parent_id', $conditions['parent_id'], 'IN');
+      $and->condition('wmi.parent_id', $conditions['parent_id'], 'IN');
     }
   }
 
   if (isset($conditions['weight'])) {
     if (is_numeric($conditions['weight'])) {
-      $and->condition('weight', $conditions['weight']);
+      $and->condition('wmi.weight', $conditions['weight']);
     }
     else if (is_array($conditions['weight']) && !empty($conditions['weight'])) {
-      $and->condition('weight', $conditions['weight'], 'IN');
+      $and->condition('wmi.weight', $conditions['weight'], 'IN');
     }
   }
 
   if (isset($conditions['human_name'])) {
     if (is_string($conditions['human_name'])) {
-      $and->condition('human_name', $conditions['human_name']);
+      $and->condition('wmi.human_name', $conditions['human_name']);
     }
     else if (is_array($conditions['human_name']) && !empty($conditions['human_name'])) {
-      $and->condition('human_name', $conditions['human_name'], 'IN');
+      $and->condition('wmi.human_name', $conditions['human_name'], 'IN');
     }
   }
 
@@ -1827,7 +1818,10 @@ function workbench_menu_get_load_menu_items($conditions = array(), $keyed = NULL
       $records = $query->execute();
     }
     catch (Exception $e) {
-      cf_error_on_query_execution($function_history, $e);
+      if (module_exists('cf_error')) {
+        cf_error::on_query_execution($e);
+      }
+
       return $sorted_menu_items;
     }
 
@@ -1842,20 +1836,52 @@ function workbench_menu_get_load_menu_items($conditions = array(), $keyed = NULL
       $menu_items = (array) $query->execute()->fetchAll();
     }
     catch (Exception $e) {
-      cf_error_on_query_execution($function_history, $e);
+      if (module_exists('cf_error')) {
+        cf_error::on_query_execution($e);
+      }
     }
   }
 
   if (!empty($menu_items)) {
-    // use a separate queries to load all many-to-many relationships
     foreach ($menu_items as $menu_item_key => &$menu_item) {
       $id = $menu_item->id;
 
-      if (!isset($sorted_menu_items['flat'][$id])) {
-        $sorted_menu_items['flat'][$id] = array();
-        $sorted_menu_items['flat'][$id]['children'] = array();
+      if (isset($sorted_menu_items['flat'][$id])) {
+        foreach (array('expand', 'item_type') as $name) {
+          $results = new stdClass();
+          $results->id = $menu_item->{$name . '_id'};
+          $results->machine_name = $menu_item->{$name . '_machine_name'};
+          $results->human_name = $menu_item->{$name . '_human_name'};
+          $results->description = $menu_item->{$name . '_description'};
+
+          unset($menu_item->{$name . '_id'});
+          unset($menu_item->{$name . '_machine_name'});
+          unset($menu_item->{$name . '_human_name'});
+          unset($menu_item->{$name . '_description'});
+
+          array_push($sorted_menu_items['flat'][$id]['item']->$name, $results);
+        }
+
+        continue;
       }
 
+      foreach (array('expand', 'item_type') as $name) {
+        $results = new stdClass();
+        $results->id = $menu_item->{$name . '_id'};
+        $results->machine_name = $menu_item->{$name . '_machine_name'};
+        $results->human_name = $menu_item->{$name . '_human_name'};
+        $results->description = $menu_item->{$name . '_description'};
+
+        unset($menu_item->{$name . '_id'});
+        unset($menu_item->{$name . '_machine_name'});
+        unset($menu_item->{$name . '_human_name'});
+        unset($menu_item->{$name . '_description'});
+
+        $menu_item->$name = array($results);
+      }
+
+      $sorted_menu_items['flat'][$id] = array();
+      $sorted_menu_items['flat'][$id]['children'] = array();
       $sorted_menu_items['flat'][$id]['item'] = $menu_item;
 
       if ($menu_item->parent_id == 0) {
@@ -1871,30 +1897,6 @@ function workbench_menu_get_load_menu_items($conditions = array(), $keyed = NULL
       }
 
       $menu_item->properties = unserialize($menu_item->properties);
-
-      foreach (array('expand', 'item_type') as $name) {
-        $results = array();
-
-        $query = db_select('workbench_menu_options_' . $name, 'wmon');
-        $query->innerjoin('workbench_menu_' . $name . 's',  'wmn', 'wmon.id = wmn.' . $name . '_id');
-        $query->fields('wmon');
-        $query->addField('wmn', 'item_id', 'item_id');
-
-        $query->condition('wmn.item_id', $id);
-
-        try {
-          $records = $query->execute();
-
-          foreach ($records as $record) {
-            $results[$record->id] = $record;
-          }
-        }
-        catch (Exception $e) {
-          cf_error_on_query_execution($function_history, $e);
-        }
-
-        $menu_item->$name = $results;
-      }
     }
   }
 
@@ -1910,9 +1912,6 @@ function workbench_menu_get_load_menu_items($conditions = array(), $keyed = NULL
  * @param string|null $keyed
  *   (optional) A string that is passed directly to
  *   workbench_menu_get_load_menu_items().
- * @param array $function_history
- *   (optional) An array of function names, ie:
- *   array('0' => 'my_function_name').
  *
  * @return array
  *   A processed array select list of menu objects for the given
@@ -1920,11 +1919,11 @@ function workbench_menu_get_load_menu_items($conditions = array(), $keyed = NULL
  *
  * @see workbench_menu_get_load_menu_items()
  */
-function workbench_menu_get_load_menu_items_select_list_options($conditions = array(), $keyed = NULL, $function_history = array()) {
+function workbench_menu_get_load_menu_items_select_list_options($conditions = array(), $keyed = NULL) {
   $options_list = &drupal_static(__FUNCTION__, NULL);
 
   if (is_null($options_list)) {
-    $items = (array) workbench_menu_get_load_menu_items($conditions, $keyed, $function_history);
+    $items = (array) workbench_menu_get_load_menu_items($conditions, $keyed);
 
     foreach ($items['flat'] as &$i) {
       $available_parents[$i['item']->id] = $i['item']->human_name;
@@ -1934,7 +1933,7 @@ function workbench_menu_get_load_menu_items_select_list_options($conditions = ar
     $data['options'] = array('0' => "<No Parent>");
 
     foreach ($items['nested'] as &$nested_item) {
-      workbench_menu_get_load_menu_items_select_list_options_recursive_walk($nested_item, $data, $function_history);
+      workbench_menu_get_load_menu_items_select_list_options_recursive_walk($nested_item, $data);
     }
 
     $options_list = $data['options'];
@@ -1952,15 +1951,10 @@ function workbench_menu_get_load_menu_items_select_list_options($conditions = ar
  *   The menu item object.
  * @param array $data
  *   An array of data globally shared between the different recursive calls.
- * @param array $function_history
- *   (optional) An array of function names, ie:
- *   array('0' => 'my_function_name').
  *
  * @see workbench_menu_get_load_menu_items_select_list_options()
  */
-function workbench_menu_get_load_menu_items_select_list_options_recursive_walk(&$item, &$data, $function_history = array()) {
-  cf_error_append_history($function_history, __FUNCTION__);
-
+function workbench_menu_get_load_menu_items_select_list_options_recursive_walk(&$item, &$data) {
   if (!isset($data['depth'])) {
     $data['depth'] = 0;
   }
@@ -1976,7 +1970,7 @@ function workbench_menu_get_load_menu_items_select_list_options_recursive_walk(&
     $data['depth']++;
 
     foreach ($item['children'] as &$child) {
-      workbench_menu_get_load_menu_items_select_list_options_recursive_walk($child, $data, $function_history);
+      workbench_menu_get_load_menu_items_select_list_options_recursive_walk($child, $data);
     }
 
     $data['depth']--;
@@ -2019,13 +2013,8 @@ function workbench_menu_edit_access($access_type = NULL, $access_type_id = NULL)
  *
  * @param string $path
  *   A string representing the path to clear.
- * @param array $function_history
- *   (optional) An array of function names, ie:
- *   array('0' => 'my_function_name').
  */
-function workbench_menu_clear_cache_at_path($path, $function_history) {
-  cf_error_append_history($function_history, __FUNCTION__);
-
+function workbench_menu_clear_cache_at_path($path) {
   $parts = explode('/', $path);
   $menu_cache_id = 'workbench_menu-menus_at-' . $parts[0];
   $breadcrumb_cache_id = 'workbench_menu-breadcrumbs_at-' . $parts[0];
