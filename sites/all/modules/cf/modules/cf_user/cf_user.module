@@ -1,35 +1,43 @@
 <?php
 
 /**
+ * @file
+ * Common Functionality - User module.
+ */
+
+/**
+ * @defgroup cf_user Common Functionality - User
+ * @ingroup cf
+ * @{
+ * Provides commonly needed user-specific functionality.
+ */
+
+/**
  * Provide a simple way to get the roles ids for the current or specified user.
  *
  * Returns a query object meant to return all rids for a given uid.
  * This does not call ->execute() on the query object.
  *
- * Why:
- *   The roles stored in the global $user variable are role names and not ids.
- *   This provides a way to get user role ids without having to load the user
- *   data, process each role, and produce an array of role ids.
+ * Justification:
+ *  see cf_user_has_role().
  *
  * @param int $uid
  *   (optional) a uid of the user to get the role ids of if the current user is
  *   not to be used.
- * @param array $function_history
- *   (optional) An array of function names, ie:
- *   array('0' => 'my_function_name').
  *
  * @return object
  *   A SelectQuery database object, this object has not been executed.
  */
-function cf_user_get_rids($uid = NULL, array $function_history = array()) {
-  cf_error_append_history($function_history, __FUNCTION__);
-
+function cf_user_get_rids($uid = NULL) {
   if ($uid == NULL) {
-    $current_user = cf_current_user();
+    $current_user = cf_current_user(FALSE);
     $uid = $current_user->uid;
   }
-  else if (!is_numeric($uid)) {
-    cf_error_not_numeric($function_history, 'uid');
+  elseif (!is_numeric($uid)) {
+    if (module_exists('cf_error')) {
+      cf_error::not_numeric('uid');
+    }
+
     return FALSE;
   }
 
@@ -48,10 +56,9 @@ function cf_user_get_rids($uid = NULL, array $function_history = array()) {
 }
 
 /**
- * Provide a simple way to confirm whether or not a user is in a given role by
- * the role id.
+ * Confirm whether a user is in a given role by the role id.
  *
- * Why:
+ * Justification:
  *   The roles stored in the global $user variable are role names and not ids.
  *   This provides a way to get user role ids without having to load the user
  *   data, process each role, and produce an array of role ids.
@@ -61,22 +68,20 @@ function cf_user_get_rids($uid = NULL, array $function_history = array()) {
  * @param int $uid
  *   (optional) a uid of the user to get the role ids of if the current user is
  *   not to be used.
- * @param array $function_history
- *   (optional) An array of function names, ie:
- *   array('0' => 'my_function_name').
  *
  * @return bool
  *   FALSE on error, FALSE if not in role, and TRUE if in role.
  */
-function cf_user_has_role($rid, $uid = NULL, array $function_history = array()) {
-  cf_error_append_history($function_history, __FUNCTION__);
-
+function cf_user_has_role($rid, $uid = NULL) {
   if (!is_numeric($rid)) {
-    cf_error_not_numeric($function_history, 'rid');
+    if (module_exists('cf_error')) {
+      cf_error::not_numeric('rid');
+    }
+
     return FALSE;
   }
 
-  $query = cf_user_get_rids($uid, $function_history);
+  $query = cf_user_get_rids($uid);
 
   if (is_object($query)) {
     $and = db_and();
@@ -92,7 +97,9 @@ function cf_user_has_role($rid, $uid = NULL, array $function_history = array()) 
       }
     }
     catch (Exception $e) {
-      cf_error_on_query_execution($function_history, $e);
+      if (module_exists('cf_error')) {
+        cf_error::on_query_execution($e);
+      }
     }
   }
 
@@ -102,25 +109,23 @@ function cf_user_has_role($rid, $uid = NULL, array $function_history = array()) 
 /**
  * Provide a simple way to load users that have any of the given role ids.
  *
- * Why:
+ * Justification:
  *   I have not found a way to do this with drupal core functions in a single
  *   database transaction.
  *
  * @param array $rids
  *   an array rid of the role to check to see if a user has the given
  *   permission.
- * @param array $function_history
- *   (optional) An array of function names, ie:
- *   array('0' => 'my_function_name').
  *
  * @return object
  *   A SelectQuery database object, this object has not been executed.
  */
-function cf_user_get_users_by_rids($rids, array $function_history = array()) {
-  cf_error_append_history($function_history, __FUNCTION__);
-
+function cf_user_get_users_by_rids($rids) {
   if (!is_array($rids) || empty($rids)) {
-    cf_error_invalid_array($function_history, 'rids');
+    if (module_exists('cf_error')) {
+      cf_error::invalid_array('rids');
+    }
+
     return FALSE;
   }
 
@@ -142,3 +147,7 @@ function cf_user_get_users_by_rids($rids, array $function_history = array()) {
 
   return $query;
 }
+
+/**
+ * @} End of '@addtogroup cf_user Common Functionality - User'.
+ */

@@ -1,17 +1,20 @@
 name = CF Settings
-description = "A placeholder that must be enabled to safely transition into 7.x-2.x."
+description = "Provides a way to provide drupal projects with a way to manage or communicate custom php or drupal settings."
 core = 7.x
 php = 5.3
 package = Common Functionality
+
+configure = admin/config/system/settings_registry
 
 dependencies[] = cf
 dependencies[] = cf_db_options
 
 files[] = cf_settings.module
+files[] = cf_settings.install
 
-; Information added by drupal.org packaging script on 2012-05-07
-version = "7.x-1.6"
+; Information added by drupal.org packaging script on 2012-05-10
+version = "7.x-2.0-unstable1"
 core = "7.x"
 project = "cf"
-datestamp = "1336413651"
+datestamp = "1336656352"
 

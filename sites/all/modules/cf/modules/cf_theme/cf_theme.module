@@ -1,27 +1,30 @@
 <?php
 
 /**
+ * @file
+ * Common Functionality - Theme module.
+ */
+
+/**
+ * @defgroup cf_theme Common Functionality - Theme
+ * @ingroup cf
+ * @{
+ * Provides theme-specific functions for themes to call.
+ */
+
+/**
  * Returns an array of variables to be used by a given theme.
  *
- * Why:
- *   Theme *.tpl.php files should not ever have to call generate or perform
- *   isset()/empty() checks to prevent errors from happening.
- *   All of this work should be done in the template.php.
- *   There is not a standard way of doing this such that other modules and
- *   themes can hook into.
- *   This also allows custom modules to alter themes without having to hack or
- *   alter any existing theme that supports these functions.
+ * Justification:
+ *   see: cf_theme_generate_headers().
  *
  * @param array $variables
  *   The variables array from the theme template functions.
- * @param array $function_history
- *   (optional) An array of function names, ie:
- *   array('0' => 'my_function_name').
  *
  * @return array
  *   An array of variables to be provided to the calling theme.
  */
-function cf_theme_get_variables(array &$variables, array $function_history = array()) {
+function cf_theme_get_variables(array &$variables) {
   $cf = &drupal_static(__FUNCTION__, array());
 
   if (!empty($cf)) {
@@ -68,7 +71,7 @@ function cf_theme_get_variables(array &$variables, array $function_history = arr
 
   // set the user agent
   if (function_exists('get_browser') && !empty($_SERVER['HTTP_USER_AGENT'])) {
-    $browser_details = get_browser(null, true);
+    $browser_details = get_browser(NULL, TRUE);
 
     $cf['agent']['raw'] = $_SERVER['HTTP_USER_AGENT'];
 
@@ -194,7 +197,7 @@ function cf_theme_get_variables(array &$variables, array $function_history = arr
   if (isset($variables['node'])) {
     $node_object = & $variables['node'];
   }
-  else if (isset($variables['page']) && is_array($variables['page']) && !empty($variables['page']['#type']) && isset($variables['page']['content']['system_main']['#node']) && is_object($variables['page']['content']['system_main']['#node'])) {
+  elseif (isset($variables['page']) && is_array($variables['page']) && !empty($variables['page']['#type']) && isset($variables['page']['content']['system_main']['#node']) && is_object($variables['page']['content']['system_main']['#node'])) {
     $node_object = & $variables['page']['content']['system_main']['#node'];
   }
 
@@ -241,7 +244,7 @@ function cf_theme_get_variables(array &$variables, array $function_history = arr
   $cf['at']['url'] = $base_url;
   $cf['at']['base'] = $base_dir;
 
-  if (!is_string($cf['at']['machine_name'])){
+  if (!is_string($cf['at']['machine_name'])) {
    $cf['at']['machine_name'] = '';
   }
 
@@ -252,14 +255,14 @@ function cf_theme_get_variables(array &$variables, array $function_history = arr
   if (function_exists('current_path')) {
     $cf['at']['path'] = current_path();
   }
-  else if (isset($_GET['q'])) {
+  elseif (isset($_GET['q'])) {
     $cf['at']['path'] = $_GET['q'];
   }
 
   if (function_exists('request_path')) {
     $cf['at']['alias'] = request_path();
   }
-  else if (isset($_GET['q'])) {
+  elseif (isset($_GET['q'])) {
     $cf['at']['alias'] = $_GET['q'];
   }
 
@@ -320,10 +323,10 @@ function cf_theme_get_variables(array &$variables, array $function_history = arr
       $timezone = preg_replace('/^\+/i', 'P', $cf['date']['timezone']);
       $timezone = preg_replace('/^\-/i', 'N', $timezone);
 
-      if (is_string($timezone)){
+      if (is_string($timezone)) {
         $timezone_css = cf_theme_safe_css_string_part($timezone);
 
-        if ($timezone_css !== FALSE){
+        if ($timezone_css !== FALSE) {
           $cf['markup_css']['body']['class'] .= ' date-timezone-' . $timezone_css;
           $cf['markup_css']['content']['class'] .= ' date-timezone-' . $timezone_css;
         }
@@ -344,25 +347,21 @@ function cf_theme_get_variables(array &$variables, array $function_history = arr
  *   - Content-Type
  *   - Generator
  *
- * Why:
+ * Justification:
  *   Theme *.tpl.php files should not ever have to call generate or perform
- *   isset()/empty() checks to prevent errors from happening.
- *   All of this work should be done in the template.php.
- *   There is not a standard way of doing this such that other modules and
- *   themes can hook into.
- *   This also allows custom modules to alter themes without having to hack or
- *   alter any existing theme that supports these functions.
+ *   isset()/empty() checks to prevent errors from happening. All of this work
+ *   should be done in the template.php. There is not a standard way of doin
+ *   this such that other modules and themes can hook into. This also allows
+ *   custom modules to alter themes without having to hack or alter any
+ *   existing theme that supports these functions.
  *
  * @param array $cf
  *   An array of header elements to process.
- * @param array $function_history
- *   (optional) An array of function names, ie:
- *   array('0' => 'my_function_name').
  *
  * @return string
  *   A string of html data.
  */
-function cf_theme_generate_headers(array $cf, array $function_history = array()) {
+function cf_theme_generate_headers(array $cf) {
   $output = '';
 
   // handle meta tags
@@ -450,14 +449,11 @@ function cf_theme_generate_headers(array $cf, array $function_history = array())
  *   The variables array to process.
  * @param array $keys
  *   An array of key names to process.
- * @param array $function_history
- *   (optional) An array of function names, ie:
- *   array('0' => 'my_function_name').
  * @param string $subdir
  *   (optional) A string representing a subdirectory inside of the variables
  *   parameter.
  */
-function cf_theme_render_variables(&$variables, $keys, $subdir = NULL, array $function_history = array()) {
+function cf_theme_render_variables(&$variables, $keys, $subdir = NULL) {
   if (is_null($subdir)) {
     foreach ($keys as $key) {
       if (empty($variables[$key])) {
@@ -489,32 +485,32 @@ function cf_theme_render_variables(&$variables, $keys, $subdir = NULL, array $fu
 /**
  * Returns a string with all non-word characters turned into underscores.
  *
- * Why:
+ * Justification:
  *   Drupals core css cleanup code does not properly handle all allowed css,
- *   namely underscores.
- *   This is a quick-way to ensure that all non-word characters are removed
- *   from a string to be used in css.
- *   This function is intended to be used to only create part of a string as
- *   done throughout the cf_theme_* functions to generate css names, such as:
+ *   namely underscores. This is a quick-way to ensure that all non-word
+ *   characters are removed from a string to be used in css. This function is
+ *   intended to be used to only create part of a string as done throughout
+ *   the cf_theme_* functions to generate css names, such as:
  *   at-www_drupal_org.
  *
  * @param string $string
  *   The string to cleanup.
- * @param array $function_history
- *   (optional) An array of function names, ie:
- *   array('0' => 'my_function_name').
  *
  * @return string|false
  *   A string with all non-word characters turned into underscores.
  *   FALSE is returned if the preg_replace() functions returns something other
  *   than a string.
  */
-function cf_theme_safe_css_string_part($string, array $function_history = array()) {
+function cf_theme_safe_css_string_part($string) {
   $replacement = preg_replace('/(\W)+/i', '_', $string);
 
-  if (is_string($replacement)){
+  if (is_string($replacement)) {
     return $replacement;
   }
 
   return FALSE;
 }
+
+/**
+ * @} End of '@addtogroup cf_node Common Functionality - Theme'.
+ */

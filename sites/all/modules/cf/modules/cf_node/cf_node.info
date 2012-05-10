@@ -1,15 +1,18 @@
 name = CF Node
 description = "Provides commonly used/needed functions to be called by other modules or inline php scripts that are specific to the node module."
 core = 7.x
+php = 5.3
 package = Common Functionality
+
 dependencies[] = cf
 dependencies[] = node
+
 files[] = cf_node.module
 files[] = cf_node.install
 
-; Information added by drupal.org packaging script on 2012-05-07
-version = "7.x-1.6"
+; Information added by drupal.org packaging script on 2012-05-10
+version = "7.x-2.0-unstable1"
 core = "7.x"
 project = "cf"
-datestamp = "1336413651"
+datestamp = "1336656352"
 

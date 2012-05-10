@@ -1,3 +1,434 @@
 <?php
 
-// this is a stub.
+/**
+ * @file
+ * Common Functionality - Database Options module.
+ */
+
+/**
+ * @defgroup cf_db_options Common Functionality - Database Options
+ * @ingroup cf
+ * @{
+ * A library to assist in quickly creating an options table and functions.
+ *
+ * Justification:
+ *   Options are normally stored in the php module itself inside of some static
+ *   function. Using a function to get a list of possible options is the simple
+ *   and efficient way to do this under normal circumstances.
+ *
+ *   Instead of using a function to define the options provided by some module,
+ *   this project uses the database. While this has a cost in performance due to
+ *   using database calls, this provides more flexibility and scalability. For
+ *   example, as of drupal 7, external databases are supported. Lets say that
+ *   for whatever reason these options and tables using them are stored in an
+ *   external database that a third-party application may access. Lets say that
+ *   the third party application is written in Java. That java application will
+ *   have no idea what options are available if they are stored in the php file.
+ *   When the options are defined and stored in the database, all it needs to
+ *   know is where to look for the possible options.
+ *
+ *   The strategy defined here is to define a unique id, a machine name, a
+ *   human name, and a description for each option. This allows for
+ *   compatibility with the drupal standard practice of using machine names for
+ *   options while still providing a database efficient practice of using
+ *   numeric ids when associating with some option. The most notable downside
+ *   to this strategy is importing and exporting of the database calls. The
+ *   database unique ids for each option are unique only to a single drupal
+ *   installation. To import and export, the machine name must instead be used.
+ */
+
+/**
+ * Creates a option tables and adds them to the schema.
+ *
+ * The option table created here uniquely describes each available option.
+ *
+ * This creates the table:
+ * - The table ${table}_options_${name} with the columns:
+ *   - id: a unique numeric id representing the an option.
+ *   - machine_name: the machine name associated with some option.
+ *   - human_name: a human friendly name associated with some option.
+ *   - description: a description about some option.
+ *
+ * @param string $table
+ *   A machine name that is prefixed onto the table.
+ *   This is often either the name of the module or the name of the table
+ *   associated with the options.
+ * @param string $name
+ *   The machine name of the options and is suffixed onto the table.
+ * @param array $schema
+ *   The schema array as defined by hook_schema().
+ *
+ * @see: hook_schema()
+ */
+function cf_db_options_create_options_schema($table, $name, &$schema) {
+  if (!is_string($table) || empty($table)) return;
+  if (!is_string($name) || empty($name)) return;
+  if (!is_array($schema)) $schema = array();
+
+  $t = get_t();
+
+  $schema[$table . '_options_' . $name] = array(
+    'description' => $t("Defines possible %name options.", array('%name' => $name)),
+    'fields' => array(
+      'id' => array(
+        'description' => $t("The primary key used to represent an option."),
+        'type' => 'serial',
+        'size' => 'big',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+      ),
+      'machine_name' => array(
+        'description' => $t("This is the machine-friendly name used to represent the option."),
+        'type' => 'varchar',
+        'length' => 64,
+        'not null' => TRUE,
+        'default' => '',
+      ),
+      'human_name' => array(
+        'description' => $t("This is the human-friendly name used to represent the option."),
+        'type' => 'text',
+        'size' => 'normal',
+        'not null' => TRUE,
+        'default' => '',
+      ),
+      'description' => array(
+        'description' => $t("This is a description the option."),
+        'type' => 'text',
+        'size' => 'medium',
+        'not null' => TRUE,
+        'default' => '',
+      ),
+    ),
+    'primary key' => array('id'),
+    'unique keys' => array(
+      'machine_name' => array('machine_name'),
+    ),
+  );
+
+  // workaround mysql's violation of the SQL standard in a way that does not break standards-compliant databases.
+  // @see https://dev.mysql.com/doc/refman/5.6/en/data-type-defaults.html
+  // @see https://bugs.mysql.com/bug.php?id=25520
+  // @see https://drupal.org/node/1401782
+  // @see https://drupal.org/node/143881
+  if (db_driver() == 'mysql') {
+    unset($schema[$table . '_options_' . $name]['fields']['human_name']['default']);
+    unset($schema[$table . '_options_' . $name]['fields']['description']['default']);
+  }
+}
+
+/**
+ * Creates a table for many-one relations with an option table.
+ *
+ * This creates the table:
+ * - The table ${table}_${name}s with the columns:
+ *   - id: holds the value from the numeric appropriate numeric id defined in
+ *     the $relation_table.
+ *   - ${name}_id: represents the id associated with a given option.
+ *
+ * @param string $table
+ *   A machine name that is prefixed onto the table.
+ *   This is often either the name of the module or the name of the table
+ *   associated with the options.
+ * @param string $name
+ *   The machine name of the options and is suffixed onto the table.
+ * @param array $schema
+ *   The schema array as defined by hook_schema().
+ * @param string $relation_table
+ *   The machine name of the table using or associating with the options.
+ * @param string $relation_column
+ *   The machine name of the table column numeric id using or associating with
+ *   the options.
+ *
+ * @see: hook_schema()
+ */
+function cf_db_options_create_options_relation($table, $name, &$schema, $relation_table, $relation_column) {
+  if (!is_string($table) || empty($table)) return;
+  if (!is_string($name) || empty($name)) return;
+  if (!is_array($schema)) $schema = array();
+  if (!is_string($relation_table) || empty($relation_table)) return;
+  if (!is_string($relation_column) || empty($relation_column)) return;
+
+  $t = get_t();
+
+  $schema[$table . '_' . $name . 's'] = array(
+    'description' => $t("Properties of type %name", array('%name' => $name)),
+    'fields' => array(
+      'id' => array(
+        'description' => $t("The id of the relation."),
+        'type' => 'int',
+        'size' => 'big',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+      ),
+      $name . '_id' => array(
+        'description' => $t("The options id from {%{table}_options_%{name}}.id.", array('%{name}' => $name, '%{table}' => $table)),
+        'type' => 'int',
+        'size' => 'big',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+      ),
+    ),
+    'foreign keys' => array(
+      'id' => array(
+        'table' => $relation_table,
+        'columns' => array('id' => $relation_column),
+      ),
+      $name . '_id' => array(
+        'table' => $table . '_options_' . $name,
+        'columns' => array($name . '_id' => 'id'),
+      ),
+    ),
+  );
+}
+
+/**
+ * Populate a specific options table.
+ *
+ * @param string $table
+ *   A machine name that is prefixed onto the table.
+ *   This is often either the name of the module or the name of the table
+ *   associated with the options.
+ * @param string $name
+ *   The machine name of the options and is suffixed onto the table.
+ * @param array $options
+ *   An array containing an options, with each option having the following keys:
+ *   - machine_name: the machine name associated with some option.
+ *   - human_name: a human friendly name associated with some option.
+ *   - description: a description about some option.
+ */
+function cf_db_options_add_options($table, $name, $options) {
+  if (!is_array($options) || empty($options)) return;
+
+  foreach ($options as &$option) {
+    if (!is_array($option) || empty($option)) continue;
+
+    $query = db_insert($table . '_options_' . $name);
+    $query->fields($option);
+    $query->execute();
+  }
+}
+
+/**
+ * Get an array of supported options for a given option type.
+ *
+ * @param string $table
+ *   A machine name that is prefixed onto the table.
+ *   This is often either the name of the module or the name of the table
+ *   associated with the options.
+ * @param string $name
+ *   The machine name of the options and is suffixed onto the table.
+ * @param int|string|null $option
+ *   (optional) Providing a valid numeric id or machine name string
+ *   will cause the return value to only contain the option that
+ *   matches this string or numeric id.
+ *
+ * @return array
+ *   An array of supported options.
+ *   The array keys are the machine names for each option.
+ */
+function cf_db_options_get_options($table, $name, $option = NULL) {
+  if (!is_string($table) || empty($table)) return array();
+  if (!is_string($name) || empty($name)) return array();
+  if (!is_null($option) && !is_string($option)) return array();
+
+  $options_table = $table . '_options_' . $name;
+
+  // $options_table is a database table name, so only allow lowercase characters and underscores
+  if (preg_match('/^(\w|_)+$/', $options_table) == 0) {
+    return array();
+  }
+
+  $options = &drupal_static(__FUNCTION__, NULL);
+
+  if (isset($options[$options_table])) {
+    if (!is_null($option)) {
+      if (is_numeric($option)) {
+        foreach ($options[$options_table] as $key => &$value) {
+          if ($value->id == $option) {
+            return $options[$options_table][$key];
+          }
+        }
+      }
+      else {
+        if (isset($options[$options_table][$option])) {
+          return $options[$options_table][$option];
+        }
+      }
+
+      return array();
+    }
+
+    return $options[$options_table];
+  }
+
+  $query = db_select($options_table, 'ot');
+
+  $query->fields('ot');
+  $query->orderBy('ot.id', 'ASC');
+
+  try {
+    $records = $query->execute()->fetchAll();
+  }
+  catch (Exception $e) {
+    throw $e;
+    return array();
+  }
+
+  $options[$options_table] = array();
+
+  foreach ($records as &$record) {
+    if (!is_object($record)) continue;
+
+    $options[$options_table][$record->machine_name] = &$record;
+  }
+
+  if (!is_null($option)) {
+    if (is_numeric($option)) {
+      foreach ($options[$options_table] as $key => &$value) {
+        if ($value->id == $option) {
+          return $options[$options_table][$key];
+        }
+      }
+    }
+    else {
+      if (isset($options[$options_table][$option])) {
+        return $options[$options_table][$option];
+      }
+    }
+
+    return array();
+  }
+
+  return $options[$options_table];
+}
+
+/**
+ * Returns a list of options.
+ *
+ * This is only a list of the machine_name and human_name of the
+ * select lists.
+ * Use this for populating select lists, radio buttons, and check
+ * boxes.
+ *
+ * @param string $table
+ *   A machine name that is prefixed onto the table.
+ *   This is often either the name of the module or the name of the table
+ *   associated with the options.
+ * @param string $name
+ *   The machine name of the options and is suffixed onto the table.
+ * @param array|null $options
+ *   (optional) Providing a valid array of options as returned by
+ *   cf_db_options_get_options() and it will be properly converted
+ *   into a options list.
+ *
+ * @return
+ *  An array of supported options.
+ *  The array keys are the standard machine name and the array value
+ *  is the human name.
+ *
+ * @see cf_db_options_get_options()
+ */
+function cf_db_options_get_options_list($table, $name, $options = NULL) {
+  if (!is_string($table) || empty($table)) return array();
+  if (!is_string($name) || empty($name)) return array();
+  if (!is_null($option) && !is_string($option)) return array();
+
+  if (is_null($options)) {
+    $options = cf_db_options_get_options($table, $name, NULL, $function_history);
+  }
+
+  $options_list = array();
+
+  foreach ($options as $machine_name => $value) {
+    if (!is_object($value)) continue;
+
+    $options_list[$value->machine_name] = $value->human_name;
+  }
+
+  return $options_list;
+}
+
+/**
+ * Returns the numeric id for a given option machine_name.
+ *
+ * Use this to get the numeric id that uniquely represents a particular option.
+ *
+ * @param string $table
+ *   A machine name that is prefixed onto the table.
+ *   This is often either the name of the module or the name of the table
+ *   associated with the options.
+ * @param string $name
+ *   The machine name of the options and is suffixed onto the table.
+ * @param string $machine_name
+ *   A machine name of the option to get the id of.
+ *
+ * @return bool|int
+ *   Returns an number that uniquely identifies the option.
+ *   FALSE is returned on error.
+ */
+function cf_db_options_machine_name_to_id($table, $name, $machine_name) {
+  if (!is_string($table) || empty($table)) return FALSE;
+  if (!is_string($name) || empty($name)) return FALSE;
+  if (!is_string($machine_name) || empty($machine_name)) return FALSE;
+
+  $options_table = $table . '_options_' . $name;
+
+  // $options_table is a database table name, so only allow lowercase characters and underscores
+  if (preg_match('/^(\w|_)+$/', $options_table) == 0) {
+    return FALSE;
+  }
+
+  $query = db_select($options_table, 'ot');
+
+  $query->fields('ot');
+  $query->orderBy('ot.id', 'ASC');
+  $query->condition('machine_name', $machine_name);
+
+  try {
+    $records = $query->execute()->fetchAll();
+    return $records[0];
+  }
+  catch (Exception $e) {
+    throw $e;
+    return FALSE;
+  }
+}
+
+/**
+ * Returns the select query string to be used as a subquery.
+ *
+ * The d7 api does not seem to provide a subquery interface for conditions.
+ * Therefore, subqueries have to be manually created select query strings.
+ * The query itself will perform a select statement, selecting the id.
+ *
+ * @param string $table
+ *   A machine name that is prefixed onto the table.
+ *   This is often either the name of the module or the name of the table
+ *   associated with the options.
+ * @param string $name
+ *   The machine name of the options and is suffixed onto the table.
+ * @param string $machine_name
+ *   A machine name of the option to generate a subquery select for.
+ *
+ * @return bool|string
+ *   Returns a subquery select string.
+ *   FALSE is returned on error.
+ */
+function cf_db_options_machine_name_to_id_subquery($table, $name, $machine_name) {
+  if (!is_string($table) || empty($table)) return FALSE;
+  if (!is_string($name) || empty($name)) return FALSE;
+  if (!is_string($machine_name) || empty($machine_name)) return FALSE;
+
+  $options_table = $table . '_options_' . $name;
+
+  // $options_table is a database table name, so only allow lowercase characters and underscores
+  if (preg_match('/^(\w|_)+$/', $options_table) == 0) {
+    return FALSE;
+  }
+
+  return '(SELECT id FROM {' . $options_table . '}' . ' WHERE machine_name = \'' . $machine_name . '\')';
+}
+
+/**
+ * @} End of '@addtogroup cf_db_options Common Functionality - Database Options'.
+ */

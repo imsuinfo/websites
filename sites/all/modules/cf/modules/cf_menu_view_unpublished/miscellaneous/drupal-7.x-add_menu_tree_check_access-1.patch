@@ -1,8 +1,8 @@
 diff --git a/includes/menu.inc b/includes/menu.inc
-index cfd35c7..12a27a7 100644
+index eec342f..b1ad98e 100644
 --- a/includes/menu.inc
 +++ b/includes/menu.inc
-@@ -1425,6 +1425,7 @@ function menu_tree_check_access(&$tree, $node_links = array()) {
+@@ -1481,6 +1481,7 @@ function menu_tree_check_access(&$tree, $node_links = array()) {
      $select->condition('n.status', 1);
      $select->condition('n.nid', $nids, 'IN');
      $select->addTag('node_access');

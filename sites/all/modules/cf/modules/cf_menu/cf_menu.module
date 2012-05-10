@@ -1,6 +1,29 @@
 <?php
 
 /**
+ * @file
+ * Common Functionality - Menu Module.
+ */
+
+/**
+ * @defgroup cf_menu Common Functionality - Menu
+ * @ingroup cf
+ * @{
+ * Provides common menu or administrative menu pages and options.
+ *
+ * This module provides the following benefits:
+ * - Standardized content accessibility administration page.
+ *   To make an accessibility administration page visible on this page,
+ *   simply defined its admin path to be a child of the path:
+ *  'admin/content/accessibility'.
+ *
+ * Justification:
+ *   One of the more rising topics in drupal web design is accessibility
+ *   compliance. It would be very useful for all accessibility related
+ *   administrative tasks to be located in one location.
+ */
+
+/**
  * Implements hook_menu().
  *
  * @see: cf_menu_accessibility_page()
@@ -8,7 +31,7 @@
 function cf_menu_menu() {
   $items = array();
 
-  $accessibility_page = variable_get('cf_menu_accessibility_page', TRUE);
+  $accessibility_page = variable_get('accessibility_admin_page', TRUE);
 
   if ($accessibility_page) {
     $items['admin/content/accessibility'] = array(
@@ -17,7 +40,7 @@ function cf_menu_menu() {
       'page callback' => 'cf_menu_accessibility_page',
       'type' => MENU_LOCAL_TASK,
       'file' => 'menu.inc',
-      'file path' => drupal_get_path('module', 'cf_menu') . '/includes',
+      'file path' => drupal_get_path('module', 'cf_menu') . '/pages',
       'access callback' => 'user_access',
       'access arguments' => array('view content accessibility administration page'),
     );
@@ -36,7 +59,7 @@ function cf_menu_cf_permission_alter(&$permissions) {
     $permissions = array();
   }
 
-  $accessibility_page = variable_get('cf_menu_accessibility_page', TRUE);
+  $accessibility_page = variable_get('accessibility_admin_page', TRUE);
 
   if ($accessibility_page) {
     $permissions['view content accessibility administration page'] = array(
@@ -44,32 +67,8 @@ function cf_menu_cf_permission_alter(&$permissions) {
       'description' => t("Grants permissions to view the content accessibility administration page."),
     );
   }
-
-  // see: http://drupal.org/node/460408#comment-4525794
-  $permissions['view unpublished content in menu'] = array(
-    'title' => t("View Unpublished Content in Menu"),
-    'description' => t("Grants permissions to view menu items that is unpublished content. (This requires a patch against drupal core in order to function.)"),
-  );
 }
 
 /**
- * Implements hook_query_TAG_alter().
- *
- * Why:
- *   The drupal menu core prevents administrators from seeing the unpublished
- *   nodes in the admin menu.
- *   See: http://drupal.org/node/460408#comment-4367202
- *
- * Errata:
- *   This requires a patch against drupal core function
- *   (drupal-7.x-add_menu_tree_check_access-1.patch).
+ * @} End of '@addtogroup cf_menu Common Functionality - Menu'.
  */
-function cf_menu_query_menu_tree_check_access_alter(&$query) {
-  if (user_access('view unpublished content in menu')) {
-    $where =& $query->conditions();
-
-    foreach ($where as $key => &$value) {
-      if (is_string($value['field']) && $value['field'] == 'n.status') unset($where[$key]);
-    }
-  }
-}

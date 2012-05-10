@@ -8,12 +8,7 @@
 /**
  * Displays the content accessibility menu page.
  *
- * This page presents links to content easement management pages.
- *
- * Why:
- *   There is no catch-all location for content accessibility related tasks.
- *   Accessibility specific information seems to better fall under the content
- *   category than the structure or the configuration categories.
+ * This page presents links to content accessibility management pages.
  *
  * @see cf_menu_menu()
  */

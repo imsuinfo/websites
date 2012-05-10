@@ -1,29 +1,39 @@
 <?php
 
 /**
+ * @file
+ * Common Functionality - HTTP module.
+ */
+
+/**
+ * @defgroup cf_http Common Functionality - HTTP
+ * @ingroup cf
+ * @{
+ * A set of functions to get content from remote web pages.
+ *
+ * Justification:
+ *   Custom php scripts need a straight-forward and easy way to pull data from
+ *   another website. This is useful as an alternative to iframe and has
+ *   advantages and disadvantages to iframes. An advantage is that this allows
+ *   showing remote content even if the remote url is down (via caching).
+ *   A disadvantage is that remote images and links need to be processed,
+ *   updated, and possibly even manually cached.
+ */
+
+/**
  * Implements hook_init().
  */
 function cf_http_init() {
-  static $cf_http_html_headers = FALSE;
+  $cf_http_html_headers = &drupal_static(__FUNCTION__, FALSE);
 
   if (!$cf_http_html_headers) {
-    drupal_add_css(drupal_get_path('module', 'cf_http') . '/includes/cf_http_html_headers.css');
+    drupal_add_css(drupal_get_path('module', 'cf_http') . '/css/cf_http_html_headers.css');
     $cf_http_html_headers = TRUE;
   }
 }
 
 /**
  * Reads an http page at the given path and returns an unprocessed response.
- *
- * Why:
- *   Custom php scripts need a straight-forward and easy way to pull data from
- *   another website.
- *   This is useful as an alternative to iframe and has advantages and
- *   disadvantages to iframes.
- *   An advantage is that this allows showing remote content even if the remote
- *   url is down (via caching).
- *   A disadvantage is that remote images and links need to be processed,
- *   updated, and possibly even manually cached.
  *
  * @param string $server
  *   Hostname or ip address of the server.
@@ -32,9 +42,6 @@ function cf_http_init() {
  *  The file/path on the server to
  * @param int $port
  *   (optional) port number of the page to read (defaults to 80).
- * @param array $function_history
- *   (optional) An array of function names, ie:
- *   array('0' => 'my_function_name').
  *
  * @return array
  *   An array containing the connection status and return http response.
@@ -43,22 +50,25 @@ function cf_http_init() {
  *   server was established and FALSE otherwise.
  *   - response: The http response as returned by the target server.
  *     This http response must be processed.
+ *
+ * @see: cf_http_get_webpage()
  */
-function cf_http_get_response($server, $path, $port = 80, array $function_history = array()) {
-  cf_error_append_history($function_history, __FUNCTION__);
-
+function cf_http_get_response($server, $path, $port = 80) {
   $results = array('connected' => FALSE, 'response' => '', 'is_local' => FALSE);
 
-  if (cf_is_empty_or_non_string($function_history, 'server', $server, WATCHDOG_ERROR)) {
+  if (cf_is_empty_or_non_string('server', $server, WATCHDOG_ERROR)) {
     return $results;
   }
 
-  if (cf_is_empty_or_non_string($function_history, 'path', $path, WATCHDOG_ERROR)) {
+  if (cf_is_empty_or_non_string('path', $path, WATCHDOG_ERROR)) {
     return $results;
   }
 
   if (!is_numeric($port)) {
-    cf_error_not_numeric($function_history, 'port');
+    if (module_exists('cf_error')) {
+      cf_error::not_numeric('port');
+    }
+
     return $results;
   }
 
@@ -75,7 +85,7 @@ function cf_http_get_response($server, $path, $port = 80, array $function_histor
 
     $results['is_local'] = stream_is_local($fp);
 
-    while(!feof($fp)) {
+    while (!feof($fp)) {
       $results['response'] .= fgets($fp, 8192);
 
       $info = stream_get_meta_data($fp);
@@ -97,27 +107,16 @@ function cf_http_get_response($server, $path, $port = 80, array $function_histor
  *
  * Originally From: http://php.net/manual/en/function.fsockopen.php#85572
  *
- * Why:
- *   Custom php scripts need a straight-forward and easy way to pull data from
- *   another website.
- *   This is useful as an alternative to iframe and has advantages and
- *   disadvantages to iframes.
- *   An advantage is that this allows showing remote content even if the remote
- *   url is down (via caching).
- *   A disadvantage is that remote images and links need to be processed,
- *   updated, and possibly even manually cached.
- *
  * @param array $headers
  *   An array of http headers to validate.
- * @param array $function_history
- *   (optional) An array of function names, ie:
- *   array('0' => 'my_function_name').
  *
  * @return bool
  *   A boolean with TRUE representing that the headers are valid, FALSE
  *   otherwise.
+ *
+ * @see: cf_http_get_webpage()
  */
-function cf_http_validate_response(array $headers, array $function_history = array()) {
+function cf_http_validate_response(array $headers) {
   if (empty($headers)) return FALSE;
 
   switch (trim(strtolower($headers[0]))) {
@@ -134,21 +133,8 @@ function cf_http_validate_response(array $headers, array $function_history = arr
 /**
  * Search through an array of http errors for common 400 and 500 http codes.
  *
- * Why:
- *   Custom php scripts need a straight-forward and easy way to pull data from
- *   another website.
- *   This is useful as an alternative to iframe and has advantages and
- *   disadvantages to iframes.
- *   An advantage is that this allows showing remote content even if the remote
- *   url is down (via caching).
- *   A disadvantage is that remote images and links need to be processed,
- *   updated, and possibly even manually cached.
- *
  * @param array $headers
  *   An array of http headers.
- * @param array $function_history
- *   (optional) An array of function names, ie:
- *   array('0' => 'my_function_name').
  *
  * @return array
  *   An array with the following structure:
@@ -156,8 +142,10 @@ function cf_http_validate_response(array $headers, array $function_history = arr
  *   0 otherwise.
  *   - key: array key of the header with the error.
  *   - value: error information associated with the error code.
+ *
+ * @see: cf_http_get_webpage()
  */
-function cf_http_headers_errors(array &$headers, array $function_history = array()) {
+function cf_http_headers_errors(array &$headers) {
   foreach ($headers as $key => &$value) {
     $matches = array();
 
@@ -174,21 +162,8 @@ function cf_http_headers_errors(array &$headers, array $function_history = array
  *
  * Originally From: http://php.net/manual/en/function.fsockopen.php#85572
  *
- * Why:
- *   Custom php scripts need a straight-forward and easy way to pull data from
- *   another website.
- *   This is useful as an alternative to iframe and has advantages and
- *   disadvantages to iframes.
- *   An advantage is that this allows showing remote content even if the remote
- *   url is down (via caching).
- *   A disadvantage is that remote images and links need to be processed,
- *   updated, and possibly even manually cached.
- *
  * @param string $document
  *   An string representing an html document.
- * @param array $function_history
- *   (optional) An array of function names, ie:
- *   array('0' => 'my_function_name').
  *
  * @return array
  *   An array containing the unchunk status and unchunked string.
@@ -196,8 +171,10 @@ function cf_http_headers_errors(array &$headers, array $function_history = array
  *   - unchunked: A boolean with TRUE representing that the document string was
  *   successfully unchunked, FALSE otherwise.
  *   - document: The complete (unchunked) html document.
+ *
+ * @see: cf_http_get_webpage()
  */
-function cf_http_unchunk_response(string $document, array $function_history = array()) {
+function cf_http_unchunk_response($document) {
   $results = array('unchunked' => FALSE, 'document' => '');
 
   if (empty($document)) return $results;
@@ -219,7 +196,7 @@ function cf_http_unchunk_response(string $document, array $function_history = ar
     $results['document'] .= substr($tmp, ($position + $add), $length);
     $tmp = substr($tmp, ($length + $position + $add));
     $check = trim($tmp);
-  } while(!empty($check));
+  } while (!empty($check));
 
   unset($tmp);
   return $results;
@@ -233,25 +210,12 @@ function cf_http_unchunk_response(string $document, array $function_history = ar
  *
  * Originally From: http://php.net/manual/en/function.fsockopen.php#85572
  *
- * Why:
- *   Custom php scripts need a straight-forward and easy way to pull data from
- *   another website.
- *   This is useful as an alternative to iframe and has advantages and
- *   disadvantages to iframes.
- *   An advantage is that this allows showing remote content even if the
- *   remote url is down (via caching).
- *   A disadvantage is that remote images and links need to be processed,
- *   updated, and possibly even manually cached.
- *
  * @param string $http_response
  *   An http response string.
  * @param string $path
  *   The file/path on the server to.
  * @param int $port
  *   (optional) port number of the page to read (defaults to 80).
- * @param array $function_history
- *   (optional) An array of function names, ie:
- *   array('0' => 'my_function_name').
  *
  * @return array
  *   An array containing the connection status and return http response.
@@ -260,18 +224,18 @@ function cf_http_unchunk_response(string $document, array $function_history = ar
  *   was successfully parsed, FALSE otherwise.
  *   - headers: The http header from the httpd response.
  *   - document: The complete html document from the http response.
+ *
+ * @see: cf_http_get_webpage()
  */
-function cf_http_parse_response($http_response, array $function_history = array()) {
-  cf_error_append_history($function_history, __FUNCTION__);
-
+function cf_http_parse_response($http_response) {
   $results = array('parsed' => FALSE, 'header' => '', 'document' => '', 'http_error' => array('error_code' => 0, 'key' => '', 'value' => ''));
 
-  if (cf_is_empty_or_non_string($function_history, 'http_response', $http_response, WATCHDOG_ERROR)) {
+  if (cf_is_empty_or_non_string('http_response', $http_response, WATCHDOG_ERROR)) {
     return $results;
   }
 
   // split into array, headers and content.
-  $hunks = explode("\r\n\r\n",trim($http_response));
+  $hunks = explode("\r\n\r\n", trim($http_response));
   if (!is_array($hunks) || count($hunks) < 2) {
     return $results;
   }
@@ -285,12 +249,12 @@ function cf_http_parse_response($http_response, array $function_history = array(
   unset($header);
   unset($document);
 
-  if (!cf_http_validate_response($results['headers'], $function_history)) {
-    $results['http_error'] = cf_http_headers_errors($results['headers'], $function_history);
+  if (!cf_http_validate_response($results['headers'])) {
+    $results['http_error'] = cf_http_headers_errors($results['headers']);
   }
 
   if (in_array('Transfer-Coding: chunked', $results['headers'])) {
-    $result = cf_http_unchunk_response($results['document'], $function_history);
+    $result = cf_http_unchunk_response($results['document']);
 
     if ($result['unchunked']) {
       $results['document'] = $result['document'];
@@ -303,7 +267,7 @@ function cf_http_parse_response($http_response, array $function_history = array(
   $results['document'] = preg_replace("/^[[:alnum:]]+\r\n/i", '', $results['document']);
   $results['document'] = preg_replace("/\r\n0$/i", '', $results['document']);
 
-  if (!is_string($results['document'])){
+  if (!is_string($results['document'])) {
     $results['document'] = '';
     return $results;
   }
@@ -320,21 +284,8 @@ function cf_http_parse_response($http_response, array $function_history = array(
  * All other elements before, between, or after the html <head> and <body> tags
  * are lost/ignored.
  *
- * Why:
- *   Custom php scripts need a straight-forward and easy way to pull data from
- *   another website.
- *   This is useful as an alternative to iframe and has advantages and
- *   disadvantages to iframes.
- *   An advantage is that this allows showing remote content even if the remote
- *   url is down (via caching).
- *   A disadvantage is that remote images and links need to be processed,
- *   updated, and possibly even manually cached.
- *
  * @param string $document
  *   An http response string.
- * @param array $function_history
- *   (optional) An array of function names, ie:
- *   array('0' => 'my_function_name').
  *
  * @return array
  *   An array containing the connection status and return http response.
@@ -343,13 +294,13 @@ function cf_http_parse_response($http_response, array $function_history = array(
  *   successfully split, FALSE otherwise.
  *   - headers: The http header from the httpd response.
  *   - document: The complete html document from the http response.
+ *
+ * @see: cf_http_get_webpage()
  */
-function cf_http_split_response($document, array $function_history = array()) {
-  cf_error_append_history($function_history, __FUNCTION__);
-
+function cf_http_split_response($document) {
   $results = array('split' => FALSE, 'head' => '', 'body' => '');
 
-  if (cf_is_empty_or_non_string($function_history, 'document', $document, WATCHDOG_ERROR)) {
+  if (cf_is_empty_or_non_string('document', $document, WATCHDOG_ERROR)) {
     return $results;
   }
 
@@ -382,16 +333,6 @@ function cf_http_split_response($document, array $function_history = array()) {
  *
  * These urls are turned into absolute urls.
  *
- * Why:
- *   Custom php scripts need a straight-forward and easy way to pull data from
- *   another website.
- *   This is useful as an alternative to iframe and has advantages and
- *   disadvantages to iframes.
- *   An advantage is that this allows showing remote content even if the remote
- *   url is down (via caching).
- *   A disadvantage is that remote images and links need to be processed,
- *   updated, and possibly even manually cached.
- *
  * @param string $text
  *   The html document text whose urls are to be altered.
  * @param string $server
@@ -410,9 +351,6 @@ function cf_http_split_response($document, array $function_history = array()) {
  *   (optional) The port number of the web-server.
  *   In almost all cases this should be 80.
  *   If $schema is set to 'https', then normally this should instead be 443.
- * @param array $function_history
- *   (optional) An array of function names, ie:
- *   array('0' => 'my_function_name').
  *
  * @return array
  *   An array containing the connection status and return http response.
@@ -420,10 +358,10 @@ function cf_http_split_response($document, array $function_history = array()) {
  *   - adjusted: A boolean with TRUE representing that the text's urls were
  *   successfully adjuested, FALSE otherwise.
  *   - text: The complete html text with all links adjusted to absolute paths.
+ *
+ * @see: cf_http_get_webpage()
  */
-function cf_http_adjust_urls($text, $server, $relative_path, $scheme = 'http', $suffix = '/', $port = 80, array $function_history = array()) {
-  cf_error_append_history($function_history, __FUNCTION__);
-
+function cf_http_adjust_urls($text, $server, $relative_path, $scheme = 'http', $suffix = '/', $port = 80) {
   $results = array('adjusted' => FALSE, 'text' => $text);
   $matches = array();
 
@@ -475,7 +413,7 @@ function cf_http_adjust_urls($text, $server, $relative_path, $scheme = 'http', $
           $safe_expression = preg_replace('/\~/i', '\~', $safe_expression);
           $safe_text = preg_replace('`' . $safe_expression . '`si', $matches[1][$key] . $matches[2][$key] . $generated_url . $matches[2][$key], $results['text']);
 
-          if (is_string($safe_text)){
+          if (is_string($safe_text)) {
             $results['text'] = $safe_text;
           }
         }
@@ -489,16 +427,6 @@ function cf_http_adjust_urls($text, $server, $relative_path, $scheme = 'http', $
 /**
  * Reads and processes a website page at the given path.
  *
- * Why:
- *   Custom php scripts need a straight-forward and easy way to pull data from
- *   another website.
- *   This is useful as an alternative to iframe and has advantages and
- *   disadvantages to iframes.
- *   An advantage is that this allows showing remote content even if the remote
- *   url is down (via caching).
- *   A disadvantage is that remote images and links need to be processed,
- *   updated, and possibly even manually cached.
- *
  * @param string $server
  *   Hostname or ip address of the server.
  *   Should not contain http:// or similary prefixes.
@@ -506,9 +434,6 @@ function cf_http_adjust_urls($text, $server, $relative_path, $scheme = 'http', $
  *  The file/path on the server to.
  * @param int $port
  *   (optional) Port number of the page to read (defaults to 80).
- * @param array $function_history
- *   (optional) An array of function names, ie:
- *   array('0' => 'my_function_name').
  *
  * @return array
  *   An array containing the connection status and return http response.
@@ -518,15 +443,13 @@ function cf_http_adjust_urls($text, $server, $relative_path, $scheme = 'http', $
  *   - headers: The http header from the httpd response.
  *   - document: The complete html document from the http response.
  */
-function cf_http_get_webpage($server, $path, $port = 80, array $function_history = array()) {
-  cf_error_append_history($function_history, __FUNCTION__);
-
+function cf_http_get_webpage($server, $path, $port = 80) {
   $results = array('read' => FALSE, 'headers' => '', 'document' => '', 'http_error' => array('error_code' => 0, 'key' => '', 'value' => ''));
 
-  $result = cf_http_get_response($server, $path, $port, $function_history);
+  $result = cf_http_get_response($server, $path, $port);
 
   if ($result['connected']) {
-    $result = cf_http_parse_response($result['response'], $function_history);
+    $result = cf_http_parse_response($result['response']);
 
     if ($result['parsed']) {
       $results['headers'] = $result['headers'];
@@ -543,16 +466,6 @@ function cf_http_get_webpage($server, $path, $port = 80, array $function_history
 /**
  * Reads and processes a website page at the given path.
  *
- * Why:
- *   Custom php scripts need a straight-forward and easy way to pull data from
- *   another website.
- *   This is useful as an alternative to iframe and has advantages and
- *   disadvantages to iframes.
- *   An advantage is that this allows showing remote content even if the remote
- *   url is down (via caching).
- *   A disadvantage is that remote images and links need to be processed,
- *   updated, and possibly even manually cached.
- *
  * @param $text
  *   Hostname or ip address of the server.
  *   Should not contain http:// or similary prefixes.
@@ -562,9 +475,6 @@ function cf_http_get_webpage($server, $path, $port = 80, array $function_history
  *   A boolean representing whether or not to preserve the header structure
  *   when the depth of a given header is reduced to a number greater than 6.
  *   If preserve is false, all header formatting will be lost.
- * @param array $function_history
- *   (optional) An array of function names, ie:
- *   array('0' => 'my_function_name').
  *
  * @return array
  *   An array containing the connection status and return http response.
@@ -572,14 +482,17 @@ function cf_http_get_webpage($server, $path, $port = 80, array $function_history
  *   - reduced: A boolean with TRUE representing that the text was successful
  *   reduced and FALSE otherwise.
  *   - text: The http text with all html headers reduced by $depth.
+ *
+ * @see: cf_http_get_webpage()
  */
-function cf_http_reduce_html_headers($text, $depth = 1, $preserve = TRUE, array $function_history = array()) {
-  cf_error_append_history($function_history, __FUNCTION__);
-
+function cf_http_reduce_html_headers($text, $depth = 1, $preserve = TRUE) {
   $results = array('reduced' => FALSE, 'text' => '');
 
   if (!is_string($text)) {
-    cf_error_not_string($function_history, 'text');
+    if (module_exists('cf_error')) {
+      cf_error::not_string('text');
+    }
+
     return $results;
   }
 
@@ -627,7 +540,7 @@ function cf_http_reduce_html_headers($text, $depth = 1, $preserve = TRUE, array 
     }
   }
 
-  if (!is_string($results['text'])){
+  if (!is_string($results['text'])) {
     $results['text'] = '';
     return $results;
   }
@@ -635,3 +548,7 @@ function cf_http_reduce_html_headers($text, $depth = 1, $preserve = TRUE, array 
   $results['reduced'] = TRUE;
   return $results;
 }
+
+/**
+ * @} End of '@defgroup cf_http Common Functionality - HTTP'.
+ */

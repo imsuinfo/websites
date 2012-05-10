@@ -1,48 +1,53 @@
 <?php
 
 /**
- * Implements hook_init().
+ * @file
+ * Common Functionality module.
  */
-function cf_init() {
-  cf_error_append_history($function_history, __FUNCTION__);
 
-  global $conf;
-
-  if (!isset($conf['role_memory_limits']) || !is_array($conf['role_memory_limits'])) {
-    $conf['role_memory_limits'] = array();
-  }
-
-  if (!isset($conf['user_memory_limits']) || !is_array($conf['user_memory_limits'])) {
-    $conf['user_memory_limits'] = array();
-  }
-
-  if (!isset($conf['ip_memory_limits']) || !is_array($conf['ip_memory_limits'])) {
-    $conf['ip_memory_limits'] = array();
-  }
-
-  $user = cf_current_user();
-
-  foreach ($conf['role_memory_limits'] as $key => &$value) {
-    if (array_key_exists($key, $user->roles) && !empty($value)) {
-      ini_set('memory_limit', $value);
-    }
-  }
-
-  foreach ($conf['user_memory_limits'] as $key => &$value) {
-    if ($key == $user->uid && !empty($value)) {
-      ini_set('memory_limit', $value);
-    }
-  }
-
-  $client_ip = ip_address();
-
-  foreach ($conf['ip_memory_limits'] as $key => &$value) {
-    if (!empty($value) && $key == $client_ip) {
-      ini_set('memory_limit', $value);
-    }
-  }
-}
-
+/**
+ * @defgroup cf Common Functionality
+ * @{
+ * Provides a collection of commonly needed functionality not in drupal core.
+ *
+ * The reasons for adding each functionality could be any of the following:
+ *  - Drupal removed support for some functionality.
+ *  - The requested functionality is notably arguable, many users or developers
+ *    agree and disagree.
+ *  - The existing module does not support this functionality, such as backports
+ *    from the core module of a later drupal version.
+ *  - Snippets of code that are used often, but not often enough to make it into
+ *    core.
+ *  - Experimental (but production ready) or new functionality that is either
+ *    generic or not complicated enough to have an entire module of its own.
+ *  - Needs to act as a library and provide integration with (but not
+ *    implementation of) other modules or third party resources.
+ *  - Provides a solution (or workaround) for common problems encountered by
+ *    drupal users and developers.
+ *
+ * The reasons for not adding functionality here:
+ *  - Large or complicated projects.
+ *  - Implementing functionality already provided by an existing module.
+ *  - Providing something for purposes other than for being used as a library or
+ *    as code snippets.
+ *  - Implementing third part resources.
+ *  - Is experimental and not intended to be used in production.
+ *  - Providing a solution (or workaround) for common problems that already have
+ *    valid solutions already provided at drupal.org.
+ *
+ * The common functionality module should be thought of as a toolkit and not as
+ * a solution itself. However, because some solutions and workarounds can be
+ * solved with nothing more than a snippet of code, some solutions may be found
+ * here.
+ *
+ * To ensure that a reduce the need for including modules and functionality that
+ * is not needed, most of the functions provided by the common functionality
+ * module will be provided in its own sub-module.
+ *
+ * Each function (and sub-module) added to this project must have an argument
+ * attached to each comment as to why it is considered needed. Sited urls are
+ * requested but not required.
+ */
 
 /**
  * Implements hook_permission().
@@ -60,111 +65,38 @@ function cf_permission() {
  *
  * This protects the user global from coding accidents.
  *
- * Why:
- *   This is to easy to accidentally do: 'if ($user->uid = 1) {'
- *
- *   The global $user data may also not have contrib modules data included, so
+ * Justification:
+ *   The global $user data may not have contrib modules data included, so
  *   accessing $user directly is generally not a good idea.
  *   This function seems rather waseteful given its simplicity.
  *   It may be better if drupal core would allow $uid to be left empty such
  *   that the user_load() function would handle accessing the global $user->id if $uid is empty.
  *
- *   See: http://drupal.org/node/57287
+ *   Also, this is too easy to accidentally do: 'if ($user->uid = 1) {'.
+ *
+ *   See: https://drupal.org/node/57287
  *   See: http://api.drupal.org/api/drupal/developer--globals.php/global/user/7#comment-7324
  *
  * @param bool $reset
  *   TRUE to reset the internal cache and load from the database.
  *   FALSE (default) to load from the internal cache, if set.
- * @param array $function_history
- *   (optional) An array of function names, ie:
- *   array('0' => 'my_function_name').
  *
- * @return
- *   A copy of the global variable $user.
- *   Changes to this variable will not be retained.
- */
-function cf_get_user($reset = FALSE, array $function_history = array()) {
-  cf_error_append_history($function_history, __FUNCTION__);
-
-  global $user;
-
-  if (!is_object($user) || !property_exists($user, 'uid')) {
-    cf_error_invalid_object($function_history, 'user', WATCHDOG_CRITICAL);
-    return FALSE;
-  }
-
-  return user_load($user->uid, $reset);
-}
-
-/**
- * Provide a safe way to get the current user.
- *
- * This is a fowards-compatible function of the 7.x-2.x versions.
- *
- * Why:
- *   This is to easy to accidentally do: 'if ($user->uid = 1) {'
- *
- *   The global $user data may also not have contrib modules data included, so
- *   accessing $user directly is generally not a good idea.
- *   This function seems rather waseteful given its simplicity.
- *   It may be better if drupal core would allow $uid to be left empty such
- *   that the user_load() function would handle accessing the global $user->id if $uid is empty.
- *
- *   See: http://drupal.org/node/57287
- *   See: http://api.drupal.org/api/drupal/developer--globals.php/global/user/7#comment-7324
- *
- * @param bool $reset
- *   TRUE to reset the internal cache and load from the database.
- *   FALSE (default) to load from the internal cache, if set.
- * @param array $function_history
- *   (optional) An array of function names, ie:
- *   array('0' => 'my_function_name').
- *
- * @return
+ * @return object|FALSE
  *   A copy of the global variable $user.
  *   Changes to this variable will not be retained.
  */
 function cf_current_user($reset = FALSE) {
-  return cf_get_user($reset);
-}
+  global $user;
 
-/**
- * Check to see if the variable is an array and if the given key exists.
- *
- * Why:
- *   According to the PHP documentation: isset() does not return TRUE for array
- *   keys that correspond to a NULL value, while array_key_exists() does.
- *   This means that array_key_exists() should be used to guarantee that a key
- *   exists as opposed to isset().
- *   The problem here is that PHP throws an error when the variable is not an
- *   array.
- *   This means that if (is_array($variable) && array_key_exists($key,
- *   $variable)) must be done.
- *
- * @param string $key
- *   The key to look for.
- * @param string $variable
- *   The possible array to search through for the given key.
- * @param array $function_history
- *   (optional) An array of function names, ie:
- *   array('0' => 'my_function_name').
- *
- * @return
- *   TRUE if the array key exists.
- *   FALSE if the array key does not exist or a parameter is invalid.
- */
-function cf_has_array_key($key, $variable, array $function_history = array()) {
-  cf_error_append_history($function_history, __FUNCTION__);
+  if (!is_object($user) || !property_exists($user, 'uid')) {
+    if (module_exists('cf_error')) {
+      cf_error::invalid_variable('user', "Not a valid user object.");
+    }
 
-  if (cf_is_empty_or_non_string($function_history, 'key', $key, WATCHDOG_ERROR)) {
     return FALSE;
   }
 
-  if (is_array($variable)) {
-    return array_key_exists($key, $variable);
-  }
-
-  return FALSE;
+  return user_load($user->uid, $reset);
 }
 
 /**
@@ -178,7 +110,7 @@ function cf_has_array_key($key, $variable, array $function_history = array()) {
  * - update = 4
  * - delete = 8
  *
- * Why:
+ * Justification:
  *   For efficiency reasons it may make more sense to store these boolean
  *   values into a single database column similar to how the unix permission
  *   umask works.
@@ -195,14 +127,11 @@ function cf_has_array_key($key, $variable, array $function_history = array()) {
  * @param bool delete
  *   Boolean that represents whether or not the DELETE flag is set to TRUE or
  *   FALSE.
- * @param array $function_history
- *   (optional) An array of function names, ie:
- *   array('0' => 'my_function_name').
  *
- * @return
+ * @return int
  *   A single numerical value that represents all 4 permissions.
  */
-function cf_convert_to_crud($create, $read, $update, $delete, array $function_history = array()) {
+function cf_convert_to_crud($create, $read, $update, $delete) {
   $crud = 0;
 
   if ($create) {
@@ -236,7 +165,7 @@ function cf_convert_to_crud($create, $read, $update, $delete, array $function_hi
  * - update = 4
  * - delete = 8
  *
- * Why:
+ * Justification:
  *   For efficiency reasons it may make more sense to store these boolean
  *   values into a single database column similar to how the unix permission
  *   umask works.
@@ -244,9 +173,6 @@ function cf_convert_to_crud($create, $read, $update, $delete, array $function_hi
  * @param int $crud
  *   An integer representing the crud that is to be converted into an array of
  *   booleans.
- * @param array $function_history
- *   (optional) An array of function names, ie:
- *   array('0' => 'my_function_name').
  *
  * @return array
  *   An array containing the following keys:
@@ -255,24 +181,25 @@ function cf_convert_to_crud($create, $read, $update, $delete, array $function_hi
  *   - update: A boolean representing update permissions.
  *   - delete: A boolean representing delete permissions.
  */
-function cf_convert_from_crud($crud, array $function_history = array()) {
-  cf_error_append_history($function_history, __FUNCTION__);
-
+function cf_convert_from_crud($crud) {
   $uncrud = array();
-
   $uncrud['create'] = FALSE;
   $uncrud['read']   = FALSE;
   $uncrud['update'] = FALSE;
   $uncrud['delete'] = FALSE;
 
   if (!isset($crud)) {
-    cf_error_invalid_variable($function_history, 'crud', 'Not defined', array());
+    if (module_exists('cf_error')) {
+      cf_error::invalid_variable('crud', 'Not defined');
+    }
 
     return $uncrud;
   }
 
   if (!is_numeric($crud)) {
-    cf_error_not_numeric($function_history, 'crud');
+    if (module_exists('cf_error')) {
+      cf_error::not_numeric('crud');
+    }
 
     return $uncrud;
   }
@@ -300,51 +227,51 @@ function cf_convert_from_crud($crud, array $function_history = array()) {
 }
 
 /**
- * Returns a standard "This page cannot be accessed" message.
+ * Check to see if the variable is an array and if the given key exists.
  *
- * Why:
- *   The drupal form api core produces problems when anything other than a form
- *   array is returned.
+ * Justification:
+ *   According to the PHP documentation: isset() does not return TRUE for array
+ *   keys that correspond to a NULL value, while array_key_exists() does. This
+ *   means that array_key_exists() should be used to guarantee that a key exists
+ *   as opposed to isset().
  *
- *   See: http://drupal.org/node/979758
+ *   The problem here is that PHP throws an error when the variable is not an
+ *   array. This means that if (is_array($variable) && array_key_exists($key,
+ *   $variable)) must be done.
  *
- * Deprecated:
- *   drupal_access_denied() cannot be directly used within a page callback
- *   according the documentation at:
- *   https://api.drupal.org/api/drupal/includes--common.inc/function/drupal_access_denied/7
+ * @param string $key
+ *   The key to look for.
+ * @param string $variable
+ *   The possible array to search through for the given key.
+ * @param int $severity
+ *   (optional) This is passed directly to watchdog and represents the
+ *   severity of the report.
  *
- *   However, the desired functionality provided by this function can still be
- *   done by calling drupal_exit() immediately after drupal_access_denied().
- *   This produces the behavior provided by thus function, therefore you can
- *   replace this function with drupal_access_denied() and drupal_exit().
- *
- *  @param string $form_state
- *    The form state.
- *  @param string $id
- *    (optional) The form id, generally this should be taken from: $form['#id'].
- * @param array $function_history
- *   (optional) An array of function names, ie:
- *   array('0' => 'my_function_name').
- *
- * @return array
- *   An array that can be safely as a return statement for a page.
+ * @return bool
+ *   TRUE if the array key exists.
+ *   FALSE if the array key does not exist or a parameter is invalid.
  */
-function cf_page_not_accessible(&$form_state, $id = '', array $function_history = array()) {
-  drupal_access_denied();
-  drupal_exit();
+function cf_has_array_key($key, $variable, $severity = WATCHDOG_WARNING) {
+  if (cf_is_empty_or_non_string('key', $key)) {
+    return FALSE;
+  }
+
+  if (is_array($variable)) {
+    return array_key_exists($key, $variable);
+  }
+
+  return FALSE;
 }
 
 /**
  * Checks if a variable is an empty string is empty or not a string at all.
  *
- * Why:
+ * Justification:
  *   Checking that a string is empty may also require a check to see if a
  *   variable is a string.
  *   This provides a way to do that two step process in 1 step.
  *   Do not use this for any other purpose.
  *
- * @param array $function_history
- *   An array of function names, ie: array('0' => 'my_function_name').
  * @param string $argument_name
  *   The variable name of the argument in question.
  * @param $variable
@@ -356,21 +283,25 @@ function cf_page_not_accessible(&$form_state, $id = '', array $function_history 
  * @return bool
  *   When the check passed returns TRUE, FALSE otherwise.
  */
-function cf_is_empty_or_non_string($function_history, $argument_name, $variable, $severity = WATCHDOG_WARNING) {
-  cf_error_append_history($function_history, __FUNCTION__);
-
+function cf_is_empty_or_non_string($argument_name, $variable, $severity = WATCHDOG_WARNING) {
   if ($argument_name == '') {
-    cf_error_empty_string($function_history, 'argument_name');
+    if (module_exists('cf_error')) {
+      cf_error::empty_string('argument_name');
+    }
   }
 
   if (!is_string($variable)) {
-    cf_error_not_string($function_history, $argument_name, $severity);
+    if (module_exists('cf_error')) {
+      cf_error::not_string($argument_name, $severity);
+    }
 
     return TRUE;
   }
 
   if ($variable == '') {
-    cf_error_empty_string($function_history, $argument_name, $severity);
+    if (module_exists('cf_error')) {
+      cf_error::empty_string($argument_name, $severity);
+    }
 
     return TRUE;
   }
@@ -385,13 +316,11 @@ function cf_is_empty_or_non_string($function_history, $argument_name, $variable,
  * This helps ensure that this argument is a valid form state.
  * This handles reporting if the form state is invalid.
  *
- * Why:
+ * Justification:
  *   Checking if the form_state is valid on every function call can quickly
  *   clutter up the code, reducing readability.
  *   form state is common enough to have its own cf error checking function.
  *
- * @param array $function_history
- *   An array of function names, ie: array('0' => 'my_function_name').
  * @param string $argument_name
  *   The variable name of the argument in question.
  * @param $variable
@@ -403,21 +332,26 @@ function cf_is_empty_or_non_string($function_history, $argument_name, $variable,
  * @return bool
  *   When the check passed returns TRUE, FALSE otherwise.
  */
-function cf_is_not_form_state($function_history, $argument_name, $variable, $severity = WATCHDOG_WARNING) {
-  cf_error_append_history($function_history, __FUNCTION__);
-
+function cf_is_not_form_state($argument_name, $variable, $severity = WATCHDOG_WARNING) {
   if ($argument_name == '') {
-    cf_error_empty_string($function_history, 'argument_name');
+    if (module_exists('cf_error')) {
+      cf_error::empty_string('argument_name');
+    }
   }
 
   if (!is_array($variable)) {
-    cf_error_invalid_array($function_history, 'argument_name', $variable, $severity);
+    if (module_exists('cf_error')) {
+      cf_error::invalid_array('argument_name', $variable, $severity);
+    }
+
     return TRUE;
   }
 
   foreach (array_keys(form_state_defaults()) as $key) {
     if (!array_key_exists($key, $variable)) {
-      cf_error_missing_array_key($function_history, $argument_name, $key, $severity);
+      if (module_exists('cf_error')) {
+        cf_error::missing_array_key($argument_name, $key, $severity);
+      }
 
       return TRUE;
     }
@@ -425,3 +359,65 @@ function cf_is_not_form_state($function_history, $argument_name, $variable, $sev
 
   return FALSE;
 }
+
+/**
+ * Detect if a specific version of a module exists.
+ *
+ * If the module does not define a version setting in the *.info file, then
+ * this function will fail to detect the version number.
+ *
+ * Justification:
+ *   Modules may need to act differently based on the version number of a
+ *   particular module.
+ *
+ * References:
+ * - http://api.drupal.org/api/drupal/includes!module.inc/function/module_exists/7#comment-11559
+ *
+ * @param string $module
+ *   The name of the module (without the .module extension).
+ * @param string $version
+ *   The desired version number.
+ * @param bool $exact
+ *   (optional) When FALSE, a regular expression is performed against the
+ *   passed version number. When TRUE, only the exact version number will
+ *   be accepted.
+ *
+ * @return bool
+ *   Returns TRUE when the version of a module matches the requested version,
+ *   FALSE otherwise.
+ */
+function cf_version_exists($module, $version, $exact = FALSE) {
+  if (cf_is_empty_or_non_string('module', $module)) {
+    return FALSE;
+  }
+
+  if (cf_is_empty_or_non_string('version', $version)) {
+    return FALSE;
+  }
+
+  if (!is_bool($exact)) {
+    if (module_exists('cf_error')) {
+      cf_error::invalid_bool('exact');
+    }
+
+    return FALSE;
+  }
+
+  if (!module_exists($module)) {
+    return FALSE;
+  }
+
+  $path = drupal_get_path('module', $module);
+  $info = drupal_parse_info_file($path .'/' . $module . '.info');
+
+  if ($exact) {
+    return ($info['version'] == $version);
+  }
+
+  return preg_match('/^(' . $version . '|' . $version . '\..*)$/i', $info['version']);
+}
+
+
+/**
+ * @} End of '@addtogroup cf Common Functionality'.
+ */
