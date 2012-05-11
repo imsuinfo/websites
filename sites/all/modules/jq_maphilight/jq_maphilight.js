@@ -12,7 +12,7 @@
         fade: (settings.jq_maphilight.fade == 'true' ? true : false),
         alwaysOn: (settings.jq_maphilight.alwaysOn == 'true' ? true : false),
         neverOn: (settings.jq_maphilight.neverOn == 'true' ? true : false),
-        groupBy: (settings.jq_maphilight.groupBy == 'true' ? true : false),
+        groupBy: (settings.jq_maphilight.groupBy == 'true' ? true : false)
       }
   if (settings.jq_maphilight.allMapsEnabled  == 'true') {
     $('img[usemap]').maphilight(options);

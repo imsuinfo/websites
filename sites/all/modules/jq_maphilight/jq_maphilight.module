@@ -62,7 +62,7 @@ function jq_maphilight_menu() {
     'page callback' => 'drupal_get_form',
     'page arguments' => array('jq_maphilight_admin_settings'),
     'access callback' => 'user_access',
-    'access arguments' => array('access administration pages'),
+    'access arguments' => array('administer site configuration'),
     'type' => MENU_NORMAL_ITEM,
   );
   return $items;
