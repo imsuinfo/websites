@@ -867,18 +867,16 @@ function workbench_moderation_form_node_form_alter(&$form, $form_state) {
   $form['revision_information']['log']['#default_value'] = t('!action by @user.', array('!action' => $logged_action, '@user' => $logged_name));
 
   // Move the revision log into the publishing options to make things pretty.
-  if ($form['options']['#access']) {
-    $form['options']['log'] = $form['revision_information']['log'];
-    $form['options']['log']['#title'] = t('Moderation notes');
-    $form['options']['workbench_moderation_state_new'] = $form['revision_information']['workbench_moderation_state_new'];
+  $form['options']['log'] = $form['revision_information']['log'];
+  $form['options']['log']['#title'] = t('Moderation notes');
+  $form['options']['workbench_moderation_state_new'] = $form['revision_information']['workbench_moderation_state_new'];
 
-    // Unset the old placement of the Revision log.
-    unset($form['revision_information']['log']);
-    unset($form['revision_information']['workbench_moderation_state_new']);
+  // Unset the old placement of the Revision log.
+  unset($form['revision_information']['log']);
+  unset($form['revision_information']['workbench_moderation_state_new']);
 
-    // The revision information section should now be empty.
-    $form['revision_information']['#access'] = FALSE;
-  }
+  // The revision information section should now be empty.
+  $form['revision_information']['#access'] = FALSE;
 
   // Users can not choose to publish content; content can only be published by
   // setting the content's moderation state to "Published".
