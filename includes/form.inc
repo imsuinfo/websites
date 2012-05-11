@@ -2739,6 +2739,9 @@ function form_get_options($element, $key) {
  */
 function theme_fieldset($variables) {
   $element = $variables['element'];
+
+  if (empty($element['#children'])) return '';
+
   element_set_attributes($element, array('id'));
   _form_set_class($element, array('form-wrapper'));
 
