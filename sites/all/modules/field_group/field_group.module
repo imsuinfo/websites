@@ -787,7 +787,6 @@ function field_group_pre_render_multipage(&$element, $group, &$form) {
  * @param $form The root element or form.
  */
 function field_group_pre_render_tabs(&$element, $group, &$form) {
-  if (empty($element['#children'])) return;
 
   $element += array(
     '#type' => 'vertical_tabs',
