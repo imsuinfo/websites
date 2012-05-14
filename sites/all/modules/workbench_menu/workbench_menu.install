@@ -44,6 +44,13 @@ function workbench_menu_schema() {
         'not null' => TRUE,
         'default' => TRUE,
       ),
+      'hidden' => array(
+        'description' => st("A boolean defining whether or not this menu should be automatically visible."),
+        'type' => 'int',
+        'size' => 'tiny',
+        'not null' => TRUE,
+        'default' => TRUE,
+      ),
       'breadcrumb_name' => array(
         'description' => st("An optional custom breadcrumb name to use instead of the taxonomy term name."),
         'type' => 'text',

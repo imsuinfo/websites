@@ -44,6 +44,11 @@ function workbench_menu_permission() {
     'description' => t("Grants permissions to alter the menu parent related settings for any workbench menus in which a user is able to edit."),
   );
 
+  $permissions['change workbench menu hidden'] = array(
+    'title' => t("Change Workbench Menu Hidden"),
+    'description' => t("Grants permissions to alter the menu hidden related settings for any workbench menus in which a user is able to edit."),
+  );
+
   $permissions['administer workbench menu'] = array(
     'title' => t("Administer Workbench Menu"),
     'description' => t("Grants permissions to alter all workbench menus and perform administrative tasks."),
@@ -367,6 +372,9 @@ function workbench_menu_block_view($delta = '') {
  *   Each array key will be the path in which a given array of
  *   breadcrumbs relate to.
  *   If FALSE, then breadcrumbs will not be populated.
+ * @param bool $skip_hidden
+ *   When set to TRUE (default), the hidden menus are skipped.
+ *   When set to FALSE, hidden menus are built.
  *
  * @return array
  *   An array with the following structure:
@@ -375,7 +383,7 @@ function workbench_menu_block_view($delta = '') {
  *
  * @see drupal_set_breadcrumb()
  */
-function workbench_menu_build_menus($path_string, &$menus_processed, &$breadcrumbs) {
+function workbench_menu_build_menus($path_string, &$menus_processed, &$breadcrumbs, $skip_hidden = TRUE) {
   $menus = (array) workbench_menu_get_menus(array('path' => array($path_string)), 'id');
 
   $menu_even = TRUE;
@@ -387,6 +395,10 @@ function workbench_menu_build_menus($path_string, &$menus_processed, &$breadcrum
   $built_menus['menus'] = array();
 
   foreach ($menus as $menu_id => &$menu) {
+    if ($skip_hidden && $menu->hidden){
+      continue;
+    }
+
     $menus_processed[$menu->access_id] = NULL;
 
     $built_menu = array();
@@ -1617,6 +1629,7 @@ function workbench_menu_save_menus($menus) {
       $record['path'] = $menu['path'];
       $record['weight'] = $menu['weight'];
       $record['show_parents'] = $menu['show_parents'];
+      $record['hidden'] = $menu['hidden'];
       $record['breadcrumb_name'] = $menu['breadcrumb_name'];
 
       if (isset($menu['id'])) {
