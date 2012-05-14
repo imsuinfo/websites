@@ -543,7 +543,7 @@ function workbench_menu_build_menu_item($menu, $item, &$variables) {
     $variables['menus_processed'][$item_menu->access_id] = NULL;
 
     $breadcrumbs_temporary = FALSE;
-    $built_menus = workbench_menu_build_menus($item_menu->path, $variables['menus_processed'], $breadcrumbs_temporary);
+    $built_menus = workbench_menu_build_menus($item_menu->path, $variables['menus_processed'], $breadcrumbs_temporary, FALSE);
     $data = array();
     $data['structure'] = $built_menus['structure'][$item_menu->weight][$item_menu->id]['structure'];
     $data['settings'] = $built_menus['structure'][$item_menu->weight][$item_menu->id]['settings'];
