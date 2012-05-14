@@ -128,6 +128,8 @@ function workbench_menu_edit_settings_form($form, &$form_state, $access_type, $a
   $default_weight = 0;
   $default_show_parents = TRUE;
   $default_breadcrumb_name = '';
+
+  $term = taxonomy_term_load($access_type_id);
   $destination = isset($_GET['destination']) ? $_GET['destination'] : 'admin/workbench/menus';
   $items = array();
 
@@ -165,11 +167,7 @@ function workbench_menu_edit_settings_form($form, &$form_state, $access_type, $a
     drupal_exit();
   }
 
-  $form['settings_label']= array(
-    '#type' => 'markup',
-    '#markup' => '<h2 id="workbench_menu-menus">' . t("Menu Settings for %menu Menu", array('%menu' => $menu->breadcrumb_name)) . '</h2>',
-    '#weight' => -100,
-  );
+  drupal_set_title(t("Menu Settings for %menu Menu (ID: %id)", array('%menu' => $term->name, '%id' => $menu->id)), PASS_THROUGH);
 
   $form['path'] = array(
     '#type' => 'textfield',
@@ -489,6 +487,8 @@ function workbench_menu_admin_settings_form($form, &$form_state, $access_type, $
   $default_weight = 0;
   $default_show_parents = TRUE;
   $default_breadcrumb_name = '';
+
+  $term = taxonomy_term_load($access_type_id);
   $destination = isset($_GET['destination']) ? $_GET['destination'] : 'admin/config/workbench/access/menus';
   $items = array();
 
@@ -526,11 +526,7 @@ function workbench_menu_admin_settings_form($form, &$form_state, $access_type, $
     drupal_exit();
   }
 
-  $form['settings_label']= array(
-    '#type' => 'markup',
-    '#markup' => '<h2 id="workbench_menu-menus">' . t("Menu Settings for %menu Menu", array('%menu' => $menu->breadcrumb_name)) . '</h2>',
-    '#weight' => -100,
-  );
+  drupal_set_title(t("Menu Settings for %menu Menu (ID: %id)", array('%menu' => $term->name, '%id' => $menu->id)), PASS_THROUGH);
 
   $form['path'] = array(
     '#type' => 'textfield',
@@ -1237,11 +1233,7 @@ function workbench_menu_admin_item_settings_add_form($form, &$form_state, $acces
     $menu = $m;
   }
 
-  $form['settings_label']= array(
-    '#type' => 'markup',
-    '#markup' => '<h2 id="workbench_menu-menu_item_settings">' . t("Add New Item to %menu Menu", array('%menu' => $menu->breadcrumb_name)) . '</h2>',
-    '#weight' => -100,
-  );
+  drupal_set_title(t("Add New Item to %menu Menu (ID: %id)", array('%menu' => $term->name, '%id' => $menu->id)), PASS_THROUGH);
 
   $form['settings'] = (array) workbench_menu_admin_item_settings_form_settings(NULL, $menu);
 
@@ -1343,7 +1335,6 @@ function workbench_menu_admin_item_settings_edit_form($form, &$form_state, $acce
     drupal_exit();
   }
 
-
   $term = taxonomy_term_load($access_type_id);
   $destination = isset($_GET['destination']) ? $_GET['destination'] : $return_destination;
   $menus = (array) workbench_menu_get_menus(array('access_id' => $access_type_id, 'fast' => NULL), 'id');
@@ -1366,11 +1357,7 @@ function workbench_menu_admin_item_settings_edit_form($form, &$form_state, $acce
     $menu = $m;
   }
 
-  $form['settings_label']= array(
-    '#type' => 'markup',
-    '#markup' => '<h2 id="workbench_menu-menu_item_settings">' . t("Menu Item %item_name from %menu Menu", array('%item_name' => $item->human_name, '%menu' => $term->name)) . '</h2>',
-    '#weight' => -100,
-  );
+  drupal_set_title(t("Menu Item %item_name (ID: %item_id) from %menu Menu (ID: %menu_id)", array('%item_name' => $item->human_name, '%menu' => $term->name, '%item_id' => $item->id, '%menu_id' => $menu->id)), PASS_THROUGH);
 
   $form['settings'] = (array) workbench_menu_admin_item_settings_form_settings($item, $menu);
 
