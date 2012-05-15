@@ -192,6 +192,14 @@ function cf_theme_get_variables(array &$variables) {
     $cf['is_data']['using_database']['database'] = db_driver();
   }
 
+  $node_id_matches = array();
+  if (preg_match('@^node/(\d+)(/.*|$|\?.*|#.*)@', current_path(), $node_id_matches)) {
+    if (!empty($node_id_matches[1])) {
+      $variables['node'] = node_load($node_id_matches[1]);
+    }
+  }
+  unset($node_id_matches);
+
   $node_object = NULL;
 
   if (isset($variables['node'])) {
