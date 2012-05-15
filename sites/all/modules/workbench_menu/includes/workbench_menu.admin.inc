@@ -1081,7 +1081,7 @@ function workbench_menu_admin_item_settings_form_settings($item, $menu) {
   $available['parents'] = workbench_menu_get_load_menu_items_select_list_options(array('menu_id' => $menu->id), 'id');
   $available['item_types'] = workbench_menu_get_options_list('item_type', NULL);
   $available['expand'] = workbench_menu_get_options_list('expand', NULL);
-  $available['menus'] = workbench_menu_get_menus_options_list(TRUE, TRUE);
+  $available['menus'] = workbench_menu_get_menus_options_list(FALSE, TRUE);
 
   // do not show current in the possible menu choices.
   unset($available['menus'][$menu->access_id]);
