@@ -536,17 +536,31 @@ function workbench_menu_build_menu_item($menu, $item, &$variables) {
     }
 
     $item_menus = (array) workbench_menu_get_menus(array('access_id' => $item['item']->properties['menu']), 'id');
-    $item_menu = array_pop($item_menus);
 
-    // @todo handle error case where menu is not found.
+    if (empty($item_menus)) {
+      if (module_exists('cf_error')) {
+        cf_error::invalid_variable('item_menus', "Failed to find workbench menu with access id of %access_id" , array('%access_id' => $item['item']->properties['menu']), WATCHDOG_WARNING);
+      }
+
+      return array('structure' => array(), 'settings' => array());
+    }
+
+    $item_menu = array_pop($item_menus);
 
     $variables['menus_processed'][$item_menu->access_id] = NULL;
 
     $breadcrumbs_temporary = FALSE;
     $built_menus = workbench_menu_build_menus($item_menu->path, $variables['menus_processed'], $breadcrumbs_temporary, FALSE);
     $data = array();
-    $data['structure'] = $built_menus['structure'][$item_menu->weight][$item_menu->id]['structure'];
-    $data['settings'] = $built_menus['structure'][$item_menu->weight][$item_menu->id]['settings'];
+
+    if (isset($built_menus['structure'][$item_menu->weight][$item_menu->id])) {
+      $data['structure'] = $built_menus['structure'][$item_menu->weight][$item_menu->id]['structure'];
+      $data['settings'] = $built_menus['structure'][$item_menu->weight][$item_menu->id]['settings'];
+    }
+    else {
+      $data['structure'] = array();
+      $data['settings'] = array();
+    }
 
     if ($settings[$item['item']->id]['expand'] != "expand_auto") {
       foreach ($data['structure'] as $row_key => &$row_value) {
