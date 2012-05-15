@@ -384,6 +384,26 @@ function genesis_mcneese_cf_theme_get_variables_alter(&$cf, $variables){
         }
       }
     }
+
+    if (property_exists($cf['is_data']['node']['object'], 'field_search_engine_optimization') && !empty($cf['is_data']['node']['object']->field_search_engine_optimization)){
+      if (!empty($variables['node']->field_search_engine_optimization['und'])) {
+        $first_keyword = TRUE;
+
+        foreach ($variables['node']->field_search_engine_optimization['und'] as $key => &$value) {
+          if (!isset($value['tid'])) continue;
+
+          $term = taxonomy_term_load($value['tid']);
+
+          if ($first_keyword) {
+            $cf['meta']['name']['keywords'] = $term->name;
+            $first_keyword = FALSE;
+          }
+          else {
+            $cf['meta']['name']['keywords'] .= ', ' . $term->name;
+          }
+        }
+      }
+    }
   }
 
   // Additional body classes to help out themers. (originally from genesis theme template file)
