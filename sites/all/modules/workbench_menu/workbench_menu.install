@@ -6,53 +6,55 @@
 function workbench_menu_schema() {
   $schema = array();
 
+  $t = get_t();
+
   $schema['workbench_menus'] = array(
-    'description' => st("Menus defined in the workbench module."),
+    'description' => $t("Menus defined in the workbench module."),
     'fields' => array(
       'id' => array(
-        'description' => st("The primary key used to represent a menu."),
+        'description' => $t("The primary key used to represent a menu."),
         'type' => 'serial',
         'size' => 'big',
         'unsigned' => TRUE,
         'not null' => TRUE,
       ),
       'access_id' => array(
-        'description' => st("The workbench access id from {workbench_access}.access_id, which may be non-numeric."),
+        'description' => $t("The workbench access id from {workbench_access}.access_id, which may be non-numeric."),
         'type' => 'varchar',
         'length' => 80,
         'not null' => TRUE,
         'default' => '',
       ),
       'path' => array(
-        'description' => st("The base path in which this menu listens on."),
+        'description' => $t("The base path in which this menu listens on."),
         'type' => 'varchar',
         'length' => 127,
         'not null' => TRUE,
         'default' => '',
       ),
       'weight' => array(
-        'description' => st("Menu weight."),
+        'description' => $t("Menu weight."),
         'type' => 'int',
         'size' => 'normal',
         'not null' => TRUE,
         'default' => 0,
       ),
       'show_parents' => array(
-        'description' => st("A boolean defining whether or not the parents should be visible."),
+        'description' => $t("A boolean defining whether or not the parents should be visible."),
         'type' => 'int',
         'size' => 'tiny',
         'not null' => TRUE,
         'default' => TRUE,
       ),
       'hidden' => array(
-        'description' => st("A boolean defining whether or not this menu should be automatically visible."),
+        'description' => $t("A boolean defining whether or not this menu should be automatically visible."),
         'type' => 'int',
         'size' => 'tiny',
         'not null' => TRUE,
         'default' => FALSE,
       ),
       'breadcrumb_name' => array(
-        'description' => st("An optional custom breadcrumb name to use instead of the taxonomy term name."),
+        'description' => $t("An optional custom breadcrumb name to use instead of the taxonomy term name."),
         'type' => 'text',
         'size' => 'normal',
         'not null' => TRUE,
@@ -73,31 +75,31 @@ function workbench_menu_schema() {
 
   foreach (array('expand', 'item_type') as $name) {
     $schema['workbench_menu_options_' . $name] = array(
-      'description' => st("Defines possible %name options.", array('%name' => $name)),
+      'description' => $t("Defines possible %name options.", array('%name' => $name)),
       'fields' => array(
         'id' => array(
-          'description' => st("The primary key used to represent an option."),
+          'description' => $t("The primary key used to represent an option."),
           'type' => 'serial',
           'size' => 'big',
           'unsigned' => TRUE,
           'not null' => TRUE,
         ),
         'machine_name' => array(
-          'description' => st("This is the machine-friendly name used to represent the option."),
+          'description' => $t("This is the machine-friendly name used to represent the option."),
           'type' => 'varchar',
           'length' => 64,
           'not null' => TRUE,
           'default' => '',
         ),
         'human_name' => array(
-          'description' => st("This is the human-friendly name used to represent the option."),
+          'description' => $t("This is the human-friendly name used to represent the option."),
           'type' => 'text',
           'size' => 'normal',
           'not null' => TRUE,
           'default' => '',
         ),
         'description' => array(
-          'description' => st("This is a description the option."),
+          'description' => $t("This is a description the option."),
           'type' => 'text',
           'size' => 'medium',
           'not null' => TRUE,
@@ -111,17 +113,17 @@ function workbench_menu_schema() {
     );
 
     $schema['workbench_menu_' . $name . 's'] = array(
-      'description' => st("Menu properties of type $name"),
+      'description' => $t("Menu properties of type $name"),
       'fields' => array(
         'item_id' => array(
-          'description' => st("The workbench menu id from {workbench_menu}.id."),
+          'description' => $t("The workbench menu id from {workbench_menu}.id."),
           'type' => 'int',
           'size' => 'big',
           'unsigned' => TRUE,
           'not null' => TRUE,
         ),
         $name . '_id' => array(
-          'description' => st("The options id from {" . 'workbench_menu_options_' . $name . "}.id."),
+          'description' => $t("The options id from {" . 'workbench_menu_options_' . $name . "}.id."),
           'type' => 'int',
           'size' => 'big',
           'unsigned' => TRUE,
@@ -152,59 +154,59 @@ function workbench_menu_schema() {
   }
 
   $schema['workbench_menu_items'] = array(
-    'description' => st("Menus items defined in the workbench module."),
+    'description' => $t("Menus items defined in the workbench module."),
     'fields' => array(
       'id' => array(
-        'description' => st("The primary key used to represent a menu item."),
+        'description' => $t("The primary key used to represent a menu item."),
         'type' => 'serial',
         'size' => 'big',
         'unsigned' => TRUE,
         'not null' => TRUE,
       ),
       'menu_id' => array(
-        'description' => st("The workbench menu id from {workbench_menu}.id."),
+        'description' => $t("The workbench menu id from {workbench_menu}.id."),
         'type' => 'int',
         'size' => 'big',
         'unsigned' => TRUE,
         'not null' => TRUE,
       ),
       'parent_id' => array(
-        'description' => st("The workbench menu parent id from {workbench_menu_items}.id."),
+        'description' => $t("The workbench menu parent id from {workbench_menu_items}.id."),
         'type' => 'int',
         'size' => 'big',
         'unsigned' => TRUE,
         'not null' => TRUE,
       ),
       'human_name' => array(
-        'description' => st("This is the human-friendly name used to represent the menu item."),
+        'description' => $t("This is the human-friendly name used to represent the menu item."),
         'type' => 'text',
         'size' => 'normal',
         'not null' => TRUE,
         'default' => '',
       ),
       'parent_id' => array(
-        'description' => st("The workbench menu parent id from {workbench_menu_items}.id."),
+        'description' => $t("The workbench menu parent id from {workbench_menu_items}.id."),
         'type' => 'int',
         'size' => 'big',
         'unsigned' => TRUE,
         'not null' => TRUE,
       ),
       'weight' => array(
-        'description' => st("Menu item weight within menu."),
+        'description' => $t("Menu item weight within menu."),
         'type' => 'int',
         'size' => 'normal',
         'not null' => TRUE,
         'default' => 0,
       ),
       'active_path' => array(
-        'description' => st("This is the path in which this menu item belongs on."),
+        'description' => $t("This is the path in which this menu item belongs on."),
         'type' => 'text',
         'size' => 'normal',
         'not null' => TRUE,
         'default' => '',
       ),
       'properties' => array(
-        'description' => st("Stores additional data whose content is directly dependent on the item type."),
+        'description' => $t("Stores additional data whose content is directly dependent on the item type."),
         'type' => 'text',
         'size' => 'big',
         'serialize' => TRUE,
@@ -240,25 +242,27 @@ function workbench_menu_schema() {
  * Implementation of hook_install().
  */
 function workbench_menu_install() {
+  $t = get_t();
+
   try {
     $expands = array();
 
     $expands[] = array(
       'machine_name' => 'expand_always',
-      'human_name' => st("Always Expand"),
-      'description' => st("The menu item will always be expanded."),
+      'human_name' => $t("Always Expand"),
+      'description' => $t("The menu item will always be expanded."),
     );
 
     $expands[] = array(
       'machine_name' => 'expand_auto',
-      'human_name' => st("Auto Expand"),
-      'description' => st("The menu item will expanded, unless told otherwise."),
+      'human_name' => $t("Auto Expand"),
+      'description' => $t("The menu item will expanded, unless told otherwise."),
     );
 
     $expands[] = array(
       'machine_name' => 'expand_never',
-      'human_name' => st("Never Expand"),
-      'description' => st("The menu item will never be expanded."),
+      'human_name' => $t("Never Expand"),
+      'description' => $t("The menu item will never be expanded."),
     );
 
     foreach ($expands as &$expand) {
@@ -272,32 +276,32 @@ function workbench_menu_install() {
 
     $item_type[] = array(
       'machine_name' => 'item_link',
-      'human_name' => st("Link"),
-      'description' => st("Links to a path found on this or some other website."),
+      'human_name' => $t("Link"),
+      'description' => $t("Links to a path found on this or some other website."),
     );
 
     $item_type[] = array(
       'machine_name' => 'item_label',
-      'human_name' => st("Label"),
-      'description' => st("Displays text that does not a link to anything."),
+      'human_name' => $t("Label"),
+      'description' => $t("Displays text that does not a link to anything."),
     );
 
     $item_type[] = array(
       'machine_name' => 'item_file',
-      'human_name' => st("File"),
-      'description' => st("Links to a file available on this website."),
+      'human_name' => $t("File"),
+      'description' => $t("Links to a file available on this website."),
     );
 
     $item_type[] = array(
       'machine_name' => 'item_menu',
-      'human_name' => st("Menu"),
-      'description' => st("Represents and loads another menu."),
+      'human_name' => $t("Menu"),
+      'description' => $t("Represents and loads another menu."),
     );
 
     $item_type[] = array(
       'machine_name' => 'item_menu_item',
-      'human_name' => st("Menu Item"),
-      'description' => st("Represents and loads a menu item from another menu."),
+      'human_name' => $t("Menu Item"),
+      'description' => $t("Represents and loads a menu item from another menu."),
     );
 
     foreach ($item_type as &$item_type) {
