@@ -753,7 +753,7 @@ function workbench_menu_build_menu_item($menu, $item, &$variables) {
           unset($path_node);
         }
         else {
-          $filename = $data['settings'][$item_menu_item['item']->id]['label'];
+          $filename = $settings[$item['item']->id]['label'];
         }
       }
 
