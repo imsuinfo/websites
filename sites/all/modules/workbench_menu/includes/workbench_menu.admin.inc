@@ -1604,7 +1604,12 @@ function workbench_menu_admin_item_settings_edit_form_submit($form, &$form_state
     $item_type = NULL;
   }
 
-  $user = cf_current_user();
+  if (module_exists('cf')) {
+    $user = cf_current_user();
+  }
+  else {
+    global $user;
+  }
 
   if (is_null($item_id)) {
     watchdog('Workbench Menu', "The user %user has added a new item %item to the menu %menu (%menu_id)", array('%user' => $user->name, '%item' => $form_state['values']['settings']['human_name'], '%menu' => $form_state['values']['menu_human_name'], '%menu_id' => $form_state['values']['menu_id']), WATCHDOG_INFO);
@@ -1793,7 +1798,12 @@ function workbench_menu_admin_item_settings_delete_form($form, &$form_state, $ac
 function workbench_menu_admin_item_settings_delete_form_submit($form, &$form_state) {
   $transaction = db_transaction();
 
-  $user = cf_current_user();
+  if (module_exists('cf')) {
+    $user = cf_current_user();
+  }
+  else {
+    global $user;
+  }
 
   watchdog('Workbench Menu', "The user %user has deleted the item %item (%item_id) from the menu %menu (%menu_id)", array('%user' => $user->name, '%item' => $form_state['values']['item_human_name'], '%item_id' => $form_state['values']['item_id'], '%menu' => $form_state['values']['menu_human_name'], '%menu_id' => $form_state['values']['menu_id']), WATCHDOG_INFO);
 
