@@ -3,6 +3,8 @@ description = "An alternative menu and breadcrumb system design to utilize the w
 package = Workbench
 core = 7.x
 
+dependencies[] = cf
+dependencies[] = cf_db_options
 dependencies[] = taxonomy
 dependencies[] = workbench_access
 

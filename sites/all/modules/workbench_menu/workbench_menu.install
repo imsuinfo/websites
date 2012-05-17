@@ -74,43 +74,7 @@ function workbench_menu_schema() {
   );
 
   foreach (array('expand', 'item_type') as $name) {
-    $schema['workbench_menu_options_' . $name] = array(
-      'description' => $t("Defines possible %name options.", array('%name' => $name)),
-      'fields' => array(
-        'id' => array(
-          'description' => $t("The primary key used to represent an option."),
-          'type' => 'serial',
-          'size' => 'big',
-          'unsigned' => TRUE,
-          'not null' => TRUE,
-        ),
-        'machine_name' => array(
-          'description' => $t("This is the machine-friendly name used to represent the option."),
-          'type' => 'varchar',
-          'length' => 64,
-          'not null' => TRUE,
-          'default' => '',
-        ),
-        'human_name' => array(
-          'description' => $t("This is the human-friendly name used to represent the option."),
-          'type' => 'text',
-          'size' => 'normal',
-          'not null' => TRUE,
-          'default' => '',
-        ),
-        'description' => array(
-          'description' => $t("This is a description the option."),
-          'type' => 'text',
-          'size' => 'medium',
-          'not null' => TRUE,
-          'default' => '',
-        ),
-      ),
-      'primary key' => array('id'),
-      'unique keys' => array(
-        'machine_name' => array('machine_name'),
-      ),
-    );
+    cf_db_options_create_options_schema('workbench_menu', $name, $schema);
 
     $schema['workbench_menu_' . $name . 's'] = array(
       'description' => $t("Menu properties of type $name"),
@@ -141,16 +105,6 @@ function workbench_menu_schema() {
         ),
       ),
     );
-
-    // workaround mysql's violation of the SQL standard in a way that does not break standards-compliant databases.
-    // @see https://dev.mysql.com/doc/refman/5.6/en/data-type-defaults.html
-    // @see https://bugs.mysql.com/bug.php?id=25520
-    // @see https://drupal.org/node/1401782
-    // @see https://drupal.org/node/143881
-    if (db_driver() == 'mysql') {
-      unset($schema['workbench_menu_options_' . $name]['fields']['human_name']['default']);
-      unset($schema['workbench_menu_options_' . $name]['fields']['description']['default']);
-    }
   }
 
   $schema['workbench_menu_items'] = array(
@@ -265,11 +219,7 @@ function workbench_menu_install() {
       'description' => $t("The menu item will never be expanded."),
     );
 
-    foreach ($expands as &$expand) {
-      $query = db_insert('workbench_menu_options_expand');
-      $query->fields($expand);
-      $query->execute();
-    }
+    cf_db_options_add_options('workbench_menu', 'expands', $expands);
 
 
     $item_type = array();
@@ -304,11 +254,7 @@ function workbench_menu_install() {
       'description' => $t("Represents and loads a menu item from another menu."),
     );
 
-    foreach ($item_type as &$item_type) {
-      $query = db_insert('workbench_menu_options_item_type');
-      $query->fields($item_type);
-      $query->execute();
-    }
+    cf_db_options_add_options('workbench_menu', 'item_type', $item_type);
   }
   catch (Exception $e) {
     if (module_exists('cf_error')) {

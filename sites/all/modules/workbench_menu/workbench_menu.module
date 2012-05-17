@@ -1170,170 +1170,6 @@ function workbench_menu_render_menu_item(&$variables, $path_current) {
 }
 
 /**
- * Get an array of supported options for a given option type.
- *
- * @param string $type
- *   A string representing the type of option to load.
- *   Known types are:
- *   - expand
- *   - position
- *   - item_type
- * @param int|string|null $option
- *   (optional) Providing a valid numeric id or machine name string
- *   will cause the return value to only contain the option that
- *   matches this string or numeric id.
- *
- * @return array
- *   An array of supported options.
- *   The array keys are the machine names for each option.
- */
-function workbench_menu_get_options($type, $option = NULL) {
-  $options = &drupal_static(__FUNCTION__, NULL);
-
-  if (!is_string($type)) {
-    if (module_exists('cf_error')) {
-      cf_error::not_string('type');
-    }
-
-    return array();
-  }
-
-  if (!is_null($option) && !is_string($option)) {
-    if (module_exists('cf_error')) {
-      cf_error::not_string('option');
-    }
-
-    return array();
-  }
-
-  if (isset($options[$type])) {
-    if (!is_null($option)) {
-      if (is_numeric($option)) {
-        foreach ($options[$type] as $key => &$value) {
-          if ($value->id == $option) {
-            return $options[$type][$key];
-          }
-        }
-      }
-      else {
-        if (isset($options[$type][$option])) {
-          return $options[$type][$option];
-        }
-      }
-
-      return array();
-    }
-
-    return $options[$type];
-  }
-
-  // $type is turned into a database table name, so only allow lowercase characters and underscores
-  if (preg_match('/^(\w|_)+$/', $type) == 0) {
-    return array();
-  }
-
-  $type = strtolower($type);
-
-  $table = 'workbench_menu_options_' . $type;
-
-  $query = db_select($table, 'wmot');
-
-  $query->fields('wmot');
-  $query->orderBy('wmot.id', 'ASC');
-
-  try {
-    $records = $query->execute()->fetchAll();
-  }
-  catch (Exception $e) {
-    if (module_exists('cf_error')) {
-      cf_error::on_query_execution($ex);
-    }
-
-    return array();
-  }
-
-  $options[$type] = array();
-
-  foreach ($records as &$record) {
-    if (!is_object($record)) continue;
-
-    $options[$type][$record->machine_name] = &$record;
-  }
-
-  if (!is_null($option)) {
-    if (is_numeric($option)) {
-      foreach ($options[$type] as $key => &$value) {
-        if ($value->id == $option) {
-          return $options[$type][$key];
-        }
-      }
-    }
-    else {
-      if (isset($options[$type][$option])) {
-        return $options[$type][$option];
-      }
-    }
-
-    return array();
-  }
-
-
-  return $options[$type];
-}
-
-/**
- * Returns a list of options.
- *
- * This is only a list of the machine_name and human_name of the
- * select lists.
- * Use this for populating select lists, radio buttons, and check
- * boxes.
- *
- * @param string $type
- *   A string representing the type of option to load.
- *   Known types are:
- *   - expand
- *   - position
- *   - item_type
- * @param array|null $option
- *   (optional) Providing a valid array of options as returned by
- *   workbench_menu_get_options() and it will be properly converted
- *   into a options list.
- *
- * @return
- *  An array of supported options.
- *  The array keys are the standard machine name and the array value
- *  is the human name.
- *
- * @see workbench_menu_get_options()
- */
-function workbench_menu_get_options_list($type, $options = NULL) {
-  $options_list = &drupal_static(__FUNCTION__, NULL);
-
-  if (isset($options_list[$type])) {
-    return $options_list[$type];
-  }
-
-  if (is_null($options)) {
-    $options = workbench_menu_get_options($type, NULL);
-  }
-
-  if (!is_array($options_list)) {
-    $options_list = array();
-  }
-
-  $options_list[$type] = array();
-
-  foreach ($options as $machine_name => $value) {
-    if (!is_object($value)) continue;
-
-    $options_list[$type][$value->machine_name] = $value->human_name;
-  }
-
-  return $options_list[$type];
-}
-
-/**
  * Obtain a list of available menus.
  *
  * @param bool $with_path
@@ -1346,29 +1182,33 @@ function workbench_menu_get_options_list($type, $options = NULL) {
  *  taxonomy human name as the value.
  */
 function workbench_menu_get_menus_options_list($with_path = FALSE, $with_id = FALSE) {
+  $variation = $with_path ? 't' : 'f';
+  $variation .= $with_id ? 't' : 'f';
+
   $options_list = &drupal_static(__FUNCTION__, NULL);
 
-  if (isset($options_list)) {
-    return $options_list;
+  if (isset($options_list[$variation])) {
+    return $options_list[$variation];
   }
 
+  $options_list = array();
   $menus = (array) workbench_menu_get_menus(array(), 'id');
 
   foreach ($menus as $id => &$menu) {
-    $options_list[$menu->access_id] = $menu->breadcrumb_name;
+    $options_list[$variation][$menu->access_id] = $menu->breadcrumb_name;
 
-    if ($with_path){
-      $options_list[$menu->access_id] .= " [url:" . $menu->path . "]";
+    if ($with_path) {
+      $options_list[$variation][$menu->access_id] .= " [url:" . $menu->path . "]";
     }
 
-    if ($with_id){
-      $options_list[$menu->access_id] .= " [id:" . $menu->id . "]";
+    if ($with_id) {
+      $options_list[$variation][$menu->access_id] .= " [id:" . $menu->id . "]";
     }
   }
 
-  asort($options_list);
+  asort($options_list[$variation]);
 
-  return $options_list;
+  return $options_list[$variation];
 }
 
 /**

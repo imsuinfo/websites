@@ -1079,8 +1079,8 @@ function workbench_menu_admin_item_settings_form_settings($item, $menu) {
 
   $available = array();
   $available['parents'] = workbench_menu_get_load_menu_items_select_list_options(array('menu_id' => $menu->id), 'id');
-  $available['item_types'] = workbench_menu_get_options_list('item_type', NULL);
-  $available['expand'] = workbench_menu_get_options_list('expand', NULL);
+  $available['item_types'] = cf_db_options_get_options_list('workbench_menu', 'item_type');
+  $available['expand'] = cf_db_options_get_options_list('workbench_menu', 'expand');
   $available['menus'] = workbench_menu_get_menus_options_list(FALSE, TRUE);
 
   // do not show current in the possible menu choices.
@@ -1604,12 +1604,7 @@ function workbench_menu_admin_item_settings_edit_form_submit($form, &$form_state
     $item_type = NULL;
   }
 
-  if (module_exists('cf')) {
-    $user = cf_current_user();
-  }
-  else {
-    global $user;
-  }
+  $user = cf_current_user();
 
   if (is_null($item_id)) {
     watchdog('Workbench Menu', "The user %user has added a new item %item to the menu %menu (%menu_id)", array('%user' => $user->name, '%item' => $form_state['values']['settings']['human_name'], '%menu' => $form_state['values']['menu_human_name'], '%menu_id' => $form_state['values']['menu_id']), WATCHDOG_INFO);
@@ -1671,7 +1666,7 @@ function workbench_menu_admin_item_settings_edit_form_submit($form, &$form_state
         $query->execute();
       }
 
-      $options = (array) workbench_menu_get_options($name, NULL);
+      $options = (array) cf_db_options_get_options('workbench_menu', $name);
 
       if (!empty($form_state['values']['settings'][$name]) && isset($options[$form_state['values']['settings'][$name]])) {
         $record = array();
@@ -1798,12 +1793,7 @@ function workbench_menu_admin_item_settings_delete_form($form, &$form_state, $ac
 function workbench_menu_admin_item_settings_delete_form_submit($form, &$form_state) {
   $transaction = db_transaction();
 
-  if (module_exists('cf')) {
-    $user = cf_current_user();
-  }
-  else {
-    global $user;
-  }
+  $user = cf_current_user();
 
   watchdog('Workbench Menu', "The user %user has deleted the item %item (%item_id) from the menu %menu (%menu_id)", array('%user' => $user->name, '%item' => $form_state['values']['item_human_name'], '%item_id' => $form_state['values']['item_id'], '%menu' => $form_state['values']['menu_human_name'], '%menu_id' => $form_state['values']['menu_id']), WATCHDOG_INFO);
 
