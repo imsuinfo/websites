@@ -716,7 +716,7 @@ function workbench_menu_build_menu_item($menu, $item, &$variables) {
             $settings[$item['item']->id]['prefix'] .= '<div class="' . $wmi_css . '-icon ' . $wmi_css . '-icon_mail"></div>';
             $settings[$item['item']->id]['attributes']['title'] = array(t("Send an e-mail to: !email_address.", array('!email_address' => check_plain($matches[1]))));
           }
-          elsif (preg_match('@^(/|#)@', $link_path) === 0) {
+          elseif (preg_match('@^(/|#)@', $link_path) === 0) {
             $link_path = '/' . $menu->path . '/' . $link_path;
           }
         }
@@ -801,7 +801,7 @@ function workbench_menu_build_menu_item($menu, $item, &$variables) {
   if ($item['item']->active_path == '<top>') {
     $active_path = $variables['menu_path'];
   }
-  elsif (empty($settings[$item['item']->id]['active_path']) && !empty($item['item']->active_path)) {
+  elseif (empty($settings[$item['item']->id]['active_path']) && !empty($item['item']->active_path)) {
     if (preg_match('@^/@', $item['item']->active_path) == 0) {
       $active_path = $variables['parent_path'] . '/' . $item['item']->active_path;
     }
@@ -1092,7 +1092,7 @@ function workbench_menu_render_menu_item(&$variables, $path_current) {
         $variables['settings'][$variables['id']]['attributes']['class'][] = 'expanded';
         $list['children'] = &$child_list;
       }
-      elsif ($variables['settings'][$variables['id']]['expand'] == 'expand_never') {
+      elseif ($variables['settings'][$variables['id']]['expand'] == 'expand_never') {
         $variables['settings'][$variables['id']]['attributes']['class'][] = 'collapsed';
 
         if ($variables['invalid_trail_active']) {
@@ -1108,7 +1108,7 @@ function workbench_menu_render_menu_item(&$variables, $path_current) {
         $variables['settings'][$variables['id']]['attributes']['class'][] = 'expanded';
         $list['children'] = &$child_list;
       }
-      elsif ($variables['settings'][$variables['id']]['expand'] == 'expand_never' || $variables['settings'][$variables['id']]['expand'] == 'expand_auto') {
+      elseif ($variables['settings'][$variables['id']]['expand'] == 'expand_never' || $variables['settings'][$variables['id']]['expand'] == 'expand_auto') {
         $variables['settings'][$variables['id']]['attributes']['class'][] = 'collapsed';
       }
     }
@@ -1243,7 +1243,7 @@ function workbench_menu_get_menus_at_paths($paths) {
       $path_string .= '/';
     }
   }
-  elsif (is_array($paths)) {
+  elseif (is_array($paths)) {
     $matches = &$paths;
   }
   else {
@@ -1346,7 +1346,7 @@ function workbench_menu_get_menus($conditions = array(), $keyed = NULL) {
     if (is_numeric($conditions['id'])) {
       $and->condition('id', $conditions['id']);
     }
-    elsif (is_array($conditions['id']) && !empty($conditions['id'])) {
+    elseif (is_array($conditions['id']) && !empty($conditions['id'])) {
       $and->condition('id', $conditions['id'], 'IN');
     }
   }
@@ -1355,7 +1355,7 @@ function workbench_menu_get_menus($conditions = array(), $keyed = NULL) {
     if (is_numeric($conditions['access_id'])) {
       $and->condition('wm.access_id', $conditions['access_id']);
     }
-    elsif (is_array($conditions['access_id']) && !empty($conditions['access_id'])) {
+    elseif (is_array($conditions['access_id']) && !empty($conditions['access_id'])) {
       $and->condition('wm.access_id', $conditions['access_id'], 'IN');
     }
   }
@@ -1364,7 +1364,7 @@ function workbench_menu_get_menus($conditions = array(), $keyed = NULL) {
     if (is_string($conditions['path'])) {
       $and->condition('path', $conditions['path']);
     }
-    elsif (is_array($conditions['path']) && !empty($conditions['path'])) {
+    elseif (is_array($conditions['path']) && !empty($conditions['path'])) {
       $and->condition('path', $conditions['path'], 'IN');
     }
   }
@@ -1499,7 +1499,7 @@ function workbench_menu_save_menus($menus) {
 
         unset($query);
       }
-      elsif (isset($menu['access_id'])) {
+      elseif (isset($menu['access_id'])) {
         $record['access_id'] = $menu['access_id'];
 
         $query->condition('access_id', $menu['access_id']);
@@ -1540,7 +1540,7 @@ function workbench_menu_save_menus($menus) {
       if (isset($menu['id'])) {
         $static_menus['menu'][$menu['id']] = $menu;
       }
-      elsif (isset($menu['access_id'])) {
+      elseif (isset($menu['access_id'])) {
         $query = db_select('workbench_menus', 'wm');
         $query->fields('wm');
         $query->condition('access_id', $menu['access_id']);
@@ -1636,7 +1636,7 @@ function workbench_menu_get_load_menu_items($conditions = array(), $keyed = NULL
     if (is_numeric($conditions['id'])) {
       $and->condition('wmi.id', $conditions['id']);
     }
-    elsif (is_array($conditions['id']) && !empty($conditions['id'])) {
+    elseif (is_array($conditions['id']) && !empty($conditions['id'])) {
       $and->condition('wmi.id', $conditions['id'], 'IN');
     }
   }
@@ -1645,7 +1645,7 @@ function workbench_menu_get_load_menu_items($conditions = array(), $keyed = NULL
     if (is_numeric($conditions['menu_id'])) {
       $and->condition('wmi.menu_id', $conditions['menu_id']);
     }
-    elsif (is_array($conditions['menu_id']) && !empty($conditions['menu_id'])) {
+    elseif (is_array($conditions['menu_id']) && !empty($conditions['menu_id'])) {
       $and->condition('wmi.menu_id', $conditions['menu_id'], 'IN');
     }
   }
@@ -1654,7 +1654,7 @@ function workbench_menu_get_load_menu_items($conditions = array(), $keyed = NULL
     if (is_numeric($conditions['parent_id'])) {
       $and->condition('wmi.parent_id', $conditions['parent_id']);
     }
-    elsif (is_array($conditions['parent_id']) && !empty($conditions['parent_id'])) {
+    elseif (is_array($conditions['parent_id']) && !empty($conditions['parent_id'])) {
       $and->condition('wmi.parent_id', $conditions['parent_id'], 'IN');
     }
   }
@@ -1663,7 +1663,7 @@ function workbench_menu_get_load_menu_items($conditions = array(), $keyed = NULL
     if (is_numeric($conditions['weight'])) {
       $and->condition('wmi.weight', $conditions['weight']);
     }
-    elsif (is_array($conditions['weight']) && !empty($conditions['weight'])) {
+    elseif (is_array($conditions['weight']) && !empty($conditions['weight'])) {
       $and->condition('wmi.weight', $conditions['weight'], 'IN');
     }
   }
@@ -1672,7 +1672,7 @@ function workbench_menu_get_load_menu_items($conditions = array(), $keyed = NULL
     if (is_string($conditions['human_name'])) {
       $and->condition('wmi.human_name', $conditions['human_name']);
     }
-    elsif (is_array($conditions['human_name']) && !empty($conditions['human_name'])) {
+    elseif (is_array($conditions['human_name']) && !empty($conditions['human_name'])) {
       $and->condition('wmi.human_name', $conditions['human_name'], 'IN');
     }
   }

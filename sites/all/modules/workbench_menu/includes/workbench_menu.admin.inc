@@ -383,10 +383,10 @@ function workbench_menu_edit_item_settings($access_type, $access_type_id, $opera
   if ($operation === 'add') {
     return drupal_get_form('workbench_menu_admin_item_settings_add_form', $access_type, $access_type_id, $return_destination);
   }
-  elsif ($operation === 'edit' && !is_null($item)) {
+  elseif ($operation === 'edit' && !is_null($item)) {
     return drupal_get_form('workbench_menu_admin_item_settings_edit_form', $access_type, $access_type_id, $item, $return_destination);
   }
-  elsif ($operation === 'delete' && !is_null($item)) {
+  elseif ($operation === 'delete' && !is_null($item)) {
     return drupal_get_form('workbench_menu_admin_item_settings_delete_form', $access_type, $access_type_id, $item, $return_destination);
   }
 
@@ -743,7 +743,7 @@ function workbench_menu_admin_settings_form_submit($form, &$form_state) {
     workbench_menu_clear_cache_at_path($form['path']['#default_value']);
     workbench_menu_clear_cache_at_path($form_state['values']['path']);
   }
-  elsif (isset($form['advanced']['breadcrumb_name']['#default_value']) && $form['advanced']['breadcrumb_name']['#default_value'] != $form_state['values']['breadcrumb_name']) {
+  elseif (isset($form['advanced']['breadcrumb_name']['#default_value']) && $form['advanced']['breadcrumb_name']['#default_value'] != $form_state['values']['breadcrumb_name']) {
     workbench_menu_clear_cache_at_path($form['path']['#default_value']);
     workbench_menu_clear_cache_at_path($form_state['values']['path']);
   }
@@ -969,10 +969,10 @@ function workbench_menu_admin_item_settings($access_type, $access_type_id, $oper
   if ($operation === 'add') {
     return drupal_get_form('workbench_menu_admin_item_settings_add_form', $access_type, $access_type_id, $return_destination);
   }
-  elsif ($operation === 'edit' && !is_null($item)) {
+  elseif ($operation === 'edit' && !is_null($item)) {
     return drupal_get_form('workbench_menu_admin_item_settings_edit_form', $access_type, $access_type_id, $item, $return_destination);
   }
-  elsif ($operation === 'delete' && !is_null($item)) {
+  elseif ($operation === 'delete' && !is_null($item)) {
     return drupal_get_form('workbench_menu_admin_item_settings_delete_form', $access_type, $access_type_id, $item, $return_destination);
   }
 
@@ -1501,7 +1501,7 @@ function workbench_menu_admin_item_settings_edit_form_validate($form, &$form_sta
       if (valid_url($form_state['values']['settings']['active_path'], TRUE)) {
         form_set_error('settings][active_path', t("The active path cannot be a full URL."));
       }
-      elsif (!valid_url($form_state['values']['settings']['active_path'])) {
+      elseif (!valid_url($form_state['values']['settings']['active_path'])) {
         form_set_error('settings][active_path', t("'%path' is not a valid path.", array('%path' => $form_state['values']['settings']['active_path'])));
       }
     }
@@ -1516,7 +1516,7 @@ function workbench_menu_admin_item_settings_edit_form_validate($form, &$form_sta
       if (empty($form_state['values']['settings']['url'])) {
         form_set_error('settings][url', t("The URL is required for an item type of %type.", array('%type' => $item_type_name)));
       }
-      elsif ($form_state['values']['settings']['url'] !== '<top>') {
+      elseif ($form_state['values']['settings']['url'] !== '<top>') {
         // be user-friendly and allow normal whitespaces on insert.
         $form_state['values']['settings']['url'] = preg_replace('/ /', '%20', $form_state['values']['settings']['url']);
 
@@ -1554,7 +1554,7 @@ function workbench_menu_admin_item_settings_edit_form_validate($form, &$form_sta
       if (empty($form_state['values']['settings']['menu_item'])) {
         form_set_error('settings][menu_item', t("The menu item is required for an item type of %type.", array('%type' => $item_type_name)));
       }
-      elsif (!is_numeric($form_state['values']['settings']['menu_item'])) {
+      elseif (!is_numeric($form_state['values']['settings']['menu_item'])) {
         form_set_error('settings][menu_item', t("The menu item '%value' is not and must be a number.", array('%value' => $form_state['values']['settings']['menu_item'], '%type' => $item_type_name)));
       }
 
