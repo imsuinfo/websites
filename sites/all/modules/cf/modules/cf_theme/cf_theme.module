@@ -403,6 +403,7 @@ function cf_theme_generate_headers(array $cf) {
   $supported_meta[] = 'revisit-after';
   $supported_meta[] = 'robots';
   $supported_meta[] = 'Template';
+  $supported_meta[] = 'google-site-verification';
 
   foreach ($supported_meta as $tag) {
     if (!empty($cf['meta']['name'][$tag])) {
