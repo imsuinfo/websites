@@ -1,6 +1,11 @@
 <?php
 
 /**
+ * @file
+ * Install file for workbench_menu module.
+ */
+
+/**
  * Implementation of hook_schema().
  */
 function workbench_menu_schema() {

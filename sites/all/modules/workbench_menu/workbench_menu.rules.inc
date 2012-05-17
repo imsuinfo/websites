@@ -175,7 +175,7 @@ function workbench_menu_has_path_by_menu_id_rules_condition($menu_id, $path = ''
  *   A workbench menu object.
  */
 function workbench_menu_clear_cache_rules_action($menu) {
-  if (!is_object($menu)){
+  if (!is_object($menu)) {
     if (module_exists('cf_error')) {
       cf_error::invalid_object('menu');
     }

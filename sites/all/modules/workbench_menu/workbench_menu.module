@@ -395,7 +395,7 @@ function workbench_menu_build_menus($path_string, &$menus_processed, &$breadcrum
   $built_menus['menus'] = array();
 
   foreach ($menus as $menu_id => &$menu) {
-    if ($skip_hidden && $menu->hidden){
+    if ($skip_hidden && $menu->hidden) {
       continue;
     }
 
@@ -414,7 +414,7 @@ function workbench_menu_build_menus($path_string, &$menus_processed, &$breadcrum
     $variables = array();
     $variables['menus_processed'] = &$menus_processed;
 
-    if ($breadcrumbs === FALSE){
+    if ($breadcrumbs === FALSE) {
       $variables['breadcrumbs_all'] = FALSE;
     }
     else {
@@ -564,7 +564,7 @@ function workbench_menu_build_menu_item($menu, $item, &$variables) {
 
     if ($settings[$item['item']->id]['expand'] != "expand_auto") {
       foreach ($data['structure'] as $row_key => &$row_value) {
-        foreach ($row_value as $key => &$value){
+        foreach ($row_value as $key => &$value) {
           $data['settings'][$key]['expand'] = $settings[$item['item']->id]['expand'];
         }
       }
@@ -589,7 +589,7 @@ function workbench_menu_build_menu_item($menu, $item, &$variables) {
     $item_menu_item_variables['menu_path'] = $item_menu->path;
     $item_menu_item_variables['breadcrumbs'] = array(l($item_menu->breadcrumb_name, $item_menu->path));
 
-    if ($variables['breadcrumbs_all'] === FALSE){
+    if ($variables['breadcrumbs_all'] === FALSE) {
       $item_menu_item_variables['breadcrumbs_all'] = FALSE;
     }
     else {
@@ -716,7 +716,7 @@ function workbench_menu_build_menu_item($menu, $item, &$variables) {
             $settings[$item['item']->id]['prefix'] .= '<div class="' . $wmi_css . '-icon ' . $wmi_css . '-icon_mail"></div>';
             $settings[$item['item']->id]['attributes']['title'] = array(t("Send an e-mail to: !email_address.", array('!email_address' => check_plain($matches[1]))));
           }
-          else if (preg_match('@^(/|#)@', $link_path) === 0) {
+          elsif (preg_match('@^(/|#)@', $link_path) === 0) {
             $link_path = '/' . $menu->path . '/' . $link_path;
           }
         }
@@ -748,7 +748,7 @@ function workbench_menu_build_menu_item($menu, $item, &$variables) {
         $active_path = $parsed_url['path'];
 
         $path_node = node_load($matches[1]);
-        if (is_object($path_node)){
+        if (is_object($path_node)) {
           $filename = $path_node->title;
           unset($path_node);
         }
@@ -801,7 +801,7 @@ function workbench_menu_build_menu_item($menu, $item, &$variables) {
   if ($item['item']->active_path == '<top>') {
     $active_path = $variables['menu_path'];
   }
-  else if (empty($settings[$item['item']->id]['active_path']) && !empty($item['item']->active_path)) {
+  elsif (empty($settings[$item['item']->id]['active_path']) && !empty($item['item']->active_path)) {
     if (preg_match('@^/@', $item['item']->active_path) == 0) {
       $active_path = $variables['parent_path'] . '/' . $item['item']->active_path;
     }
@@ -819,7 +819,7 @@ function workbench_menu_build_menu_item($menu, $item, &$variables) {
       $variables['breadcrumbs'][] = l($settings[$item['item']->id]['label'], $active_path);
     }
 
-    if ($variables['breadcrumbs_all'] !== FALSE){
+    if ($variables['breadcrumbs_all'] !== FALSE) {
       if (preg_match('@^' . $variables['parent_path'] . '/@', $active_path) > 0) {
         $variables['breadcrumbs_all'][$active_path] = $variables['breadcrumbs'];
       }
@@ -829,7 +829,7 @@ function workbench_menu_build_menu_item($menu, $item, &$variables) {
     $variables['breadcrumbs'][] = $settings[$item['item']->id]['label'];
   }
 
-  if ($variables['breadcrumbs_all'] === FALSE){
+  if ($variables['breadcrumbs_all'] === FALSE) {
     unset($settings[$item['item']->id]['breadcrumbs']);
   }
   else {
@@ -844,7 +844,7 @@ function workbench_menu_build_menu_item($menu, $item, &$variables) {
       $child_variables['menu_path'] = $variables['menu_path'];
       $child_variables['breadcrumbs'] = $variables['breadcrumbs'];
 
-      if ($variables['breadcrumbs_all'] === FALSE){
+      if ($variables['breadcrumbs_all'] === FALSE) {
         $child_variables['breadcrumbs_all'] = FALSE;
       }
       else {
@@ -1092,7 +1092,7 @@ function workbench_menu_render_menu_item(&$variables, $path_current) {
         $variables['settings'][$variables['id']]['attributes']['class'][] = 'expanded';
         $list['children'] = &$child_list;
       }
-      else if ($variables['settings'][$variables['id']]['expand'] == 'expand_never') {
+      elsif ($variables['settings'][$variables['id']]['expand'] == 'expand_never') {
         $variables['settings'][$variables['id']]['attributes']['class'][] = 'collapsed';
 
         if ($variables['invalid_trail_active']) {
@@ -1108,7 +1108,7 @@ function workbench_menu_render_menu_item(&$variables, $path_current) {
         $variables['settings'][$variables['id']]['attributes']['class'][] = 'expanded';
         $list['children'] = &$child_list;
       }
-      else if ($variables['settings'][$variables['id']]['expand'] == 'expand_never' || $variables['settings'][$variables['id']]['expand'] == 'expand_auto') {
+      elsif ($variables['settings'][$variables['id']]['expand'] == 'expand_never' || $variables['settings'][$variables['id']]['expand'] == 'expand_auto') {
         $variables['settings'][$variables['id']]['attributes']['class'][] = 'collapsed';
       }
     }
@@ -1243,7 +1243,7 @@ function workbench_menu_get_menus_at_paths($paths) {
       $path_string .= '/';
     }
   }
-  else if (is_array($paths)) {
+  elsif (is_array($paths)) {
     $matches = &$paths;
   }
   else {
@@ -1346,7 +1346,7 @@ function workbench_menu_get_menus($conditions = array(), $keyed = NULL) {
     if (is_numeric($conditions['id'])) {
       $and->condition('id', $conditions['id']);
     }
-    else if (is_array($conditions['id']) && !empty($conditions['id'])) {
+    elsif (is_array($conditions['id']) && !empty($conditions['id'])) {
       $and->condition('id', $conditions['id'], 'IN');
     }
   }
@@ -1355,7 +1355,7 @@ function workbench_menu_get_menus($conditions = array(), $keyed = NULL) {
     if (is_numeric($conditions['access_id'])) {
       $and->condition('wm.access_id', $conditions['access_id']);
     }
-    else if (is_array($conditions['access_id']) && !empty($conditions['access_id'])) {
+    elsif (is_array($conditions['access_id']) && !empty($conditions['access_id'])) {
       $and->condition('wm.access_id', $conditions['access_id'], 'IN');
     }
   }
@@ -1364,7 +1364,7 @@ function workbench_menu_get_menus($conditions = array(), $keyed = NULL) {
     if (is_string($conditions['path'])) {
       $and->condition('path', $conditions['path']);
     }
-    else if (is_array($conditions['path']) && !empty($conditions['path'])) {
+    elsif (is_array($conditions['path']) && !empty($conditions['path'])) {
       $and->condition('path', $conditions['path'], 'IN');
     }
   }
@@ -1499,7 +1499,7 @@ function workbench_menu_save_menus($menus) {
 
         unset($query);
       }
-      else if (isset($menu['access_id'])) {
+      elsif (isset($menu['access_id'])) {
         $record['access_id'] = $menu['access_id'];
 
         $query->condition('access_id', $menu['access_id']);
@@ -1540,7 +1540,7 @@ function workbench_menu_save_menus($menus) {
       if (isset($menu['id'])) {
         $static_menus['menu'][$menu['id']] = $menu;
       }
-      else if (isset($menu['access_id'])) {
+      elsif (isset($menu['access_id'])) {
         $query = db_select('workbench_menus', 'wm');
         $query->fields('wm');
         $query->condition('access_id', $menu['access_id']);
@@ -1636,7 +1636,7 @@ function workbench_menu_get_load_menu_items($conditions = array(), $keyed = NULL
     if (is_numeric($conditions['id'])) {
       $and->condition('wmi.id', $conditions['id']);
     }
-    else if (is_array($conditions['id']) && !empty($conditions['id'])) {
+    elsif (is_array($conditions['id']) && !empty($conditions['id'])) {
       $and->condition('wmi.id', $conditions['id'], 'IN');
     }
   }
@@ -1645,7 +1645,7 @@ function workbench_menu_get_load_menu_items($conditions = array(), $keyed = NULL
     if (is_numeric($conditions['menu_id'])) {
       $and->condition('wmi.menu_id', $conditions['menu_id']);
     }
-    else if (is_array($conditions['menu_id']) && !empty($conditions['menu_id'])) {
+    elsif (is_array($conditions['menu_id']) && !empty($conditions['menu_id'])) {
       $and->condition('wmi.menu_id', $conditions['menu_id'], 'IN');
     }
   }
@@ -1654,7 +1654,7 @@ function workbench_menu_get_load_menu_items($conditions = array(), $keyed = NULL
     if (is_numeric($conditions['parent_id'])) {
       $and->condition('wmi.parent_id', $conditions['parent_id']);
     }
-    else if (is_array($conditions['parent_id']) && !empty($conditions['parent_id'])) {
+    elsif (is_array($conditions['parent_id']) && !empty($conditions['parent_id'])) {
       $and->condition('wmi.parent_id', $conditions['parent_id'], 'IN');
     }
   }
@@ -1663,7 +1663,7 @@ function workbench_menu_get_load_menu_items($conditions = array(), $keyed = NULL
     if (is_numeric($conditions['weight'])) {
       $and->condition('wmi.weight', $conditions['weight']);
     }
-    else if (is_array($conditions['weight']) && !empty($conditions['weight'])) {
+    elsif (is_array($conditions['weight']) && !empty($conditions['weight'])) {
       $and->condition('wmi.weight', $conditions['weight'], 'IN');
     }
   }
@@ -1672,7 +1672,7 @@ function workbench_menu_get_load_menu_items($conditions = array(), $keyed = NULL
     if (is_string($conditions['human_name'])) {
       $and->condition('wmi.human_name', $conditions['human_name']);
     }
-    else if (is_array($conditions['human_name']) && !empty($conditions['human_name'])) {
+    elsif (is_array($conditions['human_name']) && !empty($conditions['human_name'])) {
       $and->condition('wmi.human_name', $conditions['human_name'], 'IN');
     }
   }
@@ -1889,7 +1889,7 @@ function workbench_menu_clear_cache_at_path($path) {
   $cached_menu = cache_get($menu_cache_id, 'cache_menu');
   $cached_breadcrumb = cache_get($breadcrumb_cache_id, 'cache_menu');
 
-  while (!empty($parts)){
+  while (!empty($parts)) {
     $subpath = implode('/', $parts);
     $part = array_pop($parts);
 
