@@ -61,8 +61,9 @@
  * @see: hook_schema()
  */
 function cf_db_options_create_options_schema($table, $name, &$schema) {
-  if (!is_string($table) || empty($table)) return;
-  if (!is_string($name) || empty($name)) return;
+  if (cf_is_empty_or_non_string('table', $table, WATCHDOG_ERROR)) return;
+  if (cf_is_empty_or_non_string('name', $name, WATCHDOG_ERROR)) return;
+
   if (!is_array($schema)) $schema = array();
 
   $t = get_t();
@@ -142,11 +143,12 @@ function cf_db_options_create_options_schema($table, $name, &$schema) {
  * @see: hook_schema()
  */
 function cf_db_options_create_options_relation($table, $name, &$schema, $relation_table, $relation_column) {
-  if (!is_string($table) || empty($table)) return;
-  if (!is_string($name) || empty($name)) return;
+  if (cf_is_empty_or_non_string('table', $table, WATCHDOG_ERROR)) return;
+  if (cf_is_empty_or_non_string('name', $name, WATCHDOG_ERROR)) return;
+  if (cf_is_empty_or_non_string('relation_table', $relation_table, WATCHDOG_ERROR)) return;
+  if (cf_is_empty_or_non_string('relation_column', $relation_column, WATCHDOG_ERROR)) return;
+
   if (!is_array($schema)) $schema = array();
-  if (!is_string($relation_table) || empty($relation_table)) return;
-  if (!is_string($relation_column) || empty($relation_column)) return;
 
   $t = get_t();
 
@@ -197,7 +199,7 @@ function cf_db_options_create_options_relation($table, $name, &$schema, $relatio
  *   - description: a description about some option.
  */
 function cf_db_options_add_options($table, $name, $options) {
-  if (!is_array($options) || empty($options)) return;
+  if (cf_is_empty_or_non_array('options', $options, WATCHDOG_ERROR)) return;
 
   foreach ($options as &$option) {
     if (!is_array($option) || empty($option)) continue;
@@ -227,9 +229,9 @@ function cf_db_options_add_options($table, $name, $options) {
  *   The array keys are the machine names for each option.
  */
 function cf_db_options_get_options($table, $name, $option = NULL) {
-  if (!is_string($table) || empty($table)) return array();
-  if (!is_string($name) || empty($name)) return array();
-  if (!is_null($option) && !is_string($option)) return array();
+  if (cf_is_empty_or_non_string('table', $table, WATCHDOG_ERROR)) return array();
+  if (cf_is_empty_or_non_string('name', $name, WATCHDOG_ERROR)) return array();
+  if (!is_null($option) && cf_is_empty_or_non_string('name', $name, WATCHDOG_ERROR)) return array();
 
   $options_table = $table . '_options_' . $name;
 
@@ -329,13 +331,17 @@ function cf_db_options_get_options($table, $name, $option = NULL) {
  * @see cf_db_options_get_options()
  */
 function cf_db_options_get_options_list($table, $name, $options = NULL) {
-  if (!is_string($table) || empty($table)) return array();
-  if (!is_string($name) || empty($name)) return array();
+  if (cf_is_empty_or_non_string('table', $table, WATCHDOG_ERROR)) return array();
+  if (cf_is_empty_or_non_string('name', $name, WATCHDOG_ERROR)) return array();
 
   if (is_null($options)) {
     $options = cf_db_options_get_options($table, $name, NULL);
   }
   elseif (!is_array($options)) {
+    if (module_exists('cf_error')) {
+      cf_error::invalid_array('options');
+    }
+
     return array();
   }
 
@@ -369,9 +375,9 @@ function cf_db_options_get_options_list($table, $name, $options = NULL) {
  *   FALSE is returned on error.
  */
 function cf_db_options_machine_name_to_id($table, $name, $machine_name) {
-  if (!is_string($table) || empty($table)) return FALSE;
-  if (!is_string($name) || empty($name)) return FALSE;
-  if (!is_string($machine_name) || empty($machine_name)) return FALSE;
+  if (cf_is_empty_or_non_string('table', $table, WATCHDOG_ERROR)) return FALSE;
+  if (cf_is_empty_or_non_string('name', $name, WATCHDOG_ERROR)) return FALSE;
+  if (cf_is_empty_or_non_string('machine_name', $machine_name, WATCHDOG_ERROR)) return FALSE;
 
   $options_table = $table . '_options_' . $name;
 
@@ -417,9 +423,9 @@ function cf_db_options_machine_name_to_id($table, $name, $machine_name) {
  *   FALSE is returned on error.
  */
 function cf_db_options_machine_name_to_id_subquery($table, $name, $machine_name) {
-  if (!is_string($table) || empty($table)) return FALSE;
-  if (!is_string($name) || empty($name)) return FALSE;
-  if (!is_string($machine_name) || empty($machine_name)) return FALSE;
+  if (cf_is_empty_or_non_string('table', $table, WATCHDOG_ERROR)) return FALSE;
+  if (cf_is_empty_or_non_string('name', $name, WATCHDOG_ERROR)) return FALSE;
+  if (cf_is_empty_or_non_string('machine_name', $machine_name, WATCHDOG_ERROR)) return FALSE;
 
   $options_table = $table . '_options_' . $name;
 

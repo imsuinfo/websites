@@ -127,6 +127,36 @@ class cf_error {
   }
 
   /**
+   * Reports that a given argument is supposed to be non-empty array but is not.
+   *
+   * @param string $argument_names
+   *   The variable name of the argument in question.
+   * @param int $severity
+   *   (optional) The severity of the message, as per RFC 3164. Possible values
+   *   are WATCHDOG_ERROR, WATCHDOG_WARNING, etc.
+   *
+   * @see: watchdog()
+   * @see: watchdog_severity_levels()
+   */
+  public static function empty_array($argument_name, $severity = WATCHDOG_ERROR) {
+    $error = new cf_error_code;
+
+    if (empty($argument_name)) {
+      $error2 = new cf_error_code;
+      $error2->set_severity(WATCHDOG_ERROR);
+      $error2->set_backtrace(debug_backtrace());
+      self::p_empty_string($error2, 'argument_name');
+      $argument_name = '(unknown)';
+    }
+
+    $error->set_severity($severity);
+    self::p_load_backtrace($error);
+    self::p_empty_array($error, $argument_name);
+
+    return $error;
+  }
+
+  /**
    * Reports that a given argument is supposed to be an array but is not.
    *
    * @param string $argument_names
@@ -595,6 +625,16 @@ class cf_error {
    */
   private static function p_empty_string(cf_error_code $error, $argument_name) {
     self::p_invalid_variable($error, $argument_name, "Must not be an empty string.", array());
+  }
+
+  /**
+   * Reports that a given argument is supposed to be non-empty array but is not.
+   *
+   * @param string $argument_name
+   *   The variable name of the argument in question.
+   */
+  private static function p_empty_array(cf_error_code $error, $argument_name) {
+    self::p_invalid_variable($error, $argument_name, "Must not be an empty array.", array());
   }
 
   /**
