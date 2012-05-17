@@ -32,5 +32,5 @@ function hook_cf_permission(&$permissions) {
 }
 
 /**
- * @} End of "addtogroup hooks".
+ * @} End of "@addtogroup hooks".
  */

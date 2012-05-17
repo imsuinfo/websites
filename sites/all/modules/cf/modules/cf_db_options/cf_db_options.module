@@ -331,10 +331,12 @@ function cf_db_options_get_options($table, $name, $option = NULL) {
 function cf_db_options_get_options_list($table, $name, $options = NULL) {
   if (!is_string($table) || empty($table)) return array();
   if (!is_string($name) || empty($name)) return array();
-  if (!is_null($option) && !is_string($option)) return array();
 
   if (is_null($options)) {
-    $options = cf_db_options_get_options($table, $name, NULL, $function_history);
+    $options = cf_db_options_get_options($table, $name, NULL);
+  }
+  elseif (!is_array($options)) {
+    return array();
   }
 
   $options_list = array();
