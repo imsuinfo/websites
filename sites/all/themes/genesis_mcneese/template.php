@@ -51,6 +51,8 @@ function genesis_mcneese_preprocess_html(&$vars) {
     $vars['cf'] = cf_theme_get_variables($vars);
   }
 
+  genesis_mcneese_process_variables($vars);
+
   if ($vars['cf']['at']['machine_name'] == 'sandbox.mcneese.edu' || $vars['cf']['at']['machine_name'] == 'sandbox') {
     $vars['head_title'] = "Sandbox of (" . $vars['head_title'] . ")";
   } else if ($vars['cf']['at']['machine_name'] == 'wwwdev.mcneese.edu' || $vars['cf']['at']['machine_name'] == 'wwwdev') {
@@ -59,6 +61,13 @@ function genesis_mcneese_preprocess_html(&$vars) {
     $vars['head_title'] = $vars['head_title'] . " | Development";
   } else if ($vars['cf']['at']['machine_name'] == 'wwwdev3.mcneese.edu' || $vars['cf']['at']['machine_name'] == 'wwwdev3') {
     $vars['head_title'] = $vars['head_title'] . " | Development";
+  }
+
+  // show google verification on front page and then only on www.mcneese.edu.
+  if ($vars['cf']['is']['front']) {
+    if ($vars['cf']['at']['machine_name'] == 'www.mcneese.edu' || $vars['cf']['at']['machine_name'] == 'www') {
+      $vars['cf']['meta']['name']['google-site-verification'] = 'zvxqEbtWmsaA-WXhhueU_iVFT0I9HJRH-QO0ecOL1XI';
+    }
   }
 }
 
@@ -93,8 +102,13 @@ function genesis_mcneese_process_variables(&$vars){
   $vars['secondary_local_tasks'] = menu_secondary_local_tasks();
 
   // originally from the genesis theme
-  $vars['main_menu_links'] = theme('links__system_main_menu', array('links' => $vars['main_menu'], 'attributes' => array('id' => 'main-menu', 'class' => array('links', 'clearfix')), 'heading' => t("Main Menu")));
-  $vars['secondary_menu_links'] = theme('links__system_secondary_menu', array('links' => $vars['secondary_menu'], 'attributes' => array('id' => 'secondary-menu', 'class' => array('links', 'clearfix')), 'heading' => t("Secondary Menu")));
+  if (!empty($vars['main_menu'])) {
+    $vars['main_menu_links'] = theme('links__system_main_menu', array('links' => $vars['main_menu'], 'attributes' => array('id' => 'main-menu', 'class' => array('links', 'clearfix')), 'heading' => t("Main Menu")));
+  }
+
+  if (!empty($vars['secondary_menu'])) {
+    $vars['secondary_menu_links'] = theme('links__system_secondary_menu', array('links' => $vars['secondary_menu'], 'attributes' => array('id' => 'secondary-menu', 'class' => array('links', 'clearfix')), 'heading' => t("Secondary Menu")));
+  }
 
   $keys_to_render = array('primary_local_tasks', 'secondary_local_tasks', 'main_menu_links', 'secondary_menu_links');
   cf_theme_render_variables($vars, $keys_to_render);
@@ -106,8 +120,8 @@ function genesis_mcneese_process_variables(&$vars){
   $vars['cf']['show']['page']['content'] = TRUE;
   $vars['cf']['show']['page']['footer'] = TRUE;
 
-  // never show these if on the front page
   if ($vars['cf']['is']['front']){
+    // never show these if on the front page
     $vars['cf']['show']['title_prefix'] = FALSE;
     $vars['cf']['show']['title'] = FALSE;
     $vars['cf']['show']['title_suffix'] = FALSE;
