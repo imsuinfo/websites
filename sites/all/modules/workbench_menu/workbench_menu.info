@@ -14,3 +14,10 @@ files[] = includes/workbench_menu.entity.inc
 files[] = includes/workbench_menu.css
 files[] = includes/workbench_menu_admin.css
 files[] = includes/workbench_menu.admin.inc
+
+; Information added by drupal.org packaging script on 2012-05-18
+version = "7.x-1.x-dev"
+core = "7.x"
+project = "workbench_menu"
+datestamp = "1337302577"
+
