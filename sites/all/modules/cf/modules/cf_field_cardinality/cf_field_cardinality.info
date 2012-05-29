@@ -1,0 +1,7 @@
+name = Common Functionality - Field Cardinality
+description = "Changes how the number of values options (aka: cardinality) of fields to allow more useful input."
+core = 7.x
+package = Common Functionality
+dependencies[] = cf
+dependencies[] = field
+files[] = cf_field_cardinality.module
