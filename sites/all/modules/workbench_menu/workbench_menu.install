@@ -56,7 +56,7 @@ function workbench_menu_schema() {
         'type' => 'int',
         'size' => 'tiny',
         'not null' => TRUE,
-        'default' => FALSE,
+        'default' => 0,
       ),
       'breadcrumb_name' => array(
         'description' => $t("An optional custom breadcrumb name to use instead of the taxonomy term name."),
@@ -204,27 +204,27 @@ function workbench_menu_install() {
   $t = get_t();
 
   try {
-    $expands = array();
+    $expand = array();
 
-    $expands[] = array(
+    $expand[] = array(
       'machine_name' => 'expand_always',
       'human_name' => $t("Always Expand"),
       'description' => $t("The menu item will always be expanded."),
     );
 
-    $expands[] = array(
+    $expand[] = array(
       'machine_name' => 'expand_auto',
       'human_name' => $t("Auto Expand"),
       'description' => $t("The menu item will expanded, unless told otherwise."),
     );
 
-    $expands[] = array(
+    $expand[] = array(
       'machine_name' => 'expand_never',
       'human_name' => $t("Never Expand"),
       'description' => $t("The menu item will never be expanded."),
     );
 
-    cf_db_options_add_options('workbench_menu', 'expands', $expands);
+    cf_db_options_add_options('workbench_menu', 'expand', $expand);
 
 
     $item_type = array();
