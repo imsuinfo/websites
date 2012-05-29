@@ -1,9 +1,0 @@
-name = Content Easement - Unpublished Message
-description = "Provides a message on a node view and node edit form stating that a particular node is unpublished."
-package = Content
-core = 7.x
-dependencies[] = cf
-files[] = content_easement_unpublished_message.module
-files[] = includes/message-unpublished.css
-files[] = includes/message-unpublished.png
-files[] = includes/message-unpublished.svg
