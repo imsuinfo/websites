@@ -300,6 +300,7 @@ class calendar_plugin_row extends views_plugin_row {
     // so iterate through all of them to find the right values
     // for this view result.
     foreach ($this->date_fields as $field_name => $info) {
+      if (!isset($this->entities[$id])) continue;
 
       // Load the specified node:
       // We have to clone this or nodes on other views on this page,
