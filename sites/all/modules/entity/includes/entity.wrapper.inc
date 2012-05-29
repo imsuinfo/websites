@@ -788,7 +788,7 @@ class EntityDrupalWrapper extends EntityStructureWrapper {
       try {
         $this->value(array('identifier' => TRUE));
       }
-      catch (EntityMetadataWrapper $e) {
+      catch (EntityMetadataWrapperException $e) {
         // If loading data fails, we cannot determine the concrete entity type.
       }
     }
@@ -1014,7 +1014,7 @@ class EntityListWrapper extends EntityMetadataWrapper implements IteratorAggrega
 
   public function set($values) {
     // Support setting lists of fully loaded entities.
-    if ($this->isEntityList && is_array($values) && is_object(reset($values))) {
+    if ($this->isEntityList && $values && is_object(reset($values))) {
       foreach ($values as $key => $value) {
         list($id, $vid, $bundle) = entity_extract_ids($this->itemType, $value);
         $values[$key] = $id;
@@ -1131,11 +1131,11 @@ class EntityMetadataWrapperIterator implements RecursiveIterator {
     return isset($this->keys[$this->position]);
   }
 
-  public function hasChildren () {
+  public function hasChildren() {
     return $this->current() instanceof IteratorAggregate;
   }
 
-  public function getChildren () {
+  public function getChildren() {
     return $this->current()->getIterator();
   }
 }
