@@ -245,7 +245,12 @@ class calendar_plugin_row extends views_plugin_row {
       $ids[$id] = $id;
     }
     if (!empty($ids)) {
-      $this->entities = entity_load($this->view->base_table, $ids);
+      if ($this->view->base_table == 'users') {
+        $this->entities = entity_load('user', $ids);
+      }
+      else {
+        $this->entities = entity_load($this->view->base_table, $ids);
+      }
     }
 
     // Let the style know if a link to create a new date is required.
@@ -318,7 +323,13 @@ class calendar_plugin_row extends views_plugin_row {
       $rrule_field = $info['rrule_field'];
       $is_field    = $info['is_field'];
 
-      $info = entity_get_info($this->view->base_table);
+      if ($this->view->base_table == 'users') {
+        $info = entity_get_info('user');
+      }
+      else {
+        $info = entity_get_info($this->view->base_table);
+      }
+
       $this->id_field = $info['entity keys']['id'];
       $this->bundle = $info['entity keys']['bundle'];
       $callback = $info['uri callback'];
@@ -337,7 +348,12 @@ class calendar_plugin_row extends views_plugin_row {
       if ($is_field) {
 
         $delta = isset($row->$delta_field) ? $row->$delta_field : 0;
-        $items = field_get_items($this->view->base_table, $entity, $field_name, $this->language);
+        if ($this->view->base_table == 'users') {
+          $items = field_get_items('user', $entity, $field_name, $this->language);
+        }
+        else {
+          $items = field_get_items($this->view->base_table, $entity, $field_name, $this->language);
+        }
         $item  = $items[$delta];
         $db_tz   = date_get_timezone_db($tz_handling, isset($item->$tz_field) ? $item->$tz_field : $date_info->display_timezone_name);
         $to_zone = date_get_timezone($tz_handling, isset($item->$tz_field) ? $item->$tz_field : $date_info->display_timezone_name);
@@ -352,10 +368,15 @@ class calendar_plugin_row extends views_plugin_row {
         }
 
         $cck_field = field_info_field($field_name);
-        $instance = field_info_instance($this->view->base_table, $field_name, $entity->type);
         $granularity = date_granularity_precision($cck_field['settings']['granularity']);
-        $increment = $instance['widget']['settings']['increment'];
 
+        if (property_exists($entity, 'type')) {
+          $instance = field_info_instance($this->view->base_table, $field_name, $entity->type);
+          $increment = $instance['widget']['settings']['increment'];
+        }
+        else {
+          $increment = 0;
+        }
       }
       elseif (!empty($entity->$field_name)) {
         $item = $entity->$field_name;
@@ -377,8 +398,8 @@ class calendar_plugin_row extends views_plugin_row {
 
       $event = new stdClass();
       $event->id = $entity->{$this->id_field};
-      $event->title = $entity->title;
-      $event->type = $entity->{$this->bundle};
+      if (property_exists($entity, 'title')) $event->title = $entity->title;
+      if (property_exists($this, $this->bundle)) $event->type = $entity->{$this->bundle};
       $event->date_start = $item_start_date;
       $event->date_end = $item_end_date;
       $event->db_tz = $db_tz;
