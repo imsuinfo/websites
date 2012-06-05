@@ -5,9 +5,9 @@ package = Access control
 dependencies[] = shortcut
 files[] = edit_shortcut_name_restriction.module
 
-; Information added by drupal.org packaging script on 2012-02-16
-version = "7.x-1.0-beta1"
+; Information added by drupal.org packaging script on 2012-06-05
+version = "7.x-1.0"
 core = "7.x"
 project = "edit_shortcut_name_restriction"
-datestamp = "1329404437"
+datestamp = "1338911779"
 
