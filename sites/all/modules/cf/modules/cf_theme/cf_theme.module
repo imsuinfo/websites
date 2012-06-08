@@ -43,13 +43,14 @@ function cf_theme_get_variables(array &$variables) {
   $cf['is_data'] = array();
   $cf['show'] = array();
   $cf['data'] = array();
+  $cf['user'] = array('object' => NULL);
 
-  foreach (array('front', 'admin', 'using_database', 'node', 'emergency', 'maintenance', 'unsupported', 'debug', 'overlay', 'logged_in', 'published', 'unpublished', 'promoted', 'sticky') as $key) {
+  foreach (array('front', 'admin', 'using_database', 'node', 'emergency', 'maintenance', 'unsupported', 'debug', 'overlay', 'logged_in', 'anonymous', 'published', 'unpublished', 'promoted', 'sticky') as $key) {
     $cf['is'][$key] = FALSE;
     $cf['is_data'][$key] = array();
   }
 
-  $user = cf_current_user();
+  $cf['user']['object'] = cf_current_user();
 
   // set the request time if it exists
   if (empty($_SERVER['REQUEST_TIME'])) {
@@ -182,9 +183,13 @@ function cf_theme_get_variables(array &$variables) {
     $cf['is']['admin'] = TRUE;
   }
 
-  if (is_object($user) && property_exists($user, 'uid') && $user->uid > 0) {
+  if (is_object($cf['user']['object']) && property_exists($cf['user']['object'], 'uid') && $cf['user']['object']->uid > 0) {
     $cf['is']['logged_in'] = TRUE;
-    $cf['is_data']['logged_in']['user'] = &$user;
+    $cf['is_data']['logged_in']['user'] = &$cf['user']['object'];
+  }
+  else {
+    $cf['is']['anonymous'] = TRUE;
+    $cf['is_data']['anonymous']['user'] = &$cf['user']['object'];
   }
 
   if (!empty($variables['db_is_active'])) {
