@@ -1,12 +1,14 @@
 <?php
+
 /**
- * @file views_plugin_query_default.inc
- * Defines the default query object which builds SQL to execute using the
- * Drupal database API.
+ * @file
+ * Defines the default query object.
  */
 
 /**
  * Object used to create a SELECT query.
+ *
+ * @ingroup views_query_plugins
  */
 class views_plugin_query_default extends views_plugin_query {
 
@@ -53,6 +55,13 @@ class views_plugin_query_default extends views_plugin_query {
    * A simple array of group by clauses.
    */
   var $groupby = array();
+
+
+  /**
+   * An array of fields.
+   */
+  var $fields = array();
+
 
   /**
    * The table header to use for tablesort. This matters because tablesort
@@ -217,7 +226,9 @@ class views_plugin_query_default extends views_plugin_query {
     );
     $options['query_comment'] = array(
       'default' => '',
-      'bool' => FALSE,
+    );
+    $options['query_tags'] = array(
+      'default' => array(),
     );
 
     return $options;
@@ -261,6 +272,23 @@ class views_plugin_query_default extends views_plugin_query {
       '#description' => t('If set, this comment will be embedded in the query and passed to the SQL server. This can be helpful for logging or debugging.'),
       '#default_value' => $this->options['query_comment'],
     );
+    $form['query_tags'] = array(
+      '#type' => 'textfield',
+      '#title' => t('Query Tags'),
+      '#description' => t('If set, these tags will be appended to the query and can be used to identify the query in a module. This can be helpful for altering queries.'),
+      '#default_value' => implode(', ', $this->options['query_tags']),
+      '#element_validate' => array('views_element_validate_tags'),
+    );
+  }
+
+  /**
+   * Special submit handling.
+   */
+  function options_submit(&$form, &$form_state) {
+    $element = array('#parents' => array('query', 'options', 'query_tags'));
+    $value = explode(',', drupal_array_get_nested_value($form_state['values'], $element['#parents']));
+    $value = array_filter(array_map('trim', $value));
+    form_set_value($element, $value, $form_state);
   }
 
   // ----------------------------------------------------------------
@@ -1045,7 +1073,7 @@ class views_plugin_query_default extends views_plugin_query {
   /**
    * Adds a query tag to the sql object.
    *
-   * @see SelectQuery::addTag
+   * @see SelectQuery::addTag()
    */
   function add_tag($tag) {
     $this->tags[] = $tag;
@@ -1165,6 +1193,7 @@ class views_plugin_query_default extends views_plugin_query {
       }
       // This is a formula, using no tables.
       elseif (empty($field['table'])) {
+        $non_aggregates[] = $fieldname;
         $placeholders = !empty($field['placeholders']) ? $field['placeholders'] : array();
         $query->addExpression($string, $fieldname, $placeholders);
       }
@@ -1218,11 +1247,7 @@ class views_plugin_query_default extends views_plugin_query {
      * An optimized count query includes just the base field instead of all the fields.
      * Determine of this query qualifies by checking for a groupby or distinct.
      */
-    $fields_array = array();
-    if (property_exists($this, 'fields')){
-      $fields_array = $this->fields;
-    }
-
+    $fields_array = $this->fields;
     if ($get_count && !$this->groupby) {
       foreach ($fields_array as $field) {
         if (!empty($field['distinct']) || !empty($field['function'])) {
@@ -1283,8 +1308,6 @@ class views_plugin_query_default extends views_plugin_query {
     $this->compile_fields($fields_array, $query);
 
     foreach ($fields_array as $field){
-      if (empty($field['field'])) continue;
-
       if (!empty($field['table'])){
         $name = $field['table'] . '.' . $field['field'];
       }
@@ -1336,6 +1359,13 @@ class views_plugin_query_default extends views_plugin_query {
     // Add a query comment.
     if (!empty($this->options['query_comment'])) {
       $query->comment($this->options['query_comment']);
+    }
+
+    // Add the query tags.
+    if (!empty($this->options['query_tags'])) {
+      foreach ($this->options['query_tags'] as $tag) {
+        $query->addTag($tag);
+      }
     }
 
     // Add all query substitutions as metadata.
@@ -1464,14 +1494,13 @@ class views_plugin_query_default extends views_plugin_query {
 
         $this->pager->post_execute($view->result);
 
-        if ($this->pager->use_pager()) {
+        if ($this->pager->use_count_query() || !empty($view->get_total_rows)) {
           $view->total_rows = $this->pager->get_total_items();
         }
       }
       catch (Exception $e) {
         $view->result = array();
         if (!empty($view->live_preview)) {
-          drupal_set_message(time());
           drupal_set_message($e->getMessage(), 'error');
         }
         else {
@@ -1479,6 +1508,9 @@ class views_plugin_query_default extends views_plugin_query {
         }
       }
 
+    }
+    else {
+      $start = microtime(TRUE);
     }
     $view->execute_time = microtime(TRUE) - $start;
   }
@@ -1606,4 +1638,17 @@ function views_query_default_aggregation_method_simple($group_type, $field) {
 function views_query_default_aggregation_method_distinct($group_type, $field) {
   $group_type = str_replace('_distinct', '', $group_type);
   return strtoupper($group_type) . '(DISTINCT ' . $field . ')';
+}
+
+/**
+ * Validation callback for query tags.
+ */
+function views_element_validate_tags($element, &$form_state) {
+  $values = array_map('trim', explode(',', $element['#value']));
+  foreach ($values as $value) {
+    if (preg_match("/[^a-z_]/", $value)) {
+      form_error($element, t('The query tags may only contain lower-case alphabetical characters and underscores.'));
+      return;
+    }
+  }
 }

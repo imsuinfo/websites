@@ -1,6 +1,11 @@
 <?php
 
 /**
+ * @file
+ * Definition of views_handler_argument_string.
+ */
+
+/**
  * Basic argument handler to implement string arguments that may have length
  * limits.
  *
@@ -21,17 +26,16 @@ class views_handler_argument_string extends views_handler_argument {
   function option_definition() {
     $options = parent::option_definition();
 
-    $options['glossary'] = array('default' => FALSE);
+    $options['glossary'] = array('default' => FALSE, 'bool' => TRUE);
     $options['limit'] = array('default' => 0);
     $options['case'] = array('default' => 'none');
-    $options['case_insensitive'] = array('default' => FALSE);
     $options['path_case'] = array('default' => 'none');
-    $options['transform_dash'] = array('default' => FALSE);
-    $options['break_phrase'] = array('default' => FALSE);
+    $options['transform_dash'] = array('default' => FALSE, 'bool' => TRUE);
+    $options['break_phrase'] = array('default' => FALSE, 'bool' => TRUE);
 
     if (!empty($this->definition['many to one'])) {
-      $options['add_table'] = array('default' => FALSE);
-      $options['require_value'] = array('default' => FALSE);
+      $options['add_table'] = array('default' => FALSE, 'bool' => TRUE);
+      $options['require_value'] = array('default' => FALSE, 'bool' => TRUE);
     }
 
     return $options;
@@ -70,13 +74,6 @@ class views_handler_argument_string extends views_handler_argument {
       ),
       '#default_value' => $this->options['case'],
       '#fieldset' => 'more',
-    );
-
-    $form['case_insensitive'] = array(
-      '#type' => 'checkbox',
-      '#title' => t('Case Insensitive Searches'),
-      '#description' => t('Allows for doing database searches without case sensitivity. MySQL already works in lower-case mode, so MySQL users should leave this unchecked to improve performance.'),
-      '#default_value' => $this->options['case_insensitive'],
     );
 
     $form['path_case'] = array(
@@ -208,37 +205,17 @@ class views_handler_argument_string extends views_handler_argument {
       $operator = '=';
     }
 
-    $case_insensitive = FALSE;
-    if (!empty($this->options['case_insensitive']) && $this->options['case_insensitive']){
-      $field = 'LOWER(' . $field . ')';
-
-      $case_insensitive = TRUE;
-    }
-
-    if ($formula || $case_insensitive) {
+    if ($formula) {
       $placeholder = $this->placeholder();
-
-      if ($case_insensitive){
-        if ($operator == 'IN'){
-          $field = " IN(LOWER($placeholder))";
-        }
-        else {
-          $field .= ' = LOWER(' . $placeholder . ')';
-        }
+      if ($operator == 'IN') {
+        $field .= " IN($placeholder)";
       }
       else {
-        if ($operator == 'IN') {
-          $field .= " IN($placeholder)";
-        }
-        else {
-          $field .= ' = ' . $placeholder;
-        }
+        $field .= ' = ' . $placeholder;
       }
-
       $placeholders = array(
         $placeholder => $argument,
       );
-
       $this->query->add_where_expression(0, $field, $placeholders);
     }
     else {
@@ -247,7 +224,7 @@ class views_handler_argument_string extends views_handler_argument {
   }
 
   function summary_argument($data) {
-    $value = $this->case_transform($data->{$this->base_alias}, 'path_case');
+    $value = $this->case_transform($data->{$this->base_alias}, $this->options['path_case']);
     if (!empty($this->options['transform_dash'])) {
       $value = strtr($value, ' ', '-');
     }
