@@ -47,6 +47,10 @@ function genesis_mcneese_preprocess_html(&$vars) {
     $vars = array();
   }
 
+  if (!function_exists('cf_theme_get_variables')){
+    return;
+  }
+
   if (empty($vars['cf'])){
     $vars['cf'] = cf_theme_get_variables($vars);
   }
@@ -77,6 +81,10 @@ function genesis_mcneese_preprocess_html(&$vars) {
 function genesis_mcneese_preprocess_page(&$vars) {
   if (!is_array($vars)){
     $vars = array();
+  }
+
+  if (!function_exists('cf_theme_get_variables')){
+    return;
   }
 
   if (empty($vars['cf'])){
