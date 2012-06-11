@@ -22,6 +22,10 @@ function document_theme($existing, $type, $theme, $path) {
  * Template preprocess function for document_node_information.tpl.php
  */
 function document_preprocess_document_node_information(&$variables) {
+  if (!function_exists('cf_theme_get_variables')){
+    return;
+  }
+
   $function_history = array();
   cf_error_append_history($function_history, __FUNCTION__);
 
@@ -121,6 +125,10 @@ function document_preprocess_html(&$vars) {
     $vars = array();
   }
 
+  if (!function_exists('cf_theme_get_variables')){
+    return;
+  }
+
   if (empty($vars['cf'])){
     $vars['cf'] = cf_theme_get_variables($vars);
   }
@@ -135,6 +143,10 @@ function document_preprocess_html(&$vars) {
 function document_preprocess_page(&$vars) {
   if (!is_array($vars)){
     $vars = array();
+  }
+
+  if (!function_exists('cf_theme_get_variables')){
+    return;
   }
 
   if (empty($vars['cf'])){
