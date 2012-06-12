@@ -6,7 +6,7 @@
   <title><?php print $head_title; ?></title>
   <?php print $styles; ?>
   <?php print $scripts; ?>
-  <?php print(cf_theme_generate_headers($cf)); ?>
+  <?php if (function_exists('cf_theme_generate_headers')) print(cf_theme_generate_headers($cf)); ?>
   <?php if ($cf['is']['front'] || $cf['at']['path'] == 'news' || $cf['at']['alias'] == 'news') { ?><link rel="alternate"  type="application/rss+xml" title="McNeese State University - News, Events, and More" href="/rss/feed/news_events_and_more" /><?php } ?>
   <?php if ($cf['at']['path'] == 'news/featured' || $cf['at']['alias'] == 'news/featured') { ?><link rel="alternate"  type="application/rss+xml" title="McNeese State University - Featured" href="/rss/feed/featured" /><?php } ?>
   <?php if ($cf['at']['path'] == 'news/events' || $cf['at']['alias'] == 'news/events') { ?><link rel="alternate"  type="application/rss+xml" title="McNeese State University - News & Events" href="/rss/feed/news" /><?php } ?>

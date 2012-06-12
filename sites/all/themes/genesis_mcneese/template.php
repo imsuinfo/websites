@@ -1,6 +1,67 @@
 <?php
 
 /**
+ * Custom initialization function designed to set defaults.
+ *
+ * This is provided to handle the case where the cf functions are not available, for whatever reason.
+ * This provides a manual setup of the default array keys used in the appropriate *.tpl.php theme templates.
+ * The initialized variables is the bare minimumi and defaults most conditionals to FALSE.
+ */
+function genesis_mcneese_initialize_cf_array(&$vars) {
+  $vars['cf'] = array();
+  $cf = &$vars['cf'];
+  $page = &$vars['page'];
+
+  $cf['agent'] = array();
+  $cf['agent']['doctype'] = '';
+
+  $cf['at'] = array();
+  $cf['is'] = array();
+  $cf['show'] = array();
+  $cf['show']['page'] = array();
+
+  foreach (array('front', 'path', 'alias') as $item) {
+    $cf['at'][$item] = '';
+  }
+
+  foreach (array('overlay', 'unsupported', 'emergency') as $item) {
+    $cf['is'][$item] = FALSE;
+  }
+
+  foreach (array('help', 'subboard', 'sidebar_second', 'tertiary_content') as $item) {
+    $cf['show']['page'][$item] = FALSE;
+  }
+
+  foreach (array('emergency', 'subboard_image', 'logo', 'title_prefix', 'title_suffix', 'site_name', 'sidenote', 'breadcrumb', 'site_slogan') as $item) {
+    $cf['show'][$item] = FALSE;
+  }
+
+  foreach (array('header', 'content', 'footer', 'leaderboard', 'sidebar_first', 'highlighted', 'secondary_content') as $item) {
+    $page[$item] = drupal_render($page[$item]);
+    $cf['show']['page'][$item] = TRUE;
+  }
+
+  foreach (array('primary_local_tasks', 'secondary_local_tasks', 'main_menu_links', 'secondary_menu_links', 'action_links') as $item) {
+    $cf['show'][$item] = FALSE;
+  }
+
+  foreach (array('messages', 'title') as $item) {
+    $cf['show'][$item] = TRUE;
+  }
+
+  // some defaults we can guess
+  $cf['is']['front'] = drupal_is_front_page();
+
+  $cf['markup_css'] = array();
+  $cf['markup_css']['body'] = array();
+  $cf['markup_css']['body']['class'] = '';
+  $cf['markup_css']['container'] = array();
+  $cf['markup_css']['container']['class'] = '';
+  $cf['markup_css']['content'] = array();
+  $cf['markup_css']['content']['class'] = '';
+}
+
+/**
  * Override or insert variables into the maintenance page template.
  */
 function genesis_mcneese_preprocess_maintenance_page(&$vars) {
@@ -9,6 +70,7 @@ function genesis_mcneese_preprocess_maintenance_page(&$vars) {
   }
 
   if (!function_exists('cf_theme_get_variables')){
+    genesis_mcneese_initialize_cf_array($vars);
     return;
   }
 
@@ -48,6 +110,7 @@ function genesis_mcneese_preprocess_html(&$vars) {
   }
 
   if (!function_exists('cf_theme_get_variables')){
+    genesis_mcneese_initialize_cf_array($vars);
     return;
   }
 
@@ -84,6 +147,7 @@ function genesis_mcneese_preprocess_page(&$vars) {
   }
 
   if (!function_exists('cf_theme_get_variables')){
+    genesis_mcneese_initialize_cf_array($vars);
     return;
   }
 
