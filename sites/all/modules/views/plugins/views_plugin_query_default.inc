@@ -1161,6 +1161,7 @@ class views_plugin_query_default extends views_plugin_query {
    * Build fields array.
    */
   function compile_fields($fields_array, $query) {
+    $compiled = array('actual_fields' => array());
     $non_aggregates = array();
     foreach ($fields_array as $field) {
       $string = '';
@@ -1169,6 +1170,10 @@ class views_plugin_query_default extends views_plugin_query {
       }
       $string .= $field['field'];
       $fieldname = (!empty($field['alias']) ? $field['alias'] : $string);
+
+      if (!in_array($string, $compiled['fields'])) {
+        $compiled['fields'][] = $string;
+      }
 
       if (!empty($field['distinct'])) {
         throw new Exception("Column-level distinct is not supported anymore.");
@@ -1193,7 +1198,7 @@ class views_plugin_query_default extends views_plugin_query {
       }
       // This is a formula, using no tables.
       elseif (empty($field['table'])) {
-        $non_aggregates[] = $fieldname;
+        $non_aggregates[$string] = $fieldname;
         $placeholders = !empty($field['placeholders']) ? $field['placeholders'] : array();
         $query->addExpression($string, $fieldname, $placeholders);
       }
@@ -1204,7 +1209,7 @@ class views_plugin_query_default extends views_plugin_query {
         $query->addField(!empty($field['table']) ? $field['table'] : $this->base_table, $field['field'], $fieldname);
       }
       elseif (empty($field['aggregate'])) {
-        $non_aggregates[] = $fieldname;
+        $non_aggregates[$string] = $fieldname;
         $query->addField(!empty($field['table']) ? $field['table'] : $this->base_table, $field['field'], $fieldname);
       }
 
@@ -1221,9 +1226,9 @@ class views_plugin_query_default extends views_plugin_query {
         break;
       }
     }
-    return array(
-      $non_aggregates,
-    );
+
+    $compiled['non_aggregates'] = $non_aggregates;
+    return $compiled;
   }
 
   /**
@@ -1237,8 +1242,7 @@ class views_plugin_query_default extends views_plugin_query {
     // Check query distinct value.
     if (empty($this->no_distinct) && $this->distinct && !empty($this->fields)) {
       if ($this->pure_distinct === FALSE){
-        $base_field_alias = $this->add_field($this->base_table, $this->base_field);
-        $this->add_groupby($base_field_alias);
+        $this->add_groupby($this->base_table . '.' . $this->base_field);
       }
       $distinct = TRUE;
     }
@@ -1303,33 +1307,14 @@ class views_plugin_query_default extends views_plugin_query {
     }
 
     $this->has_aggregate = FALSE;
-    $non_aggregates = array();
 
-    $this->compile_fields($fields_array, $query);
-
-    foreach ($fields_array as $field){
-      if (!empty($field['table'])){
-        $name = $field['table'] . '.' . $field['field'];
-      }
-      else {
-        // Ignore SELECT variables, they cannot be used inside of GROUP BY statements as they are not part of any column.
-        if (preg_match("/^'.*'$/i", $field['field']) > 0){
-          continue;
-        }
-
-        $name = $field['field'];
-      }
-
-      if (!in_array($name, $non_aggregates)){
-        $non_aggregates[] = $name;
-      }
-    }
+    $compiled = $this->compile_fields($fields_array, $query);
 
     if (count($this->having)) {
       $this->has_aggregate = TRUE;
     }
-    if ($this->has_aggregate && (!empty($this->groupby) || !empty($non_aggregates))) {
-      $groupby = array_unique(array_merge($this->groupby, $non_aggregates));
+    if (!empty($this->groupby) || $this->has_aggregate && !empty($compiled['non_aggregates'])) {
+      $groupby = array_unique(array_merge($this->groupby, $compiled['fields']));
       foreach ($groupby as $field) {
         $query->groupBy($field);
       }
