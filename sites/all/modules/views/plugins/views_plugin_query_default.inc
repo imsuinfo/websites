@@ -1161,7 +1161,6 @@ class views_plugin_query_default extends views_plugin_query {
    * Build fields array.
    */
   function compile_fields($fields_array, $query) {
-    $compiled = array('actual_fields' => array());
     $non_aggregates = array();
     foreach ($fields_array as $field) {
       $string = '';
@@ -1170,10 +1169,6 @@ class views_plugin_query_default extends views_plugin_query {
       }
       $string .= $field['field'];
       $fieldname = (!empty($field['alias']) ? $field['alias'] : $string);
-
-      if (!in_array($string, $compiled['fields'])) {
-        $compiled['fields'][] = $string;
-      }
 
       if (!empty($field['distinct'])) {
         throw new Exception("Column-level distinct is not supported anymore.");
@@ -1198,7 +1193,9 @@ class views_plugin_query_default extends views_plugin_query {
       }
       // This is a formula, using no tables.
       elseif (empty($field['table'])) {
-        $non_aggregates[$string] = $fieldname;
+        if (!in_array($fieldname, $non_aggregates)) {
+          $non_aggregates[] = $fieldname;
+        }
         $placeholders = !empty($field['placeholders']) ? $field['placeholders'] : array();
         $query->addExpression($string, $fieldname, $placeholders);
       }
@@ -1209,7 +1206,9 @@ class views_plugin_query_default extends views_plugin_query {
         $query->addField(!empty($field['table']) ? $field['table'] : $this->base_table, $field['field'], $fieldname);
       }
       elseif (empty($field['aggregate'])) {
-        $non_aggregates[$string] = $fieldname;
+        if (!in_array($string, $non_aggregates)) {
+          $non_aggregates[] = $string;
+        }
         $query->addField(!empty($field['table']) ? $field['table'] : $this->base_table, $field['field'], $fieldname);
       }
 
@@ -1226,9 +1225,9 @@ class views_plugin_query_default extends views_plugin_query {
         break;
       }
     }
-
-    $compiled['non_aggregates'] = $non_aggregates;
-    return $compiled;
+    return array(
+      $non_aggregates,
+    );
   }
 
   /**
@@ -1241,8 +1240,9 @@ class views_plugin_query_default extends views_plugin_query {
   function query($get_count = FALSE) {
     // Check query distinct value.
     if (empty($this->no_distinct) && $this->distinct && !empty($this->fields)) {
-      if ($this->pure_distinct === FALSE){
-        $this->add_groupby($this->base_table . '.' . $this->base_field);
+      if ($this->pure_distinct === FALSE) {
+        $base_field_alias = $this->add_field($this->base_table, $this->base_field);
+        $this->add_groupby($base_field_alias);
       }
       $distinct = TRUE;
     }
@@ -1307,14 +1307,15 @@ class views_plugin_query_default extends views_plugin_query {
     }
 
     $this->has_aggregate = FALSE;
+    $non_aggregates = array();
 
-    $compiled = $this->compile_fields($fields_array, $query);
+    list($non_aggregates) = $this->compile_fields($fields_array, $query);
 
     if (count($this->having)) {
       $this->has_aggregate = TRUE;
     }
-    if (!empty($this->groupby) || $this->has_aggregate && !empty($compiled['non_aggregates'])) {
-      $groupby = array_unique(array_merge($this->groupby, $compiled['fields']));
+    if ($this->has_aggregate && (!empty($this->groupby) || !empty($non_aggregates))) {
+      $groupby = array_unique(array_merge($this->groupby, $non_aggregates));
       foreach ($groupby as $field) {
         $query->groupBy($field);
       }
