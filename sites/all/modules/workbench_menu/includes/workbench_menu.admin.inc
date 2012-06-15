@@ -1016,10 +1016,11 @@ function workbench_menu_admin_item_settings_form_settings($item, $menu) {
   $defaults['parent_id'] = '0';
   $defaults['weight'] = '0';
   $defaults['active_path'] = '';
-  $defaults['item_type'] = 'item_link';
+  $defaults['item_type'] = 'item_node';
   $defaults['expand'] = 'expand_auto';
   $defaults['properties'] = array();
   $defaults['properties']['url'] = '';
+  $defaults['properties']['node_id'] = '';
   $defaults['properties']['disabled'] = FALSE;
   $defaults['properties']['file'] = '';
   $defaults['properties']['file_type'] = 'file_type_file';
@@ -1074,6 +1075,10 @@ function workbench_menu_admin_item_settings_form_settings($item, $menu) {
     if (!empty($defaults['properties']['file'])) {
       // be user-friendly and show normal spaces instead of %20.
       $defaults['properties']['file'] = preg_replace('/%20/', ' ', $defaults['properties']['file']);
+    }
+
+    if (!empty($defaults['properties']['node_id'])) {
+      $defaults['properties']['node_id'] = $defaults['properties']['node_id'];
     }
   }
 
@@ -1174,6 +1179,19 @@ function workbench_menu_admin_item_settings_form_settings($item, $menu) {
     '#size' => 64,
   );
 
+  $form['settings']['node_id'] = array(
+    '#type' => 'textfield',
+    '#title' => t("Node ID"),
+    '#default_value' => $defaults['properties']['node_id'],
+    '#description' =>
+      t("Specify the numeric node id of your desired page.") . '<br>' .
+      t("You can search for a specific node id by typing in the title in this field.") . '<br>' .
+      t("Both ? and # are allowed to be appended onto the node id."),
+    '#dependency' => array('edit-settings-item-type' => array('item_node')),
+    '#size' => 64,
+    '#autocomplete_path' => 'workbench_menu/autocomplete_nid',
+  );
+
   $form['settings']['disabled'] = array(
     '#type' => 'checkbox',
     '#title' => t("Disabled"),
@@ -1242,6 +1260,9 @@ function workbench_menu_admin_item_settings_form_settings($item, $menu) {
     '#description' => t("Define the default behavior for when the item should have its child items shown."),
   );
 
+  if (!(user_access('change workbench menu item active path') || user_access('administer workbench menu'))) {
+    $form['settings']['active_path']['#type'] = 'value';
+  }
 
   return $form;
 }
@@ -1512,6 +1533,34 @@ function workbench_menu_admin_item_settings_edit_form_validate($form, &$form_sta
   }
 
   switch ($item_type) {
+    case 'item_node':
+      if (empty($form_state['values']['settings']['node_id'])) {
+        form_set_error('settings][node_id', t("The node id is required for an item type of %type.", array('%type' => $item_type_name)));
+      }
+      else {
+        $matches = array();
+        $node_id = $form_state['values']['settings']['node_id'];
+        $matched = preg_match('@^(\d+)(/.*|$|\?.*|#.*)@', $node_id, $matches);
+
+        if ($matched > 0) {
+          $node_id = $matches[1];
+        }
+
+        if (!is_numeric($node_id) || (float) $node_id !== round($node_id)) {
+          form_set_error('settings][node_id', t("%nid is not a valid node id, the node id can only be a positive integer.", array('%nid' => $form_state['values']['settings']['node_id'])));
+        }
+        else {
+          if ($matched > 0) {
+            $results = db_query('SELECT nid FROM {node} WHERE nid = :nid', array(':nid' => $node_id));
+          }
+
+          if (!is_object($results) || $results->rowCount() == 0) {
+            form_set_error('settings][node_id', t("There is no node with an id of %nid .", array('%nid' => $node_id)));
+          }
+        }
+      }
+      break;
+
     case 'item_link':
       if (empty($form_state['values']['settings']['url'])) {
         form_set_error('settings][url', t("The URL is required for an item type of %type.", array('%type' => $item_type_name)));
@@ -1615,7 +1664,7 @@ function workbench_menu_admin_item_settings_edit_form_submit($form, &$form_state
 
   $properties = array();
 
-  foreach (array('url', 'disabled', 'file', 'file_type', 'menu', 'menu_item') as $property) {
+  foreach (array('url', 'node_id', 'disabled', 'file', 'file_type', 'menu', 'menu_item') as $property) {
     if (isset($form_state['values']['settings'][$property])) {
       $properties[$property] = &$form_state['values']['settings'][$property];
     }

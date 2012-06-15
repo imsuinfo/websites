@@ -49,6 +49,11 @@ function workbench_menu_permission() {
     'description' => t("Grants permissions to alter the menu hidden related settings for any workbench menus in which a user is able to edit."),
   );
 
+  $permissions['change workbench menu item active path'] = array(
+    'title' => t("Change Workbench Menu Item Active Path"),
+    'description' => t("Grants permissions to alter the active path for any menu item in which a user is able to edit."),
+  );
+
   $permissions['administer workbench menu'] = array(
     'title' => t("Administer Workbench Menu"),
     'description' => t("Grants permissions to alter all workbench menus and perform administrative tasks."),
@@ -127,6 +132,13 @@ function workbench_menu_menu() {
     'access arguments' => array(3, 4),
     'type' => MENU_NORMAL_ITEM,
     'weight' => 6,
+  );
+
+  $items['workbench_menu/autocomplete_nid'] = array(
+    'title' => '',
+    'page callback' => 'workbench_menu_autocomplete_nid',
+    'access callback' => 'workbench_menu_edit_access',
+    'type' => MENU_CALLBACK,
   );
 
   return $items;
@@ -667,11 +679,17 @@ function workbench_menu_build_menu_item($menu, $item, &$variables) {
   }
 
   // menu item links are parts of a menu that link to some url, file, or id (local or remote).
-  if ($settings[$item['item']->id]['type'] == 'item_link') {
+  if ($settings[$item['item']->id]['type'] == 'item_link' || $settings[$item['item']->id]['type'] == 'item_node') {
     $link_path = '';
 
     $matches = array();
-    $matched = preg_match('@^/node/(\d+)(/.*|$|\?.*|#.*)@', $item['item']->properties['url'], $matches);
+
+    if ($settings[$item['item']->id]['type'] == 'item_link') {
+      $matched = preg_match('@^/node/(\d+)(/.*|$|\?.*|#.*)@', $item['item']->properties['url'], $matches);
+    }
+    else {
+      $matched = preg_match('@^(\d+)(/.*|$|\?.*|#.*)@', $item['item']->properties['node_id'], $matches);
+    }
 
     if ($matched > 0) {
       $path_alias = drupal_get_path_alias('node/' . $matches[1] . $matches[2]);
@@ -1913,4 +1931,45 @@ function workbench_menu_clear_cache_at_path($path) {
   if ($cached_breadcrumb) {
     cache_set($menu_cache_id, $breadcrumbs_cached, 'cache_menu');
   }
+}
+
+/**
+ * Generates the JS array for workbench node id autocomplete fields.
+ *
+ * This pulls the first 15 results that match the specified string.
+ *
+ * @param string $string
+ *   A string to match node titles against.
+ * @return array
+ *   An array of string matches.
+ */
+function workbench_menu_autocomplete_nid($string) {
+  if (!is_string($string)) {
+    if (module_exists('cf_error')) {
+      cf_error::not_string('string');
+    }
+
+    return array();
+  }
+
+  $matches = array();
+  $results = db_query_range('SELECT nid, title FROM {node} WHERE LOWER(title) LIKE LOWER(:string) ORDER BY title', 0, 9, array(':string' => $string . '%'));
+
+  foreach ($results as $node) {
+    $matches[$node->nid] = check_plain($node->title);
+  }
+
+  if (module_exists('devel')) {
+    $GLOBALS['devel_shutdown'] = FALSE;
+  }
+
+  if (count($matches) < 9) {
+    $results = db_query_range('SELECT nid, title FROM {node} WHERE LOWER(title) LIKE LOWER(:string) ORDER BY title', 0, 9 - count($matches), array(':string' => '%' . $string . '%'));
+
+    foreach ($results as $node) {
+      $matches[$node->nid] = check_plain($node->title);
+    }
+  }
+
+  drupal_json_output($matches);
 }

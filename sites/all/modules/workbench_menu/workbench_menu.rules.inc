@@ -15,7 +15,6 @@ function workbench_menu_rules_file_info() {
   return $items;
 }
 
-
 /**
  * Implements hook_rules_condition_info() on behalf of the node module.
  */
