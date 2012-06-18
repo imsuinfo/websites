@@ -5,3 +5,10 @@ package = Common Functionality
 dependencies[] = cf
 dependencies[] = field
 files[] = cf_field_cardinality.module
+
+; Information added by drupal.org packaging script on 2012-06-18
+version = "7.x-2.0-unstable2"
+core = "7.x"
+project = "cf"
+datestamp = "1340028075"
+
