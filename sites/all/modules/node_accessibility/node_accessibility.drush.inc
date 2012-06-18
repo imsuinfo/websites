@@ -13,22 +13,22 @@ function node_accessibility_drush_command() {
 
   $items['acc_validate_node'] = array(
     'callback' => 'node_accessibility_drush_callback_validate',
-    'description' => "Perform accessibility validation on nodes.",
+    'description' => dt("Perform accessibility validation on nodes."),
     'arguments' => array(
-      'nids' => "A list of space-separated node IDs to validate.",
+      'nids' => dt("Optional list of space-separated node IDs to validate."),
     ),
     'options' => array(
-      '--all' => "Perform validation on every single node in the system (this may take a while).",
-      '--type' => "Perform validation on every single node in the system of the specified content type (use the machine name).",
-      '--delete' => "Instead of performing validation, delete the validation information for a given node.",
-      '--revisions' => "Include all revisions for each node (can make --all take a very long time).",
-      '--chunk' => "Set total number of nodes to validate in one pass; defaults to 256.",
+      '--all' => dt("Perform validation on every single node in the system (this may take a while)."),
+      '--type' => dt("Perform validation on every single node in the system of the specified content type (use the machine name)."),
+      '--delete' => dt("Instead of performing validation, delete the validation information for a given node."),
+      '--revisions' => dt("Include all revisions for each node (can make --all take a very long time)."),
+      '--chunk' => dt("Set total number of nodes to validate in one pass; defaults to 256."),
     ),
     'examples' => array(
-      'drush acc_validate_node 45 46 47' => "Validate nodes with IDs of 45, 46, and 47.",
-      'drush acc_validate_node --all' => "Validate all nodes in the system.",
-      'drush acc_validate_node --type page' => "Validate all nodes in the system of the content type 'page'.",
-      'drush acc_validate_node --all --revisions --delete' => "Delete validation problems for all revisions for all nodes in the system.",
+      'drush acc_validate_node 45 46 47' => dt("Validate nodes with IDs of 45, 46, and 47."),
+      'drush acc_validate_node --all' => dt("Validate all nodes in the system."),
+      'drush acc_validate_node --type page' => dt("Validate all nodes in the system of the content type 'page'."),
+      'drush acc_validate_node --all --revisions --delete' => dt("Delete validation problems for all revisions for all nodes in the system."),
     ),
   );
 
