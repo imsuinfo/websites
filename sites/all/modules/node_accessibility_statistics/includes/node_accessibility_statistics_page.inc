@@ -426,15 +426,19 @@ function node_accessibility_statistics_page($statistics_type = 'all') {
 /**
  * Displays accessibility statistical information derived from nodes on the entire system.
  *
- * @param $statistics_type
+ * @param $published_type
+ *   One of the following allowed strings:
+ *   - 'all' No restrictions on loading of problems.
+ *   - 'published' Restrict loading of problems to live published content (active revision).
+ *   - 'unpublished' Restrict loading of problems to live unpublished content (active revision).
+ *
+ * @param $live_type
  *   One of the following allowed strings:
  *   - 'all' No restrictions on loading of problems.
  *   - 'live' Restrict loading of problems to live content (active revision).
  *   - 'unlive' Restrict loading of problems to non-live content (active revision).
- *   - 'published' Restrict loading of problems to published content (active revision).
- *   - 'unpublished' Restrict loading of problems to unpublished content (active revision).
  */
-function node_accessibility_statistics_page_problem($machine_name, $statistics_type = 'all') {
+function node_accessibility_statistics_page_problem($machine_name, $published_type = 'all', $live_type = 'live') {
   $function_history = array();
   cf_error_append_history($function_history, __FUNCTION__);
   $form = array();
@@ -447,26 +451,30 @@ function node_accessibility_statistics_page_problem($machine_name, $statistics_t
   $conditions = array();
   $title = "All";
 
-  if (is_string($statistics_type)) {
-    switch ($statistics_type) {
-      case 'live':
-        $conditions['live_only'] = TRUE;
-        $title = "Live";
-        break;
-
-      case 'unlive':
-        $conditions['unlive_only'] = TRUE;
-        $title = "Unlive";
-        break;
-
+  if (is_string($published_type)) {
+    switch ($published_type) {
       case 'published':
         $conditions['published_only'] = TRUE;
+        $conditions['live_only'] = TRUE;
         $title = "Published";
         break;
 
       case 'unpublished':
         $conditions['unpublished_only'] = TRUE;
+        $conditions['live_only'] = TRUE;
         $title = "Unpublished";
+        break;
+    }
+  }
+
+  if (is_string($live_type)) {
+    switch ($live_type) {
+      case 'live':
+        $conditions['live_only'] = TRUE;
+        break;
+
+      case 'unlive':
+        $conditions['unlive_only'] = TRUE;
         break;
     }
   }
