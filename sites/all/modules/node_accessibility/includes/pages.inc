@@ -64,7 +64,11 @@ function node_accessibility_accessibility_tab_page($form, &$form_state, $node, $
     '#collapsible' => TRUE,
     '#collapsed' => TRUE,
     '#tree' => TRUE,
-    '#description' => theme('node_accessibility_information', array('node' => $node)),
+  );
+
+  $form['about_this_node']['node_information']['information'] = array(
+    '#type' => 'markup',
+    '#markup' => theme('node_accessibility_information', array('node' => $node)),
   );
 
   $form['accessibility_validation_results'] = array(
