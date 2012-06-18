@@ -13,7 +13,7 @@
 <div class="node_accessibility-node_information node_accessibility-items">
   <div class="node_accessibility-node_information-nid node_accessibility-node_information-item">
     <span class="node_accessibility-node_information-nid-object node_accessibility-node_information-object"><?php print(t("Node ID")); ?></span>
-    <span class="node_accessibility-node_information-nid-content node_accessibility-node_information-content"><?php print($node->nid); ?></span>
+    <span class="node_accessibility-node_information-nid-content node_accessibility-node_information-content"><a href="<?php print(url('node/' . $node->nid)); ?>"><?php print($node->nid); ?></a></span>
   </div>
   <div class="node_accessibility-node_information-vid node_accessibility-node_information-item">
     <span class="node_accessibility-node_information-vid-object node_accessibility-node_information-object"><?php print(t("Revision ID")); ?></span>
