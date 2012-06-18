@@ -82,7 +82,7 @@ function genesis_mcneese_preprocess_maintenance_page(&$vars) {
   cf_theme_render_variables($vars, $keys_to_render);
 
   $keys_to_render = array('leaderboard', 'primary_links', 'header', 'help', 'secondary_content', 'sidebar_first', 'highlighted', 'content', 'sidebar_second', 'tertiary_content', 'footer', 'action_links', 'subboard');
-  cf_theme_render_variables($vars, $keys_to_render);
+  cf_theme_render_variables($vars, $keys_to_render, 'page');
 
   genesis_mcneese_process_variables($vars);
 

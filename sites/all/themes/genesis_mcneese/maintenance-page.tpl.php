@@ -36,7 +36,7 @@
   <!--(begin_page)-->
   <div id="container" class="<?php print $classes; ?>">
     <?php if (!$cf['is']['overlay']){ ?>
-      <?php if ($cf['show']['leaderboard']){ ?>
+      <?php if ($cf['show']['page']['leaderboard']){ ?>
         <div id="leaderboard" class="clearfix">
           <!--(begin_leaderboard)-->
           <?php print($leaderboard); ?>
@@ -60,7 +60,7 @@
             <!--(end_branding)-->
           </div>
 
-        <?php if ($cf['show']['header']){ ?>
+        <?php if ($cf['show']['page']['header']){ ?>
           <!--(begin_header_blocks)-->
           <div id="header-blocks"><?php print($header); ?></div>
           <!--(end_header_blocks)-->
@@ -80,7 +80,7 @@
     <?php } ?>
 
     <div id="columns" class="clear clearfix <?php print($cf['markup_css']['container']['class']); ?>">
-      <?php if ($cf['show']['sidebar_first']){ ?>
+      <?php if ($cf['show']['page']['sidebar_first']){ ?>
         <div id="sidebar-first" class="sidebar">
           <!--(begin_sidebar_first)-->
           <?php print($sidebar_first); ?>
@@ -103,14 +103,14 @@
           <!--(end_messages)-->
         <?php } ?>
 
-        <?php if ($cf['show']['help']){ ?>
+        <?php if ($cf['show']['page']['help']){ ?>
           <!--(begin_help)-->
           <?php print($help); ?>
           <!--(end_help)-->
         <?php } ?>
 
         <div class="content-inner">
-          <?php if ($cf['show']['highlighted']){ ?>
+          <?php if ($cf['show']['page']['highlighted']){ ?>
             <!--(begin_highlighted)-->
             <div id="highlighted"><?php print ($highlighted); ?></div>
             <!--(end_highlighted)-->
@@ -118,7 +118,7 @@
 
           <div id="main-content">
             <!--(begin_main_content)-->
-            <?php if ($cf['show']['subboard'] || $cf['show']['subboard_image']){ ?>
+            <?php if ($cf['show']['page']['subboard'] || $cf['show']['subboard_image']){ ?>
               <div id="subboard">
                 <?php if ($cf['show']['subboard_image']){ ?>
                   <div id="subboard-image">
@@ -128,7 +128,7 @@
                   </div>
                 <?php } ?>
 
-                <?php if ($cf['show']['subboard']){ ?>
+                <?php if ($cf['show']['page']['subboard']){ ?>
                   <!--(begin_subboard)-->
                   <?php print($subboard); ?>
                   <!--(end_subboard)-->
@@ -186,7 +186,7 @@
               </div>
             <?php } ?>
 
-            <?php if ($cf['show']['action_links']){ ?>
+            <?php if ($cf['show']['page']['action_links']){ ?>
               <div id='action_links'>
                 <!--(begin_action_links)-->
                 <ul class="action-links"><?php print($action_links); ?></ul>
@@ -208,14 +208,14 @@
         <!--(end_content_column)-->
       </div>
 
-      <?php if ($cf['show']['sidebar_second']){ ?>
+      <?php if ($cf['show']['page']['sidebar_second']){ ?>
         <!--(begin_sidebar_second)-->
         <div id="sidebar-second" class="sidebar"><?php print($sidebar_second); ?></div>
         <!--(end_sidebar_second)-->
       <?php } ?>
     </div>
 
-    <?php if ($cf['show']['tertiary_content'] && !$cf['is']['overlay']){ ?>
+    <?php if ($cf['show']['page']['tertiary_content'] && !$cf['is']['overlay']){ ?>
       <div id="tertiary-content" class="<?php print($cf['markup_css']['content']['class']); ?>">
         <!--(begin_tertiary_content)-->
         <?php print($tertiary_content); ?>
@@ -224,7 +224,7 @@
     <?php } ?>
   </div>
 
-  <?php if ($cf['show']['footer'] && !$cf['is']['overlay']){ ?>
+  <?php if ($cf['show']['page']['footer'] && !$cf['is']['overlay']){ ?>
     <div id="footer" class="drupal_footer">
       <!--(begin_footer)-->
       <?php print ($footer); ?>
