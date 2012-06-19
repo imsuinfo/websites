@@ -548,11 +548,8 @@ html#ckeditor-wysiwygarea body.cke_show_blocks h6 {
   padding: 0;
 }
 
-.block-workbench-menu .menu_item-container > .menu_item-wrapper > .menu_item-type-item_label {
+.block-workbench-menu .menu_item-container > .menu_item-wrapper > span.menu_item-type-item_label {
   color: #00477f;
-}
-
-.block-workbench-menu .menu_item-container > .menu_item-wrapper > .menu_item-type-item_label {
   padding: 2px 4px;
 }
 

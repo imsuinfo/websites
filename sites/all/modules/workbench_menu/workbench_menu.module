@@ -364,6 +364,7 @@ function workbench_menu_block_view($delta = '') {
     '#markup' => implode(' ', $menu_markup),
     '#attached' => array(
       'css' => array(drupal_get_path('module', 'workbench_menu') . '/includes/workbench_menu.css'),
+      'js' => array(drupal_get_path('module', 'workbench_menu') . '/includes/workbench_menu.js'),
     ),
   );
 
@@ -675,6 +676,13 @@ function workbench_menu_build_menu_item($menu, $item, &$variables) {
   if ($settings[$item['item']->id]['type'] == 'item_label') {
     if (isset($item['item']->properties['disabled']) && $item['item']->properties['disabled']) {
       $settings[$item['item']->id]['attributes']['class'][] = 'disabled';
+      $settings[$item['item']->id]['clickable'] = FALSE;
+    }
+    elseif (isset($item['item']->properties['clickable']) && $item['item']->properties['clickable']) {
+      $settings[$item['item']->id]['attributes']['class'][] = 'clickable';
+      $settings[$item['item']->id]['attributes']['class'][] = 'noscript';
+      $settings[$item['item']->id]['attributes']['href'] = array('#');
+      $settings[$item['item']->id]['clickable'] = TRUE;
     }
   }
 
@@ -999,6 +1007,10 @@ function workbench_menu_render_menus($built_menus, $path_current, &$show_parents
  *   - 'invalid_trail_active': A boolean representing that the trail
  *   is active but there is no actual active item because the path
  *   is invalid (or has no item associated with it).
+ *   - 'clickable_label': A boolean representing that the item
+ *   is a clickable label and so the paths are not active, but
+ *   should be made available for the client (via js and/or css) to
+ *   make it active or not.
  * @param string $path_current
  *   A string containing the complete url path that is currently
  *   active.
@@ -1023,6 +1035,13 @@ function workbench_menu_render_menu_item(&$variables, $path_current) {
   $variables['count_item_local']++;
   $variables['trail_is_active'] = FALSE;
   $variables['invalid_trail_active'] = FALSE;
+  $variables['clickable_label'] = FALSE;
+
+  if ($variables['settings'][$variables['id']]['type'] == 'item_label') {
+    if (!empty($variables['settings'][$variables['id']]['clickable'])) {
+      $variables['clickable_label'] = TRUE;
+    }
+  }
 
   $list = array();
   $list['id'] = array();
@@ -1083,6 +1102,7 @@ function workbench_menu_render_menu_item(&$variables, $path_current) {
     $child_variables['depth'] = $variables['depth'] + 1;
     $child_variables['trail_is_active'] = FALSE;
     $child_variables['invalid_trail_active'] = FALSE;
+    $child_variables['clickable'] = FALSE;
 
     $child_list = array();
 
@@ -1105,10 +1125,16 @@ function workbench_menu_render_menu_item(&$variables, $path_current) {
       }
     }
 
-    if ($variables['trail_is_active']) {
+    if ($variables['trail_is_active'] || $variables['clickable_label']) {
       if ($variables['settings'][$variables['id']]['expand'] == 'expand_always' || $variables['settings'][$variables['id']]['expand'] == 'expand_auto') {
-        $variables['settings'][$variables['id']]['attributes']['class'][] = 'expanded';
         $list['children'] = &$child_list;
+
+        if ($variables['clickable_label']) {
+          $variables['settings'][$variables['id']]['attributes']['class'][] = 'collapsed';
+        }
+        else {
+          $variables['settings'][$variables['id']]['attributes']['class'][] = 'expanded';
+        }
       }
       elseif ($variables['settings'][$variables['id']]['expand'] == 'expand_never') {
         $variables['settings'][$variables['id']]['attributes']['class'][] = 'collapsed';
@@ -1134,6 +1160,16 @@ function workbench_menu_render_menu_item(&$variables, $path_current) {
 
   if ($variables['trail_is_active'] || preg_match('@^' . $variables['settings'][$variables['id']]['active_path'] . '/@', $path_current) > 0) {
     $variables['settings'][$variables['id']]['attributes']['class'][] = 'active-trail';
+
+    if ($variables['clickable_label']) {
+      $noscript_key = array_search('noscript', $variables['settings'][$variables['id']]['attributes']['class']);
+
+      if ($noscript_key !== FALSE) {
+        unset($variables['settings'][$variables['id']]['attributes']['class'][$noscript_key]);
+      }
+
+      unset($noscript_key);
+    }
   }
 
   $variables['settings'][$variables['id']]['attributes']['class'][] = ($variables['even_menu'] ? 'menu_even' : 'menu_odd') ;

@@ -83,3 +83,16 @@
 .menu_item-icon_mail {
   background-image: url(../images/icon_mail.png);
 }
+
+.menu_item-container.clickable.collapsed > .item-list {
+  display: none;
+}
+
+.menu_item-container.clickable.expanded > .item-list,
+.menu_item-container.clickable.collapsed.active > .item-list,
+.menu_item-container.clickable.collapsed.active-trail > .item-list,
+.menu_item-container.clickable.collapsed.noscript:hover > .item-list,
+.menu_item-container.clickable.collapsed.noscript:focus > .item-list,
+.menu_item-container.clickable.collapsed.noscript:active > .item-list {
+  display: block;
+}

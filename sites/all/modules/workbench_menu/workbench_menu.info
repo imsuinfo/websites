@@ -12,6 +12,7 @@ files[] = workbench_menu.install
 files[] = workbench_menu.module
 files[] = includes/workbench_menu.entity.inc
 files[] = includes/workbench_menu.css
+files[] = includes/workbench_menu.js
 files[] = includes/workbench_menu_admin.css
 files[] = includes/workbench_menu.admin.inc
 

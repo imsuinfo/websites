@@ -1022,6 +1022,7 @@ function workbench_menu_admin_item_settings_form_settings($item, $menu) {
   $defaults['properties']['url'] = '';
   $defaults['properties']['node_id'] = '';
   $defaults['properties']['disabled'] = FALSE;
+  $defaults['properties']['clickable'] = FALSE;
   $defaults['properties']['file'] = '';
   $defaults['properties']['file_type'] = 'file_type_file';
   $defaults['properties']['menu'] = NULL;
@@ -1197,6 +1198,14 @@ function workbench_menu_admin_item_settings_form_settings($item, $menu) {
     '#title' => t("Disabled"),
     '#default_value' => $defaults['properties']['disabled'],
     '#description' => t("Specify that this label represents a disabled or otherwise not available link."),
+    '#dependency' => array('edit-settings-item-type' => array('item_label')),
+  );
+
+  $form['settings']['clickable'] = array(
+    '#type' => 'checkbox',
+    '#title' => t("Clickable"),
+    '#default_value' => $defaults['properties']['clickable'],
+    '#description' => t("Specify that this label acts like a link and when clicked on may even expand to show hidden child items."),
     '#dependency' => array('edit-settings-item-type' => array('item_label')),
   );
 
@@ -1625,6 +1634,12 @@ function workbench_menu_admin_item_settings_edit_form_validate($form, &$form_sta
         $form_state['values']['settings']['menu'] = $record->menu_id;
       }
       break;
+
+    case 'item_label':
+      if ($form_state['values']['settings']['disabled'] && $form_state['values']['settings']['clickable']) {
+        form_set_error('settings][menu', t("The menu item %type cannot be both disabled and clickable, choose one or the other.", array('%type' => $item_type_name)));
+      }
+      break;
   }
 }
 
@@ -1664,7 +1679,7 @@ function workbench_menu_admin_item_settings_edit_form_submit($form, &$form_state
 
   $properties = array();
 
-  foreach (array('url', 'node_id', 'disabled', 'file', 'file_type', 'menu', 'menu_item') as $property) {
+  foreach (array('url', 'node_id', 'disabled', 'clickable', 'file', 'file_type', 'menu', 'menu_item') as $property) {
     if (isset($form_state['values']['settings'][$property])) {
       $properties[$property] = &$form_state['values']['settings'][$property];
     }
