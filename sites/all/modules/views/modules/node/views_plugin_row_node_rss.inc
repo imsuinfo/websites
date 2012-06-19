@@ -144,7 +144,12 @@ class views_plugin_row_node_rss extends views_plugin_row {
       foreach (rdf_get_namespaces() as $prefix => $uri) {
         $xml_rdf_namespaces['xmlns:' . $prefix] = $uri;
       }
-      $this->view->style_plugin->namespaces += $xml_rdf_namespaces;
+      if (property_exists($this->view->style_plugin, 'namespaces')) {
+        $this->view->style_plugin->namespaces += $xml_rdf_namespaces;
+      }
+      else {
+        $this->view->style_plugin->namespaces = $xml_rdf_namespaces;
+      }
     }
 
     // Hide the links if desired.
