@@ -10,28 +10,14 @@
           c = $(w).parent();
 
           if (!$(c).hasClass('active') && !$(c).hasClass('active-trail')) {
-            //if ($(c).hasClass('pseudo-active')) {
             if ($(c).hasClass('expanded')) {
-              //$(c).removeClass('pseudo-active');
-              //$(c).removeClass('active-trail');
-              //$(w).removeClass('pseudo-active');
-              //$(w).removeClass('active-trail');
-              //$(this).removeClass('pseudo-active');
-              //$(this).removeClass('active-trail');
               $(c).removeClass('expanded');
               $(c).addClass('collapsed');
               $(w).removeClass('expanded');
               $(w).addClass('collapsed');
               $(this).removeClass('expanded');
               $(this).addClass('collapsed');
-            //} else if (!$(c).hasClass('active-trail')) {
             } else if (!$(c).hasClass('active-trail')) {
-              //$(c).addClass('pseudo-active');
-              //$(c).addClass('active-trail');
-              //$(w).addClass('pseudo-active');
-              //$(w).addClass('active-trail');
-              //$(this).addClass('pseudo-active');
-              //$(this).addClass('active-trail');
               $(c).removeClass('collapsed');
               $(c).addClass('expanded');
               $(w).removeClass('collapsed');
