@@ -102,7 +102,7 @@ function cf_settings_boot() {
 
     if (array_key_exists($variable->variable_name, $conf['ip_php_ini'])) {
       foreach ($conf['ip_php_ini'][$variable->variable_name] as $key => &$value) {
-        if (!empty($value) && $key == $value) {
+        if (!empty($value) && $key == $client_ip) {
           ini_set($variable->variable_name, $value);
         }
       }
