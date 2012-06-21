@@ -18,17 +18,23 @@
  * Returns a query object meant to return all rids for a given uid.
  * This does not call ->execute() on the query object.
  *
+ * Can return an array of rids and will included the roles 0 and 2.
+ *
  * Justification:
  *  see cf_user_has_role().
  *
  * @param int $uid
  *   (optional) a uid of the user to get the role ids of if the current user is
  *   not to be used.
+ * @param int $object
+ *   (optional) If TRUE, then an un-executed query object is returned.
+ *   If FALSE, then an array of rids is returned.
  *
- * @return object
- *   A SelectQuery database object, this object has not been executed.
+ * @return object|array
+ *   Either a SelectQuery database object, this object has not been executed
+ *   or an array of rids is returned.
  */
-function cf_user_get_rids($uid = NULL) {
+function cf_user_get_rids($uid = NULL, $object = TRUE) {
   if ($uid == NULL) {
     $current_user = cf_current_user(FALSE);
     $uid = $current_user->uid;
@@ -52,7 +58,41 @@ function cf_user_get_rids($uid = NULL) {
 
   $query->condition($and);
 
-  return $query;
+  if ($object) {
+    return $query;
+  }
+
+  global $user;
+  $rids = array();
+
+  try {
+    $query_execute = $query->execute();
+
+    $rids = array_keys($query_execute->fetchAllAssoc('rid'));
+  }
+  catch (Exception $e) {
+    if (module_exists('cf_error')) {
+      cf_error::on_query_execution($e);
+    }
+  }
+
+  if ($user->uid == 0) {
+    if (!in_array(0, $rids)) {
+      $rids[] = 0;
+    }
+  }
+  else {
+    if (!in_array(2, $rids)) {
+      $rids[] = 2;
+    }
+
+    if ($user->uid == 1 && !in_array(1, $rids)) {
+      $rids[] = 1;
+    }
+  }
+
+
+  return $rids;
 }
 
 /**
@@ -93,9 +133,12 @@ function cf_user_has_role($rid, $uid = NULL) {
     return FALSE;
   }
 
-  // Roles 0 and 2 don't actually get assigned and can be guessed based on uid.
+  // Roles 0, 1, and 2 don't actually get assigned and can be guessed based on uid.
   if ($rid == 0) {
     return $uid == 0;
+  }
+  elseif ($rid == 1) {
+    return $uid == 1;
   }
   elseif ($rid == 2) {
     return $uid != 0;
