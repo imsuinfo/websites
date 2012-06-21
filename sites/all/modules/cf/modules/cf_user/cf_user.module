@@ -81,6 +81,26 @@ function cf_user_has_role($rid, $uid = NULL) {
     return FALSE;
   }
 
+  if ($uid == NULL) {
+    $current_user = cf_current_user(FALSE);
+    $uid = $current_user->uid;
+  }
+  elseif (!is_numeric($uid)) {
+    if (module_exists('cf_error')) {
+      cf_error::not_numeric('uid');
+    }
+
+    return FALSE;
+  }
+
+  // Roles 0 and 2 don't actually get assigned and can be guessed based on uid.
+  if ($rid == 0) {
+    return $uid == 0;
+  }
+  elseif ($rid == 2) {
+    return $uid != 0;
+  }
+
   $query = cf_user_get_rids($uid);
 
   if (is_object($query)) {
