@@ -465,5 +465,36 @@ function cf_version_exists($module, $version, $exact = FALSE) {
 
 
 /**
+ * Determine if the argument is an integer.
+ *
+ * Justification:
+ *   The PHP function is_int() does not return TRUE for numeric strings.
+ *   Doing a is_numeric() returns TRUE for floats.
+ *   There is no way to test to see if a numeric string is an integer.
+ *
+ *   The test for ($argument == (int) $argument) does not work because PHP
+ *   will auto-case both sides of the argument to an integer. The end result
+ *   is that arguments that are floats will return TRUE when it should not.
+ *
+ * References:
+ * - https://drupal.org/node/1003788#comment-4958332
+ * - http://us3.php.net/manual/en/function.is-int.php
+ * - http://us3.php.net/manual/en/function.is-numeric.php
+ *
+ * @param string $argument
+ *   The argument to test if it is an integer.
+ *
+ * @return bool
+ *   Returns TRUE for an integer or a string that represents a valid integer.
+ *   FALSE is returned for all non-integers, including floats.
+ */
+function cf_is_integer($argument) {
+  if (!is_numeric($argument)) return FALSE;
+
+  return (float) $argument === round($argument);
+}
+
+
+/**
  * @} End of '@addtogroup cf Common Functionality'.
  */
