@@ -152,14 +152,28 @@ class date_ical_plugin_row_ical_feed extends views_plugin_row {
       return;
     }
 
-    // Set the item date to the proper display timezone;
-    $start->setTimezone(new dateTimezone('UTC'));
-    $end->setTimezone(new dateTimezone('UTC'));
+    $start->setTimezone(new dateTimezone($item['timezone']));
+    $end->setTimezone(new dateTimezone($item['timezone']));
 
     $start_formatted = $start->format(DATE_FORMAT_DATETIME);
     $end_formatted = $end->format(DATE_FORMAT_DATETIME);
 
-    $all_day = date_is_all_day($start_formatted, $end_formatted, date_granularity_precision($info['granularity']));
+    // Guarantee an always accurate time by using UTC.
+    $start->setTimezone(new dateTimezone('UTC'));
+    $end->setTimezone(new dateTimezone('UTC'));
+
+    if ($start->format('Y-m-d') == $end->format('Y-m-d')) {
+      $all_day = date_is_all_day($start_formatted, $end_formatted, date_granularity_precision($info['granularity']));
+    }
+    else {
+      // set to all day if the start and end timespan is longer than 24 hours.
+      if (strtotime("+1 day", $start->getTimestamp()) <= $end->getTimestamp()) {
+        $all_day = TRUE;
+      }
+      else {
+        $all_day = FALSE;
+      }
+    }
 
     // According to RFC 2445 (clarified in RFC 5545) the DTEND value is
     // non-inclusive.  When it is a DATE rather than a DATETIME, this means
