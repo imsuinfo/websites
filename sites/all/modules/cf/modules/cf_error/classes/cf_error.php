@@ -847,27 +847,96 @@ class cf_error {
         $backtrace_size = count($full_backtrace);
 
         if ($backtrace_size > 0) {
-          $short_backtrace[] = reset($full_backtrace);
+          reset($full_backtrace);
+          $short_backtrace[] = & $full_backtrace[0];
         }
 
         if ($backtrace_size > 1) {
-          $short_backtrace[] = $full_backtrace[1];
+          $short_backtrace[] = & $full_backtrace[1];
         }
 
         if ($backtrace_size > 2) {
-          $short_backtrace[] = $full_backtrace[2];
+          $short_backtrace[] = & $full_backtrace[2];
         }
 
-        $variables_array['%cf_error-backtrace'] = print_r($short_backtrace, TRUE);
+        $variables_array['%cf_error-backtrace'] = self::p_generate_backtrace($short_backtrace);
       }
       else {
-        $variables_array['%cf_error-backtrace'] = print_r($error->get_backtrace(), TRUE);
+        $variables_array['%cf_error-backtrace'] = self::p_generate_backtrace($error->get_backtrace());
       }
 
       $message .= " \nBacktrace: %cf_error-backtrace";
     }
 
     watchdog($error->get_type(), $message, $variables_array, $error->get_severity());
+  }
+
+  /**
+   * Safely generates backtrace string.
+   *
+   * Alternate approachs use print_r() or var_export(), but these are prone to
+   * memory recursion problems.
+   *
+   * This has a maximum recursion of 3.
+   *
+   * @param array $backtrace
+   *   A backtrace array to convert to a string.
+   *
+   * @param array $backtrace
+   *   A backtrace array to convert to a string.
+   *
+   * @return string
+   *   The generated string.
+   */
+  private static function p_generate_backtrace(&$backtrace, $depth = 0) {
+    $string = "";
+    $length = $depth * 4 + 2;
+
+    if ($depth == 0) {
+      $string = "\n";
+
+      foreach ($backtrace as $key => &$value) {
+        $string .= str_repeat(' ', 2) . '[' . $key . '] => Array ' . "\n";
+        $string .=str_repeat(' ', 4) .  '(' . "\n";
+        $string .= self::p_generate_backtrace($value, $depth + 1);
+        $string .= str_repeat(' ', 4) . ')' . "\n";
+      }
+    }
+    else {
+      foreach ($backtrace as $key => &$value) {
+        if (is_array($value)) {
+          if ($depth + 1 > 4) {
+            $string .= str_repeat(' ', $length) . '[' . $key . '] => Array (not displayed)' . "\n";
+          }
+          else {
+            $string .= str_repeat(' ', $length) . '[' . $key . '] => Array ' . "\n";
+            $string .= str_repeat(' ', $length + 2) . '(' . "\n";
+            $string .= self::p_generate_backtrace($value, $depth + 1);
+            $string .= str_repeat(' ', $length + 2) . ')' . "\n";
+          }
+        }
+        elseif (is_object($value)) {
+          if ($depth + 1 > 4) {
+            $string .= str_repeat(' ', $length) . '[' . $key . '] => Object (not displayed)' . "\n";
+          }
+          else {
+            $object = (array) get_object_vars($value);
+            $string .= str_repeat(' ', $length) . '[' . $key . '] => Object ' . "\n";
+            $string .= str_repeat(' ', $length + 2) . '(' . "\n";
+            $string .= self::p_generate_backtrace($object, $depth + 1);
+            $string .= str_repeat(' ', $length + 2) . ')' . "\n";
+          }
+        }
+        elseif (is_bool($value)) {
+          $string .= str_repeat(' ', $length) . '[' . $key . '] => ' . ($value ? "TRUE" : "FALSE") . "\n";
+        }
+        else {
+          $string .= str_repeat(' ', $length) . '[' . $key . '] => ' . print_r($value, TRUE) . "\n";
+        }
+      }
+    }
+
+    return $string;
   }
 }
 
