@@ -272,6 +272,10 @@ function cf_db_options_get_options($table, $name, $option = NULL) {
     $records = $query->execute()->fetchAll();
   }
   catch (Exception $e) {
+    if (module_exists('cf_error')) {
+      cf_error::on_query_execution($e);
+    }
+
     throw $e;
     return array();
   }
@@ -388,15 +392,72 @@ function cf_db_options_machine_name_to_id($table, $name, $machine_name) {
 
   $query = db_select($options_table, 'ot');
 
-  $query->fields('ot');
-  $query->orderBy('ot.id', 'ASC');
+  $query->fields('ot', array('id'));
   $query->condition('machine_name', $machine_name);
 
   try {
-    $records = $query->execute()->fetchAll();
-    return $records[0];
+    return $query->execute()->fetchField();
   }
   catch (Exception $e) {
+    if (module_exists('cf_error')) {
+      cf_error::on_query_execution($e);
+    }
+
+    throw $e;
+    return FALSE;
+  }
+}
+
+/**
+ * Returns the machine_name for a given option numeric id.
+ *
+ * Use this to get the machine name that uniquely represents a particular option.
+ *
+ * @param string $table
+ *   A machine name that is prefixed onto the table.
+ *   This is often either the name of the module or the name of the table
+ *   associated with the options.
+ * @param string $name
+ *   The machine name of the options and is suffixed onto the table.
+ * @param int $id
+ *   A numeric id of the option to get the machine_name of.
+ *
+ * @return bool|string
+ *   Returns an string that uniquely identifies the option.
+ *   FALSE is returned on error.
+ */
+function cf_db_options_id_to_machine_name($table, $name, $id) {
+  if (cf_is_empty_or_non_string('table', $table, WATCHDOG_ERROR)) return FALSE;
+  if (cf_is_empty_or_non_string('name', $name, WATCHDOG_ERROR)) return FALSE;
+
+  if (!cf_is_integer($id)) {
+    if (module_exists('cf_error')) {
+      cf_error::not_numeric('id');
+    }
+
+    return FALSE;
+  }
+
+  $options_table = $table . '_options_' . $name;
+
+  // $options_table is a database table name, so only allow lowercase characters and underscores
+  if (preg_match('/^(\w|_)+$/', $options_table) == 0) {
+    return FALSE;
+  }
+
+  $query = db_select($options_table, 'ot');
+
+  $query->fields('ot', array('machine_name'));
+  $query->condition('id', $id);
+
+  try {
+    return $query->execute()->fetchField();
+  }
+  catch (Exception $e) {
+    if (module_exists('cf_error')) {
+      cf_error::on_query_execution($e);
+    }
+
     throw $e;
     return FALSE;
   }

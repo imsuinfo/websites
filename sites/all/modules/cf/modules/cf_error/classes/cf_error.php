@@ -365,6 +365,40 @@ class cf_error {
   }
 
   /**
+   * Reports php exceptions.
+   *
+   * @param object $exception
+   *   The query exception object.
+   * @param int $severity
+   *   (optional) The severity of the message, as per RFC 3164. Possible values
+   *   are WATCHDOG_ERROR, WATCHDOG_WARNING, etc.
+   *
+   * @see: watchdog()
+   * @see: watchdog_severity_levels()
+   */
+  public static function on_exception($exception, $severity = WATCHDOG_ERROR) {
+    $error = new cf_error_code;
+
+    if (is_object($exception)) {
+      $exception_message = $exception->getMessage();
+    }
+    else {
+      $error2 = new cf_error_code;
+      $error2->set_severity(WATCHDOG_ERROR);
+      $error2->set_backtrace(debug_backtrace());
+      self::p_invalid_object($error2, 'exception');
+      $exception_message = "";
+    }
+
+    $error->set_severity($severity);
+    $error->set_type('php');
+    self::p_load_backtrace($error);
+    self::p_on_exception($error, $exception_message);
+
+    return $error;
+  }
+
+  /**
    * Reports that a given argument is supposed to be an boolean but is not.
    *
    * @param string $argument_names
@@ -580,6 +614,9 @@ class cf_error {
    * This removes parts of the backtrace that where errors from this class were
    * called from. Therefore, the backtrace log stops where the error actually
    * happens and not where this function is called.
+   *
+   * @param cf_error_code $error
+   *   The error code class object associated with the error.
    */
   private static function p_load_backtrace(cf_error_code &$error) {
     $backtrace = debug_backtrace();
@@ -596,6 +633,8 @@ class cf_error {
   /**
    * Reports variables as invalid to the watchdog system.
    *
+   * @param cf_error_code $error
+   *   The error code class object associated with the error.
    * @param string $argument_names
    *   The variable name of the argument in question.
    * @param string $why
@@ -610,6 +649,8 @@ class cf_error {
   /**
    * Reports that a given argument is supposed to be a string but is not.
    *
+   * @param cf_error_code $error
+   *   The error code class object associated with the error.
    * @param string $argument_name
    *   The variable name of the argument in question.
    */
@@ -620,6 +661,8 @@ class cf_error {
   /**
    * Reports that a given argument is supposed to be non-empty string but is not.
    *
+   * @param cf_error_code $error
+   *   The error code class object associated with the error.
    * @param string $argument_name
    *   The variable name of the argument in question.
    */
@@ -630,6 +673,8 @@ class cf_error {
   /**
    * Reports that a given argument is supposed to be non-empty array but is not.
    *
+   * @param cf_error_code $error
+   *   The error code class object associated with the error.
    * @param string $argument_name
    *   The variable name of the argument in question.
    */
@@ -640,6 +685,8 @@ class cf_error {
   /**
    * Reports that a given argument is supposed to be an array but is not.
    *
+   * @param cf_error_code $error
+   *   The error code class object associated with the error.
    * @param string $argument_name
    *   The variable name of the argument in question.
    */
@@ -650,6 +697,8 @@ class cf_error {
   /**
    * Reports that a given argument is supposed to be an object but is not.
    *
+   * @param cf_error_code $error
+   *   The error code class object associated with the error.
    * @param string $argument_name
    *   The variable name of the argument in question.
    */
@@ -660,6 +709,8 @@ class cf_error {
   /**
    * Reports that a given array is missing a specific array key.
    *
+   * @param cf_error_code $error
+   *   The error code class object associated with the error.
    * @param string $argument_name
    *   The variable name of the argument in question.
    * @param string $key_name
@@ -672,6 +723,8 @@ class cf_error {
   /**
    * Reports that a given object is missing a property.
    *
+   * @param cf_error_code $error
+   *   The error code class object associated with the error.
    * @param string $argument_name
    *   The variable name of the argument in question.
    */
@@ -682,6 +735,8 @@ class cf_error {
   /**
    * Reports that a given argument is supposed to be numeric but is not.
    *
+   * @param cf_error_code $error
+   *   The error code class object associated with the error.
    * @param string $argument_name
    *   The variable name of the argument in question.
    */
@@ -692,6 +747,8 @@ class cf_error {
   /**
    * Reports query execution failures.
    *
+   * @param cf_error_code $error
+   *   The error code class object associated with the error.
    * @param string $exception_message
    *   The message reported by the exception.
    * @param string $query_string
@@ -706,8 +763,22 @@ class cf_error {
   }
 
   /**
+   * Reports php exceptions.
+   *
+   * @param cf_error_code $error
+   *   The error code class object associated with the error.
+   * @param string $exception_message
+   *   The message reported by the exception.
+   */
+  private static function p_on_exception(cf_error_code $error, $exception_message) {
+    self::p_print_message($error, "Exception: %cf_error-exception_message.", array('%cf_error-exception_message' => $exception_message));
+  }
+
+  /**
    * Reports that a given argument is supposed to be an boolean but is not.
    *
+   * @param cf_error_code $error
+   *   The error code class object associated with the error.
    * @param string $argument_name
    *   The variable name of the argument in question.
    */
@@ -718,6 +789,8 @@ class cf_error {
   /**
    * Reports if a variable is not a float, double, or real.
    *
+   * @param cf_error_code $error
+   *   The error code class object associated with the error.
    * @param string $argument_name
    *   The variable name of the argument in question.
    */
@@ -728,6 +801,8 @@ class cf_error {
   /**
    * Reports if an argument is not a callable function.
    *
+   * @param cf_error_code $error
+   *   The error code class object associated with the error.
    * @param string $argument_name
    *   The variable name of the argument in question.
    */
@@ -738,6 +813,8 @@ class cf_error {
   /**
    * Reports that a given argument is not an integer or a long.
    *
+   * @param cf_error_code $error
+   *   The error code class object associated with the error.
    * @param string $argument_name
    *   The variable name of the argument in question.
    */
@@ -748,6 +825,8 @@ class cf_error {
   /**
    * Reports that a given argument is supposed to be a resource but is not.
    *
+   * @param cf_error_code $error
+   *   The error code class object associated with the error.
    * @param string $argument_name
    *   The variable name of the argument in question.
    */
@@ -758,6 +837,8 @@ class cf_error {
   /**
    * Reports that a given argument is supposed to be a scalar but is not.
    *
+   * @param cf_error_code $error
+   *   The error code class object associated with the error.
    * @param string $argument_name
    *   The variable name of the argument in question.
    */
@@ -768,6 +849,8 @@ class cf_error {
   /**
    * Reports that a given argument is supposed to be a null but is not.
    *
+   * @param cf_error_code $error
+   *   The error code class object associated with the error.
    * @param string $argument_name
    *   The variable name of the argument in question.
    */
@@ -784,6 +867,8 @@ class cf_error {
    *   This facilitates printing the error messages without having each and every
    *   usage need to manually do so.
    *
+   * @param cf_error_code $error
+   *   The error code class object associated with the error.
    * @param string $message
    *   A string to display.
    * @param array $variables_array
@@ -881,7 +966,6 @@ class cf_error {
    *
    * @param array $backtrace
    *   A backtrace array to convert to a string.
-   *
    * @param array $backtrace
    *   A backtrace array to convert to a string.
    *
