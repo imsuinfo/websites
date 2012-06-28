@@ -4,15 +4,18 @@
  * Implements hook_help().
  */
 function editing_overlay_help($path, $arg = NULL) {
-  $function_history = array();
-  cf_error_append_history($function_history, __FUNCTION__);
-
   if (function_exists('cf_version_exists')) {
     if (cf_is_empty_or_non_string('path', $path, WATCHDOG_ERROR)){
       return;
     }
   }
   else {
+    $function_history = array();
+
+    if (module_exists('cf_error_append_history')) {
+      cf_error_append_history($function_history, __FUNCTION__);
+    }
+
     if (cf_is_empty_or_non_string($function_history, 'path', $path, WATCHDOG_ERROR)){
       return;
     }
@@ -43,9 +46,6 @@ function editing_overlay_permission() {
  * Implements hook_init().
  */
 function editing_overlay_init() {
-  $function_history = array();
-  cf_error_append_history($function_history, __FUNCTION__);
-
   $mode = overlay_get_mode();
   $user = cf_current_user();
 
