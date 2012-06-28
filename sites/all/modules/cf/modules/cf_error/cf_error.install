@@ -28,15 +28,8 @@ function cf_error_install() {
  * Implementation of hook_uninstall().
  */
 function cf_error_uninstall() {
-  // cf_settings is treated as a soft-dependency and so unregister the variables only if cf_settings is loaded.
-  if (module_exists('cf_settings')) {
-    $deregistration = cf_settings_unregister('cf_error_backtrace_mode', 'drupal_variables', 'cf_error');
-
-    if (!$deregistration) {
-      watchdog('cf_error', "Failed to unregister settings variable: cf_error_backtrace_show");
-    }
-  }
-  else {
+  // cf_settings is treated as a soft-dependency and so manually delete variables when cf_settings is disabled.
+  if (!module_exists('cf_settings')) {
     variable_del('cf_error_backtrace_show');
   }
 }

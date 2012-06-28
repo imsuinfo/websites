@@ -13,15 +13,6 @@ function cf_menu_install() {
 }
 
 /**
- * Implementation of hook_uninstall().
- */
-function cf_menu_uninstall() {
-  if (module_exists('cf_settings')) {
-    cf_settings_unregister('accessibility_admin_page', 'drupal_variables', 'cf_menu');
-  }
-}
-
-/**
  * Upgrade module from 7.x-1.x to 7.x-2.x.
  */
 function cf_menu_update_7200() {

@@ -435,5 +435,50 @@ function cf_settings_get_variable_types_list($options = NULL) {
 }
 
 /**
+ * Implements hook_modules_uninstalled().
+ */
+function cf_settings_modules_uninstalled($module_list) {
+  foreach ($module_list as $module) {
+
+    // when a module gets uninstalled, ensure that all of its registered variables get deleted.
+    try {
+      $query = db_select('cf_settings_register', 'csr');
+
+      $query->fields('csr');
+      $query->innerjoin('cf_settings_options_variable_type', 'csovt', 'csr.variable_type = csovt.id');
+      $query->condition('csr.module_name', $module);
+      $query->condition('csovt.machine_name', 'drupal_variables');
+      $results = $query->execute();
+
+      foreach ($results->fetchAll() as $result) {
+        cf_settings_unregister($result->variable_name, $result->variable_type, $module);
+      }
+    }
+    catch (Exception $e) {
+      if (module_exists('cf_error')) {
+        cf_error::on_query_execution($e);
+      }
+
+      throw $e;
+    }
+
+    // delete all registered items made by this module.
+    try {
+      $query = db_delete('cf_settings_register');
+
+      $query->condition('module_name', $module);
+      $query->execute();
+    }
+    catch (Exception $e) {
+      if (module_exists('cf_error')) {
+        cf_error::on_query_execution($e);
+      }
+
+      throw $e;
+    }
+  }
+}
+
+/**
  * @} End of '@addtogroup cf_settings Common Functionality - Settings'.
  */
