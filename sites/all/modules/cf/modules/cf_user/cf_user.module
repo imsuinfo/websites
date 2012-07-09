@@ -212,5 +212,5 @@ function cf_user_get_users_by_rids($rids) {
 }
 
 /**
- * @} End of '@addtogroup cf_user Common Functionality - User'.
+ * @} End of '@defgroup cf_user Common Functionality - User'.
  */

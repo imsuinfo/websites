@@ -389,5 +389,5 @@ function cf_error_invalid_null($function_history, $argument_name, $severity = WA
 }
 
 /**
- * @} End of '@addtogroup cf_1x_compatibility Common Functionality - 1.x Compatibility'.
+ * @} End of '@defgroup cf_1x_compatibility Common Functionality - 1.x Compatibility'.
  */

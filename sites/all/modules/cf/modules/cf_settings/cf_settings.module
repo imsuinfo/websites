@@ -480,5 +480,5 @@ function cf_settings_modules_uninstalled($module_list) {
 }
 
 /**
- * @} End of '@addtogroup cf_settings Common Functionality - Settings'.
+ * @} End of '@defgroup cf_settings Common Functionality - Settings'.
  */

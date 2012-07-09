@@ -499,5 +499,5 @@ function cf_db_options_machine_name_to_id_subquery($table, $name, $machine_name)
 }
 
 /**
- * @} End of '@addtogroup cf_db_options Common Functionality - Database Options'.
+ * @} End of '@defgroup cf_db_options Common Functionality - Database Options'.
  */

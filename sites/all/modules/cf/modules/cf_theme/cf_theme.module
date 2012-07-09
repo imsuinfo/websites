@@ -497,6 +497,57 @@ function cf_theme_render_variables(&$variables, $keys, $subdir = NULL) {
 }
 
 /**
+ * Safely render all cf variables specified in the $keys array.
+ *
+ * This is useful as a post-process render, such as inside of *.tpl.php.
+ *
+ * Why:
+ *   Theme *.tpl.php files should not ever have to call generate or perform
+ *   isset()/empty() checks to prevent errors from happening.
+ *   All of this work should be done in the template.php.
+ *   There is a standard way of doing this such that other modules and themes
+ *   can hook into.
+ *   This also allows custom modules to alter themes without having to hack or
+ *   alter any existing theme that supports these functions.
+ *
+ * @param array $cf
+ *   The cf variables array to process.
+ * @param array $keys
+ *   An array of key names to process.
+ * @param string $subdir
+ *   (optional) A string representing a subdirectory inside of the variables
+ *   parameter.
+ *
+ * @see cf_theme_render_variables()
+ */
+function cf_theme_render_cf(&$cf, $keys, $subdir = NULL) {
+  if (is_null($subdir)) {
+    foreach ($keys as $key) {
+      if (empty($cf[$key])) {
+        $cf['data'][$key] = '';
+        $cf['show'][$key] = FALSE;
+      }
+      else {
+        $cf['data'][$key] = render($cf[$key]);
+        $cf['show'][$key] = TRUE;
+      }
+    }
+  }
+  else {
+    foreach ($keys as $key) {
+      if (empty($cf[$subdir][$key])) {
+        $cf['data'][$subdir][$key] = '';
+        $cf['show'][$subdir][$key] = FALSE;
+      }
+      else {
+        $cf['data'][$subdir][$key] = render($cf[$subdir][$key]);
+        $cf['show'][$subdir][$key] = TRUE;
+      }
+    }
+  }
+}
+
+/**
  * Returns a string with all non-word characters turned into underscores.
  *
  * Justification:
@@ -526,5 +577,5 @@ function cf_theme_safe_css_string_part($string) {
 }
 
 /**
- * @} End of '@addtogroup cf_node Common Functionality - Theme'.
+ * @} End of '@defgroup cf_node Common Functionality - Theme'.
  */

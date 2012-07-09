@@ -70,5 +70,5 @@ function cf_menu_cf_permission_alter(&$permissions) {
 }
 
 /**
- * @} End of '@addtogroup cf_menu Common Functionality - Menu'.
+ * @} End of '@defgroup cf_menu Common Functionality - Menu'.
  */

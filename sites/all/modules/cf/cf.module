@@ -496,5 +496,5 @@ function cf_is_integer($argument) {
 
 
 /**
- * @} End of '@addtogroup cf Common Functionality'.
+ * @} End of '@defgroup cf Common Functionality'.
  */

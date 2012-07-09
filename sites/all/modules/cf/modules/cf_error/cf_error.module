@@ -106,5 +106,5 @@ function cf_error_menu() {
 }
 
 /**
- * @} End of '@addtogroup cf_error Common Functionality - Error'.
+ * @} End of '@defgroup cf_error Common Functionality - Error'.
  */

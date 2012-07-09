@@ -124,5 +124,5 @@ function cf_node_create($form_id, $node_class) {
 }
 
 /**
- * @} End of '@addtogroup cf_node Common Functionality - Node'.
+ * @} End of '@defgroup cf_node Common Functionality - Node'.
  */

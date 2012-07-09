@@ -54,5 +54,5 @@ function cf_menu_view_unpublished_query_menu_tree_check_access_alter(&$query) {
 }
 
 /**
- * @} End of '@addtogroup cf_menu_view_unpublished Common Functionality - Menu View Unpublished'.
+ * @} End of '@defgroup cf_menu_view_unpublished Common Functionality - Menu View Unpublished'.
  */
