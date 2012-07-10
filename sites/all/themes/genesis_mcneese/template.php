@@ -37,7 +37,7 @@ function genesis_mcneese_initialize_cf_array(&$vars) {
   }
 
   foreach (array('header', 'content', 'footer', 'leaderboard', 'sidebar_first', 'highlighted', 'secondary_content') as $item) {
-    $cf['data']['page'][$item] = drupal_render($page[$item]);
+    $page[$item] = drupal_render($page[$item]);
     $cf['show']['page'][$item] = TRUE;
   }
 
@@ -67,14 +67,6 @@ function genesis_mcneese_initialize_cf_array(&$vars) {
 function genesis_mcneese_preprocess_maintenance_page(&$vars) {
   if (!is_array($vars)){
     $vars = array();
-  }
-
-  // convert drupal core theme structure to cf theme structure
-  $keys_to_render = array('logo', 'title_prefix', 'title_suffix', 'side_links', 'action_links');
-  foreach ($keys_to_render as $key) {
-    if (isset($vars[$key])) {
-      $cf['data'][$key] = & $vars[$key];
-    }
   }
 
   if (!function_exists('cf_theme_get_variables')){
@@ -152,14 +144,6 @@ function genesis_mcneese_preprocess_html(&$vars) {
 function genesis_mcneese_preprocess_page(&$vars) {
   if (!is_array($vars)){
     $vars = array();
-  }
-
-  // convert drupal core theme structure to cf theme structure
-  $keys_to_render = array('logo', 'title_prefix', 'title_suffix', 'side_links', 'action_links');
-  foreach ($keys_to_render as $key) {
-    if (isset($vars[$key])) {
-      $cf['data'][$key] = & $vars[$key];
-    }
   }
 
   if (!function_exists('cf_theme_get_variables')){

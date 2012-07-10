@@ -34,7 +34,7 @@ function mcneese_drupal_initialize_cf_array(&$vars) {
   }
 
   foreach (array('header', 'sub_header', 'messages', 'content', 'footer') as $item) {
-    $cf['data']['page'][$item] = drupal_render($page[$item]);
+    $page[$item] = drupal_render($page[$item]);
     $cf['show']['page'][$item] = TRUE;
   }
 
@@ -83,14 +83,6 @@ function mcneese_drupal_preprocess_maintenance_page(&$vars) {
   if (!empty($vars['sidebar_second'])){
     $vars['sidebar_right'] .= $vars['sidebar_second'];
     unset($vars['sidebar_second']);
-  }
-
-  // convert drupal core theme structure to cf theme structure
-  $keys_to_render = array('logo', 'title_prefix', 'title_suffix', 'side_links', 'primary_local_tasks', 'secondary_local_tasks', 'action_links');
-  foreach ($keys_to_render as $key) {
-    if (isset($vars[$key])) {
-      $cf['data'][$key] = & $vars[$key];
-    }
   }
 
   if (!function_exists('cf_theme_get_variables')){
@@ -148,14 +140,6 @@ function mcneese_drupal_preprocess_maintenance_page(&$vars) {
 function mcneese_drupal_preprocess_html(&$vars) {
   if (!is_array($vars)){
     $vars = array();
-  }
-
-  // convert drupal core theme structure to cf theme structure
-  $keys_to_render = array('logo', 'title_prefix', 'title_suffix', 'side_links', 'primary_local_tasks', 'secondary_local_tasks', 'action_links');
-  foreach ($keys_to_render as $key) {
-    if (isset($vars[$key])) {
-      $cf['data'][$key] = & $vars[$key];
-    }
   }
 
   if (!function_exists('cf_theme_get_variables')){

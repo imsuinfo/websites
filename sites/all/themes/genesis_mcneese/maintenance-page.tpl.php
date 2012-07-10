@@ -39,7 +39,7 @@
       <?php if ($cf['show']['page']['leaderboard']){ ?>
         <div id="leaderboard" class="clearfix">
           <!--(begin_leaderboard)-->
-          <?php print($cf['data']['leaderboard']); ?>
+          <?php print($leaderboard); ?>
           <!--(end_leaderboard)-->
         </div>
       <?php } ?>
@@ -62,7 +62,7 @@
 
         <?php if ($cf['show']['page']['header']){ ?>
           <!--(begin_header_blocks)-->
-          <div id="header-blocks"><?php print($cf['data']['header']); ?></div>
+          <div id="header-blocks"><?php print($header); ?></div>
           <!--(end_header_blocks)-->
         <?php } ?>
 
@@ -73,7 +73,7 @@
       <?php if ($cf['show']['main_menu_links']){ ?>
         <div id="main-menu-wrapper" class="clearfix">
           <!--(begin_main_menu_links)-->
-          <div class="main-menu-inner"><?php print($cf['data']['main_menu_links']); ?></div>
+          <div class="main-menu-inner"><?php print($main_menu_links); ?></div>
           <!--(end_main_menu_links)-->
         </div>
       <?php } ?>
@@ -83,7 +83,7 @@
       <?php if ($cf['show']['page']['sidebar_first']){ ?>
         <div id="sidebar-first" class="sidebar">
           <!--(begin_sidebar_first)-->
-          <?php print($cf['data']['sidebar_first']); ?>
+          <?php print($sidebar_first); ?>
           <!--(end_sidebar_first)-->
         </div>
       <?php } ?>
@@ -99,20 +99,20 @@
 
         <?php if ($cf['show']['messages']){ ?>
           <!--(begin_messages)-->
-          <?php print($cf['data']['messages']); ?>
+          <?php print($messages); ?>
           <!--(end_messages)-->
         <?php } ?>
 
         <?php if ($cf['show']['page']['help']){ ?>
           <!--(begin_help)-->
-          <?php print($cf['data']['help']); ?>
+          <?php print($help); ?>
           <!--(end_help)-->
         <?php } ?>
 
         <div class="content-inner">
           <?php if ($cf['show']['page']['highlighted']){ ?>
             <!--(begin_highlighted)-->
-            <div id="highlighted"><?php print ($cf['data']['highlighted']); ?></div>
+            <div id="highlighted"><?php print ($highlighted); ?></div>
             <!--(end_highlighted)-->
           <?php } ?>
 
@@ -130,7 +130,7 @@
 
                 <?php if ($cf['show']['page']['subboard']){ ?>
                   <!--(begin_subboard)-->
-                  <?php print($cf['data']['page']['subboard']); ?>
+                  <?php print($subboard); ?>
                   <!--(end_subboard)-->
                 <?php } ?>
               </div>
@@ -138,26 +138,26 @@
 
             <?php if ($cf['show']['title_prefix']){ ?>
               <!--(begin_title_prefix)-->
-              <?php print($cf['data']['title_prefix']); ?>
+              <?php print($title_prefix); ?>
               <!--(end_title_prefix)-->
             <?php } ?>
 
             <?php if ($cf['show']['title']){ ?>
               <!--(begin_title)-->
-              <h1 id="page-title" class="drupal_page_title"><?php print($cf['data']['title']); ?></h1>
+              <h1 id="page-title" class="drupal_page_title"><?php print($title); ?></h1>
               <!--(end_title)-->
             <?php } ?>
 
             <?php if ($cf['show']['title_suffix']){ ?>
               <!--(begin_title_suffix)-->
-              <?php print($cf['data']['title_suffix']); ?>
+              <?php print($title_suffix); ?>
               <!--(end_title_suffix)-->
             <?php } ?>
 
             <?php if ($cf['show']['primary_local_tasks']){ ?>
               <div id='local-tasks'>
                 <!--(begin_primary_tabs)-->
-                <ul class='tabs primary'><?php print($cf['data']['primary_local_tasks']); ?></ul>
+                <ul class='tabs primary'><?php print($primary_local_tasks); ?></ul>
                 <!--(end_primary_tabs)-->
               </div>
             <?php } ?>
@@ -166,7 +166,7 @@
               <div id="breadcrumb">
                 <?php if ($cf['show']['breadcrumb']){ ?>
                   <!--(begin_breadcrumb)-->
-                  <?php print $cf['data']['breadcrumb']; ?>
+                  <?php print $breadcrumb; ?>
                   <!--(end_breadcrumb)-->
                 <?php } ?>
 
@@ -181,7 +181,7 @@
             <?php if ($cf['show']['secondary_local_tasks']){ ?>
               <div id='secondary_local_tasks'>
                 <!--(begin_secondary_tabs)-->
-                <ul class='tabs secondary'><?php print($cf['data']['secondary_local_tasks']); ?></ul>
+                <ul class='tabs secondary'><?php print($secondary_local_tasks); ?></ul>
                 <!--(end_secondary_tabs)-->
               </div>
             <?php } ?>
@@ -189,7 +189,7 @@
             <?php if ($cf['show']['page']['action_links']){ ?>
               <div id='action_links'>
                 <!--(begin_action_links)-->
-                <ul class="action-links"><?php print($cf['data']['action_links']); ?></ul>
+                <ul class="action-links"><?php print($action_links); ?></ul>
                 <!--(end_action_links)-->
               </div>
             <?php } ?>
@@ -199,7 +199,7 @@
               <?php if (!empty($cf['is']['emergency'])){ ?>
                 <div class="emergency-content"><?php print(check_markup($cf['is_data']['emergency']['body']['value'], $cf['is_data']['emergency']['body']['format'])); ?></div>
               <?php } else { ?>
-                <?php print($cf['data']['content']); ?>
+                <?php print($content); ?>
               <?php } ?>
             </div>
             <!--(end_main_content)-->
@@ -210,7 +210,7 @@
 
       <?php if ($cf['show']['page']['sidebar_second']){ ?>
         <!--(begin_sidebar_second)-->
-        <div id="sidebar-second" class="sidebar"><?php print($cf['data']['sidebar_second']); ?></div>
+        <div id="sidebar-second" class="sidebar"><?php print($sidebar_second); ?></div>
         <!--(end_sidebar_second)-->
       <?php } ?>
     </div>
@@ -218,7 +218,7 @@
     <?php if ($cf['show']['page']['tertiary_content'] && !$cf['is']['overlay']){ ?>
       <div id="tertiary-content" class="<?php print($cf['markup_css']['content']['class']); ?>">
         <!--(begin_tertiary_content)-->
-        <?php print($cf['data']['tertiary_content']); ?>
+        <?php print($tertiary_content); ?>
         <!--(end_tertiary_content)-->
       </div>
     <?php } ?>
@@ -227,7 +227,7 @@
   <?php if ($cf['show']['page']['footer'] && !$cf['is']['overlay']){ ?>
     <div id="footer" class="drupal_footer">
       <!--(begin_footer)-->
-      <?php print ($cf['data']['footer']); ?>
+      <?php print ($footer); ?>
       <!--(end_footer)-->
     </div>
   <?php } ?>
