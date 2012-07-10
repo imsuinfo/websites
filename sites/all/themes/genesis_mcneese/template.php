@@ -37,7 +37,7 @@ function genesis_mcneese_initialize_cf_array(&$vars) {
   }
 
   foreach (array('header', 'content', 'footer', 'leaderboard', 'sidebar_first', 'highlighted', 'secondary_content') as $item) {
-    $cf['data'['page'][$item] = drupal_render($page[$item]);
+    $cf['data']['page'][$item] = drupal_render($page[$item]);
     $cf['show']['page'][$item] = TRUE;
   }
 
