@@ -28,7 +28,7 @@
                 <?php if ($cf['show']['logo']){ ?>
                   <span id="logo">
                     <!--(begin_website_logo)-->
-                    <a id="website_logo-link" href="/" title="<?php print(t("Home Page")); ?>">
+                    <a id="website_logo-link" href="<?php print(base_path()); ?>" title="<?php print(t("Home Page")); ?>">
                       <img id="website_logo-image" alt="<?php print($cf['data']['logo']['alt']); ?>" title="<?php print($cf['data']['logo']['title']); ?>" src="<?php print($cf['data']['logo']['src']);?>">
                     </a>
                     <!--(end_website_logo)-->
