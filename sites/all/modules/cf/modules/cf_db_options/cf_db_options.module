@@ -38,6 +38,41 @@
  */
 
 /**
+ * Builds an options table name.
+ *
+ * The option table is created with a generated name.
+ * Use this function to get the generated name for a given options table.
+ *
+ * @param string $table
+ *   A machine name that is prefixed onto the table.
+ *   This is often either the name of the module or the name of the table
+ *   associated with the options.
+ * @param string $name
+ *   The machine name of the options and is suffixed onto the table.
+ *
+ * @return bool|string
+ *   Returns the generated string or FALSE on error.
+ */
+function cf_db_options_get_options_name($table, $name) {
+  if (cf_is_empty_or_non_string('table', $table, WATCHDOG_ERROR)) {
+    if (module_exists('cf_error')) {
+      cf_error::empty_string('table');
+    }
+
+    return FALSE;
+  }
+
+  if (cf_is_empty_or_non_string('name', $name, WATCHDOG_ERROR)) {
+    if (module_exists('cf_error')) {
+      cf_error::empty_string('name');
+    }
+
+    return FALSE;
+  }
+
+  return $table . '_options_' . $name;
+}
+/**
  * Creates a option tables and adds them to the schema.
  *
  * The option table created here uniquely describes each available option.
@@ -58,17 +93,21 @@
  * @param array $schema
  *   The schema array as defined by hook_schema().
  *
+ * @return bool
+ *   Returns TRUE on success, FALSE otherwise.
+ *
  * @see: hook_schema()
  */
 function cf_db_options_create_options_schema($table, $name, &$schema) {
-  if (cf_is_empty_or_non_string('table', $table, WATCHDOG_ERROR)) return;
-  if (cf_is_empty_or_non_string('name', $name, WATCHDOG_ERROR)) return;
+  $table_name = cf_db_options_get_options_name($table, $name);
+
+  if ($table_name === FALSE) return FALSE;
 
   if (!is_array($schema)) $schema = array();
 
   $t = get_t();
 
-  $schema[$table . '_options_' . $name] = array(
+  $schema[$table_name] = array(
     'description' => $t("Defines possible %name options.", array('%name' => $name)),
     'fields' => array(
       'id' => array(
@@ -112,9 +151,11 @@ function cf_db_options_create_options_schema($table, $name, &$schema) {
   // @see https://drupal.org/node/1401782
   // @see https://drupal.org/node/143881
   if (db_driver() == 'mysql') {
-    unset($schema[$table . '_options_' . $name]['fields']['human_name']['default']);
-    unset($schema[$table . '_options_' . $name]['fields']['description']['default']);
+    unset($schema[$table_name]['fields']['human_name']['default']);
+    unset($schema[$table_name]['fields']['description']['default']);
   }
+
+  return TRUE;
 }
 
 /**
@@ -140,13 +181,18 @@ function cf_db_options_create_options_schema($table, $name, &$schema) {
  *   The machine name of the table column numeric id using or associating with
  *   the options.
  *
+ * @return bool
+ *   Returns TRUE on success, FALSE otherwise.
+ *
  * @see: hook_schema()
  */
 function cf_db_options_create_options_relation($table, $name, &$schema, $relation_table, $relation_column) {
-  if (cf_is_empty_or_non_string('table', $table, WATCHDOG_ERROR)) return;
-  if (cf_is_empty_or_non_string('name', $name, WATCHDOG_ERROR)) return;
-  if (cf_is_empty_or_non_string('relation_table', $relation_table, WATCHDOG_ERROR)) return;
-  if (cf_is_empty_or_non_string('relation_column', $relation_column, WATCHDOG_ERROR)) return;
+  if (cf_is_empty_or_non_string('relation_table', $relation_table, WATCHDOG_ERROR)) return FALSE;
+  if (cf_is_empty_or_non_string('relation_column', $relation_column, WATCHDOG_ERROR)) return FALSE;
+
+  $table_name = cf_db_options_get_options_name($table, $name);
+
+  if ($table_name === FALSE) return FALSE;
 
   if (!is_array($schema)) $schema = array();
 
@@ -176,11 +222,13 @@ function cf_db_options_create_options_relation($table, $name, &$schema, $relatio
         'columns' => array('id' => $relation_column),
       ),
       $name . '_id' => array(
-        'table' => $table . '_options_' . $name,
+        'table' => $table_name,
         'columns' => array($name . '_id' => 'id'),
       ),
     ),
   );
+
+  return TRUE;
 }
 
 /**
@@ -197,17 +245,26 @@ function cf_db_options_create_options_relation($table, $name, &$schema, $relatio
  *   - machine_name: the machine name associated with some option.
  *   - human_name: a human friendly name associated with some option.
  *   - description: a description about some option.
+ *
+ * @return bool
+ *   Returns TRUE on success, FALSE otherwise.
  */
 function cf_db_options_add_options($table, $name, $options) {
-  if (cf_is_empty_or_non_array('options', $options, WATCHDOG_ERROR)) return;
+  if (cf_is_empty_or_non_array('options', $options, WATCHDOG_ERROR)) return FALSE;
+
+  $table_name = cf_db_options_get_options_name($table, $name);
+
+  if ($table_name === FALSE) return FALSE;
 
   foreach ($options as &$option) {
     if (!is_array($option) || empty($option)) continue;
 
-    $query = db_insert($table . '_options_' . $name);
+    $query = db_insert($table_name);
     $query->fields($option);
     $query->execute();
   }
+
+  return TRUE;
 }
 
 /**
@@ -229,11 +286,11 @@ function cf_db_options_add_options($table, $name, $options) {
  *   The array keys are the machine names for each option.
  */
 function cf_db_options_get_options($table, $name, $option = NULL) {
-  if (cf_is_empty_or_non_string('table', $table, WATCHDOG_ERROR)) return array();
-  if (cf_is_empty_or_non_string('name', $name, WATCHDOG_ERROR)) return array();
   if (!is_null($option) && cf_is_empty_or_non_string('name', $name, WATCHDOG_ERROR)) return array();
 
-  $options_table = $table . '_options_' . $name;
+  $options_table = cf_db_options_get_options_name($table, $name);
+
+  if ($options_table === FALSE) return array();
 
   // $options_table is a database table name, so only allow lowercase characters and underscores
   if (preg_match('/^(\w|_)+$/', $options_table) == 0) {
@@ -379,11 +436,11 @@ function cf_db_options_get_options_list($table, $name, $options = NULL) {
  *   FALSE is returned on error.
  */
 function cf_db_options_machine_name_to_id($table, $name, $machine_name) {
-  if (cf_is_empty_or_non_string('table', $table, WATCHDOG_ERROR)) return FALSE;
-  if (cf_is_empty_or_non_string('name', $name, WATCHDOG_ERROR)) return FALSE;
   if (cf_is_empty_or_non_string('machine_name', $machine_name, WATCHDOG_ERROR)) return FALSE;
 
-  $options_table = $table . '_options_' . $name;
+  $options_table = cf_db_options_get_options_name($table, $name);
+
+  if ($options_table === FALSE) return FALSE;
 
   // $options_table is a database table name, so only allow lowercase characters and underscores
   if (preg_match('/^(\w|_)+$/', $options_table) == 0) {
@@ -427,9 +484,6 @@ function cf_db_options_machine_name_to_id($table, $name, $machine_name) {
  *   FALSE is returned on error.
  */
 function cf_db_options_id_to_machine_name($table, $name, $id) {
-  if (cf_is_empty_or_non_string('table', $table, WATCHDOG_ERROR)) return FALSE;
-  if (cf_is_empty_or_non_string('name', $name, WATCHDOG_ERROR)) return FALSE;
-
   if (!cf_is_integer($id)) {
     if (module_exists('cf_error')) {
       cf_error::not_numeric('id');
@@ -438,7 +492,9 @@ function cf_db_options_id_to_machine_name($table, $name, $id) {
     return FALSE;
   }
 
-  $options_table = $table . '_options_' . $name;
+  $options_table = cf_db_options_get_options_name($table, $name);
+
+  if ($options_table === FALSE) return FALSE;
 
   // $options_table is a database table name, so only allow lowercase characters and underscores
   if (preg_match('/^(\w|_)+$/', $options_table) == 0) {
@@ -484,11 +540,11 @@ function cf_db_options_id_to_machine_name($table, $name, $id) {
  *   FALSE is returned on error.
  */
 function cf_db_options_machine_name_to_id_subquery($table, $name, $machine_name) {
-  if (cf_is_empty_or_non_string('table', $table, WATCHDOG_ERROR)) return FALSE;
-  if (cf_is_empty_or_non_string('name', $name, WATCHDOG_ERROR)) return FALSE;
   if (cf_is_empty_or_non_string('machine_name', $machine_name, WATCHDOG_ERROR)) return FALSE;
 
-  $options_table = $table . '_options_' . $name;
+  $options_table = cf_db_options_get_options_name($table, $name);
+
+  if ($options_table === FALSE) return FALSE;
 
   // $options_table is a database table name, so only allow lowercase characters and underscores
   if (preg_match('/^(\w|_)+$/', $options_table) == 0) {
