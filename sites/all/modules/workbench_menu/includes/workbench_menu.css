@@ -84,15 +84,15 @@
   background-image: url(../images/icon_mail.png);
 }
 
-.menu_item-container.clickable.collapsed > .item-list {
+.menu_item.clickable.collapsed > .menu_item-children {
   display: none;
 }
 
-.menu_item-container.clickable.expanded > .item-list,
-.menu_item-container.clickable.collapsed.active > .item-list,
-.menu_item-container.clickable.collapsed.active-trail > .item-list,
-.menu_item-container.clickable.collapsed.noscript:hover > .item-list,
-.menu_item-container.clickable.collapsed.noscript:focus > .item-list,
-.menu_item-container.clickable.collapsed.noscript:active > .item-list {
+.menu_item.clickable.expanded > .menu_item-children,
+.menu_item.clickable.collapsed.active > .menu_item-children,
+.menu_item.clickable.collapsed.active-trail > .menu_item-children,
+.menu_item.clickable.collapsed.noscript:hover > .menu_item-children,
+.menu_item.clickable.collapsed.noscript:focus > .menu_item-children,
+.menu_item.clickable.collapsed.noscript:active > .menu_item-children {
   display: block;
 }

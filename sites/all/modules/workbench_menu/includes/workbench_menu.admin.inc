@@ -101,7 +101,11 @@ function workbench_menu_edit_settings($access_type = NULL, $access_type_id = NUL
  */
 function workbench_menu_edit_settings_form($form, &$form_state, $access_type, $access_type_id) {
   if ($access_type !== 'taxonomy') {
-    drupal_access_denied();
+    if (module_exists('cf_error')) {
+      cf_error::invalid_variable('access_type', "At this time only taxonomy access_type is supported.");
+    }
+
+    drupal_not_found();
     drupal_exit();
   }
 
@@ -110,7 +114,7 @@ function workbench_menu_edit_settings_form($form, &$form_state, $access_type, $a
       cf_error::not_numeric('access_type_id');
     }
 
-    drupal_access_denied();
+    drupal_not_found();
     drupal_exit();
   }
 
@@ -168,7 +172,7 @@ function workbench_menu_edit_settings_form($form, &$form_state, $access_type, $a
     }
   }
   else {
-    drupal_access_denied();
+    drupal_not_found();
     drupal_exit();
   }
 
@@ -365,7 +369,11 @@ function workbench_menu_edit_item_settings($access_type, $access_type_id, $opera
   drupal_add_css(drupal_get_path('module', 'workbench_menu') . '/includes/workbench_menu_admin.css');
 
   if ($access_type !== 'taxonomy') {
-    drupal_access_denied();
+    if (module_exists('cf_error')) {
+      cf_error::invalid_variable('access_type', "At this time only taxonomy access_type is supported.");
+    }
+
+    drupal_not_found();
     drupal_exit();
   }
 
@@ -374,7 +382,7 @@ function workbench_menu_edit_item_settings($access_type, $access_type_id, $opera
       cf_error::not_numeric('access_type_id');
     }
 
-    drupal_access_denied();
+    drupal_not_found();
     drupal_exit();
   }
 
@@ -390,7 +398,7 @@ function workbench_menu_edit_item_settings($access_type, $access_type_id, $opera
     return drupal_get_form('workbench_menu_admin_item_settings_delete_form', $access_type, $access_type_id, $item, $return_destination);
   }
 
-  drupal_access_denied();
+  drupal_not_found();
   drupal_exit();
 }
 
@@ -485,7 +493,11 @@ function workbench_menu_admin_settings($access_type = NULL, $access_type_id = NU
  */
 function workbench_menu_admin_settings_form($form, &$form_state, $access_type, $access_type_id) {
   if ($access_type !== 'taxonomy') {
-    drupal_access_denied();
+    if (module_exists('cf_error')) {
+      cf_error::invalid_variable('access_type', "At this time only taxonomy access_type is supported.");
+    }
+
+    drupal_not_found();
     drupal_exit();
   }
 
@@ -494,7 +506,7 @@ function workbench_menu_admin_settings_form($form, &$form_state, $access_type, $
       cf_error::not_numeric('access_type_id');
     }
 
-    drupal_access_denied();
+    drupal_not_found();
     drupal_exit();
   }
 
@@ -550,7 +562,7 @@ function workbench_menu_admin_settings_form($form, &$form_state, $access_type, $
     }
   }
   else {
-    drupal_access_denied();
+    drupal_not_found();
     drupal_exit();
   }
 
@@ -911,11 +923,13 @@ function theme_workbench_menu_admin_settings_form($element) {
   $actions = array(&$form['actions']);
   unset($form['actions']);
 
+  $variables = array();
+  $variables['table'] =  array('header' => $header, 'rows' => $rows, 'empty' => t("This menu has no items."), 'attributes' => array('id' => $table_id, 'class' => array('menu_settings-table')));
+  $variables['add_path'] = $path_prefix . '/items/add';
+
   $output = '';
   $output .= drupal_render_children($form);
-  $output .= '<h3 id="workbench_menu-menus-manage_menu">' . t("Menu Items") . '</h3>';
-  $output .= '<div class="workbench_menu-manage_menu-menu_items-table">' . theme('table', array('header' => $header, 'rows' => $rows, 'empty' => t("This menu has no items."), 'attributes' => array('id' => $table_id))) . '</div>';
-  $output .= '<div class="workbench_menu-manage_menu-menu_items-add_item_link">' . l(t("Add new menu item."), $path_prefix . '/items/add') . '</div>';
+  $output .= theme('workbench_menu_settings_table', $variables);
   $output .= drupal_render_children($actions);
 
   return $output;
@@ -951,7 +965,11 @@ function workbench_menu_admin_item_settings($access_type, $access_type_id, $oper
   drupal_add_css(drupal_get_path('module', 'workbench_menu') . '/includes/workbench_menu_admin.css');
 
   if ($access_type !== 'taxonomy') {
-    drupal_access_denied();
+    if (module_exists('cf_error')) {
+      cf_error::invalid_variable('access_type', "At this time only taxonomy access_type is supported.");
+    }
+
+    drupal_not_found();
     drupal_exit();
   }
 
@@ -960,7 +978,7 @@ function workbench_menu_admin_item_settings($access_type, $access_type_id, $oper
       cf_error::not_numeric('access_type_id');
     }
 
-    drupal_access_denied();
+    drupal_not_found();
     drupal_exit();
   }
 
@@ -976,7 +994,7 @@ function workbench_menu_admin_item_settings($access_type, $access_type_id, $oper
     return drupal_get_form('workbench_menu_admin_item_settings_delete_form', $access_type, $access_type_id, $item, $return_destination);
   }
 
-  drupal_access_denied();
+  drupal_not_found();
   drupal_exit();
 }
 
@@ -1296,7 +1314,7 @@ function workbench_menu_admin_item_settings_add_form($form, &$form_state, $acces
   $menus = (array) workbench_menu_get_menus(array('access_id' => $access_type_id, 'fast' => NULL), 'id');
 
   if (empty($menus)) {
-    drupal_access_denied();
+    drupal_not_found();
     drupal_exit();
   }
 
@@ -1384,7 +1402,11 @@ function workbench_menu_admin_item_settings_add_form_submit($form, &$form_state)
  */
 function workbench_menu_admin_item_settings_edit_form($form, &$form_state, $access_type, $access_type_id, $item_id, $return_destination) {
   if ($access_type !== 'taxonomy') {
-    drupal_access_denied();
+    if (module_exists('cf_error')) {
+      cf_error::invalid_variable('access_type', "At this time only taxonomy access_type is supported.");
+    }
+
+    drupal_not_found();
     drupal_exit();
   }
 
@@ -1393,7 +1415,7 @@ function workbench_menu_admin_item_settings_edit_form($form, &$form_state, $acce
       cf_error::not_numeric('access_type_id');
     }
 
-    drupal_access_denied();
+    drupal_not_found();
     drupal_exit();
   }
 
@@ -1402,7 +1424,7 @@ function workbench_menu_admin_item_settings_edit_form($form, &$form_state, $acce
       cf_error::not_numeric('item_id');
     }
 
-    drupal_access_denied();
+    drupal_not_found();
     drupal_exit();
   }
 
@@ -1411,14 +1433,14 @@ function workbench_menu_admin_item_settings_edit_form($form, &$form_state, $acce
   $menus = (array) workbench_menu_get_menus(array('access_id' => $access_type_id, 'fast' => NULL), 'id');
 
   if (empty($menus)) {
-    drupal_access_denied();
+    drupal_not_found();
     drupal_exit();
   }
 
   $items = (array) workbench_menu_get_load_menu_items(array('id' => $item_id), 'id');
 
   if (!isset($items['flat'][$item_id])) {
-    drupal_access_denied();
+    drupal_not_found();
     drupal_exit();
   }
 
@@ -1779,7 +1801,11 @@ function workbench_menu_admin_item_settings_edit_form_submit($form, &$form_state
  */
 function workbench_menu_admin_item_settings_delete_form($form, &$form_state, $access_type, $access_type_id, $item_id, $return_destination) {
   if ($access_type !== 'taxonomy') {
-    drupal_access_denied();
+    if (module_exists('cf_error')) {
+      cf_error::invalid_variable('access_type', "At this time only taxonomy access_type is supported.");
+    }
+
+    drupal_not_found();
     drupal_exit();
   }
 
@@ -1788,7 +1814,7 @@ function workbench_menu_admin_item_settings_delete_form($form, &$form_state, $ac
       cf_error::not_numeric('access_type_id');
     }
 
-    drupal_access_denied();
+    drupal_not_found();
     drupal_exit();
   }
 
@@ -1797,7 +1823,7 @@ function workbench_menu_admin_item_settings_delete_form($form, &$form_state, $ac
       cf_error::not_numeric('item_id');
     }
 
-    drupal_access_denied();
+    drupal_not_found();
     drupal_exit();
   }
 
@@ -1806,7 +1832,7 @@ function workbench_menu_admin_item_settings_delete_form($form, &$form_state, $ac
   $items = (array) workbench_menu_get_load_menu_items(array('id' => $item_id), 'id');
 
   if (!isset($items['flat'][$item_id])) {
-    drupal_access_denied();
+    drupal_not_found();
     drupal_exit();
   }
 

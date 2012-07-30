@@ -206,9 +206,55 @@ function workbench_menu_theme($existing, $type, $theme, $path) {
     'path' => drupal_get_path('module', 'workbench_menu') . '/includes',
   );
 
+  $themes['workbench_menu_settings_table'] = array(
+    'file' => 'workbench_menu.admin.inc',
+    'template' => 'workbench_menu_settings_table',
+    'variables' => array(
+      'table' => array(),
+      'add_path' => '',
+    ),
+    'path' => drupal_get_path('module', 'workbench_menu') . '/includes',
+  );
+
   $themes['workbench_menu_edit_settings_form'] = array(
     'render element' => 'form',
     'file' => 'workbench_menu.admin.inc',
+    'path' => drupal_get_path('module', 'workbench_menu') . '/includes',
+  );
+
+  $list = array();
+  $list['items'] = '';
+  $list['title'] = '';
+  $list['attributes'] = array();
+
+  $themes['workbench_menu_list'] = array(
+    'template' => 'workbench_menu_list',
+    'variables' => array(
+      'list' => $list,
+      'data' => array(),
+    ),
+    'path' => drupal_get_path('module', 'workbench_menu') . '/includes',
+  );
+
+  $data = array();
+  $data['id'] = 0;
+  $data['menu_id'] = 0;
+  $data['even_menu'] = FALSE;
+  $data['count_menu'] = 0;
+  $data['settings'] = array();
+  $data['even_item'] = TRUE;
+  $data['count_item'] = 0;
+  $data['even_item_local'] = TRUE;
+  $data['count_item_local'] = 0;
+  $data['depth'] = 0;
+  $data['trail_is_active'] = FALSE;
+  $data['path_current'] = '';
+
+  $themes['workbench_menu_item'] = array(
+    'template' => 'workbench_menu_item',
+    'variables' => array(
+      'data' => $data,
+    ),
     'path' => drupal_get_path('module', 'workbench_menu') . '/includes',
   );
 
@@ -321,14 +367,7 @@ function workbench_menu_block_view($delta = '') {
         $current_path2 = array_pop($path_tree2);
 
         if (!empty($breadcrumbs_cached[$current_path2])) {
-          $bc = $breadcrumbs_cached[$current_path2];
-
-          // always show the topmost breadcrumb even when on the top-level path.
-          // (this is different from normal-breadcrumb behavior and is intentional.)
-          // @todo: look into providing an option for users to control this behavior.
-          if (count($bc) > 1) {
-            array_pop($bc);
-          }
+          $bc = array_merge(array('<a href="' . base_path() . '">' . t("Home") . '</a>'), $breadcrumbs_cached[$current_path2]);
 
           drupal_set_breadcrumb($bc);
           break;
@@ -497,8 +536,6 @@ function workbench_menu_build_menus($path_string, &$menus_processed, &$breadcrum
  * @see drupal_set_breadcrumb()
  */
 function workbench_menu_build_menu_item($menu, $item, &$variables) {
-  static $wmi_css = 'menu_item';
-
   $built_menu = array();
 
   $structure = array();
@@ -510,8 +547,9 @@ function workbench_menu_build_menu_item($menu, $item, &$variables) {
   $settings[$item['item']->id]['expand'] = 'expand_auto';
   $settings[$item['item']->id]['label'] = check_plain($item['item']->human_name);
   $settings[$item['item']->id]['attributes'] = array();
-  $settings[$item['item']->id]['attributes']['id'][] = $wmi_css . '-menu_' . $menu->id . '-item_' . $item['item']->id;
   $settings[$item['item']->id]['attributes']['class'] = array();
+  $settings[$item['item']->id]['attributes']['class'][] = 'menu_item';
+  $settings[$item['item']->id]['attributes']['class'][] = 'menu_item-id-' . $item['item']->id;
   $settings[$item['item']->id]['prefix'] = '';
   $settings[$item['item']->id]['postfix'] = '';
   $settings[$item['item']->id]['outside_link'] = FALSE;
@@ -523,13 +561,13 @@ function workbench_menu_build_menu_item($menu, $item, &$variables) {
 
   foreach ($item['item']->item_type as &$type) {
     $settings[$item['item']->id]['type'] = $type->machine_name;
-    $settings[$item['item']->id]['attributes']['class'][] = $wmi_css . '-type-' . $type->machine_name;
+    $settings[$item['item']->id]['attributes']['class'][] = 'menu_item-type-' . $type->machine_name;
     break;
   }
 
   foreach ($item['item']->expand as &$expand) {
     $settings[$item['item']->id]['expand'] = $expand->machine_name;
-    $settings[$item['item']->id]['attributes']['class'][] = $wmi_css . '-expand-' . $expand->machine_name;
+    $settings[$item['item']->id]['attributes']['class'][] = 'menu_item-expand-' . $expand->machine_name;
     break;
   }
 
@@ -659,7 +697,7 @@ function workbench_menu_build_menu_item($menu, $item, &$variables) {
       $settings[$item['item']->id]['attributes'][$attribute] = $value;
     }
 
-    $settings[$item['item']->id]['attributes']['class'][] = $wmi_css . '-type-' . $data['settings'][$item_menu_item['item']->id]['type'];
+    $settings[$item['item']->id]['attributes']['class'][] = 'menu_item-type-' . $data['settings'][$item_menu_item['item']->id]['type'];
 
     unset($data['settings'][$item_menu_item['item']->id]);
 
@@ -681,7 +719,7 @@ function workbench_menu_build_menu_item($menu, $item, &$variables) {
     elseif (isset($item['item']->properties['clickable']) && $item['item']->properties['clickable']) {
       $settings[$item['item']->id]['attributes']['class'][] = 'clickable';
       $settings[$item['item']->id]['attributes']['class'][] = 'noscript';
-      $settings[$item['item']->id]['attributes']['href'] = array('#');
+      $settings[$item['item']->id]['attributes']['href'] = array('');
       $settings[$item['item']->id]['clickable'] = TRUE;
     }
   }
@@ -719,7 +757,7 @@ function workbench_menu_build_menu_item($menu, $item, &$variables) {
 
     if (empty($link_path)) {
       if ($item['item']->properties['url'] == '<top>') {
-        $settings[$item['item']->id]['attributes']['class'][] = $wmi_css . '-menu_top';
+        $settings[$item['item']->id]['attributes']['class'][] = 'menu_item-menu_top';
         $settings[$item['item']->id]['top_link'] = TRUE;
 
         $link_path = '/' . $menu->path;
@@ -732,14 +770,14 @@ function workbench_menu_build_menu_item($menu, $item, &$variables) {
           $parsed_url = parse_url($link_path);
           $remote_url = check_plain($parsed_url['host']);
 
-          $settings[$item['item']->id]['prefix'] .= '<div class="' . $wmi_css . '-icon ' . $wmi_css . '-icon_external"></div>';
+          $settings[$item['item']->id]['prefix'] .= '<div class="' . 'menu_item-icon ' . 'menu_item-icon_external"></div>';
           $settings[$item['item']->id]['attributes']['title'] = array(t("This links to the external website: !remote_url.", array('!remote_url' => $remote_url)));
         }
         else {
           $matches = array();
 
           if (preg_match('/^mailto:(.*)/', $link_path, $matches) > 0) {
-            $settings[$item['item']->id]['prefix'] .= '<div class="' . $wmi_css . '-icon ' . $wmi_css . '-icon_mail"></div>';
+            $settings[$item['item']->id]['prefix'] .= '<div class="' . 'menu_item-icon ' . 'menu_item-icon_mail"></div>';
             $settings[$item['item']->id]['attributes']['title'] = array(t("Send an e-mail to: !email_address.", array('!email_address' => check_plain($matches[1]))));
           }
           elseif (preg_match('@^(/|#)@', $link_path) === 0) {
@@ -800,17 +838,17 @@ function workbench_menu_build_menu_item($menu, $item, &$variables) {
         $parsed_url = parse_url($link_path);
         $remote_url = check_plain($parsed_url['host']);
 
-        $settings[$item['item']->id]['prefix'] = '<div class="' . $wmi_css . '-icon ' . $wmi_css . '-icon_' . $icon . '"></div>';
+        $settings[$item['item']->id]['prefix'] = '<div class="' . 'menu_item-icon ' . 'menu_item-icon_' . $icon . '"></div>';
         $settings[$item['item']->id]['attributes']['title'] = array(t("Download !filename from the external website: !remote_url.", array('!filename' => $filename, '!remote_url' => $remote_url)));
-        $settings[$item['item']->id]['attributes']['class'][] = $wmi_css . '-external_url';
+        $settings[$item['item']->id]['attributes']['class'][] = 'menu_item-external_url';
       }
       else {
-        $settings[$item['item']->id]['prefix'] .= '<div class="' . $wmi_css . '-icon ' . $wmi_css . '-icon_' . $icon . '"></div>';
+        $settings[$item['item']->id]['prefix'] .= '<div class="' . 'menu_item-icon ' . 'menu_item-icon_' . $icon . '"></div>';
         $settings[$item['item']->id]['attributes']['title'] = array(t("Download !filename.", array('!filename' => $filename)));
       }
     }
     else {
-      $settings[$item['item']->id]['prefix'] .= '<div class="' . $wmi_css . '-icon ' . $wmi_css . '-icon_' . $icon . '"></div>';
+      $settings[$item['item']->id]['prefix'] .= '<div class="' . 'menu_item-icon ' . 'menu_item-icon_' . $icon . '"></div>';
       $settings[$item['item']->id]['attributes']['title'] = array(t("View or Download: !filename.", array('!filename' => $filename)));
     }
 
@@ -941,15 +979,15 @@ function workbench_menu_render_menus($built_menus, $path_current, &$show_parents
       $count_menu++;
 
       $list = array();
-
+      $list['items'] = array();
       $list['attributes'] = array();
-      $list['attributes']['id'] = array('workbench_menu-' . $menu_id);
       $list['attributes']['class'] = array();
-      $list['attributes']['class'][] = 'menu';
       $list['attributes']['class'][] = 'workbench_menu';
-      $list['attributes']['class'][] = 'workbench_menu-weight_' . $built_menus_weight;
-      $list['attributes']['class'][] = 'workbench_menu-count_' . $count_menu;
-      $list['attributes']['class'][] = 'workbench_menu-depth_' . $menu_depth;
+      $list['attributes']['class'][] = 'workbench_menu-id-' . $menu_id;
+      $list['attributes']['class'][] = 'workbench_menu-weight-' . $built_menus_weight;
+      $list['attributes']['class'][] = 'workbench_menu-count-' . $count_menu;
+      $list['attributes']['class'][] = 'workbench_menu-depth-' . $menu_depth;
+      $list['attributes']['class'][] = 'menu';
 
       if (!$menu_data['show_parents']) $show_parents = FALSE;
 
@@ -964,17 +1002,18 @@ function workbench_menu_render_menus($built_menus, $path_current, &$show_parents
       $variables['count_item_local'] = 0;
       $variables['depth'] = 0;
       $variables['trail_is_active'] = FALSE;
+      $variables['path_current'] = $path_current;
 
       foreach ($menu_data['structure'] as $weight => &$items) {
         foreach ($items as $id => &$children) {
-          $variables['id'] = &$id;
+          $variables['id'] = $id;
           $variables['children'] = &$children;
 
-          $list['items'][] = workbench_menu_render_menu_item($variables, $path_current);
+          $list['items'][] = theme('workbench_menu_item', array('data' => &$variables));
         }
       }
 
-      $rendered[$built_menus_weight] .= theme('item_list', $list);
+      $rendered[$built_menus_weight] .= theme('workbench_menu_list', array('list' => $list, 'data' => $variables));
     }
   }
 
@@ -983,51 +1022,13 @@ function workbench_menu_render_menus($built_menus, $path_current, &$show_parents
 
 /**
  * Render the contents of a pre-built menu item into html menu items.
- *
- * This function is recursive.
- *
- * @param array $variables
- *   An array containing the following keys:
- *   - 'menu_id': The id of the menu in which an item belongs to.
- *   - 'even_menu': A boolean representing whether or not the item's
- *   menu is even or odd.
- *   - 'count_menu': An auto-incremented number assigned to the menu.
- *   - 'settings': An array containing all settings associated with
- *   the menu item.
- *   - 'even_item': A boolean representing whether or not this item
- *   is even or odd.
- *   - 'count_item': An auto-incremented number assigned to the item.
- *   - 'even_item_local': An auto-incremented number assigned to the
- *   item that is reset between recursive calls.
- *   - 'count_item_local':
- *   - 'depth': An auto-incremented number that is incremented each
- *   time this function recurses.
- *   - 'trail_is_active': A boolean representing whether or not the
- *   item or its children is active and thus the trail is active.
- *   - 'invalid_trail_active': A boolean representing that the trail
- *   is active but there is no actual active item because the path
- *   is invalid (or has no item associated with it).
- *   - 'clickable_label': A boolean representing that the item
- *   is a clickable label and so the paths are not active, but
- *   should be made available for the client (via js and/or css) to
- *   make it active or not.
- * @param string $path_current
- *   A string containing the complete url path that is currently
- *   active.
- * @param array $path_parts
- *   An array of sub-strings derived from the $path_current variable.
- *   This is normally done via explode('/', $path_current).
- *
- * @return array
- *   A list structured in such a way that it can be directly passed
- *   to theme_item_list().
- *
- * @see workbench_menu_render_menus()
- * @see theme_item_list()
  */
-function workbench_menu_render_menu_item(&$variables, $path_current) {
-  static $wmm_css = 'menu';
-  static $wmi_css = 'menu_item';
+function template_preprocess_workbench_menu_item(&$vars) {
+  $variables = &$vars['data'];
+
+  if (empty($variables['settings'])) {
+    return;
+  }
 
   $variables['even_item'] = !$variables['even_item'];
   $variables['count_item']++;
@@ -1043,22 +1044,19 @@ function workbench_menu_render_menu_item(&$variables, $path_current) {
     }
   }
 
-  $list = array();
-  $list['id'] = array();
-  $list['data'] = array();
-  $list['class'] = array();
-  $list['children'] = array();
+  $variables['child_list'] = array();
 
-  $alter_settings = array();
-  $alter_settings['variables'] = $variables;
+  // provide an active text string for purposes of accessibility.
+  $variables['active_text'] = '';
 
-  if ($variables['settings'][$variables['id']]['active_path'] == $path_current) {
+  if ($variables['settings'][$variables['id']]['active_path'] == $variables['path_current']) {
     $variables['trail_is_active'] = TRUE;
     $variables['settings'][$variables['id']]['attributes']['class'][] = 'active';
+    $variables['active_text'] =' <span class="element-invisible">' . t("(active menu item)") . '</span>';
   }
   else {
-    if (preg_match('@' . $variables['settings'][$variables['id']]['active_path'] . '@', $path_current) > 0) {
-      $path_current_parts = explode('/', $path_current);
+    if (preg_match('@' . $variables['settings'][$variables['id']]['active_path'] . '@', $variables['path_current']) > 0) {
+      $path_current_parts = explode('/', $variables['path_current']);
 
       while (!empty($path_current_parts)) {
         if (implode('/', $path_current_parts) == $variables['settings'][$variables['id']]['active_path']) {
@@ -1074,14 +1072,7 @@ function workbench_menu_render_menu_item(&$variables, $path_current) {
   }
 
   if ($variables['trail_is_active'] && isset($variables['settings'][$variables['id']]['breadcrumbs'])) {
-    $bc = $variables['settings'][$variables['id']]['breadcrumbs'];
-
-    // always show the topmost breadcrumb even when on the top-level path.
-    // (this is different from normal-breadcrumb behavior and is intentional.)
-    // @todo: look into providing an option for users to control this behavior.
-    if (count($bc) > 1 && !$variables['invalid_trail_active']) {
-      array_pop($bc);
-    }
+    $bc = array_merge(array('<a href="' . base_path() . '">' . t("Home") . '</a>'), $variables['settings'][$variables['id']]['breadcrumbs']);
 
     drupal_set_breadcrumb($bc);
   }
@@ -1103,17 +1094,16 @@ function workbench_menu_render_menu_item(&$variables, $path_current) {
     $child_variables['trail_is_active'] = FALSE;
     $child_variables['invalid_trail_active'] = FALSE;
     $child_variables['clickable'] = FALSE;
+    $child_variables['path_current'] = $variables['path_current'];
 
     $child_list = array();
 
     foreach ($variables['children'] as $weight => &$items) {
       foreach ($items as $id => &$children) {
-        $child_variables['id'] = &$id;
+        $child_variables['id'] = $id;
         $child_variables['children'] = &$children;
 
-        $item = workbench_menu_render_menu_item($child_variables, $path_current);
-
-        $child_list[] = $item;
+        $child_list[] = theme('workbench_menu_item', array('data' => &$child_variables));
 
         if ($child_variables['trail_is_active']) {
           $variables['trail_is_active'] = TRUE;
@@ -1127,7 +1117,7 @@ function workbench_menu_render_menu_item(&$variables, $path_current) {
 
     if ($variables['trail_is_active'] || $variables['clickable_label']) {
       if ($variables['settings'][$variables['id']]['expand'] == 'expand_always' || $variables['settings'][$variables['id']]['expand'] == 'expand_auto') {
-        $list['children'] = &$child_list;
+        $variables['child_list'] = &$child_list;
 
         if ($variables['clickable_label']) {
           $variables['settings'][$variables['id']]['attributes']['class'][] = 'collapsed';
@@ -1144,13 +1134,14 @@ function workbench_menu_render_menu_item(&$variables, $path_current) {
         }
         else {
           $variables['settings'][$variables['id']]['attributes']['class'][] = 'active';
+          $variables['active_text'] =' <span class="element-invisible">' . t("(active menu item)") . '</span>';
         }
       }
     }
     else {
       if ($variables['settings'][$variables['id']]['expand'] == 'expand_always') {
         $variables['settings'][$variables['id']]['attributes']['class'][] = 'expanded';
-        $list['children'] = &$child_list;
+        $variables['child_list'] = &$child_list;
       }
       elseif ($variables['settings'][$variables['id']]['expand'] == 'expand_never' || $variables['settings'][$variables['id']]['expand'] == 'expand_auto') {
         $variables['settings'][$variables['id']]['attributes']['class'][] = 'collapsed';
@@ -1158,7 +1149,7 @@ function workbench_menu_render_menu_item(&$variables, $path_current) {
     }
   }
 
-  if ($variables['trail_is_active'] || preg_match('@^' . $variables['settings'][$variables['id']]['active_path'] . '/@', $path_current) > 0) {
+  if ($variables['trail_is_active'] || preg_match('@^' . $variables['settings'][$variables['id']]['active_path'] . '/@', $variables['path_current']) > 0) {
     $variables['settings'][$variables['id']]['attributes']['class'][] = 'active-trail';
 
     if ($variables['clickable_label']) {
@@ -1175,52 +1166,14 @@ function workbench_menu_render_menu_item(&$variables, $path_current) {
   $variables['settings'][$variables['id']]['attributes']['class'][] = ($variables['even_menu'] ? 'menu_even' : 'menu_odd') ;
   $variables['settings'][$variables['id']]['attributes']['class'][] = ($variables['even_item'] ? 'even' : 'odd') ;
   $variables['settings'][$variables['id']]['attributes']['class'][] = ($variables['even_item_local'] ? 'local_even' : 'local_odd') ;
-  $variables['settings'][$variables['id']]['attributes']['class'][] = 'menu_' . $variables['count_menu'];
-  $variables['settings'][$variables['id']]['attributes']['class'][] = 'row_' . $variables['count_item'];
-  $variables['settings'][$variables['id']]['attributes']['class'][] = 'local_row_' . $variables['count_item_local'];
-  $variables['settings'][$variables['id']]['attributes']['class'][] = 'depth_' . $variables['depth'];
+  $variables['settings'][$variables['id']]['attributes']['class'][] = 'menu-' . $variables['count_menu'];
+  $variables['settings'][$variables['id']]['attributes']['class'][] = 'row-' . $variables['count_item'];
+  $variables['settings'][$variables['id']]['attributes']['class'][] = 'local_row-' . $variables['count_item_local'];
+  $variables['settings'][$variables['id']]['attributes']['class'][] = 'depth-' . $variables['depth'];
 
   $variables['count_item']++;
   $variables['even_item_local'] = !$variables['even_item_local'];
   $variables['count_item_local']++;
-
-  if (empty($list['children'])) unset($list['children']);
-
-  // @todo: write the api for this alter function
-  drupal_alter(__FUNCTION__, $alter_settings);
-
-  $id = implode(' ', $variables['settings'][$variables['id']]['attributes']['id']);
-  $list['id'] = array('id' => $id . '-container');
-
-  $class = implode(' ', $variables['settings'][$variables['id']]['attributes']['class']);
-  $list['class'] = array('class' => $wmi_css . '-container ' . $class);
-
-  $list['data'] = $variables['settings'][$variables['id']]['prefix'];
-
-  $attributes = '';
-  if (!empty($variables['settings'][$variables['id']]['attributes'])) {
-    foreach ($variables['settings'][$variables['id']]['attributes'] as $attribute => &$values) {
-      $attributes .= $attribute . '="';
-
-      if ($attribute == 'class') {
-        $attributes .= $wmi_css . ' ';
-      }
-
-      $attributes .= implode(' ', $values);
-      $attributes .=  '" ';
-    }
-  }
-
-  if (!empty($variables['settings'][$variables['id']]['attributes']['href'])) {
-    $list['data'] .= '<div id="' . $id . '-wrapper" class="' . $wmi_css . '-wrapper ' . $class . '"><a ' . $attributes . '>' . $variables['settings'][$variables['id']]['label'] . '</a></div>';
-  }
-  else {
-    $list['data'] .= '<div id="' . $id . '-wrapper" class="' . $wmi_css . '-wrapper ' . $class . '"><span ' . $attributes . '>' . $variables['settings'][$variables['id']]['label'] . '</span></div>';
-  }
-
-  $list['data'] .= $variables['settings'][$variables['id']]['postfix'];
-
-  return $list;
 }
 
 /**
@@ -1914,7 +1867,13 @@ function workbench_menu_get_load_menu_items_select_list_options_recursive_walk(&
  * @see workbench_access_get_access_tree()
  */
 function workbench_menu_edit_access($access_type = NULL, $access_type_id = NULL) {
-  if ($access_type == NULL || $access_type_id == NULL) return user_access('edit workbench menu');
+  if (user_access('admin workbench menu')) {
+    return TRUE;
+  }
+
+  if ($access_type == NULL || $access_type_id == NULL) {
+    return user_access('edit workbench menu');
+  }
 
   if (!user_access('edit workbench menu')) return FALSE;
 
@@ -2009,3 +1968,4 @@ function workbench_menu_autocomplete_nid($string) {
 
   drupal_json_output($matches);
 }
+
