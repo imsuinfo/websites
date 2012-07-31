@@ -1,0 +1,13 @@
+name = McNeese Module - Block
+description = "Provides Block specific module functionality."
+core = 7.x
+php = 5.3
+package = McNeese
+
+dependencies[] = cf
+dependencies[] = cf_settings
+dependencies[] = cf_theme
+dependencies[] = mcneese_html5
+
+files[] = mcneese_block.module
+files[] = mcneese_block.install

@@ -1,0 +1,157 @@
+<?php
+
+/**
+ * @file
+ * McNeese State University HTML 5 module.
+ */
+
+/**
+ * @defgroup mcneese_html5 McNeese HTML 5
+ * @{
+ * Provides html 5 functionality and changes to drupal 7.
+ */
+
+/**
+ * Implements hook_theme().
+ */
+function mcneese_html5_theme($existing, $type, $theme, $path) {
+  $themes = array();
+
+  $themes['mcneese_tag'] = array(
+    'variables' => array('name' => '', 'attributes' => array(), 'type' => '', 'open' => TRUE, 'html5' => TRUE),
+  );
+
+  return $themes;
+}
+
+/**
+ * Generate an HTML5 tag or fallback to a pre-HTML5 tag alternative.
+ *
+ * This will only create tags that are valid for HTML 5. All fallback
+ * pre-html5 tags that are created will still be compatible with HTML 5.
+ *
+ * This will also append a css tag for the type in use.
+ *
+ * @param array $variables
+ *   An array containing the following:
+ *   - name: a string representing the html tag name.
+ *   - attributes: an array of html attributes to apply to the tag.
+ *   - type: a string representing the type of tag, such as: 'semantic',
+ *    'media', 'canvas', or 'form'.
+ *   - open: a boolean, when TRUE represent to build an open tag and FALSE
+ *     builds a close tag.
+ *   - html5: a boolean, when TRUE, HTML5 code is generated, when FALSE,
+ *     pre-HTML5 code is created.
+ *
+ * @return string
+ *   Generated html markup for the given tag.
+ */
+function theme_mcneese_tag($variables) {
+  if (cf_is_empty_or_non_string('name', $variables['name'])) {
+    if (module_exists('cf_error')) {
+      cf_error::invalid_variable('variables[name]', t("Must be a valid non-empty string."));
+    }
+
+    return '';
+  }
+
+  if (cf_is_empty_or_non_string('type', $variables['type'])) {
+    if (module_exists('cf_error')) {
+      cf_error::invalid_variable('variables[type]', t("Must be a valid non-empty string."));
+    }
+
+    return '';
+  }
+
+  if (!is_array($variables['attributes'])) {
+    if (module_exists('cf_error')) {
+      cf_error::invalid_array('variables[type]');
+    }
+
+    return '';
+  }
+
+  if (!is_bool($variables['open'])) {
+    if (module_exists('cf_error')) {
+      cf_error::invalid_bool('variables[open]');
+    }
+
+    return '';
+  }
+
+  if (!is_bool($variables['html5'])) {
+    if (module_exists('cf_error')) {
+      cf_error::invalid_bool('variables[html5]');
+    }
+
+    return '';
+  }
+
+  // ensure that the tag name exists.
+  $type_css = 'html_tag-' . $variables['name'];
+
+  if (!array_key_exists('class', $variables['attributes'])) {
+    $variables['attributes']['class'] = array();
+  }
+
+  if (!in_array($type_css, $variables['attributes']['class'])) {
+    $variables['attributes']['class'][] = $type_css;
+  }
+
+  $type_object = cf_db_options_get_options('mcneese_html5', $variables['type'], $variables['name']);
+
+  if (is_object($type_object)) {
+    if ($variables['html5']) {
+      $type_markup = $type_object->machine_name;
+    }
+    else {
+      $type_markup = $type_object->fallback;
+    }
+  }
+  else {
+    return '';
+  }
+
+  if (empty($type_markup)) {
+    return '';
+  }
+
+  if ($variables['open']) {
+    $markup = '<' . $type_markup;
+
+    foreach ($variables['attributes'] as $attribute => &$attribute_value) {
+      $attribute_content = '';
+
+      if (is_string($attribute_value)) {
+        $attribute_content = $attribute_value;
+      }
+      elseif (is_array($attribute_value)) {
+        foreach ($attribute_value as &$value) {
+          if (!is_string($value)) continue;
+
+          $attribute_content .= $value . ' ';
+        }
+      }
+      else {
+        continue;
+      }
+
+      // do not allow literal double-quotes
+      $attribute_content = str_replace('"', '&#34;', $attribute_content);
+
+      if (!empty($attribute_content)) {
+        $markup .= ' ' . $attribute . '="' . $attribute_content . '"';
+      }
+    }
+
+    $markup .= '>';
+
+    return $markup;
+  }
+
+  return '</' . $type_markup . '>';
+}
+
+/**
+ * @} End of '@defgroup mcneese_html5 McNeese HTML 5'.
+ */

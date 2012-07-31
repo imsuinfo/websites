@@ -1,0 +1,12 @@
+name = McNeese Module - HTML 5
+description = "Provides HTML 5 specific module functionality."
+core = 7.x
+php = 5.3
+package = McNeese
+
+dependencies[] = cf
+dependencies[] = cf_settings
+dependencies[] = cf_theme
+
+files[] = mcneese_html5.module
+files[] = mcneese_html5.install

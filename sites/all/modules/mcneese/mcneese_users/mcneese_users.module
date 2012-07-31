@@ -1,0 +1,153 @@
+<?php
+
+/**
+ * @file
+ * McNeese State University Users module.
+ */
+
+/**
+ * @defgroup mcneese_tusers Users Themes
+ * @{
+ * Provides user functionality and changes to drupal 7.
+ */
+
+/**
+ * Implements hook_form_FORM_ID_alter() for user_profile_form.
+ */
+function mcneese_users_form_user_profile_form_alter(&$form, &$form_state) {
+  if ($form['#user_category'] == 'account') {
+    $account = $form['#user'];
+
+    if (!isset($form['additional_settings']['#type'])) {
+      $form['additional_settings'] = array(
+        '#type' => 'vertical_tabs',
+        '#weight' => 99,
+        '#theme_wrappers' => array('vertical_tabs'),
+        '#prefix' => '<div class="field-group-vertical_tabs-wrapper">',
+        '#suffix' => '</div>',
+      );
+      $form['#attached']['js'][] = 'misc/form.js';
+      $form['#attached']['js'][] = 'misc/collapse.js';
+    }
+
+    $form['mcneese_settings'] = array(
+      '#type' => 'fieldset',
+      '#title' => t("McNeese Settings"),
+      '#weight' => 4,
+      '#collapsible' => TRUE,
+      '#tree' => TRUE,
+      '#group' => 'additional_settings',
+    );
+
+    $form['mcneese_settings']['toolbar'] = array(
+      '#type' => 'fieldset',
+      '#title' => t("Toolbar Settings"),
+      '#weight' => 4,
+      '#collapsible' => TRUE,
+      '#collapsed' => TRUE,
+      '#tree' => TRUE,
+    );
+
+    $form['mcneese_settings']['toolbar']['autohide'] = array(
+      '#type' => 'checkbox',
+      '#title' => t("Auto-hide toolbar"),
+      '#description' => t("Normally the toolbar is always visible on the page, enable this to hide most of the toolbar when it is not active."),
+      '#default_value' => isset($account->data['mcneese_settings']['toolbar']['autohide']) ? $account->data['mcneese_settings']['toolbar']['autohide'] : FALSE,
+    );
+
+    $form['mcneese_settings']['toolbar']['sticky'] = array(
+      '#type' => 'checkbox',
+      '#title' => t("Enable a sticky toolbar"),
+      '#description' => t("Normally the toolbar will float above the page, enable this to make the toolbar stick (embed) on page."),
+      '#default_value' => isset($account->data['mcneese_settings']['toolbar']['sticky']) ? $account->data['mcneese_settings']['toolbar']['sticky'] : FALSE,
+    );
+
+    $form['mcneese_settings']['toolbar']['shortcuts'] = array(
+      '#type' => 'checkbox',
+      '#title' => t("Show the shorcut bar"),
+      '#description' => t("The shortcut bar is an additional menu below the toolbar that under normal circumstances a user may edit."),
+      '#default_value' => !_toolbar_is_collapsed(),
+    );
+
+    $form['mcneese_settings']['menu_tabs'] = array(
+      '#type' => 'fieldset',
+      '#title' => t("Menu Tabs Settings"),
+      '#weight' => 4,
+      '#collapsible' => TRUE,
+      '#collapsed' => TRUE,
+      '#tree' => TRUE,
+    );
+
+    $form['mcneese_settings']['menu_tabs']['sticky'] = array(
+      '#type' => 'checkbox',
+      '#title' => t("Enable a sticky menu tabs"),
+      '#description' => t("Normally the menu tabs will float on the left side of the page, enable this to make the menu tabs stick (embed) on the page just above the breadcrumbs. (Non-HTML5 compliant browsers will always be sticky.)"),
+      '#default_value' => isset($account->data['mcneese_settings']['menu_tabs']['sticky']) ? $account->data['mcneese_settings']['menu_tabs']['sticky'] : FALSE,
+    );
+
+    $form['mcneese_settings']['action_links'] = array(
+      '#type' => 'fieldset',
+      '#title' => t("Action Link Settings"),
+      '#weight' => 4,
+      '#collapsible' => TRUE,
+      '#collapsed' => TRUE,
+      '#tree' => TRUE,
+    );
+
+    $form['mcneese_settings']['action_links']['sticky'] = array(
+      '#type' => 'checkbox',
+      '#title' => t("Enable a sticky action links"),
+      '#description' => t("Normally the action links will float on the right side of the page, enable this to make the action links stick (embed) on the page just below the breadcrumbs. (Non-HTML5 compliant browsers will always be sticky.)"),
+      '#default_value' => isset($account->data['mcneese_settings']['action_links']['sticky']) ? $account->data['mcneese_settings']['action_links']['sticky'] : FALSE,
+    );
+
+    $form['mcneese_settings']['help'] = array(
+      '#type' => 'fieldset',
+      '#title' => t("Help Settings"),
+      '#weight' => 4,
+      '#collapsible' => TRUE,
+      '#collapsed' => TRUE,
+      '#tree' => TRUE,
+    );
+
+    $form['mcneese_settings']['help']['sticky'] = array(
+      '#type' => 'checkbox',
+      '#title' => t("Enable a sticky help"),
+      '#description' => t("Normally the help will float on the right side of the page, enable this to make the help stick (embed) on the page, above the page title. (Non-HTML5 compliant browsers will always be sticky.)"),
+      '#default_value' => isset($account->data['mcneese_settings']['help']['sticky']) ? $account->data['mcneese_settings']['help']['sticky'] : FALSE,
+    );
+
+    $form['mcneese_settings']['messages'] = array(
+      '#type' => 'fieldset',
+      '#title' => t("Messages Settings"),
+      '#weight' => 4,
+      '#collapsible' => TRUE,
+      '#collapsed' => TRUE,
+      '#tree' => TRUE,
+    );
+
+    $form['mcneese_settings']['messages']['sticky'] = array(
+      '#type' => 'checkbox',
+      '#title' => t("Enable a sticky messages"),
+      '#description' => t("Normally the messages will float on the right side of the page, enable this to make the messages stick (embed) on the page, above the page title. (Non-HTML5 compliant browsers will always be sticky.)"),
+      '#default_value' => isset($account->data['mcneese_settings']['messages']['sticky']) ? $account->data['mcneese_settings']['messages']['sticky'] : FALSE,
+    );
+  }
+}
+
+/**
+ * Implements hook_user_presave().
+ */
+function mcneese_users_user_presave(&$edit, $account, $category) {
+  global $base_path;
+
+  if (isset($edit['mcneese_settings'])) {
+    $edit['data']['mcneese_settings'] = $edit['mcneese_settings'];
+  }
+
+  setcookie('Drupal.toolbar.collapsed', !$edit['mcneese_settings']['toolbar']['shortcuts'], NULL, $base_path);
+}
+
+/**
+ * @} End of '@defgroup mcneese_user McNeese Users'.
+ */

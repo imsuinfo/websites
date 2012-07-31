@@ -1,0 +1,9 @@
+name = McNeese Module - Users
+description = "Provides user specific functionality."
+core = 7.x
+php = 5.3
+package = McNeese
+
+dependencies[] = cf
+
+files[] = mcneese_users.module

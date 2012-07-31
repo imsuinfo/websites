@@ -1,0 +1,10 @@
+name = McNeese Module - Themes
+description = "Provides theme/template specific functionality."
+core = 7.x
+php = 5.3
+package = McNeese
+
+dependencies[] = cf
+dependencies[] = cf_theme
+
+files[] = mcneese_themes.module
