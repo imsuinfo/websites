@@ -45,7 +45,7 @@ function cf_theme_get_variables(array &$variables) {
   $cf['data'] = array();
   $cf['user'] = array('object' => NULL);
 
-  foreach (array('front', 'admin', 'using_database', 'node', 'emergency', 'maintenance', 'unsupported', 'debug', 'overlay', 'logged_in', 'anonymous', 'published', 'unpublished', 'promoted', 'sticky') as $key) {
+  foreach (array('front', 'admin', 'admin_path', 'using_database', 'node', 'profile', 'emergency', 'maintenance', 'unsupported', 'debug', 'overlay', 'logged_in', 'anonymous', 'published', 'unpublished', 'promoted', 'sticky') as $key) {
     $cf['is'][$key] = FALSE;
     $cf['is_data'][$key] = array();
   }
@@ -197,24 +197,16 @@ function cf_theme_get_variables(array &$variables) {
     $cf['is_data']['using_database']['database'] = db_driver();
   }
 
+  $node_object = NULL;
   $node_id_matches = array();
   if (preg_match('@^node/(\d+)(/.*|$|\?.*|#.*)@', current_path(), $node_id_matches)) {
     if (!empty($node_id_matches[1])) {
-      $variables['node'] = node_load($node_id_matches[1]);
+      $node_object = node_load($node_id_matches[1]);
     }
   }
   unset($node_id_matches);
 
-  $node_object = NULL;
-
-  if (isset($variables['node'])) {
-    $node_object = & $variables['node'];
-  }
-  elseif (isset($variables['page']) && is_array($variables['page']) && !empty($variables['page']['#type']) && isset($variables['page']['content']['system_main']['#node']) && is_object($variables['page']['content']['system_main']['#node'])) {
-    $node_object = & $variables['page']['content']['system_main']['#node'];
-  }
-
-  if (is_object($node_object) && property_exists($node_object, 'type') && !empty($node_object->type)) {
+  if (is_object($node_object)) {
     if (property_exists($node_object, 'nid') && !empty($node_object->nid)) {
       $cf['is']['node'] = TRUE;
       $cf['is_data']['node']['object'] = &$node_object;
@@ -240,6 +232,18 @@ function cf_theme_get_variables(array &$variables) {
       }
     }
   }
+
+  $user_id_matches = array();
+  if (preg_match('@^user/(\d+)(/.*|$|\?.*|#.*)@', current_path(), $user_id_matches)) {
+    if (!empty($user_id_matches[1])) {
+      $cf['is_data']['profile']['object'] = user_load($user_id_matches[1]);
+
+      if (is_object($cf['is_data']['profile']['object'] )) {
+        $cf['is']['profile'] = TRUE;
+      }
+    }
+  }
+  unset($user_id_matches);
 
   if (module_exists('overlay')) {
     $overlay_mode = overlay_get_mode();
@@ -285,6 +289,10 @@ function cf_theme_get_variables(array &$variables) {
 
   if (!empty($cf['at']['alias'])) {
     $cf['at']['css'] .=  ' alias-' . cf_theme_safe_css_string_part($cf['at']['alias']);
+  }
+
+  if (path_is_admin($cf['at']['path'])) {
+    $cf['is']['admin_path'] = TRUE;
   }
 
   // Add date-specific css
