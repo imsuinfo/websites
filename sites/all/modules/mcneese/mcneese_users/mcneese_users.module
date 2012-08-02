@@ -39,6 +39,8 @@ function mcneese_users_form_user_profile_form_alter(&$form, &$form_state) {
       '#group' => 'additional_settings',
     );
 
+
+    // toolbar
     $form['mcneese_settings']['toolbar'] = array(
       '#type' => 'fieldset',
       '#title' => t("Toolbar Settings"),
@@ -69,6 +71,8 @@ function mcneese_users_form_user_profile_form_alter(&$form, &$form_state) {
       '#default_value' => !_toolbar_is_collapsed(),
     );
 
+
+    // menu tabs
     $form['mcneese_settings']['menu_tabs'] = array(
       '#type' => 'fieldset',
       '#title' => t("Menu Tabs Settings"),
@@ -82,9 +86,11 @@ function mcneese_users_form_user_profile_form_alter(&$form, &$form_state) {
       '#type' => 'checkbox',
       '#title' => t("Enable a sticky menu tabs"),
       '#description' => t("Normally the menu tabs will float on the left side of the page, enable this to make the menu tabs stick (embed) on the page just above the breadcrumbs. (Non-HTML5 compliant browsers will always be sticky.)"),
-      '#default_value' => isset($account->data['mcneese_settings']['menu_tabs']['sticky']) ? $account->data['mcneese_settings']['menu_tabs']['sticky'] : FALSE,
+      '#default_value' => isset($account->data['mcneese_settings']['menu_tabs']['sticky']) ? $account->data['mcneese_settings']['menu_tabs']['sticky'] : TRUE,
     );
 
+
+    // action links
     $form['mcneese_settings']['action_links'] = array(
       '#type' => 'fieldset',
       '#title' => t("Action Link Settings"),
@@ -98,9 +104,11 @@ function mcneese_users_form_user_profile_form_alter(&$form, &$form_state) {
       '#type' => 'checkbox',
       '#title' => t("Enable a sticky action links"),
       '#description' => t("Normally the action links will float on the right side of the page, enable this to make the action links stick (embed) on the page just below the breadcrumbs. (Non-HTML5 compliant browsers will always be sticky.)"),
-      '#default_value' => isset($account->data['mcneese_settings']['action_links']['sticky']) ? $account->data['mcneese_settings']['action_links']['sticky'] : FALSE,
+      '#default_value' => isset($account->data['mcneese_settings']['action_links']['sticky']) ? $account->data['mcneese_settings']['action_links']['sticky'] : TRUE,
     );
 
+
+    // help
     $form['mcneese_settings']['help'] = array(
       '#type' => 'fieldset',
       '#title' => t("Help Settings"),
@@ -114,9 +122,11 @@ function mcneese_users_form_user_profile_form_alter(&$form, &$form_state) {
       '#type' => 'checkbox',
       '#title' => t("Enable a sticky help"),
       '#description' => t("Normally the help will float on the right side of the page, enable this to make the help stick (embed) on the page, above the page title. (Non-HTML5 compliant browsers will always be sticky.)"),
-      '#default_value' => isset($account->data['mcneese_settings']['help']['sticky']) ? $account->data['mcneese_settings']['help']['sticky'] : FALSE,
+      '#default_value' => isset($account->data['mcneese_settings']['help']['sticky']) ? $account->data['mcneese_settings']['help']['sticky'] : TRUE,
     );
 
+
+    // messages
     $form['mcneese_settings']['messages'] = array(
       '#type' => 'fieldset',
       '#title' => t("Messages Settings"),
@@ -130,7 +140,43 @@ function mcneese_users_form_user_profile_form_alter(&$form, &$form_state) {
       '#type' => 'checkbox',
       '#title' => t("Enable a sticky messages"),
       '#description' => t("Normally the messages will float on the right side of the page, enable this to make the messages stick (embed) on the page, above the page title. (Non-HTML5 compliant browsers will always be sticky.)"),
-      '#default_value' => isset($account->data['mcneese_settings']['messages']['sticky']) ? $account->data['mcneese_settings']['messages']['sticky'] : FALSE,
+      '#default_value' => isset($account->data['mcneese_settings']['messages']['sticky']) ? $account->data['mcneese_settings']['messages']['sticky'] : TRUE,
+    );
+
+
+    // information
+    $form['mcneese_settings']['information'] = array(
+      '#type' => 'fieldset',
+      '#title' => t("Information Region Settings"),
+      '#weight' => 4,
+      '#collapsible' => TRUE,
+      '#collapsed' => TRUE,
+      '#tree' => TRUE,
+    );
+
+    $form['mcneese_settings']['information']['sticky'] = array(
+      '#type' => 'checkbox',
+      '#title' => t("Enable a sticky information region"),
+      '#description' => t("Normally the information region will float on the right side of the page, enable this to make the information region stick (embed) on the page, above the page title. (Non-HTML5 compliant browsers will always be sticky.)"),
+      '#default_value' => isset($account->data['mcneese_settings']['information']['sticky']) ? $account->data['mcneese_settings']['information']['sticky'] : TRUE,
+    );
+
+
+    // editing
+    $form['mcneese_settings']['editing'] = array(
+      '#type' => 'fieldset',
+      '#title' => t("Editing Region Settings"),
+      '#weight' => 4,
+      '#collapsible' => TRUE,
+      '#collapsed' => TRUE,
+      '#tree' => TRUE,
+    );
+
+    $form['mcneese_settings']['editing']['sticky'] = array(
+      '#type' => 'checkbox',
+      '#title' => t("Enable a sticky editing region"),
+      '#description' => t("Normally the editing region will float on the right side of the page, enable this to make the editing region stick (embed) on the page, above the page title. (Non-HTML5 compliant browsers will always be sticky.)"),
+      '#default_value' => isset($account->data['mcneese_settings']['editing']['sticky']) ? $account->data['mcneese_settings']['editing']['sticky'] : TRUE,
     );
   }
 }
