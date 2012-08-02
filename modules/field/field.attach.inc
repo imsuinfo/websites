@@ -65,7 +65,7 @@ define('FIELD_STORAGE_UPDATE', 'update');
 define('FIELD_STORAGE_INSERT', 'insert');
 
 /**
- * @} End of "defgroup field_storage"
+ * @} End of "defgroup field_storage".
  */
 
 /**
@@ -310,10 +310,6 @@ function _field_invoke_multiple($op, $entity_type, $entities, &$a = NULL, &$b = 
     $instances = _field_invoke_get_instances($entity_type, $bundle, $options);
 
     foreach ($instances as $instance) {
-      if (empty($instance)) {
-        $return[$id] = array();
-        continue;
-      }
       $field_id = $instance['field_id'];
       $field_name = $instance['field_name'];
       $field = $field_info[$field_id];
@@ -1379,5 +1375,5 @@ function field_attach_delete_bundle($entity_type, $bundle) {
 
 
 /**
- * @} End of "defgroup field_attach"
+ * @} End of "defgroup field_attach".
  */

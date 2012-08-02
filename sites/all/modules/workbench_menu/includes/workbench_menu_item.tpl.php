@@ -40,15 +40,19 @@ if (!empty($data['settings'])) {
   $attributes = ' ' . drupal_attributes($data['settings'][$data['id']]['attributes']);
 ?>
 <li class="<?php print($classes); ?>">
-  <?php print($data['settings'][$data['id']]['prefix']); ?>
-
   <?php if (!empty($data['settings'][$data['id']]['attributes']['href'])) { ?>
-    <a<?php print($attributes); ?>><?php print($data['settings'][$data['id']]['label'] . $data['active_text']); ?></a>
+    <a<?php print($attributes); ?>>
+      <?php print($data['settings'][$data['id']]['prefix']); ?>
+      <?php print($data['settings'][$data['id']]['label'] . $data['active_text']); ?>
+      <?php print($data['settings'][$data['id']]['postfix']); ?>
+    </a>
   <?php } else { ?>
-    <span<?php print($attributes); ?>><?php print($data['settings'][$data['id']]['label'] . $data['active_text']); ?></span>
+    <span<?php print($attributes); ?>>
+      <?php print($data['settings'][$data['id']]['prefix']); ?>
+      <?php print($data['settings'][$data['id']]['label'] . $data['active_text']); ?>
+      <?php print($data['settings'][$data['id']]['postfix']); ?>
+    </span>
   <?php } ?>
-
-  <?php print($data['settings'][$data['id']]['postfix']); ?>
 
   <?php if (!empty($data['child_list'])) {
     $list = array();

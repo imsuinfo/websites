@@ -349,7 +349,7 @@ function taxonomy_overview_terms($form, &$form_state, $vocabulary) {
     $current_page = array_merge($order, $current_page); // Update our form with the new order.
     foreach ($current_page as $key => $term) {
       // Verify this is a term for the current page and set at the current depth.
-      if (is_array($form_state['input'][$key]) && array_key_exists('tid', $form_state['input'][$key]) && is_numeric($form_state['input'][$key]['tid'])) {
+      if (is_array($form_state['input'][$key]) && is_numeric($form_state['input'][$key]['tid'])) {
         $current_page[$key]->depth = $form_state['input'][$key]['depth'];
       }
       else {
@@ -580,7 +580,6 @@ function theme_taxonomy_overview_terms($variables) {
       $term['weight']['#attributes']['class'] = array('term-weight');
       $row[] = drupal_render($term['weight']);
       $row[] = drupal_render($term['edit']);
-      $row[] = isset($term['tid']['#value']) ? intval($term['tid']['#value']) : '';
       $row = array('data' => $row);
       $rows[$key] = $row;
     }
@@ -621,7 +620,7 @@ function theme_taxonomy_overview_terms($variables) {
     $rows[] = array(array('data' => $form['#empty_text'], 'colspan' => '3'));
   }
 
-  $header = array(t('Name'), t('Weight'), t('Operations'), t('Term id'));
+  $header = array(t('Name'), t('Weight'), t('Operations'));
   $output = theme('table', array('header' => $header, 'rows' => $rows, 'attributes' => array('id' => 'taxonomy')));
   $output .= drupal_render_children($form);
   $output .= theme('pager');
@@ -697,7 +696,8 @@ function taxonomy_form_term($form, &$form_state, $edit = array(), $vocabulary = 
     '#value' => isset($term->vocabulary_machine_name) ? $term->vocabulary_machine_name : $vocabulary->name,
   );
 
-  field_attach_form('taxonomy_term', $term, $form, $form_state);
+  $langcode = entity_language('taxonomy_term', $term);
+  field_attach_form('taxonomy_term', $term, $form, $form_state, $langcode);
 
   $form['relations'] = array(
     '#type' => 'fieldset',
