@@ -30,7 +30,7 @@ class views_handler_area_view extends views_handler_area {
     $view_display = $this->view->name . ':' . $this->view->current_display;
 
     $options = array('' => t('-Select-'));
-    $options += views_get_views_as_options(FALSE, 'all', $view_display, FALSE, TRUE);
+    $options += views_get_views_as_options(FALSE, 'all', $view_display);
     $form['view_to_insert'] = array(
       '#type' => 'select',
       '#title' => t('View to insert'),

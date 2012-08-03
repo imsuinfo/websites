@@ -187,8 +187,9 @@ class views_plugin_style extends views_plugin {
     // @TODO: Document "uses grouping" in docs.php when docs.php is written.
     if ($this->uses_fields() && $this->definition['uses grouping']) {
       $options = array('' => t('- None -'));
-      $field_labels = $this->display->handler->get_field_labels(TRUE);
+      $field_labels = $this->display->handler->get_field_labels();
       $options += $field_labels;
+
       // If there are no fields, we can't group on them.
       if (count($options) > 1) {
         // This is for backward compability, when there was just a single select form.

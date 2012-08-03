@@ -714,7 +714,9 @@ function views_ui_add_form_save_submit($form, &$form_state) {
     $form_state['redirect'] = 'admin/structure/views';
   }
   $view->save();
-
+  menu_rebuild();
+  cache_clear_all('*', 'cache_views', TRUE);
+  cache_clear_all();
   $form_state['redirect'] = 'admin/structure/views';
   if (!empty($view->display['page'])) {
     $display = $view->display['page'];
@@ -850,7 +852,7 @@ function views_ui_break_lock_confirm($form, &$form_state, $view) {
   $form = array();
 
   if (empty($view->locked)) {
-    $form['message']['#markup'] = t('There is no lock on view %name to break.', array('%name' => $view->name));
+    $form['#markup'] = t('There is no lock on view %view to break.', array('%name' => $view->name));
     return $form;
   }
 
@@ -2153,6 +2155,15 @@ function views_ui_edit_view_form_submit($form, &$form_state) {
   $form_state['view']->save();
   drupal_set_message(t('The view %name has been saved.', array('%name' => $form_state['view']->get_human_name())));
 
+  // Make sure menu items get rebuilt as neces
+  menu_rebuild();
+
+  // Clear the views cache.
+  cache_clear_all('*', 'cache_views');
+
+  // Clear the page cache.
+  cache_clear_all();
+
   // Remove this view from cache so we can edit it properly.
   ctools_object_cache_clear('view', $form_state['view']->name);
 }
@@ -3176,13 +3187,11 @@ function theme_views_ui_reorder_displays_form($vars) {
   drupal_add_tabledrag('reorder-displays', 'order', 'sibling', 'weight');
 
   $output = drupal_render($form['override']);
-  $output .= '<div class="scroll">';
   $output .= theme('table',
     array('header' => $header,
     'rows' => $rows,
     'attributes' => array('id' => 'reorder-displays'),
   ));
-  $output .= '</div>';
   $output .= drupal_render_children($form);
 
   return $output;
@@ -5310,27 +5319,4 @@ function views_ui_field_list() {
   );
 
   return $output;
-}
-
-/**
- * Lists all plugins and what enabled Views use them.
- */
-function views_ui_plugin_list() {
-  $rows = views_plugin_list();
-  foreach ($rows as &$row) {
-    // Link each view name to the view itself.
-    foreach ($row['views'] as $row_name => $view) {
-      $row['views'][$row_name] = l($view, "admin/structure/views/view/$view");
-    }
-    $row['views'] = implode(', ', $row['views']);
-  }
-
-  // Sort rows by field name.
-  ksort($rows);
-  return array(
-    '#theme' => 'table',
-    '#header' => array(t('Type'), t('Name'), t('Provided by'), t('Used in')),
-    '#rows' => $rows,
-    '#empty' => t('There are no enabled views.'),
-  );
 }

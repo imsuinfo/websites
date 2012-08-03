@@ -92,13 +92,7 @@ class view extends views_db_object {
 
   var $use_ajax = FALSE;
 
-  /**
-   * Where the results of a query will go.
-   *
-   * The array must use a numeric index starting at 0.
-   *
-   * @var array
-   */
+  // Where the results of a query will go.
   var $result = array();
 
   // May be used to override the current pager info.
@@ -603,7 +597,7 @@ class view extends views_db_object {
     foreach ($this->display_handler->get_option('relationships') as $id => $options) {
       $options['table'] = views_move_table($options['table']);
       $data = views_fetch_data($options['table'], FALSE);
-      if (isset($data[$options['field']]['relationship']['base'])) {
+      if (isset($data[$options['field']])) {
         $base_tables[$data[$options['field']]['relationship']['base']] = TRUE;
       }
     }
@@ -1135,9 +1129,6 @@ class view extends views_db_object {
     }
     else {
       $this->query->execute($this);
-      // Enforce the array key rule as documented in
-      // views_plugin_query::execute().
-      $this->result = array_values($this->result);
       $this->_post_execute();
       if ($cache) {
         $cache->cache_set('results');
@@ -1789,11 +1780,6 @@ class view extends views_db_object {
     if ($this->vid == 'new') {
       $this->vid = NULL;
     }
-    // If there is no vid, check if a view with this machine name already exists.
-    elseif (empty($this->vid)) {
-      $vid = db_query("SELECT vid from {views_view} WHERE name = :name", array(':name' => $this->name))->fetchField();
-      $this->vid = $vid ? $vid : NULL;
-    }
 
     $transaction = db_transaction();
 
@@ -1823,8 +1809,8 @@ class view extends views_db_object {
 
     $this->save_locale_strings();
 
-    // Clear caches.
-    views_invalidate_cache();
+    cache_clear_all('views_urls', 'cache_views');
+    cache_clear_all(); // clear the page cache as well.
   }
 
   /**
@@ -1861,8 +1847,8 @@ class view extends views_db_object {
     cache_clear_all('views_query:' . $this->name, 'cache_views');
 
     if ($clear) {
-      // Clear caches.
-      views_invalidate_cache();
+      cache_clear_all(); // this clears the block and page caches only.
+      menu_rebuild(); // force a menu rebuild when a view is deleted.
     }
   }
 
