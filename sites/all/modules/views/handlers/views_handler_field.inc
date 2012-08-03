@@ -378,6 +378,17 @@ class views_handler_field extends views_handler {
     }
   }
 
+  /**
+   * Determines if this field will be available as an option to group the result
+   * by in the style settings.
+   *
+   * @return bool
+   *  TRUE if this field handler is groupable, otherwise FALSE.
+   */
+  function use_string_group_by() {
+    return TRUE;
+  }
+
   function option_definition() {
     $options = parent::option_definition();
 
@@ -1165,7 +1176,7 @@ If you would like to have the characters \'[\' and \']\' please use the html ent
           $more_link_path = drupal_substr($more_link_path, drupal_strlen($base_path));
         }
 
-        $more_link = l($more_link_text, $more_link_path);
+        $more_link = l($more_link_text, $more_link_path, array('attributes' => array('class' => array('views-more-link'))));
 
         $suffix .= " " . $more_link;
       }

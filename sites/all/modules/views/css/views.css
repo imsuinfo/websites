@@ -1,6 +1,7 @@
 .views-exposed-form .views-exposed-widget {
-  float: left; /* LTR */
-  padding: .5em 1em 0 0; /* LTR */
+  display: inline-block;
+  vertical-align: top;
+  margin: 7px 14px 0 0; /* LTR */
 }
 
 .views-exposed-form .views-exposed-widget .form-submit {

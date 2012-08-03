@@ -12,6 +12,7 @@ dependencies[] = ctools
 files[] = handlers/views_handler_area.inc
 files[] = handlers/views_handler_area_result.inc
 files[] = handlers/views_handler_area_text.inc
+files[] = handlers/views_handler_area_text_custom.inc
 files[] = handlers/views_handler_area_view.inc
 files[] = handlers/views_handler_argument.inc
 files[] = handlers/views_handler_argument_date.inc
@@ -42,6 +43,7 @@ files[] = handlers/views_handler_filter_boolean_operator_string.inc
 files[] = handlers/views_handler_filter_combine.inc
 files[] = handlers/views_handler_filter_date.inc
 files[] = handlers/views_handler_filter_equality.inc
+files[] = handlers/views_handler_filter_entity_bundle.inc
 files[] = handlers/views_handler_filter_group_by_numeric.inc
 files[] = handlers/views_handler_filter_in_operator.inc
 files[] = handlers/views_handler_filter_many_to_one.inc
@@ -301,9 +303,9 @@ files[] = tests/views_cache.test
 files[] = tests/views_view.test
 files[] = tests/views_ui.test
 
-; Information added by drupal.org packaging script on 2012-06-14
-version = "7.x-3.3+170-dev"
+; Information added by drupal.org packaging script on 2012-08-02
+version = "7.x-3.3+218-dev"
 core = "7.x"
 project = "views"
-datestamp = "1339678090"
+datestamp = "1343912402"
 
