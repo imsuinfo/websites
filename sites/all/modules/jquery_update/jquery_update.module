@@ -65,7 +65,7 @@ function jquery_update_library_alter(&$libraries, $module) {
 
   // Replace jQuery.
   jquery_update_jquery_replace($libraries, $cdn, $path, $min); 
-  $libraries['jquery']['version'] = '1.7.2';
+  $libraries['jquery']['version'] = '1.5.2';
 
   // Replace jQuery UI with CDN or local files. If from a CDN include all of jQuery UI.
   jquery_update_jqueryui_replace($libraries, $cdn, $path, $min);
@@ -120,12 +120,12 @@ function jquery_update_form_system_performance_settings_alter(&$form, &$form_sta
 function jquery_update_jquery_replace(&$libraries, $cdn, $path, $min) {
   switch($cdn) {
     case 'google':
-      $libraries['jquery']['js']['misc/jquery.js']['data'] = 'https://ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery' . $min . '.js';
+      $libraries['jquery']['js']['misc/jquery.js']['data'] = 'https://ajax.googleapis.com/ajax/libs/jquery/1.5.2/jquery' . $min . '.js';
       $libraries['jquery']['js']['misc/jquery.js']['type'] = 'external';
       jquery_update_jquery_backup($libraries, $path, $min);
       break;
     case 'microsoft':
-      $libraries['jquery']['js']['misc/jquery.js']['data'] = 'http://ajax.aspnetcdn.com/ajax/jQuery/jquery-1.7.2' . $min . '.js';
+      $libraries['jquery']['js']['misc/jquery.js']['data'] = 'http://ajax.aspnetcdn.com/ajax/jQuery/jquery-1.5.2' . $min . '.js';
       $libraries['jquery']['js']['misc/jquery.js']['type'] = 'external';
       jquery_update_jquery_backup($libraries, $path, $min);
       break;
