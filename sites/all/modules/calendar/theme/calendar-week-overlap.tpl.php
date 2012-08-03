@@ -23,6 +23,10 @@
  * $max_date_formatted: The maximum date for this calendar in the format YYYY-MM-DD HH:MM:SS.
  * 
  */
+$header_ids = array();
+foreach ($day_names as $key => $value) {
+  $header_ids[$key] = $value['header_id'];
+}
 //dsm('Display: '. $display_type .': '. $min_date_formatted .' to '. $max_date_formatted);
 $params = array(
   'view' => $view,
@@ -42,7 +46,7 @@ $params = array(
     <tr>
       <th class="calendar-agenda-hour">&nbsp;</th>
       <?php foreach ($day_names as $cell): ?>
-        <th class="<?php print $cell['class']; ?>">
+        <th class="<?php print $cell['class']; ?>" id="<?php print $cell['header_id']; ?>">
           <?php print $cell['data']; ?>
         </th>
       <?php endforeach; ?>
@@ -179,11 +183,11 @@ $params = array(
         <tr>
           <?php for ($index = 0; $index < 8; $index++): ?>
           <?php if ($index == 0 ): ?>
-          <td class="first">
+          <td class="first" headers="<?php print $header_ids[$index]; ?>">
           <?php elseif ($index == 7 ) : ?>
-          <td class="last">
+          <td class="last"">
           <?php else : ?>
-          <td>
+          <td headers="<?php print $header_ids[$index]; ?>">
           <?php endif; ?>
             <?php foreach ($start_times as $time_cnt => $start_time): ?>
               <?php 
