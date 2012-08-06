@@ -1,4 +1,12 @@
 /*** Administrative Toolbar ***/
+.mcneese.is-toolbar-fixed.mcneese.is-toolbar-autoshow.is-toolbar-shortcuts-collapsed > #mcneese-page {
+  margin-top: 25px;
+}
+
+.mcneese.is-toolbar-fixed.mcneese.is-toolbar-autoshow.is-toolbar-shortcuts-expanded > #mcneese-page {
+  margin-top: 50px;
+}
+
 #mcneese-toolbar {
   top: 0;
   left: 0;
@@ -364,6 +372,7 @@
 
 /*** Tabs - Relative ***/
 #mcneese-tabs.relative {
+  display: inline-block;
   position: relative;
 
   margin: 0;

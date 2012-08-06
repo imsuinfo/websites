@@ -250,6 +250,7 @@
   background-color: #99b2ee;
 }
 
+.mcneese input#edit-displays-settings-settings-content-tab-content-details-top-actions-disable,
 .mcneese a.button,
 .mcneese a.button:visited,
 .mcneese input#edit-submit.form-cancel,
@@ -280,6 +281,7 @@
   background-color: #99b2ee;
 }
 
+.mcneese input#edit-displays-settings-settings-content-tab-content-details-top-actions-delete,
 .mcneese input#edit-submit.form-delete,
 .mcneese input.form-delete,
 .mcneese input#edit-remove,
