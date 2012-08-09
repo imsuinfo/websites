@@ -1214,14 +1214,17 @@ div#content .calendar-calendar .week-view .full td.multi-day .calendar.weekview 
   padding: 0;
 }
 
-div#content .calendar > .contents > a {
+div#content .calendar > .contents > a,
+div#content .calendar > .contents > .views-field > .field-content > a {
   display: block;
 
   padding: 3px;
 }
 
 div#content .calendar > .contents > a,
-div#content .calendar > .contents > a:visited {
+div#content .calendar > .contents > a:visited,
+div#content .calendar > .contents > .views-field > .field-content > a,
+div#content .calendar > .contents > .views-field > .field-content > a:visited {
   background-color: #6384b8;
 }
 
@@ -1230,7 +1233,13 @@ div#content .calendar > .contents > .event-249,
 div#content .calendar > .contents > .event-252,
 div#content .calendar > .contents > .event-255:visited,
 div#content .calendar > .contents > .event-249:visited,
-div#content .calendar > .contents > .event-252:visited {
+div#content .calendar > .contents > .event-252:visited,
+div#content .calendar > .contents > .views-field > .field-content > .event-255,
+div#content .calendar > .contents > .views-field > .field-content > .event-249,
+div#content .calendar > .contents > .views-field > .field-content > .event-252,
+div#content .calendar > .contents > .views-field > .field-content > .event-255:visited,
+div#content .calendar > .contents > .views-field > .field-content > .event-249:visited,
+div#content .calendar > .contents > .views-field > .field-content > .event-252:visited {
   background-color: #e6e993;
 }
 
@@ -1239,7 +1248,13 @@ div#content .calendar > .contents > .event-249,
 div#content .calendar > .contents > .event-252,
 div#content .calendar > .contents > .event-255:visited,
 div#content .calendar > .contents > .event-249:visited,
-div#content .calendar > .contents > .event-252:visited {
+div#content .calendar > .contents > .event-252:visited,
+div#content .calendar > .contents > .views-field > .field-content > .event-255,
+div#content .calendar > .contents > .views-field > .field-content > .event-249,
+div#content .calendar > .contents > .views-field > .field-content > .event-252,
+div#content .calendar > .contents > .views-field > .field-content > .event-255:visited,
+div#content .calendar > .contents > .views-field > .field-content > .event-249:visited,
+div#content .calendar > .contents > .views-field > .field-content > .event-252:visited {
   color: #002080;
 }
 
@@ -1251,24 +1266,41 @@ div#content .calendar > .contents > .event-249:active,
 div#content .calendar > .contents > .event-252:active,
 div#content .calendar > .contents > .event-255:hover,
 div#content .calendar > .contents > .event-249:hover,
-div#content .calendar > .contents > .event-252:hover {
+div#content .calendar > .contents > .event-252:hover,
+div#content .calendar > .contents > .views-field > .field-content > .event-255:focus,
+div#content .calendar > .contents > .views-field > .field-content > .event-249:focus,
+div#content .calendar > .contents > .views-field > .field-content > .event-252:focus,
+div#content .calendar > .contents > .views-field > .field-content > .event-255:active,
+div#content .calendar > .contents > .views-field > .field-content > .event-249:active,
+div#content .calendar > .contents > .views-field > .field-content > .event-252:active,
+div#content .calendar > .contents > .views-field > .field-content > .event-255:hover,
+div#content .calendar > .contents > .views-field > .field-content > .event-249:hover,
+div#content .calendar > .contents > .views-field > .field-content > .event-252:hover {
   color: #5f0000;
 }
 
 div#content .calendar > .contents > .event-256,
 div#content .calendar > .contents > .event-250,
 div#content .calendar > .contents > .event-256:visited,
-div#content .calendar > .contents > .event-250:visited {
+div#content .calendar > .contents > .event-250:visited,
+div#content .calendar > .contents > .views-field > .field-content > .event-256,
+div#content .calendar > .contents > .views-field > .field-content > .event-250,
+div#content .calendar > .contents > .views-field > .field-content > .event-256:visited,
+div#content .calendar > .contents > .views-field > .field-content > .event-250:visited {
   background-color: #9c4f4b;
 }
 
 div#content .calendar > .contents > .event-292,
-div#content .calendar > .contents > .event-292:visited {
+div#content .calendar > .contents > .event-292:visited,
+div#content .calendar > .contents > .views-field > .field-content > .event-292,
+div#content .calendar > .contents > .views-field > .field-content > .event-292:visited {
   background-color: #418e38;
 }
 
 div#content .calendar > .contents > .event-399,
-div#content .calendar > .contents > .event-399:visited {
+div#content .calendar > .contents > .event-399:visited,
+div#content .calendar > .contents > .views-field > .field-content > .event-399,
+div#content .calendar > .contents > .views-field > .field-content > .event-399:visited {
   background-color: #975700;
 }
 
@@ -1335,4 +1367,11 @@ div#content .node-ie-policy .field-name-field-fs-handbook > .field-item,
 div#content .node-ie-policy .field-name-field-authority > .field-item {
   display: inline-block;
   vertical-align: baseline;
+}
+
+
+
+/*** Toolbar tweaks ***/
+#toolbar > .toolbar-menu {
+  min-height: 20px;
 }

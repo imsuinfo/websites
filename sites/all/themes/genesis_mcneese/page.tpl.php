@@ -218,6 +218,8 @@
         <!--(end_tertiary_content)-->
       </div>
     <?php } ?>
+
+    <div id="container-foot"></div>
   </div>
 
   <?php if ($cf['show']['page']['footer'] && !$cf['is']['overlay']){ ?>
