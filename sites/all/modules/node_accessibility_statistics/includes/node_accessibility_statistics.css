@@ -1,5 +1,6 @@
 .node_accessibility_statistics-plot-wrapper {
   display: inline-block;
+  vertical-align: top;
 
   margin: 6px;
 }
