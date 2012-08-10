@@ -212,7 +212,7 @@
     </div>
 
     <?php if ($cf['show']['page']['tertiary_content'] && !$cf['is']['overlay']){ ?>
-      <div id="tertiary-content" class="<?php print($cf['markup_css']['content']['class']); ?>">
+      <div id="tertiary-content" class="<?php print($cf['markup_css']['body']['class']); ?>">
         <!--(begin_tertiary_content)-->
         <?php print($page['tertiary_content']); ?>
         <!--(end_tertiary_content)-->
