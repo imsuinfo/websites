@@ -35,7 +35,7 @@ function cf_theme_get_variables(array &$variables) {
   $cf['meta'] = array('charset' => 'UTF-8', 'content' => NULL, 'http-equiv' => array(), 'name' => array());
   $cf['agent'] = array('machine_name' => 'unknown', 'human_name' => 'unknown', 'major_version' => 'unknown', 'engine' => 'unknown', 'raw' => '');
   $cf['breadcrumb'] = array();
-  $cf['markup_css'] = array('body' => array('id' => '', 'class' => ''), 'content' => array('id' => '', 'class' => ''));
+  $cf['markup_css'] = array('body' => array('id' => '', 'class' => ''));
   $cf['at'] = array('machine_name' => '', 'human_name' => '', 'url' => '', 'base' => '', 'path' => '', 'alias' => '', 'css' => '');
   $cf['date'] = array('enabled' => FALSE, 'year' => '', 'month' => '', 'day' => '', 'week' => '', 'hour' => '', 'minute' => '', 'timezone' => '');
   $cf['theme'] = array('path' => '', 'machine_name' => '', 'human_name' => '');
@@ -313,43 +313,41 @@ function cf_theme_get_variables(array &$variables) {
   foreach ($cf['is'] as $key => $value) {
     if ($value === TRUE) {
       $cf['markup_css']['body']['class'] .= ' is-' . $key;
-      $cf['markup_css']['content']['class'] .= ' is-' . $key;
     }
   }
 
   $cf['markup_css']['body']['class'] .= $cf['at']['css'];
-  $cf['markup_css']['content']['class'] .= $cf['at']['css'];
 
   if (!empty($cf['agent']['machine_name'])) {
     $class_part = cf_theme_safe_css_string_part($cf['agent']['machine_name']);
     $cf['markup_css']['body']['class'] .= ' agent-name-' . $class_part;
-    $cf['markup_css']['content']['class'] .= ' agent-name-' . $class_part;
   }
 
   if (!empty($cf['agent']['engine'])) {
     $class_part = cf_theme_safe_css_string_part($cf['agent']['engine']);
     $cf['markup_css']['body']['class'] .= ' agent-engine-' . $class_part;
-    $cf['markup_css']['content']['class'] .= ' agent-engine-' . $class_part;
   }
+
+  if (!empty($cf['agent']['major_version'])) {
+    $class_part = cf_theme_safe_css_string_part($cf['agent']['major_version']);
+    $cf['markup_css']['body']['class'] .= ' agent-major_version-' . $class_part;
+  }
+
 
   if ($cf['is']['node']) {
     $class_part = cf_theme_safe_css_string_part($cf['is_data']['node']['object']->nid);
     $cf['markup_css']['body']['class'] .= ' node-id-' . $class_part;
-    $cf['markup_css']['content']['class'] .= ' node-id-' . $class_part;
 
     $class_part = cf_theme_safe_css_string_part($cf['is_data']['node']['object']->type);
     $cf['markup_css']['body']['class'] .= ' node-type-' . $class_part;
-    $cf['markup_css']['content']['class'] .= ' node-type-' . $class_part;
 
     if (!empty($cf['is_data']['node']['object']->path['alias'])) {
       $class_part = cf_theme_safe_css_string_part(drupal_get_path_alias($cf['is_data']['node']['object']->path['alias']));
       $cf['markup_css']['body']['class'] .= ' node-path-' . $class_part;
-      $cf['markup_css']['content']['class'] .= ' node-path-' . $class_part;
     }
     elseif (!empty($cf['is_data']['node']['object']->path['source'])) {
       $class_part = cf_theme_safe_css_string_part(drupal_get_path_alias($cf['is_data']['node']['object']->path['source']));
       $cf['markup_css']['body']['class'] .= ' node-path-' . $class_part;
-      $cf['markup_css']['content']['class'] .= ' node-path-' . $class_part;
     }
   }
 
@@ -358,7 +356,6 @@ function cf_theme_get_variables(array &$variables) {
       if (!empty($cf['date'][$key])) {
         $class_part = cf_theme_safe_css_string_part($cf['date'][$key]);
         $cf['markup_css']['body']['class'] .= ' date-' . $key . '-' . $class_part;
-        $cf['markup_css']['content']['class'] .= ' date-' . $key . '-' . $class_part;
       }
     }
 
@@ -371,7 +368,6 @@ function cf_theme_get_variables(array &$variables) {
 
         if ($timezone_css !== FALSE) {
           $cf['markup_css']['body']['class'] .= ' date-timezone-' . $timezone_css;
-          $cf['markup_css']['content']['class'] .= ' date-timezone-' . $timezone_css;
         }
       }
     }
