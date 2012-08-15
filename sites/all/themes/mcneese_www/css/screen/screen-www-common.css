@@ -33,6 +33,12 @@
   margin-bottom: 10px;
 }
 
+#mcneese-page-content > .group_image,
+#mcneese-page-content > .column-2 > .group_image {
+  display: block;
+  margin: 0 auto;
+}
+
 
 
 /*** wwwdev.mcneese.edu-specific ***/
@@ -130,6 +136,14 @@
 .mcneese.at-wwwdev2 #mcneese-page-watermarks-post {
   color: #ffffff;
   background-color: transparent;
+}
+
+
+
+/*** sandbox.mcneese.edu-specific ***/
+.mcneese.at-sandbox_mcneese_edu #mcneese-header > .header-section > .site-logo,
+.mcneese.at-sandbox #mcneese-header > .header-section > .site-logo {
+  background-image: url(../../images/sandbox.png);
 }
 
 
