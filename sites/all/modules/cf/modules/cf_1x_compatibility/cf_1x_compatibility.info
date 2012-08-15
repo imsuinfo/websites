@@ -9,9 +9,9 @@ dependencies[] = cf_error
 
 files[] = cf_1x_compatibility.module
 
-; Information added by drupal.org packaging script on 2012-06-18
-version = "7.x-2.0-unstable2"
+; Information added by drupal.org packaging script on 2012-08-10
+version = "7.x-2.0-unstable3"
 core = "7.x"
 project = "cf"
-datestamp = "1340028075"
+datestamp = "1344613905"
 
