@@ -33,6 +33,7 @@ function cf_theme_get_variables(array &$variables) {
 
   $cf['css'] = array();
   $cf['meta'] = array('charset' => 'UTF-8', 'content' => NULL, 'http-equiv' => array(), 'name' => array());
+  $cf['link'] = array();
   $cf['agent'] = array('machine_name' => 'unknown', 'human_name' => 'unknown', 'major_version' => 'unknown', 'engine' => 'unknown', 'raw' => '');
   $cf['breadcrumb'] = array();
   $cf['markup_css'] = array('body' => array('id' => '', 'class' => ''));
@@ -469,6 +470,70 @@ function cf_theme_generate_headers(array $cf) {
     }
   }
   */
+
+  // handle custom links
+  $supported_link_media = array();
+  $supported_link_media[] = 'screen';
+  $supported_link_media[] = 'tty';
+  $supported_link_media[] = 'tv';
+  $supported_link_media[] = 'projection';
+  $supported_link_media[] = 'handheld';
+  $supported_link_media[] = 'print';
+  $supported_link_media[] = 'braille';
+  $supported_link_media[] = 'aural';
+  $supported_link_media[] = 'all';
+
+  $supported_link_rel = array();
+  $supported_link_rel[] = 'alternate';
+  $supported_link_rel[] = 'appendix';
+  $supported_link_rel[] = 'bookmark';
+  $supported_link_rel[] = 'chapter';
+  $supported_link_rel[] = 'contents';
+  $supported_link_rel[] = 'copyright';
+  $supported_link_rel[] = 'glossary';
+  $supported_link_rel[] = 'help';
+  $supported_link_rel[] = 'home';
+  $supported_link_rel[] = 'index';
+  $supported_link_rel[] = 'next';
+  $supported_link_rel[] = 'prev';
+  $supported_link_rel[] = 'section';
+  $supported_link_rel[] = 'start';
+  $supported_link_rel[] = 'stylesheet';
+  $supported_link_rel[] = 'subsection';
+  $supported_link_rel[] = 'shortcut icon';
+
+  foreach ($cf['link'] as $key => &$link) {
+    if (empty($link['href'])) continue;
+
+    $output .= '<link';
+
+    foreach (array('charset', 'href', 'hreflang', 'media', 'rel', 'target', 'type') as $type) {
+      if ($type == 'rel') {
+        if (empty($link['rel'])) {
+          if (!empty($link['rev']) && in_array($link['rev'], $supported_link_rel)) {
+            $output .= ' rev="' . $link['rev'] . '"';
+          }
+        }
+        else {
+          if (in_array($link['rel'], $supported_link_rel)) {
+            $output .= ' rel="' . $link['rel'] . '"';
+          }
+        }
+      }
+      else if ($type == 'media') {
+        if (!empty($link['media']) && in_array($link['media'], $supported_link_media)) {
+          $output .= ' media="' . $link['media'] . '"';
+        }
+      }
+      else {
+        if (!empty($link[$type])) {
+          $output .= ' ' . $type . '="' . filter_xss($link[$type], array()) . '"';
+        }
+      }
+    }
+
+    $output .= '>' . "\n";
+  }
 
   return $output;
 }
