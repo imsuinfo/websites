@@ -139,11 +139,20 @@ function ldap_profile_user_login(&$edit, $account) {
   array_push($ldapfields, 'uid');
 
   // Acquire all fields from user's LDAP attributes
-  $ldapdata = $server->search($dn, "(objectClass=*)", $ldapfields);
+  if (is_object($server)) {
+    $ldapdata = $server->search($dn, "(objectClass=*)", $ldapfields);
+  }
+  else {
+    $ldapdata = FALSE;
+  }
+
   if ($ldapdata === FALSE) {
     $ldapdata = array();
   }
-  $ldapdata = $ldapdata[0];
+  else {
+    $ldapdata = $ldapdata[0];
+  }
+
   $dnLdapdata = array();
 
   // Perform searches for all DNs set to derive information from
