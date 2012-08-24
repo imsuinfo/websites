@@ -1,0 +1,131 @@
+<?php
+/**
+ * @file
+ * This is the installation file for the Background Process module
+ */
+
+/**
+ * Implements of hook_enable().
+ */
+function background_process_enable() {
+  $_SESSION['background_process_determine_default_service_host'] = TRUE;
+}
+
+/**
+ * Implements of hook_schema().
+ */
+function background_process_schema() {
+  $schema = array();
+
+  $schema['background_process'] = array(
+    'fields' => array(
+      'handle' => array(
+        'type' => 'varchar',
+        'length' => 255,
+        'not null' => TRUE,
+      ),
+      'callback' => array(
+        'type' => 'text',
+        'not null' => FALSE,
+      ),
+      'args' => array(
+        'type' => 'blob',
+        'not null' => FALSE,
+      ),
+      'uid' => array(
+        'type' => 'int',
+        'not null' => TRUE,
+        'default' => 0,
+      ),
+      'token' => array(
+        'type' => 'varchar',
+        'length' => 32,
+        'not null' => TRUE,
+        'default' => '',
+      ),
+      'service_host' => array(
+        'type' => 'varchar',
+        'length' => 64,
+        'not null' => TRUE,
+        'default' => '',
+      ),
+      'start_stamp' => array(
+        'type' => 'numeric',
+        'precision' => '16',
+        'scale' => '6',
+        'not null' => FALSE,
+      ),
+      'status' => array(
+        'type' => 'int',
+        'size' => 'normal',
+        'not null' => TRUE,
+        'default' => 0,
+      ),
+    ),
+    'primary key' => array('handle'),
+  );
+
+  return $schema;
+}
+
+/**
+ * Add status column to background_process table.
+ */
+function background_process_update_7001() {
+  db_add_field('background_process', 'status', array(
+    'type' => 'int',
+    'size' => 'normal',
+    'not null' => TRUE,
+    'default' => 0,
+  ));
+}
+
+/**
+ * Determine default service host.
+ */
+function background_process_update_7101() {
+}
+
+/**
+ * Implements hook_uninstall().
+ */
+function background_process_uninstall() {
+  // Removing process variables.
+  variable_del('background_process_service_timeout');
+  variable_del('background_process_connection_timeout');
+  variable_del('background_process_stream_timeout');
+  variable_del('background_process_service_groups');
+  variable_del('background_process_default_service_group');
+  variable_del('background_process_service_hosts');
+  variable_del('background_process_default_service_host');
+  variable_del('background_process_cleanup_age');
+  variable_del('background_process_queues');
+  variable_del('background_process_derived_default_host');
+  variable_del('background_process_token');
+}
+
+
+/**
+ * Determine default service host
+ */
+function background_process_update_7102() {
+}
+
+/**
+ * Determine default service host
+ */
+function background_process_update_7103() {
+  drupal_set_message(st('Update complete. Please visit !settings page and determine default service host, if not configured in settings.php', array('!settings' => l('settings', 'admin/config/system/background-process'))));
+}
+
+/**
+ * Change start column from double to numeric
+ */
+function background_process_update_7104() {
+  db_change_field('background_process', 'start', 'start', array(
+    'type' => 'numeric',
+    'precision' => '16',
+    'scale' => '6',
+    'not null' => FALSE,
+  ));
+}

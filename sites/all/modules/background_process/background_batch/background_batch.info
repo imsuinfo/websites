@@ -1,0 +1,14 @@
+name = Background Batch
+description = Adds background processing to Drupals batch API
+core = 7.x
+php = 5.0
+
+dependencies[] = background_process
+dependencies[] = progress
+
+; Information added by drupal.org packaging script on 2012-03-18
+version = "7.x-1.12"
+core = "7.x"
+project = "background_process"
+datestamp = "1332071438"
+
