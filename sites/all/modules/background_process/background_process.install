@@ -55,7 +55,7 @@ function background_process_schema() {
         'scale' => '6',
         'not null' => FALSE,
       ),
-      'status' => array(
+      'exec_status' => array(
         'type' => 'int',
         'size' => 'normal',
         'not null' => TRUE,
@@ -72,7 +72,7 @@ function background_process_schema() {
  * Add status column to background_process table.
  */
 function background_process_update_7001() {
-  db_add_field('background_process', 'status', array(
+  db_add_field('background_process', 'exec_status', array(
     'type' => 'int',
     'size' => 'normal',
     'not null' => TRUE,
