@@ -302,8 +302,22 @@ function mcneese_themes_form($variables) {
   $element['#attributes']['role'] = 'form';
 
 
+  // alter tags to provide more css controls
+  if (!empty($element['#form_id'])) {
+    $sanitized = preg_replace('/(\W)+/i', '_', $element['#form_id']);
+  } else {
+    $sanitized = preg_replace('/(\W)+/i', '_', $element['#attributes']['id']);
+  }
+
+  if (!isset($element['#attributes']['class'])) {
+    $element['#attributes']['class'] = array();
+  }
+
+  $element['#attributes']['class'][] = $sanitized;
+
+
   // Anonymous DIV to satisfy XHTML compliance.
-  return '<form' . drupal_attributes($element['#attributes']) . '><div>' . $element['#children'] . '</div></form>';
+  return '<form' . drupal_attributes($element['#attributes']) . '><div class="form-wrapper-inner">' . $element['#children'] . '</div></form>';
 }
 
 /**
