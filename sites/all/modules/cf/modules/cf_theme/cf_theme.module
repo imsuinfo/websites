@@ -64,11 +64,19 @@ function cf_theme_get_variables(array &$variables) {
   // do not cache maintenance mode pages.
   $maintenace_mode = variable_get('maintenance_mode', 0);
 
-  if ($maintenace_mode || !empty($MAINTENANCE_MODE)) {
+  if ($maintenace_mode || defined('MAINTENANCE_MODE')) {
     $cf['meta']['name']['googlebot'] = 'noarchive,noindex,nofollow,nosnippet';
     $cf['meta']['name']['robots'] = 'NONE';
     $cf['meta']['http-equiv']['cache-control'] = 'no-cache';
     $cf['is']['maintenance'] = TRUE;
+    $cf['is_data']['maintenance']['type'] = 'normal';
+
+    if (defined('MAINTENANCE_MODE')) {
+      $cf['is_data']['maintenance']['type'] = MAINTENANCE_MODE;
+    }
+
+    $cf['is']['maintenance-type-' . $cf['is_data']['maintenance']['type']] = TRUE;
+    $cf['is_data']['maintenance-type-' . $cf['is_data']['maintenance']['type']] = array();
   }
 
   // set the user agent
