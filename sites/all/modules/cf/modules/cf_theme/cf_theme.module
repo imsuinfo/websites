@@ -72,7 +72,7 @@ function cf_theme_get_variables(array &$variables) {
     $cf['is_data']['maintenance']['type'] = 'normal';
 
     if (defined('MAINTENANCE_MODE')) {
-      $cf['is_data']['maintenance']['type'] = MAINTENANCE_MODE;
+      $cf['is_data']['maintenance']['type'] = check_plain(MAINTENANCE_MODE);
     }
 
     $cf['is']['maintenance-type-' . $cf['is_data']['maintenance']['type']] = TRUE;
