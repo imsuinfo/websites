@@ -207,6 +207,13 @@ function mcneese_html5_install() {
   );
 
   $semantic[] = array(
+    'machine_name' => 'ol',
+    'human_name' => $t("Ordered List"),
+    'description' => $t("Defines an ordered list."),
+    'fallback' => 'ol',
+  );
+
+  $semantic[] = array(
     'machine_name' => 'p',
     'human_name' => $t("Paragraph"),
     'description' => $t("Defines a paragraph."),
@@ -309,6 +316,13 @@ function mcneese_html5_install() {
     'human_name' => $t("Time"),
     'description' => $t("Defines a date/time."),
     'fallback' => '',
+  );
+
+  $semantic[] = array(
+    'machine_name' => 'ul',
+    'human_name' => $t("Unordered List"),
+    'description' => $t("Defines an unordered list."),
+    'fallback' => 'ul',
   );
 
   $semantic[] = array(
