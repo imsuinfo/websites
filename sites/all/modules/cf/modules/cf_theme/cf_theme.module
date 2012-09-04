@@ -183,7 +183,7 @@ function cf_theme_get_variables(array &$variables) {
   }
 
   // set frontpage defaults
-  if (drupal_is_front_page() && !$cf['is']['maintenance']) {
+  if (drupal_is_front_page()) {
     $cf['is']['front'] = TRUE;
     $cf['meta']['name']['robots'] = 'INDEX,FOLLOW';
   }
