@@ -1,3 +1,14 @@
+/*** footer ***/
+#mcneese-www-footer {
+  display: none;
+}
+
+
+
+/*** Search Form ***/
+#mcneese-page-main > .block-name-block-block-12 {
+  display: none;
+}
 
 
 
