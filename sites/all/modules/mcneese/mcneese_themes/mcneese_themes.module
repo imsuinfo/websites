@@ -309,7 +309,7 @@ function mcneese_themes_form($variables) {
     $sanitized = preg_replace('/(\W)+/i', '_', $element['#attributes']['id']);
   }
 
-  if (!isset($element['#attributes']['class'])) {
+  if (!isset($element['#attributes']['class']) || !is_array($element['#attributes']['class'])) {
     $element['#attributes']['class'] = array();
   }
 
