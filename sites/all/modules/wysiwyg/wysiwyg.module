@@ -618,7 +618,7 @@ function wysiwyg_get_css() {
 
   $files = array();
   foreach (drupal_add_css() as $filepath => $info) {
-    if ($info['group'] >= CSS_THEME && $info['media'] != 'print') {
+    if ($info['group'] >= CSS_THEME && ($info['media'] == 'all' || $info['media'] == 'screen')) {
       if (file_exists($filepath)) {
         $files[] = base_path() . $filepath;
       }
