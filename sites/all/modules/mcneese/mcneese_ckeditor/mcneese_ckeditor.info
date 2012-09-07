@@ -1,0 +1,10 @@
+name = McNeese Module - Ckeditor
+description = "Provides custom ckeditor changes."
+core = 7.x
+php = 5.3
+package = McNeese
+
+dependencies[] = cf
+dependencies[] = cf_theme
+
+files[] = mcneese_ckeditor.module
