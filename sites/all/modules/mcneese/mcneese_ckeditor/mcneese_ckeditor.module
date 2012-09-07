@@ -27,7 +27,7 @@ function mcneese_ckeditor_wysiwyg_editor_settings_alter(&$settings, $context) {
     //$settings['contentsCss'] = array();
 
     // http://docs.cksource.com/ckeditor_api/symbols/CKEDITOR.config.html#.resize_minWidth
-    $settings['resize_minWidth'] = 500;
+    $settings['resize_minWidth'] = 580;
 
     // http://docs.cksource.com/ckeditor_api/symbols/CKEDITOR.config.html#.enterMode
     $settings['enterMode'] = 2;
