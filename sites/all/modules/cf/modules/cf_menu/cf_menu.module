@@ -46,6 +46,21 @@ function cf_menu_menu() {
     );
   }
 
+  $management_page = variable_get('management_admin_page', TRUE);
+
+  if ($management_page) {
+    $items['admin/content/management'] = array(
+      'title' => "Management",
+      'description' => "Content management administrative pages.",
+      'page callback' => 'cf_menu_management_page',
+      'type' => MENU_LOCAL_TASK,
+      'file' => 'menu.inc',
+      'file path' => drupal_get_path('module', 'cf_menu') . '/pages',
+      'access callback' => 'user_access',
+      'access arguments' => array('view content management administration page'),
+    );
+  }
+
   return $items;
 }
 
@@ -65,6 +80,15 @@ function cf_menu_cf_permission_alter(&$permissions) {
     $permissions['view content accessibility administration page'] = array(
       'title' => t("View Content Accessibility Administration Page"),
       'description' => t("Grants permissions to view the content accessibility administration page."),
+    );
+  }
+
+  $management_page = variable_get('management_admin_page', TRUE);
+
+  if ($management_page) {
+    $permissions['view content management administration page'] = array(
+      'title' => t("View Content Management Administration Page"),
+      'description' => t("Grants permissions to view the content management administration page."),
     );
   }
 }

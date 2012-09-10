@@ -62,14 +62,15 @@ function cf_theme_get_variables(array &$variables) {
   }
 
   // do not cache maintenance mode pages.
-  $maintenace_mode = variable_get('maintenance_mode', 0);
+  $maintenance_mode = variable_get('maintenance_mode', 0);
 
-  if ($maintenace_mode || defined('MAINTENANCE_MODE')) {
+  if ($maintenance_mode || defined('MAINTENANCE_MODE')) {
     $cf['meta']['name']['googlebot'] = 'noarchive,noindex,nofollow,nosnippet';
     $cf['meta']['name']['robots'] = 'NONE';
     $cf['meta']['http-equiv']['cache-control'] = 'no-cache';
     $cf['is']['maintenance'] = TRUE;
     $cf['is_data']['maintenance']['type'] = 'normal';
+    $cf['is_data']['maintenance']['mode'] = $maintenance_mode;
 
     if (defined('MAINTENANCE_MODE')) {
       $cf['is_data']['maintenance']['type'] = check_plain(MAINTENANCE_MODE);
@@ -647,6 +648,31 @@ function cf_theme_render_cf(&$cf, $keys, $subdir = NULL) {
 }
 
 /**
+ * A wrapper around drupal_clean_css_identifier that allows underscores.
+ *
+ * Justification:
+ *   Drupals core css cleanup code does not properly handle all allowed css,
+ *   namely underscores. This is a quick-way to ensure that all non-word
+ *   characters are removed from a string to be used in css.
+ *
+ * @param string $string
+ *   The string to cleanup.
+ *
+ * @return string|false
+ *   FALSE is returned if the preg_replace() functions returns something other
+ *   than a string.
+ */
+function cf_theme_safe_css($string) {
+  $replacement = drupal_clean_css_identifier($string, array(' ' => '-', '_' => '_', '/' => '-', '[' => '-', ']' => ''));
+
+  if (is_string($replacement)) {
+    return $replacement;
+  }
+
+  return FALSE;
+}
+
+/**
  * Returns a string with all non-word characters turned into underscores.
  *
  * Justification:
@@ -674,6 +700,7 @@ function cf_theme_safe_css_string_part($string) {
 
   return FALSE;
 }
+
 
 /**
  * @} End of '@defgroup cf_node Common Functionality - Theme'.

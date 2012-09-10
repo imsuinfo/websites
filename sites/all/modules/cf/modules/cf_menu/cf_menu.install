@@ -10,6 +10,7 @@
  */
 function cf_menu_install() {
   cf_settings_register('accessibility_admin_page', 'drupal_variables', 'cf_menu', TRUE);
+  cf_settings_register('management_admin_page', 'drupal_variables', 'cf_menu', TRUE);
 }
 
 /**
@@ -17,4 +18,11 @@ function cf_menu_install() {
  */
 function cf_menu_update_7200() {
   cf_settings_register('accessibility_admin_page', 'drupal_variables', 'cf_menu', TRUE);
+}
+
+/**
+ * Register the new management_admin_page drupal variable.
+ */
+function cf_menu_update_7201() {
+  cf_settings_register('management_admin_page', 'drupal_variables', 'cf_menu', TRUE);
 }
