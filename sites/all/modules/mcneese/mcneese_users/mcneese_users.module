@@ -6,7 +6,7 @@
  */
 
 /**
- * @defgroup mcneese_tusers Users Themes
+ * @defgroup mcneese_users McNeese Users
  * @{
  * Provides user functionality and changes to drupal 7.
  */

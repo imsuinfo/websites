@@ -1,5 +1,16 @@
 <?php
 
+/**
+ * @file
+ * McNeese State University Ckeditor module.
+ */
+
+/**
+ * @defgroup mcneese_ckeditor McNeese Ckeditor
+ * @{
+ * Provides changes to the ckeditor library for drupal 7.
+ */
+
 function mcneese_ckeditor_wysiwyg_editor_settings_alter(&$settings, $context) {
   if (isset($context['profile']) && is_object($context['profile']) && $context['profile']->editor == 'ckeditor') {
     // toolbar
@@ -139,3 +150,7 @@ function mcneese_ckeditor_wysiwyg_editor_settings_alter(&$settings, $context) {
     // Add templates here
   }
 }
+
+/**
+ * @} End of '@defgroup mcneese_ckeditor McNeese Ckeditor'.
+ */
