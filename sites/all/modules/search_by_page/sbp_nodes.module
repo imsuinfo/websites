@@ -121,7 +121,11 @@ function sbp_nodes_sbp_details($id, $environment, $keys = NULL) {
 
   $node = node_load($id, NULL, TRUE);
 
-  if (!$node->title) {
+  if (!is_object($node) || ! property_exists($node, 'title')) {
+    return NULL;
+  }
+
+  if (!node_access('view', $node)) {
     return NULL;
   }
 
