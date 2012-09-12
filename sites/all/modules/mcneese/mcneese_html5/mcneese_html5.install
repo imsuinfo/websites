@@ -203,7 +203,7 @@ function mcneese_html5_install() {
     'machine_name' => 'nav',
     'human_name' => $t("Navigation"),
     'description' => $t("Defines navigation links."),
-    'fallback' => 'ul',
+    'fallback' => 'div',
   );
 
   $semantic[] = array(
