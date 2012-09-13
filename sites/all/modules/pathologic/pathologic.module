@@ -173,7 +173,8 @@ function _pathologic_replace($matches) {
   }
   // Now parse the URL after reverting HTML character encoding.
   // @see http://drupal.org/node/1672932
-  $parts = parse_url(htmlspecialchars_decode($matches[2]));
+  $workaround = preg_replace("/\n/", '', $matches[2]);
+  $parts = parse_url(htmlspecialchars_decode($workaround));
   // Do some more early tests to see if we should just give up now.
   if (
     // If parse_url() failed, give up.
