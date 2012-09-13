@@ -275,28 +275,6 @@
   background-image: url(../../images/background-marble-black.png);
 }
 
-.mcneese.at-wwwdev_mcneese_edu #mcneese-header > .header-top > .header-menu-1 > .html_tag-nav > .navigation_list > li > a.active,
-.mcneese.at-wwwdev2_mcneese_edu #mcneese-header > .header-top > .header-menu-1 > .html_tag-nav > .navigation_list > li > a.active,
-.mcneese.at-wwwdev #mcneese-header > .header-top > .header-menu-1 > .html_tag-nav > .navigation_list > li > a.active,
-.mcneese.at-wwwdev2 #mcneese-header > .header-top > .header-menu-1 > .html_tag-nav > .navigation_list > li > a.active,
-.mcneese.at-wwwdev_mcneese_edu #mcneese-header > .header-top > .header-menu-1 > .html_tag-nav > .navigation_list > li > a.active:visited,
-.mcneese.at-wwwdev2_mcneese_edu #mcneese-header > .header-top > .header-menu-1 > .html_tag-nav > .navigation_list > li > a.active:visited,
-.mcneese.at-wwwdev #mcneese-header > .header-top > .header-menu-1 > .html_tag-nav > .navigation_list > li > a.active:visited,
-.mcneese.at-wwwdev2 #mcneese-header > .header-top > .header-menu-1 > .html_tag-nav > .navigation_list > li > a.active:visited {
-  background-image: url(../../images/background-marble-yellow.png);
-}
-
-.mcneese.at-wwwdev_mcneese_edu #mcneese-header > .header-bottom > .header-menu-2 > .html_tag-nav > .navigation_list > li > a.active,
-.mcneese.at-wwwdev2_mcneese_edu #mcneese-header > .header-bottom > .header-menu-2 > .html_tag-nav > .navigation_list > li > a.active,
-.mcneese.at-wwwdev #mcneese-header > .header-bottom > .header-menu-2 > .html_tag-nav > .navigation_list > li > a.active,
-.mcneese.at-wwwdev2 #mcneese-header > .header-bottom > .header-menu-2 > .html_tag-nav > .navigation_list > li > a.active,
-.mcneese.at-wwwdev_mcneese_edu #mcneese-header > .header-bottom > .header-menu-2 > .html_tag-nav > .navigation_list > li > a.active:visited,
-.mcneese.at-wwwdev2_mcneese_edu #mcneese-header > .header-bottom > .header-menu-2 > .html_tag-nav > .navigation_list > li > a.active:visited,
-.mcneese.at-wwwdev #mcneese-header > .header-bottom > .header-menu-2 > .html_tag-nav > .navigation_list > li > a.active:visited,
-.mcneese.at-wwwdev2 #mcneese-header > .header-bottom > .header-menu-2 > .html_tag-nav > .navigation_list > li > a.active:visited {
-  background-image: url(../../images/background-marble-yellow.png);
-}
-
 .mcneese.at-wwwdev_mcneese_edu #mcneese-header > .header-section > .header-menu > .html_tag-nav > .navigation_list > li > a:hover,
 .mcneese.at-wwwdev2_mcneese_edu #mcneese-header > .header-section > .header-menu > .html_tag-nav > .navigation_list > li > a:hover,
 .mcneese.at-wwwdev #mcneese-header > .header-section > .header-menu > .html_tag-nav > .navigation_list > li > a:hover,
@@ -616,14 +594,6 @@
   background-image: url(../../images/background-marble-yellow.png);
 }
 
-.mcneese.at-sandbox_mcneese_edu #mcneese-header > .header-bottom > .header-menu-2 > .html_tag-nav > .navigation_list > li > a.active,
-.mcneese.at-sandbox #mcneese-header > .header-bottom > .header-menu-2 > .html_tag-nav > .navigation_list > li > a.active,
-.mcneese.at-sandbox_mcneese_edu #mcneese-header > .header-bottom > .header-menu-2 > .html_tag-nav > .navigation_list > li > a.active:visited,
-.mcneese.at-sandbox #mcneese-header > .header-bottom > .header-menu-2 > .html_tag-nav > .navigation_list > li > a.active:visited {
-  background-image: url(../../images/background-marble-yellow.png);
-}
-
-
 .mcneese.at-sandbox_mcneese_edu #mcneese-header > .header-section > .header-menu > .html_tag-nav > .navigation_list > li > a:hover,
 .mcneese.at-sandbox #mcneese-header > .header-section > .header-menu > .html_tag-nav > .navigation_list > li > a:hover,
 .mcneese.at-sandbox_mcneese_edu #mcneese-header > .header-section > .header-menu > .html_tag-nav > .navigation_list > li > a:active,
@@ -756,27 +726,27 @@
   -webkit-box-sizing: border-box;
 }
 
-#mcneese-header > .header-top > .block-name-block-block-13 > li,
-#mcneese-header > .header-top > .block-name-block-block-13 > div {
+#mcneese-header > .header-top > .block-name-block-block-13 > .navigation_list > li,
+#mcneese-header > .header-top > .block-name-block-block-13 > .navigation_list > div {
   display: inline-block;
   text-align: center;
 
   margin: 0 auto;
 }
 
-#mcneese-header > .header-top > .block-name-block-block-13 > .search_form-top_box_links-ada {
+#mcneese-header > .header-top > .block-name-block-block-13 > .navigation_list > .search_form-top_box_links-ada {
   width: 30px;
 }
 
-#mcneese-header > .header-top > .block-name-block-block-13 > .search_form-top_box_links-staff {
+#mcneese-header > .header-top > .block-name-block-block-13 > .navigation_list > .search_form-top_box_links-staff {
   width: 115px;
 }
 
-#mcneese-header > .header-top > .block-name-block-block-13 > .search_form-top_box_links-index {
+#mcneese-header > .header-top > .block-name-block-block-13 > .navigation_list > .search_form-top_box_links-index {
   width: 50px;
 }
 
-#mcneese-header > .header-top > .block-name-block-block-13 > .search_form-top_box_links-bar {
+#mcneese-header > .header-top > .block-name-block-block-13 > .navigation_list > .search_form-top_box_links-bar {
   width: 4px;
 }
 
