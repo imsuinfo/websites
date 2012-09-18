@@ -1,0 +1,78 @@
+<?php
+
+/**
+ * @file
+ * McNeese State University Content Management module.
+ */
+
+/**
+ * @defgroup mcneese_management Content Management
+ * @{
+ * Provides control panel interface functionality for drupal 7.
+ */
+
+
+/**
+ * Implements hook_permission().
+ */
+function mcneese_management_permission() {
+  $permissions = array();
+
+  $permissions['mcneese management emergency'] = array(
+    'title' => t("Manage Emergency Content"),
+    'description' => t("Grants permissions to manage emergency content."),
+  );
+
+  return $permissions;
+}
+
+/**
+ * Implements hook_menu().
+ */
+function mcneese_management_menu() {
+  $items = array();
+
+  $items['admin/content/management/emergency'] = array(
+    'title' => "Emergency",
+    'description' => "View emergency status and/or manage emergency settings.",
+    'page callback' => 'mcneese_management_emergency_page',
+    'page arguments' => array(),
+    'file' => 'mcneese_management_emergency_page.inc',
+    'file path' => drupal_get_path('module', 'mcneese_management') . '/pages',
+    'access callback' => 'user_access',
+    'access arguments' => array('mcneese management emergency'),
+    'tab_parent' => 'admin/content/management/emergency',
+    'tab_root' => 'admin/content/management/emergency',
+    'type' => MENU_LOCAL_TASK,
+  );
+
+  $items['admin/content/management/emergency/settings'] = array(
+    'title' => "Emergency Settings",
+    'description' => "Change emergency settings.",
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('mcneese_management_emergency_settings_page'),
+    'file' => 'mcneese_management_emergency_page.inc',
+    'file path' => drupal_get_path('module', 'mcneese_management') . '/pages',
+    'access callback' => 'user_access',
+    'access arguments' => array('mcneese management emergency'),
+    'tab_parent' => 'admin/content/management/emergency',
+    'tab_root' => 'admin/content/management/emergency',
+    'type' => MENU_LOCAL_TASK,
+  );
+
+  return $items;
+}
+
+/**
+ * Implements hook_theme().
+ */
+function mcneese_management_theme($existing, $type, $theme, $path) {
+  $themes = array();
+
+  return $themes;
+}
+
+
+/**
+ * @} End of '@defgroup mcneese_management Content Management'.
+ */

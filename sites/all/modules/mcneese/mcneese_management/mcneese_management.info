@@ -1,0 +1,10 @@
+name = McNeese Module - Content Management
+description = "Provides content management specific functionality."
+core = 7.x
+php = 5.3
+package = McNeese
+
+dependencies[] = cf
+
+files[] = mcneese_management.module
+files[] = pages/mcneese_management_emergency_page.inc

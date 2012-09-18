@@ -13,6 +13,10 @@
 
 function mcneese_ckeditor_wysiwyg_editor_settings_alter(&$settings, $context) {
   if (isset($context['profile']) && is_object($context['profile']) && $context['profile']->editor == 'ckeditor') {
+    global $base_theme_info;
+    global $theme_info;
+    global $base_path;
+
     // toolbar
     $full_toolbar = array();
     $full_toolbar[] = array('Source', 'Maximize',  'ShowBlocks');
@@ -32,10 +36,34 @@ function mcneese_ckeditor_wysiwyg_editor_settings_alter(&$settings, $context) {
 
     $settings['toolbar'] = $full_toolbar;
 
-
-    // (Already handled by wysiwyg ckeditor module)
     // http://docs.cksource.com/ckeditor_api/symbols/CKEDITOR.config.html#.contentsCss
-    //$settings['contentsCss'] = array();
+    $settings['contentsCss'] = array();
+
+    foreach ((array) $base_theme_info as $bti_key => $bti) {
+      foreach ((array) $bti->stylesheets as $media => $css_array) {
+        // for now process only the media type 'all' and 'screen'.
+        if ($media == 'all' || $media == 'screen') {
+          if (empty($css_array)) continue;
+
+          foreach ($css_array as $key => $css) {
+            if (empty($css)) continue;
+            $settings['contentsCss'][] = $base_path . $css;
+          }
+        }
+      }
+    }
+
+    foreach ((array) $theme_info->stylesheets as $media => $css_array) {
+      // for now process only the media type 'all' and 'screen'.
+      if ($media == 'all' || $media == 'screen') {
+        if (empty($css_array)) continue;
+
+        foreach ($css_array as $key => $css) {
+          if (empty($css)) continue;
+          $settings['contentsCss'][] = $base_path . $css;
+        }
+      }
+    }
 
     // http://docs.cksource.com/ckeditor_api/symbols/CKEDITOR.config.html#.resize_minWidth
     $settings['resize_minWidth'] = 580;
