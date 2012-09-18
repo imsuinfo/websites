@@ -890,7 +890,7 @@ function workbench_menu_build_menu_item($menu, $item, &$variables) {
     }
   }
   else {
-    $variables['breadcrumbs'][] = $settings[$item['item']->id]['label'];
+    $variables['breadcrumbs'][] = '<span>' . $settings[$item['item']->id]['label'] . '</span>';
   }
 
   if ($variables['breadcrumbs_all'] === FALSE) {
