@@ -50,9 +50,8 @@ function background_process_schema() {
         'default' => '',
       ),
       'start_stamp' => array(
-        'type' => 'numeric',
-        'precision' => '16',
-        'scale' => '6',
+        'type' => 'varchar',
+        'length' => '18',
         'not null' => FALSE,
       ),
       'exec_status' => array(
@@ -72,7 +71,7 @@ function background_process_schema() {
  * Add status column to background_process table.
  */
 function background_process_update_7001() {
-  db_add_field('background_process', 'exec_status', array(
+  db_add_field('background_process', 'status', array(
     'type' => 'int',
     'size' => 'normal',
     'not null' => TRUE,
@@ -104,7 +103,6 @@ function background_process_uninstall() {
   variable_del('background_process_token');
 }
 
-
 /**
  * Determine default service host
  */
@@ -127,5 +125,29 @@ function background_process_update_7104() {
     'precision' => '16',
     'scale' => '6',
     'not null' => FALSE,
+  ));
+}
+
+/**
+ * Re-determine default service host.
+ */
+function background_process_update_7105() {
+  $_SESSION['background_process_determine_default_service_host'] = TRUE;
+}
+
+/**
+ * Change schema to SQL 99 compliance
+ */
+function background_process_update_7106() {
+  db_change_field('background_process', 'start', 'start_stamp', array(
+    'type' => 'varchar',
+    'length' => '18',
+    'not null' => FALSE,
+  ));
+  db_change_field('background_process', 'status', 'exec_status', array(
+    'type' => 'int',
+    'size' => 'normal',
+    'not null' => TRUE,
+    'default' => 0,
   ));
 }

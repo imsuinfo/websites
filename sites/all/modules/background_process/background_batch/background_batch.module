@@ -136,7 +136,6 @@ function _background_batch_operation($operation, &$context) {
 /**
  * Process a batch step
  * @param type $id
- * @param type $token
  * @return type
  */
 function _background_batch_process($id = NULL) {
@@ -144,12 +143,8 @@ function _background_batch_process($id = NULL) {
     return;
   }
 
-  $token = drupal_get_token($id);
-
   // Retrieve the current state of batch from db.
-  $data = db_query("SELECT batch FROM {batch} WHERE bid = :bid AND token = :token",
-            array(':bid' => $id, ':token' => $token)
-          )->fetchColumn();
+  $data = db_query("SELECT batch FROM {batch} WHERE bid = :bid", array(':bid' => $id))->fetchColumn();
   if (!$data) {
     return;
   }
@@ -158,6 +153,13 @@ function _background_batch_process($id = NULL) {
 
   $batch =& batch_get();
   $batch = unserialize($data);
+
+  // Check if the current user owns (has access to) this batch.
+  global $user;
+  if ($batch['uid'] != $user->uid) {
+    return drupal_access_denied();
+  }
+
 
   // Register database update for the end of processing.
   drupal_register_shutdown_function('_batch_shutdown');
@@ -322,7 +324,7 @@ class BackgroundBatchContext extends ArrayObject {
         $progress = $base + $value * $step;
 
         progress_estimate_completion($this->progress);
-        $elapsed = floor($this->progress->current_stamp - $this->progress->start_stamp);
+        $elapsed = floor($this->progress->current - $this->progress->start);
 
         // Consider rounding errors from core batch API. Don't progress to a lower value.
         $percentage = $progress >= $this->progress->progress ? $progress : $this->progress->progress;
@@ -334,7 +336,7 @@ class BackgroundBatchContext extends ArrayObject {
           '@percentage' => $percentage * 100,
           '@elapsed'    => format_interval($elapsed),
           // If possible, estimate remaining processing time.
-          '@estimate'   => format_interval(floor($this->progress->estimate) - floor($this->progress->current_stamp)),
+          '@estimate'   => format_interval(floor($this->progress->estimate) - floor($this->progress->current)),
         );
         $message = strtr($progress_message, $values);
         $message .= $message && $this['message'] ? '<br/>' : '';

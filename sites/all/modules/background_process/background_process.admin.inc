@@ -28,9 +28,15 @@ function background_process_settings_form() {
   );
   $form['background_process_cleanup_age'] = array(
     '#type' => 'textfield',
-    '#title' => t('Cleanup age'),
+    '#title' => t('Cleanup age (for locked processes)'),
     '#description' => t('Seconds to wait before unlocking processes that never started.'),
     '#default_value' => variable_get('background_process_cleanup_age', BACKGROUND_PROCESS_CLEANUP_AGE),
+  );
+  $form['background_process_cleanup_age_running'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Cleanup age (for running processes)'),
+    '#description' => t('Unlock processes that has been running for more than X seconds.'),
+    '#default_value' => variable_get('background_process_cleanup_age_running', BACKGROUND_PROCESS_CLEANUP_AGE_RUNNING),
   );
 
   $options = variable_get('background_process_service_groups', array());
@@ -99,9 +105,9 @@ function background_process_overview_page() {
       $process->callback,
       $process->uid,
       $process->service_host,
-      format_date((int)$process->start_stamp, 'custom', 'Y-m-d H:i:s'),
+      format_date((int)$process->start, 'custom', 'Y-m-d H:i:s'),
       $progress ? sprintf("%.02f%%", $progress->progress * 100) : t('N/A'),
-      l(t('Unlock'), 'background-process/unlock/' . $process->handle,
+      l(t('Unlock'), 'background-process/unlock/' . rawurlencode($process->handle),
         array('attributes' => array('class' => 'button-unlock'), 'query' => drupal_get_destination())
       )
     );
@@ -123,6 +129,7 @@ function background_process_overview_page() {
  *   Handle of process to unlock
  */
 function background_process_service_unlock($handle) {
+  $handle = rawurldecode($handle);
   if (background_process_unlock($handle)) {
     drupal_set_message(t('Process %handle unlocked', array('%handle' => $handle)));
   }

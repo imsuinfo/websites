@@ -13,9 +13,6 @@
  * For implementation of load balancing functionality:
  * @see hook_service_group()
  *
- * @todo Administration interface for settings and viewing running processes
- * @todo Clean up orphan handles whos request did not make it through to the service (add expiration?)
- * @todo Add SSL support for service calls?
  * @todo Add functionality for killing keep alive requests?
  */
 
@@ -25,10 +22,12 @@ define('BACKGROUND_PROCESS_SERVICE_TIMEOUT', 0);
 define('BACKGROUND_PROCESS_CONNECTION_TIMEOUT', 2);
 define('BACKGROUND_PROCESS_STREAM_TIMEOUT', 2);
 define('BACKGROUND_PROCESS_CLEANUP_AGE', 120);
+define('BACKGROUND_PROCESS_CLEANUP_AGE_RUNNING', 86400);
 
 define('BACKGROUND_PROCESS_STATUS_NONE', 0);
 define('BACKGROUND_PROCESS_STATUS_LOCKED', 1);
 define('BACKGROUND_PROCESS_STATUS_RUNNING', 2);
+define('BACKGROUND_PROCESS_STATUS_QUEUED', 3);
 
 // ---------- HOOKS ----------
 
@@ -37,7 +36,7 @@ define('BACKGROUND_PROCESS_STATUS_RUNNING', 2);
  */
 function background_process_menu() {
   $items = array();
-  $items['bgp:start/%/%'] = array(
+  $items['bgp-start/%/%'] = array(
     'type' => MENU_CALLBACK,
     'title' => 'Run background process',
     'description' => 'Run background process',
@@ -122,6 +121,21 @@ function background_process_cron() {
       }
     }
   } while (!empty($handles));
+
+  $msg = t('Stalled (auto unlock due to long run time)');
+  do {
+    $result = db_query_range("SELECT handle, start_stamp FROM {background_process} WHERE start_stamp < :start AND exec_status = :status", 0, 10, array(':start' => time() - variable_get('background_process_cleanup_age_running', BACKGROUND_PROCESS_CLEANUP_AGE_RUNNING), ':status' => BACKGROUND_PROCESS_STATUS_RUNNING));
+    $handles = $result->fetchAllAssoc('handle', PDO::FETCH_ASSOC);
+    foreach ($handles as $handle => $process) {
+      // Unlock the process
+      if (background_process_unlock($handle, $msg, $process['start_stamp'])) {
+        drupal_set_message(t("%handle unlocked: !msg", array('%handle' => $handle, '!msg' => $msg)));
+      }
+      else {
+        drupal_set_message(t("%handle could not be unlocked: !msg", array('%handle' => $handle, '!msg' => $msg)), 'error');
+      }
+    }
+  } while (!empty($handles));
 }
 
 /**
@@ -132,8 +146,8 @@ function background_process_cron_alter(&$items) {
   // Unlock background if too old.
   // @todo Move to some access handler or pre-execute?
   if ($process = background_process_get_process('uc:background_process_cron')) {
-    if ($process->start_stamp + 30 < time()) {
-      background_process_unlock($process->handle, t('Self unlocking stale lock'), $process->start_stamp);
+    if ($process->start + 30 < time()) {
+      background_process_unlock($process->handle, t('Self unlocking stale lock'), $process->start);
     }
   }
 }
@@ -194,13 +208,21 @@ function background_process_service_access($handle, $token) {
   }
 
   $start = microtime(TRUE);
-  db_update('background_process')
-    ->fields(array(
-      'start_stamp' => sprintf("%.06f", $start),
-      'exec_status' => BACKGROUND_PROCESS_STATUS_RUNNING,
-    ))
-    ->condition('handle', $handle)
-    ->execute();
+  try {
+    $old_db = db_set_active('background_process');
+    db_update('background_process')
+      ->fields(array(
+        'start_stamp' => sprintf("%.06f", $start),
+        'exec_status' => BACKGROUND_PROCESS_STATUS_RUNNING,
+      ))
+      ->condition('handle', $handle)
+      ->execute();
+    db_set_active($old_db);
+  }
+  catch (Exception $e) {
+    db_set_active($old_db);
+    throw $e;
+  }
 
   // Make sure the process is removed when we're done
   drupal_register_shutdown_function('background_process_remove_process', $process->handle, $start);
@@ -321,7 +343,7 @@ function background_process_start($callback /* [, $var [, $... ]] */) {
   $process = new BackgroundProcess();
   $args = func_get_args();
   array_splice($args, 0, 1);
-  $result = $process->start_stamp($callback, $args);
+  $result = $process->start($callback, $args);
   return $result ? $process->handle : $result;
 }
 
@@ -347,7 +369,7 @@ function background_process_start_locked($handle, $callback /* [, $var [, $... ]
   $process = new BackgroundProcess($handle);
   $args = func_get_args();
   array_splice($args, 0, 2);
-  $result = $process->start_stamp($callback, $args);
+  $result = $process->start($callback, $args);
   return $result ? $process->handle : $result;
 }
 
@@ -407,6 +429,10 @@ function background_process_queue_locked($handle, $callback /* [, $var [, $... ]
  *
  */
 function background_process_service_start($handle, $return = FALSE) {
+  // Let's clean up the mess the menu-router system leaves behind.
+  $cid = 'menu_item:' . hash('sha256', $_GET['q']);
+  drupal_register_shutdown_function('cache_clear_all', $cid, 'cache_menu');
+
   // Damn those slashes!
   $handle = rawurldecode($handle);
 
@@ -424,9 +450,13 @@ function background_process_service_start($handle, $return = FALSE) {
     try {
       drupal_register_shutdown_function('module_invoke_all', 'background_process_shutdown', $process);
       $callback = _background_process_callback_name($process->callback);
+      $old_db = db_set_active('background_process');
       progress_initialize_progress($handle, "Background process '$callback' initialized");
+      db_set_active($old_db);
       call_user_func_array($process->callback, $process->args);
+      $old_db = db_set_active('background_process');
       progress_end_progress($handle, "Background process '$callback' finished");
+      db_set_active($old_db);
     }
     catch (Exception $e) {
       // Exception occurred, inform shutdown handlers
@@ -484,7 +514,9 @@ function background_process_keepalive() {
  *   TRUE if started, FALSE if not
  */
 function background_process_is_started($handle) {
+  $old_db = db_set_active('background_process');
   $progress = progress_get_progress($handle);
+  db_set_active($old_db);
   return !empty($progress);
 }
 
@@ -497,8 +529,10 @@ function background_process_is_started($handle) {
  *   TRUE if finished, FALSE if not
  */
 function background_process_is_finished($handle) {
+  $old_db = db_set_active('background_process');
   $progress = progress_get_progress($handle);
-  return (empty($progress) || $progress->end_stamp);
+  db_set_active($old_db);
+  return (empty($progress) || $progress->end);
 }
 
 /**
@@ -525,15 +559,24 @@ function background_process_set_process($handle, $callback, $uid, $args, $token)
     $uid = $user->uid;
   }
 
-  return db_update('background_process')
-    ->fields(array(
-      'callback' => $callback,
-      'args' => $args,
-      'uid' => $uid,
-      'token' => $token
-    ))
-    ->condition('handle', $handle)
-    ->execute();
+  try {
+    $old_db = db_set_active('background_process');
+    $result = db_update('background_process')
+      ->fields(array(
+        'callback' => $callback,
+        'args' => $args,
+        'uid' => $uid,
+        'token' => $token
+      ))
+      ->condition('handle', $handle)
+      ->execute();
+    db_set_active($old_db);
+    return $result;
+  }
+  catch (Exception $e) {
+    db_set_active($old_db);
+    throw $e;
+  }
 }
 
 /**
@@ -544,21 +587,34 @@ function background_process_set_process($handle, $callback, $uid, $args, $token)
  * @return boolean
  *   TRUE if locked, FALSE if lock could not be obtained
  */
-function background_process_lock_process($handle) {
+function background_process_lock_process($handle, $status = BACKGROUND_PROCESS_STATUS_LOCKED) {
   try {
+    $old_db = db_set_active('background_process');
     db_insert('background_process')
       ->fields(array(
         'handle' => $handle,
         'start_stamp' => sprintf("%.06f", microtime(TRUE)),
-        'exec_status' => BACKGROUND_PROCESS_STATUS_LOCKED,
+        'exec_status' => $status,
       ))
       ->execute();
+    db_set_active($old_db);
     _background_process_ensure_cleanup($handle);
     return TRUE;
   }
   catch (Exception $e) {
+    db_set_active($old_db);
     return FALSE;
   }
+}
+
+/**
+ * Set status for background process
+ */
+function background_process_update_status($handle, $status) {
+  db_update('background_process')
+    ->fields(array('exec_status' => $status))
+    ->condition('handle', $handle)
+    ->exeute();
 }
 
 /**
@@ -570,15 +626,24 @@ function background_process_lock_process($handle) {
  *   Background process
  */
 function background_process_get_process($handle) {
-  $result = db_select('background_process', 'bp')
-    ->fields('bp', array('handle', 'callback', 'args', 'uid', 'token', 'service_host', 'start_stamp', 'exec_status'))
-    ->condition('handle', $handle)
-    ->execute()
-    ->fetchObject();
+  try {
+    $old_db = db_set_active('background_process');
+    $result = db_select('background_process', 'bp')
+      ->fields('bp', array('handle', 'callback', 'args', 'uid', 'token', 'service_host', 'start_stamp', 'exec_status'))
+      ->condition('handle', $handle)
+      ->execute()
+      ->fetchObject();
+    db_set_active($old_db);
+  }
+  catch (Exception $e) {
+    db_set_active($old_db);
+    throw $e;
+  }
   if ($result) {
     $result->args = unserialize($result->args);
     $result->callback = unserialize($result->callback);
-    $result->start_stamp = $result->start_stamp ? $result->start_stamp : $result->start_stamp;
+    $result->start = $result->start_stamp;
+    $result->status = $result->exec_status;
     return $result;
   }
   return FALSE;
@@ -593,10 +658,11 @@ function background_process_get_process($handle) {
  *   Background process
  */
 function background_process_get_processes($status = NULL) {
+  $old_db = db_set_active('background_process');
   $result = db_select('background_process', 'bp')
     ->fields('bp', array('handle', 'callback', 'args', 'uid', 'token', 'service_host', 'start_stamp', 'exec_status'));
   if (isset($status)) {
-    $result = $result->condition('bp.exec_status', $status);
+    $result = $result->condition('bp.status', $status);
   }
   $result = $result->execute();
 
@@ -604,9 +670,11 @@ function background_process_get_processes($status = NULL) {
   while ($process = $result->fetchObject()) {
     $process->args = unserialize($process->args);
     $process->callback = unserialize($process->callback);
-    $process->start_stamp = $process->start_stamp ? $process->start_stamp : $process->start_stamp;
+    $process->start = $process->start_stamp;
+    $process->status = $process->exec_status;
     $processes[] = $process;
   }
+  db_set_active($old_db);
   return $processes;
 }
 
@@ -619,17 +687,20 @@ function background_process_get_processes($status = NULL) {
  *   Number of handles deleted on success, FALSE on failure.
  */
 function background_process_remove_process($handle, $start = NULL) {
+  $old_db = db_set_active('background_process');
   if (isset($start)) {
-    return db_delete('background_process')
+    $result = db_delete('background_process')
       ->condition('handle', $handle)
       ->condition('start_stamp', sprintf("%.06f", $start), '=')
       ->execute();
   }
   else {
-    return db_delete('background_process')
+    $result = db_delete('background_process')
       ->condition('handle', $handle)
       ->execute();
   }
+  db_set_active($old_db);
+  return $result;
 }
 
 /**
@@ -640,14 +711,40 @@ function background_process_remove_process($handle, $start = NULL) {
  */
 function background_process_unlock($handle, $msg = NULL, $start = NULL) {
   $process = background_process_get_process($handle);
-  if ($process && (!isset($start) || $start === $process->start_stamp)) {
+  if ($process && (!isset($start) || $start === $process->start)) {
     // Unlock the process
-    if (background_process_remove_process($process->handle, $process->start_stamp)) {
+    if (background_process_remove_process($process->handle, $process->start)) {
       module_invoke_all('background_process_shutdown', $process, $msg ? $msg : t('Manually unlocked'));
       return TRUE;
     }
   }
   return FALSE;
+}
+
+/**
+ * Set a service host for a background process.
+ *
+ * @param $handle
+ *   Background process handle
+ * @param $service_host
+ *   Name of service host
+ */
+function background_process_set_service_host($handle, $service_host) {
+  try {
+    $old_db = db_set_active('background_process');
+    $result = db_update('background_process')
+           ->fields(array(
+             'service_host' => $service_host ? $service_host : '',
+           ))
+           ->condition('handle', $handle)
+           ->execute();
+    db_set_active($old_db);
+    return $result;
+  }
+  catch (Exception $e) {
+    db_set_active($old_db);
+    throw $e;
+  }
 }
 
 /**
@@ -674,7 +771,7 @@ function background_process_get_service_hosts() {
  *   Array of service host parameters for the default service host. FALSE if none could be determined.
  */
 function background_process_determine_default_service_host() {
-  $token = md5(session_id() . md5(uniqid(mt_rand(), true)) . md5(uniqid(mt_rand(), true)));
+  $token = md5(session_id() . md5(uniqid(mt_rand(), TRUE)) . md5(uniqid(mt_rand(), TRUE)));
   variable_set('background_process_token', $token);
 
   global $conf;
@@ -852,7 +949,7 @@ function background_process_http_request_initiate(&$result) {
   $options = $result->options;
   $socket = $result->socket;
   $uri = $result->uri;
-  $result->start_stamp = microtime(TRUE);
+  $result->start = microtime(TRUE);
   $result->data_ready = TRUE;
   if (empty($options['context'])) {
     $fp = @stream_socket_client($socket, $errno, $errstr, $options['timeout']);
@@ -1153,8 +1250,15 @@ function background_process_http_request_process(&$results, $options = array()) 
 function background_process_determine_and_save_default_service_host() {
   $host = background_process_determine_default_service_host();
   if ($host) {
+    global $base_url;
     drupal_set_message(t('Default service host determined at %base_url', array('%base_url' => _background_process_secure_url($host['base_url']))));
-    variable_set('background_process_derived_default_host', array('default' => $host));
+    if ($host['base_url'] === $base_url) {
+      variable_del('background_process_derived_default_host');
+    }
+    else {
+      variable_set('background_process_derived_default_host', array('default' => $host));
+      drupal_set_message(t('Default service host differs from base url (%base_url). If migrating database to other sites or environments, you will need to either run "Determine default service host" again, or configure the default service host manually through settings.php', array('%base_url' => $base_url)), 'warning');
+    }
     return TRUE;
   }
   else {

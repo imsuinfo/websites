@@ -12,7 +12,7 @@
 define('BACKGROUND_PROCESS_ASS_MAX_AGE', 30);
 
 /**
- * Implementation of hook_menu().
+ * Implements hook_menu().
  */
 function background_process_ass_menu() {
   $items = array();
@@ -60,7 +60,7 @@ function background_process_ass_cron_alter(&$items) {
   // Unlock background if too old.
   // @todo Move to some access handler or pre-execute?
   if ($process = background_process_get_process('uc:background_process_ass_cron')) {
-    if ($process->start_stamp + 30 < time()) {
+    if ($process->start + 30 < time()) {
       background_process_unlock($process->handle, t('Self unlocking stale lock'));
     }
   }
@@ -77,10 +77,10 @@ function background_process_ass_service_group() {
 
 /**
  * Determine host with most idle workers and claim it.
- * 
+ *
  * @param $service_group
  *   Service group to check
- * @return 
+ * @return
  *   Claimed service host on success, NULL if none found
  */
 function background_process_ass_service_group_idle($service_group, $reload = FALSE) {
@@ -92,7 +92,7 @@ function background_process_ass_service_group_idle($service_group, $reload = FAL
   // Load idle worker status for all hosts
   foreach ($service_group['hosts'] as $idx => $host) {
     $name = $host . '_ass';
-    
+
     if ($reload || !isset($workers[$name])) {
       $workers[$name] = background_process_ass_get_server_status($name, TRUE, $reload);
     }
@@ -130,7 +130,7 @@ function background_process_ass_auto_unlock() {
     if (!$process->service_host) {
       continue;
     }
-    
+
     // Naming convention suffix "_ass" for a given service hosts defines the
     // host to use for server-status.
     if (!isset($service_hosts[$process->service_host . '_ass'])) {
@@ -139,7 +139,7 @@ function background_process_ass_auto_unlock() {
     if (!isset($service_hosts[$process->service_host])) {
       continue;
     }
-    list($url, $headers) = background_process_build_request('bgp:start/' . rawurlencode($process->handle), $process->service_host);
+    list($url, $headers) = background_process_build_request('bgp-start/' . rawurlencode($process->handle), $process->service_host);
 
     $process->http_host = $headers['Host'];
 
@@ -158,11 +158,11 @@ function background_process_ass_auto_unlock() {
       continue;
     }
 
-    if ($process->start_stamp > time() - variable_get('background_process_ass_max_age', BACKGROUND_PROCESS_ASS_MAX_AGE)) {
+    if ($process->start > time() - variable_get('background_process_ass_max_age', BACKGROUND_PROCESS_ASS_MAX_AGE)) {
       // Not ready for unlock yet
       continue;
     }
-    
+
     $server_status = background_process_ass_get_server_status($process->service_host . '_ass');
     if ($server_status) {
       if (!background_process_ass_check_process($process, $server_status, $path)) {
@@ -177,7 +177,7 @@ function background_process_ass_auto_unlock() {
  *
  * @param $process
  *   Process object
- * @param $server_status 
+ * @param $server_status
  *   Server status data
  * @return boolean
  *   TRUE if running, FALSE if not.
@@ -185,7 +185,7 @@ function background_process_ass_auto_unlock() {
 function background_process_ass_check_process($process, $server_status, $path) {
   $active = TRUE;
   // Is status reliable?
-  if ($server_status && $server_status['status']['Current Timestamp'] > $process->start_stamp) {
+  if ($server_status && $server_status['status']['Current Timestamp'] > $process->start) {
     // Check if process is in the server status
     if (!empty($server_status['connections'])) {
       $active = FALSE;
@@ -221,7 +221,7 @@ function _background_process_ass_unlock($process) {
   if ($process->status == BACKGROUND_PROCESS_STATUS_RUNNING) {
     $msg = t('Died unexpectedly (auto unlock due to missing connection)');
     // Unlock the process
-    if (background_process_unlock($process->handle, $msg, $process->start_stamp)) {
+    if (background_process_unlock($process->handle, $msg, $process->start)) {
       drupal_set_message(t("%handle unlocked: !msg", array('%handle' => $process->handle, '!msg' => $msg)));
     }
   }
@@ -252,14 +252,14 @@ function background_process_ass_get_server_status($name, $auto = FALSE, $reload 
     return;
   }
   $service_host = $service_hosts[$name];
-  
+
   // Static caching.
   $cache = &drupal_static('background_process_ass_server_status', array());
   if (!$reload && isset($cache[$name][$auto])) {
     return $cache[$name][$auto];
   }
   $server_status = array();
-  
+
   $options = array();
   if ($auto) {
     $options['query']['auto'] = 1;
@@ -268,7 +268,7 @@ function background_process_ass_get_server_status($name, $auto = FALSE, $reload 
 
   $timestamp = time();
   $response = drupal_http_request($url, array('headers' => $headers));
-  
+
   if ($response->code != 200) {
     watchdog('bg_process', 'Could not acquire server status from %url - error: %error', array('%url' => $url, '%error' => $response->error), WATCHDOG_ERROR);
     return NULL;
@@ -296,7 +296,7 @@ function background_process_ass_get_server_status($name, $auto = FALSE, $reload 
     $server_status['status']['Current Timestamp'] = $timestamp;
   }
   $cache[$name][$auto] = $server_status;
-  
+
   return $server_status;
 }
 
@@ -339,10 +339,10 @@ function _background_process_ass_parse_table($html) {
         $table[] = $row;
       }
     }
-    
+
     $tables[] = $table;
   }
-  
+
   return $tables;
 }
 

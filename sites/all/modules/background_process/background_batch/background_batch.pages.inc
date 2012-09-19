@@ -40,22 +40,21 @@ function background_batch_settings_form() {
  */
 function background_batch_overview_page() {
   $data = array();
-  $sql = "
-SELECT b.bid, p.progress, p.message, p.start_stamp, p.end_stamp, p.current_stamp
-FROM {batch} b
-JOIN {progress} p
-ON p.name = CONCAT('_background_batch:', b.bid)
-ORDER BY b.bid
-";
-  $result = db_query($sql);
-  while ($row = $result->fetchObject()) {
-    $eta = progress_estimate_completion($row);
+  $bids = db_select('batch', 'b')
+            ->fields('b', array('bid'))
+            ->orderBy('b.bid', 'ASC')
+            ->execute()
+            ->fetchAllKeyed(0, 0);
+
+  foreach ($bids as $bid) {
+    $progress = progress_get_progress('_background_batch:' . $bid);
+    $eta = progress_estimate_completion($progress);
     $data[] = array(
-      $row->end_stamp ? $row->bid : l($row->bid, 'batch', array('query' => array('op' => 'start', 'id' => $row->bid))),
-      ($row->progress * 100) . '%',
-      $row->message,
-      $row->start_stamp ? format_date((int)$row->start_stamp, 'small') : t('N/A'),
-      $row->end_stamp ? format_date((int)$row->end_stamp, 'small') : ($eta ? format_date((int)$eta, 'small') : t('N/A')),
+      $progress->end ? $bid : l($bid, 'batch', array('query' => array('op' => 'start', 'id' => $bid))),
+      ($progress->progress * 100) . '%',
+      $progress->message,
+      $progress->start ? format_date((int)$progress->start, 'small') : t('N/A'),
+      $progress->end ? format_date((int)$progress->end, 'small') : ($eta ? format_date((int)$eta, 'small') : t('N/A')),
     );
   }
   $header = array('Batch ID', 'Progress', 'Message', 'Started', 'Finished/ETA');
@@ -118,14 +117,19 @@ function _background_batch_initiate() {
   $process = background_process_get_process($handle);
   $progress = progress_get_progress('_' . $handle);
   if (!$process) {
-    if (!$progress || !$progress->end_stamp) {
+    if (!$progress || !$progress->end) {
       // Hasn't run yet or has stopped. (re)start batch job.
       $process = new BackgroundProcess($handle);
       $process->service_host = 'background_batch';
       if ($process->lock()) {
         $message = $batch['sets'][0]['init_message'];
         progress_initialize_progress('_' . $handle, $message);
-        db_query("UPDATE {progress} SET start_stamp = :start WHERE name = :name", array(':start' => $batch['timestamp'], ':name' => '_' . $handle));
+        if (function_exists('progress_set_progress_start')) {
+          progress_set_progress_start('_' . $handle, $batch['timestamp']);
+        }
+        else {
+          db_query("UPDATE {progress} SET start = :start WHERE name = :name", array(':start' => $batch['timestamp'], ':name' => '_' . $handle));
+        }
         $result = $process->execute('_background_batch_process', array($id));
       }
     }

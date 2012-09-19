@@ -4,9 +4,9 @@ core = 7.x
 
 dependencies[] = background_process
 
-; Information added by drupal.org packaging script on 2012-03-18
-version = "7.x-1.12"
+; Information added by drupal.org packaging script on 2012-09-16
+version = "7.x-1.12+17-dev"
 core = "7.x"
 project = "background_process"
-datestamp = "1332071438"
+datestamp = "1347797166"
 

@@ -35,7 +35,7 @@ class BackgroundProcess {
     $this->service_group = variable_get('background_process_default_service_group', 'default');
   }
 
-  public function lock() {
+  public function lock($status = BACKGROUND_PROCESS_STATUS_LOCKED) {
     // Preliminary select to avoid unnecessary write-attempt
     if (background_process_get_process($this->handle)) {
       // watchdog('bg_process', 'Will not attempt to lock handle %handle, already exists', array('%handle' => $this->handle), WATCHDOG_NOTICE);
@@ -43,7 +43,7 @@ class BackgroundProcess {
     }
 
     // "Lock" handle
-    if (!background_process_lock_process($this->handle)) {
+    if (!background_process_lock_process($this->handle, $status)) {
       // If this happens, we might have a race condition or an md5 clash
       watchdog('bg_process', 'Could not lock handle %handle', array('%handle' => $this->handle), WATCHDOG_ERROR);
       return FALSE;
@@ -76,7 +76,7 @@ class BackgroundProcess {
   }
 
   public function queue($callback, $args = array()) {
-    if (!$this->lock()) {
+    if (!$this->lock(BACKGROUND_PROCESS_STATUS_QUEUED)) {
       return FALSE;
     }
 
@@ -88,7 +88,9 @@ class BackgroundProcess {
     module_invoke_all('background_process_pre_execute', $this->handle, $callback, $args, $this->token);
 
     // Initialize progress stats
+    $old_db = db_set_active('background_process');
     progress_remove_progress($this->handle);
+    db_set_active($old_db);
 
     $queues = variable_get('background_process_queues', array());
     $queue_name = isset($queues[$callback]) ? 'bgp:' . $queues[$callback] : 'background_process';
@@ -153,20 +155,19 @@ class BackgroundProcess {
     module_invoke_all('background_process_pre_execute', $this->handle, $callback, $args, $this->token);
 
     // Initialize progress stats
+    $old_db = db_set_active('background_process');
     progress_remove_progress($this->handle);
+    db_set_active($old_db);
 
     $this->connection = FALSE;
 
     $this->determineServiceHost();
 
-    list($url, $headers) = background_process_build_request('bgp:start/' . rawurlencode($this->handle) . '/' . rawurlencode($this->token), $this->service_host);
+    $handle = rawurlencode($this->handle);
+    $token = rawurlencode($this->token);
+    list($url, $headers) = background_process_build_request('bgp-start/' . $handle . '/' . $token, $this->service_host);
 
-    db_update('background_process')
-      ->fields(array(
-        'service_host' => $this->service_host ? $this->service_host : '',
-      ))
-      ->condition('handle', $this->handle)
-      ->execute();
+    background_process_set_service_host($this->handle, $this->service_host);
 
     $options = array('method' => 'POST', 'headers' => $headers);
     $result = background_process_http_request($url, $options);
@@ -177,7 +178,7 @@ class BackgroundProcess {
     }
     else {
       background_process_remove_process($this->handle);
-      watchdog('bg_process', 'Could not call service %handle for callback %callback', array('%handle' => $this->handle, '%callback' => $callback), WATCHDOG_ERROR);
+      watchdog('bg_process', 'Could not call service %handle for callback %callback: %error', array('%handle' => $this->handle, '%callback' => $callback, '%error' => $result->error), WATCHDOG_ERROR);
       // Throw exception here instead?
       return NULL;
     }
