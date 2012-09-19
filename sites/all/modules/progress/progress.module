@@ -1,9 +1,9 @@
 <?php
 /**
  * @file
- * 
+ *
  * Progress framework for keeping track of progresses
- * 
+ *
  * @todo Force MyISAM for table {progress} to avoid transaction/isolation level problems, and use INSERT DELAYED for performance?
  */
 
@@ -30,7 +30,7 @@ function progress_initialize_progress($name, $message) {
       'start_stamp' => $current,
       'current_stamp' => $current,
     ))
-    ->execute();  
+    ->execute();
   return progress_set_progress($name, $message, 0);
 }
 
@@ -55,7 +55,24 @@ function progress_set_progress($name, $message, $progress) {
       'current_stamp' => $current,
     ))
     ->condition('name', $name)
-    ->execute();  
+    ->execute();
+}
+
+/**
+ * Set progress start time
+ *
+ * @param string $name
+ *   Name of progress
+ * @param float $start
+ *   Start time of progress
+ */
+function progress_set_progress_start($name, $start) {
+  return db_update('progress')
+    ->fields(array(
+      'start_stamp' => $start,
+    ))
+    ->condition('name', $name)
+    ->execute();
 }
 
 /**
@@ -94,7 +111,13 @@ function progress_set_intervalled_progress($name, $message, $progress, $interval
  *   Object containing all the progress data
  */
 function progress_get_progress($name) {
-  return db_query("SELECT name, progress, message, start_stamp, end_stamp, current_stamp FROM {progress} WHERE name = :name", array(':name' => $name))->fetchObject();
+  $result = db_query("SELECT name, progress, message, start_stamp, end_stamp, current_stamp FROM {progress} WHERE name = :name", array(':name' => $name))->fetchObject();
+  if ($result) {
+    $result->start = $result->start_stamp;
+    $result->end = $result->end_stamp;
+    $result->current = $result->current_stamp;
+  }
+  return $result;
 }
 
 /**
@@ -116,7 +139,7 @@ function progress_end_progress($name, $message) {
       'end_stamp' => $current,
     ))
     ->condition('name', $name)
-    ->execute();  
+    ->execute();
 }
 
 /**
@@ -143,9 +166,12 @@ function progress_get_progresses() {
   $result = db_select('progress', 'p')
     ->fields('p', array('name', 'progress', 'message', 'start_stamp', 'end_stamp', 'current_stamp'))
     ->execute();
-          
+
   $progresses = array();
   foreach ($result as $progress) {
+    $progress->start = $progress->start_stamp;
+    $progress->end = $progress->end_stamp;
+    $progress->current = $progress->current_stamp;
     $progresses[$progress->name] = $progress;
   }
   return $progresses;
@@ -161,7 +187,7 @@ function progress_get_progresses() {
  */
 function progress_estimate_completion($progress) {
   if ($progress->progress) {
-    $progress->estimate = $progress->start_stamp + 1 / $progress->progress * ($progress->current_stamp - $progress->start_stamp);
+    $progress->estimate = $progress->start + 1 / $progress->progress * ($progress->current - $progress->start);
   }
   else {
     $progress->estimate = NULL;
@@ -170,8 +196,8 @@ function progress_estimate_completion($progress) {
 }
 
 /**
- * Implementation of hook_cron().
- * 
+ * Implements hook_cron().
+ *
  * Clean up finished progresses
  */
 function progress_cron() {
@@ -182,7 +208,7 @@ function progress_cron() {
 }
 
 /**
- * Implementation of hook_cronapi().
+ * Implements hook_cronapi().
  */
 function progress_cronapi($op, $job = NULL) {
   switch ($op) {

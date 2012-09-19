@@ -1,9 +1,9 @@
 <?php
 /**
  * @file
- * 
+ *
  * Installation file for the Progress module
- * 
+ *
  */
 
 function progress_schema() {
@@ -55,3 +55,43 @@ function progress_schema() {
 
   return $schema;
 }
+
+
+/**
+ * Implements hook_update_dependencies().
+ */
+function progress_update_dependencies() {
+  $dependencies = array();
+  $dependencies['progress'][7101] = array(
+    'background_process' => 7106,
+  );
+  return $dependencies;
+}
+
+/**
+ * Change schema to SQL 99 compliance
+ */
+function progress_update_7101() {
+  db_change_field('progress', 'start', 'start_stamp', array(
+    'description' => 'Start time in unix timestamp',
+    'type' => 'float',
+    'size' => 'big',
+    'not null' => TRUE,
+    'default' => 0
+  ));
+  db_change_field('progress', 'end', 'end_stamp', array(
+    'description' => 'End time in unix timestamp',
+    'type' => 'float',
+    'size' => 'big',
+    'not null' => TRUE,
+    'default' => 0
+  ));
+  db_change_field('progress', 'current', 'current_stamp', array(
+    'description' => 'Current time in unix timestamp',
+    'type' => 'float',
+    'size' => 'big',
+    'not null' => TRUE,
+    'default' => 0
+  ));
+}
+
