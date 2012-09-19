@@ -14,11 +14,12 @@ function ultimate_cron_schema() {
   $schema['ultimate_cron'] = array(
     'description' => 'Cron job function list',
     'export' => array(
-      'key' => 'function',
+      'key' => 'name',
       'key name' => 'Function name',
       'primary key' => 'fid',
-      'identifier' => 'function',
+      'identifier' => 'name',
       'default hook' => 'default_ultimate_cron_function',
+      'save callback' => 'ultimate_cron_crud_save',
       'api' => array(
         'owner' => 'ultimate_cron',
         'api' => 'default_ultimate_cron_functions',
@@ -34,7 +35,7 @@ function ultimate_cron_schema() {
         'not null' => TRUE,
         'no export' => TRUE,
       ),
-      'function' => array(
+      'name' => array(
         'description' => 'Function name',
         'type' => 'varchar',
         'length' => 127,
@@ -48,7 +49,9 @@ function ultimate_cron_schema() {
       ),
     ),
     'primary key' => array('fid'),
-    'unique key' => array('function'),
+    'unique keys' => array(
+      'uniq_name' => array('name')
+    ),
   );
 
   $schema['ultimate_cron_log'] = array(
@@ -60,7 +63,7 @@ function ultimate_cron_schema() {
         'size' => 'normal',
         'not null' => TRUE,
       ),
-      'function' => array(
+      'name' => array(
         'description' => 'Function name',
         'type' => 'varchar',
         'length' => 127,
@@ -95,8 +98,8 @@ function ultimate_cron_schema() {
     ),
     'primary key' => array('lid'),
     'indexes' => array(
-       'idx_last' => array('function', 'start_stamp'),
-       'idx_count' => array('function', 'end_stamp'),
+       'idx_last' => array('name', 'start_stamp'),
+       'idx_count' => array('name', 'end_stamp'),
     ),
   );
 
@@ -109,11 +112,23 @@ function ultimate_cron_schema() {
 function ultimate_cron_enable() {
   // Disable built-in poor mans cron
   variable_set('cron_safe_threshold', 0);
-
-  // Max modules weight
-  module_load_include('module', 'ultimate_cron');
-  ultimate_cron_reclaim();
 }
+
+/**
+ * Implements hook_uninstall().
+ */
+function ultimate_cron_uninstall() {
+  variable_del('ultimate_cron_simultaneous_connections');
+  variable_del('ultimate_cron_rule');
+  variable_del('ultimate_cron_cleanup_log');
+  variable_del('ultimate_cron_catch_up');
+  variable_del('ultimate_cron_queue_polling_latency');
+  variable_del('ultimate_cron_queue_lease_time');
+  variable_del('ultimate_cron_poorman');
+  variable_del('ultimate_cron_launch_window');
+  variable_del('ultimate_cron_max_execution_time');
+}
+
 
 /**
  * Implements hook_requirements().
@@ -131,13 +146,6 @@ function ultimate_cron_requirements($phase) {
         $response['severity'] = REQUIREMENT_ERROR;
         $response['value'] = t('Ultimate Cron is DISABLED!');
         $response['description'] = t('%modules is installed on the system, but is incompatible with Ultimate Cron.<br/>Please disable the modules %modules.<br/>You might want to !url settings first.', array('%modules' => join(', ', $modules), '!url' => l(t('import'), 'admin/settings/cron/import')));
-      }
-      elseif ($functions = ultimate_cron_unsafe_hooks()) {
-        $response['severity'] = REQUIREMENT_WARNING;
-        $response['value'] = t('Running in degraded mode');
-        $response['description'] = t('Ultimate Cron is not the first module. Please reclaim position through !settings to enable Ultimate Cron handling for all functions.', array('!settings' => l(t('settings'), 'admin/config/system/cron/settings')));
-        $response['description'] .= '<br/>';
-        $response['description'] .= t('Functions not handled by Ultimate Cron due to module weight, when cron is invoked through system crontab:<br/>%functions', array('%functions' => join(', ', array_keys($functions))));
       }
       $result = array();
       $result['ultimate_cron'] = $response;
@@ -200,6 +208,74 @@ function ultimate_cron_update_7003() {
   db_drop_field('ultimate_cron_log', 'fid');
   db_drop_index('ultimate_cron_log', 'idx_last');
   db_drop_index('ultimate_cron_log', 'idx_count');
-  db_add_index('ultimate_cron_log', 'idx_last', array('function', 'start_stamp'));
-  db_add_index('ultimate_cron_log', 'idx_count', array('function', 'end_stamp'));
+  db_add_index('ultimate_cron_log', 'idx_last', array('function', 'start'));
+  db_add_index('ultimate_cron_log', 'idx_count', array('function', 'end'));
 }
+
+/**
+ * Add missing index to database
+ */
+function ultimate_cron_update_7105() {
+  $items = db_select('ultimate_cron')
+             ->fields('ultimate_cron', array('fid', 'function'))
+             ->orderBy('fid', 'ASC')
+             ->execute()
+             ->fetchAllAssoc('fid', PDO::FETCH_ASSOC);
+  $fids = array();
+  $keep = array();
+  foreach ($items as $item) {
+    if (isset($keep[$item['function']])) {
+      $fids[] = $keep[$item['function']];
+    }
+    $keep[$item['function']] = $item['fid'];
+  }
+  if ($fids) {
+    db_delete('ultimate_cron')
+      ->condition('fid', $fids)
+      ->execute();
+  }
+  db_add_unique_key('ultimate_cron', 'uniq_function', array('function'));
+}
+
+/**
+ * Change schema to SQL 99 compliance
+ */
+function ultimate_cron_update_7106() {
+  db_drop_unique_key('ultimate_cron', 'idx_function');
+  db_change_field('ultimate_cron', 'function', 'name', array(
+    'description' => 'Function name',
+    'type' => 'varchar',
+    'length' => 127,
+    'not null' => TRUE,
+  ));
+  db_add_unique_key('ultimate_cron', 'idx_name', array('name'));
+  
+  db_change_field('ultimate_cron_log', 'function', 'name', array(
+    'description' => 'Function name',
+    'type' => 'varchar',
+    'length' => 127,
+    'not null' => TRUE,
+  ));
+  db_change_field('ultimate_cron_log', 'start', 'start_stamp', array(
+    'description' => 'Timstamp of execution start',
+    'type' => 'float',
+    'size' => 'big',
+    'not null' => TRUE,
+    'default' => 0,
+  ));
+  db_change_field('ultimate_cron_log', 'end', 'end_stamp', array(
+    'description' => 'Timstamp of execution end',
+    'type' => 'float',
+    'size' => 'big',
+    'not null' => TRUE,
+    'default' => 0,
+  ));
+  db_change_field('ultimate_cron_log', 'status', 'exec_status', array(
+    'description' => 'Status of the execution',
+    'type' => 'int',
+    'size' => 'normal',
+    'not null' => FALSE,
+    'default' => NULL,
+  ));
+}
+
