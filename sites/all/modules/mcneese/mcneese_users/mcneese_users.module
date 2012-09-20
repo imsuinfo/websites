@@ -40,8 +40,19 @@ function mcneese_users_form_user_profile_form_alter(&$form, &$form_state) {
     );
 
 
+    // navigations
+    $form['mcneese_settings']['navigation'] = array(
+      '#type' => 'fieldset',
+      '#title' => t("Navigation Settings"),
+      '#weight' => 4,
+      '#collapsible' => TRUE,
+      '#collapsed' => TRUE,
+      '#tree' => TRUE,
+    );
+
+
     // toolbar
-    $form['mcneese_settings']['toolbar'] = array(
+    $form['mcneese_settings']['navigation']['toolbar'] = array(
       '#type' => 'fieldset',
       '#title' => t("Toolbar Settings"),
       '#weight' => 4,
@@ -50,21 +61,21 @@ function mcneese_users_form_user_profile_form_alter(&$form, &$form_state) {
       '#tree' => TRUE,
     );
 
-    $form['mcneese_settings']['toolbar']['autohide'] = array(
+    $form['mcneese_settings']['navigation']['toolbar']['autohide'] = array(
       '#type' => 'checkbox',
       '#title' => t("Auto-hide toolbar"),
       '#description' => t("Normally the toolbar is always visible on the page, enable this to hide most of the toolbar when it is not active."),
-      '#default_value' => isset($account->data['mcneese_settings']['toolbar']['autohide']) ? $account->data['mcneese_settings']['toolbar']['autohide'] : FALSE,
+      '#default_value' => isset($account->data['mcneese_settings']['navigation']['toolbar']['autohide']) ? $account->data['mcneese_settings']['navigation']['toolbar']['autohide'] : FALSE,
     );
 
-    $form['mcneese_settings']['toolbar']['sticky'] = array(
+    $form['mcneese_settings']['navigation']['toolbar']['sticky'] = array(
       '#type' => 'checkbox',
       '#title' => t("Enable a sticky toolbar"),
       '#description' => t("Normally the toolbar will float above the page, enable this to make the toolbar stick (embed) on page."),
-      '#default_value' => isset($account->data['mcneese_settings']['toolbar']['sticky']) ? $account->data['mcneese_settings']['toolbar']['sticky'] : FALSE,
+      '#default_value' => isset($account->data['mcneese_settings']['navigation']['toolbar']['sticky']) ? $account->data['mcneese_settings']['navigation']['toolbar']['sticky'] : FALSE,
     );
 
-    $form['mcneese_settings']['toolbar']['shortcuts'] = array(
+    $form['mcneese_settings']['navigation']['toolbar']['shortcuts'] = array(
       '#type' => 'checkbox',
       '#title' => t("Show the shorcut bar"),
       '#description' => t("The shortcut bar is an additional menu below the toolbar that under normal circumstances a user may edit."),
@@ -73,7 +84,7 @@ function mcneese_users_form_user_profile_form_alter(&$form, &$form_state) {
 
 
     // menu tabs
-    $form['mcneese_settings']['menu_tabs'] = array(
+    $form['mcneese_settings']['navigation']['menu_tabs'] = array(
       '#type' => 'fieldset',
       '#title' => t("Menu Tabs Settings"),
       '#weight' => 4,
@@ -82,16 +93,16 @@ function mcneese_users_form_user_profile_form_alter(&$form, &$form_state) {
       '#tree' => TRUE,
     );
 
-    $form['mcneese_settings']['menu_tabs']['sticky'] = array(
+    $form['mcneese_settings']['navigation']['menu_tabs']['sticky'] = array(
       '#type' => 'checkbox',
       '#title' => t("Enable a sticky menu tabs"),
       '#description' => t("Normally the menu tabs will float on the left side of the page, enable this to make the menu tabs stick (embed) on the page just above the breadcrumbs. (Non-HTML5 compliant browsers will always be sticky.)"),
-      '#default_value' => isset($account->data['mcneese_settings']['menu_tabs']['sticky']) ? $account->data['mcneese_settings']['menu_tabs']['sticky'] : TRUE,
+      '#default_value' => isset($account->data['mcneese_settings']['navigation']['menu_tabs']['sticky']) ? $account->data['mcneese_settings']['navigation']['menu_tabs']['sticky'] : TRUE,
     );
 
 
     // action links
-    $form['mcneese_settings']['action_links'] = array(
+    $form['mcneese_settings']['navigation']['action_links'] = array(
       '#type' => 'fieldset',
       '#title' => t("Action Link Settings"),
       '#weight' => 4,
@@ -100,52 +111,63 @@ function mcneese_users_form_user_profile_form_alter(&$form, &$form_state) {
       '#tree' => TRUE,
     );
 
-    $form['mcneese_settings']['action_links']['sticky'] = array(
+    $form['mcneese_settings']['navigation']['action_links']['sticky'] = array(
       '#type' => 'checkbox',
       '#title' => t("Enable a sticky action links"),
       '#description' => t("Normally the action links will float on the right side of the page, enable this to make the action links stick (embed) on the page just below the breadcrumbs. (Non-HTML5 compliant browsers will always be sticky.)"),
-      '#default_value' => isset($account->data['mcneese_settings']['action_links']['sticky']) ? $account->data['mcneese_settings']['action_links']['sticky'] : TRUE,
+      '#default_value' => isset($account->data['mcneese_settings']['navigation']['action_links']['sticky']) ? $account->data['mcneese_settings']['navigation']['action_links']['sticky'] : TRUE,
+    );
+
+
+    // regions
+    $form['mcneese_settings']['region'] = array(
+      '#type' => 'fieldset',
+      '#title' => t("Region Settings"),
+      '#weight' => 4,
+      '#collapsible' => TRUE,
+      '#collapsed' => TRUE,
+      '#tree' => TRUE,
     );
 
 
     // help
-    $form['mcneese_settings']['help'] = array(
+    $form['mcneese_settings']['region']['help'] = array(
       '#type' => 'fieldset',
-      '#title' => t("Help Settings"),
+      '#title' => t("Help Region Settings"),
       '#weight' => 4,
       '#collapsible' => TRUE,
       '#collapsed' => TRUE,
       '#tree' => TRUE,
     );
 
-    $form['mcneese_settings']['help']['sticky'] = array(
+    $form['mcneese_settings']['region']['help']['sticky'] = array(
       '#type' => 'checkbox',
-      '#title' => t("Enable a sticky help"),
+      '#title' => t("Enable a sticky help region"),
       '#description' => t("Normally the help will float on the right side of the page, enable this to make the help stick (embed) on the page, above the page title. (Non-HTML5 compliant browsers will always be sticky.)"),
-      '#default_value' => isset($account->data['mcneese_settings']['help']['sticky']) ? $account->data['mcneese_settings']['help']['sticky'] : TRUE,
+      '#default_value' => isset($account->data['mcneese_settings']['region']['help']['sticky']) ? $account->data['mcneese_settings']['region']['help']['sticky'] : TRUE,
     );
 
 
     // messages
-    $form['mcneese_settings']['messages'] = array(
+    $form['mcneese_settings']['region']['messages'] = array(
       '#type' => 'fieldset',
-      '#title' => t("Messages Settings"),
+      '#title' => t("Messages Region Settings"),
       '#weight' => 4,
       '#collapsible' => TRUE,
       '#collapsed' => TRUE,
       '#tree' => TRUE,
     );
 
-    $form['mcneese_settings']['messages']['sticky'] = array(
+    $form['mcneese_settings']['region']['messages']['sticky'] = array(
       '#type' => 'checkbox',
-      '#title' => t("Enable a sticky messages"),
+      '#title' => t("Enable a sticky messages region"),
       '#description' => t("Normally the messages will float on the right side of the page, enable this to make the messages stick (embed) on the page, above the page title. (Non-HTML5 compliant browsers will always be sticky.)"),
-      '#default_value' => isset($account->data['mcneese_settings']['messages']['sticky']) ? $account->data['mcneese_settings']['messages']['sticky'] : TRUE,
+      '#default_value' => isset($account->data['mcneese_settings']['region']['messages']['sticky']) ? $account->data['mcneese_settings']['region']['messages']['sticky'] : TRUE,
     );
 
 
     // information
-    $form['mcneese_settings']['information'] = array(
+    $form['mcneese_settings']['region']['information'] = array(
       '#type' => 'fieldset',
       '#title' => t("Information Region Settings"),
       '#weight' => 4,
@@ -154,16 +176,16 @@ function mcneese_users_form_user_profile_form_alter(&$form, &$form_state) {
       '#tree' => TRUE,
     );
 
-    $form['mcneese_settings']['information']['sticky'] = array(
+    $form['mcneese_settings']['region']['information']['sticky'] = array(
       '#type' => 'checkbox',
       '#title' => t("Enable a sticky information region"),
       '#description' => t("Normally the information region will float on the right side of the page, enable this to make the information region stick (embed) on the page, above the page title. (Non-HTML5 compliant browsers will always be sticky.)"),
-      '#default_value' => isset($account->data['mcneese_settings']['information']['sticky']) ? $account->data['mcneese_settings']['information']['sticky'] : TRUE,
+      '#default_value' => isset($account->data['mcneese_settings']['region']['information']['sticky']) ? $account->data['mcneese_settings']['region']['information']['sticky'] : TRUE,
     );
 
 
     // editing
-    $form['mcneese_settings']['editing'] = array(
+    $form['mcneese_settings']['region']['editing'] = array(
       '#type' => 'fieldset',
       '#title' => t("Editing Region Settings"),
       '#weight' => 4,
@@ -172,11 +194,11 @@ function mcneese_users_form_user_profile_form_alter(&$form, &$form_state) {
       '#tree' => TRUE,
     );
 
-    $form['mcneese_settings']['editing']['sticky'] = array(
+    $form['mcneese_settings']['region']['editing']['sticky'] = array(
       '#type' => 'checkbox',
       '#title' => t("Enable a sticky editing region"),
       '#description' => t("Normally the editing region will float on the right side of the page, enable this to make the editing region stick (embed) on the page, above the page title. (Non-HTML5 compliant browsers will always be sticky.)"),
-      '#default_value' => isset($account->data['mcneese_settings']['editing']['sticky']) ? $account->data['mcneese_settings']['editing']['sticky'] : TRUE,
+      '#default_value' => isset($account->data['mcneese_settings']['region']['editing']['sticky']) ? $account->data['mcneese_settings']['region']['editing']['sticky'] : TRUE,
     );
   }
 }
@@ -190,7 +212,7 @@ function mcneese_users_user_presave(&$edit, $account, $category) {
   if (isset($edit['mcneese_settings'])) {
     $edit['data']['mcneese_settings'] = $edit['mcneese_settings'];
 
-    setcookie('Drupal.toolbar.collapsed', !$edit['mcneese_settings']['toolbar']['shortcuts'], NULL, $base_path);
+    setcookie('Drupal.toolbar.collapsed', !$edit['mcneese_settings']['navigation']['toolbar']['shortcuts'], NULL, $base_path);
   }
 }
 
