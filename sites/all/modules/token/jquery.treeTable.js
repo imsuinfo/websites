@@ -177,7 +177,7 @@
         });
 
         if(options.expandable) {
-          cell.prepend('<span style="margin-left: -' + options.indent + 'px; padding-left: ' + options.indent + 'px" class="expander"></span>');
+          cell.prepend('<span style="padding-left: ' + options.indent + 'px" class="expander"></span>');
           $(cell[0].firstChild).click(function() { node.toggleBranch(); });
 
           if(options.clickableNodeNames) {
