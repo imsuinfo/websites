@@ -55,7 +55,6 @@ function mcneese_users_form_user_profile_form_alter(&$form, &$form_state) {
     $form['mcneese_settings']['navigation']['toolbar'] = array(
       '#type' => 'fieldset',
       '#title' => t("Toolbar Settings"),
-      '#weight' => 4,
       '#collapsible' => TRUE,
       '#collapsed' => TRUE,
       '#tree' => TRUE,
@@ -87,7 +86,6 @@ function mcneese_users_form_user_profile_form_alter(&$form, &$form_state) {
     $form['mcneese_settings']['navigation']['menu_tabs'] = array(
       '#type' => 'fieldset',
       '#title' => t("Menu Tabs Settings"),
-      '#weight' => 4,
       '#collapsible' => TRUE,
       '#collapsed' => TRUE,
       '#tree' => TRUE,
@@ -105,7 +103,6 @@ function mcneese_users_form_user_profile_form_alter(&$form, &$form_state) {
     $form['mcneese_settings']['navigation']['action_links'] = array(
       '#type' => 'fieldset',
       '#title' => t("Action Link Settings"),
-      '#weight' => 4,
       '#collapsible' => TRUE,
       '#collapsed' => TRUE,
       '#tree' => TRUE,
@@ -133,8 +130,7 @@ function mcneese_users_form_user_profile_form_alter(&$form, &$form_state) {
     // help
     $form['mcneese_settings']['region']['help'] = array(
       '#type' => 'fieldset',
-      '#title' => t("Help Region Settings"),
-      '#weight' => 4,
+      '#title' => t("Help Settings"),
       '#collapsible' => TRUE,
       '#collapsed' => TRUE,
       '#tree' => TRUE,
@@ -151,8 +147,7 @@ function mcneese_users_form_user_profile_form_alter(&$form, &$form_state) {
     // messages
     $form['mcneese_settings']['region']['messages'] = array(
       '#type' => 'fieldset',
-      '#title' => t("Messages Region Settings"),
-      '#weight' => 4,
+      '#title' => t("Messages Settings"),
       '#collapsible' => TRUE,
       '#collapsed' => TRUE,
       '#tree' => TRUE,
@@ -169,8 +164,7 @@ function mcneese_users_form_user_profile_form_alter(&$form, &$form_state) {
     // information
     $form['mcneese_settings']['region']['information'] = array(
       '#type' => 'fieldset',
-      '#title' => t("Information Region Settings"),
-      '#weight' => 4,
+      '#title' => t("Information Settings"),
       '#collapsible' => TRUE,
       '#collapsed' => TRUE,
       '#tree' => TRUE,
@@ -187,8 +181,7 @@ function mcneese_users_form_user_profile_form_alter(&$form, &$form_state) {
     // editing
     $form['mcneese_settings']['region']['editing'] = array(
       '#type' => 'fieldset',
-      '#title' => t("Editing Region Settings"),
-      '#weight' => 4,
+      '#title' => t("Editing Settings"),
       '#collapsible' => TRUE,
       '#collapsed' => TRUE,
       '#tree' => TRUE,
@@ -199,6 +192,45 @@ function mcneese_users_form_user_profile_form_alter(&$form, &$form_state) {
       '#title' => t("Enable a sticky editing region"),
       '#description' => t("Normally the editing region will float on the right side of the page, enable this to make the editing region stick (embed) on the page, above the page title. (Non-HTML5 compliant browsers will always be sticky.)"),
       '#default_value' => isset($account->data['mcneese_settings']['region']['editing']['sticky']) ? $account->data['mcneese_settings']['region']['editing']['sticky'] : TRUE,
+    );
+
+
+    // style
+    $form['mcneese_settings']['style'] = array(
+      '#type' => 'fieldset',
+      '#title' => t("Style Settings"),
+      '#weight' => 4,
+      '#collapsible' => TRUE,
+      '#collapsed' => TRUE,
+      '#tree' => TRUE,
+    );
+
+
+    // subtle information
+    $form['mcneese_settings']['style']['subtle_information'] = array(
+      '#type' => 'fieldset',
+      '#title' => t("Subtle Information Settings"),
+      '#collapsible' => TRUE,
+      '#collapsed' => TRUE,
+      '#tree' => TRUE,
+    );
+
+
+    // background_colors
+    $form['mcneese_settings']['style']['subtle_information']['background_colors'] = array(
+      '#type' => 'checkbox',
+      '#title' => t("Enable background color status hints"),
+      '#description' => t("Changes the background color of a page to further emphasize or hint states of a page, such as draft or unpublished."),
+      '#default_value' => isset($account->data['mcneese_settings']['style']['subtle_information']['background_colors']) ? $account->data['mcneese_settings']['style']['subtle_information']['background_colors'] : TRUE,
+    );
+
+
+    // watermarks
+    $form['mcneese_settings']['style']['subtle_information']['watermarks'] = array(
+      '#type' => 'checkbox',
+      '#title' => t("Show status watermarks"),
+      '#description' => t("Adds a watermark to the margins of a page to mark the status of a page, such as draft or unpublished."),
+      '#default_value' => isset($account->data['mcneese_settings']['style']['subtle_information']['watermarks']) ? $account->data['mcneese_settings']['style']['subtle_information']['watermarks'] : TRUE,
     );
   }
 }
