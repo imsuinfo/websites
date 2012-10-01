@@ -506,8 +506,10 @@ function _link_sanitize(&$item, $delta, &$field, $instance, &$node) {
   }
 
   // Remove the rel=nofollow for internal links.
-  if ($type != LINK_EXTERNAL && strpos($item['attributes']['rel'], 'nofollow') !== FALSE) {
-    $item['attributes']['rel'] = str_replace('nofollow', '', $item['attributes']);
+  if (isset($item['attributes']['rel']) && is_string($item['attributes']['rel'])) {
+    if ($type != LINK_EXTERNAL && strpos($item['attributes']['rel'], 'nofollow') !== FALSE) {
+      $item['attributes']['rel'] = str_replace('nofollow', '', $item['attributes']);
+    }
   }
 
   // Handle "title" link attribute.
