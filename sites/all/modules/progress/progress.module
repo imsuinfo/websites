@@ -31,7 +31,6 @@ function progress_initialize_progress($name, $message) {
       'current_stamp' => $current,
     ))
     ->execute();
-  return progress_set_progress($name, $message, 0);
 }
 
 /**

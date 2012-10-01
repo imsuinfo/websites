@@ -56,18 +56,6 @@ function progress_schema() {
   return $schema;
 }
 
-
-/**
- * Implements hook_update_dependencies().
- */
-function progress_update_dependencies() {
-  $dependencies = array();
-  $dependencies['progress'][7101] = array(
-    'background_process' => 7106,
-  );
-  return $dependencies;
-}
-
 /**
  * Change schema to SQL 99 compliance
  */
