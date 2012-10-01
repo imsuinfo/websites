@@ -1,5 +1,4 @@
 <?php
-// $Id: intlinks_hide_bad_links.inc,v 1.2 2010/12/14 14:21:41 LoMo Exp $
 
 /**
  * @file

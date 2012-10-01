@@ -1,5 +1,4 @@
 <?php
-// $Id: intlinks_common_functions.inc,v 1.1 2010/12/13 09:54:09 LoMo Exp $
 
 /**
  * @file

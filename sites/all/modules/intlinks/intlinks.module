@@ -1,5 +1,4 @@
 <?php
-// $Id: intlinks.module,v 1.1 2010/12/13 09:54:09 LoMo Exp $
 
 /**
  * @file
@@ -34,24 +33,11 @@
 function intlinks_help($path, $arg) {
   switch ($path) {
     case 'admin/help#intlinks':
-      $output = '<p>' . t('To use the Internal links filter, simply enable the'
-      . ' Internal links title filter for one or more of your'
-      . ' <a href="@text_formats">text formats</a>.', array(
+      $output = '<p>' . t('To use the Internal links filter, simply enable the Internal links title filter for one or more of your <a href="@text_formats">text formats</a>.', array(
         '@text_formats' => url('admin/config/content/formats'))) . '</p><p>';
-      $output .= t('If you like, you can also enable the Internal links'
-      . ' "hide bad" filter, which hides internal links to pages not yet published'
-      . ' or to bad internal paths, rather than displaying links which would'
-      . ' simply yield a "page not found" error.') . '</p><p>';
-      $output .= t('If you enable both filters, be sure to move the action of the'
-      . ' "hide bad" filter before the "title" filter. There would not be much use'
-      . ' in wasting queries on getting titles and re-writing links to unpublished'
-      . ' content, only to remove the links with the "hide bad" filter,'
-      . ' before display output.') . '</p><p>';
-      $output .= t('Note: For best performance, sites which uses these filters'
-      . ' should cache the output. Use of these filters on each page load will'
-      . ' add significant additional load in terms of database queries and'
-      . ' processing. Caching output is especially recommended for high-volume'
-      . ' sites with a lot of cross-linking between articles.') . '</p>';
+      $output .= t('If you like, you can also enable the Internal links "hide bad" filter, which hides internal links to pages not yet published or to bad internal paths, rather than displaying links which would simply yield a "page not found" error.') . '</p><p>';
+      $output .= t('If you enable both filters, be sure to move the action of the "hide bad" filter before the "title" filter. There would not be much use in wasting queries on getting titles and re-writing links to unpublished content, only to remove the links with the "hide bad" filter, before display output.') . '</p><p>';
+      $output .= t('Note: For best performance, sites which uses these filters should cache the output. Use of these filters on each page load will add significant additional load in terms of database queries and processing. Caching output is especially recommended for high-volume sites with a lot of cross-linking between articles.') . '</p>';
       return $output;
   }
 }
@@ -62,10 +48,7 @@ function intlinks_help($path, $arg) {
 function intlinks_filter_info() {
   $filters['intlinks title'] = array(
     'title' => t('Internal links title filter'),
-    'description' => t('Identifies internal links in content and adds an HTML'
-    . ' "title" attribute (if none already exists), using the linked node\'s'
-    . ' node title. Also re-writes links to "normal Drupal paths" (e.g. node/123)'
-    . ' as path alias if an alias exists.'),
+    'description' => t('Identifies internal links in content and adds an HTML "title" attribute (if none already exists), using the linked node\'s node title. Also re-writes links to "normal Drupal paths" (e.g. node/123) as path alias if an alias exists.'),
     'process callback' => 'intlinks_title_filter_process',
 //    'settings callback' => 'intlinks_title_filter_settings',
     'default settings' => array(
@@ -75,8 +58,7 @@ function intlinks_filter_info() {
   );
   $filters['intlinks hide bad'] = array(
     'title' => t('Internal links hide bad filter'),
-    'description' => t('Identifies bad internal links in content (unpublished'
-    . ' or non-existent) and suppresses their output'),
+    'description' => t('Identifies bad internal links in content (unpublished or non-existent) and suppresses their output'),
     'process callback' => 'intlinks_hide_bad_filter_process',
 //    'settings callback' => 'intlinks_hide_bad_filter_settings',
     'default settings' => array(
@@ -109,8 +91,7 @@ function intlinks_title_filter_process($text) {
  */
 function intlinks_title_filter_tips($filter, $format, $long = FALSE) {
   if ($filter->settings['intlinks_title_display_tip']) {
-    return t('Adds node titles to internal links found in content' .
-      ' (as HTML "title" attribute).');
+    return t('Adds node titles to internal links found in content (as HTML "title" attribute).');
   }
 }
 

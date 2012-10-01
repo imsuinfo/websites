@@ -1,4 +1,3 @@
-$Id: README.txt,v 1.1 2010/12/13 09:54:09 LoMo Exp $
 
 CONTENTS OF THIS FILE
 ---------------------
