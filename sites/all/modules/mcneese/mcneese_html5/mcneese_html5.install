@@ -488,8 +488,4 @@ function mcneese_html5_install() {
   );
 
   cf_db_options_add_options('mcneese_html5', 'form', $form);
-
-
-  // register all settings, if any
-  cf_settings_register('msu_html', 'drupal_variables', 'mcneese_html5');
 }

@@ -1,0 +1,12 @@
+name = McNeese Module - Content Formats
+description = "Provides Content formatting specific module functionality."
+core = 7.x
+php = 5.3
+package = McNeese
+
+dependencies[] = cf
+dependencies[] = cf_settings
+dependencies[] = mcneese_content
+
+files[] = mcneese_content_formats.module
+files[] = mcneese_content_formats.install

@@ -1,0 +1,9 @@
+name = McNeese Module - Content
+description = "Provides Content specific module functionality."
+core = 7.x
+php = 5.3
+package = McNeese
+
+dependencies[] = cf
+
+files[] = mcneese_content.module
