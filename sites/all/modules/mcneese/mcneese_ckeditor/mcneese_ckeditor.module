@@ -17,6 +17,7 @@ function mcneese_ckeditor_wysiwyg_editor_settings_alter(&$settings, $context) {
     global $theme_info;
     global $base_path;
 
+
     // toolbar
     $full_toolbar = array();
     $full_toolbar[] = array('Source', 'Maximize',  'ShowBlocks');
@@ -35,6 +36,28 @@ function mcneese_ckeditor_wysiwyg_editor_settings_alter(&$settings, $context) {
     $full_toolbar[] = array('TextColor', 'BGColor');
 
     $settings['toolbar'] = $full_toolbar;
+
+    $current_path = current_path();
+    $node_type = '';
+
+    $matches = array();
+    $matched = preg_match('@^node/add/(\w*)($|/$|\?.*)@', $current_path, $matches);
+
+    if ($matched > 0){
+      $node_type = check_plain($matches[1]);
+    }
+    else {
+      $matches = array();
+      $matched = preg_match('@^node/(\d+)(/.*|$|\?.*|#.*)@', $current_path, $matches);
+
+      if ($matched > 0 && !empty($matches[1])){
+        $node = node_load($matches[1]);
+
+        if (is_object($node)){
+          $node_type = check_plain($node->type);
+        }
+      }
+    }
 
     // http://docs.cksource.com/ckeditor_api/symbols/CKEDITOR.config.html#.contentsCss
     $settings['contentsCss'] = array();
@@ -168,6 +191,10 @@ function mcneese_ckeditor_wysiwyg_editor_settings_alter(&$settings, $context) {
 
     // http://docs.cksource.com/ckeditor_api/symbols/CKEDITOR.config.html#.bodyClass
     $settings['bodyClass'] = 'mcneese mcneese-wysiwyg mcneese-wysiwyg-ckeditor';
+
+    if (!empty($node_type)) {
+      $settings['bodyClass'] .= ' node-type-' . $node_type;
+    }
 
     // http://docs.cksource.com/ckeditor_api/symbols/CKEDITOR.config.html#.baseHref
     //$settings['baseHref'] = $base_url . $base_path;
