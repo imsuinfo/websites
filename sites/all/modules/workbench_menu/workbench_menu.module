@@ -993,6 +993,8 @@ function workbench_menu_render_menus($built_menus, $path_current, &$show_parents
 
       $variables = array();
       $variables['menu_id'] = &$menu_id;
+      $variables['menu_depth'] = $menu_depth;
+      $variables['menu_weight'] = $built_menus_weight;
       $variables['even_menu'] = &$even_menu;
       $variables['count_menu'] = &$count_menu;
       $variables['settings'] = &$menu_data['settings'];
@@ -1083,6 +1085,8 @@ function template_preprocess_workbench_menu_item(&$vars) {
   else {
     $child_variables = array();
     $child_variables['menu_id'] = &$variables['menu_id'];
+    $child_variables['menu_depth'] = $variables['menu_depth'] + 1;
+    $child_variables['menu_weight'] = 0;
     $child_variables['even_menu'] = &$variables['even_menu'];
     $child_variables['count_menu'] = &$variables['count_menu'];
     $child_variables['settings'] = &$variables['settings'];
