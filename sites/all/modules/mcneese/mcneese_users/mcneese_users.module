@@ -99,6 +99,23 @@ function mcneese_users_form_user_profile_form_alter(&$form, &$form_state) {
     );
 
 
+    // breadcrumb
+    $form['mcneese_settings']['navigation']['breadcrumb'] = array(
+      '#type' => 'fieldset',
+      '#title' => t("Breadcrumb Settings"),
+      '#collapsible' => TRUE,
+      '#collapsed' => TRUE,
+      '#tree' => TRUE,
+    );
+
+    $form['mcneese_settings']['navigation']['breadcrumb']['sticky'] = array(
+      '#type' => 'checkbox',
+      '#title' => t("Enable a sticky breadcrumb"),
+      '#description' => t("Normally the breadcrumb will float on the left side of the page, enable this to make the menu tabs stick (embed) on the page just below the page title. (Non-HTML5 compliant browsers will always be sticky.)"),
+      '#default_value' => isset($account->data['mcneese_settings']['navigation']['breadcrumb']['sticky']) ? $account->data['mcneese_settings']['navigation']['breadcrumb']['sticky'] : TRUE,
+    );
+
+
     // action links
     $form['mcneese_settings']['navigation']['action_links'] = array(
       '#type' => 'fieldset',
@@ -192,6 +209,23 @@ function mcneese_users_form_user_profile_form_alter(&$form, &$form_state) {
       '#title' => t("Enable a sticky editing region"),
       '#description' => t("Normally the editing region will float on the right side of the page, enable this to make the editing region stick (embed) on the page, above the page title. (Non-HTML5 compliant browsers will always be sticky.)"),
       '#default_value' => isset($account->data['mcneese_settings']['region']['editing']['sticky']) ? $account->data['mcneese_settings']['region']['editing']['sticky'] : TRUE,
+    );
+
+
+    // side
+    $form['mcneese_settings']['region']['side'] = array(
+      '#type' => 'fieldset',
+      '#title' => t("Side Settings"),
+      '#collapsible' => TRUE,
+      '#collapsed' => TRUE,
+      '#tree' => TRUE,
+    );
+
+    $form['mcneese_settings']['region']['side']['sticky'] = array(
+      '#type' => 'checkbox',
+      '#title' => t("Enable a sticky side region"),
+      '#description' => t("Normally the side region is on the left side of the page, disable this to make the side region float on the left side of the page, freeing up room for the main content. (Non-HTML5 compliant browsers will always be sticky.)"),
+      '#default_value' => isset($account->data['mcneese_settings']['region']['side']['sticky']) ? $account->data['mcneese_settings']['side']['editing']['sticky'] : TRUE,
     );
 
 
