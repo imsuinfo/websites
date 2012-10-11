@@ -225,7 +225,7 @@ function mcneese_users_form_user_profile_form_alter(&$form, &$form_state) {
       '#type' => 'checkbox',
       '#title' => t("Enable a sticky side region"),
       '#description' => t("Normally the side region is on the left side of the page, disable this to make the side region float on the left side of the page, freeing up room for the main content. (Non-HTML5 compliant browsers will always be sticky.)"),
-      '#default_value' => isset($account->data['mcneese_settings']['region']['side']['sticky']) ? $account->data['mcneese_settings']['side']['editing']['sticky'] : TRUE,
+      '#default_value' => isset($account->data['mcneese_settings']['region']['side']['sticky']) ? $account->data['mcneese_settings']['region']['side']['sticky'] : TRUE,
     );
 
 
