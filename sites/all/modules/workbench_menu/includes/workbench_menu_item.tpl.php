@@ -7,7 +7,7 @@
  *   - 'menu_id': The id of the menu in which an item belongs to.
  *   - 'even_menu': A boolean representing whether or not the item's menu is
  *   even or odd.
- *   - 'count_menu': An auto-incremented number assigned to the menu.
+ *   - 'menu_count': An auto-incremented number assigned to the menu.
  *   - 'settings': An array containing all settings associated with the menu
  *   item.
  *   - 'even_item': A boolean representing whether or not this item is even or
@@ -61,7 +61,7 @@ if (!empty($data['settings'])) {
     $list['attributes']['class'] = array();
     $list['attributes']['class'][] = 'menu_item-children';
 
-    print(theme('workbench_menu_list', array('list' => $list, 'data' => $data)));
+    print(theme('workbench_menu_list', array('list' => $list, 'data' => $data, 'child' => TRUE)));
   } ?>
 </li>
 <?php } ?>

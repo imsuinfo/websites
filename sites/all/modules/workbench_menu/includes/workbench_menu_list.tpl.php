@@ -9,6 +9,8 @@
  *   - even: a boolean representing that this menu is even.
  *   - count: the menu number in regards to the total menus on the screen.
  *   - settings: an array of settings associated with the menu.
+ * 'child': a boolean representing whether or not this is a child of an
+ *  another list.
  *
  * Content Variables:
  * - 'list': an array with the following keys:
