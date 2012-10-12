@@ -266,6 +266,24 @@ function mcneese_users_form_user_profile_form_alter(&$form, &$form_state) {
       '#description' => t("Adds a watermark to the margins of a page to mark the status of a page, such as draft or unpublished."),
       '#default_value' => isset($account->data['mcneese_settings']['style']['subtle_information']['watermarks']) ? $account->data['mcneese_settings']['style']['subtle_information']['watermarks'] : TRUE,
     );
+
+
+    // work area information
+    $form['mcneese_settings']['style']['work_area'] = array(
+      '#type' => 'fieldset',
+      '#title' => t("Work Area Settings"),
+      '#collapsible' => TRUE,
+      '#collapsed' => TRUE,
+      '#tree' => TRUE,
+    );
+
+    // page_width
+    $form['mcneese_settings']['style']['work_area']['page_width'] = array(
+      '#type' => 'checkbox',
+      '#title' => t("Expand the page width to fit the screen"),
+      '#description' => t("Alters the page width to expand based on your browsers size. When off, this will force a fixed/preset width exactly as public user see."),
+      '#default_value' => isset($account->data['mcneese_settings']['style']['work_area']['page_width']) ? $account->data['mcneese_settings']['style']['work_area']['page_width'] : TRUE,
+    );
   }
 }
 
