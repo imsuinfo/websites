@@ -195,23 +195,6 @@ function mcneese_users_form_user_profile_form_alter(&$form, &$form_state) {
     );
 
 
-    // editing
-    $form['mcneese_settings']['region']['editing'] = array(
-      '#type' => 'fieldset',
-      '#title' => t("Editing Settings"),
-      '#collapsible' => TRUE,
-      '#collapsed' => TRUE,
-      '#tree' => TRUE,
-    );
-
-    $form['mcneese_settings']['region']['editing']['sticky'] = array(
-      '#type' => 'checkbox',
-      '#title' => t("Enable a sticky editing region"),
-      '#description' => t("Normally the editing region will float on the right side of the page, enable this to make the editing region stick (embed) on the page, above the page title. (Non-HTML5 compliant browsers will always be sticky.)"),
-      '#default_value' => isset($account->data['mcneese_settings']['region']['editing']['sticky']) ? $account->data['mcneese_settings']['region']['editing']['sticky'] : TRUE,
-    );
-
-
     // side
     $form['mcneese_settings']['region']['side'] = array(
       '#type' => 'fieldset',
