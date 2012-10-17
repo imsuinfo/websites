@@ -267,6 +267,14 @@ function mcneese_users_form_user_profile_form_alter(&$form, &$form_state) {
       '#description' => t("Alters the page width to expand based on your browsers size. When off, this will force a fixed/preset width exactly as public user see."),
       '#default_value' => isset($account->data['mcneese_settings']['style']['work_area']['page_width']) ? $account->data['mcneese_settings']['style']['work_area']['page_width'] : TRUE,
     );
+
+    // page_width-toggle
+    $form['mcneese_settings']['style']['work_area']['page_width-toggle'] = array(
+      '#type' => 'checkbox',
+      '#title' => t("Show page width toggle icon"),
+      '#description' => t("When enabled, an icon appears that allows for temporarilly toggling the page width settings for the current page.."),
+      '#default_value' => isset($account->data['mcneese_settings']['style']['work_area']['page_width-toggle']) ? $account->data['mcneese_settings']['style']['work_area']['page_width-toggle'] : TRUE,
+    );
   }
 }
 
