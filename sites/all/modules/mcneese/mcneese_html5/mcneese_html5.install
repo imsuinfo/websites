@@ -186,6 +186,13 @@ function mcneese_html5_install() {
   );
 
   $semantic[] = array(
+    'machine_name' => 'menu',
+    'human_name' => $t("Menu"),
+    'description' => $t("Defines a list/menu of commands."),
+    'fallback' => 'mark',
+  );
+
+  $semantic[] = array(
     'machine_name' => 'mark',
     'human_name' => $t("Mark"),
     'description' => $t("Defines marked/highlighted text."),
