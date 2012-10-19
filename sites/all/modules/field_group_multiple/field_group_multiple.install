@@ -20,8 +20,3 @@ function field_group_multiple_install() {
     ->execute();
 }
 
-
-// function field_group_multiple_schema(){
-//   // TODO schema for mappings
-//   // field delta to real
-// }

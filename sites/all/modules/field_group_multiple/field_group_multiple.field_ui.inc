@@ -40,12 +40,12 @@ function _field_group_multiple_field_ui_overview_operation($form, &$form_state, 
           $group->group_name = $field_name;
           $group->format_type = $data['format']['type'];
 
-          $unsorted = array_keys($map, $field_name);          
+          $unsorted = array_keys($map, $field_name);
           $sorted = array();
-          foreach($unsorted as $unsorted_field){            
+          foreach($unsorted as $unsorted_field){
             $sorted[$unsorted_field] = array('#weight' => $form_state['values']['fields'][$unsorted_field]['weight']);
           }
-          $group->children = element_children($sorted, TRUE); 
+          $group->children = element_children($sorted, TRUE);
           $function($form, $form_state, $group);
         }
       }
@@ -98,6 +98,7 @@ function _field_group_multiple_default_format_settings($group) {
     '#default_value' => $default_parent_type,
     '#attributes' => array('class' => array('field-group-parent-type')),
   );
+
 
   if (!empty($default_parent_type)) {
     $field_group_types = field_group_formatter_info();
@@ -160,7 +161,7 @@ function _field_group_multiple_default_format_validate($form, &$form_state, $gro
   if (!empty($cardinalities)) {
     if (min($cardinalities) != max($cardinalities)) {
       form_set_error("fields[" . $group->group_name . "][format][type]",
-        t('Field cardinalities in group !group_name must be equal.', array('!group_name' => $group->group_name)));
+      t('Field cardinalities in group !group_name must be equal.', array('!group_name' => $group->group_name)));
     }
   }
 }
@@ -174,7 +175,16 @@ function _field_group_multiple_default_format_submit($form, &$form_state, $group
  * Table settings
  */
 function _field_group_multiple_table_format_settings($group) {
+
   $form = _field_group_multiple_default_format_settings($group);
+
+  $form['instance_settings']['row_titles'] = array(
+          '#title' => t("Row Titles"),
+          '#description' => t("If you want col 1 to render as row titles enter them as csv's, the first value is the col header, use -none- as the first to omit header e.g -none-,Red,Green,Blue or Colors,Red,Green,Blue ."),
+          '#type' => 'textarea',
+          '#default_value' => isset($group->format_settings['instance_settings']['row_titles']) ? $group->format_settings['instance_settings']['row_titles'] : '');
+  
+
   return $form;
 }
 
