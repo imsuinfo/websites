@@ -65,7 +65,7 @@ function mcneese_ckeditor_wysiwyg_editor_settings_alter(&$settings, $context) {
     foreach ((array) $base_theme_info as $bti_key => $bti) {
       foreach ((array) $bti->stylesheets as $media => $css_array) {
         // for now process only the media type 'all' and 'screen'.
-        if ($media == 'all' || $media == 'screen') {
+        if (preg_match('/\ball\b/', $media) > 0 || preg_match('/\bscreen\b/', $media) > 0) {
           if (empty($css_array)) continue;
 
           foreach ($css_array as $key => $css) {
@@ -78,7 +78,7 @@ function mcneese_ckeditor_wysiwyg_editor_settings_alter(&$settings, $context) {
 
     foreach ((array) $theme_info->stylesheets as $media => $css_array) {
       // for now process only the media type 'all' and 'screen'.
-      if ($media == 'all' || $media == 'screen') {
+      if (preg_match('/\ball\b/', $media) > 0 || preg_match('/\bscreen\b/', $media) > 0) {
         if (empty($css_array)) continue;
 
         foreach ($css_array as $key => $css) {
