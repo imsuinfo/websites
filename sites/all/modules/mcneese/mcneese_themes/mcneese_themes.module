@@ -12,6 +12,26 @@
  */
 
 /**
+ * Implements hook_init().
+ */
+function mcneese_themes_init() {
+  // always enable jquery ui and all of its parts
+  $jquery_ui_names = array(
+    'ui.accordion', 'ui.autocomplete', 'ui.button', 'ui.datepicker',
+    'ui.dialog', 'ui.draggable', 'ui.droppable', 'ui.mouse', 'ui.position',
+    'ui.progressbar', 'ui.resizable', 'ui.selectable', 'ui.slider',
+    'ui.sortable', 'ui.tabs', 'ui.widget', 'effects.blind', 'effects.bounce',
+    'effects.clip', 'effects.drop', 'effects.explode', 'effects.fade',
+    'effects.fold', 'effects.highlight', 'effects.pulsate', 'effects.scale',
+    'effects.shake', 'effects.slide', 'effects.transfer',
+  );
+
+  foreach ($jquery_ui_names as $name) {
+    drupal_add_library('system', $name);
+  }
+}
+
+/**
  * Implements hook_theme().
  */
 function mcneese_themes_theme($existing, $type, $theme, $path) {
