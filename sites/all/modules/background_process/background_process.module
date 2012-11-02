@@ -22,7 +22,9 @@ define('BACKGROUND_PROCESS_SERVICE_TIMEOUT', 0);
 define('BACKGROUND_PROCESS_CONNECTION_TIMEOUT', 2);
 define('BACKGROUND_PROCESS_STREAM_TIMEOUT', 2);
 define('BACKGROUND_PROCESS_CLEANUP_AGE', 120);
-define('BACKGROUND_PROCESS_CLEANUP_AGE_RUNNING', 86400);
+define('BACKGROUND_PROCESS_CLEANUP_AGE_RUNNING', 8 * 3600);
+define('BACKGROUND_PROCESS_CLEANUP_AGE_QUEUE', 86400);
+define('BACKGROUND_PROCESS_REDISPATCH_THRESHOLD', 10);
 
 define('BACKGROUND_PROCESS_STATUS_NONE', 0);
 define('BACKGROUND_PROCESS_STATUS_LOCKED', 1);
@@ -104,12 +106,21 @@ function background_process_permission() {
  * Implements hook_cron().
  */
 function background_process_cron() {
-  // Don't use more than 30 seconds to unlock
-  set_time_limit(30);
+  // Don't use more than 120 seconds to unlock
+  $expire = 120;
+  set_time_limit($expire);
+
   // Cleanup old handles
+  $time = time();
   $msg = t('Never started (auto unlock due to timeout)');
   do {
-    $result = db_query_range("SELECT handle, start_stamp FROM {background_process} WHERE start_stamp < :start AND exec_status = :status", 0, 10, array(':start' => time() - variable_get('background_process_cleanup_age', BACKGROUND_PROCESS_CLEANUP_AGE), ':status' => BACKGROUND_PROCESS_STATUS_LOCKED));
+    if (time() >= $_SERVER['REQUEST_TIME'] + $expire) {
+      break;
+    }
+    $result = db_query_range("SELECT handle, start_stamp FROM {background_process} WHERE start_stamp < :start AND exec_status = :status", 0, 10, array(
+      ':start' => $time - variable_get('background_process_cleanup_age', BACKGROUND_PROCESS_CLEANUP_AGE),
+      ':status' => BACKGROUND_PROCESS_STATUS_LOCKED
+    ));
     $handles = $result->fetchAllAssoc('handle', PDO::FETCH_ASSOC);
     foreach ($handles as $handle => $process) {
       // Unlock the process
@@ -122,9 +133,17 @@ function background_process_cron() {
     }
   } while (!empty($handles));
 
-  $msg = t('Stalled (auto unlock due to long run time)');
+  // Cleanup stale requests
+  $time = time();
+  $msg = t('Never finished (auto unlock due to long run)');
   do {
-    $result = db_query_range("SELECT handle, start_stamp FROM {background_process} WHERE start_stamp < :start AND exec_status = :status", 0, 10, array(':start' => time() - variable_get('background_process_cleanup_age_running', BACKGROUND_PROCESS_CLEANUP_AGE_RUNNING), ':status' => BACKGROUND_PROCESS_STATUS_RUNNING));
+    if (time() >= $_SERVER['REQUEST_TIME'] + $expire) {
+      break;
+    }
+    $result = db_query_range("SELECT handle, start_stamp FROM {background_process} WHERE start_stamp < :start AND exec_status = :status", 0, 10, array( 
+      ':start' => $time - variable_get('background_process_cleanup_age_running', BACKGROUND_PROCESS_CLEANUP_AGE_RUNNING),
+      ':status' => BACKGROUND_PROCESS_STATUS_RUNNING
+    ));
     $handles = $result->fetchAllAssoc('handle', PDO::FETCH_ASSOC);
     foreach ($handles as $handle => $process) {
       // Unlock the process
@@ -135,7 +154,30 @@ function background_process_cron() {
         drupal_set_message(t("%handle could not be unlocked: !msg", array('%handle' => $handle, '!msg' => $msg)), 'error');
       }
     }
-  } while (!empty($handles));
+  } while (!empty($results));
+
+  // Cleanup queued requests that were never processed 
+  $time = time();
+  $msg = t('Never picked up by cron worker (auto unlock due to timeout)');
+  do {
+    if (time() >= $_SERVER['REQUEST_TIME'] + $expire) {
+      break;
+    }
+    $result = db_query_range("SELECT handle, start_stamp FROM {background_process} WHERE start_stamp < :start AND exec_status = :status", 0, 10, array(
+      ':start' => $time - variable_get('background_process_cleanup_age_queue', BACKGROUND_PROCESS_CLEANUP_AGE_QUEUE),
+      ':status' => BACKGROUND_PROCESS_STATUS_QUEUED
+    ));
+    $handles = $result->fetchAllAssoc('handle', PDO::FETCH_ASSOC);
+    foreach ($handles as $handle => $process) {
+      // Unlock the process
+      if (background_process_unlock($handle, $msg, $process['start_stamp'])) {
+        drupal_set_message(t("%handle unlocked: !msg", array('%handle' => $handle, '!msg' => $msg)));
+      }
+      else {
+        drupal_set_message(t("%handle could not be unlocked: !msg", array('%handle' => $handle, '!msg' => $msg)), 'error');
+      }
+    }
+  } while (!empty($results));
 }
 
 /**
@@ -174,6 +216,7 @@ function background_process_cronapi($op, $job = NULL) {
 function background_process_service_group() {
   $info = array();
   $info['methods']['background_process_service_group_random'] = t('Random');
+  $info['methods']['background_process_service_group_round_robin'] = t('Pseudo round-robin');
   return $info;
 }
 
@@ -185,9 +228,26 @@ function background_process_service_group_random($service_group) {
 }
 
 /**
+ * Round-robin load balancing based on random pick.
+ */
+function background_process_service_group_round_robin($service_group) {
+  static $idx = NULL;
+  if (isset($idx)) {
+    $idx = ($idx + 1) % count($service_group['hosts']);
+  }
+  else {
+    $idx = rand(0, count($service_group['hosts']) - 1);
+  }
+  return $service_group['hosts'][$idx];
+}
+
+/**
  * Access handler for service call
  */
 function background_process_service_access($handle, $token) {
+  // Setup service
+  ignore_user_abort(TRUE);
+
   // Damn those slashes!
   $handle = rawurldecode($handle);
   $token = rawurldecode($token);
@@ -207,26 +267,6 @@ function background_process_service_access($handle, $token) {
     return FALSE;
   }
 
-  $start = microtime(TRUE);
-  try {
-    $old_db = db_set_active('background_process');
-    db_update('background_process')
-      ->fields(array(
-        'start_stamp' => sprintf("%.06f", $start),
-        'exec_status' => BACKGROUND_PROCESS_STATUS_RUNNING,
-      ))
-      ->condition('handle', $handle)
-      ->execute();
-    db_set_active($old_db);
-  }
-  catch (Exception $e) {
-    db_set_active($old_db);
-    throw $e;
-  }
-
-  // Make sure the process is removed when we're done
-  drupal_register_shutdown_function('background_process_remove_process', $process->handle, $start);
-
   // Login as the user that requested the call
   if ($process->uid) {
     global $user;
@@ -239,7 +279,6 @@ function background_process_service_access($handle, $token) {
   else {
     $user = drupal_anonymous_user();
   }
-  background_process_current_handle($handle);
   return TRUE;
 }
 
@@ -429,6 +468,8 @@ function background_process_queue_locked($handle, $callback /* [, $var [, $... ]
  *
  */
 function background_process_service_start($handle, $return = FALSE) {
+  drupal_add_http_header('Content-Type', 'text/plain');
+
   // Let's clean up the mess the menu-router system leaves behind.
   $cid = 'menu_item:' . hash('sha256', $_GET['q']);
   drupal_register_shutdown_function('cache_clear_all', $cid, 'cache_menu');
@@ -445,6 +486,41 @@ function background_process_service_start($handle, $return = FALSE) {
   if (!$process) {
     watchdog('bg_process', 'Process not found for handle: %handle', array('%handle' => $handle), WATCHDOG_ERROR);
   }
+
+  $process->start_stamp = microtime(TRUE);
+  try {
+    $old_db = db_set_active('background_process');
+    $claimed = db_update('background_process')
+                 ->fields(array(
+                   'start_stamp' => sprintf("%.06f", $process->start_stamp),
+                   'exec_status' => BACKGROUND_PROCESS_STATUS_RUNNING,
+                 ))
+                 ->condition('handle', $handle)
+                 ->condition('exec_status', BACKGROUND_PROCESS_STATUS_LOCKED)
+                 ->execute();
+    db_set_active($old_db);
+    if ($claimed) {
+      $process->exec_status = BACKGROUND_PROCESS_STATUS_RUNNING;
+      $process = BackgroundProcess::load($process);
+      $process->sendMessage('claimed');
+      background_process_current_handle($handle);
+    }
+    else {
+      if ($return) {
+        return;
+      }
+      else {
+        exit;
+      }
+    }
+  }
+  catch (Exception $e) {
+    db_set_active($old_db);
+    throw $e;
+  }
+
+  // Make sure the process is removed when we're done
+  drupal_register_shutdown_function('background_process_remove_process', $process->handle, $process->start_stamp);
 
   if (is_callable($process->callback)) {
     try {
@@ -714,7 +790,8 @@ function background_process_unlock($handle, $msg = NULL, $start = NULL) {
   if ($process && (!isset($start) || $start === $process->start)) {
     // Unlock the process
     if (background_process_remove_process($process->handle, $process->start)) {
-      module_invoke_all('background_process_shutdown', $process, $msg ? $msg : t('Manually unlocked'));
+      global $user;
+      module_invoke_all('background_process_shutdown', $process, $msg ? $msg : t('Manually unlocked by !name', array('!name' => $user->name)));
       return TRUE;
     }
   }
@@ -759,6 +836,24 @@ function background_process_get_service_hosts() {
     )
   ));
   return $service_hosts;
+}
+
+/**
+ * Get service hosts defined in the system.
+ */
+function background_process_get_service_groups() {
+  $service_groups = variable_get('background_process_service_groups', array());
+  $service_groups += array(
+    'default' => array(
+      'hosts' => array(variable_get('background_process_default_service_host', 'default')),
+    ),
+  );
+  foreach ($service_groups as &$service_group) {
+    $service_group += array(
+      'method' => 'background_process_service_group_round_robin'
+    );
+  }
+  return $service_groups;
 }
 
 /**

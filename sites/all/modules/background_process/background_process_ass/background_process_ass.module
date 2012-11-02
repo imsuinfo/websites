@@ -114,8 +114,8 @@ function background_process_ass_service_group_idle($service_group, $reload = FAL
     return $result;
   }
   else {
-    // Could not determine most idle host, fallback to random
-    return background_process_service_group_random($service_group);
+    // Could not determine most idle host, fallback to pseudo round robin
+    return background_process_service_group_round_robin($service_group);
   }
 }
 

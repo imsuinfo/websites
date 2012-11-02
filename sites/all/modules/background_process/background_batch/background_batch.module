@@ -120,16 +120,28 @@ function background_batch_library() {
  */
 function _background_batch_operation($operation, &$context) {
   // Steal context and trap finished variable
-  $batch_context = new BackgroundBatchContext($context);
+  $fine_progress = !empty($context['sandbox']['background_batch_fine_progress']);
+  if ($fine_progress) {
+    $batch_context = new BackgroundBatchContext($context);
+  }
+  else {
+    $batch_context = $context;
+  }
 
   // Call the original operation
   $operation[1][] = &$batch_context;
   call_user_func_array($operation[0], $operation[1]);
 
-  // Transfer back context result to batch api
-  $batch_context = (array)$batch_context;
-  foreach (array_keys($batch_context) as $key) {
-    $context[$key] = $batch_context[$key];
+  if ($fine_progress) {
+    // Transfer back context result to batch api
+    $batch_context = (array)$batch_context;
+    foreach (array_keys($batch_context) as $key) {
+      $context[$key] = $batch_context[$key];
+    }
+  }
+  else {
+    $batch_context = new BackgroundBatchContext($context);
+    $batch_context['finished'] = $context['finished'];
   }
 }
 
@@ -167,17 +179,34 @@ function _background_batch_process($id = NULL) {
   timer_start('background_batch_processing');
 
   $percentage = 0;
+  $mem_max_used = 0;
+  $mem_last_used = memory_get_usage();
+  $mem_limit = ini_get('memory_limit');
+  preg_match('/(\d+)(\w)/', $mem_limit, $matches);
+  switch ($matches[2]) {
+    case 'M':
+    default:
+      $mem_limit = $matches[1] * 1024 * 1024;
+      break;
+  }
+
   while ($percentage < 100) {
     list ($percentage, $message) = _batch_process();
-    if ($progress = progress_get_progress('_background_batch:' . $id)) {
-      // Estimate completion
-      progress_estimate_completion($progress);
 
-      $progress->progress *= 100;
-      // Consider rounding errors from core batch API. Don't progress to a lower value.
-      $percentage = $percentage >= $progress->progress ? $percentage : $progress->progress;
+    $mem_used = memory_get_usage();
+    // If we memory usage of last run will exceed the memory limit in next run
+    // then bail out
+    if ($mem_limit < $mem_used + $mem_last_used) {
+      break;
     }
-    progress_set_progress('_background_batch:' . $id, $message, $percentage / 100);
+
+    $mem_last_used = $mem_used - $mem_last_used;
+    // If we maximum memory usage of previous runs will exceed the memory limit in next run
+    // then bail out
+    $mem_max_used = $mem_max_used < $mem_last_used ? $mem_last_used : $mem_max_used;
+    if ($mem_limit < $mem_used + $mem_max_used) {
+      break;
+    }
 
     // Restart background process after X miliseconds
     if (timer_read('background_batch_processing') > variable_get('background_batch_process_lifespan', BACKGROUND_BATCH_PROCESS_LIFESPAN)) {
@@ -326,14 +355,11 @@ class BackgroundBatchContext extends ArrayObject {
         progress_estimate_completion($this->progress);
         $elapsed = floor($this->progress->current - $this->progress->start);
 
-        // Consider rounding errors from core batch API. Don't progress to a lower value.
-        $percentage = $progress >= $this->progress->progress ? $progress : $this->progress->progress;
-
         $values     = array(
           '@remaining'  => $count,
           '@total'      => $total,
           '@current'    => $current,
-          '@percentage' => $percentage * 100,
+          '@percentage' => $progress * 100,
           '@elapsed'    => format_interval($elapsed),
           // If possible, estimate remaining processing time.
           '@estimate'   => format_interval(floor($this->progress->estimate) - floor($this->progress->current)),

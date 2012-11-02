@@ -26,6 +26,12 @@ function background_process_settings_form() {
     '#description' => t('Timeout for stream in seconds'),
     '#default_value' => variable_get('background_process_stream_timeout', BACKGROUND_PROCESS_STREAM_TIMEOUT),
   );
+  $form['background_process_redispatch_threshold'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Redispatch threshold (for locked processes)'),
+    '#description' => t('Seconds to wait before redispatching processes that never started.'),
+    '#default_value' => variable_get('background_process_redispatch_threshold', BACKGROUND_PROCESS_REDISPATCH_THRESHOLD),
+  );
   $form['background_process_cleanup_age'] = array(
     '#type' => 'textfield',
     '#title' => t('Cleanup age (for locked processes)'),
@@ -38,18 +44,11 @@ function background_process_settings_form() {
     '#description' => t('Unlock processes that has been running for more than X seconds.'),
     '#default_value' => variable_get('background_process_cleanup_age_running', BACKGROUND_PROCESS_CLEANUP_AGE_RUNNING),
   );
-
-  $options = variable_get('background_process_service_groups', array());
-  foreach ($options as $key => &$value) {
-    $value = (empty($value['description']) ? $key : $value['description']) . ' (' . join(',', $value['hosts']) . ')';
-  }
-  $options += array('default' => 'default (default)');
-  $form['background_process_default_service_group'] = array(
-    '#type' => 'select',
-    '#title' => t('Default service group'),
-    '#description' => t('The default service group to use.'),
-    '#options' => $options,
-    '#default_value' => variable_get('background_process_default_service_group', 'default'),
+  $form['background_process_cleanup_age_queue'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Cleanup age for queued jobs'),
+    '#description' => t('Unlock queued processes that have been more than X seconds to start.'),
+    '#default_value' => variable_get('background_process_cleanup_age_queue', BACKGROUND_PROCESS_CLEANUP_AGE_QUEUE),
   );
 
   $options = background_process_get_service_hosts();
@@ -67,6 +66,19 @@ function background_process_settings_form() {
     '#description' => t('The default service host to use'),
     '#options' => $options,
     '#default_value' => variable_get('background_process_default_service_host', 'default'),
+  );
+
+  $methods = module_invoke_all('service_group');
+  $options = background_process_get_service_groups();
+  foreach ($options as $key => &$value) {
+    $value = (empty($value['description']) ? $key : $value['description']) . ' (' . join(',', $value['hosts']) . ') : ' . $methods['methods'][$value['method']];
+  }
+  $form['background_process_default_service_group'] = array(
+    '#type' => 'select',
+    '#title' => t('Default service group'),
+    '#description' => t('The default service group to use.'),
+    '#options' => $options,
+    '#default_value' => variable_get('background_process_default_service_group', 'default'),
   );
 
   $form = system_settings_form($form);

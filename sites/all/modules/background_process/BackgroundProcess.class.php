@@ -17,9 +17,16 @@ class BackgroundProcess {
 
   public static function load($process) {
     $new = new BackgroundProcess($process->handle);
+    @$new->callback = $process->callback;
+    @$new->args = $process->args;
+    @$new->uid = $process->uid;
+    @$new->token = $process->token;
     @$new->service_host = $process->service_host;
     @$new->service_group = $process->service_group;
-    @$new->uid = $process->uid;
+    @$new->exec_status = $process->exec_status;
+    @$new->start_stamp = $process->start_stamp;
+    @$new->status = $process->exec_status;
+    @$new->start = $process->start_stamp;
     return $new;
   }
 
@@ -43,11 +50,14 @@ class BackgroundProcess {
     }
 
     // "Lock" handle
+    $this->start_stamp = $this->start = microtime(TRUE);
     if (!background_process_lock_process($this->handle, $status)) {
       // If this happens, we might have a race condition or an md5 clash
       watchdog('bg_process', 'Could not lock handle %handle', array('%handle' => $this->handle), WATCHDOG_ERROR);
       return FALSE;
     }
+    $this->exec_status = $this->status = BACKGROUND_PROCESS_STATUS_LOCKED;
+    $this->sendMessage('locked');
     return TRUE;
   }
 
@@ -122,7 +132,7 @@ class BackgroundProcess {
 
           // Default method if none is provided
           $service_group += array(
-            'method' => 'background_process_service_group_random'
+            'method' => 'background_process_service_group_round_robin'
           );
           if (is_callable($service_group['method'])) {
             $this->service_host = call_user_func($service_group['method'], $service_group);
@@ -163,6 +173,12 @@ class BackgroundProcess {
 
     $this->determineServiceHost();
 
+    return $this->dispatch();
+  }
+
+  function dispatch() {
+    $this->sendMessage('dispatch');
+
     $handle = rawurlencode($this->handle);
     $token = rawurlencode($this->token);
     list($url, $headers) = background_process_build_request('bgp-start/' . $handle . '/' . $token, $this->service_host);
@@ -184,5 +200,33 @@ class BackgroundProcess {
     }
     return FALSE;
   }
-}
 
+  function sendMessage($action) {
+    if (module_exists('nodejs')) {
+      if (!isset($this->progress_object)) {
+        if ($progress = progress_get_progress($this->handle)) {
+          $this->progress_object = $progress;
+          $this->progress = $progress->progress;
+          $this->progress_message = $progress->message;
+        }
+        else {
+          $this->progress = 0;
+          $this->progress_message = '';
+        }
+      }
+      $object = clone $this;
+      $message = (object) array(
+        'channel' => 'background_process',
+        'data' => (object) array(
+          'action' => $action,
+          'background_process' => $object,
+          'timestamp' => microtime(TRUE),
+        ),
+        'callback' => 'nodejsBackgroundProcess',
+      );
+      drupal_alter('background_process_message', $message);
+      nodejs_send_content_channel_message($message);
+    }
+  }
+
+}

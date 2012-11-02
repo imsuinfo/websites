@@ -23,6 +23,7 @@ function background_process_schema() {
         'type' => 'varchar',
         'length' => 255,
         'not null' => TRUE,
+        'default' => '',
       ),
       'callback' => array(
         'type' => 'text',
@@ -68,24 +69,6 @@ function background_process_schema() {
 }
 
 /**
- * Add status column to background_process table.
- */
-function background_process_update_7001() {
-  db_add_field('background_process', 'status', array(
-    'type' => 'int',
-    'size' => 'normal',
-    'not null' => TRUE,
-    'default' => 0,
-  ));
-}
-
-/**
- * Determine default service host.
- */
-function background_process_update_7101() {
-}
-
-/**
  * Implements hook_uninstall().
  */
 function background_process_uninstall() {
@@ -104,6 +87,36 @@ function background_process_uninstall() {
 }
 
 /**
+ * Major version upgrade of Drupal
+ */
+function background_process_update_7000(&$context) {
+  $context['sandbox']['major_version_upgrade'] = array(
+    7101 => TRUE,
+    7102 => TRUE,
+    7103 => TRUE,
+    7104 => TRUE,
+    7105 => TRUE,
+    7106 => TRUE,
+  );
+}
+
+/**
+ * Add status column to background_process table.
+ */
+function background_process_update_7101() {
+  if (!empty($context['sandbox']['major_version_upgrade'][7101])) {
+    // This udate is already part of latest 6.x
+    return;
+  }
+  db_add_field('background_process', 'status', array(
+    'type' => 'int',
+    'size' => 'normal',
+    'not null' => TRUE,
+    'default' => 0,
+  ));
+}
+
+/**
  * Determine default service host
  */
 function background_process_update_7102() {
@@ -113,13 +126,16 @@ function background_process_update_7102() {
  * Determine default service host
  */
 function background_process_update_7103() {
-  drupal_set_message(st('Update complete. Please visit !settings page and determine default service host, if not configured in settings.php', array('!settings' => l('settings', 'admin/config/system/background-process'))));
 }
 
 /**
  * Change start column from double to numeric
  */
 function background_process_update_7104() {
+  if (!empty($context['sandbox']['major_version_upgrade'][7104])) {
+    // This udate is already part of latest 6.x
+    return;
+  }
   db_change_field('background_process', 'start', 'start', array(
     'type' => 'numeric',
     'precision' => '16',
@@ -132,6 +148,10 @@ function background_process_update_7104() {
  * Re-determine default service host.
  */
 function background_process_update_7105() {
+  if (!empty($context['sandbox']['major_version_upgrade'][7105])) {
+    // This udate is already part of latest 6.x
+    return;
+  }
   $_SESSION['background_process_determine_default_service_host'] = TRUE;
 }
 
@@ -139,6 +159,10 @@ function background_process_update_7105() {
  * Change schema to SQL 99 compliance
  */
 function background_process_update_7106() {
+  if (!empty($context['sandbox']['major_version_upgrade'][7106])) {
+    // This udate is already part of latest 6.x
+    return;
+  }
   db_change_field('background_process', 'start', 'start_stamp', array(
     'type' => 'varchar',
     'length' => '18',

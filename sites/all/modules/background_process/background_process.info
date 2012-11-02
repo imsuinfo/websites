@@ -6,9 +6,9 @@ php = 5.0
 dependencies[] = progress
 configure = admin/config/system/background-process
 
-; Information added by drupal.org packaging script on 2012-09-16
-version = "7.x-1.12+17-dev"
+; Information added by drupal.org packaging script on 2012-10-20
+version = "7.x-1.13"
 core = "7.x"
 project = "background_process"
-datestamp = "1347797166"
+datestamp = "1350764767"
 

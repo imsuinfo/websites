@@ -51,7 +51,7 @@ function background_batch_overview_page() {
     $eta = progress_estimate_completion($progress);
     $data[] = array(
       $progress->end ? $bid : l($bid, 'batch', array('query' => array('op' => 'start', 'id' => $bid))),
-      ($progress->progress * 100) . '%',
+      sprintf("%.2f%%", $progress->progress * 100),
       $progress->message,
       $progress->start ? format_date((int)$progress->start, 'small') : t('N/A'),
       $progress->end ? format_date((int)$progress->end, 'small') : ($eta ? format_date((int)$eta, 'small') : t('N/A')),
@@ -107,38 +107,47 @@ function background_batch_page() {
 /**
  * Start a batch job in the background
  */
-function _background_batch_initiate() {
+function _background_batch_initiate($process = NULL) {
   require_once('includes/batch.inc');
   $batch =& batch_get();
   $id = $batch['id'];
 
   $handle = 'background_batch:' . $id;
-  // If batch is already in progress, goto to the status page instead of starting it.
-  $process = background_process_get_process($handle);
-  $progress = progress_get_progress('_' . $handle);
   if (!$process) {
-    if (!$progress || !$progress->end) {
-      // Hasn't run yet or has stopped. (re)start batch job.
-      $process = new BackgroundProcess($handle);
-      $process->service_host = 'background_batch';
-      if ($process->lock()) {
-        $message = $batch['sets'][0]['init_message'];
-        progress_initialize_progress('_' . $handle, $message);
-        if (function_exists('progress_set_progress_start')) {
-          progress_set_progress_start('_' . $handle, $batch['timestamp']);
-        }
-        else {
-          db_query("UPDATE {progress} SET start = :start WHERE name = :name", array(':start' => $batch['timestamp'], ':name' => '_' . $handle));
-        }
-        $result = $process->execute('_background_batch_process', array($id));
-      }
+    $process = background_process_get_process($handle);
+  }
+
+  if ($process) {
+    // If batch is already in progress, goto to the status page instead of starting it.
+    if ($process->exec_status == BACKGROUND_PROCESS_STATUS_RUNNING) {
+      return $process;
     }
-    else {
-      // Job has already run and finished. Cleanup?
+    // If process is locked and hasn't started for X seconds, then relaunch
+    if (
+      $process->exec_status == BACKGROUND_PROCESS_STATUS_LOCKED &&
+      $process->start_stamp + variable_get('background_process_redispatch_threshold', BACKGROUND_PROCESS_REDISPATCH_THRESHOLD) < time()
+    ) {
+      $process = BackgroundProcess::load($process);
+      $process->dispatch();
     }
+    return $process;
   }
   else {
-    // Job running. Goto status page.
+    // Hasn't run yet or has stopped. (re)start batch job.
+    $process = new BackgroundProcess($handle);
+    $process->service_host = 'background_batch';
+    if ($process->lock()) {
+      $message = $batch['sets'][0]['init_message'];
+      progress_initialize_progress('_' . $handle, $message);
+      if (function_exists('progress_set_progress_start')) {
+        progress_set_progress_start('_' . $handle, $batch['timestamp']);
+      }
+      else {
+        db_query("UPDATE {progress} SET start = :start WHERE name = :name", array(':start' => $batch['timestamp'], ':name' => '_' . $handle));
+      }
+      $result = $process->execute('_background_batch_process', array($id));
+      return $process;
+    }
   }
 }
 
@@ -202,7 +211,9 @@ function _background_batch_page_do_js() {
 
   drupal_save_session(FALSE);
 
-  // Get progress
+  $percentage = t('N/A');
+  $message = '';
+
   if ($progress = progress_get_progress('_background_batch:' . $id)) {
     $percentage = $progress->progress * 100;
     $message = $progress->message;
@@ -215,9 +226,18 @@ function _background_batch_page_do_js() {
       $js_setting['batch']['initMessage'] = $message;
     }
   }
-  else {
-    $percentage = t('N/A');
+
+  if ($batch['sets'][$batch['current_set']]['count'] == 0) {
+    // The background process has self-destructed, and the batch job is done.
+    $percentage = 100;
     $message = '';
+  }
+  elseif ($process = background_process_get_process('background_batch:' . $id)) {
+    _background_batch_initiate($process);
+  }
+  else {
+    // Not running ... and stale?
+    _background_batch_initiate();
   }
 
   drupal_json_output(array('status' => TRUE, 'percentage' => sprintf("%.02f", $percentage), 'message' => $message));
@@ -231,6 +251,7 @@ function _background_batch_page_do_js() {
 function _background_batch_page_do_nojs() {
   $batch = &batch_get();
   $id = $batch['id'];
+  _background_batch_initiate();
 
   $current_set = _batch_current_set();
   drupal_set_title($current_set['title'], PASS_THROUGH);
@@ -253,7 +274,9 @@ function _background_batch_page_do_nojs() {
   list($fallback) = explode('<!--partial-->', $fallback);
   print $fallback;
 
-  // Perform actual processing.
+  $percentage = t('N/A');
+  $message = '';
+
   // Get progress
   if ($progress = progress_get_progress('_background_batch:' . $id)) {
     $percentage = $progress->progress * 100;
@@ -263,13 +286,19 @@ function _background_batch_page_do_nojs() {
     if (variable_get('background_batch_show_eta', BACKGROUND_BATCH_PROCESS_ETA)) {
       $message = "ETA: " . ($progress->estimate ? format_date((int)$progress->estimate, 'large') : t('N/A')) . "<br/>$message";
     }
-    else {
-      $js_setting['batch']['initMessage'] = $message;
-    }
+  }
+
+  if ($batch['sets'][$batch['current_set']]['count'] == 0) {
+    // The background process has self-destructed, and the batch job is done.
+    $percentage = 100;
+    $message = '';
+  }
+  elseif ($process = background_process_get_process('background_batch:' . $id)) {
+    _background_batch_initiate($process);
   }
   else {
-    $percentage = t('N/A');
-    $message = '';
+    // Not running ... and stale?
+    _background_batch_initiate();
   }
 
   if ($percentage == 100) {
