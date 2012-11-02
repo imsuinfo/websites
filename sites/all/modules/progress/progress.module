@@ -47,14 +47,38 @@ function progress_initialize_progress($name, $message) {
  */
 function progress_set_progress($name, $message, $progress) {
   $current = microtime(TRUE);
-  return db_update('progress')
-    ->fields(array(
+  $result = db_update('progress')
+              ->fields(array(
+                'progress' => $progress,
+                'message' => $message,
+                'current_stamp' => $current,
+              ))
+              ->condition('name', $name)
+              ->execute();
+
+  if (module_exists('nodejs')) {
+    $start_stamp = db_query("SELECT start_stamp FROM {progress} WHERE name = :name", array(':name' => $name))->fetchField();
+    $object = (object) array(
+      'name' => $name,
       'progress' => $progress,
       'message' => $message,
       'current_stamp' => $current,
-    ))
-    ->condition('name', $name)
-    ->execute();
+      'start_stamp' => $start_stamp,
+    );
+    $message = (object) array(
+      'channel' => 'progress',
+      'data' => (object) array(
+        'action' => 'setProgress',
+        'progress' => $object,
+        'timestamp' => microtime(TRUE),
+      ),
+      'callback' => 'nodejsProgress',
+    );
+    drupal_alter('progress_message', $message);
+    nodejs_send_content_channel_message($message);
+  }
+
+  return $result;
 }
 
 /**
