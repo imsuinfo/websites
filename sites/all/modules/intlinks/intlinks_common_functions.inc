@@ -35,6 +35,9 @@ function intlinks_is_node_path($path) {
   // after the slash should all be numeric for the next test.
   $path_parts = explode('#', $path);
   $path = $path_parts[0];
+  // We also want to omit any queries.
+  $path_parts = explode('?', $path);
+  $path = $path_parts[0];
   // Now the path is trimmed of anything extraneous.
   $path_parts = explode('/', $path);
   if ((count($path_parts) == 2) && ctype_digit($path_parts[1])) {

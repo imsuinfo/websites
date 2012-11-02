@@ -60,32 +60,20 @@ function intlinks_get_node_title_from_nid($nid) {
  *   and/or URL path alias if link passed was, e.g. <a href="/node/123">.
  */
 function _intlinks_title_process_link($matches) {
-
   if (($matches[2][0] != "/") && ($matches[2][0] != '.')) {
     // Do nothing if the link is not internal (root rel or doc rel).
     return $matches[0];
     // All links *should* be root relative.
   }
-
+  $has_query = FALSE;
   $trimmed_path = ltrim($matches[2], "/");
-  $path_parts = explode("#", $trimmed_path);
-
-
-  // Added to get the current node language
-  $node_lang = '';
-  $node_prefix = '';
-  if ($node_id = intlinks_is_node_path($path_parts[0])) {
-      $node = node_load($node_id);
-    if ($node) {
-        $languages = language_list();
-        $node_lang = $node->language;
-        if ($node_lang != LANGUAGE_NONE) {
-          $node_prefix = $languages[$node->language]->prefix;
-        }
-    }
+  if (strpos($trimmed_path, '?')) {
+  	$has_query = TRUE;
+  	$path_parts = explode('?', $trimmed_path);
   }
-
-
+  else {
+  	$path_parts = explode('#', $trimmed_path);
+  }
   // If an HTML title attribute already exists...
   if (strpos($matches[1], 'title=') !== FALSE) {
      // and if the link is not to a "normal Drupal path" (path alias exists)...
@@ -95,14 +83,12 @@ function _intlinks_title_process_link($matches) {
     }
     // Deal with links to normal Drupal paths which already have a title.
     // Change the Drupal path to a path alias, if one exists.
-    elseif ($matches[2][0] == "/") {
+    elseif ($matches[2][0] == '/') {
        // The 2nd part of a normal Drupal path is the node id.
       if ($node_id = intlinks_is_node_path($path_parts[0])) {
         $node_path = 'node/' . $node_id;
-
-        // Get alias, if one exists; otherwise, keep path as-is.
-        //edited to manage the lang prefix
-        $path = drupal_get_path_alias($node_path, $node_lang);
+         // Get alias, if one exists; otherwise, keep path as-is.
+        $path = drupal_get_path_alias($node_path);
         $insert_path = '/' . check_plain($path);
         // Exploding around '#' produces 2-element array for paths w/ anchors.
         if (count($path_parts) == 2) {
@@ -110,7 +96,8 @@ function _intlinks_title_process_link($matches) {
           $insert_path .= '#' . $anchor;
         }
         // Insert the path alias into the link and return
-        return preg_replace('%href="([^"]+?)"%', 'href="' . ((empty($node_prefix)) ? '' : $node_prefix . '/') . $insert_path . '"', $matches[0]);
+        return preg_replace('%href="([^"]+?)"%', 'href="' .
+          $insert_path . '"', $matches[0]);
       }
       // Path starts with 'node/', but isn't a proper Drupal "normal path".
       // Return such links, unchanged.
@@ -129,7 +116,7 @@ function _intlinks_title_process_link($matches) {
     if (strpos($matches[2], '/node/') === FALSE) {
       // Handle links which already have a path alias.
       // If the link is a normal, root-relative link, starting with "/":
-      if ($matches[2][0] == "/") {
+      if ($matches[2][0] == '/') {
         $path_alias = $path_parts[0];
         // Calls to drupal_get_normal_path() return e.g. node/3 .
         $node_path = drupal_get_normal_path($path_alias);
@@ -140,7 +127,7 @@ function _intlinks_title_process_link($matches) {
           return $matches[0];
         }
         // The 2nd part of a normal Drupal path is the node id.
-        $node_id = ltrim($node_path, "node/");
+        $node_id = ltrim($node_path, 'node/');
         $node_title = intlinks_get_node_title_from_nid($node_id);
         if ($node_title === FALSE) {
           // Terminate -- something is wrong; all nodes should have titles.
@@ -176,22 +163,24 @@ function _intlinks_title_process_link($matches) {
      // But, better safe than sorry: Give it a proper test.
       if ($node_id = intlinks_is_node_path($matches[2])) {
         $node_path = 'node/' . $node_id;
-        //edited to manage the lang prefix
-        $path = drupal_get_path_alias($node_path, $node_lang);
+        $path = drupal_get_path_alias($node_path);
         $node_title = intlinks_get_node_title_from_nid($node_id);
         if ($node_title === FALSE) {
           // Terminate. Something is wrong; all nodes should have titles.
           return $matches[0];
         }
         $insert_title = ' title="' . check_plain($node_title) . '"';
-
-        //edited to manage the lang prefix
-        $insert_path = '/' . ((empty($node_prefix)) ? '' : $node_prefix . '/') . check_plain($path);
-
-        // There is an anchor in the link if $path_parts array has 2 elements.
+        $insert_path = '/' . check_plain($path);
+        // There is an anchor or query if $path_parts array has 2 elements.
         if (count($path_parts) == 2) {
-          $anchor = $path_parts[1];
-          $insert_path .= '#' . $anchor;
+          if (!$has_query) {
+          	// $path_parts[1] is the anchor.
+          	$insert_path .= '#' . $path_parts[1];
+          }
+          else {
+          	// $path_parts[1] is a query, possibly with an anchor.
+          	$insert_path .= '?' . $path_parts[1];
+          }
         }
         $return_link = preg_replace('%href="([^"]+?)"%', 'href="' . $insert_path
           . '"', $matches[0]);

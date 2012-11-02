@@ -96,13 +96,14 @@ that if you have any questions. ;-)
 
 KNOWN ISSUES
 ------------
-No known "issues", per se, but the module is written without a lot of
-flexibility. More features and/or options may be added in future. Since the
-filters need to access the database to look up information about the links,
-it is most efficient to use them on cached content. A busy site (or a shared
-server) could well see significant page-load delays if the output of these
-filters is not cached, especially if there are many links to process on a
-typical page.
+Intlinks needs improvements for multilingual sites and this is taking place in the
+7.x-2.x branch. If you have a multilingual site, you should try this branch, however
+it does not yet support field translation (each node requires a language). Ideally,
+we would like to support all forms of language negotiation as well as field translation
+on sites which use the Title module to provide translation of the title field.
+
+This module is really made for links to nodes, so may not get titles for non-node paths,
+however we have plans for how to deal with this, as well, so this should be improved.
 
 
 MORE INFORMATION

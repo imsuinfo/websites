@@ -115,11 +115,13 @@ function _intlinks_process_bad_link($matches) {
   }
   //Strip the leading slash from link path to look up.
   $path = ltrim($matches[1], '/');
-  $path_parts = explode("#", $path);
+  $path_parts = explode('#', $path);
    // We don't want the "anchor", if there is one.
   $path = $path_parts[0];
-  // We also don't want any arguments for special paths.
-  $path_parts = explode("&", $path);
+  // We also don't want any arguments or queries for special paths.
+  $path_parts = explode('&', $path);
+  $path = $path_parts[0];
+  $path_parts = explode('?', $path);
   $path = $path_parts[0];
   if (strpos($path, 'node/') === FALSE) {
     $node_path = drupal_get_normal_path($path);
