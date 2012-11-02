@@ -186,27 +186,52 @@ function drush_ultimate_cron_cron_run($function = NULL) {
   $logfile = drush_get_option('logfile');
   $logfile = is_string($logfile) ? $logfile : '/dev/null';
 
+  // Get global options
+  $options = drush_get_context('cli');
+  $cmd_options = '';
+
+  // Determine new parameter string for sub-requests
+  $passthru = array('root', 'php', 'uri', 'simulate');
+  foreach ($options as $key => $option) {
+    if (in_array($key, $passthru)) {
+      $cmd_options .= ' --' . $key . '=' . escapeshellarg($option);
+    }
+  }
+
   if ($function == 'all') {
     if ($cli) {
       $hooks = ultimate_cron_get_hooks();
       $schedule = ultimate_cron_get_schedule($hooks);
       foreach ($schedule as $function => $hook) {
+        if (!empty($options['simulate'])) {
+          // Dry-run ...
+          drush_print(dt('[!function]: Simulated launch @ !ts', array('!ts' => date('Y-m-d H:i:s'), '!function' => $function)));
+          continue;
+        }
+
         drush_print(dt('[!function]: Launching @ !ts', array('!ts' => date('Y-m-d H:i:s'), '!function' => $function)));
-        $cmd = $_SERVER['SCRIPT_FILENAME'] . " cron-run $function --cli " . ($check_rule ? '--check-rule' : '');
+
+        // Launch the sub-request
+        $cmd = $_SERVER['SCRIPT_FILENAME'] . " $cmd_options cron-run $function --cli " . ($check_rule ? '--check-rule' : '');
         exec("$cmd >> " . escapeshellarg($logfile) . " 2>&1 &");
       }
       drush_print(dt('[!ts] Launced !jobs jobs', array('!ts' => date('Y-m-d H:i:s'), '!jobs' => count($schedule))));
 
       // Update drupals cron timestamp, but don't clear the cache for all variables!
-      $name = 'cron_last';
-      $value = time();
-      global $conf;
-      db_merge('variable')->key(array('name' => $name))->fields(array('value' => serialize($value)))->execute();
-      $conf[$name] = $value;
+      if (empty($options['simulate'])) {
+        $name = 'cron_last';
+        $value = time();
+        global $conf;
+        db_merge('variable')->key(array('name' => $name))->fields(array('value' => serialize($value)))->execute();
+        $conf[$name] = $value;
+      }
+
       return;
     }
     else {
-      ultimate_cron_cron_run(TRUE);
+      if (empty($options['simulate'])) {
+        ultimate_cron_cron(TRUE);
+      }
       $messages = drupal_get_messages();
       foreach ($messages['status'] as $message) {
         drush_print(strip_tags($message));
@@ -235,6 +260,18 @@ function drush_ultimate_cron_cron_run($function = NULL) {
   }
 
 
+  if (!empty($options['simulate'])) {
+    // Dry-run ...
+    drush_print("[$function]: Simulated run");
+    return;
+  }
+
+  if (!empty($options['simulate'])) {
+    // Dry-run ...
+    drush_print("[$function]: Simulated run");
+    return;
+  }
+
   if ($cli) {
     $start = microtime(TRUE);
     $result = ultimate_cron_run_hook_cli($function, $hook);
@@ -253,7 +290,6 @@ function drush_ultimate_cron_cron_run($function = NULL) {
     if ($log['start'] >= $start && !empty($log['msg'])) {
       drush_print("[$function]: " . $log['msg']);
     }
-    #drush_print(dt('!function finished', array('!function' => $function)));
     return $result ? NULL : drush_set_error(dt('[!function]: could not start (service unavailable)', array('!function' => $function)));
   }
 

@@ -86,6 +86,11 @@ define('ULTIMATE_CRON_QUEUE_POLLING_LATENCY', '');
  */
 define('ULTIMATE_CRON_LAUNCH_WINDOW', 55);
 
+/**
+ * Time in seconds to spend on launcing cron jobs.
+ */
+define('ULTIMATE_CRON_SERVICE_GROUP', 'default');
+
 // ---------- HOOKS ----------
 
 module_load_include('nagios.inc', 'ultimate_cron');
@@ -166,6 +171,14 @@ function ultimate_cron_menu() {
     'description' => 'Disable cron job',
     'page callback' => 'ultimate_cron_service_enable',
     'page arguments' => array(4, FALSE),
+    'access arguments' => array('administer ultimate cron'),
+    'file' => 'ultimate_cron.admin.inc',
+  );
+  $items['admin/ultimate-cron/service/process-status'] = array(
+    'type' => MENU_CALLBACK,
+    'title' => 'Cron job process status',
+    'description' => 'Cron job process status',
+    'page callback' => 'ultimate_cron_service_process_status',
     'access arguments' => array('administer ultimate cron'),
     'file' => 'ultimate_cron.admin.inc',
   );
@@ -406,6 +419,35 @@ function ultimate_cron_cronapi($op, $job = NULL, $hook = NULL) {
 }
 
 /**
+ * Implements hook_progress_message_alter().
+ */
+function ultimate_cron_progress_message_alter(&$message) {
+  $pseudo_process = new stdClass();
+  $pseudo_process->handle = $message->data->progress->name;
+  $pseudo_process->start_stamp = $message->data->progress->start_stamp;
+  $pseudo_process->progress = $message->data->progress->progress;
+  $pseudo_process->exec_status = 2;
+  $message->data->background_process = $pseudo_process;
+  return ultimate_cron_background_process_message_alter($message);
+}
+
+/**
+ * Implements hook_background_process_message_alter().
+ */
+function ultimate_cron_background_process_message_alter(&$message) {
+  // Only alter Ultimate Cron background process messages
+  if (substr($message->data->background_process->handle, 0, 3) !== 'uc:') {
+    return;
+  }
+
+  $message->data->ultimate_cron['start_stamp'] = format_date((int)$message->data->background_process->start_stamp, 'custom', 'Y-m-d H:i:s');
+  if ($message->data->background_process->progress >= 0) {
+    $message->data->ultimate_cron['progress'] = gmdate('H:i:s', (int)(microtime(TRUE) - $message->data->background_process->start_stamp)) . sprintf(" (%3d%%)", $message->data->background_process->progress * 100);
+  }
+  $message->data->ultimate_cron['unlockURL'] = url('background-process/unlock/' . $message->data->background_process->handle, array('query' => array('destination' => 'admin/config/system/cron')));
+}
+
+/**
  * Implements hook_theme_registry_alter().
  */
 function ultimate_cron_theme_registry_alter(&$theme_registry) {
@@ -536,10 +578,32 @@ function ultimate_cron_background_process_shutdown($process, $shutdown_msg = NUL
       'name' => $name,
       'start_stamp' => $process->start,
       'end_stamp' => $end,
+      'service_host' => $process->service_host,
       'exec_status' => $result,
       'msg' => trim($msg),
     );
+    $old_db = db_set_active('background_process');
     drupal_write_record('ultimate_cron_log', $object);
+    db_set_active($old_db);
+
+    $object->formatted['start_stamp'] = format_date((int)$object->start_stamp, 'custom', 'Y-m-d H:i:s');
+    $object->formatted['end_stamp'] = format_date((int)$object->end_stamp, 'custom', 'Y-m-d H:i:s');
+    $object->formatted['duration'] = gmdate('H:i:s', (int)($object->end_stamp - $object->start_stamp));
+    $object->formatted['severity'] = $object->exec_status ? 'noerror' : 'error';
+    $object->formatted['executeURL'] = url('admin/ultimate-cron/service/start/' . $object->name, array('query' => array('destination' => 'admin/config/system/cron')));
+    $object->formatted['msg'] = strip_tags(html_entity_decode($object->msg, ENT_QUOTES));
+    if (module_exists('nodejs')) {
+      $message = (object) array(
+        'channel' => 'ultimate_cron',
+        'data' => (object) array(
+          'action' => 'log',
+          'log' => $object,
+        ),
+        'callback' => 'nodejsUltimateCron',
+      );
+      nodejs_send_content_channel_message($message);
+    }
+
   }
 }
 
@@ -696,9 +760,8 @@ function ultimate_cron_run_hook($name, $hook) {
   $process->uid = 0;
 
   // Determine service group
-  if (!empty($hook['settings']['service_group'])) {
-    $process->service_group = $hook['settings']['service_group'];
-  }
+  $process->service_group = empty($hook['settings']['service_group']) ? variable_get('ultimate_cron_service_group', ULTIMATE_CRON_SERVICE_GROUP) : $hook['settings']['service_group'];
+
   $hook['timestamp'] = time();
   unset($hook['log']['msg']);
   $result = $process->start('_ultimate_cron_run_hook', array($name, $hook));
@@ -1239,6 +1302,30 @@ function _ultimate_cron_incompatible_modules() {
     }
   }
   return $modules;
+}
+
+/**
+ * Get service hosts defined in the system.
+ */
+function ultimate_cron_get_service_groups() {
+  if (function_exists('background_process_get_service_groups')) {
+    return background_process_get_service_groups();
+  }
+
+  // Fallback for setups that havent upgraded Background Process.
+  // We have this to avoid upgrade dependencies or majer version bump.
+  $service_groups = variable_get('background_process_service_groups', array());
+  $service_groups += array(
+    'default' => array(
+      'hosts' => array(variable_get('background_process_default_service_host', 'default')),
+    ),
+  );
+  foreach ($service_groups as &$service_group) {
+    $service_group += array(
+      'method' => 'background_process_service_group_random'
+    );
+  }
+  return $service_groups;
 }
 
 /**
