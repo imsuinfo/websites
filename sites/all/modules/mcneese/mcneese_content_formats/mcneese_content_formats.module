@@ -83,24 +83,26 @@ function mcneese_content_formats_node_presave($node) {
     // at this time 'deny abused codes' is only applied to the body field (and its summary).
     // this does not pay attention to text formats.
     // if such flexibility is needed, then it will be added on a per-text-field basis.
-    foreach ($node->body as $language => &$language_value) {
-      foreach ($language_value as $index => &$index_value) {
-        if (!empty($index_value['summary'])) {
-          foreach ($abused_codes as $code => $replacement) {
-            $replaced = preg_replace('|' . $code . '|i', $replacement, $index_value['summary']);
+    if (property_exists($node, 'body') && is_array($node->body)) {
+      foreach ($node->body as $language => &$language_value) {
+        foreach ($language_value as $index => &$index_value) {
+          if (!empty($index_value['summary'])) {
+            foreach ($abused_codes as $code => $replacement) {
+              $replaced = preg_replace('|' . $code . '|i', $replacement, $index_value['summary']);
 
-            if ($replaced !== FALSE) {
-              $index_value['summary'] = $replaced;
+              if ($replaced !== FALSE) {
+                $index_value['summary'] = $replaced;
+              }
             }
           }
-        }
 
-        if (!empty($index_value['value'])) {
-          foreach ($abused_codes as $code => $replacement) {
-            $replaced = preg_replace('|' . $code . '|i', $replacement, $index_value['value']);
+          if (!empty($index_value['value'])) {
+            foreach ($abused_codes as $code => $replacement) {
+              $replaced = preg_replace('|' . $code . '|i', $replacement, $index_value['value']);
 
-            if ($replaced !== FALSE) {
-              $index_value['value'] = $replaced;
+              if ($replaced !== FALSE) {
+                $index_value['value'] = $replaced;
+              }
             }
           }
         }
