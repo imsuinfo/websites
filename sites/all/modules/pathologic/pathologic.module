@@ -34,7 +34,7 @@ function pathologic_filter_info() {
 /**
  * Settings callback for Pathologic.
  */
-function _pathologic_settings($form, &$form_state, $filter, $format, $defaults) {
+function _pathologic_settings($form, &$form_state, $filter, $format, $defaults, $filters) {
   return array(
     'reminder' => array(
       '#type' => 'item',
@@ -44,7 +44,7 @@ function _pathologic_settings($form, &$form_state, $filter, $format, $defaults) 
     'protocol_style' => array(
       '#type' => 'radios',
       '#title' => t('Processed URL format'),
-      '#default_value' => isset($filter->settings['protocol_style']) ? $filter->settings['protocol_style'] : 'full',
+      '#default_value' => isset($filter->settings['protocol_style']) ? $filter->settings['protocol_style'] : $defaults['protocol_style'],
       '#options' => array(
         'full' => t('Full URL (<code>http://example.com/foo/bar</code>)'),
         'proto-rel' => t('Protocol relative URL (<code>//example.com/foo/bar</code>)'),
@@ -185,19 +185,60 @@ function _pathologic_replace($matches) {
   // Do some more early tests to see if we should just give up now.
   if (
     // If parse_url() failed, give up.
-    $parts === FALSE ||
+    $parts === FALSE
     // If there's a scheme part and it doesn't look useful, bail out.
     // "files" and "internal" are for Path Filter compatibility.
-    (isset($parts['scheme']) && !in_array($parts['scheme'], array('http', 'https', 'files', 'internal')))
+    || (isset($parts['scheme']) && !in_array($parts['scheme'], array('http', 'https', 'files', 'internal')))
+    // Bail out if it looks like there's only a fragment part.
+    || (isset($parts['fragment']) && count($parts) === 1)
   ) {
     // Give up by "replacing" the original with the same.
     return $matches[0];
   }
 
-  // Undo possible URL encoding in the path.
-  // @see http://drupal.org/node/1672932
   if (isset($parts['path'])) {
+    // Undo possible URL encoding in the path.
+    // @see http://drupal.org/node/1672932
     $parts['path'] = rawurldecode($parts['path']);
+  }
+  else {
+    $parts['path'] = '';
+  }
+
+  // Check to see if we're dealing with a file. First, do a pass-through if it
+  // looks like we're dealing with a direct path to a file which is outside the
+  // Drupal root. Use realpath() and the server's (?) docroot to iron out
+  // wrinkles to the file's actual path.
+  // @see http://drupal.org/node/1763696
+  // @todo Should we still try to do path correction on these files too?
+  $filepath = realpath($settings['current_settings']['docroot'] . '/' . $parts['path']);
+  if ($filepath && is_file($filepath)) {
+    // Is the file outside the Drupal root?
+    if (strpos($filepath, DRUPAL_ROOT) !== 0) {
+      return $matches[0];
+    }
+    else {
+      // Linking to a file inside the Drupal root. Okay.
+      $settings['langcode'] = LANGUAGE_NONE;
+      $settings['is_file'] = TRUE;
+    }
+  }
+  elseif (isset($parts['scheme']) && $parts['scheme'] === 'files') {
+    // Path Filter "files:" support. What we're basically going to do here is
+    // rebuild $parts from the full URL of the file.
+    $new_parts = parse_url(file_create_url(file_default_scheme() . '://' . $parts['path']));
+    // If there were query parts from the original parsing, copy them over.
+    if (!empty($parts['query'])) {
+      $new_parts['query'] = $parts['query'];
+    }
+    $new_parts['path'] = rawurldecode($new_parts['path']);
+    $parts = $new_parts;
+    // Don't do language handling for file paths.
+    $settings['langcode'] = LANGUAGE_NONE;
+    $settings['is_file'] = TRUE;
+  }
+  else {
+    $settings['is_file'] = FALSE;
   }
 
   // Let's also bail out of this doesn't look like a local path.
@@ -243,39 +284,6 @@ function _pathologic_replace($matches) {
   // big foreach() mess above, we still want to pass it through.
   if (!$found && !(isset($parts['path']) && !isset($parts['host']))) {
     return $matches[0];
-  }
-
-  // Check to see if we're dealing with a file. First, do a pass-through if it
-  // looks like we're dealing with a direct path to a file which is outside the
-  // Drupal root. Use realpath() and the server's (?) docroot to iron out
-  // wrinkles to the file's actual path.
-  // @see http://drupal.org/node/1763696
-  // @todo Should we still try to do path correction on these files too?
-  $filepath = realpath($settings['current_settings']['docroot'] . '/' . $parts['path']);
-  if ($filepath && is_file($filepath) && strpos($filepath, DRUPAL_ROOT) !== 0) {
-    return $matches[0];
-  }
-  if (isset($parts['scheme']) && $parts['scheme'] === 'files') {
-    // Path Filter "files:" support. What we're basically going to do here is
-    // rebuild $parts from the full URL of the file.
-    $new_parts = parse_url(file_create_url(file_default_scheme() . '://' . $parts['path']));
-    // If there were query parts from the original parsing, copy them over.
-    if (!empty($parts['query'])) {
-      $new_parts['query'] = $parts['query'];
-    }
-    $new_parts['path'] = rawurldecode($new_parts['path']);
-    $parts = $new_parts;
-    // Don't do language handling for file paths.
-    $settings['langcode'] = LANGUAGE_NONE;
-    $settings['is_file'] = TRUE;
-  }
-  elseif (is_file($parts['path'])) {
-    // Don't do language handling for file paths.
-    $settings['langcode'] = LANGUAGE_NONE;
-    $settings['is_file'] = TRUE;
-  }
-  else {
-    $settings['is_file'] = FALSE;
   }
 
   // Examine the query part of the URL. Break it up and look through it; if it
@@ -328,7 +336,16 @@ function _pathologic_replace($matches) {
       // Create an absolute URL if protocol_style is 'full' or 'proto-rel', but
       // not if it's 'path'.
       'absolute' => $settings['current_settings']['protocol_style'] !== 'path',
-      'language' => isset($settings['language_list'][$settings['langcode']]) ? $settings['language_list'][$settings['langcode']] : $settings['language_list'][LANGUAGE_NONE],
+      // Note: There appears to be a bug in core which will cause the following
+      // to result in worse-than-failure behavior if it's uncommented and runs
+      // as is.
+      // @see http://drupal.org/node/1812264
+      // @see http://drupal.org/node/1806678
+/*       'language' => isset($settings['language_list'][$settings['langcode']]) ? $settings['language_list'][$settings['langcode']] : $settings['language_list'][LANGUAGE_NONE], */
+      // However, we still don't want paths to files to have language codes
+      // added. So, this ugliness.
+      // @todo Fix when core is fixed.
+      'language' => $settings['is_file'] ? $settings['language_list'][LANGUAGE_NONE] : NULL,
       // A special parameter not actually used by url(), but we use it to see if
       // an alter hook implementation wants us to just pass through the original
       // URL.
