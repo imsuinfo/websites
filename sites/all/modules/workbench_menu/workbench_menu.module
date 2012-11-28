@@ -1722,7 +1722,7 @@ function workbench_menu_get_load_menu_items($conditions = array(), $keyed = NULL
     foreach ($menu_items as $menu_item_key => &$menu_item) {
       $id = $menu_item->id;
 
-      if (isset($sorted_menu_items['flat'][$id])) {
+      if (isset($sorted_menu_items['flat'][$id]) && isset($sorted_menu_items['flat'][$id]['item']) && is_object($sorted_menu_items['flat'][$id]['item'])) {
         foreach (array('expand', 'item_type') as $name) {
           $results = new stdClass();
           $results->id = $menu_item->{$name . '_id'};
