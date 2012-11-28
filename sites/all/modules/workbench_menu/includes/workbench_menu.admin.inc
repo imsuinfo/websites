@@ -1115,10 +1115,6 @@ function workbench_menu_admin_item_settings_form_settings($item, $menu) {
   $available['parents'] = workbench_menu_get_load_menu_items_select_list_options(array('menu_id' => $menu->id), 'id');
   $available['item_types'] = cf_db_options_get_options_list('workbench_menu', 'item_type');
   $available['expand'] = cf_db_options_get_options_list('workbench_menu', 'expand');
-  $available['menus'] = workbench_menu_get_menus_options_list(FALSE, TRUE);
-
-  // do not show current in the possible menu choices.
-  unset($available['menus'][$menu->access_id]);
 
   $available['file_types'] = array(
     'audio' => t("Audio"),
@@ -1260,24 +1256,27 @@ function workbench_menu_admin_item_settings_form_settings($item, $menu) {
   );
 
   $form['settings']['menu'] = array(
-    '#type' => 'select',
+    '#type' => 'textfield',
     '#title' => t("Menu"),
-    '#options' => $available['menus'],
     '#default_value' => $defaults['properties']['menu'],
-    '#description' => t("Load another menu and attach at this location."),
+    '#description' =>
+      t("Load another menu and attach at this location.") . '<br>' .
+      t("You can search for a specific menu id by typing in the title in this field."),
     '#dependency' => array('edit-settings-item-type' => array('item_menu')),
+    '#size' => 64,
+    '#autocomplete_path' => 'workbench_menu/autocomplete_menu_id',
   );
 
   $form['settings']['menu_item'] = array(
     '#type' => 'textfield',
     '#title' => t("Menu Item"),
     '#default_value' => $defaults['properties']['menu_item'],
-    '#description' => t("Specify a menu item from another menu and attach as this item.") . '<br>' .
-      t("The menu item must be specified by that item's numeric ID."),
-      // @todo try to add a 'select' link here in the same way the file link works.
+    '#description' =>
+      t("Specify a menu item id from another menu and attach as this menu.") . '<br>' .
+      t("You can search for a specific menu id by typing in the title in this field."),
     '#dependency' => array('edit-settings-item-type' => array('item_menu_item')),
-    '#size' => 32,
-    '#maxlength' => 64,
+    '#size' => 64,
+    '#autocomplete_path' => 'workbench_menu/autocomplete_menu_item_id',
   );
 
   $form['settings']['file_type'] = array(

@@ -141,6 +141,20 @@ function workbench_menu_menu() {
     'type' => MENU_CALLBACK,
   );
 
+  $items['workbench_menu/autocomplete_menu_id'] = array(
+    'title' => '',
+    'page callback' => 'workbench_menu_autocomplete_menu_id',
+    'access callback' => 'workbench_menu_edit_access',
+    'type' => MENU_CALLBACK,
+  );
+
+  $items['workbench_menu/autocomplete_menu_item_id'] = array(
+    'title' => '',
+    'page callback' => 'workbench_menu_autocomplete_menu_item_id',
+    'access callback' => 'workbench_menu_edit_access',
+    'type' => MENU_CALLBACK,
+  );
+
   return $items;
 }
 
@@ -1965,6 +1979,88 @@ function workbench_menu_autocomplete_nid($string) {
 
     foreach ($results as $node) {
       $matches[$node->nid] = check_plain($node->title);
+    }
+  }
+
+  drupal_json_output($matches);
+}
+
+/**
+ * Generates the JS array for workbench menu id autocomplete fields.
+ *
+ * This pulls the first 10 results that match the specified string.
+ *
+ * @param string $string
+ *   A string to match node titles against.
+ * @return array
+ *   An array of string matches.
+ */
+function workbench_menu_autocomplete_menu_id($string) {
+  if (!is_string($string)) {
+    if (module_exists('cf_error')) {
+      cf_error::not_string('string');
+    }
+
+    return array();
+  }
+
+  $matches = array();
+  $results = db_query_range('SELECT ttd.name AS name, wm.id AS id FROM {taxonomy_term_data} AS ttd INNER JOIN {workbench_menus AS wm ON ttd.tid = CAST(wm.access_id AS integer) WHERE LOWER(name) LIKE LOWER(:string) ORDER BY name', 0, 9, array(':string' => $string . '%'));
+
+  foreach ($results as $menu) {
+    $matches[$menu->id] = check_plain($menu->name . ' [id:' . $menu->id . ']');
+  }
+
+  if (module_exists('devel')) {
+    $GLOBALS['devel_shutdown'] = FALSE;
+  }
+
+  if (count($matches) < 9) {
+    $results = db_query_range('SELECT ttd.name AS name, wm.id AS id FROM {taxonomy_term_data} AS ttd INNER JOIN {workbench_menus AS wm ON ttd.tid = CAST(wm.access_id AS integer) WHERE LOWER(name) LIKE LOWER(:string) ORDER BY name', 0, 9 - count($matches), array(':string' => '%' . $string . '%'));
+
+    foreach ($results as $menu) {
+      $matches[$menu->id] = check_plain($menu->name . ' [id:' . $menu->id . ']');
+    }
+  }
+
+  drupal_json_output($matches);
+}
+
+/**
+ * Generates the JS array for workbench menu item id autocomplete fields.
+ *
+ * This pulls the first 10 results that match the specified string.
+ *
+ * @param string $string
+ *   A string to match node titles against.
+ * @return array
+ *   An array of string matches.
+ */
+function workbench_menu_autocomplete_menu_item_id($string) {
+  if (!is_string($string)) {
+    if (module_exists('cf_error')) {
+      cf_error::not_string('string');
+    }
+
+    return array();
+  }
+
+  $matches = array();
+  $results = db_query_range('SELECT id, human_name FROM {workbench_menu_items} WHERE LOWER(human_name) LIKE LOWER(:string) ORDER BY human_name', 0, 9, array(':string' => $string . '%'));
+
+  foreach ($results as $item) {
+    $matches[$item->id] = check_plain($item->human_name . ' [id:' . $item->id . ']');
+  }
+
+  if (module_exists('devel')) {
+    $GLOBALS['devel_shutdown'] = FALSE;
+  }
+
+  if (count($matches) < 9) {
+    $results = db_query_range('SELECT id, human_name FROM {workbench_menu_items} WHERE LOWER(human_name) LIKE LOWER(:string) ORDER BY human_name', 0, 9 - count($matches), array(':string' => '%' . $string . '%'));
+
+    foreach ($results as $item) {
+      $matches[$item->id] = check_plain($item->human_name . ' [id:' . $item->id . ']');
     }
   }
 
