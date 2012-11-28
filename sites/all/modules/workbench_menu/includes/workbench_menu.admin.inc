@@ -266,6 +266,11 @@ function workbench_menu_edit_settings_form($form, &$form_state, $access_type, $a
     '#value' => $active['access_scheme'],
   );
 
+  $form['access_id']= array(
+    '#type' => 'value',
+    '#value' => $access_type_id,
+  );
+
   $form['menu_id']= array(
     '#type' => 'value',
     '#value' => $menu->id,
@@ -646,6 +651,11 @@ function workbench_menu_admin_settings_form($form, &$form_state, $access_type, $
   $form['workbench_access'] = array(
     '#type' => 'value',
     '#value' => $active['access_scheme'],
+  );
+
+  $form['access_id']= array(
+    '#type' => 'value',
+    '#value' => $access_type_id,
   );
 
   $form['menu_id']= array(
@@ -1324,6 +1334,11 @@ function workbench_menu_admin_item_settings_add_form($form, &$form_state, $acces
 
   $form['settings'] = (array) workbench_menu_admin_item_settings_form_settings(NULL, $menu);
 
+  $form['access_id']= array(
+    '#type' => 'value',
+    '#value' => $access_type_id,
+  );
+
   $form['menu_id'] = array(
     '#type' => 'value',
     '#value' => $menu->id,
@@ -1428,7 +1443,7 @@ function workbench_menu_admin_item_settings_edit_form($form, &$form_state, $acce
 
   $term = taxonomy_term_load($access_type_id);
   $destination = isset($_GET['destination']) ? $_GET['destination'] : $return_destination;
-  $menus = (array) workbench_menu_get_menus(array('access_id' => $access_type_id, 'fast' => NULL), 'id');
+  $menus = (array) workbench_menu_get_menus(array('access_id' => $access_type_id), 'id');
 
   if (empty($menus)) {
     drupal_not_found();
@@ -1438,19 +1453,12 @@ function workbench_menu_admin_item_settings_edit_form($form, &$form_state, $acce
   $menu = array_pop($menus);
 
   // do not allow operating on items that do not exist in the selected menu.
-  if (!array_key_exists($item, $menu->items['flat'])) {
+  if (!array_key_exists($item_id, $menu->items['flat'])) {
     drupal_not_found();
     drupal_exit();
   }
 
-  $items = (array) workbench_menu_get_load_menu_items(array('id' => $item_id), 'id');
-
-  if (!isset($items['flat'][$item_id])) {
-    drupal_not_found();
-    drupal_exit();
-  }
-
-  $item = &$items['flat'][$item_id]['item'];
+  $item = &$menu->items['flat'][$item_id]['item'];
 
   drupal_set_title(t("Menu Item %item_name (ID: %item_id) from %menu Menu (ID: %menu_id)", array('%item_name' => $item->human_name, '%menu' => $term->name, '%item_id' => $item->id, '%menu_id' => $menu->id)), PASS_THROUGH);
 
@@ -1459,6 +1467,11 @@ function workbench_menu_admin_item_settings_edit_form($form, &$form_state, $acce
   $form['item_id'] = array(
     '#type' => 'value',
     '#value' => $item->id,
+  );
+
+  $form['access_id']= array(
+    '#type' => 'value',
+    '#value' => $access_type_id,
   );
 
   $form['menu_id'] = array(
@@ -1505,22 +1518,24 @@ function workbench_menu_admin_item_settings_edit_form($form, &$form_state, $acce
  *   The form state array as defined by drupals form api.
  */
 function workbench_menu_admin_item_settings_edit_form_validate($form, &$form_state) {
-  if (isset($form_state['values']['menu_id'])) {
-    $menus = (array) workbench_menu_get_menus(array('menu_id' => $form_state['values']['menu_id'], 'fast' => NULL), 'id');
+  if (isset($form_state['values']['item_id'])) {
+    if (isset($form_state['values']['access_id'])) {
+      $menus = (array) workbench_menu_get_menus(array('access_id' => $form_state['values']['access_id']), 'id');
 
-    if (empty($menus)) {
+      if (empty($menus)) {
+        form_set_error('', t("The specified menu associated with this menu item does not exist."));
+      }
+
+      $menu = array_pop($menus);
+
+      // do not allow operating on items that do not exist in the selected menu.
+      if (!array_key_exists($form_state['values']['item_id'], $menu->items['flat'])) {
+        form_set_error('', t("The menu item is not associated with the specified menu."));
+      }
+    }
+    else {
       form_set_error('', t("The specified menu associated with this menu item does not exist."));
     }
-
-    $menu = array_pop($menus);
-
-    // do not allow operating on items that do not exist in the selected menu.
-    if (!array_key_exists($item, $menu->items['flat'])) {
-      form_set_error('', t("The menu item is not associated with the specified menu."));
-    }
-  }
-  else {
-    form_set_error('', t("The specified menu associated with this menu item does not exist."));
   }
 
   $item_type = &$form_state['values']['settings']['item_type'];
@@ -1849,7 +1864,7 @@ function workbench_menu_admin_item_settings_delete_form($form, &$form_state, $ac
 
   $term = taxonomy_term_load($access_type_id);
   $destination = isset($_GET['destination']) ? $_GET['destination'] : $return_destination;
-  $menus = (array) workbench_menu_get_menus(array('access_id' => $access_type_id, 'fast' => NULL), 'id');
+  $menus = (array) workbench_menu_get_menus(array('access_id' => $access_type_id), 'id');
 
   if (empty($menus)) {
     drupal_not_found();
@@ -1859,7 +1874,7 @@ function workbench_menu_admin_item_settings_delete_form($form, &$form_state, $ac
   $menu = array_pop($menus);
 
   // do not allow operating on items that do not exist in the selected menu.
-  if (!array_key_exists($item, $menu->items['flat'])) {
+  if (!array_key_exists($item_id, $menu->items['flat'])) {
     drupal_not_found();
     drupal_exit();
   }
@@ -1872,6 +1887,11 @@ function workbench_menu_admin_item_settings_delete_form($form, &$form_state, $ac
   }
 
   $item = &$items['flat'][$item_id]['item'];
+
+  $form['access_id']= array(
+    '#type' => 'value',
+    '#value' => $access_type_id,
+  );
 
   $form['item_id'] = array(
     '#type' => 'value',
@@ -1916,22 +1936,24 @@ function workbench_menu_admin_item_settings_delete_form($form, &$form_state, $ac
  *   The form state array as defined by drupals form api.
  */
 function workbench_menu_admin_item_settings_delete_form_validate($form, &$form_state) {
-  if (isset($form_state['values']['menu_id'])) {
-    $menus = (array) workbench_menu_get_menus(array('menu_id' => $form_state['values']['menu_id'], 'fast' => NULL), 'id');
+  if (isset($form_state['values']['item_id'])) {
+    if (isset($form_state['values']['access_id'])) {
+      $menus = (array) workbench_menu_get_menus(array('access_id' => $form_state['values']['access_id']), 'id');
 
-    if (empty($menus)) {
+      if (empty($menus)) {
+        form_set_error('', t("The specified menu associated with this menu item does not exist."));
+      }
+
+      $menu = array_pop($menus);
+
+      // do not allow operating on items that do not exist in the selected menu.
+      if (!array_key_exists($form_state['values']['item_id'], $menu->items['flat'])) {
+        form_set_error('', t("The menu item is not associated with the specified menu."));
+      }
+    }
+    else {
       form_set_error('', t("The specified menu associated with this menu item does not exist."));
     }
-
-    $menu = array_pop($menus);
-
-    // do not allow operating on items that do not exist in the selected menu.
-    if (!array_key_exists($item, $menu->items['flat'])) {
-      form_set_error('', t("The menu item is not associated with the specified menu."));
-    }
-  }
-  else {
-    form_set_error('', t("The specified menu associated with this menu item does not exist."));
   }
 }
 
