@@ -1875,19 +1875,19 @@ function workbench_menu_get_load_menu_items_select_list_options_recursive_walk(&
  *   If NULL is passed, then this simply returnes whether or not the
  *   user has 'edit workbench menu' access.
  *
- * @param int|null $access_type_id
+ * @param int|null $access_id
  *   The access_id to validate against.
  *   If NULL is passed, then this simply returnes whether or not the
  *   user has 'edit workbench menu' access.
  *
  * @see workbench_access_get_access_tree()
  */
-function workbench_menu_edit_access($access_type = NULL, $access_type_id = NULL) {
+function workbench_menu_edit_access($access_type = NULL, $access_id = NULL) {
   if (user_access('admin workbench menu')) {
     return TRUE;
   }
 
-  if ($access_type == NULL || $access_type_id == NULL) {
+  if ($access_type == NULL || $access_id == NULL) {
     return user_access('edit workbench menu');
   }
 
@@ -1896,7 +1896,7 @@ function workbench_menu_edit_access($access_type = NULL, $access_type_id = NULL)
   if ($access_type == 'taxonomy') {
     $access = workbench_access_get_access_tree();
 
-    if (array_key_exists($access_type_id, $access)) {
+    if (array_key_exists($access_id, $access)) {
       return TRUE;
     }
   }
@@ -2067,3 +2067,106 @@ function workbench_menu_autocomplete_menu_item_id($string) {
   drupal_json_output($matches);
 }
 
+/**
+ * Perform a db check to see if a menu with the given id exists.
+ *
+ * @param int $menu_id
+ *   The numeric id for the given menu.
+ * @param int $is_access_id
+ *   (optional) If set to TRUE, then the menu_id is instead an access_id.
+ *
+ * @return bool|null
+ *   Returns TRUE/FALSE if the item exists and NULL on error.
+ */
+function workbench_menu_menu_exists($menu_id = NULL, $is_access_id = FALSE) {
+  if (!is_numeric($menu_id)) {
+    if (module_exists('cf_error')) {
+      cf_error::not_numeric('menu_id');
+    }
+
+    return NULL;
+  }
+
+  if (!is_bool($is_access_id)) {
+    if (module_exists('cf_error')) {
+      cf_error::invalid_bool('is_access_id');
+    }
+
+    return NULL;
+  }
+
+  $query = db_select('workbench_menus', 'wm');
+
+  $query->fields('wm');
+
+  if ($is_access_id) {
+    $query->condition('wm.access_id', $menu_id);
+  }
+  else {
+    $query->condition('wm.id', $menu_id);
+  }
+
+  $executed = $query->execute();
+
+  return $executed->rowCount() > 0;
+}
+
+/**
+ * Perform a db check to see if a menu item with the given id exists.
+ *
+ * When a menu id is specified, then this returns TRUE/FALSE depending on
+ * whether or not that item exists and is associated with the specified menu.
+ *
+ * @param int $item_id
+ *   The numeric id for the given menu item.
+ * @param int $menu_id
+ *   (optional) numeric id for the given menu.
+ * @param int $is_access_id
+ *   (optional) If set to TRUE, then the menu_id is instead an access_id.
+ *
+ * @return bool|null
+ *   Returns TRUE/FALSE if the item exists and NULL on error.
+ */
+function workbench_menu_menu_item_exists($item_id, $menu_id = NULL, $is_access_id = FALSE) {
+  if (!is_numeric($item_id)) {
+    if (module_exists('cf_error')) {
+      cf_error::not_numeric('item_id');
+    }
+
+    return NULL;
+  }
+
+  $query = db_select('workbench_menu_items', 'wmi');
+  $query->fields('wmi');
+  $query->condition('wmi.id', $item_id);
+
+  if (!is_null($menu_id)) {
+    if (!is_numeric($menu_id)) {
+      if (module_exists('cf_error')) {
+        cf_error::not_numeric('menu_id');
+      }
+
+      return NULL;
+    }
+
+    if (!is_bool($is_access_id)) {
+      if (module_exists('cf_error')) {
+        cf_error::invalid_bool('is_access_id');
+      }
+
+      return NULL;
+    }
+
+    if ($is_access_id) {
+      $query->innerjoin('workbench_menus', 'wm', 'wm.id = wmi.menu_id');
+      $query->condition('wm.access_id', $menu_id);
+    }
+    else {
+      $query->condition('wmi.menu_id', $menu_id);
+    }
+  }
+
+  $executed = $query->execute();
+
+  return $executed->rowCount() > 0;
+}

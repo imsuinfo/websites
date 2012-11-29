@@ -10,7 +10,7 @@
  *
  * @param string|null $access_type
  *   The type of access requested (e.g.g taxonomy).
- * @param int|null $access_type_id
+ * @param int|null $access_id
  *   The id for this specific access (here, a taxnomy term tid).
  *
  * @return array
@@ -18,11 +18,11 @@
  *
  * @see workbench_menu_edit_settings_form()
  */
-function workbench_menu_edit_settings($access_type = NULL, $access_type_id = NULL) {
+function workbench_menu_edit_settings($access_type = NULL, $access_id = NULL) {
   drupal_add_css(drupal_get_path('module', 'workbench_menu') . '/includes/workbench_menu_admin.css');
 
-  if (!(is_null($access_type) && is_null($access_type_id))) {
-    return drupal_get_form('workbench_menu_edit_settings_form', $access_type, $access_type_id);
+  if (!(is_null($access_type) && is_null($access_id))) {
+    return drupal_get_form('workbench_menu_edit_settings_form', $access_type, $access_id);
   }
 
   $access = workbench_access_get_access_tree();
@@ -93,13 +93,13 @@ function workbench_menu_edit_settings($access_type = NULL, $access_type_id = NUL
  *   The form state array as defined by drupals form api.
  * @param string $access_type
  *   The type of access requested (e.g.g taxonomy).
- * @param int $access_type_id
+ * @param int $access_id
  *   The id for this specific access (here, a taxnomy term tid).
  *
  * @return array
  *   The built form array.
  */
-function workbench_menu_edit_settings_form($form, &$form_state, $access_type, $access_type_id) {
+function workbench_menu_edit_settings_form($form, &$form_state, $access_type, $access_id) {
   if ($access_type !== 'taxonomy') {
     if (module_exists('cf_error')) {
       cf_error::invalid_variable('access_type', "At this time only taxonomy access_type is supported.");
@@ -109,21 +109,21 @@ function workbench_menu_edit_settings_form($form, &$form_state, $access_type, $a
     drupal_exit();
   }
 
-  if (!is_numeric($access_type_id)) {
+  if (!is_numeric($access_id)) {
     if (module_exists('cf_error')) {
-      cf_error::not_numeric('access_type_id');
+      cf_error::not_numeric('access_id');
     }
 
     drupal_not_found();
     drupal_exit();
   }
 
-  $access = workbench_access_get_access_tree();
-
   $form = array();
+  $access = workbench_access_get_access_tree();
   $active = workbench_access_get_active_tree();
-  $active['access_scheme']['access_id'] = $access_type_id;
-  if ($active['access_scheme']['access_type'] != $access_type || !isset($active['active'][$access_type_id])) {
+  $active['access_scheme']['access_id'] = $access_id;
+
+  if ($active['access_scheme']['access_type'] != $access_type || !isset($active['active'][$access_id])) {
     drupal_access_denied();
     drupal_exit();
   }
@@ -134,12 +134,12 @@ function workbench_menu_edit_settings_form($form, &$form_state, $access_type, $a
   $default_hidden = FALSE;
   $default_breadcrumb_name = '';
 
-  $term = taxonomy_term_load($access_type_id);
+  $term = taxonomy_term_load($access_id);
   $destination = isset($_GET['destination']) ? $_GET['destination'] : 'admin/workbench/menus';
   $items = array();
 
   // the menu edit form should always pull the latest data from the database
-  $menus = (array) workbench_menu_get_menus(array('access_id' => $access_type_id), NULL);
+  $menus = (array) workbench_menu_get_menus(array('access_id' => $access_id), NULL);
 
   if (!empty($menus)) {
     $menu = array_pop($menus);
@@ -259,7 +259,7 @@ function workbench_menu_edit_settings_form($form, &$form_state, $access_type, $a
     unset($form['advanced']['breadcrumb_name']);
   }
 
-  workbench_menu_build_item_editing_form($form, 'admin/workbench/menus/taxonomy/' . $access_type_id, $items);
+  workbench_menu_build_item_editing_form($form, 'admin/workbench/menus/taxonomy/' . $access_id, $items);
 
   $form['workbench_access'] = array(
     '#type' => 'value',
@@ -268,7 +268,7 @@ function workbench_menu_edit_settings_form($form, &$form_state, $access_type, $a
 
   $form['access_id']= array(
     '#type' => 'value',
-    '#value' => $access_type_id,
+    '#value' => $access_id,
   );
 
   $form['menu_id']= array(
@@ -278,7 +278,7 @@ function workbench_menu_edit_settings_form($form, &$form_state, $access_type, $a
 
   $form['redirect_to'] = array(
     '#type' => 'value',
-    '#value' => $destination . '/taxonomy/' . $access_type_id,
+    '#value' => $destination . '/taxonomy/' . $access_id,
   );
 
   $form['actions']['submit'] = array(
@@ -350,7 +350,7 @@ function theme_workbench_menu_edit_settings_form($element) {
  *
  * @param string $access_type
  *   The type of access requested (e.g. taxonomy).
- * @param int $access_type_id
+ * @param int $access_id
  *   The id for this specific access (here, a taxnomy term tid).
  * @param $operation (optional)
  *   A string representing the operation to perform, which can be:
@@ -370,7 +370,7 @@ function theme_workbench_menu_edit_settings_form($element) {
  * @see workbench_menu_admin_item_settings_edit_form()
  * @see workbench_menu_admin_item_settings_delete_form()
  */
-function workbench_menu_edit_item_settings($access_type, $access_type_id, $operation = NULL, $item = NULL) {
+function workbench_menu_edit_item_settings($access_type, $access_id, $operation = NULL, $item = NULL) {
   drupal_add_css(drupal_get_path('module', 'workbench_menu') . '/includes/workbench_menu_admin.css');
 
   if ($access_type !== 'taxonomy') {
@@ -382,25 +382,25 @@ function workbench_menu_edit_item_settings($access_type, $access_type_id, $opera
     drupal_exit();
   }
 
-  if (!is_numeric($access_type_id)) {
+  if (!is_numeric($access_id)) {
     if (module_exists('cf_error')) {
-      cf_error::not_numeric('access_type_id');
+      cf_error::not_numeric('access_id');
     }
 
     drupal_not_found();
     drupal_exit();
   }
 
-  $return_destination = 'admin/workbench/menus/' . $access_type . '/' . $access_type_id;
+  $return_destination = 'admin/workbench/menus/' . $access_type . '/' . $access_id;
 
   if ($operation === 'add') {
-    return drupal_get_form('workbench_menu_admin_item_settings_add_form', $access_type, $access_type_id, $return_destination);
+    return drupal_get_form('workbench_menu_admin_item_settings_add_form', $access_type, $access_id, $return_destination);
   }
   elseif ($operation === 'edit' && !is_null($item)) {
-    return drupal_get_form('workbench_menu_admin_item_settings_edit_form', $access_type, $access_type_id, $item, $return_destination);
+    return drupal_get_form('workbench_menu_admin_item_settings_edit_form', $access_type, $access_id, $item, $return_destination);
   }
   elseif ($operation === 'delete' && !is_null($item)) {
-    return drupal_get_form('workbench_menu_admin_item_settings_delete_form', $access_type, $access_type_id, $item, $return_destination);
+    return drupal_get_form('workbench_menu_admin_item_settings_delete_form', $access_type, $access_id, $item, $return_destination);
   }
 
   drupal_not_found();
@@ -412,7 +412,7 @@ function workbench_menu_edit_item_settings($access_type, $access_type_id, $opera
  *
  * @param string|null $access_type
  *   The type of access requested (e.g.g taxonomy).
- * @param int|null $access_type_id
+ * @param int|null $access_id
  *   The id for this specific access (here, a taxnomy term tid).
  *
  * @return array
@@ -420,11 +420,11 @@ function workbench_menu_edit_item_settings($access_type, $access_type_id, $opera
  *
  * @see workbench_menu_admin_settings_form()
  */
-function workbench_menu_admin_settings($access_type = NULL, $access_type_id = NULL) {
+function workbench_menu_admin_settings($access_type = NULL, $access_id = NULL) {
   drupal_add_css(drupal_get_path('module', 'workbench_menu') . '/includes/workbench_menu_admin.css');
 
-  if (!(is_null($access_type) && is_null($access_type_id))) {
-    return drupal_get_form('workbench_menu_admin_settings_form', $access_type, $access_type_id);
+  if (!(is_null($access_type) && is_null($access_id))) {
+    return drupal_get_form('workbench_menu_admin_settings_form', $access_type, $access_id);
   }
 
   $active = workbench_access_get_active_tree();
@@ -490,13 +490,13 @@ function workbench_menu_admin_settings($access_type = NULL, $access_type_id = NU
  *   The form state array as defined by drupals form api.
  * @param string $access_type
  *   The type of access requested (e.g.g taxonomy).
- * @param int $access_type_id
+ * @param int $access_id
  *   The id for this specific access (here, a taxnomy term tid).
  *
  * @return
  *   The built form array.
  */
-function workbench_menu_admin_settings_form($form, &$form_state, $access_type, $access_type_id) {
+function workbench_menu_admin_settings_form($form, &$form_state, $access_type, $access_id) {
   if ($access_type !== 'taxonomy') {
     if (module_exists('cf_error')) {
       cf_error::invalid_variable('access_type', "At this time only taxonomy access_type is supported.");
@@ -506,9 +506,9 @@ function workbench_menu_admin_settings_form($form, &$form_state, $access_type, $
     drupal_exit();
   }
 
-  if (!is_numeric($access_type_id)) {
+  if (!is_numeric($access_id)) {
     if (module_exists('cf_error')) {
-      cf_error::not_numeric('access_type_id');
+      cf_error::not_numeric('access_id');
     }
 
     drupal_not_found();
@@ -517,8 +517,9 @@ function workbench_menu_admin_settings_form($form, &$form_state, $access_type, $
 
   $form = array();
   $active = workbench_access_get_active_tree();
-  $active['access_scheme']['access_id'] = $access_type_id;
-  if ($active['access_scheme']['access_type'] != $access_type || !isset($active['active'][$access_type_id])) {
+  $active['access_scheme']['access_id'] = $access_id;
+
+  if ($active['access_scheme']['access_type'] != $access_type || !isset($active['active'][$access_id])) {
     drupal_access_denied();
     drupal_exit();
   }
@@ -529,12 +530,12 @@ function workbench_menu_admin_settings_form($form, &$form_state, $access_type, $
   $default_hidden = FALSE;
   $default_breadcrumb_name = '';
 
-  $term = taxonomy_term_load($access_type_id);
+  $term = taxonomy_term_load($access_id);
   $destination = isset($_GET['destination']) ? $_GET['destination'] : 'admin/config/workbench/access/menus';
   $items = array();
 
   // the menu edit form should always pull the latest data from the database
-  $menus = (array) workbench_menu_get_menus(array('access_id' => $access_type_id), NULL);
+  $menus = (array) workbench_menu_get_menus(array('access_id' => $access_id), NULL);
 
   if (!empty($menus)) {
     $menu = array_pop($menus);
@@ -646,7 +647,7 @@ function workbench_menu_admin_settings_form($form, &$form_state, $access_type, $
     $form['advanced']['breadcrumb_name']['#disabled'] = TRUE;
   }
 
-  workbench_menu_build_item_editing_form($form, 'admin/config/workbench/access/menus/taxonomy/' . $access_type_id, $items);
+  workbench_menu_build_item_editing_form($form, 'admin/config/workbench/access/menus/taxonomy/' . $access_id, $items);
 
   $form['workbench_access'] = array(
     '#type' => 'value',
@@ -655,7 +656,7 @@ function workbench_menu_admin_settings_form($form, &$form_state, $access_type, $
 
   $form['access_id']= array(
     '#type' => 'value',
-    '#value' => $access_type_id,
+    '#value' => $access_id,
   );
 
   $form['menu_id']= array(
@@ -665,7 +666,7 @@ function workbench_menu_admin_settings_form($form, &$form_state, $access_type, $
 
   $form['redirect_to'] = array(
     '#type' => 'value',
-    '#value' => $destination . '/taxonomy/' . $access_type_id,
+    '#value' => $destination . '/taxonomy/' . $access_id,
   );
 
   $form['actions']['submit'] = array(
@@ -701,6 +702,14 @@ function workbench_menu_admin_settings_form($form, &$form_state, $access_type, $
  *   The form state array as defined by drupals form api.
  */
 function workbench_menu_admin_settings_form_validate($form, &$form_state) {
+  if (workbench_menu_menu_exists($form['menu_id']['#value']) !== TRUE) {
+    form_set_error('menu_id', t("An invalid menu id has been specified."));
+  }
+
+  if (workbench_menu_menu_exists($form['access_id']['#value'], TRUE) !== TRUE) {
+    form_set_error('access_id', t("An invalid access id has been specified."));
+  }
+
   if (!empty($form_state['values']['path'])) {
     // be user-friendly and allow normal whitespaces on insert.
     $form_state['values']['path'] = preg_replace('/ /', '%20', $form_state['values']['path']);
@@ -729,7 +738,7 @@ function workbench_menu_admin_settings_form_validate($form, &$form_state) {
  */
 function workbench_menu_admin_settings_form_submit($form, &$form_state) {
   $menu = array();
-  $menu['access_id'] = &$form_state['values']['workbench_access']['access_id'];
+  $menu['access_id'] = &$form['workbench_access']['#value']['access_id'];
   $menu['path'] = &$form_state['values']['path'];
   $menu['weight'] = &$form_state['values']['weight'];
   $menu['show_parents'] = &$form_state['values']['show_parents'];
@@ -950,7 +959,7 @@ function theme_workbench_menu_admin_settings_form($element) {
  *
  * @param string $access_type
  *   The type of access requested (e.g.g taxonomy).
- * @param int $access_type_id
+ * @param int $access_id
  *   The id for this specific access (here, a taxnomy term tid).
  * @param string|null $operation
  *   (optional) A string representing the operation to perform,
@@ -971,7 +980,7 @@ function theme_workbench_menu_admin_settings_form($element) {
  * @see workbench_menu_admin_item_settings_edit_form()
  * @see workbench_menu_admin_item_settings_delete_form()
  */
-function workbench_menu_admin_item_settings($access_type, $access_type_id, $operation = NULL, $item = NULL) {
+function workbench_menu_admin_item_settings($access_type, $access_id, $operation = NULL, $item = NULL) {
   drupal_add_css(drupal_get_path('module', 'workbench_menu') . '/includes/workbench_menu_admin.css');
 
   if ($access_type !== 'taxonomy') {
@@ -983,25 +992,25 @@ function workbench_menu_admin_item_settings($access_type, $access_type_id, $oper
     drupal_exit();
   }
 
-  if (!is_numeric($access_type_id)) {
+  if (!is_numeric($access_id)) {
     if (module_exists('cf_error')) {
-      cf_error::not_numeric('access_type_id');
+      cf_error::not_numeric('access_id');
     }
 
     drupal_not_found();
     drupal_exit();
   }
 
-  $return_destination = 'admin/config/workbench/access/menus/' . $access_type . '/' . $access_type_id;
+  $return_destination = 'admin/config/workbench/access/menus/' . $access_type . '/' . $access_id;
 
   if ($operation === 'add') {
-    return drupal_get_form('workbench_menu_admin_item_settings_add_form', $access_type, $access_type_id, $return_destination);
+    return drupal_get_form('workbench_menu_admin_item_settings_add_form', $access_type, $access_id, $return_destination);
   }
   elseif ($operation === 'edit' && !is_null($item)) {
-    return drupal_get_form('workbench_menu_admin_item_settings_edit_form', $access_type, $access_type_id, $item, $return_destination);
+    return drupal_get_form('workbench_menu_admin_item_settings_edit_form', $access_type, $access_id, $item, $return_destination);
   }
   elseif ($operation === 'delete' && !is_null($item)) {
-    return drupal_get_form('workbench_menu_admin_item_settings_delete_form', $access_type, $access_type_id, $item, $return_destination);
+    return drupal_get_form('workbench_menu_admin_item_settings_delete_form', $access_type, $access_id, $item, $return_destination);
   }
 
   drupal_not_found();
@@ -1308,7 +1317,7 @@ function workbench_menu_admin_item_settings_form_settings($item, $menu) {
  *
  * @param string $access_type
  *   The type of access requested (e.g. taxonomy).
- * @param int $access_type_id
+ * @param int $access_id
  *   The id for this specific access (here, a taxnomy term tid).
  * @param string $return_destination
  *   A url path string that designates where this form should return
@@ -1317,10 +1326,10 @@ function workbench_menu_admin_item_settings_form_settings($item, $menu) {
  * @return array
  *   A form array for adding a new menu item.
  */
-function workbench_menu_admin_item_settings_add_form($form, &$form_state, $access_type, $access_type_id, $return_destination) {
-  $term = taxonomy_term_load($access_type_id);
+function workbench_menu_admin_item_settings_add_form($form, &$form_state, $access_type, $access_id, $return_destination) {
+  $term = taxonomy_term_load($access_id);
   $destination = isset($_GET['destination']) ? $_GET['destination'] : $return_destination;
-  $menus = (array) workbench_menu_get_menus(array('access_id' => $access_type_id, 'fast' => NULL), 'id');
+  $menus = (array) workbench_menu_get_menus(array('access_id' => $access_id, 'fast' => NULL), 'id');
 
   if (empty($menus)) {
     drupal_not_found();
@@ -1335,7 +1344,7 @@ function workbench_menu_admin_item_settings_add_form($form, &$form_state, $acces
 
   $form['access_id']= array(
     '#type' => 'value',
-    '#value' => $access_type_id,
+    '#value' => $access_id,
   );
 
   $form['menu_id'] = array(
@@ -1401,7 +1410,7 @@ function workbench_menu_admin_item_settings_add_form_submit($form, &$form_state)
  *
  * @param array $access_type
  *   The type of access requested (e.g.g taxonomy).
- * @param int $access_type_id
+ * @param int $access_id
  *   The id for this specific access (here, a taxnomy term tid).
  * @param int $item_id
  *   The numerical id for a menu item.
@@ -1412,7 +1421,7 @@ function workbench_menu_admin_item_settings_add_form_submit($form, &$form_state)
  * @return array|false
  *   A form array for adding a new menu item, or FALSE on error.
  */
-function workbench_menu_admin_item_settings_edit_form($form, &$form_state, $access_type, $access_type_id, $item_id, $return_destination) {
+function workbench_menu_admin_item_settings_edit_form($form, &$form_state, $access_type, $access_id, $item_id, $return_destination) {
   if ($access_type !== 'taxonomy') {
     if (module_exists('cf_error')) {
       cf_error::invalid_variable('access_type', "At this time only taxonomy access_type is supported.");
@@ -1422,9 +1431,9 @@ function workbench_menu_admin_item_settings_edit_form($form, &$form_state, $acce
     drupal_exit();
   }
 
-  if (!is_numeric($access_type_id)) {
+  if (!is_numeric($access_id)) {
     if (module_exists('cf_error')) {
-      cf_error::not_numeric('access_type_id');
+      cf_error::not_numeric('access_id');
     }
 
     drupal_not_found();
@@ -1440,9 +1449,9 @@ function workbench_menu_admin_item_settings_edit_form($form, &$form_state, $acce
     drupal_exit();
   }
 
-  $term = taxonomy_term_load($access_type_id);
+  $term = taxonomy_term_load($access_id);
   $destination = isset($_GET['destination']) ? $_GET['destination'] : $return_destination;
-  $menus = (array) workbench_menu_get_menus(array('access_id' => $access_type_id), 'id');
+  $menus = (array) workbench_menu_get_menus(array('access_id' => $access_id), 'id');
 
   if (empty($menus)) {
     drupal_not_found();
@@ -1470,7 +1479,7 @@ function workbench_menu_admin_item_settings_edit_form($form, &$form_state, $acce
 
   $form['access_id']= array(
     '#type' => 'value',
-    '#value' => $access_type_id,
+    '#value' => $access_id,
   );
 
   $form['menu_id'] = array(
@@ -1517,19 +1526,18 @@ function workbench_menu_admin_item_settings_edit_form($form, &$form_state, $acce
  *   The form state array as defined by drupals form api.
  */
 function workbench_menu_admin_item_settings_edit_form_validate($form, &$form_state) {
-  if (isset($form_state['values']['item_id'])) {
-    if (isset($form_state['values']['access_id'])) {
-      $menus = (array) workbench_menu_get_menus(array('access_id' => $form_state['values']['access_id']), 'id');
+  if (workbench_menu_menu_exists($form['menu_id']['#value']) !== TRUE) {
+    form_set_error('menu_id', t("An invalid menu id has been specified."));
+  }
 
-      if (empty($menus)) {
-        form_set_error('', t("The specified menu associated with this menu item does not exist."));
-      }
+  if (isset($form['item_id']['#value'])) {
+    if (workbench_menu_menu_item_exists($form['item_id']['#value'], $form['menu_id']['#value']) !== TRUE) {
+      form_set_error('menu_id', t("An invalid item id has been specified."));
+    }
 
-      $menu = array_pop($menus);
-
-      // do not allow operating on items that do not exist in the selected menu.
-      if (!array_key_exists($form_state['values']['item_id'], $menu->items['flat'])) {
-        form_set_error('', t("The menu item is not associated with the specified menu."));
+    if (isset($form['access_id']['#value'])) {
+      if (workbench_menu_menu_exists($form['access_id']['#value'], TRUE) !== TRUE) {
+        form_set_error('access_id', t("An invalid access id has been specified."));
       }
     }
     else {
@@ -1541,8 +1549,8 @@ function workbench_menu_admin_item_settings_edit_form_validate($form, &$form_sta
   $item_type_name = &$form['settings']['settings']['item_type']['#options'][$item_type];
 
   if (isset($form_state['values']['settings']['parent_id'])) {
-    if (isset($form_state['values']['item_id'])) {
-      if ($form_state['values']['item_id'] === $form_state['values']['settings']['parent_id']) {
+    if (isset($form['item_id']['#value'])) {
+      if ($form['item_id']['#value'] === $form_state['values']['settings']['parent_id']) {
         form_set_error('settings][parent_id', t("The menu item cannot be its own parent."));
       }
     }
@@ -1710,15 +1718,15 @@ function workbench_menu_admin_item_settings_edit_form_validate($form, &$form_sta
 function workbench_menu_admin_item_settings_edit_form_submit($form, &$form_state) {
   $transaction = db_transaction();
 
-  if (isset($form_state['values']['item_id'])) {
-    $item_id = $form_state['values']['item_id'];
+  if (isset($form['item_id']['#value'])) {
+    $item_id = $form['item_id']['#value'];
   }
   else {
     $item_id = NULL;
   }
 
-  if (isset($form_state['values']['settings']['item_type'])) {
-    $item_type = &$form_state['values']['settings']['item_type'];
+  if (isset($form_state['value']['settings']['item_type'])) {
+    $item_type = &$form_state['value']['settings']['item_type'];
   }
   else {
     $item_type = NULL;
@@ -1727,10 +1735,10 @@ function workbench_menu_admin_item_settings_edit_form_submit($form, &$form_state
   $user = cf_current_user();
 
   if (is_null($item_id)) {
-    watchdog('Workbench Menu', "The user %user has added a new item %item to the menu %menu (%menu_id)", array('%user' => $user->name, '%item' => $form_state['values']['settings']['human_name'], '%menu' => $form_state['values']['menu_human_name'], '%menu_id' => $form_state['values']['menu_id']), WATCHDOG_INFO);
+    watchdog('Workbench Menu', "The user %user has added a new item %item to the menu %menu (%menu_id)", array('%user' => $user->name, '%item' => $form_state['values']['settings']['human_name'], '%menu' => $form['menu_human_name']['#value'], '%menu_id' => $form['menu_id']['#value']), WATCHDOG_INFO);
   }
   else {
-    watchdog('Workbench Menu', "The user %user has changed the item %item (%item_id) from the menu %menu (%menu_id)", array('%user' => $user->name, '%item' => $form_state['values']['item_human_name'], '%item_id' => $form_state['values']['item_id'], '%menu' => $form_state['values']['menu_human_name'], '%menu_id' => $form_state['values']['menu_id']), WATCHDOG_INFO);
+    watchdog('Workbench Menu', "The user %user has changed the item %item (%item_id) from the menu %menu (%menu_id)", array('%user' => $user->name, '%item' => $form_state['values']['settings']['human_name'], '%item_id' => $form['item_id']['#value'], '%menu' => $form['menu_human_name']['#value'], '%menu_id' => $form['menu_id']['#value']), WATCHDOG_INFO);
   }
 
   $properties = array();
@@ -1755,7 +1763,7 @@ function workbench_menu_admin_item_settings_edit_form_submit($form, &$form_state
     $columns = array('menu_id', 'parent_id', 'human_name', 'weight', 'active_path', 'properties');
     $record = array();
 
-    $record['menu_id'] = $form_state['values']['menu_id'];
+    $record['menu_id'] = $form['menu_id']['#value'];
     $record['parent_id'] = $form_state['values']['settings']['parent_id'];
     $record['human_name'] = $form_state['values']['settings']['human_name'];
     $record['weight'] = $form_state['values']['settings']['weight'];
@@ -1823,7 +1831,7 @@ function workbench_menu_admin_item_settings_edit_form_submit($form, &$form_state
  *
  * @param string $access_type
  *   The type of access requested (e.g.g taxonomy).
- * @param int $access_type_id
+ * @param int $access_id
  *   The id for this specific access (here, a taxnomy term tid).
  * @param int $item_id
  *   The numerical id for a menu item.
@@ -1833,7 +1841,7 @@ function workbench_menu_admin_item_settings_edit_form_submit($form, &$form_state
  * @return array
  *   A form array for adding a new menu item.
  */
-function workbench_menu_admin_item_settings_delete_form($form, &$form_state, $access_type, $access_type_id, $item_id, $return_destination) {
+function workbench_menu_admin_item_settings_delete_form($form, &$form_state, $access_type, $access_id, $item_id, $return_destination) {
   if ($access_type !== 'taxonomy') {
     if (module_exists('cf_error')) {
       cf_error::invalid_variable('access_type', "At this time only taxonomy access_type is supported.");
@@ -1843,9 +1851,9 @@ function workbench_menu_admin_item_settings_delete_form($form, &$form_state, $ac
     drupal_exit();
   }
 
-  if (!is_numeric($access_type_id)) {
+  if (!is_numeric($access_id)) {
     if (module_exists('cf_error')) {
-      cf_error::not_numeric('access_type_id');
+      cf_error::not_numeric('access_id');
     }
 
     drupal_not_found();
@@ -1861,9 +1869,9 @@ function workbench_menu_admin_item_settings_delete_form($form, &$form_state, $ac
     drupal_exit();
   }
 
-  $term = taxonomy_term_load($access_type_id);
+  $term = taxonomy_term_load($access_id);
   $destination = isset($_GET['destination']) ? $_GET['destination'] : $return_destination;
-  $menus = (array) workbench_menu_get_menus(array('access_id' => $access_type_id), 'id');
+  $menus = (array) workbench_menu_get_menus(array('access_id' => $access_id), 'id');
 
   if (empty($menus)) {
     drupal_not_found();
@@ -1889,7 +1897,7 @@ function workbench_menu_admin_item_settings_delete_form($form, &$form_state, $ac
 
   $form['access_id']= array(
     '#type' => 'value',
-    '#value' => $access_type_id,
+    '#value' => $access_id,
   );
 
   $form['item_id'] = array(
@@ -1935,19 +1943,18 @@ function workbench_menu_admin_item_settings_delete_form($form, &$form_state, $ac
  *   The form state array as defined by drupals form api.
  */
 function workbench_menu_admin_item_settings_delete_form_validate($form, &$form_state) {
-  if (isset($form_state['values']['item_id'])) {
-    if (isset($form_state['values']['access_id'])) {
-      $menus = (array) workbench_menu_get_menus(array('access_id' => $form_state['values']['access_id']), 'id');
+  if (workbench_menu_menu_exists($form['menu_id']['#value']) !== TRUE) {
+    form_set_error('menu_id', t("An invalid menu id has been specified."));
+  }
 
-      if (empty($menus)) {
-        form_set_error('', t("The specified menu associated with this menu item does not exist."));
-      }
+  if (isset($form['item_id']['#value'])) {
+    if (workbench_menu_menu_item_exists($form['item_id']['#value']) !== TRUE) {
+      form_set_error('menu_id', t("An invalid item id has been specified."));
+    }
 
-      $menu = array_pop($menus);
-
-      // do not allow operating on items that do not exist in the selected menu.
-      if (!array_key_exists($form_state['values']['item_id'], $menu->items['flat'])) {
-        form_set_error('', t("The menu item is not associated with the specified menu."));
+    if (isset($form['access_id']['#value'])) {
+      if (workbench_menu_menu_exists($form['access_id']['#value'], TRUE) !== TRUE) {
+        form_set_error('access_id', t("An invalid access id has been specified."));
       }
     }
     else {
@@ -1969,16 +1976,16 @@ function workbench_menu_admin_item_settings_delete_form_submit($form, &$form_sta
 
   $user = cf_current_user();
 
-  watchdog('Workbench Menu', "The user %user has deleted the item %item (%item_id) from the menu %menu (%menu_id)", array('%user' => $user->name, '%item' => $form_state['values']['item_human_name'], '%item_id' => $form_state['values']['item_id'], '%menu' => $form_state['values']['menu_human_name'], '%menu_id' => $form_state['values']['menu_id']), WATCHDOG_INFO);
+  watchdog('Workbench Menu', "The user %user has deleted the item %item (%item_id) from the menu %menu (%menu_id)", array('%user' => $user->name, '%item' => $form_state['values']['item_human_name'], '%item_id' => $form['item_id']['#value'], '%menu' => $form_state['values']['menu_human_name'], '%menu_id' => $form['menu_id']['#value']), WATCHDOG_INFO);
 
   try {
     $query = db_delete('workbench_menu_items');
-    $query->condition('id', $form_state['values']['item_id']);
+    $query->condition('id', $form['item_id']['#value']);
     $query->execute();
 
     foreach (array('expand', 'item_type') as $name) {
       $query = db_delete('workbench_menu_' . $name . 's');
-      $query->condition('item_id', $form_state['values']['item_id']);
+      $query->condition('item_id', $form['item_id']['#value']);
       $query->execute();
     }
 
