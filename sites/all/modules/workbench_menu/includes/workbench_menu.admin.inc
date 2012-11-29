@@ -1670,6 +1670,13 @@ function workbench_menu_admin_item_settings_edit_form_validate($form, &$form_sta
       if (empty($form_state['values']['settings']['menu'])) {
         form_set_error('settings][menu', t("The menu is required for an item type of %type.", array('%type' => $item_type_name)));
       }
+
+      // if the current it has children, do not allow it to be changed into an item type that is not allowed to have children.
+      $items = (array) workbench_menu_get_load_menu_items(array('parent_id' => $form['item_id']['#value']));
+
+      if (!empty($items)) {
+        form_set_error('settings][item_type', t("This item cannot be changed to an item type of %type because that item type does not support child items. You must remove all child items from this item to use this item type.", array('%type' => $item_type_name)));
+      }
       break;
 
     case 'item_menu_item':
@@ -1679,23 +1686,31 @@ function workbench_menu_admin_item_settings_edit_form_validate($form, &$form_sta
       elseif (!is_numeric($form_state['values']['settings']['menu_item'])) {
         form_set_error('settings][menu_item', t("The menu item '%value' is not and must be a number.", array('%value' => $form_state['values']['settings']['menu_item'], '%type' => $item_type_name)));
       }
-
-      $query = db_select('workbench_menu_items', 'wmi');
-
-      $query->fields('wmi');
-      $query->orderBy('wmi.id', 'ASC');
-
-      $query->condition('wmi.id', $form_state['values']['settings']['menu_item']);
-
-      $records = (array) $query->execute()->fetchAll();
-
-      if (empty($records)) {
-        form_set_error('settings][menu_item', t("There exists no item with the id of '%value'.", array('%value' => $form_state['values']['settings']['menu_item'])));
-      }
       else {
-        $record = array_pop($records);
+        $query = db_select('workbench_menu_items', 'wmi');
 
-        $form_state['values']['settings']['menu'] = $record->menu_id;
+        $query->fields('wmi');
+        $query->orderBy('wmi.id', 'ASC');
+
+        $query->condition('wmi.id', $form_state['values']['settings']['menu_item']);
+
+        $records = (array) $query->execute()->fetchAll();
+
+        if (empty($records)) {
+          form_set_error('settings][menu_item', t("There exists no item with the id of '%value'.", array('%value' => $form_state['values']['settings']['menu_item'])));
+        }
+        else {
+          $record = array_pop($records);
+
+          $form_state['values']['settings']['menu'] = $record->menu_id;
+        }
+      }
+
+      // if the current it has children, do not allow it to be changed into an item type that is not allowed to have children.
+      $items = (array) workbench_menu_get_load_menu_items(array('parent_id' => $form['item_id']['#value']));
+
+      if (!empty($items)) {
+        form_set_error('settings][item_type', t("This item cannot be changed to an item type of %type because that item type does not support child items. You must remove all child items from this item to use this item type.", array('%type' => $item_type_name)));
       }
       break;
 
