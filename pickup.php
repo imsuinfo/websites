@@ -32,7 +32,7 @@
   $httponly = TRUE;
 
   if (empty($_SERVER["SERVER_NAME"])) {
-    $domain = '.wwwdev.mcneese.edu';
+    $domain = '.www.mcneese.edu';
   }
   else {
     $domain = '.' . $_SERVER["SERVER_NAME"];
