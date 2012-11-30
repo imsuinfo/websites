@@ -1,92 +1,68 @@
-<HTML>
-	<HEAD>
-	    <TITLE>Cookie Pickup</TITLE>
-		<META HTTP-EQUIV="Content-Script-Type" CONTENT="text/javascript">
-		<META HTTP-EQUIV="Pragma" CONTENT="no-cache">
-		<META HTTP-EQUIV="expires" CONTENT="-1">
-        <SCRIPT language="JavaScript1.1">
-function performCookiePickup()
-{
-    var debug = false;
-    var destinationURL;
-    var searchString = document.location.search;
-    if ( searchString.length == 1 )
-    {
-        // nothing to do
-        return;
-    }
+<html>
+<head>
+  <title>Cookie Pickup</title>
+  <meta http-equiv="cache-control" content="no-cache">
+  <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+  <meta charset="UTF-8">
+  <meta name="robots" content="NONE">
+  <meta name="googlebot" content="noarchive,nofollow,noindex,nosnippet">
 
-    // strip off the leading '?'
-    searchString = searchString.substring( 1 );
+  <script type="text/javascript">
+    function pickup_cookie() {
+      var destination;
+      var search = document.location.search;
+      var i;
+      var debug = false;
 
-    // split the string on '&'
-    var searchParameters = searchString.split( '&' );
-    for ( i=0; i<searchParameters.length; i++ )
-    {
-        // split the name value pairs
-        var nvPair = searchParameters[i].split( "=" );
-        if ( nvPair.length < 2 )
-        {
-            if ( nvPair.length == 1 &&
-                 nvPair[0] == "debug" )
-            {
-                debug = true;
-            }
-            else
-            {
-                if ( debug )
-                    document.write( "Received Parameter -> " + name + "<br>" );
-            }
+      if (search.length == 1) return;
+
+      // strip off the leading '?'
+      search = search.substring(1);
+
+      // split the string on '&'
+      var parameters = search.split("&");
+ 
+      for (i = 0; i < parameters.length; i++) {
+        var pair = parameters[i].split("=");
+
+        if (pair.length < 2) {
+          if (!debug) {
+            debug = length == 1 && pair[0] == "debug";
+          }
+          else {
+            alert("Received Parameter (" + i + "): '" + pair[0] + "' = has no value");
+          }
         }
-        else
-        {
-            var name = nvPair[0];
-            var value = nvPair[1];
+        else {
+          if (debug) {
+            alert("Received Parameter (" + i + "): '" + pair[0] + "' = '" + pair[1] + "', unescaped = '" + unescape(pair[1]) + "'");
+          }
 
-            if ( name == "cookie" )
-            {
-                var cookie = unescape( value );
-                if ( debug )
-                    document.write( "Setting cookie -> " + cookie + "<br>" );
-                document.cookie = cookie;
-            }
-            else if ( name == "dest" )
-            {
-                destinationURL = unescape( value );
-                if ( debug )
-                    document.write( "Destination URL -> " + destinationURL + "<br>" );
-            }
-            else if ( name == "debug" )
-            {
-                debug = true;
-            }
-            else
-            {
-                if ( debug )
-                    document.write( "Received Parameter -> " + name +
-                        " = " + value + "<br>" );
-            }
+          if (pair[0] == "cookie") {
+            document.cookie = unescape(pair[1]);
+          }
+          else if (pair[0] == "dest") {
+            destination = unescape(pair[1]);
+          }
+          else if (pair[0] == "debug") {
+            debug = true;
+          }
         }
-    }
-    
-    if ( destinationURL )
-    {
-        if ( debug )
-            window.alert( "Redirecting to -> " + destinationURL );
-        document.location.replace(destinationURL);
-    }
-    else
-    {
-        // must be a debug session that is dead ending :)
-    }
-}
+      }
 
-performCookiePickup();
+      if (destination) {
+        if (debug) {
+          alert("Redirecting To: " + destination);
+        }
 
-        </SCRIPT>
-    </HEAD>
-    <BODY>
-&nbsp;
-    </BODY>
-</HTML>
+        document.location.replace(destination);
+      }
+    }
 
+    pickup_cookie();
+  </script>
+</head>
+
+<body>
+</body>
+</html>
