@@ -198,7 +198,7 @@ function cf_convert_from_crud($crud) {
 
   if (!is_numeric($crud)) {
     if (module_exists('cf_error')) {
-      cf_error::not_numeric('crud');
+      cf_error::invalid_numeric('crud');
     }
 
     return $uncrud;
@@ -292,7 +292,7 @@ function cf_is_empty_or_non_string($argument_name, $variable, $severity = WATCHD
 
   if (!is_string($variable)) {
     if (module_exists('cf_error')) {
-      cf_error::not_string($argument_name, $severity);
+      cf_error::invalid_string($argument_name, $severity);
     }
 
     return TRUE;

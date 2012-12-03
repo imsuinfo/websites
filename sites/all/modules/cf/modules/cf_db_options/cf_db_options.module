@@ -486,7 +486,7 @@ function cf_db_options_machine_name_to_id($table, $name, $machine_name) {
 function cf_db_options_id_to_machine_name($table, $name, $id) {
   if (!cf_is_integer($id)) {
     if (module_exists('cf_error')) {
-      cf_error::not_numeric('id');
+      cf_error::invalid_numeric('id');
     }
 
     return FALSE;

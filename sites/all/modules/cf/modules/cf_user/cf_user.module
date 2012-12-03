@@ -41,7 +41,7 @@ function cf_user_get_rids($uid = NULL, $object = TRUE) {
   }
   elseif (!is_numeric($uid)) {
     if (module_exists('cf_error')) {
-      cf_error::not_numeric('uid');
+      cf_error::invalid_numeric('uid');
     }
 
     return FALSE;
@@ -115,7 +115,7 @@ function cf_user_get_rids($uid = NULL, $object = TRUE) {
 function cf_user_has_role($rid, $uid = NULL) {
   if (!is_numeric($rid)) {
     if (module_exists('cf_error')) {
-      cf_error::not_numeric('rid');
+      cf_error::invalid_numeric('rid');
     }
 
     return FALSE;
@@ -127,7 +127,7 @@ function cf_user_has_role($rid, $uid = NULL) {
   }
   elseif (!is_numeric($uid)) {
     if (module_exists('cf_error')) {
-      cf_error::not_numeric('uid');
+      cf_error::invalid_numeric('uid');
     }
 
     return FALSE;

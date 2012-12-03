@@ -87,7 +87,7 @@ function cf_error_invalid_variable($function_history, $argument_name, $why, arra
  * This is a compatibility function for cf-1.x.
  *
  * Do not use this.
- * Use cf_error::not_string() instead.
+ * Use cf_error::invalid_string() instead.
  *
  * @param array $function_history
  *   An array of function names, ie: array('0' => 'my_function_name').
@@ -99,7 +99,7 @@ function cf_error_invalid_variable($function_history, $argument_name, $why, arra
  */
 function cf_error_not_string($function_history, $argument_name, $severity = WATCHDOG_ERROR) {
   if (module_exists('cf_error')) {
-    cf_error::not_string($argument_name, $severity);
+    cf_error::invalid_string($argument_name, $severity);
   }
 }
 
@@ -211,7 +211,7 @@ function cf_error_missing_object_property($function_history, $argument_name, $pr
  * This is a compatibility function for cf-1.x.
  *
  * Do not use this.
- * Use cf_error::not_numeric() instead.
+ * Use cf_error::invalid_numeric() instead.
  *
  * @param array $function_history
  *   An array of function names, ie: array('0' => 'my_function_name').
@@ -223,7 +223,7 @@ function cf_error_missing_object_property($function_history, $argument_name, $pr
  */
 function cf_error_not_numeric($function_history, $argument_name, $severity = WATCHDOG_ERROR) {
   if (module_exists('cf_error')) {
-    cf_error::not_numeric($argument_name, $severity);
+    cf_error::invalid_numeric($argument_name, $severity);
   }
 }
 

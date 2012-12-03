@@ -66,7 +66,7 @@ function cf_http_get_response($server, $path, $port = 80) {
 
   if (!is_numeric($port)) {
     if (module_exists('cf_error')) {
-      cf_error::not_numeric('port');
+      cf_error::invalid_numeric('port');
     }
 
     return $results;
@@ -490,7 +490,7 @@ function cf_http_reduce_html_headers($text, $depth = 1, $preserve = TRUE) {
 
   if (!is_string($text)) {
     if (module_exists('cf_error')) {
-      cf_error::not_string('text');
+      cf_error::invalid_string('text');
     }
 
     return $results;

@@ -1,4 +1,4 @@
-<?php
+invalid<?php
 
 /**
  * @file
@@ -75,10 +75,28 @@ class cf_error {
    *   (optional) The severity of the message, as per RFC 3164. Possible values
    *   are WATCHDOG_ERROR, WATCHDOG_WARNING, etc.
    *
+   * @deprecated
+   *   invalid_string() should be used instead.
+   *
+   * @see: not_string()
+   */
+  public static function not_string($argument_name, $severity = WATCHDOG_ERROR) {
+    return self::invalid_string($argument_name, $severity);
+  }
+
+  /**
+   * Reports that a given argument is supposed to be a string but is not.
+   *
+   * @param string $argument_names
+   *   The variable name of the argument in question.
+   * @param int $severity
+   *   (optional) The severity of the message, as per RFC 3164. Possible values
+   *   are WATCHDOG_ERROR, WATCHDOG_WARNING, etc.
+   *
    * @see: watchdog()
    * @see: watchdog_severity_levels()
    */
-  public static function not_string($argument_name, $severity = WATCHDOG_ERROR) {
+  public static function invalid_string($argument_name, $severity = WATCHDOG_ERROR) {
     $error = new cf_error_code;
 
     if (empty($argument_name)) {
@@ -91,7 +109,7 @@ class cf_error {
 
     $error->set_severity($severity);
     self::p_load_backtrace($error);
-    self::p_not_string($error, $argument_name);
+    self::p_invalid_string($error, $argument_name);
 
     return $error;
   }
@@ -305,10 +323,29 @@ class cf_error {
    *   (optional) The severity of the message, as per RFC 3164. Possible values
    *   are WATCHDOG_ERROR, WATCHDOG_WARNING, etc.
    *
+   * @deprecated
+   *   invalid_numeric() should be used instead.
+   *
    * @see: watchdog()
    * @see: watchdog_severity_levels()
    */
   public static function not_numeric($argument_name, $severity = WATCHDOG_ERROR) {
+    return self::invalid_numeric($argument_name, $severity);
+  }
+
+  /**
+   * Reports that a given argument is supposed to be numeric but is not.
+   *
+   * @param string $argument_names
+   *   The variable name of the argument in question.
+   * @param int $severity
+   *   (optional) The severity of the message, as per RFC 3164. Possible values
+   *   are WATCHDOG_ERROR, WATCHDOG_WARNING, etc.
+   *
+   * @see: watchdog()
+   * @see: watchdog_severity_levels()
+   */
+  public static function invalid_numeric($argument_name, $severity = WATCHDOG_ERROR) {
     $error = new cf_error_code();
 
     if (empty($argument_name)) {
@@ -321,7 +358,7 @@ class cf_error {
 
     $error->set_severity($severity);
     self::p_load_backtrace($error);
-    self::p_not_numeric($error, $argument_name);
+    self::p_invalid_numeric($error, $argument_name);
 
     return $error;
   }
@@ -654,7 +691,7 @@ class cf_error {
    * @param string $argument_name
    *   The variable name of the argument in question.
    */
-  private static function p_not_string(cf_error_code $error, $argument_name) {
+  private static function p_invalid_string(cf_error_code $error, $argument_name) {
     self::p_invalid_variable($error, $argument_name, "Must be a string.", array());
   }
 
@@ -740,7 +777,7 @@ class cf_error {
    * @param string $argument_name
    *   The variable name of the argument in question.
    */
-  private static function p_not_numeric(cf_error_code $error, $argument_name) {
+  private static function p_invalid_numeric(cf_error_code $error, $argument_name) {
     self::p_invalid_variable($error, $argument_name, "Not a numeric value.", array());
   }
 
