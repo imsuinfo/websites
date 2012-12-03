@@ -2,7 +2,12 @@
 
 /**
  * @file
- * Install file for mcneese_content_formaats module.
+ * Install file for mcneese_content_formats module.
+ */
+
+/**
+ * @addtogroup mcneese_content_formats
+ * @{
  */
 
 /**
@@ -15,3 +20,7 @@ function mcneese_content_formats_install() {
     cf_settings_unregister($r->variable_name, $r->variable_type, $r->module);
   }
 }
+
+/**
+ * @} End of '@addtogroup mcneese_content_formats'.
+ */

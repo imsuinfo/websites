@@ -6,6 +6,11 @@
  */
 
 /**
+ * @addtogroup mcneese_management
+ * @{
+ */
+
+/**
  *
  */
 function mcneese_management_emergency_page() {
@@ -31,3 +36,7 @@ function mcneese_management_emergency_settings_page($form, &$form_state) {
 
   return $form;
 }
+
+/**
+ * @} End of '@addtogroup mcneese_management'.
+ */
