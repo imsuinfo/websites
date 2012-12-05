@@ -701,7 +701,6 @@ function cf_theme_safe_css_string_part($string) {
   return FALSE;
 }
 
-
 /**
  * @} End of '@defgroup cf_node Common Functionality - Theme'.
  */

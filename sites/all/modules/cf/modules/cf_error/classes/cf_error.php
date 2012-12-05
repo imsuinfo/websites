@@ -1,4 +1,4 @@
-invalid<?php
+<?php
 
 /**
  * @file
