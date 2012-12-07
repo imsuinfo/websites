@@ -156,10 +156,16 @@ function killfile_rules_actions_parameters($node_label) {
  */
 function killfile_rules_condition_node_is_deleted($node) {
   $function_history = array();
-  cf_error_append_history($function_history, __FUNCTION__);
+
+  if (!function_exists('cf_version_exists')) {
+    cf_error_append_history($function_history, __FUNCTION__);
+  }
 
   if (!is_object($node)){
-    cf_error_invalid_object($function_history, 'node', WATCHDOG_WARNING);
+    if (!function_exists('cf_version_exists')) {
+      cf_error_invalid_object($function_history, 'node', WATCHDOG_WARNING);
+    }
+
     return FALSE;
   }
 
@@ -180,8 +186,16 @@ function killfile_rules_condition_node_is_deleted($node) {
  *   TRUE/FALSE depending on if the node has killfile support enabled for its node type.
  */
 function killfile_rules_condition_content_is_using_killfile($node) {
+  $function_history = array();
+
+  if (!function_exists('cf_version_exists')) {
+    cf_error_append_history($function_history, __FUNCTION__);
+  }
+
   if (!is_object($node)){
-    cf_error_invalid_object($function_history, 'node', WATCHDOG_WARNING);
+    if (!function_exists('cf_version_exists')) {
+      cf_error_invalid_object($function_history, 'node', WATCHDOG_WARNING);
+    }
     return FALSE;
   }
 
@@ -203,10 +217,15 @@ function killfile_rules_condition_content_is_using_killfile($node) {
  */
 function killfile_delete_action($node, $author = NULL) {
   $function_history = array();
-  cf_error_append_history($function_history, __FUNCTION__);
+
+  if (!function_exists('cf_version_exists')) {
+    cf_error_append_history($function_history, __FUNCTION__);
+  }
 
   if (!is_object($node)){
-    cf_error_invalid_object($function_history, 'node');
+    if (!function_exists('cf_version_exists')) {
+      cf_error_invalid_object($function_history, 'node');
+    }
     return array('node' => $node);
   }
 
@@ -244,10 +263,15 @@ function killfile_delete_action($node, $author = NULL) {
  */
 function killfile_undelete_action($node, $author = NULL) {
   $function_history = array();
-  cf_error_append_history($function_history, __FUNCTION__);
+
+  if (!function_exists('cf_version_exists')) {
+    cf_error_append_history($function_history, __FUNCTION__);
+  }
 
   if (!is_object($node)){
-    cf_error_invalid_object($function_history, 'node');
+    if (!function_exists('cf_version_exists')) {
+      cf_error_invalid_object($function_history, 'node');
+    }
     return array('node' => $node);
   }
 
