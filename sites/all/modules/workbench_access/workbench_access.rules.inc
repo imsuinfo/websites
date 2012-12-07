@@ -204,11 +204,22 @@ function workbench_access_unassign_access_section_presave_rules_action($node, $a
 function workbench_access_load_access_section_rules_action($node) {
   $sections = array();
 
-  if (is_object($node) && property_exists($node, 'workbench_access_id')){
-    $sections = $node->workbench_access_id;
-
-    if (!is_array($sections)){
-      $sections = array($sections);
+  if (is_object($node)) {
+    if (property_exists($node, 'workbench_access_id')) {
+      if (is_array($node->workbench_access_id)) {
+        $sections = $node->workbench_access_id;
+      }
+      else {
+        $sections = array($node->workbench_access_id);
+      }
+    }
+    else if (property_exists($node, 'workbench_access')) {
+      if (is_array($node->workbench_access)) {
+        $sections = $node->workbench_access;
+      }
+      else {
+        $sections = array($node->workbench_access);
+      }
     }
   }
 
