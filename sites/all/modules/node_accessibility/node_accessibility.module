@@ -761,8 +761,6 @@ function node_accessibility_save_node_problems($nid, $vid, $reports, $function_h
     return FALSE;
   }
 
-  $function_history = $function_history;
-
   $tests_known = (array) quail_api_load_tests(array(), 'machine_name', $function_history);
   $problems = array();
 
