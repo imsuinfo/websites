@@ -16,17 +16,24 @@
  */
 function killfile_unkillfile_form($form, &$form_state, $node) {
   $function_history = array();
-  cf_error_append_history($function_history, __FUNCTION__);
+
+  if (!function_exists('cf_version_exists')) {
+    cf_error_append_history($function_history, __FUNCTION__);
+  }
 
   if (!is_array($form)){
-    cf_error_invalid_array($function_history, 'form');
+    if (!function_exists('cf_version_exists')) {
+      cf_error_invalid_array($function_history, 'form');
+    }
     return cf_page_not_accessible($form_state);
   }
 
   if (!isset($form['#id'])) $form['#id'] = '';
 
   if (!is_array($form)){
-    cf_error_invalid_array($function_history, 'form');
+    if (!function_exists('cf_version_exists')) {
+      cf_error_invalid_array($function_history, 'form');
+    }
     return cf_page_not_accessible($form_state, $form['#id']);
   }
 
@@ -35,7 +42,9 @@ function killfile_unkillfile_form($form, &$form_state, $node) {
   }
 
   if (!is_object($node)){
-    cf_error_invalid_object($function_history, 'node');
+    if (!function_exists('cf_version_exists')) {
+      cf_error_invalid_object($function_history, 'node');
+    }
     return cf_page_not_accessible($form_state, $form['#id']);
   }
 
@@ -76,10 +85,15 @@ function killfile_unkillfile_form($form, &$form_state, $node) {
  */
 function killfile_unkillfile_form_submit($form, &$form_state) {
   $function_history = array();
-  cf_error_append_history($function_history, __FUNCTION__);
+
+  if (!function_exists('cf_version_exists')) {
+    cf_error_append_history($function_history, __FUNCTION__);
+  }
 
   if (!is_array($form)){
-    cf_error_invalid_array($function_history, 'form');
+    if (!function_exists('cf_version_exists')) {
+      cf_error_invalid_array($function_history, 'form');
+    }
     return;
   }
 
