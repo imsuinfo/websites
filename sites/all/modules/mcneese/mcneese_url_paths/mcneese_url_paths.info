@@ -1,0 +1,16 @@
+name = McNeese - Url Path
+description = "Provides url path handling for McNeese State University"
+core = 7.x
+php = 5.3
+package = McNeese
+
+dependencies[] = cf
+dependencies[] = cf_error
+dependencies[] = workbench_access
+dependencies[] = workbench_moderation
+dependencies[] = workbench_menu
+dependencies[] = rules
+
+files[] = mcneese_url_paths.module
+files[] = mcneese_url_paths.rules.inc
+files[] = classes/mcneese_url_paths_handler.php
