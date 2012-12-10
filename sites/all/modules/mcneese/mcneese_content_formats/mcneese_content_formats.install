@@ -13,7 +13,7 @@
 /**
  * Implementation of hook_uninstall().
  */
-function mcneese_content_formats_install() {
+function mcneese_content_formats_uninstall() {
   $registered = cf_settings_get_registered(array('module_name' => 'mcneese_content_formats'), 'id');
 
   foreach ($registered as &$r) {
