@@ -48,41 +48,31 @@ function mcneese_html5_theme($existing, $type, $theme, $path) {
  */
 function theme_mcneese_tag($variables) {
   if (cf_is_empty_or_non_string('name', $variables['name'])) {
-    if (module_exists('cf_error')) {
-      cf_error::invalid_variable('variables[name]', t("Must be a valid non-empty string."));
-    }
+    cf_error::invalid_variable('variables[name]', t("Must be a valid non-empty string."));
 
     return '';
   }
 
   if (cf_is_empty_or_non_string('type', $variables['type'])) {
-    if (module_exists('cf_error')) {
-      cf_error::invalid_variable('variables[type]', t("Must be a valid non-empty string."));
-    }
+    cf_error::invalid_variable('variables[type]', t("Must be a valid non-empty string."));
 
     return '';
   }
 
   if (!is_array($variables['attributes'])) {
-    if (module_exists('cf_error')) {
-      cf_error::invalid_array('variables[type]');
-    }
+    cf_error::invalid_array('variables[type]');
 
     return '';
   }
 
   if (!is_bool($variables['open'])) {
-    if (module_exists('cf_error')) {
-      cf_error::invalid_bool('variables[open]');
-    }
+    cf_error::invalid_bool('variables[open]');
 
     return '';
   }
 
   if (!is_bool($variables['html5'])) {
-    if (module_exists('cf_error')) {
-      cf_error::invalid_bool('variables[html5]');
-    }
+    cf_error::invalid_bool('variables[html5]');
 
     return '';
   }

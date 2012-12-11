@@ -5,6 +5,7 @@ php = 5.3
 package = McNeese
 
 dependencies[] = cf
+dependencies[] = cf_error
 dependencies[] = cf_theme
 
 files[] = mcneese_ckeditor.module

@@ -52,9 +52,6 @@ function mcneese_content_form_node_type_form_alter(&$form, &$form_state, $form_i
  *   A form state
  */
 function mcneese_content_node_type_form_submit($form, &$form_state) {
-  $function_history = array();
-  cf_error_append_history($function_history, __FUNCTION__);
-
   drupal_alter('mcneese_content_node_type_form_submit', $form, $form_state);
 }
 

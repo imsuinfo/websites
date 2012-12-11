@@ -25,9 +25,7 @@ function mcneese_block_block_view_alter(&$data, $block) {
     $query->condition('delta', $block->delta);
   }
   catch (Exception $e) {
-    if (module_exists('cf_error')) {
-      cf_error::on_exception($e);
-    }
+    cf_error::on_exception($e);
 
     return;
   }
@@ -58,9 +56,7 @@ function mcneese_block_block_view_alter(&$data, $block) {
     }
   }
   catch (Exception $e) {
-    if (module_exists('cf_error')) {
-      cf_error::on_query_execution($e);
-    }
+    cf_error::on_query_execution($e);
 
     return;
   }
@@ -95,9 +91,7 @@ function mcneese_block_form_block_admin_configure_alter(&$form, &$form_state) {
       $query->condition('delta', $form['delta']['#value']);
     }
     catch (Exception $e) {
-      if (module_exists('cf_error')) {
-        cf_error::on_exception($e);
-    }
+      cf_error::on_exception($e);
 
       return FALSE;
     }
@@ -124,9 +118,7 @@ function mcneese_block_form_block_admin_configure_alter(&$form, &$form_state) {
       }
     }
     catch (Exception $e) {
-      if (module_exists('cf_error')) {
-        cf_error::on_query_execution($e);
-      }
+      cf_error::on_query_execution($e);
 
       return FALSE;
     }
@@ -193,9 +185,7 @@ function mcneese_block_form_block_admin_configure_submit($form, &$form_state) {
       $query->execute();
     }
     catch (Exception $e) {
-      if (module_exists('cf_error')) {
-        cf_error::on_query_execution($e);
-      }
+      cf_error::on_query_execution($e);
 
       throw $e;
     }
@@ -226,9 +216,7 @@ function mcneese_block_form_block_admin_configure_submit($form, &$form_state) {
       $query->execute();
     }
     catch (Exception $e) {
-      if (module_exists('cf_error')) {
-        cf_error::on_query_execution($e);
-      }
+      cf_error::on_query_execution($e);
 
       throw $e;
     }
@@ -247,9 +235,7 @@ function mcneese_block_module_uninstall($module_list) {
       $query->execute();
     }
     catch (Exception $e) {
-      if (module_exists('cf_error')) {
-        cf_error::on_query_execution($e);
-      }
+      cf_error::on_query_execution($e);
 
       throw $e;
     }
@@ -277,9 +263,7 @@ function mcneese_block_form_block_custom_block_delete_submit($form, &$form_state
     $query->execute();
   }
   catch (Exception $e) {
-    if (module_exists('cf_error')) {
-      cf_error::on_query_execution($e);
-    }
+    cf_error::on_query_execution($e);
 
     throw $e;
   }

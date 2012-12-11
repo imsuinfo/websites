@@ -5,6 +5,9 @@ php = 5.3
 package = McNeese
 
 dependencies[] = cf
+dependencies[] = cf_error
+dependencies[] = cf_settings
 
 files[] = mcneese_management.module
+files[] = mcneese_management.rules.inc
 files[] = pages/mcneese_management_emergency_page.inc

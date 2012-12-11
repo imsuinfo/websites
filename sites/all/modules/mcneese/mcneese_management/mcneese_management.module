@@ -33,43 +33,136 @@ function mcneese_management_menu() {
   $items = array();
 
   $items['admin/content/management/emergency'] = array(
-    'title' => "Emergency",
-    'description' => "View emergency status and/or manage emergency settings.",
-    'page callback' => 'mcneese_management_emergency_page',
-    'page arguments' => array(),
-    'file' => 'mcneese_management_emergency_page.inc',
-    'file path' => drupal_get_path('module', 'mcneese_management') . '/pages',
-    'access callback' => 'user_access',
-    'access arguments' => array('mcneese management emergency'),
-    'tab_parent' => 'admin/content/management/emergency',
-    'tab_root' => 'admin/content/management/emergency',
-    'type' => MENU_LOCAL_TASK,
-  );
-
-  $items['admin/content/management/emergency/settings'] = array(
     'title' => "Emergency Settings",
-    'description' => "Change emergency settings.",
+    'description' => "View emergency status and manage emergency settings.",
     'page callback' => 'drupal_get_form',
     'page arguments' => array('mcneese_management_emergency_settings_page'),
     'file' => 'mcneese_management_emergency_page.inc',
     'file path' => drupal_get_path('module', 'mcneese_management') . '/pages',
     'access callback' => 'user_access',
     'access arguments' => array('mcneese management emergency'),
-    'tab_parent' => 'admin/content/management/emergency',
-    'tab_root' => 'admin/content/management/emergency',
+    'tab_parent' => 'admin/content/management',
+    'tab_root' => 'admin/content/management',
     'type' => MENU_LOCAL_TASK,
+  );
+
+  $items['admin/content/management/emergency/autocomplete_nid'] = array(
+    'title' => '',
+    'page callback' => 'mcneese_management_autocomplete_nid',
+    'access callback' => 'user_access',
+    'access arguments' => array('mcneese management emergency'),
+    'type' => MENU_CALLBACK,
   );
 
   return $items;
 }
 
 /**
- * Implements hook_theme().
+ * Generates the JS array for workbench node id autocomplete fields.
+ *
+ * This pulls the first 15 results that match the specified string.
+ *
+ * @param string $string
+ *   A string to match node titles against.
+ * @return array
+ *   An array of string matches.
  */
-function mcneese_management_theme($existing, $type, $theme, $path) {
-  $themes = array();
+function mcneese_management_autocomplete_nid($string) {
+  if (!is_string($string)) {
+    cf_error::not_string('string');
 
-  return $themes;
+    return array();
+  }
+
+  $matches = array();
+  $results = db_query_range('SELECT nid, title FROM {node} WHERE LOWER(title) LIKE LOWER(:string) ORDER BY title', 0, 9, array(':string' => $string . '%'));
+
+  foreach ($results as $node) {
+    $matches[$node->nid] = check_plain($node->title);
+  }
+
+  if (module_exists('devel')) {
+    $GLOBALS['devel_shutdown'] = FALSE;
+  }
+
+  if (count($matches) < 9) {
+    $results = db_query_range('SELECT nid, title FROM {node} WHERE LOWER(title) LIKE LOWER(:string) ORDER BY title', 0, 9 - count($matches), array(':string' => '%' . $string . '%'));
+
+    foreach ($results as $node) {
+      $matches[$node->nid] = check_plain($node->title);
+    }
+  }
+
+  drupal_json_output($matches);
+}
+
+/**
+ * Get the status of the emergency mode.
+ *
+ * @return bool
+ *   TRUE when in emergency mode, FALSE otherwise.
+ */
+function mcneese_management_get_emergency_mode() {
+  return variable_get('emergency_mode', FALSE);
+}
+
+/**
+ * Get the node id of the emergency node.
+ *
+ * @return int
+ *   The emergency node id.
+ */
+function mcneese_management_get_emergency_node() {
+  return variable_get('emergency_node', 0);
+}
+
+/**
+ * Set the status of the emergency mode.
+ *
+ * @param bool $emergency_mode
+ *   TRUE to enable emergency mode, FALSE to disable.
+ */
+function mcneese_management_set_emergency_mode($emergency_mode) {
+  if (is_bool($emergency_mode)) {
+    $mode = $emergency_mode;
+  }
+  else if ($emergency_mode) {
+    $mode = TRUE;
+  }
+  else {
+    $mode = FALSE;
+  }
+
+  if ($mode == TRUE && !mcneese_management_get_emergency_node() > 0) {
+    // cannot set emergency mode to TRUE if there is no emergency node defined.
+    return;
+  }
+
+  $maintenance_mode = variable_get('maintenance_mode', FALSE);
+ 
+  if ($mode == TRUE || $maintenance_mode != FALSE) {
+    variable_set('maintenance_mode', $mode);
+  }
+
+  variable_set('emergency_mode', $mode);
+
+  // caches must be flushed on mode change for the change to be noticed.
+  _drupal_flush_css_js();
+  drupal_clear_css_cache();
+  drupal_clear_js_cache();
+  cache_clear_all(NULL, 'cache_block');
+  cache_clear_all(NULL, 'cache_page');
+  cache_clear_all(NULL, 'cache_menu');
+}
+
+/**
+ * Set the node id of the emergency node.
+ *
+ * @param int $node_id
+ *   The emergency node id.
+ */
+function mcneese_management_set_emergency_node($node_id) {
+  variable_set('emergency_node', $node_id);
 }
 
 

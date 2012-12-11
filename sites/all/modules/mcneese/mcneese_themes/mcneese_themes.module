@@ -78,9 +78,7 @@ function mcneese_themes_theme_registry_alter(&$theme_registry) {
  */
 function theme_items_list($vars) {
   if (!is_array($vars['items'])) {
-    if (module_exists('cf_error')) {
-      cf_error::invalid_array('vars[items]');
-    }
+    cf_error::invalid_array('vars[items]');
 
     return '';
   }
