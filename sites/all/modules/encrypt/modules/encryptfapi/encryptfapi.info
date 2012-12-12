@@ -1,0 +1,16 @@
+name = Encrypt Form API
+description = Adds '#encrypt' property to Form API
+core = 7.x
+package = Encryption
+
+files[] = encryptfapi.module
+files[] = encryptfapi.test
+
+dependencies[] = encrypt
+
+; Information added by drupal.org packaging script on 2012-10-01
+version = "7.x-2.0-beta3"
+core = "7.x"
+project = "encrypt"
+datestamp = "1349108467"
+

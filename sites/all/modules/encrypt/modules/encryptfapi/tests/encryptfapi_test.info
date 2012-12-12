@@ -1,0 +1,13 @@
+name = Encrypt FAPI Test
+description = Module for testing the #encrypt FAPI property
+package = Testing
+core = 7.x
+version = VERSION
+hidden = TRUE
+
+; Information added by drupal.org packaging script on 2012-10-01
+version = "7.x-2.0-beta3"
+core = "7.x"
+project = "encrypt"
+datestamp = "1349108467"
+

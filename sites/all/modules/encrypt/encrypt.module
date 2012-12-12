@@ -1,0 +1,306 @@
+<?php
+
+/**
+ * @file
+ * Main Encrypt Drupal File
+ *
+ * This file holds the main Drupal hook functions,
+ * and API functions.
+ *
+ * @ingroup encrypt
+ */
+
+/**
+ * @defgroup encrypt Encrypt: Provides an API for two-way encryption
+ *
+ * Provides an API for two-way encryption.  Drupal has no native way
+ * to do two-way encryption.  PHP's ability to do two-way encryption
+ * is a little more involved than most people care to get into.  This
+ * module provides an easy way to encrypt() and decrypt().
+ */
+
+/**
+ * Implements hook_help().
+ */
+function encrypt_help($path, $arg) {
+  switch ($path) {
+    case 'admin/help#encrypt':
+      $output = '<p>' . t("The encrypt module Provides an API for two-way encryption. Drupal has no native way to do two-way encryption. PHP's ability to do two-way encryption is a little more involved than most people care to get into.  This module provides an easy way to encrypt() and decrypt().") . '</p>';
+
+      if (!function_exists('mcrypt_encrypt')) {
+        $output .= '<p>' . t('MCrypt is currently not installed or configured properly on your server. If you would like to use the "MCrypt AES 256" method for encryption (highly recommended), follow the instructions for <a href="http://www.php.net/manual/en/mcrypt.setup.php">installing MCrypt</a>.') . '</p>';
+      }
+
+      return $output;
+  }
+}
+
+/**
+ * Implements hook_menu().
+ */
+function encrypt_menu() {
+  $items = array();
+
+  $items['admin/config/system/encrypt'] = array(
+    'title' => 'Encrypt',
+    'description' => 'Main settings for encryption.',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('encrypt_admin_settings'),
+    'access arguments' => array('administer encrypt'),
+    'file' => 'includes/encrypt.admin.inc',
+    'type' => MENU_NORMAL_ITEM,
+  );
+
+  return $items;
+}
+
+/**
+ * Implements hook_permission().
+ */
+function encrypt_permission() {
+  return array(
+    'administer encrypt' => array(
+      'title' => t('Administer encryption settings'),
+    ),
+  );
+}
+
+/**
+ * Implements hook_ctools_plugin_type().
+ *
+ * Tell ctools about our plugin types.
+ */
+function encrypt_ctools_plugin_type() {
+  $plugins = array();
+
+  $plugins['encryption_methods'] = array(
+    'cache' => TRUE,
+    'cache table' => 'cache',
+    'process' => '_encrypt_plugin_process',
+    'defaults' => array(
+      'title' => '',
+      'description' => '',
+      'encrypt callback' => NULL,
+      'dependency callback' => NULL,
+      'dependency errors' => NULL,
+      'settings form' => NULL,
+    ),
+  );
+  $plugins['key_providers'] = array(
+    'cache' => TRUE,
+    'cache table' => 'cache',
+    'process' => '_encrypt_plugin_process',
+    'defaults' => array(
+      'title' => '',
+      'description' => '',
+      'key callback' => NULL,
+      'dependency callback' => NULL,
+      'dependency errors' => NULL,
+      'settings form' => NULL,
+    ),
+  );
+
+  return $plugins;
+}
+
+/**
+ * Fetch metadata on a specific encryption method plugin.
+ *
+ * @param mixed $method
+ *   Name of an encryption method. If no $method is specified, this function
+ *   will return info about the default encryption method.
+ *
+ * @return array
+ *   An array with information about the requested encryption method.
+ */
+function encrypt_get_encryption_method($method = NULL) {
+  // If no $method is passed, get the default method.
+  $method = $method ? $method : variable_get('encrypt_encryption_method', 'default');
+  ctools_include('plugins');
+  return ctools_get_plugins('encrypt', 'encryption_methods', $method);
+}
+
+/**
+ * Returns information for all encryption methods.
+ *
+ * @param boolean $all
+ *   A flag indicating whether to include plugins with unmet dependencies.
+ *
+ * @param boolean $reset
+ *   A flag indicating whether to clear the plugin cache. Otherwise, this
+ *   function may return stale data if plugin properties have changed.
+ *
+ * @return array
+ *   An array of arrays with information about all available encryption methods.
+ */
+function encrypt_get_encryption_methods($all = TRUE, $reset = FALSE) {
+  // Clear the plugin cache if necessary.
+  if ($reset) {
+    _encrypt_clear_plugin_cache('encryption_methods');
+  }
+
+  ctools_include('plugins');
+  $methods = ctools_get_plugins('encrypt', 'encryption_methods');
+
+  return $all ? $methods : array_filter($methods, '_encrypt_plugin_is_valid');
+}
+
+/**
+ * Fetch metadata on a specific key provider plugin.
+ *
+ * @param mixed $provider
+ *   Name of a key provider method. If no $provider is specified, this function
+ *   will return info about the default key provider.
+ *
+ * @return array
+ *   An array with information about the requested key provider.
+ */
+function encrypt_get_key_provider($provider = NULL) {
+  // If no $provider is passed, get the default provider.
+  $provider = $provider ? $provider : variable_get('encrypt_key_provider', 'drupal_private_key');
+  ctools_include('plugins');
+  return ctools_get_plugins('encrypt', 'key_providers', $provider);
+}
+
+/**
+ * Returns info for all encryption key providers.
+ *
+ * @param boolean $all
+ *   A flag indicating whether to include plugins with unmet dependencies.
+ *
+ * @param boolean $reset
+ *   A flag indicating whether to clear the plugin cache. Otherwise, this
+ *   function may return stale data if plugin properties have changed.
+ *
+ * @return array
+ *   An array of arrays with information about all available key providers.
+ */
+function encrypt_get_key_providers($all = TRUE, $reset = FALSE) {
+  if ($reset) {
+    _encrypt_clear_plugin_cache('key_providers');
+  }
+
+  ctools_include('plugins');
+  $providers = ctools_get_plugins('encrypt', 'key_providers');
+
+  return $all ? $providers : array_filter($providers, '_encrypt_plugin_is_valid');
+}
+
+/**
+ * Get the key from a key provider.
+ *
+ * @param mixed $provider
+ *   The key provider to retrieve the key for. Can be either the fully-loaded
+ *   provider (from encrypt_get_key_provider() or the name of the provider. If
+ *   NULL, it assumes the default key provider.
+ *
+ * @return string
+ *   The key.
+ */
+function encrypt_get_key_from_key_provider($provider = NULL) {
+  if (!is_array($provider)) {
+    $provider = encrypt_get_key_provider($provider);
+  }
+  $key_function = ctools_plugin_get_function($provider, 'key callback');
+  $key = call_user_func($key_function, $provider['settings']);
+  return $key;
+}
+
+/**
+ * Additional processing for plugins.
+ */
+function _encrypt_plugin_process(&$plugin, $info) {
+  // Attach the plugins settings.
+  $plugin['settings'] = variable_get("encrypt_{$plugin['plugin type']}_{$plugin['name']}_settings", array());
+
+  // Calculate dependencies and attach any errors.
+  if ($plugin['dependency callback'] && $dep_function = ctools_plugin_get_function($plugin, 'dependency callback')) {
+    $plugin['dependency errors'] = call_user_func($dep_function);
+  }
+}
+
+/**
+ * Helper function to determine if a plugin has unmet dependencies. Most
+ * helpful in conjunction with array_filter().
+ *
+ * @param $plugin array
+ *   The plugin to check.
+ *
+ * @return boolean
+ *   Whether or not the plugin is valid (has no unmet dependencies).
+ */
+function _encrypt_plugin_is_valid($plugin) {
+  if (isset($plugin['dependency errors']) && !empty($plugin['dependency errors'])) {
+    return FALSE;
+  }
+  else {
+    return TRUE;
+  }
+}
+
+/**
+ * Helper function to clear encrypt plugin caches.
+ */
+function _encrypt_clear_plugin_cache($type = NULL) {
+  if ($type) {
+    cache_clear_all("plugins:encrypt:$type", 'cache');
+  }
+  else {
+    cache_clear_all('plugins:encrypt:', 'cache', TRUE);
+  }
+}
+
+/**
+ * Encrypt
+ *
+ * Encrypt text.
+ *
+ * @param string $text
+ *   Text to encrypt
+ *
+ * @param array $options
+ *   Array of options for encryption
+ *
+ * @param mixed $method
+ *   String name of method to use. Uses setting default if NULL
+ *
+ * @return string
+ *   A serialized array containing the encrypted text and encryption method.
+ */
+function encrypt($text = '', $options = array(), $method = NULL, $key_provider = NULL) {
+  module_load_include('inc', 'encrypt', 'includes/encrypt.encrypt');
+  return _encrypt_decrypt('encrypt', $text, $options, $method, $key_provider);
+}
+
+/**
+ * Decrypt
+ *
+ * Decrypt text.
+ *
+ * @param string $text
+ *   Text to decrypt
+ *
+ * @param array $options
+ *   Array of options for decryption
+ *
+ * @param mixed $method
+ *   String name of method to use. Uses setting default if NULL
+ *
+ * @return string
+ *   Decrypted text
+ */
+function decrypt($text = '', $options = array(), $method = NULL, $key_provider = NULL) {
+  module_load_include('inc', 'encrypt', 'includes/encrypt.encrypt');
+  return _encrypt_decrypt('decrypt', $text, $options, $method, $key_provider);
+}
+
+/**
+ * Implements hook_ctools_plugin_directory().
+ *
+ * Tell ctools about our plugins.
+ */
+function encrypt_ctools_plugin_directory($module, $plugin) {
+  if ($module == 'encrypt') {
+    return 'plugins/' . $plugin;
+  }
+}
