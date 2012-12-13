@@ -501,18 +501,10 @@ function _ldap_authentication_user_login_authenticate_validate(&$form_state) {
   * being used here.
   */
 
+  $form_state['uid'] = $account->uid;
 
-  /**
-   * without doing the user_login_submit,
-   * [#1009990]
-   *
-   */
-  $fake_form_state = array('uid' => $account->uid);
-  user_login_submit(array(), $fake_form_state);
-  global $user;
-  $form_state['uid'] = $user->uid;
-  return $user;
-
+  // the uid is returned so that special login modules, namely ldap sso, can manually call this function.
+  return $account->uid;
 }
 
 

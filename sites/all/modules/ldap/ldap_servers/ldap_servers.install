@@ -17,7 +17,7 @@ function ldap_servers_install() {
   if (! ($key = variable_get('ldap_servers_encrypt_key', NULL))) {
  	module_load_include('inc', 'ldap_servers','ldap_servers.functions');
     ldap_server_module_load_include('inc', 'ldap_servers', 'ldap_servers.encryption');
-    $key = ldap_servers_random_salt(10);
+    $key = drupal_random_bytes(10);
     variable_set('ldap_servers_encrypt_key', $key);
   }
 

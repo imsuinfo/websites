@@ -149,7 +149,18 @@ function ldap_sso_user_login_sso() {
         ),
         'sso_login' => TRUE,
       );
-      $user = ldap_authentication_user_login_authenticate_validate(array(), $fake_form_state);
+
+      $user_id = ldap_authentication_user_login_authenticate_validate(array(), $fake_form_state);
+
+      /**
+       * without doing the user_login_submit,
+       * [#1009990]
+       *
+       */
+      $fake_form_state = array('uid' => $user_id);
+      user_login_submit(array(), $fake_form_state);
+      global $user;
+
       if ($user && $user->uid > 0) {
         if ($auth_conf->seamlessLogin == 1) {
           setcookie("seamless_login", 'auto login', time() + $auth_conf->cookieExpire, base_path(), "");
