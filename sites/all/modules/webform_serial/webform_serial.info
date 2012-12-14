@@ -1,0 +1,13 @@
+name = Webform Serial
+description = Webform component that adds an auto-increment counter to forms.
+core = 7.x
+package = Webform
+
+dependencies[] = webform
+
+; Information added by drupal.org packaging script on 2012-08-25
+version = "7.x-1.x-dev"
+core = "7.x"
+project = "webform_serial"
+datestamp = "1345857054"
+
