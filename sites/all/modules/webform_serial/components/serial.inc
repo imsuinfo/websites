@@ -36,6 +36,8 @@ function _webform_render_serial($component, $value, $format = 'text') {
     '#format' => 'text',
     '#markup' => $value[0],
     '#webform_component' => $component,
+    '#field_suffix' => NULL,
+    '#field_prefix' => NULL,
   );
 }
 
@@ -51,6 +53,8 @@ function _webform_display_serial($component, $value, $format = 'text') {
     '#format' => $format,
     '#value' => isset($value[0]) ? $value[0] : '',
     '#translatable' => array('title'),
+    '#field_suffix' => NULL,
+    '#field_prefix' => NULL,
   );
 }
 
