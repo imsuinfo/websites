@@ -46,6 +46,20 @@ function term_ref_autocomplete_callback($field_name, $raw_tags_typed = '') {
     if (!empty($tags_typed)) {
       $query->condition('t.tid', $tids, 'NOT IN');
     }
+
+    if (module_exists('workbench_access')) {
+      global $user;
+
+      if (!isset($user->workbench_access)) {
+        workbench_access_user_load_data($user);
+      }
+
+      $tree = workbench_access_get_user_tree($user);
+      $tree_tids = array_keys($tree);
+
+      $query->condition('t.tid', $tree_tids, 'IN');
+    }
+
     // Select rows that match by term name.
     $tags_return = $query
       ->fields('t', array('tid', 'name'))

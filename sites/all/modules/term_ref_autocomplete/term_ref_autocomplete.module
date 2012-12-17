@@ -192,13 +192,53 @@ function term_ref_autocomplete_taxonomy_autocomplete_validate($element, &$form_s
     $value_ref = &$form_state['values'][$element['#field_name']][$element['#language']];
   }
   
-  $tids = _term_ref_autocomplete_parse_input($value_ref['names']);
-  if (!empty($tids)) {
-    $terms = taxonomy_term_load_multiple($tids);
+  $named_tags = _term_ref_autocomplete_parse_input_named($value_ref['names']);
+  $tids = array_keys($named_tags);
+  if (empty($tids)) {
+    if (!empty($value_ref['names'])) {
+      form_set_error($element['#field_name'], t('No valid terms have been specified!'));
+      drupal_set_message("value ref = " . print_r($value_ref, TRUE));
+    }
+  }
+  else {
+    if (module_exists('workbench_access')) {
+      global $user;
+
+      if (!isset($user->workbench_access)) {
+        workbench_access_user_load_data($user);
+      }
+
+      $tree = workbench_access_get_user_tree($user);
+      $invalid_terms = array();
+      $valid_terms = array();
+      foreach ($tids as $tid) {
+        if (isset($tree[$tid])) {
+          $valid_terms[] = $tid;
+        }
+        else {
+          $invalid_terms[] = check_plain($named_tags[$tid] . ' [' . $tid . ']');
+        }
+      }
+
+      if (!empty($terms)) {
+        form_set_error($element['#field_name'], t('You may not assign this content to: !terms', array('!terms' => implode(', ', $terms))));
+      }
+      else {
+        $terms = taxonomy_term_load_multiple($valid_terms);
+
+        // These need to be stored in a zero-indexed array as nested arrays instead of objects
+        foreach ($terms as $term) {
+          $values[] = (array)$term;
+        }
+      }
+    }
+    else {
+      $terms = taxonomy_term_load_multiple($tids);
     
-    // These need to be stored in a zero-indexed array as nested arrays instead of objects
-    foreach ($terms as $term) {
-      $values[] = (array)$term;
+      // These need to be stored in a zero-indexed array as nested arrays instead of objects
+      foreach ($terms as $term) {
+        $values[] = (array)$term;
+      }
     }
   }
   
@@ -216,5 +256,22 @@ function _term_ref_autocomplete_parse_input($value) {
     $tags = $matches[1];
   }
   
+  return $tags;
+}
+
+/**
+ * Parses the input coming from the form element, either via AJAX calls or element validation and returns array of term IDs
+ *
+ * This also returns the name of the term with the tid.
+ */
+function _term_ref_autocomplete_parse_input_named($value) {
+  $tags = array();
+  $matched = preg_match_all('/([^,]+)\[\s*tid\s*:\s*(\d+)\s*\]/', $value, $matches);
+
+  $i = 0;
+  for (; $i < $matched; $i++) {
+    $tags[$matches[2][$i]] = $matches[1][$i];
+  }
+
   return $tags;
 }
