@@ -183,6 +183,7 @@ function _workbench_access_get_node_section_names($node) {
         $sections[$node->nid][$access_id] = $info['name'];
       }
     }
+
   }
 
   return $sections[$node->nid];

@@ -28,7 +28,7 @@ function workbench_access_rules_condition_info() {
 
    $items['contents_current_access_section'] = array(
      'group' => t("Node"),
-     'label' => t("Contents current access control section"),
+     'label' => t("Content's current access control section"),
      'base' => 'workbench_access_rules_condition_contents_current_access_section',
      'parameter' => array(
        'node' => array('type' => 'node', 'label' => t("Content")),
@@ -102,9 +102,9 @@ function workbench_access_rules_action_info() {
       ),
     ),
     'provides' => array(
-      'workbench_access_sections' => array(
+      'workbench_access_section' => array(
         'type' => 'list<taxonomy_term>',
-        'label' => t("Workbench Access Sections"),
+        'label' => t("Workbench Access States"),
       ),
     ),
   );
@@ -122,7 +122,7 @@ function workbench_access_rules_action_info() {
  *   TRUE/FALSE depending on if the content is using workbench access control.
  */
 function workbench_access_rules_condition_content_is_using_workbench_access($node) {
-  if (!is_object($node)) {
+  if (!is_object($node) || !property_exists($node, 'workbench_access')) {
     return FALSE;
   }
 
@@ -141,15 +141,15 @@ function workbench_access_rules_condition_content_is_using_workbench_access($nod
  *  TRUE/FALSE depending on if the nodes current section matches selected section.
  */
 function workbench_access_rules_condition_contents_current_access_section($node, $access_section) {
-  if (!is_object($node) || !property_exists($node, 'workbench_access_id')) {
+  if (!is_object($node) || !property_exists($node, 'workbench_access')) {
     return FALSE;
   }
 
-  if (is_array($node->workbench_access_id)){
-   return in_array($access_section, $node->workbench_access_id);
+  if (is_array($node->workbench_access)) {
+   return in_array($access_section, $node->workbench_access);
   }
 
-  return $node->workbench_access_id == $access_section;
+  return $node->workbench_access == $access_section;
 }
 
 /**
@@ -165,7 +165,7 @@ function workbench_access_rules_condition_contents_current_access_section($node,
  *   An array containing the node object stored in the key called 'node'.
  */
 function workbench_access_assign_access_section_presave_rules_action($node, $access_section) {
-  if (is_object($node) && !empty($access_section)){
+  if (is_object($node) && !empty($access_section)) {
     actions_do('workbench_access_assign_section_presave_action', $node, array('section' => $access_section));
   }
 
@@ -185,7 +185,7 @@ function workbench_access_assign_access_section_presave_rules_action($node, $acc
  *   An array containing the node object stored in the key called 'node'.
  */
 function workbench_access_unassign_access_section_presave_rules_action($node, $access_section) {
-  if (is_object($node) && !empty($access_section)){
+  if (is_object($node) && !empty($access_section)) {
     actions_do('workbench_access_unassign_section_presave_action', $node, array('section' => $access_section));
   }
 
@@ -204,25 +204,13 @@ function workbench_access_unassign_access_section_presave_rules_action($node, $a
 function workbench_access_load_access_section_rules_action($node) {
   $sections = array();
 
-  if (is_object($node)) {
-    if (property_exists($node, 'workbench_access_id')) {
-      if (is_array($node->workbench_access_id)) {
-        $sections = $node->workbench_access_id;
-      }
-      else {
-        $sections = array($node->workbench_access_id);
-      }
-    }
-    else if (property_exists($node, 'workbench_access')) {
-      if (is_array($node->workbench_access)) {
-        $sections = $node->workbench_access;
-      }
-      else {
-        $sections = array($node->workbench_access);
-      }
+  if (is_object($node) && property_exists($node, 'workbench_access')) {
+    $sections = $node->workbench_access;
+
+    if (!is_array($sections)){
+      $sections = array($sections);
     }
   }
 
   return array('node' => $node, 'workbench_access_sections' => $sections);
 }
-

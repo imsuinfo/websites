@@ -19,6 +19,9 @@ function menu_workbench_access_info() {
       'access_type_id' => array_filter(variable_get('workbench_access_menu', array('main-menu'))),
       'description' => t('Uses the menu system for assigning hierarchical access control.'),
       'configuration' => 'menu_workbench_access_configuration',
+      'form_field' => 'menu',
+      'storage_column' => 'mlid',
+      'translatable' => FALSE,
       'node_table' => 'workbench_access_node',
       'query_field' => 'access_id',
       'field_table' => 'workbench_access_node',
@@ -108,27 +111,25 @@ function menu_workbench_access_tree($info, $keys) {
       $items[$key] = 0;
     }
   }
+  $tree = array();
   foreach ($items as $name => $mlid) {
     $data = menu_load($name);
-    $tree[$name] = array(
-      'access_id' => $data['menu_name'],
-      'access_type_id' => $data['menu_name'],
-      'name' => $data['title'],
-      'description' => $data['description'],
-      'weight' => 0,
-      'depth' => 0,
-      'parent' => 0,
-    );
+    if ($mlid == 0) {
+      $tree[$name] = array(
+        'access_id' => $data['menu_name'],
+        'access_type_id' => $data['menu_name'],
+        'name' => $data['title'],
+        'description' => $data['description'],
+        'weight' => 0,
+        'depth' => 0,
+        'parent' => 0,
+      );
+    }
     $menu = menu_tree_all_data($name);
     foreach ($menu as $link) {
       // Ensure that we start at the top of the current request.
-      if ($mlid > 0 && $link['link']['mlid'] == $mlid) {
-        $tree = array();
-        _workbench_access_menu_build_tree($tree, $link);
-      }
-      elseif ($mlid == 0) {
-        _workbench_access_menu_build_tree($tree, $link);
-      }
+      // If mlid is 0, we are at the root.
+      _workbench_access_menu_build_tree($tree, $link, $mlid);
     }
   }
   if ($keys) {
@@ -144,21 +145,26 @@ function menu_workbench_access_tree($info, $keys) {
  *   The workbench access tree being built.
  * @param $link
  *   The menu link being inspected.
+ * @param $mlid
+ *   The menu link id being acted upon. May be 0 if this is the top-level menu
+ *   item.
  */
-function _workbench_access_menu_build_tree(&$tree, $link) {
+function _workbench_access_menu_build_tree(&$tree, $link, $mlid = 0) {
   $item = (object) $link['link'];
-  $tree[$item->mlid] = array(
-    'access_id' => $item->mlid,
-    'access_type_id' => $item->menu_name,
-    'name' => $item->link_title,
-    'description' => isset($item->options['attributes']['title']) ? $item->options['attributes']['title'] : '',
-    'weight' => $item->weight,
-    'depth' => $item->depth,
-    'parent' => ($item->plid == 0) ? $item->menu_name : $item->plid,
-  );
+  if ($item->mlid == $mlid || $mlid === 0) {
+    $tree[$item->mlid] = array(
+      'access_id' => $item->mlid,
+      'access_type_id' => $item->menu_name,
+      'name' => $item->link_title,
+      'description' => isset($item->options['attributes']['title']) ? $item->options['attributes']['title'] : '',
+      'weight' => $item->weight,
+      'depth' => $item->depth,
+      'parent' => ($item->plid == 0) ? $item->menu_name : $item->plid,
+    );
+  }
   if (!empty($link['below'])) {
     foreach ($link['below'] as $below) {
-      _workbench_access_menu_build_tree($tree, $below);
+      _workbench_access_menu_build_tree($tree, $below, $below['link']['mlid']);
     }
   }
 }
@@ -169,6 +175,7 @@ function _workbench_access_menu_build_tree(&$tree, $link) {
  * Load data for a menu.
  */
 function menu_workbench_access_load($scheme) {
+  $data = array();
   // This might be a menu or a single menu item.
   if ($menu = menu_load($scheme['access_id'])) {
     $menu = (object) $menu;
@@ -178,8 +185,8 @@ function menu_workbench_access_load($scheme) {
       'description' => $menu->description,
     );
   }
-  else {
-    $item = (object) menu_link_load($scheme['access_id']);
+  elseif ($item = menu_link_load($scheme['access_id'])) {
+    $item = (object) $item;
     $data = array(
       'access_id' => $item->mlid,
       'name' => $item->link_title,
@@ -188,6 +195,7 @@ function menu_workbench_access_load($scheme) {
   }
   return $data;
 }
+
 
 /**
  * Implements hook_menu_delete().
@@ -220,6 +228,15 @@ function workbench_access_menu_link_insert($link) {
     );
     workbench_access_section_save($section);
   }
+}
+
+/**
+ * Implements hook_menu_link_update().
+ *
+ * If a menu link is updated, refresh the tree.
+ */
+function workbench_access_menu_link_update($link) {
+  workbench_access_reset_tree();
 }
 
 /**
