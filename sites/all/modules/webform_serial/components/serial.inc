@@ -16,14 +16,58 @@ function _webform_defaults_serial() {
     'value' => '',
     'mandatory' => 0,
     'extra' => array(
-      'private' => 1,
+      'initial' => '',
+      'increment' => 1,
+      'private' => TRUE,
     ),
   );
 }
 
 function _webform_edit_serial($component) {
-  drupal_set_message(t('Do not disable the <em>Private</em> checkbox.'), 'warning');
-  return array();
+  drupal_set_message(t('Please do not disable the <em>Private</em> checkbox.'), 'warning');
+
+  $form = array();
+  $form['extra']['initial'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Initial value'),
+    '#default_value' => $component['extra']['initial'],
+    '#description' => t('The initial value of the field. Leave blank to start counting at 1.'),
+    '#size' => 8,
+    '#maxlength' => 1024,
+    '#weight' => 0,
+    '#element_validate' => array('_webform_edit_serial_validate'),
+  );
+  $form['extra']['increment'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Increment value'),
+    '#default_value' => empty($component['extra']['increment']) ? 1 : $component['extra']['increment'],
+    '#description' => t('The increment value of the field. Each time the form is submitted, add this many to the serial field.'),
+    '#size' => 8,
+    '#maxlength' => 1024,
+    '#weight' => 0,
+    '#element_validate' => array('_webform_edit_serial_validate'),
+  );
+  return $form;
+}
+
+/**
+ * Validation of serial edit form items.
+ */
+function _webform_edit_serial_validate($element, &$form_state) {
+  $values = $form_state['values']['extra'];
+  switch ($element['#name']) {
+    case 'extra[initial]':
+      if (!empty($values['initial']) && !is_numeric($values['initial'])) {
+        form_error($element, t('Initial value needs to be empty or a number.'));
+      }
+      break;
+
+    case 'extra[increment]':
+      if (empty($values['increment']) || !is_numeric($values['increment'])) {
+        form_error($element, t('Increment value needs to be a number and may not be zero.'));
+      }
+      break;
+  }
 }
 
 /**
@@ -135,7 +179,17 @@ function webform_serial_webform_submission_presave($node, &$submission) {
       // Cast this to int, because the first query will return NULL.
       $current = (int)$query->execute()->fetchField();
 
-      $submission->data[$cid]['value'] = array(0 => ++$current);
+      // Calculate the increment (default to 1).
+      $increment = empty($component['extra']['increment']) ? 1 : (int)$component['extra']['increment'];
+
+      // If there is no current (first entry) then check if we have an
+      // initial value we should be using.
+      if (empty($current)) {
+        // Subtract $increment because we're incrementing again below.
+        $current = (int)$component['extra']['initial'] - $increment;
+      }
+
+      $submission->data[$cid]['value'] = array(0 => $current + $increment);
     }
   }
 }
