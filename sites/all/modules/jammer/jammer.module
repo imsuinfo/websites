@@ -110,50 +110,59 @@ function jammer_form_alter(&$form, &$form_state, $form_id) {
 //  }
 
   if (strpos($form['#id'], 'node-form') !== FALSE) {
-    if (in_array($form['type']['#value'], variable_get('jammer_body_options', array())) && !user_access('view body options')) {
-      $form['body']['#access'] = FALSE;
+    // jammer_publishing_options   
+    if (variable_get('jammer_node_promoted', 0) == 1) {
+      $form['options']['promote']['#access'] = FALSE;
     }
-    if (in_array($form['type']['#value'], variable_get('jammer_menu_options', array())) && !user_access('view menu options')) {
-      $form['menu']['#access'] = FALSE;
-    }
-    if (in_array($form['type']['#value'], variable_get('jammer_author_options', array())) && !user_access('view author options')) {
-      $form['author']['#access'] = FALSE;
-    }
-    if (in_array($form['type']['#value'], variable_get('jammer_path_options', array())) && !user_access('view path options')) {
-      $form['path']['#access'] = FALSE;
-    }
-    if (in_array($form['type']['#value'], variable_get('jammer_comment_settings', array())) && !user_access('view comment settings')) {
-      $form['comment_settings']['#access'] = FALSE;
-    }
-    if (in_array($form['type']['#value'], variable_get('jammer_revision_information', array())) && !user_access('view revision information')) {
-      $form['revision_information']['#access'] = FALSE;
-    }
-    if (in_array($form['type']['#value'], variable_get('jammer_revision_log_textarea_unset_node_types', array()))
-        && isset($form['revision_information']['log']) && !user_access('view revision log textarea')) {
-      $form['revision_information']['log']['#access'] = FALSE;
-      if (isset($form['revision_information']['revision']['#access']) && $form['revision_information']['revision']['#access'] == FALSE
-          && !user_access('view revision information')) {
-        $form['revision_information']['#access'] = FALSE;
-      }
-    }
-    if (in_array($form['type']['#value'], variable_get('jammer_preview_button_unset_node_types', array())) && isset($form['actions']['preview'])
-        && !user_access('view preview button')) {
-      $form['actions']['preview']['#access'] = FALSE;
-    }
-    if (in_array($form['type']['#value'], variable_get('jammer_submit_button_unset_node_types', array())) && isset($form['actions']['submit'])
-        && !user_access('view submit button')) {
-      $form['actions']['submit']['#access'] = FALSE;
-    }
-    if (in_array($form['type']['#value'], variable_get('jammer_delete_button_unset_node_types', array())) && isset($form['actions']['delete'])
-        && !user_access('view delete button')) {
-      $form['actions']['delete']['#access'] = FALSE;
+    if (variable_get('jammer_node_sticky', 0) == 1) {
+      $form['options']['sticky']['#access'] = FALSE;
     }
 
-    // We can only safely remove the 'teaser_js' textarea for a separate teaser, and the 'teaser_include' checkbox,
-    // IF the teaser is not in fact already different. Else we risk zapping the default value.
-    if (in_array($form['type']['#value'], variable_get('jammer_teaser_controls_unset_node_types', array())) && isset($form['body']['und'][0]['summary'])
-        && empty($form['body']['und'][0]['summary']['#default_value']) && !user_access('view teaser controls')) {
-      $form['body']['und'][0]['summary']['#access'] = FALSE;
+    if (isset($form['type']['#value'])) {
+      if (in_array($form['type']['#value'], variable_get('jammer_body_options', array())) && !user_access('view body options')) {
+        $form['body']['#access'] = FALSE;
+      }
+      if (in_array($form['type']['#value'], variable_get('jammer_menu_options', array())) && !user_access('view menu options')) {
+        $form['menu']['#access'] = FALSE;
+      }
+      if (in_array($form['type']['#value'], variable_get('jammer_author_options', array())) && !user_access('view author options')) {
+        $form['author']['#access'] = FALSE;
+      }
+      if (in_array($form['type']['#value'], variable_get('jammer_path_options', array())) && !user_access('view path options')) {
+        $form['path']['#access'] = FALSE;
+      }
+      if (in_array($form['type']['#value'], variable_get('jammer_comment_settings', array())) && !user_access('view comment settings')) {
+        $form['comment_settings']['#access'] = FALSE;
+      }
+      if (in_array($form['type']['#value'], variable_get('jammer_revision_information', array())) && !user_access('view revision information')) {
+        $form['revision_information']['#access'] = FALSE;
+      }
+      if (in_array($form['type']['#value'], variable_get('jammer_revision_log_textarea_unset_node_types', array()))
+          && isset($form['revision_information']['log']) && !user_access('view revision log textarea')) {
+        $form['revision_information']['log']['#access'] = FALSE;
+        if (isset($form['revision_information']['revision']['#access']) && $form['revision_information']['revision']['#access'] == FALSE
+            && !user_access('view revision information')) {
+          $form['revision_information']['#access'] = FALSE;
+        }
+      }
+      if (in_array($form['type']['#value'], variable_get('jammer_preview_button_unset_node_types', array())) && isset($form['actions']['preview'])
+          && !user_access('view preview button')) {
+        $form['actions']['preview']['#access'] = FALSE;
+      }
+      if (in_array($form['type']['#value'], variable_get('jammer_submit_button_unset_node_types', array())) && isset($form['actions']['submit'])
+          && !user_access('view submit button')) {
+        $form['actions']['submit']['#access'] = FALSE;
+      }
+      if (in_array($form['type']['#value'], variable_get('jammer_delete_button_unset_node_types', array())) && isset($form['actions']['delete'])
+          && !user_access('view delete button')) {
+        $form['actions']['delete']['#access'] = FALSE;
+      }
+      // We can only safely remove the 'teaser_js' textarea for a separate teaser, and the 'teaser_include' checkbox,
+      // IF the teaser is not in fact already different. Else we risk zapping the default value.
+      if (in_array($form['type']['#value'], variable_get('jammer_teaser_controls_unset_node_types', array())) && isset($form['body']['und'][0]['summary'])
+          && empty($form['body']['und'][0]['summary']['#default_value']) && !user_access('view teaser controls')) {
+        $form['body']['und'][0]['summary']['#access'] = FALSE;
+      }
     }
   }
 
@@ -213,6 +222,26 @@ function jammer_admin_settings($form, &$form_state) {
     '#multiple' => TRUE,
     '#default_value' => variable_get('jammer_path_options', array()),
     '#description' => t('The selected node types will no longer have the url options listed when creating or editing a node of that type.'),
+  );
+  
+  // Remove publishing settings
+  $form['jammer_publishing_options'] = array(
+    '#type' => 'fieldset',
+    '#title' => t('Publishing options'),
+    '#collapsible' => TRUE,
+    '#collapsed' => FALSE,
+  );
+  $form['jammer_publishing_options']['jammer_node_promoted'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('Remove promoted checkbox on Publishing options'),
+    '#default_value' => variable_get('jammer_node_promoted', 0),
+    '#description' => t("Nodes won't have the option for publishing to the front page by enabling this option."),
+  );
+  $form['jammer_publishing_options']['jammer_node_sticky'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('Remove sticky checkbox on Publishing options'),
+    '#default_value' => variable_get('jammer_node_sticky', 0),
+    '#description' => t("Nodes won't have the option for setting sticky at top of lists by enabling this option."),
   );
 
   // Remove the body settings.
