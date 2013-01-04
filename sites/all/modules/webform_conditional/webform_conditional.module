@@ -18,7 +18,7 @@ function webform_conditional_form_webform_component_edit_form_alter(&$form, &$fo
   //not all types are hideable by this module
   if (_webform_conditional_type_is_hideable($form['type']['#value'])) {
     $triggerComponents = _webform_conditional_possible_trigger_components($form['nid']['#value'], $form['cid']['#value']);
-    if (!empty($triggerComponents)) {
+    if (!empty($triggerComponents) && isset($form['conditional']['extra']['conditional_component']['#options'])) {
       //if there are any same page component add function to handle values
       array_unshift($form['#submit'], 'webform_condtional_component_edit_submit');
       $form['conditional']['#access'] = TRUE;
