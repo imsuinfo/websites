@@ -1,0 +1,12 @@
+name = McNeese Module - Webform
+description = "Provides webform specific functionality."
+core = 7.x
+php = 5.3
+package = McNeese
+
+dependencies[] = cf
+dependencies[] = cf_error
+dependencies[] = cf_settings
+dependencies[] = webform
+
+files[] = mcneese_webform.module
