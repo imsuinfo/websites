@@ -34,7 +34,7 @@ function background_process_ass_menu() {
  */
 function background_process_ass_cron() {
   // Don't use more than 30 seconds to unlock
-  set_time_limit(30);
+  @set_time_limit(30);
   background_process_ass_auto_unlock();
 }
 

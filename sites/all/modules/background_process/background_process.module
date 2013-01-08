@@ -108,7 +108,7 @@ function background_process_permission() {
 function background_process_cron() {
   // Don't use more than 120 seconds to unlock
   $expire = 120;
-  set_time_limit($expire);
+  @set_time_limit($expire);
 
   // Cleanup old handles
   $time = time();
@@ -329,9 +329,16 @@ function _background_process_queue($item) {
   $oldhandle = background_process_current_handle();
   list ($handle, $token) = $item;
   if (background_process_service_access($handle, $token)) {
-    background_process_service_start($handle, TRUE);
+    try {
+      background_process_service_execute(rawurldecode($handle), TRUE);
+      background_process_current_handle($oldhandle);
+    }
+    catch (Exception $e) {
+      background_process_current_handle($oldhandle);
+      background_process_update_status(rawurldecode($handle), BACKGROUND_PROCESS_STATUS_QUEUED);
+      throw $e;
+    } 
   }
-  background_process_current_handle($oldhandle);
 }
 
 /**
@@ -461,30 +468,59 @@ function background_process_queue_locked($handle, $callback /* [, $var [, $... ]
 }
 
 /**
+ * Cleanup cache menu and ensure all locks are released (again).
+ */
+function _background_process_cleanup_menu($cid) {
+  cache_clear_all($cid, 'cache_menu');
+  // Release locks in case cache_clear_all() set's a lock and lock_release_all()
+  // has already been run.
+  lock_release_all();
+}
+
+/**
  * Call the function requested by the service call
  *
- * @param $callback
- *   Function to call
- *
+ * @param $handle
+ *   Raw URL encoded handle of process
+ * @param $return
+ *   Whether or not the function should return or exit.
  */
 function background_process_service_start($handle, $return = FALSE) {
   drupal_add_http_header('Content-Type', 'text/plain');
 
   // Let's clean up the mess the menu-router system leaves behind.
   $cid = 'menu_item:' . hash('sha256', $_GET['q']);
-  drupal_register_shutdown_function('cache_clear_all', $cid, 'cache_menu');
+  drupal_register_shutdown_function('_background_process_cleanup_menu', $cid);
+
+  // Setup service
+  ignore_user_abort(TRUE);
+  @set_time_limit(variable_get('background_process_service_timeout', BACKGROUND_PROCESS_SERVICE_TIMEOUT));
 
   // Damn those slashes!
   $handle = rawurldecode($handle);
 
-  // Setup service
-  ignore_user_abort(TRUE);
-  set_time_limit(variable_get('background_process_service_timeout', BACKGROUND_PROCESS_SERVICE_TIMEOUT));
+  return background_process_service_execute($handle, $return);
+}
 
+/**
+ * Execute the service
+ *
+ * @param $handle
+ *   Handle of process
+ * @param $return
+ *   Whether or not the function should return or exit.
+ */
+function background_process_service_execute($handle, $return = FALSE) {
   // @todo Add static caching? We've already loaded this previously in the access handler
   $process = background_process_get_process($handle);
   if (!$process) {
     watchdog('bg_process', 'Process not found for handle: %handle', array('%handle' => $handle), WATCHDOG_ERROR);
+    if ($return) {
+      return;
+    }
+    else {
+      exit;
+    }
   }
 
   $process->start_stamp = microtime(TRUE);
@@ -496,7 +532,7 @@ function background_process_service_start($handle, $return = FALSE) {
                    'exec_status' => BACKGROUND_PROCESS_STATUS_RUNNING,
                  ))
                  ->condition('handle', $handle)
-                 ->condition('exec_status', BACKGROUND_PROCESS_STATUS_LOCKED)
+                 ->condition('exec_status', array(BACKGROUND_PROCESS_STATUS_LOCKED, BACKGROUND_PROCESS_STATUS_QUEUED), 'IN')
                  ->execute();
     db_set_active($old_db);
     if ($claimed) {
@@ -520,11 +556,16 @@ function background_process_service_start($handle, $return = FALSE) {
   }
 
   // Make sure the process is removed when we're done
-  drupal_register_shutdown_function('background_process_remove_process', $process->handle, $process->start_stamp);
+  if (!$return) {
+    drupal_register_shutdown_function('background_process_remove_process', $process->handle, $process->start_stamp);
+  }
 
   if (is_callable($process->callback)) {
+    $old_db = NULL;
     try {
-      drupal_register_shutdown_function('module_invoke_all', 'background_process_shutdown', $process);
+      if (!$return) {
+        drupal_register_shutdown_function('module_invoke_all', 'background_process_shutdown', $process);
+      }
       $callback = _background_process_callback_name($process->callback);
       $old_db = db_set_active('background_process');
       progress_initialize_progress($handle, "Background process '$callback' initialized");
@@ -533,10 +574,20 @@ function background_process_service_start($handle, $return = FALSE) {
       $old_db = db_set_active('background_process');
       progress_end_progress($handle, "Background process '$callback' finished");
       db_set_active($old_db);
+      if ($return) {
+        background_process_remove_process($process->handle, $process->start_stamp);
+        module_invoke_all('background_process_shutdown', $process);
+      }
     }
     catch (Exception $e) {
-      // Exception occurred, inform shutdown handlers
-      module_invoke_all('background_process_shutdown', $process, (string)$e);
+      // Exception occurred, switch back to proper db if necessary
+      // and inform shutdown handlers.
+      if ($old_db) {
+        db_set_active($old_db);
+      }
+      if (!$return) {
+        module_invoke_all('background_process_shutdown', $process, (string) $e);
+      }
       throw $e;
     }
   }
@@ -690,7 +741,7 @@ function background_process_update_status($handle, $status) {
   db_update('background_process')
     ->fields(array('exec_status' => $status))
     ->condition('handle', $handle)
-    ->exeute();
+    ->execute();
 }
 
 /**
@@ -874,14 +925,16 @@ function background_process_determine_default_service_host() {
   $scheme = isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] == 'on' ? 'https://' : 'http://';
 
   global $base_url;
+  $url = parse_url($base_url);
+  $path = empty($url['path']) ? '' : $url['path'];
   $candidates = array(
     array('base_url' => $base_url),
-    array('base_url' => $scheme . $_SERVER['SERVER_NAME'] . ':' . $_SERVER['SERVER_PORT'], 'http_host' => $_SERVER['HTTP_HOST']),
-    array('base_url' => $scheme . '127.0.0.1:' . $_SERVER['SERVER_PORT'], 'http_host' => $_SERVER['HTTP_HOST']),
-    array('base_url' => $scheme . $_SERVER['SERVER_ADDR'] . ':' . $_SERVER['SERVER_PORT'], 'http_host' => $_SERVER['HTTP_HOST']),
-    array('base_url' => $scheme . $auth . $_SERVER['SERVER_NAME'] . ':' . $_SERVER['SERVER_PORT'], 'http_host' => $_SERVER['HTTP_HOST']),
-    array('base_url' => $scheme . $auth . '127.0.0.1:' . $_SERVER['SERVER_PORT'], 'http_host' => $_SERVER['HTTP_HOST']),
-    array('base_url' => $scheme . $auth . $_SERVER['SERVER_ADDR'] . ':' . $_SERVER['SERVER_PORT'], 'http_host' => $_SERVER['HTTP_HOST']),
+    array('base_url' => $scheme . $_SERVER['SERVER_NAME'] . ':' . $_SERVER['SERVER_PORT'] . $path, 'http_host' => $_SERVER['HTTP_HOST']),
+    array('base_url' => $scheme . '127.0.0.1:' . $_SERVER['SERVER_PORT'] . $path, 'http_host' => $_SERVER['HTTP_HOST']),
+    array('base_url' => $scheme . (!array_key_exists('SERVER_ADDR', $_SERVER) ? $_SERVER['LOCAL_ADDR'] : $_SERVER['SERVER_ADDR']) . ':' . $_SERVER['SERVER_PORT'] . $path, 'http_host' => $_SERVER['HTTP_HOST']),
+    array('base_url' => $scheme . $auth . $_SERVER['SERVER_NAME'] . ':' . $_SERVER['SERVER_PORT'] . $path, 'http_host' => $_SERVER['HTTP_HOST']),
+    array('base_url' => $scheme . $auth . '127.0.0.1:' . $_SERVER['SERVER_PORT'] . $path, 'http_host' => $_SERVER['HTTP_HOST']),
+    array('base_url' => $scheme . $auth . (!array_key_exists('SERVER_ADDR', $_SERVER) ? $_SERVER['LOCAL_ADDR'] : $_SERVER['SERVER_ADDR']) . ':' . $_SERVER['SERVER_PORT'] . $path, 'http_host' => $_SERVER['HTTP_HOST']),
   );
 
   $found = NULL;
@@ -969,6 +1022,7 @@ function background_process_http_request($url, array $options = array()) {
   $result = new stdClass();
   $result->url = $url;
   $result->options = $options;
+  $result->code = NULL;
   $uri = @parse_url($url);
   $result->uri = $uri;
 
