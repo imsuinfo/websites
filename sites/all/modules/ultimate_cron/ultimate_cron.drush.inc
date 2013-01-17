@@ -230,7 +230,7 @@ function drush_ultimate_cron_cron_run($function = NULL) {
     }
     else {
       if (empty($options['simulate'])) {
-        ultimate_cron_cron(TRUE);
+        ultimate_cron_cron_run(TRUE);
       }
       $messages = drupal_get_messages();
       foreach ($messages['status'] as $message) {
