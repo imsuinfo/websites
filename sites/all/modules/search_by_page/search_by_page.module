@@ -679,21 +679,6 @@ function search_by_page_search_execute($keys = NULL, $conditions = NULL) {
 
   $stuff = $query->execute();
 
-  // Save global pager information and page title, because rendering
-  // can screw this up.
-  $title = drupal_get_title();
-  $tmp_parray = $pager_page_array[0];
-  $tmp_ptotal = $pager_total[0];
-  $tmp_itotal = $pager_total_items[0];
-  $tmp_breadcrumb = drupal_get_breadcrumb();
-  $tmp_trail = menu_get_active_trail();
-  $tmp_menu = menu_get_item();
-
-  // Use PHP's output buffering to prevent any output during rendering.
-  // Some modules print things directly when rendering the page, which is
-  // not good practice, but so it goes.
-  ob_start();
-
   // Create array of formatted results for Search
 
   $results = array();
@@ -735,24 +720,6 @@ function search_by_page_search_execute($keys = NULL, $conditions = NULL) {
 
     $results[] = $res;
   }
-
-  // Reset page title and pager stuff.
-  drupal_set_title($title);
-  $pager_page_array[0] = $tmp_parray;
-  $pager_total[0] = $tmp_ptotal;
-  $pager_total_items[0] = $tmp_itotal;
-  drupal_static_reset('menu_get_item');
-  menu_set_item(NULL, $tmp_menu);
-  drupal_set_breadcrumb($tmp_breadcrumb);
-  menu_set_active_trail($tmp_trail);
-  ob_end_clean();
-  drupal_static_reset('system_main_content_added');
-  drupal_static_reset('drupal_set_page_content');
-  drupal_static_reset('menu_local_tasks');
-  drupal_static_reset('menu_local_tasks:root_path');
-  drupal_static_reset('menu_tree_set_path');
-  drupal_static_reset('menu_tree_page_data');
-  _search_by_page_setup_theme();
 
   return $results;
 }

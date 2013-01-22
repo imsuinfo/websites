@@ -121,7 +121,11 @@ function sbp_nodes_sbp_details($id, $environment, $keys = NULL) {
 
   $node = node_load($id, NULL, TRUE);
 
-  if (!$node->title) {
+  if (!is_object($node) || ! property_exists($node, 'title')) {
+    return NULL;
+  }
+
+  if (!node_access('view', $node)) {
     return NULL;
   }
 
@@ -143,11 +147,9 @@ function sbp_nodes_sbp_details($id, $environment, $keys = NULL) {
   // See if we want to display an excerpt or a teaser
 
   if (search_by_page_setting_get('sbp_nodes_display_type', $environment, 'excerpts') == 'excerpts') {
-    $content = search_by_page_page_content('node/' . $id);
-    if (!is_int($content)) {
-      $content = search_by_page_strip_tags($content, $environment);
-      $ret['snippet'] = search_by_page_excerpt($keys, $content);
-    }
+    $content = drupal_render(node_view($node));
+    $content = search_by_page_strip_tags($content, $environment);
+    $ret['snippet'] = search_by_page_excerpt($keys, $content);
   }
   else {
     // We want a teaser
