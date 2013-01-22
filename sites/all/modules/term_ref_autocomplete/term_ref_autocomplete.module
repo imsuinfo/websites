@@ -173,8 +173,7 @@ function term_ref_autocomplete_field_widget_form(&$form, &$form_state, $field, $
   );
 
   // HACK: force a default value for workbench access users when there is only 1 workbench_access field.
-  if (module_exists('workbench_access')) {
-
+  if (module_exists('workbench_access') && isset($form['#node']) && property_exists($form['#node'], 'type')) {
     $type = $form['#node']->type;
     $fields = workbench_access_get_assigned_fields($type);
     $form_fields = array();
