@@ -80,6 +80,12 @@ function menu_workbench_access_configuration(&$form, &$form_state) {
       ),
     ),
   );
+  $form['menu_workbench_access_info']['workbench_access_menu_limit'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('Limit available menu items based on Workbench Access.'),
+    '#description' => t('If checked, when creating nodes users will not be able to choose a parent menu item to which they do not have editorial access.'),
+    '#default_value' => variable_get('workbench_access_menu_limit', 1),
+  );
 }
 
 /**
@@ -114,6 +120,10 @@ function menu_workbench_access_tree($info, $keys) {
   $tree = array();
   foreach ($items as $name => $mlid) {
     $data = menu_load($name);
+    if (empty($data['menu_name'])) {
+      break;
+    }
+
     if ($mlid == 0) {
       $tree[$name] = array(
         'access_id' => $data['menu_name'],
@@ -124,11 +134,15 @@ function menu_workbench_access_tree($info, $keys) {
         'depth' => 0,
         'parent' => 0,
       );
+      $mlid = TRUE;
     }
-    $menu = menu_tree_all_data($name);
-    foreach ($menu as $link) {
+    // This call returns a nested array.
+    // @todo, given the use of a private function here, we might need our
+    // own lookup instead.
+    $menu = _menu_build_tree($name);
+    foreach ($menu['tree'] as $link) {
       // Ensure that we start at the top of the current request.
-      // If mlid is 0, we are at the root.
+      // If mlid is TRUE, we are at the root.
       _workbench_access_menu_build_tree($tree, $link, $mlid);
     }
   }
@@ -147,11 +161,12 @@ function menu_workbench_access_tree($info, $keys) {
  *   The menu link being inspected.
  * @param $mlid
  *   The menu link id being acted upon. May be 0 if this is the top-level menu
- *   item.
+ *   item. Switches to TRUE so that children of a matching item can be selected.
  */
 function _workbench_access_menu_build_tree(&$tree, $link, $mlid = 0) {
   $item = (object) $link['link'];
-  if ($item->mlid == $mlid || $mlid === 0) {
+  // If the item matches the expected link id, or is the top-level, continue.
+  if ($item->mlid == $mlid || $mlid === TRUE) {
     $tree[$item->mlid] = array(
       'access_id' => $item->mlid,
       'access_type_id' => $item->menu_name,
@@ -161,10 +176,14 @@ function _workbench_access_menu_build_tree(&$tree, $link, $mlid = 0) {
       'depth' => $item->depth,
       'parent' => ($item->plid == 0) ? $item->menu_name : $item->plid,
     );
+    // Access to the parent grants access to the children.
+    $mlid = TRUE;
   }
+  // menu_tree_all_data() returns a nested array, so if we don't start at the
+  // top level of the tree, then we must check below links individually.
   if (!empty($link['below'])) {
     foreach ($link['below'] as $below) {
-      _workbench_access_menu_build_tree($tree, $below, $below['link']['mlid']);
+      _workbench_access_menu_build_tree($tree, $below, $mlid);
     }
   }
 }
@@ -215,7 +234,7 @@ function workbench_access_menu_delete($menu) {
  * If an new link is added, check to see if we need to create a section.
  */
 function workbench_access_menu_link_insert($link) {
-  if (variable_get('workbench_access', 'taxonomy') != 'menu' || !variable_get('workbench_access_auto_assign', 1)) {
+  if (variable_get('workbench_access') != 'menu' || !variable_get('workbench_access_auto_assign', 1)) {
     return;
   }
   $active = array_filter(variable_get('workbench_access_menu', array()));
@@ -248,5 +267,59 @@ function workbench_access_menu_link_delete($link) {
   $access_scheme = db_query("SELECT * FROM {workbench_access} WHERE access_type = :access_type AND access_id = :access_id", array(':access_type' => 'menu', ':access_id' => $link['mlid']))->fetchAssoc();
   if (!empty($access_scheme)) {
     workbench_access_section_delete($access_scheme);
+  }
+}
+
+/**
+ * Executes a form alter on a specific FieldAPI form element.
+ */
+function menu_workbench_access_default_form_alter(&$form, &$form_state, $options) {
+  if (!isset($form['menu'])) {
+    return;
+  }
+
+  // If no options, then no access.
+  if (empty($options)) {
+    $form['menu']['#access'] = FALSE;
+    return;
+  }
+
+  // Nothing to do if we're not limiting menu items.
+  if (!variable_get('workbench_access_menu_limit', 1)) {
+    return;
+  }
+
+  // Note that we require menu data for access control.
+  $form['menu']['enabled']['#description'] = t('To enforce access control, this content must be placed in the menu.');
+
+  // Adjust the parent form.
+  $parent = &$form['menu']['link']['parent'];
+  $current = $parent['#options'];
+
+  foreach ($parent['#options'] as $key => $value) {
+    $ids = explode(':', $key);
+    $menu = $ids[0];
+    $plid = $ids[1];
+    // Unset if the user does not not have access to this item and the item
+    // is not the current parent.
+    if (!isset($options[$plid]) && !isset($options[$menu]) && (!$form['menu']['enabled']['#default_value'] || $key != $parent['#default_value'])) {
+      unset($parent['#options'][$key]);
+    }
+  }
+
+  // Assume that all new content will be in the menu.
+  if (empty($form['#node']->nid)) {
+    $form['menu']['enabled']['#default_value'] = 1;
+  }
+
+  // Add a warning note if the user does not have rights to the current parent,
+  // as the user will not be able to restore the item to its current value if
+  // changed.
+  if (array_key_exists($parent['#default_value'], $parent['#options'])) {
+    $tree = workbench_access_get_user_tree();
+    $default = explode(':', $parent['#default_value']);
+    if ($default[1] != 0 && !isset($tree[$default[1]])) {
+      $parent['#description'] = t('<strong>Note:</strong> since you do not have editorial access to the parent of this menu item, if you change the parent you may not be able to restore it to its original value.');
+    }
   }
 }
