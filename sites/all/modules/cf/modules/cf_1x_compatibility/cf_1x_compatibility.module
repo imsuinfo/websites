@@ -244,7 +244,7 @@ function cf_error_not_numeric($function_history, $argument_name, $severity = WAT
  */
 function cf_error_on_query_execution($function_history, $exception, $severity = WATCHDOG_ERROR) {
   if (module_exists('cf_error')) {
-    cf_error::on_query_execution($argument_name, $severity);
+    cf_error::on_query_execution($exception, $severity);
   }
 }
 
