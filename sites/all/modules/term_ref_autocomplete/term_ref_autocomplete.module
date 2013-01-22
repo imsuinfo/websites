@@ -172,6 +172,31 @@ function term_ref_autocomplete_field_widget_form(&$form, &$form_state, $field, $
     '#element_validate' => array('term_ref_autocomplete_taxonomy_autocomplete_validate'),
   );
 
+  // HACK: force a default value for workbench access users when there is only 1 workbench_access field.
+  if (module_exists('workbench_access')) {
+
+    $type = $form['#node']->type;
+    $fields = workbench_access_get_assigned_fields($type);
+    $form_fields = array();
+    foreach ($fields as $field => $info) {
+      if (!empty($info['instance_info']['workbench_access_field'])) {
+        $form_fields[] = $field;
+      }
+    }
+    if (count($form_fields) == 1 && empty($element['names']['#default_value'])) {
+      $user_data = workbench_access_active_options();
+
+      foreach ($user_data as $key => $tmp_tag) {
+        if (strpos($tmp_tag, ',') !== FALSE || strpos($tmp_tag, '"') !== FALSE) {
+          $tmp_tag = '"' . str_replace('"', '""', $tmp_tag) . '"';
+        }
+
+        $element['names']['#default_value'][] = $tmp_tag . ' [tid:' . $key . ']';
+        break;
+      }
+    }
+  }
+
   return $element;
 }
 
