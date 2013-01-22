@@ -9,9 +9,9 @@ files[] = tests/rules.test
 
 configure = admin/config/system/cron/settings
 
-; Information added by drupal.org packaging script on 2012-10-20
-version = "7.x-1.7"
+; Information added by drupal.org packaging script on 2013-01-19
+version = "7.x-1.8"
 core = "7.x"
 project = "ultimate_cron"
-datestamp = "1350764529"
+datestamp = "1358611421"
 
