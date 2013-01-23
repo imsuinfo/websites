@@ -801,7 +801,7 @@ function node_accessibility_statistics_load_plots(array $parameters = array(), $
 
     if (is_null($and)) $and = db_and();
 
-    $and->condition('type', $parameters['type'], '=');
+    $and->condition('nasp.type', $parameters['type'], '=');
   }
 
   if (!is_null($and)) {
