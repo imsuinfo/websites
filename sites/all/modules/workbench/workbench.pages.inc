@@ -30,20 +30,20 @@ function workbench_content() {
     '#title' => t('My Profile'),
     '#view' => 'workbench_current_user',
     '#view_display' => 'block_1',
-    '#attributes' => array('class' => array('left', 'clearfix')),
+    '#attributes' => array('class' => array('left')),
     '#theme' => 'workbench_element',
   );
   // This right column is given a width of 65% by workbench.myworkbench.css.
   $output['workbench_edited'] = array(
     '#view' => 'workbench_edited',
     '#view_display' => 'block_1',
-    '#attributes' => array('class' => array('right', 'clearfix')),
+    '#attributes' => array('class' => array('right')),
     '#theme' => 'workbench_element',
   );
   $output['workbench_recent_content'] = array(
     '#view' => 'workbench_recent_content',
     '#view_display' => 'block_1',
-    '#attributes' => array('class' => array('clearfix'), 'style' => array('clear: both;')),
+    '#attributes' => array('class' => array(), 'style' => array('clear: both;')),
     '#theme' => 'workbench_element',
   );
 
