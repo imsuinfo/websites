@@ -88,7 +88,7 @@ function workbench_access_views_data() {
  * filters/fields/settings from workbench_access.
  */
 function workbench_access_views_pre_view(&$view, &$display_id, &$args) {
-  if ($view->export_module != 'workbench_access') {
+  if (!property_exists($view, 'export_module') || $view->export_module != 'workbench_access') {
     return;
   }
 
