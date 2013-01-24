@@ -91,11 +91,13 @@ function workbench_moderation_node_history_view($node) {
   $query = db_select('node', 'n');
   $query->leftJoin('node_revision', 'r', 'n.nid = r.nid');
   $query->leftJoin('users', 'u', 'r.uid = u.uid');
+  $query->leftJoin('workbench_moderation_node_history', 'm', 'r.vid = m.vid');
   $query->addField('n', 'vid', 'live_revision');
   $query->condition('n.nid', $node->nid)
     ->orderBy('r.vid', 'DESC')
     ->fields('r', array('nid', 'vid', 'title', 'log', 'uid', 'timestamp'))
-    ->fields('u', array('name'));
+    ->fields('u', array('name'))
+    ->fields('m');
 
   $revisions = $query->execute()
     ->fetchAllAssoc('vid');
@@ -134,18 +136,42 @@ function workbench_moderation_node_history_view($node) {
 
     // Revision operations.
     $revision_operations = array();
-    if (isset($node->workbench_moderation['published']) && $revision->vid == $node->workbench_moderation['published']->vid) {
-      $revision_operations['view'] = workbench_moderation_access_link(t('view'), "node/{$revision->nid}");
-    }
-    elseif ($revision->vid == $node->workbench_moderation['current']->vid) {
-      $revision_operations['view'] = workbench_moderation_access_link(t('view'), "node/{$revision->nid}/current-revision");
-    }
-    else {
-      $revision_operations['view'] = workbench_moderation_access_link(t('view'), "node/{$revision->nid}/revisions/{$revision->vid}/view");
+
+    // Loading the node at the specific revision using node_load() is too slow
+    // when there are many revisions, thus we fake it by cloning the original
+    // node and changing the 'vid' and the 'my_revision' elements required for
+    // granting access to the revision operations (view, update/revert, delete).
+    $node_revision = clone $node;
+    $node_revision->vid = $revision->vid;
+    $node_revision->workbench_moderation['my_revision'] = $revision;
+
+    // View operation.
+    if (_workbench_moderation_revision_access($node_revision, 'view')) {
+      // Link to the node page if this is the published revision.
+      if (isset($node->workbench_moderation['published']) && $revision->vid == $node->workbench_moderation['published']->vid) {
+        $url = "node/{$revision->nid}";
+      }
+      // The special case "current-revision" link handles routing for the
+      // current unpublished revision.
+      elseif ($revision->vid == $node->workbench_moderation['current']->vid) {
+        $url = "node/{$revision->nid}/current-revision";
+      }
+      // Otherwise, link to the normal revision view page.
+      else {
+        $url = "node/{$revision->nid}/revisions/{$revision->vid}/view";
+      }
+      $revision_operations['view'] = l(t('View'), $url);
     }
 
-    $revision_operations['revert'] = workbench_moderation_access_link(t('revert'), "node/{$revision->nid}/revisions/{$revision->vid}/revert");
-    $revision_operations['delete'] = workbench_moderation_access_link(t('delete'), "node/{$revision->nid}/revisions/{$revision->vid}/delete");
+    // Revert operation.
+    if (_workbench_moderation_revision_access($node_revision, 'update')) {
+      $revision_operations['revert'] = l(t('Revert'), "node/{$revision->nid}/revisions/{$revision->vid}/revert");
+    }
+
+    // Delete operation.
+    if (_workbench_moderation_revision_access($node_revision, 'delete')) {
+      $revision_operations['delete'] = l(t('Delete'), "node/{$revision->nid}/revisions/{$revision->vid}/delete");
+    }
 
     $row['data']['revision'] = implode(' | ', array_filter($revision_operations));
 

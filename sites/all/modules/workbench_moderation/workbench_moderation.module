@@ -193,7 +193,9 @@ function workbench_moderation_menu_alter(&$items) {
 
   // For revert and delete operations, use our own access check.
   $items['node/%node/revisions/%/revert']['access callback'] = '_workbench_moderation_revision_access';
+  $items['node/%node/revisions/%/revert']['access arguments'] = array(1,'update');
   $items['node/%node/revisions/%/delete']['access callback'] = '_workbench_moderation_revision_access';
+  $items['node/%node/revisions/%/delete']['access arguments'] = array(1,'delete');
 
   // Provide a container administration menu item, if one doesn't already exist.
   if (!isset($items['admin/config/workbench'])) {
@@ -487,36 +489,22 @@ function _workbench_moderation_access($op, $node) {
  * that revision in {node}, whether or not it is the current revision.
  */
 function _workbench_moderation_revision_access($node, $op) {
+
   // Normal behavior for unmoderated nodes.
   if (!workbench_moderation_node_type_moderated($node->type)) {
     return _node_revision_access($node, $op);
   }
 
-  // Prevent reverting to or deleting the current revision.
-  if ($node->workbench_moderation['current']->vid == $node->workbench_moderation['my_revision']->vid) {
+  // Prevent reverting to (ie, update) or deleting the current and published revisions.
+  if (($node->workbench_moderation['current']->vid == $node->workbench_moderation['my_revision']->vid
+    || (isset($node->workbench_moderation['published']) && $node->workbench_moderation['published']->vid == $node->workbench_moderation['my_revision']->vid))
+      && ($op == 'update' || $op == 'delete')) {
     return FALSE;
-  }
-
-  // Temporarily give the node an impossible revision.
-  // _node_revision_access() keeps access check results in a static variable
-  // indexed by revision only, not by op. Thus, subsequent checks on the same
-  // vid for different ops yield the same result, regardless of permissions.
-  // Setting a fake vid here allows us to store different static results per op.
-  $tmp = $node->vid;
-  switch ($op) {
-    case 'update':
-      $node->vid = -1;
-      break;
-    case 'delete':
-      $node->vid = -2;
-      break;
   }
 
   // Check access.
   $access = _node_revision_access($node, $op);
 
-  // Restore the original revision id.
-  $node->vid = $tmp;
   return $access;
 }
 
