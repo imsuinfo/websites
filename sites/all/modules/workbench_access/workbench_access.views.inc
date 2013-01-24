@@ -88,6 +88,10 @@ function workbench_access_views_data() {
  * filters/fields/settings from workbench_access.
  */
 function workbench_access_views_pre_view(&$view, &$display_id, &$args) {
+  if ($view->export_module != 'workbench_access') {
+    return;
+  }
+
   // If not configured, do nothing.
   $tree = workbench_access_get_active_tree();
   if (empty($tree['active'])) {
