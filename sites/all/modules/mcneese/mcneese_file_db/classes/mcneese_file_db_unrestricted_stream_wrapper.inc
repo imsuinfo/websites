@@ -431,7 +431,7 @@ class mcneese_file_db_unrestricted_stream_wrapper extends mcneese_file_db_stream
     }
 
     // initialize the raw file so that it can be stat'd on stream_close().
-    if (is_null($file->stream_fhandle) || empty($this->stream_fid)) {
+    if (is_null($this->stream_fhandle) || empty($this->stream_fid)) {
       $this->stream_fname = drupal_tempnam('temporary://', MCNEESE_FILE_DB_KEY);
       $this->stream_position = 0;
       $this->stream_fhandle = fopen($this->stream_fname, 'w+b');
