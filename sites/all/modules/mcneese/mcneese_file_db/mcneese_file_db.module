@@ -141,6 +141,7 @@ function mcneese_file_db_get_server_id() {
 
   return $mcneese_file_db_server_id;
 }
+
 /**
  * Loads the available files.
  *
@@ -414,7 +415,7 @@ function mcneese_file_db_load_file($by = '', $arg1 = '', $arg2 = '', $arg3 = '')
     }
   }
 
-  if ($file_meta && !empty($filepath)) {
+  if (!empty($file_meta) && !empty($filepath)) {
     // prevent devel_shutdown from being called.
     $GLOBALS['devel_shutdown'] = FALSE;
 
@@ -449,6 +450,8 @@ function mcneese_file_db_load_file($by = '', $arg1 = '', $arg2 = '', $arg3 = '')
     if ($by == MCNEESE_FILE_DB_PATH_BY_HASH || $by == MCNEESE_FILE_DB_UPLOAD) {
       header('Content-Type: ' . $mimetype);
       header('Content-Length: ' . $filesize);
+      header('ETag: "' . $file_meta->checksum . '"');
+      header('Accept-Ranges: bytes');
 
       // allow image and text files to be viewed in place instead of downloaded.
       if (strncmp('image/', $mimetype, 6) != 0 && strncmp('text/', $mimetype, 6) != 0) {
@@ -457,8 +460,17 @@ function mcneese_file_db_load_file($by = '', $arg1 = '', $arg2 = '', $arg3 = '')
         header('Content-Description: File Transfer');
       }
 
+      // ETag cache optimization
+      if (isset($_SERVER['HTTP_IF_NONE_MATCH']) && $_SERVER['HTTP_IF_NONE_MATCH'] == '"' . $file_meta->checksum . '"') {
+        header('HTTP/1.1 304 Not Modified', TRUE, 304);
+        exit();
+      }
+
       ob_clean();
       flush();
+
+      // ensure that the file transfer is not cut short by a time limit.
+      @set_time_limit(0);
 
       readfile($filepath);
     }
@@ -496,7 +508,7 @@ function mcneese_file_db_register_stream_wrappers() {
   }
 
   stream_wrapper_register(mcneese_file_db_unrestricted_stream_wrapper::SCHEME, 'mcneese_file_db_unrestricted_stream_wrapper');
-  //stream_wrapper_register(mcneese_file_db_restricted_stream_wrapper::SCHEME, 'mcneese_file_db_private_stream_wrapper');
+  //stream_wrapper_register(mcneese_file_db_restricted_stream_wrapper::SCHEME, 'mcneese_file_db_restricted_stream_wrapper');
 }
 
 /**
@@ -568,6 +580,7 @@ function mcneese_file_db_generate_image_style($arguments) {
 
   if (file_exists($file_uri)) {
     $filesize = filesize($file_uri);
+    //$checksum = shasum($file_uri);
 
     include_once DRUPAL_ROOT . '/includes/file.mimetypes.inc';
     $mapping = file_mimetype_mapping();
@@ -578,6 +591,8 @@ function mcneese_file_db_generate_image_style($arguments) {
 
     header('Content-Type: ' . $mimetype);
     header('Content-Length: ' . $filesize);
+    //header('ETag: "' . $checksum . '"');
+    header('Accept-Ranges: bytes');
 
     ob_clean();
     flush();

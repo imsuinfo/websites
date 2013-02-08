@@ -127,7 +127,19 @@ abstract class mcneese_file_db_stream_wrapper implements DrupalStreamWrapperInte
    * Implements realpath().
    */
   public function realpath() {
-    return $this->getExternalUrl();
+    $built_uri = $this->build_uri();
+
+    if ($built_uri === FALSE) {
+      return FALSE;
+    }
+
+    $parts = explode('://', $built_uri, 2);
+
+    if (empty($parts[1])) {
+      return FALSE;
+    }
+
+    return url($this->get_external() . '/' . $parts[1], array('absolute' => TRUE));
   }
 
   /**
