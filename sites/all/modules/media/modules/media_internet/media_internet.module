@@ -289,7 +289,7 @@ class MediaInternetFileHandler extends MediaInternetBaseHandler {
   }
 
   public function postSave(&$file_obj) {
-    $scheme = variable_get('file_default_scheme', 'public') . '://';
+    $scheme = file_entity_default_scheme() . '://';
     $uri = file_stream_wrapper_uri_normalize($scheme . $file_obj->filename);
     // Now to its new home.
     $file_obj = file_move($file_obj, $uri, FILE_EXISTS_RENAME);

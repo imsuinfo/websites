@@ -173,7 +173,7 @@ function file_entity_add_upload_submit($form, &$form_state) {
  */
 function file_entity_upload_destination_uri(array $params, array $data = array()) {
   $params += array(
-    'uri_scheme' => file_default_scheme(),
+    'uri_scheme' => file_entity_default_scheme(),
     'file_directory' => '',
   );
 
@@ -201,7 +201,7 @@ function file_entity_add_upload_multiple($form, &$form_state, $params = array())
 function file_entity_add_upload_multiple_submit($form, &$form_state) {
   $upload_location = !empty($form['upload']['#upload_location']) ?
     $form['upload']['#upload_location'] . '/' :
-    variable_get('file_default_scheme', 'public') . '://';
+    file_entity_default_scheme() . '://';
 
   // We can't use file_save_upload() because of http://www.jacobsingh.name/content/tight-coupling-no-not
   foreach ($form_state['values']['upload'] as $uploaded_file) {
@@ -565,4 +565,24 @@ function file_entity_get_upload_validators(array $options = array()) {
   }
 
   return $validators;
+}
+
+/**
+ * A standard way to load the default file_entity scheme.
+ *
+ * Allows for a custom media scheme 'file_entity_default_scheme' to be defined in
+ * the sites/default/settings.php file. Otherwise, the default file scheme is
+ * returned.
+ *
+ * @return string
+ *   A formatted scheme string.
+ */
+function file_entity_default_scheme() {
+  global $conf;
+
+  if (empty($conf['file_entity_default_scheme'])) {
+    return file_default_scheme();
+  }
+
+  return $conf['file_entity_default_scheme'];
 }

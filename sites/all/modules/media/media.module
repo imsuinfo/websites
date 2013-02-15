@@ -848,7 +848,7 @@ function media_parse_to_file($url) {
       return;
     }
     $source_file = file_uri_to_object($source_uri);
-    $scheme = variable_get('file_default_scheme', 'public') . '://';
+    $scheme = file_entity_default_scheme() . '://';
     $uri = file_stream_wrapper_uri_normalize($scheme . $source_file->filename);
     // Now to its new home.
     $file = file_move($source_file, $uri, FILE_EXISTS_RENAME);
