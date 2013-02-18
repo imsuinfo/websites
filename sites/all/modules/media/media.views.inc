@@ -79,7 +79,6 @@ function template_preprocess_media_views_view_media_browser(&$vars) {
     $vars['rows'][$index] = $file;
     $vars['rows'][$index]->preview = l($file->preview, 'media/browser', array(
       'html' => TRUE,
-      'absolute' => FALSE,
       'attributes' => array(
         'data-fid' => $row->fid,
       ),
