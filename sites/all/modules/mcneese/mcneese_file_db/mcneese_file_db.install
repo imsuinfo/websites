@@ -48,12 +48,6 @@ function mcneese_file_db_install() {
     server_id smallint REFERENCES mcneese_file_db_servers (id) ON DELETE CASCADE
   );
 
-  CREATE TABLE mcneese_file_db_uniques (
-    association_id int REFERENCES mcneese_file_db_associations (id) ON DELETE CASCADE,
-    unique_id int DEFAULT 0,
-    PRIMARY KEY (association_id, unique_id)
-  );
-
   CREATE TABLE mcneese_file_db_users (
     file_id bigint REFERENCES mcneese_file_db_files (id) ON DELETE CASCADE,
     server_id smallint REFERENCES mcneese_file_db_servers (id) ON DELETE CASCADE,
@@ -73,7 +67,6 @@ function mcneese_file_db_install() {
   GRANT ALL PRIVILEGES ON DATABASE web_files TO web_files_user ;
   GRANT ALL PRIVILEGES ON mcneese_file_db_servers TO web_files_user ;
   GRANT ALL PRIVILEGES ON mcneese_file_db_associations TO web_files_user ;
-  GRANT ALL PRIVILEGES ON mcneese_file_db_uniques TO web_files_user ;
   GRANT ALL PRIVILEGES ON mcneese_file_db_file_data TO web_files_user ;
   GRANT ALL PRIVILEGES ON mcneese_file_db_files TO web_files_user ;
   GRANT ALL PRIVILEGES ON mcneese_file_db_groups TO web_files_user ;

@@ -20,7 +20,6 @@ define('MCNEESE_FILE_DB_BLOCK_SIZE', 4096);
 
 define('MCNEESE_FILE_DB_FILE_PATH', 'f');
 define('MCNEESE_FILE_DB_STYLES', 'styles');
-define('MCNEESE_FILE_DB_UPLOAD', 'u');
 define('MCNEESE_FILE_DB_PATH_BY_HASH', 'c');
 define('MCNEESE_FILE_DB_PATH_BY_HASH_SUM', 's');
 
@@ -158,8 +157,6 @@ function mcneese_file_db_get_server_id() {
  *    - timestamp: An array of:
  *      - operation: one of '>', '>=', '<', '<=', '<>', '=='.
  *      - stamp: timestamp to compare against.
- *    - id: The unique file id.
- *    - unique: The uniques table unique id.
  *
  * @return bool
  *   TRUE/FALSE depending on whether the file listing was loaded.
@@ -173,13 +170,7 @@ function mcneese_file_db_load_available_files($conditions = array()) {
 
   try {
     $server_id = mcneese_file_db_get_server_id();
-
-    if (empty($conditions['unique'])) {
-      $query = mcneese_file_db_build_query_by_checksum($server_id);
-    }
-    else {
-      $query = mcneese_file_db_build_query_by_unique($server_id, $conditions['unique']);
-    }
+    $query = mcneese_file_db_build_query_by_checksum($server_id);
 
     if (!empty($conditions)) {
       $and = null;
@@ -306,40 +297,6 @@ function mcneese_file_db_build_data_query($server_id) {
 }
 
 /**
- * Build a select query for the primary table using the uniques table.
- *
- * @param string $server_id
- *   The id of the server as it appears in the database.
- * @param string $unique_id
- *   The unique_id of the file as it appears in the uniques database table.
- *   This is _not_ the "unique" file id that is the primary key for the files
- *   table.
- * @param string $primary_table
- *   (optional) the name of the primary table.
- *   Should be either 'mcneese_file_db_files' or 'mcneese_file_db_file_data'.
- * @param string $primary_table_alias
- *   (optional) the alias of the primary table.
- *   Should be either 'mfdf' or 'mfdfd'.
- *
- * @return object
- *   An unexecuted select query object.
- */
-function mcneese_file_db_build_query_by_unique($server_id, $unique_id, $primary_table = 'mcneese_file_db_files', $primary_table_alias = 'mfdf') {
-  $file_db = mcneese_file_db_prepare_connection();
-  $options = mcneese_file_db_prepare_options();
-
-  $query = $file_db->select($primary_table, $primary_table_alias, $options);
-  $query->fields($primary_table_alias);
-
-  $query->join('mcneese_file_db_associations', 'mfda', $primary_table_alias . '.id = mfda.file_id');
-  $query->join('mcneese_file_db_uniques', 'mfdu', 'mfda.id = mfdu.association_id');
-  $query->condition('mfda.server_id', $server_id);
-  $query->condition('mfdu.unique_id', $unique_id);
-
-  return $query;
-}
-
-/**
  * Converts the postgresql bytea string to a binary string.
  *
  * @param string $bytea
@@ -395,26 +352,6 @@ function mcneese_file_db_load_file($by = '', $arg1 = '', $arg2 = '', $arg3 = '')
     }
   }
 
-  // load files by their unique upload id.
-  if ($by == MCNEESE_FILE_DB_UPLOAD) {
-    // $arg1 = unique id
-    // $arg2 = filename
-
-    if (!empty($arg1)) {
-      $unique_id = intval($arg1);
-
-      $files = (array) mcneese_file_db_load_available_files(array('unique' => $unique_id));
-
-      if (!empty($files)) {
-        $file_meta = array_pop($files);
-        unset($files);
-      }
-
-      $filepath = mcneese_file_db_unrestricted_stream_wrapper::SCHEME . '://';
-      $filepath .= MCNEESE_FILE_DB_PATH_BY_HASH . '/' . $file_meta->checksum;
-    }
-  }
-
   if (!empty($file_meta) && !empty($filepath)) {
     // prevent devel_shutdown from being called.
     $GLOBALS['devel_shutdown'] = FALSE;
@@ -447,7 +384,7 @@ function mcneese_file_db_load_file($by = '', $arg1 = '', $arg2 = '', $arg3 = '')
       $filesize = 0;
     }
 
-    if ($by == MCNEESE_FILE_DB_PATH_BY_HASH || $by == MCNEESE_FILE_DB_UPLOAD) {
+    if ($by == MCNEESE_FILE_DB_PATH_BY_HASH) {
       header('Content-Type: ' . $mimetype);
       header('Content-Length: ' . $filesize);
       header('ETag: "' . $file_meta->checksum . '"');
@@ -604,6 +541,44 @@ function mcneese_file_db_generate_image_style($arguments) {
 
   drupal_not_found();
   drupal_exit();
+}
+
+/**
+ * Implements hook_file_validate().
+ */
+function mcneese_file_db_file_validate($file) {
+  $errors = array();
+
+  if (!file_exists($file->uri)) {
+    $errors[] = t("The file was not found at: '%uri'", array('%uri' => $file->uri));
+    return $errors;
+  }
+
+  $outer_parts = explode('://', $file->destination, 2);
+
+  if ($outer_parts[0] != mcneese_file_db_unrestricted_stream_wrapper::SCHEME) {
+    // @todo: add check for restricted scheme as well
+    return $errors;
+  }
+
+  $checksum = sha1_file($file->uri);
+  $shortsum = substr($checksum, 0, MCNEESE_FILE_DB_SHORT_SUM_SIZE);
+
+  $file->destination = $outer_parts[0] . '://' . MCNEESE_FILE_DB_PATH_BY_HASH . '/' . $shortsum;
+
+  if (empty($file->filename)) {
+    $file->destination .= '/file';
+  }
+  else {
+    $file->destination .= '/' . $file->filename;
+  }
+
+  $loaded = (array) mcneese_file_db_load_available_files(array('checksum' => $checksum));
+
+  if (empty($loaded)) return $errors;
+
+  $errors[] = t("The file already exist.");
+  return $errors;
 }
 
 /**

@@ -2,11 +2,11 @@
 
 /**
  * @file
- * Provides the stream wrapper: dbu://
+ * Provides the stream wrapper: dbr://
  *
  * This class will handle upload & download of unrestricted files.
  * The following paths are supports:
- * - upload: dbr://u/[random]/[filename]
+ * - upload: dbr://[filename]
  * - download: dbr://c/[short_checksum]/[filename (optional)]
  *
  * The external url for these files are:
@@ -21,7 +21,7 @@
  * @{
  */
 
-class mcneese_file_db_restricted_stream_wrapper extends mcneese_file_db_stream_wrapper {
+class mcneese_file_db_unrestricted_stream_wrapper extends mcneese_file_db_stream_wrapper {
   const SCHEME = 'dbr';
   const CORE = 'private';
 
@@ -131,29 +131,6 @@ class mcneese_file_db_restricted_stream_wrapper extends mcneese_file_db_stream_w
             $query = $file_db->delete('mcneese_file_db_files', $options);
             $query->condition('id', $this->stream_fid);
             $query->execute();
-
-            // if a unique_id was specified, then save the unique id, mapping to the existing file id.
-            if (!empty($this->tmp_unique)) {
-              $files = (array) mcneese_file_db_load_available_files(array('checksum' => $this->tmp_checksum));
-
-              if (!empty($files)) {
-                $tmp_meta = array_pop($files);
-                unset($files);
-
-                $query = $file_db->select('mcneese_file_db_associations', 'mfda', $options);
-                $query->fields('mfda', array('id'));
-                $query->condition('mfda.file_id', $tmp_meta->id);
-                $query->condition('mfda.server_id', $server_id);
-
-                $association_id = $query->execute()->fetchField();
-
-                $query = $file_db->insert('mcneese_file_db_uniques', $options);
-                $fields = array('unique_id' => $this->tmp_unique, 'association_id' => $association_id);
-                $query->fields($fields);
-
-                $write_result = $query->execute();
-              }
-            }
           }
           catch (Exception $e) {
             $transaction->rollback();
@@ -181,12 +158,6 @@ class mcneese_file_db_restricted_stream_wrapper extends mcneese_file_db_stream_w
 
             $query = $file_db->insert('mcneese_file_db_associations', $options);
             $fields = array('file_id' => $this->stream_fid, 'server_id' => $server_id);
-            $query->fields($fields);
-
-            $write_result = $query->execute();
-
-            $query = $file_db->insert('mcneese_file_db_uniques', $options);
-            $fields = array('unique_id' => $this->tmp_unique, 'association_id' => $write_result);
             $query->fields($fields);
 
             $write_result = $query->execute();
@@ -257,14 +228,6 @@ class mcneese_file_db_restricted_stream_wrapper extends mcneese_file_db_stream_w
     if (empty($this->file_meta)) {
       if (!empty($this->tmp_checksum)) {
         $this->load_file_meta($this->tmp_checksum);
-      }
-      else if (!empty($this->tmp_unique)) {
-        $this->load_file_meta_by_unique($this->tmp_unique);
-
-        // newly upload files do not have to exist and directly opened via stream_open().
-        if (empty($this->file_meta)) {
-          return TRUE;
-        }
       }
     }
 
@@ -389,9 +352,6 @@ class mcneese_file_db_restricted_stream_wrapper extends mcneese_file_db_stream_w
       else if (!empty($this->tmp_checksum)) {
         $this->load_file_meta($this->tmp_checksum);
       }
-      else if (!empty($this->tmp_unique)) {
-        $this->load_file_meta_by_unique($this->tmp_unique);
-      }
 
       if (is_null($this->file_meta)) {
         return FALSE;
@@ -431,7 +391,7 @@ class mcneese_file_db_restricted_stream_wrapper extends mcneese_file_db_stream_w
     }
 
     // initialize the raw file so that it can be stat'd on stream_close().
-    if (is_null($file->stream_fhandle) || empty($this->stream_fid)) {
+    if (is_null($this->stream_fhandle) || empty($this->stream_fid)) {
       $this->stream_fname = drupal_tempnam('temporary://', MCNEESE_FILE_DB_KEY);
       $this->stream_position = 0;
       $this->stream_fhandle = fopen($this->stream_fname, 'w+b');
@@ -514,7 +474,7 @@ class mcneese_file_db_restricted_stream_wrapper extends mcneese_file_db_stream_w
    */
   public static function getMimeType($uri, $mapping = NULL) {
     // Drupal made getMimeType() static, so getting the mimetype requires creating another object and then calling a custom get_mimetype() function.
-    $wrapper = new mcneese_file_db_restricted_stream_wrapper();
+    $wrapper = new mcneese_file_db_unrestricted_stream_wrapper();
     $wrapper->setUri($uri);
     return $wrapper->get_mimetype();
   }
@@ -523,7 +483,7 @@ class mcneese_file_db_restricted_stream_wrapper extends mcneese_file_db_stream_w
    * Implements get_scheme().
    */
   protected function get_scheme() {
-    return mcneese_file_db_restricted_stream_wrapper::SCHEME;
+    return mcneese_file_db_unrestricted_stream_wrapper::SCHEME;
   }
 
   /**
@@ -531,13 +491,6 @@ class mcneese_file_db_restricted_stream_wrapper extends mcneese_file_db_stream_w
    */
   protected function get_external() {
     return MCNEESE_FILE_DB_FILE_PATH;
-  }
-
-  /**
-   * Implements get_upload().
-   */
-  protected function get_upload() {
-    return MCNEESE_FILE_DB_UPLOAD;
   }
 
   /**
@@ -551,7 +504,7 @@ class mcneese_file_db_restricted_stream_wrapper extends mcneese_file_db_stream_w
    * Implements get_core().
    */
   protected function get_core() {
-    return mcneese_file_db_restricted_stream_wrapper::CORE;
+    return mcneese_file_db_unrestricted_stream_wrapper::CORE;
   }
 }
 

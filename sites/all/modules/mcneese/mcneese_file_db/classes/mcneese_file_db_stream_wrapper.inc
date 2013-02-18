@@ -20,7 +20,6 @@ abstract class mcneese_file_db_stream_wrapper implements DrupalStreamWrapperInte
 
   protected $tmp_filename = null;
   protected $tmp_checksum = null;
-  protected $tmp_unique = null;
 
   protected $stream = null;
   protected $stream_blocks = 0;
@@ -52,7 +51,7 @@ abstract class mcneese_file_db_stream_wrapper implements DrupalStreamWrapperInte
       return FALSE;
     }
 
-    return url($this->get_external() . '/' . $parts[1], array('absolute' => FALSE));
+    return $this->get_external() . '/' . $parts[1];
   }
 
   /**
@@ -266,14 +265,6 @@ abstract class mcneese_file_db_stream_wrapper implements DrupalStreamWrapperInte
   abstract protected function get_external();
 
   /**
-   * Wrapper function to load the current upload string.
-   *
-   * @return string
-   *   The upload string.
-   */
-  abstract protected function get_upload();
-
-  /**
    * Wrapper function to load the current path by hash string.
    *
    * @return string
@@ -372,44 +363,6 @@ abstract class mcneese_file_db_stream_wrapper implements DrupalStreamWrapperInte
   }
 
   /**
-   * Loads the file meta if a valid unique id is supplied.
-   *
-   * @param int $unique
-   *   Use the specified unique to load the file meta.
-   *   This is not the (unique) file id.
-   * @param bool $assign
-   *   (optional) When TRUE, save the file meta object in $this->file_meta.
-   *
-   * @return object|FALSE
-   *   A file_meta object as returned by the database.
-   */
-  protected function load_file_meta_by_unique($unique, $assign = TRUE) {
-    $file_meta = FALSE;
-
-    if (empty($unique)) {
-      return $file_meta;
-    }
-
-    // use existing data if possible
-    $files = (array) mcneese_file_db_load_available_files(array('unique' => $unique));
-
-    if (!empty($files)) {
-      $file_meta = array_pop($files);
-    }
-
-    if ($assign) {
-      unset($this->file_meta);
-      $this->file_meta = null;
-
-      if ($file_meta !== FALSE) {
-        $this->file_meta = $file_meta;
-      }
-    }
-
-    return $file_meta;
-  }
-
-  /**
    * Checks to see if a file by the given checksum exists.
    *
    * At this time, it only confirms the existence of files defined on
@@ -469,7 +422,6 @@ abstract class mcneese_file_db_stream_wrapper implements DrupalStreamWrapperInte
     $this->file_meta = null;
     $this->tmp_checksum = null;
     $this->tmp_filename = null;
-    $this->tmp_unique = null;
     $this->image_style = null;
     $this->image_style_uri = null;
 
@@ -523,26 +475,6 @@ abstract class mcneese_file_db_stream_wrapper implements DrupalStreamWrapperInte
 
         return TRUE;
       }
-      else if ($parts[0] == $this->get_upload()) {
-        if (count($parts) == 2) {
-          return FALSE;
-        }
-
-        // load the file if it already exists in the database.
-        if (empty($this->file_meta)) {
-          $this->load_file_meta_by_unique($parts[1]);
-        }
-
-        // don't re-assign already loaded data.
-        if ($this->tmp_unique == $parts[1]) {
-          return TRUE;
-        }
-
-        $this->tmp_unique = $parts[1];
-        $this->tmp_filename = $parts[2];
-
-        return TRUE;
-      }
     }
 
     return FALSE;
@@ -573,9 +505,6 @@ abstract class mcneese_file_db_stream_wrapper implements DrupalStreamWrapperInte
       }
       else if (!empty($this->tmp_checksum)) {
         $this->load_file_meta($this->tmp_checksum);
-      }
-      else if (!empty($this->tmp_unique)) {
-        $this->load_file_meta_by_unique($this->tmp_unique);
       }
     }
 
