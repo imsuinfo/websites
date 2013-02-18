@@ -116,6 +116,7 @@ function theme_media_admin_thumbnail($variables) {
     $file_url,
     array(
       'html' => TRUE,
+      'absolute' => FALSE,
       'attributes' => array('class' => 'media-thumbnail'),
     ));
   return $output;
@@ -165,7 +166,7 @@ function theme_media_browser_control_result_limit($variables) {
     }
     // set the value of this limit parameter to this limit value
     $parameters['limit'] = $limit;
-    $per_display[] = l($limit, $limit, array('query' => $parameters, 'attributes' => array('class' => $class)));
+    $per_display[] = l($limit, $limit, array('query' => $parameters, 'attributes' => array('class' => $class), 'absolute' => FALSE));
   }
 
   return theme('item_list', array('items' => $per_display, 'attributes' => array('class' => 'result_limit')));
@@ -188,7 +189,7 @@ function theme_media_thumbnail($variables) {
   // Arguments for the thumbnail link
   $thumb = $element['#children'];
   $target = 'file/' . $element['#file']->fid . '/edit';
-  $options = array('query' => $destination, 'html' => TRUE, 'attributes' => array('title' => t('Click to edit details')));
+  $options = array('query' => $destination, 'html' => TRUE, 'absolute' => FALSE, 'attributes' => array('title' => t('Click to edit details')));
 
   // Element should be a field renderable array... This is a little wonky - admitted.
   if (!empty($element['#show_names']) && $element['#name']) {
