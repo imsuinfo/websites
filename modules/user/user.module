@@ -2118,11 +2118,6 @@ function user_login_name_validate($form, &$form_state) {
  * is set to the matching user ID.
  */
 function user_login_authenticate_validate($form, &$form_state) {
-  // No additional validation of user credentials is needed when
-  // $form_state['uid'] is set.
-  if (!empty($form_state['uid'])) {
-    return;
-  }
   $password = trim($form_state['values']['pass']);
   if (!empty($form_state['values']['name']) && !empty($password)) {
     // Do not allow any login from the current user's IP if the limit has been
