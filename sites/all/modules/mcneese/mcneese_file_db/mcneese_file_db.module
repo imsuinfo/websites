@@ -14,7 +14,7 @@
 
 define('MCNEESE_FILE_DB_TARGET', 'default');
 define('MCNEESE_FILE_DB_KEY', 'file_db');
-define('MCNEESE_FILE_DB_CONF_HOSTNAME', 'file_db_hostname');
+define('MCNEESE_FILE_DB_CONF_HOSTID', 'file_db_hostid');
 define('MCNEESE_FILE_DB_SHORT_SUM_SIZE', 7);
 define('MCNEESE_FILE_DB_BLOCK_SIZE', 4096);
 
@@ -112,33 +112,13 @@ function mcneese_file_db_prepare_options() {
  *   Returns a number representing this server or NULL on failure.
  */
 function mcneese_file_db_get_server_id() {
-  $mcneese_file_db_server_id = &drupal_static('mcneese_file_db_server_id', NULL);
+  global $conf;
 
-  if (empty($mcneese_file_db_server_id)) {
-    global $conf;
-
-    if (isset($conf[MCNEESE_FILE_DB_CONF_HOSTNAME])) {
-      try {
-        $options = mcneese_file_db_prepare_options();
-        $file_db = mcneese_file_db_prepare_connection();
-
-        $query = $file_db->select('mcneese_file_db_servers', 'mfds', $options);
-        $query->fields('mfds', array('id'));
-        $query->condition('mfds.machine_name', $conf[MCNEESE_FILE_DB_CONF_HOSTNAME]);
-
-        $results = $query->execute()->fetch();
-
-        $mcneese_file_db_server_id = $results->id;
-      }
-      catch (Exception $e) {
-        cf_error::on_query_execution($e);
-
-        throw $e;
-      }
-    }
+  if (empty($conf[MCNEESE_FILE_DB_CONF_HOSTID])) {
+    return null;
   }
 
-  return $mcneese_file_db_server_id;
+  return $conf[MCNEESE_FILE_DB_CONF_HOSTID];
 }
 
 /**
@@ -164,84 +144,115 @@ function mcneese_file_db_get_server_id() {
 function mcneese_file_db_load_available_files($conditions = array()) {
   global $conf;
 
-  if (empty($conf[MCNEESE_FILE_DB_CONF_HOSTNAME])) {
+  if (empty($conf[MCNEESE_FILE_DB_CONF_HOSTID])) {
     return FALSE;
   }
 
   try {
-    $server_id = mcneese_file_db_get_server_id();
-    $query = mcneese_file_db_build_query_by_checksum($server_id);
+    $file_db = mcneese_file_db_prepare_connection();
+    $options = mcneese_file_db_prepare_options();
+
+    $query = 'SELECT * FROM {mcneese_file_db_files} mfdf';
+    $query .= ' INNER JOIN {mcneese_file_db_associations} mfda ON (mfdf.id = mfda.file_id AND mfda.server_id = :server_id)';
+
+    $arguments = array(':server_id' => $conf[MCNEESE_FILE_DB_CONF_HOSTID]);
 
     if (!empty($conditions)) {
       $and = null;
 
-      if (isset($conditions['range']['start']) && isset($conditions['range']['stop'])) {
-        $query->range($conditions['range']['start'], $conditions['range']['stop']);
-      }
-
       if (!empty($conditions['filename'])) {
         if (is_null($and)) {
-          $and = db_and();
+          $and = '';
+        }
+        else {
+          $and .= ' AND';
         }
 
-        $and->condition('mfdf.filename', $conditions['filename'], 'LIKE');
+        $and .= ' mfdf.filename LIKE :filename';
+        $arguments[':filename'] = $conditions['filename'];
       }
 
       if (!empty($conditions['extension'])) {
         if (is_null($and)) {
-          $and = db_and();
+          $and = '';
+        }
+        else {
+          $and .= ' AND';
         }
 
-        $and->condition('mfdf.extension', $conditions['extension'], 'LIKE');
+        $and .= ' mfdf.extension LIKE :extension';
+        $arguments[':extension'] = $conditions['extension'];
       }
 
       if (!empty($conditions['mimetype'])) {
         if (is_null($and)) {
-          $and = db_and();
+          $and = '';
+        }
+        else {
+          $and .= ' AND';
         }
 
-        $and->condition('mfdf.mimetype', $conditions['mimetype'], 'LIKE');
+        $and .= ' mfdf.mimetype LIKE :mimetype';
+        $arguments[':mimetype'] = $conditions['mimetype'];
       }
 
       if (!empty($conditions['checksum'])) {
         if (is_null($and)) {
-          $and = db_and();
+          $and = '';
+        }
+        else {
+          $and .= ' AND';
         }
 
         if (strlen($conditions['checksum']) == MCNEESE_FILE_DB_SHORT_SUM_SIZE) {
-          $file_db = mcneese_file_db_prepare_connection();
-          $and->condition('mfdf.checksum', $file_db->escapeLike($conditions['checksum']) . '%', 'LIKE');
-          unset($file_db);
+          $and .= ' mfdf.checksum LIKE :checksum';
+          $arguments[':checksum'] = $file_db->escapeLike($conditions['checksum']) . '%';
         }
         else {
-          $and->condition('mfdf.checksum', $conditions['checksum']);
+          $and .= ' mfdf.checksum = :checksum';
+          $arguments[':checksum'] = $conditions['checksum'];
         }
       }
 
       if (!empty($conditions['id'])) {
         if (is_null($and)) {
-          $and = db_and();
+          $and = '';
+        }
+        else {
+          $and .= ' AND';
         }
 
-        $and->condition('mfdf.id', $conditions['id']);
+        $and .= ' mfdf.id LIKE :id';
+        $arguments[':id'] = $conditions['id'];
       }
 
       if (isset($conditions['timestamp']['operation']) && isset($conditions['timestamp']['stamp'])) {
         if (in_array($conditions['timestamp']['operation'], array('>', '>=', '<', '<=', '<>', '=='))) {
           if (is_null($and)) {
-            $and = db_and();
+            $and = '';
+          }
+          else {
+            $and .= ' AND';
           }
 
-          $and->condition('mfdf.timestamp', $conditions['timestamp']['stamp'], $conditions['timestamp']['operation']);
+          $and .= ' mfdf.timestamp ' . $conditions['timestamp']['operation'] . ' :timestamp';
+          $arguments[':timestamp'] = $conditions['timestamp'];
         }
       }
 
       if (!is_null($and)) {
-        $query->condition($and);
+        $query .= ' WHERE ' . $and;
       }
     }
 
-    return $query->execute()->fetchAll();
+    if (isset($conditions['range']['start']) && isset($conditions['range']['stop'])) {
+      $results = $file_db->queryRange($query, $conditions['range']['start'], $conditions['range']['stop'], $arguments, $options);
+    }
+    else {
+      $results = $file_db->query($query, $arguments, $options);
+    }
+
+    return $results->fetchAll();
   }
   catch (Exception $e) {
     cf_error::on_query_execution($e);
