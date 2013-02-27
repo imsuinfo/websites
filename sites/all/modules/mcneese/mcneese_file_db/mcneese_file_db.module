@@ -22,6 +22,7 @@ define('MCNEESE_FILE_DB_FILE_PATH', 'f');
 define('MCNEESE_FILE_DB_STYLES', 'styles');
 define('MCNEESE_FILE_DB_PATH_BY_HASH', 'c');
 define('MCNEESE_FILE_DB_PATH_BY_HASH_SUM', 's');
+define('MCNEESE_FILE_DB_PATH_BY_HASH_SUM_EXTENSION', 'sha1sum');
 
 
 /**
@@ -342,6 +343,7 @@ function mcneese_file_db_bytea_to_bin($bytea) {
 function mcneese_file_db_load_file($by = '', $arg1 = '', $arg2 = '', $arg3 = '') {
   $filepath = '';
   $file_meta = FALSE;
+  $not_modified = FALSE;
 
   // @todo: perform access control
 
@@ -350,11 +352,25 @@ function mcneese_file_db_load_file($by = '', $arg1 = '', $arg2 = '', $arg3 = '')
     // $arg1 = checksum
     // $arg2 = custom filename
 
+    $if_none_match = '';
+
+    if (isset($_SERVER['HTTP_IF_NONE_MATCH'])) {
+      $if_none_match = substr($_SERVER['HTTP_IF_NONE_MATCH'], 1);
+      $if_none_match = substr($if_none_match, 0, -1);
+    }
+
     if (!empty($arg1)) {
       $filepath = mcneese_file_db_unrestricted_stream_wrapper::SCHEME . '://';
-      $filepath .= MCNEESE_FILE_DB_PATH_BY_HASH . '/' . $arg1;
 
-      $files = (array) mcneese_file_db_load_available_files(array('checksum' => $arg1));
+      if (!strncmp($arg1, $if_none_match, MCNEESE_FILE_DB_SHORT_SUM_SIZE)) {
+        $filepath .= MCNEESE_FILE_DB_PATH_BY_HASH . '/' . $if_none_match;
+        $files = (array) mcneese_file_db_load_available_files(array('checksum' => $if_none_match));
+        $not_modified = TRUE;
+      }
+      else {
+        $filepath .= MCNEESE_FILE_DB_PATH_BY_HASH . '/' . $arg1;
+        $files = (array) mcneese_file_db_load_available_files(array('checksum' => $arg1));
+      }
 
       if (!empty($files)) {
         $file_meta = array_pop($files);
@@ -396,10 +412,18 @@ function mcneese_file_db_load_file($by = '', $arg1 = '', $arg2 = '', $arg3 = '')
     }
 
     if ($by == MCNEESE_FILE_DB_PATH_BY_HASH) {
+      $content_location = '/' . MCNEESE_FILE_DB_FILE_PATH . '/' . MCNEESE_FILE_DB_PATH_BY_HASH;
+      $content_location .= '/' . $file_meta->checksum . '/';
+      $content_location .= $file_meta->filename . '.' . $file_meta->extension;
+
       header('Content-Type: ' . $mimetype);
       header('Content-Length: ' . $filesize);
+      header('Content-Location: ' . $content_location);
       header('ETag: "' . $file_meta->checksum . '"');
       header('Accept-Ranges: bytes');
+      header('Last-Modified: ' . date('r', strtotime($file_meta->timestamp)));
+      header('Expires: ' . date('r', strtotime('+14 days', REQUEST_TIME)));
+      header('Date: ' . date('r', REQUEST_TIME));
 
       // allow image and text files to be viewed in place instead of downloaded.
       if (strncmp('image/', $mimetype, 6) != 0 && strncmp('text/', $mimetype, 6) != 0) {
@@ -408,8 +432,8 @@ function mcneese_file_db_load_file($by = '', $arg1 = '', $arg2 = '', $arg3 = '')
         header('Content-Description: File Transfer');
       }
 
-      // ETag cache optimization
-      if (isset($_SERVER['HTTP_IF_NONE_MATCH']) && $_SERVER['HTTP_IF_NONE_MATCH'] == '"' . $file_meta->checksum . '"') {
+      // ETag cache optimization and other http header responses.
+      if ($not_modified) {
         header('HTTP/1.1 304 Not Modified', TRUE, 304);
         exit();
       }
@@ -423,6 +447,11 @@ function mcneese_file_db_load_file($by = '', $arg1 = '', $arg2 = '', $arg3 = '')
       readfile($filepath);
     }
     else if ($by == MCNEESE_FILE_DB_PATH_BY_HASH_SUM) {
+      $content_location = '/' . MCNEESE_FILE_DB_FILE_PATH . '/' . MCNEESE_FILE_DB_PATH_BY_HASH_SUM;
+      $content_location .= '/' . $file_meta->checksum . '/';
+      $content_location .= $file_meta->filename . '.' . $file_meta->extension;
+      $content_location .= '.' . MCNEESE_FILE_DB_PATH_BY_HASH_SUM_EXTENSION;;
+
       $data = $file_meta->checksum . '  ' . $filename;
 
       header('Content-Type: text/plain');
@@ -430,6 +459,10 @@ function mcneese_file_db_load_file($by = '', $arg1 = '', $arg2 = '', $arg3 = '')
       header('Content-Transfer-Encoding: binary');
       header('Content-Disposition: attachment; filename="' . $filename . '.sha1sum"');
       header('Content-Description: File Transfer');
+      header('Content-Location: ' . $content_location);
+      header('Last-Modified: ' . date('r', strtotime($file_meta->timestamp)));
+      header('Expires: ' . date('r', strtotime('+14 days', REQUEST_TIME)));
+      header('Date: ' . date('r', REQUEST_TIME));
 
       ob_clean();
       flush();
