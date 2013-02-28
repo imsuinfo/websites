@@ -376,17 +376,13 @@ abstract class mcneese_file_db_stream_wrapper implements DrupalStreamWrapperInte
    */
   protected function checksum_exists($checksum) {
     try {
-      $server_id = mcneese_file_db_get_server_id();
-      $query = mcneese_file_db_build_query_by_checksum($server_id);
+      $file_db = mcneese_file_db_prepare_connection();
+      $options = mcneese_file_db_prepare_options();
 
-      if (count($checksum) == MCNEESE_FILE_DB_SHORT_SUM_SIZE) {
-        $query->condition('mfdf.checksum', db_like($checksum) . '%', 'LIKE');
-      }
-      else {
-        $query->condition('mfdf.checksum', $checksum);
-      }
+      $built = mcneese_file_db_build_query_by_checksum($checksum);
+      $results = $file_db->queryRange($built['query'], 0, 1, $built['arguments'], $options);
 
-      return $query->execute()->rowCount() != 0;
+      return $results->rowCount() != 0;
     }
     catch (Exception $e) {
       cf_error::on_query_execution($e);

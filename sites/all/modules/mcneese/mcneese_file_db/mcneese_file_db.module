@@ -14,7 +14,7 @@
 
 define('MCNEESE_FILE_DB_TARGET', 'default');
 define('MCNEESE_FILE_DB_KEY', 'file_db');
-define('MCNEESE_FILE_DB_CONF_HOSTID', 'file_db_hostid');
+define('MCNEESE_FILE_DB_CONF_SERVER_ID', 'file_db_server_id');
 define('MCNEESE_FILE_DB_SHORT_SUM_SIZE', 7);
 define('MCNEESE_FILE_DB_BLOCK_SIZE', 4096);
 
@@ -115,11 +115,11 @@ function mcneese_file_db_prepare_options() {
 function mcneese_file_db_get_server_id() {
   global $conf;
 
-  if (empty($conf[MCNEESE_FILE_DB_CONF_HOSTID])) {
+  if (empty($conf[MCNEESE_FILE_DB_CONF_SERVER_ID])) {
     return null;
   }
 
-  return $conf[MCNEESE_FILE_DB_CONF_HOSTID];
+  return $conf[MCNEESE_FILE_DB_CONF_SERVER_ID];
 }
 
 /**
@@ -145,7 +145,7 @@ function mcneese_file_db_get_server_id() {
 function mcneese_file_db_load_available_files($conditions = array()) {
   global $conf;
 
-  if (empty($conf[MCNEESE_FILE_DB_CONF_HOSTID])) {
+  if (empty($conf[MCNEESE_FILE_DB_CONF_SERVER_ID])) {
     return FALSE;
   }
 
@@ -156,7 +156,7 @@ function mcneese_file_db_load_available_files($conditions = array()) {
     $query = 'SELECT * FROM {mcneese_file_db_files} mfdf';
     $query .= ' INNER JOIN {mcneese_file_db_associations} mfda ON (mfdf.id = mfda.file_id AND mfda.server_id = :server_id)';
 
-    $arguments = array(':server_id' => $conf[MCNEESE_FILE_DB_CONF_HOSTID]);
+    $arguments = array(':server_id' => $conf[MCNEESE_FILE_DB_CONF_SERVER_ID]);
 
     if (!empty($conditions)) {
       $and = null;
@@ -267,45 +267,75 @@ function mcneese_file_db_load_available_files($conditions = array()) {
 /**
  * Build a select query for the file table.
  *
- * @param string $server_id
- *   The id of the server as it appears in the database.
+ * @param string $checksum
+ *   The checksum to compare against.
  *
- * @return object
- *   An unexecuted select query object.
+ * @return array|bool
+ *   An array of:
+ *   - query: The query string.
+ *   - arguments: An array of query arguments.
+ *
+ *   If there is an error, the FALSE is returned.
  */
-function mcneese_file_db_build_query_by_checksum($server_id) {
-  $file_db = mcneese_file_db_prepare_connection();
-  $options = mcneese_file_db_prepare_options();
+function mcneese_file_db_build_query_by_checksum($checksum) {
+  global $conf;
 
-  $query = $file_db->select('mcneese_file_db_files', 'mfdf', $options);
-  $query->fields('mfdf');
+  if (empty($conf[MCNEESE_FILE_DB_CONF_SERVER_ID])) {
+    return FALSE;
+  }
 
-  $query->join('mcneese_file_db_associations', 'mfda', 'mfdf.id = mfda.file_id');
-  $query->condition('mfda.server_id', $server_id);
+  $built = array();
+  $built['query'] = '';
+  $built['arguments'] = array();
+  $built['arguments'][':server_id'] = $conf[MCNEESE_FILE_DB_CONF_SERVER_ID];
 
-  return $query;
+  $built['query'] = 'SELECT * FROM {mcneese_file_db_files} mfdf';
+  $built['query'] .= ' INNER JOIN {mcneese_file_db_associations} mfda ON (mfdf.id = mfda.file_id AND mfda.server_id = :server_id)';
+
+  if (count($checksum) == MCNEESE_FILE_DB_SHORT_SUM_SIZE) {
+    $built['query'] .= ' WHERE mfdf.checksum LIKE :checksum';
+    $built['arguments'][':checksum'] = db_like($checksum);
+  }
+  else {
+    $built['query'] .= ' WHERE mfdf.checksum = :checksum';
+    $built['arguments'][':checksum'] = $checksum;
+  }
+
+  return $built;
 }
 
 /**
  * Build a select query for the file data table.
  *
- * @param string $server_id
- *   The id of the server as it appears in the database.
+ * @param string $checksum
+ *   The checksum to compare against.
  *
- * @return object
- *   An unexecuted select query object.
+ * @return array|bool
+ *   An array of:
+ *   - query: The query string.
+ *   - arguments: An array of query arguments.
+ *
+ *   If there is an error, the FALSE is returned.
  */
-function mcneese_file_db_build_data_query($server_id) {
-  $file_db = mcneese_file_db_prepare_connection();
-  $options = mcneese_file_db_prepare_options();
+function mcneese_file_db_build_data_query($file_id) {
+  global $conf;
 
-  $query = $file_db->select('mcneese_file_db_file_data', 'mfdfd', $options);
-  $query->fields('mfdfd');
+  if (empty($conf[MCNEESE_FILE_DB_CONF_SERVER_ID])) {
+    return FALSE;
+  }
 
-  $query->join('mcneese_file_db_associations', 'mfda', 'mfdfd.file_id = mfda.file_id');
-  $query->condition('mfda.server_id', $server_id);
+  $built = array();
+  $built['query'] = '';
+  $built['arguments'] = array();
+  $built['arguments'][':server_id'] = $conf[MCNEESE_FILE_DB_CONF_SERVER_ID];
+  $built['arguments'][':file_id'] = $file_id;
 
-  return $query;
+  $built['query'] = 'SELECT * FROM {mcneese_file_db_file_data} mfdfd';
+  $built['query'] .= ' INNER JOIN {mcneese_file_db_associations} mfda ON (mfdfd.file_id = mfda.file_id AND mfda.server_id = :server_id)';
+  $built['query'] .= ' WHERE mfda.server_id = :server_id';
+  $built['query'] .= ' AND mfda.file_id = :file_id';
+
+  return $built;
 }
 
 /**
@@ -435,10 +465,12 @@ function mcneese_file_db_load_file($by = '', $arg1 = '', $arg2 = '', $arg3 = '')
       // ETag cache optimization and other http header responses.
       if ($not_modified) {
         header('HTTP/1.1 304 Not Modified', TRUE, 304);
+        ob_flush();
+        flush();
         exit();
       }
 
-      ob_clean();
+      ob_flush();
       flush();
 
       // ensure that the file transfer is not cut short by a time limit.
@@ -464,12 +496,13 @@ function mcneese_file_db_load_file($by = '', $arg1 = '', $arg2 = '', $arg3 = '')
       header('Expires: ' . date('r', strtotime('+14 days', REQUEST_TIME)));
       header('Date: ' . date('r', REQUEST_TIME));
 
-      ob_clean();
+      ob_flush();
       flush();
 
       print($data);
     }
 
+    ob_flush();
     flush();
     exit();
   }
@@ -575,7 +608,7 @@ function mcneese_file_db_generate_image_style($arguments) {
     //header('ETag: "' . $checksum . '"');
     header('Accept-Ranges: bytes');
 
-    ob_clean();
+    ob_flush();
     flush();
 
     readfile($file_uri);

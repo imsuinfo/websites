@@ -70,6 +70,12 @@ class mcneese_file_db_unrestricted_stream_wrapper extends mcneese_file_db_stream
    * Implements stream_close().
    */
   public function stream_close() {
+    global $conf;
+
+    if (empty($conf[MCNEESE_FILE_DB_CONF_SERVER_ID])) {
+      return FALSE;
+    }
+
     if (!is_null($this->stream_fhandle) && $this->stream_fid != 0) {
       $stat = fstat($this->stream_fhandle);
       fclose($this->stream_fhandle);
@@ -124,7 +130,6 @@ class mcneese_file_db_unrestricted_stream_wrapper extends mcneese_file_db_stream
           $transaction = db_transaction();
 
           try {
-            $server_id = mcneese_file_db_get_server_id();
             $file_db = mcneese_file_db_prepare_connection();
             $options = mcneese_file_db_prepare_options();
 
@@ -146,7 +151,6 @@ class mcneese_file_db_unrestricted_stream_wrapper extends mcneese_file_db_stream
           $transaction = db_transaction();
 
           try {
-            $server_id = mcneese_file_db_get_server_id();
             $file_db = mcneese_file_db_prepare_connection();
             $options = mcneese_file_db_prepare_options();
 
@@ -157,7 +161,7 @@ class mcneese_file_db_unrestricted_stream_wrapper extends mcneese_file_db_stream
             $write_result = $query->execute();
 
             $query = $file_db->insert('mcneese_file_db_associations', $options);
-            $fields = array('file_id' => $this->stream_fid, 'server_id' => $server_id);
+            $fields = array('file_id' => $this->stream_fid, 'server_id' => $conf[MCNEESE_FILE_DB_CONF_SERVER_ID]);
             $query->fields($fields);
 
             $write_result = $query->execute();
@@ -165,7 +169,7 @@ class mcneese_file_db_unrestricted_stream_wrapper extends mcneese_file_db_stream
             $this->load_user();
 
             $query = $file_db->insert('mcneese_file_db_users', $options);
-            $fields = array('file_id' => $this->stream_fid, 'user_id' => $this->user, 'server_id' => $server_id);
+            $fields = array('file_id' => $this->stream_fid, 'user_id' => $this->user, 'server_id' => $conf[MCNEESE_FILE_DB_CONF_SERVER_ID]);
             $query->fields($fields);
 
             $write_result = $query->execute();
@@ -236,11 +240,17 @@ class mcneese_file_db_unrestricted_stream_wrapper extends mcneese_file_db_stream
     }
     else {
       try {
-        $server_id = mcneese_file_db_get_server_id();
+        $file_db = mcneese_file_db_prepare_connection();
+        $options = mcneese_file_db_prepare_options();
 
-        $query = mcneese_file_db_build_data_query($server_id);
-        $query->condition('mfda.file_id', $this->file_meta->id);
-        $this->stream = $query->execute();
+        $built = mcneese_file_db_build_data_query($this->file_meta->id);
+
+        if ($built === FALSE) {
+          $this->stream = FALSE;
+        }
+        else {
+          $this->stream = $file_db->query($built['query'], $built['arguments'], $options);
+        }
 
         if ($this->stream === FALSE) {
           $this->stream_close(); // @todo: is this necessary?
@@ -276,6 +286,12 @@ class mcneese_file_db_unrestricted_stream_wrapper extends mcneese_file_db_stream
       return $output;
     }
 
+    global $conf;
+
+    if (empty($conf[MCNEESE_FILE_DB_CONF_SERVER_ID])) {
+      return FALSE;
+    }
+
     // determine the number of blocks to read.
     $offset = $bytes + $this->stream_last_read;
     $blocks = intval($offset / MCNEESE_FILE_DB_BLOCK_SIZE);
@@ -292,18 +308,21 @@ class mcneese_file_db_unrestricted_stream_wrapper extends mcneese_file_db_stream
       $underflow = 0;
     }
 
-    $server_id = mcneese_file_db_get_server_id();
     $file_db = mcneese_file_db_prepare_connection();
     $options = mcneese_file_db_prepare_options();
 
+    $query = 'SELECT mfdfd.data FROM {mcneese_file_db_file_data} mfdfd';
+    $query .= ' INNER JOIN {mcneese_file_db_associations} mfda ON (mfdfd.file_id = mfda.file_id AND mfda.server_id = :server_id)';
+    $query .= ' WHERE mfdfd.file_id = :file_id';
+    $query .= ' AND mfdfd.block = :block';
+    $arguments = array(':server_id' => $conf[MCNEESE_FILE_DB_CONF_SERVER_ID]);
+    $arguments[':file_id'] = $this->stream_fid;
+
     while ($this->stream_position < $stream_blocks) {
       try {
-        $query = $file_db->select('mcneese_file_db_file_data', 'mfdfd', $options);
-        $query->fields('mfdfd', array('data'));
-        $query->condition('mfdfd.file_id', $this->stream_fid);
-        $query->condition('mfdfd.block', $this->stream_position);
+        $arguments[':block'] = $this->stream_position;
 
-        $results = $query->execute()->fetchField();
+        $results = $file_db->queryRange($query, 0, 1, $arguments, $options)->fetchField();
         $raw_bytes = mcneese_file_db_bytea_to_bin($results);
 
         if ($underflow > 0 && $this->stream_position + 1 == $stream_blocks) {
@@ -401,7 +420,6 @@ class mcneese_file_db_unrestricted_stream_wrapper extends mcneese_file_db_stream
     $block = substr($data, 0, $block_length);
 
     try {
-      $server_id = mcneese_file_db_get_server_id();
       $file_db = mcneese_file_db_prepare_connection();
       $options = mcneese_file_db_prepare_options();
 
