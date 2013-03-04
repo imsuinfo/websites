@@ -67,7 +67,7 @@ function mcneese_workflow_workbench_moderation_transition($node, $previous_state
         actions_do('workbench_moderation_set_state_action', $node, array('state' => 'published', 'force_transition' => TRUE));
       }
       else {
-        $message = '<strong>%title</strong> (node %nid, revision %vid) has failed accessibility validation and contains major accessibility issues.<br>';;
+        $message = '<strong>%title</strong> (node %nid, revision %vid) has failed accessibility validation and contains major accessibility issues.<br>';
         actions_do('workbench_moderation_set_state_action', $node, array('state' => 'needs_work', 'force_transition' => TRUE));
         drupal_set_message(t($message . $details, array('%title' => $node->title, '%nid' => $node->nid, '%vid' => $node->vid)), 'error');
       }
