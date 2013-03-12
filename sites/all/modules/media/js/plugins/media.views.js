@@ -67,7 +67,7 @@ Drupal.media.browser.views.select = function(view) {
 Drupal.media.browser.views.setup = function(view) {
   // Catch the click on a media item
   $('.view-content .media-item', view).bind('click', function () {
-    var fid = $(this).closest('a[data-fid]').data('fid'),
+    var fid = $(this).closest('[data-fid]').data('fid'),
       selectedFiles = new Array();
 
     // Remove all currently selected files
