@@ -36,28 +36,25 @@ $uri = request_uri();
 $arguments = explode('/', $uri);
 
 if (isset($arguments[1]) && $arguments[1] == 'f') {
-  try {
-    _drupal_root_db_prepare_();
-    mcneese_file_db_return_file($arguments);
-  }
-  catch (Exception $e) {
-    drupal_bootstrap(DRUPAL_BOOTSTRAP_FULL);
-    throw $e;
-  }
+  _drupal_root_db_prepare_();
+  mcneese_file_db_return_file($arguments);
 }
 else if (isset($arguments[1]) && $arguments[1] == 'files' && count($arguments) > 6 && $arguments[2] == 'styles') {
-  drupal_bootstrap(DRUPAL_BOOTSTRAP_FULL);
+  _drupal_root_db_prepare_();
+  mcneese_file_db_register_stream_wrappers();
 
   //if (($arguments[4] == mcneese_file_db_unrestricted_stream_wrapper::SCHEME || $arguments[4] == mcneese_file_db_restricted_stream_wrapper::SCHEME) && $arguments[5] == 'f') {
   if ($arguments[4] == mcneese_file_db_unrestricted_stream_wrapper::SCHEME && $arguments[5] == 'f') {
     $file_uri = DRUPAL_ROOT . $uri;
 
     if (!file_exists($file_uri) || empty($arguments[8])) {
+      drupal_bootstrap(DRUPAL_BOOTSTRAP_FULL);
       mcneese_file_db_generate_image_style($arguments);
       exit();
     }
   }
 
+  drupal_bootstrap(DRUPAL_BOOTSTRAP_FULL);
   menu_execute_active_handler();
 }
 else {
