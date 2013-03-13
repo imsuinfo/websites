@@ -15,6 +15,7 @@
       <?php foreach ($rows as $id => $row): ?>
         <li id="media-item-<?php print $row->fid; ?>" data-fid="<?php print $row->fid; ?>" class="<?php print $classes_array[$id]; ?>">
           <?php print $row->preview; ?>
+          <a href="<?php print($row->url); ?>" class="media-item-url" title="link to file"></a>
         </li>
       <?php endforeach; ?>
     <?php print $list_type_suffix; ?>

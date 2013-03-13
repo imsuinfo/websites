@@ -16,8 +16,7 @@
 /* Media item */
 
 .media-item {
-  background: #FFFFFF;
-  border: 1px solid #CCCCCC;
+  border: 1px solid #cccccc;
   padding: 5px;
   width: 100px;
 }
@@ -36,6 +35,21 @@
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+/* Media Item Url */
+
+.media-item-url {
+  float: right;
+
+  margin: 5px;
+
+  width: 12px;
+  height: 12px;
+
+  background-image: url(../images/icons/default/link-external.png);
+  background-repeat: none;
+  background-position: center;
 }
 
 /* Media item list */
