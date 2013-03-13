@@ -804,7 +804,7 @@ function workbench_menu_build_menu_item($menu, $item, &$variables) {
       }
     }
 
-    $settings[$item['item']->id]['attributes']['href'] = array(check_url($link_path));
+    $settings[$item['item']->id]['attributes']['href'] = array($link_path);
     $settings[$item['item']->id]['outside_link'] = (preg_match('@^' . $menu->path . '/@', $link_path) > 0);
 
     unset($matches);
@@ -869,7 +869,7 @@ function workbench_menu_build_menu_item($menu, $item, &$variables) {
       $settings[$item['item']->id]['attributes']['title'] = array(t("View or Download: !filename.", array('!filename' => $filename)));
     }
 
-    $settings[$item['item']->id]['attributes']['href'] = array(check_url($link_path));
+    $settings[$item['item']->id]['attributes']['href'] = array($link_path);
     $settings[$item['item']->id]['postfix'] = '';
 
     unset($icon);
