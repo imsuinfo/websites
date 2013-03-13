@@ -253,11 +253,19 @@ function cf_settings_unregister($variable_name, $variable_type, $module_name) {
   if (!is_string($variable_type) || empty($variable_type)) return FALSE;
   if (!is_string($module_name) || empty($module_name)) return FALSE;
 
-  $subquery = cf_db_options_machine_name_to_id_subquery('cf_settings', 'variable_type', $variable_type);
+  $options_table = cf_db_options_get_options_name('cf_settings', 'variable_type');
 
-  if ($subquery === FALSE) return FALSE;
+  if ($options_table === FALSE) return FALSE;
 
-  db_query('DELETE FROM {cf_settings_register} WHERE variable_name = :variable_name AND variable_type = ' . $subquery . ' AND module_name = :module_name', array(':variable_name' => $variable_name, ':module_name' => $module_name));
+  $subquery =  db_select($options_table, 'csot');
+  $subquery->fields('csot', array('id'));
+  $subquery->condition('machine_name', $variable_type);
+
+  $query = db_delete('cf_settings_register');
+  $query->condition('variable_name', $variable_name);
+  $query->condition('module_name', $module_name, 'IN');
+  $query->condition('variable_type', $subquery, 'IN');
+  $query->execute();
 
   if ($variable_type == 'drupal_variables') {
     if (!cf_settings_is_registered($variable_name, $variable_type)) {
