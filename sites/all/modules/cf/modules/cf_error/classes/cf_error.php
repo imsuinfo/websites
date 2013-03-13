@@ -919,39 +919,42 @@ class cf_error {
    * @see watchdog_severity_levels()
    */
   private static function p_print_message(cf_error_code $error, $message, array $variables_array, $additional = "") {
-    switch ($error->get_severity()) {
-      case WATCHDOG_EMERGENCY:
-        if (user_access('view cf emergency messages')) {
-          drupal_set_message(t($message, $variables_array), 'error', FALSE);
-        }
-        break;
 
-      case WATCHDOG_ALERT:
-      case WATCHDOG_CRITICAL:
-      case WATCHDOG_ERROR:
-        if (user_access('view cf error messages')) {
-          drupal_set_message(t($message, $variables_array), 'error', FALSE);
-        }
-        break;
+    if (function_exists('user_access')) {
+      switch ($error->get_severity()) {
+        case WATCHDOG_EMERGENCY:
+          if (user_access('view cf emergency messages')) {
+            drupal_set_message(t($message, $variables_array), 'error', FALSE);
+          }
+          break;
 
-      case WATCHDOG_WARNING:
-        if (user_access('view cf warning messages')) {
-          drupal_set_message(t($message, $variables_array), 'warning', FALSE);
-        }
-        break;
+        case WATCHDOG_ALERT:
+        case WATCHDOG_CRITICAL:
+        case WATCHDOG_ERROR:
+          if (user_access('view cf error messages')) {
+            drupal_set_message(t($message, $variables_array), 'error', FALSE);
+          }
+          break;
 
-      case WATCHDOG_NOTICE:
-      case WATCHDOG_INFO:
-        if (user_access('view cf information messages')) {
-          drupal_set_message(t($message, $variables_array), 'status', FALSE);
-        }
-        break;
+        case WATCHDOG_WARNING:
+          if (user_access('view cf warning messages')) {
+            drupal_set_message(t($message, $variables_array), 'warning', FALSE);
+          }
+          break;
 
-      case WATCHDOG_DEBUG:
-        if (user_access('view cf debug messages')) {
-          drupal_set_message(t($message, $variables_array), 'status', FALSE);
-        }
-        break;
+        case WATCHDOG_NOTICE:
+        case WATCHDOG_INFO:
+          if (user_access('view cf information messages')) {
+            drupal_set_message(t($message, $variables_array), 'status', FALSE);
+          }
+          break;
+
+        case WATCHDOG_DEBUG:
+          if (user_access('view cf debug messages')) {
+            drupal_set_message(t($message, $variables_array), 'status', FALSE);
+          }
+          break;
+      }
     }
 
     $message .= $additional;
