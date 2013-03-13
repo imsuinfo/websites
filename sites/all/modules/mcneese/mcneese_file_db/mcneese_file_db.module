@@ -15,14 +15,15 @@
 define('MCNEESE_FILE_DB_TARGET', 'default');
 define('MCNEESE_FILE_DB_KEY', 'file_db');
 define('MCNEESE_FILE_DB_CONF_SERVER_ID', 'file_db_server_id');
-define('MCNEESE_FILE_DB_SHORT_SUM_SIZE', 7);
+define('MCNEESE_FILE_DB_SHORT_SUM_SIZE', 8);
 define('MCNEESE_FILE_DB_BLOCK_SIZE', 4096);
 
 define('MCNEESE_FILE_DB_FILE_PATH', 'f');
 define('MCNEESE_FILE_DB_STYLES', 'styles');
 define('MCNEESE_FILE_DB_PATH_BY_HASH', 'c');
 define('MCNEESE_FILE_DB_PATH_BY_HASH_SUM', 's');
-define('MCNEESE_FILE_DB_PATH_BY_HASH_SUM_EXTENSION', 'sha1sum');
+define('MCNEESE_FILE_DB_PATH_BY_HASH_SUM_EXTENSION', 'sha256sum');
+define('MCNEESE_FILE_DB_PATH_BY_HASH_ALGORITHM', 'sha256');
 
 
 /**
@@ -153,7 +154,7 @@ function mcneese_file_db_load_available_files($conditions = array()) {
     $file_db = mcneese_file_db_prepare_connection();
     $options = mcneese_file_db_prepare_options();
 
-    $query = 'SELECT * FROM {mcneese_file_db_files} mfdf';
+    $query = 'SELECT mfdf.* FROM {mcneese_file_db_files} mfdf';
     $query .= ' INNER JOIN {mcneese_file_db_associations} mfda ON (mfdf.id = mfda.file_id AND mfda.server_id = :server_id)';
 
     $arguments = array(':server_id' => $conf[MCNEESE_FILE_DB_CONF_SERVER_ID]);
@@ -289,7 +290,7 @@ function mcneese_file_db_build_query_by_checksum($checksum) {
   $built['arguments'] = array();
   $built['arguments'][':server_id'] = $conf[MCNEESE_FILE_DB_CONF_SERVER_ID];
 
-  $built['query'] = 'SELECT * FROM {mcneese_file_db_files} mfdf';
+  $built['query'] = 'SELECT mfdf.* FROM {mcneese_file_db_files} mfdf';
   $built['query'] .= ' INNER JOIN {mcneese_file_db_associations} mfda ON (mfdf.id = mfda.file_id AND mfda.server_id = :server_id)';
 
   if (count($checksum) == MCNEESE_FILE_DB_SHORT_SUM_SIZE) {
@@ -330,7 +331,7 @@ function mcneese_file_db_build_data_query($file_id) {
   $built['arguments'][':server_id'] = $conf[MCNEESE_FILE_DB_CONF_SERVER_ID];
   $built['arguments'][':file_id'] = $file_id;
 
-  $built['query'] = 'SELECT * FROM {mcneese_file_db_file_data} mfdfd';
+  $built['query'] = 'SELECT mfdfd.* FROM {mcneese_file_db_file_data} mfdfd';
   $built['query'] .= ' INNER JOIN {mcneese_file_db_associations} mfda ON (mfdfd.file_id = mfda.file_id AND mfda.server_id = :server_id)';
   $built['query'] .= ' WHERE mfda.server_id = :server_id';
   $built['query'] .= ' AND mfda.file_id = :file_id';
@@ -482,14 +483,14 @@ function mcneese_file_db_load_file($by = '', $arg1 = '', $arg2 = '', $arg3 = '')
       $content_location = '/' . MCNEESE_FILE_DB_FILE_PATH . '/' . MCNEESE_FILE_DB_PATH_BY_HASH_SUM;
       $content_location .= '/' . $file_meta->checksum . '/';
       $content_location .= $file_meta->filename . '.' . $file_meta->extension;
-      $content_location .= '.' . MCNEESE_FILE_DB_PATH_BY_HASH_SUM_EXTENSION;;
+      $content_location .= '.' . MCNEESE_FILE_DB_PATH_BY_HASH_SUM_EXTENSION;
 
       $data = $file_meta->checksum . '  ' . $filename;
 
       header('Content-Type: text/plain');
       header('Content-Length: ' . strlen($data));
       header('Content-Transfer-Encoding: binary');
-      header('Content-Disposition: attachment; filename="' . $filename . '.sha1sum"');
+      header('Content-Disposition: attachment; filename="' . $filename . '.' . MCNEESE_FILE_DB_PATH_BY_HASH_SUM_EXTENSION . '"');
       header('Content-Description: File Transfer');
       header('Content-Location: ' . $content_location);
       header('Last-Modified: ' . date('r', strtotime($file_meta->timestamp)));
@@ -638,7 +639,7 @@ function mcneese_file_db_file_validate($file) {
     return $errors;
   }
 
-  $checksum = sha1_file($file->uri);
+  $checksum = hash_file(MCNEESE_FILE_DB_PATH_BY_HASH_ALGORITHM, $file->uri);
   $shortsum = substr($checksum, 0, MCNEESE_FILE_DB_SHORT_SUM_SIZE);
 
   $file->destination = $outer_parts[0] . '://' . MCNEESE_FILE_DB_PATH_BY_HASH . '/' . $shortsum;

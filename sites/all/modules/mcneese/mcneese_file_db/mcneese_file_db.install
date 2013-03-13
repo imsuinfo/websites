@@ -27,7 +27,7 @@ function mcneese_file_db_install() {
     filename varchar(255),
     extension varchar(63),
     mimetype varchar(255),
-    checksum varchar(40) UNIQUE,
+    checksum varchar(64) UNIQUE,
     size bigint,
     timestamp timestamp NOT NULL DEFAULT now()
   );

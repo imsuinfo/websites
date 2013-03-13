@@ -122,7 +122,7 @@ class mcneese_file_db_unrestricted_stream_wrapper extends mcneese_file_db_stream
           }
         }
 
-        $fields['checksum'] = sha1_file($this->stream_fname);
+        $fields['checksum'] = hash_file(MCNEESE_FILE_DB_PATH_BY_HASH_ALGORITHM, $this->stream_fname);
         $this->tmp_checksum = $fields['checksum'];
 
         // if the checksum already exists in the database, then delete the current newly created file.
