@@ -23,7 +23,8 @@ a new rule.
 -- USAGE --
 
 Using the submitted data in a rule is easy, as you can access it either via PHP
-or using tokens (after installing the Token-module).
+(requires core module "PHP Filter") or using tokens (after installing the
+Token-module [http://drupal.org/project/token]).
 
 PHP:
  Each rule reacting on an event thrown by "Webform Rules" gets 3 arguments to
@@ -91,6 +92,10 @@ Condition:
  Webform Rules adds a new condition to the rules configuration. With this
  condition you can tell rules to react only on one specific webform by selecting
  its title.
+
+Actions:
+ Webform Rules provides some additional actions to either open or close webforms
+ or fetch a list of submissions for a webform.
 
 
 -- AUTHOR --
