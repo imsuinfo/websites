@@ -4,7 +4,7 @@
  * @file
  * Provides the stream wrapper: dbr://
  *
- * This class will handle upload & download of unrestricted files.
+ * This class will handle upload & download of restricted files.
  * The following paths are supports:
  * - upload: dbr://[filename]
  * - download: dbr://c/[short_checksum]/[filename (optional)]
@@ -21,7 +21,7 @@
  * @{
  */
 
-class mcneese_file_db_unrestricted_stream_wrapper extends mcneese_file_db_stream_wrapper {
+class mcneese_file_db_restricted_stream_wrapper extends mcneese_file_db_stream_wrapper {
   const SCHEME = 'dbr';
   const CORE = 'private';
 
@@ -492,7 +492,7 @@ class mcneese_file_db_unrestricted_stream_wrapper extends mcneese_file_db_stream
    */
   public static function getMimeType($uri, $mapping = NULL) {
     // Drupal made getMimeType() static, so getting the mimetype requires creating another object and then calling a custom get_mimetype() function.
-    $wrapper = new mcneese_file_db_unrestricted_stream_wrapper();
+    $wrapper = new mcneese_file_db_restricted_stream_wrapper();
     $wrapper->setUri($uri);
     return $wrapper->get_mimetype();
   }
@@ -501,7 +501,7 @@ class mcneese_file_db_unrestricted_stream_wrapper extends mcneese_file_db_stream
    * Implements get_scheme().
    */
   protected function get_scheme() {
-    return mcneese_file_db_unrestricted_stream_wrapper::SCHEME;
+    return mcneese_file_db_restricted_stream_wrapper::SCHEME;
   }
 
   /**
@@ -522,7 +522,7 @@ class mcneese_file_db_unrestricted_stream_wrapper extends mcneese_file_db_stream
    * Implements get_core().
    */
   protected function get_core() {
-    return mcneese_file_db_unrestricted_stream_wrapper::CORE;
+    return mcneese_file_db_restricted_stream_wrapper::CORE;
   }
 }
 

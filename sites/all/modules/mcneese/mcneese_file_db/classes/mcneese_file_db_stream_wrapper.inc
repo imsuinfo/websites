@@ -51,7 +51,9 @@ abstract class mcneese_file_db_stream_wrapper implements DrupalStreamWrapperInte
       return FALSE;
     }
 
-    return $this->get_external() . '/' . $parts[1];
+    global $base_path;
+
+    return $base_path . $this->get_external() . '/' . $parts[1];
   }
 
   /**
@@ -428,17 +430,41 @@ abstract class mcneese_file_db_stream_wrapper implements DrupalStreamWrapperInte
     }
 
     if (count($outer_parts) > 1) {
-      $parts = explode('/', $outer_parts[1]);
+      // first eliminate all repeated '/', such as 'dbu://a/b/////c/d' which should be read as 'dbu://a/b/c/d'.
+      $fixed_uri = preg_replace('@/+@i', '/', $outer_parts[1]);
 
+      $parts = explode('/', $fixed_uri);
+
+      if (count($parts) < 2) {
+        return FALSE;
+      }
+
+      // A uri may also contain a link to a style path, such as dbu://styles/square_thumbnail/dbu/f/c/01234567/gksu.png .
       if ($parts[0] == MCNEESE_FILE_DB_STYLES) {
         $this->image_style = $parts[1];
         $this->image_style_uri = null;
 
-        if ($parts[2] != $this->get_scheme() || $parts[3] != $this->get_external()) {
+        if ($parts[2] != $this->get_scheme()) {
           return FALSE;
         }
 
-        $parts = array_slice($parts, 4);
+        if ($parts[3] == $this->get_external()) {
+          $parts = array_slice($parts, 4);
+        }
+        else {
+          return FALSE;
+        }
+      }
+
+      // allow being passed a path beginning with /MCNEESE_FILE_DB_FILE_PATH .
+      // doing this allows for modules to find the scheme using only the final url.
+      if (empty($parts[0]) && $parts[1] == MCNEESE_FILE_DB_FILE_PATH) {
+        array_shift($parts);
+        array_shift($parts);
+
+        if (count($parts) < 2) {
+          return FALSE;
+        }
       }
 
       if ($parts[0] == $this->get_path_by_hash()) {
