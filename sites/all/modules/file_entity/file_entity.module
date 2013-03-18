@@ -701,7 +701,7 @@ function file_entity_file_formatter_file_image_view($file, $display, $langcode) 
       $element = array(
         '#theme' => 'image_style',
         '#style_name' => $display['settings']['image_style'],
-        '#path' => url(file_create_url($file->uri)),
+        '#path' => file_create_url($file->uri),
         '#width' => $file->image_dimensions['width'],
         '#height' => $file->image_dimensions['height'],
         '#alt' => token_replace($display['settings']['alt'], array('file' => $file), $replace_options),
@@ -711,7 +711,7 @@ function file_entity_file_formatter_file_image_view($file, $display, $langcode) 
     else {
       $element = array(
         '#theme' => 'image',
-        '#path' => url(file_create_url($file->uri)),
+        '#path' => file_create_url($file->uri),
         '#width' => $file->image_dimensions['width'],
         '#height' => $file->image_dimensions['height'],
         '#alt' => token_replace($display['settings']['alt'], array('file' => $file), $replace_options),
