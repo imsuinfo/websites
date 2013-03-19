@@ -22,7 +22,7 @@
  */
 function cf_field_cardinality_form_field_ui_field_edit_form_alter(&$form, &$form_state, $form_id) {
   if (!is_array($form)) {
-    if (module_exists('cf_error')) {
+    if (class_exists('cf_error')) {
       cf_error::invalid_array('form');
     }
     return;

@@ -55,7 +55,7 @@
  */
 function cf_db_options_get_options_name($table, $name) {
   if (cf_is_empty_or_non_string('table', $table, WATCHDOG_ERROR)) {
-    if (module_exists('cf_error')) {
+    if (class_exists('cf_error')) {
       cf_error::empty_string('table');
     }
 
@@ -63,7 +63,7 @@ function cf_db_options_get_options_name($table, $name) {
   }
 
   if (cf_is_empty_or_non_string('name', $name, WATCHDOG_ERROR)) {
-    if (module_exists('cf_error')) {
+    if (class_exists('cf_error')) {
       cf_error::empty_string('name');
     }
 
@@ -329,7 +329,7 @@ function cf_db_options_get_options($table, $name, $option = NULL) {
     $records = $query->execute()->fetchAll();
   }
   catch (Exception $e) {
-    if (module_exists('cf_error')) {
+    if (class_exists('cf_error')) {
       cf_error::on_query_execution($e);
     }
 
@@ -399,7 +399,7 @@ function cf_db_options_get_options_list($table, $name, $options = NULL) {
     $options = cf_db_options_get_options($table, $name, NULL);
   }
   elseif (!is_array($options)) {
-    if (module_exists('cf_error')) {
+    if (class_exists('cf_error')) {
       cf_error::invalid_array('options');
     }
 
@@ -456,7 +456,7 @@ function cf_db_options_machine_name_to_id($table, $name, $machine_name) {
     return $query->execute()->fetchField();
   }
   catch (Exception $e) {
-    if (module_exists('cf_error')) {
+    if (class_exists('cf_error')) {
       cf_error::on_query_execution($e);
     }
 
@@ -485,7 +485,7 @@ function cf_db_options_machine_name_to_id($table, $name, $machine_name) {
  */
 function cf_db_options_id_to_machine_name($table, $name, $id) {
   if (!cf_is_integer($id)) {
-    if (module_exists('cf_error')) {
+    if (class_exists('cf_error')) {
       cf_error::invalid_numeric('id');
     }
 
@@ -510,7 +510,7 @@ function cf_db_options_id_to_machine_name($table, $name, $id) {
     return $query->execute()->fetchField();
   }
   catch (Exception $e) {
-    if (module_exists('cf_error')) {
+    if (class_exists('cf_error')) {
       cf_error::on_query_execution($e);
     }
 

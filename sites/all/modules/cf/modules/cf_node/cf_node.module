@@ -93,7 +93,7 @@ function cf_node_create($form_id, $node_class) {
   }
 
   if (!is_object($node_class)) {
-    if (module_exists('cf_error')) {
+    if (class_exists('cf_error')) {
       cf_error::invalid_object('node_class');
     }
 

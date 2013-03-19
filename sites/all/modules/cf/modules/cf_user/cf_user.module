@@ -40,7 +40,7 @@ function cf_user_get_rids($uid = NULL, $object = TRUE) {
     $uid = $current_user->uid;
   }
   elseif (!is_numeric($uid)) {
-    if (module_exists('cf_error')) {
+    if (class_exists('cf_error')) {
       cf_error::invalid_numeric('uid');
     }
 
@@ -71,7 +71,7 @@ function cf_user_get_rids($uid = NULL, $object = TRUE) {
     $rids = array_keys($query_execute->fetchAllAssoc('rid'));
   }
   catch (Exception $e) {
-    if (module_exists('cf_error')) {
+    if (class_exists('cf_error')) {
       cf_error::on_query_execution($e);
     }
   }
@@ -114,7 +114,7 @@ function cf_user_get_rids($uid = NULL, $object = TRUE) {
  */
 function cf_user_has_role($rid, $uid = NULL) {
   if (!is_numeric($rid)) {
-    if (module_exists('cf_error')) {
+    if (class_exists('cf_error')) {
       cf_error::invalid_numeric('rid');
     }
 
@@ -126,7 +126,7 @@ function cf_user_has_role($rid, $uid = NULL) {
     $uid = $current_user->uid;
   }
   elseif (!is_numeric($uid)) {
-    if (module_exists('cf_error')) {
+    if (class_exists('cf_error')) {
       cf_error::invalid_numeric('uid');
     }
 
@@ -160,7 +160,7 @@ function cf_user_has_role($rid, $uid = NULL) {
       }
     }
     catch (Exception $e) {
-      if (module_exists('cf_error')) {
+      if (class_exists('cf_error')) {
         cf_error::on_query_execution($e);
       }
     }
@@ -185,7 +185,7 @@ function cf_user_has_role($rid, $uid = NULL) {
  */
 function cf_user_get_users_by_rids($rids) {
   if (!is_array($rids) || empty($rids)) {
-    if (module_exists('cf_error')) {
+    if (class_exists('cf_error')) {
       cf_error::invalid_array('rids');
     }
 

@@ -463,7 +463,7 @@ function cf_settings_modules_uninstalled($module_list) {
       }
     }
     catch (Exception $e) {
-      if (module_exists('cf_error')) {
+      if (class_exists('cf_error')) {
         cf_error::on_query_execution($e);
       }
 
@@ -478,7 +478,7 @@ function cf_settings_modules_uninstalled($module_list) {
       $query->execute();
     }
     catch (Exception $e) {
-      if (module_exists('cf_error')) {
+      if (class_exists('cf_error')) {
         cf_error::on_query_execution($e);
       }
 

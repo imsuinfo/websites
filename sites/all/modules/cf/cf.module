@@ -89,7 +89,7 @@ function cf_current_user($reset = FALSE) {
   global $user;
 
   if (!is_object($user) || !property_exists($user, 'uid')) {
-    if (module_exists('cf_error')) {
+    if (class_exists('cf_error')) {
       cf_error::invalid_variable('user', "Not a valid user object.");
     }
 
@@ -189,7 +189,7 @@ function cf_convert_from_crud($crud) {
   $uncrud['delete'] = FALSE;
 
   if (!isset($crud)) {
-    if (module_exists('cf_error')) {
+    if (class_exists('cf_error')) {
       cf_error::invalid_variable('crud', 'Not defined');
     }
 
@@ -197,7 +197,7 @@ function cf_convert_from_crud($crud) {
   }
 
   if (!is_numeric($crud)) {
-    if (module_exists('cf_error')) {
+    if (class_exists('cf_error')) {
       cf_error::invalid_numeric('crud');
     }
 
@@ -285,13 +285,13 @@ function cf_has_array_key($key, $variable, $severity = WATCHDOG_WARNING) {
  */
 function cf_is_empty_or_non_string($argument_name, $variable, $severity = WATCHDOG_WARNING) {
   if ($argument_name == '') {
-    if (module_exists('cf_error')) {
+    if (class_exists('cf_error')) {
       cf_error::empty_string('argument_name');
     }
   }
 
   if (!is_string($variable)) {
-    if (module_exists('cf_error')) {
+    if (class_exists('cf_error')) {
       cf_error::invalid_string($argument_name, $severity);
     }
 
@@ -299,7 +299,7 @@ function cf_is_empty_or_non_string($argument_name, $variable, $severity = WATCHD
   }
 
   if ($variable == '') {
-    if (module_exists('cf_error')) {
+    if (class_exists('cf_error')) {
       cf_error::empty_string($argument_name, $severity);
     }
 
@@ -331,13 +331,13 @@ function cf_is_empty_or_non_string($argument_name, $variable, $severity = WATCHD
  */
 function cf_is_empty_or_non_array($argument_name, $variable, $severity = WATCHDOG_WARNING) {
   if ($argument_name == '') {
-    if (module_exists('cf_error')) {
+    if (class_exists('cf_error')) {
       cf_error::empty_string('argument_name');
     }
   }
 
   if (!is_array($variable)) {
-    if (module_exists('cf_error')) {
+    if (class_exists('cf_error')) {
       cf_error::invalid_array($argument_name, $severity);
     }
 
@@ -345,7 +345,7 @@ function cf_is_empty_or_non_array($argument_name, $variable, $severity = WATCHDO
   }
 
   if (empty($variable)) {
-    if (module_exists('cf_error')) {
+    if (class_exists('cf_error')) {
       cf_error::empty_array($argument_name, $severity);
     }
 
@@ -380,13 +380,13 @@ function cf_is_empty_or_non_array($argument_name, $variable, $severity = WATCHDO
  */
 function cf_is_not_form_state($argument_name, $variable, $severity = WATCHDOG_WARNING) {
   if ($argument_name == '') {
-    if (module_exists('cf_error')) {
+    if (class_exists('cf_error')) {
       cf_error::empty_string('argument_name');
     }
   }
 
   if (!is_array($variable)) {
-    if (module_exists('cf_error')) {
+    if (class_exists('cf_error')) {
       cf_error::invalid_array('argument_name', $variable, $severity);
     }
 
@@ -395,7 +395,7 @@ function cf_is_not_form_state($argument_name, $variable, $severity = WATCHDOG_WA
 
   foreach (array_keys(form_state_defaults()) as $key) {
     if (!array_key_exists($key, $variable)) {
-      if (module_exists('cf_error')) {
+      if (class_exists('cf_error')) {
         cf_error::missing_array_key($argument_name, $key, $severity);
       }
 
@@ -442,7 +442,7 @@ function cf_version_exists($module, $version, $exact = FALSE) {
   }
 
   if (!is_bool($exact)) {
-    if (module_exists('cf_error')) {
+    if (class_exists('cf_error')) {
       cf_error::invalid_bool('exact');
     }
 

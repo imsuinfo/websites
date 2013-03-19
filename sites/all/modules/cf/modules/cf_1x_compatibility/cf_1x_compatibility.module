@@ -78,7 +78,7 @@ function cf_error_append_history(&$function_history, $function_name) {
  *   severity of the report.
  */
 function cf_error_invalid_variable($function_history, $argument_name, $why, array $variables = array(), $severity = WATCHDOG_ERROR) {
-  if (module_exists('cf_error')) {
+  if (class_exists('cf_error')) {
     cf_error::invalid_variable($argument_name, $why, $variables, $severity);
   }
 }
@@ -98,7 +98,7 @@ function cf_error_invalid_variable($function_history, $argument_name, $why, arra
  *   severity of the report.
  */
 function cf_error_not_string($function_history, $argument_name, $severity = WATCHDOG_ERROR) {
-  if (module_exists('cf_error')) {
+  if (class_exists('cf_error')) {
     cf_error::invalid_string($argument_name, $severity);
   }
 }
@@ -118,7 +118,7 @@ function cf_error_not_string($function_history, $argument_name, $severity = WATC
  *    of the report.
  */
 function cf_error_empty_string($function_history, $argument_name, $severity = WATCHDOG_ERROR) {
-  if (module_exists('cf_error')) {
+  if (class_exists('cf_error')) {
     cf_error::empty_string($argument_name, $severity);
   }
 }
@@ -138,7 +138,7 @@ function cf_error_empty_string($function_history, $argument_name, $severity = WA
  *   of the report.
  */
 function cf_error_invalid_array($function_history, $argument_name, $severity = WATCHDOG_ERROR) {
-  if (module_exists('cf_error')) {
+  if (class_exists('cf_error')) {
     cf_error::invalid_array($argument_name, $severity);
   }
 }
@@ -158,7 +158,7 @@ function cf_error_invalid_array($function_history, $argument_name, $severity = W
  *   of the report.
  */
 function cf_error_invalid_object($function_history, $argument_name, $severity = WATCHDOG_ERROR) {
-  if (module_exists('cf_error')) {
+  if (class_exists('cf_error')) {
     cf_error::invalid_object($argument_name, $severity);
   }
 }
@@ -180,7 +180,7 @@ function cf_error_invalid_object($function_history, $argument_name, $severity = 
  *   of the report.
  */
 function cf_error_missing_array_key($function_history, $argument_name, $key_name, $severity = WATCHDOG_ERROR) {
-  if (module_exists('cf_error')) {
+  if (class_exists('cf_error')) {
     cf_error::missing_array_key($argument_name, $key_name, $severity);
   }
 }
@@ -202,7 +202,7 @@ function cf_error_missing_array_key($function_history, $argument_name, $key_name
  *   of the report.
  */
 function cf_error_missing_object_property($function_history, $argument_name, $property_name, $severity = WATCHDOG_ERROR) {
-  if (module_exists('cf_error')) {
+  if (class_exists('cf_error')) {
     cf_error::missing_object_property($argument_name, $property_name, $severity);
   }
 }
@@ -222,7 +222,7 @@ function cf_error_missing_object_property($function_history, $argument_name, $pr
  *   of the report.
  */
 function cf_error_not_numeric($function_history, $argument_name, $severity = WATCHDOG_ERROR) {
-  if (module_exists('cf_error')) {
+  if (class_exists('cf_error')) {
     cf_error::invalid_numeric($argument_name, $severity);
   }
 }
@@ -243,7 +243,7 @@ function cf_error_not_numeric($function_history, $argument_name, $severity = WAT
  *
  */
 function cf_error_on_query_execution($function_history, $exception, $severity = WATCHDOG_ERROR) {
-  if (module_exists('cf_error')) {
+  if (class_exists('cf_error')) {
     cf_error::on_query_execution($exception, $severity);
   }
 }
@@ -263,7 +263,7 @@ function cf_error_on_query_execution($function_history, $exception, $severity = 
  *   of the report.
  */
 function cf_error_invalid_bool($function_history, $argument_name, $severity = WATCHDOG_ERROR) {
-  if (module_exists('cf_error')) {
+  if (class_exists('cf_error')) {
     cf_error::invalid_bool($argument_name, $severity);
   }
 }
@@ -283,7 +283,7 @@ function cf_error_invalid_bool($function_history, $argument_name, $severity = WA
  *   of the report.
  */
 function cf_error_invalid_float($function_history, $argument_name, $severity = WATCHDOG_ERROR) {
-  if (module_exists('cf_error')) {
+  if (class_exists('cf_error')) {
     cf_error::invalid_float($argument_name, $severity);
   }
 }
@@ -303,7 +303,7 @@ function cf_error_invalid_float($function_history, $argument_name, $severity = W
  *   of the report.
  */
 function cf_error_invalid_callable($function_history, $argument_name, $severity = WATCHDOG_ERROR) {
-  if (module_exists('cf_error')) {
+  if (class_exists('cf_error')) {
     cf_error::invalid_callable($argument_name, $severity);
   }
 }
@@ -323,7 +323,7 @@ function cf_error_invalid_callable($function_history, $argument_name, $severity 
  *   of the report.
  */
 function cf_error_invalid_integer($function_history, $argument_name, $severity = WATCHDOG_ERROR) {
-  if (module_exists('cf_error')) {
+  if (class_exists('cf_error')) {
     cf_error::invalid_integer($argument_name, $severity);
   }
 }
@@ -343,7 +343,7 @@ function cf_error_invalid_integer($function_history, $argument_name, $severity =
  *   of the report.
  */
 function cf_error_invalid_resource($function_history, $argument_name, $severity = WATCHDOG_ERROR) {
-  if (module_exists('cf_error')) {
+  if (class_exists('cf_error')) {
     cf_error::invalid_resource($argument_name, $severity);
   }
 }
@@ -363,7 +363,7 @@ function cf_error_invalid_resource($function_history, $argument_name, $severity 
  *   of the report.
  */
 function cf_error_invalid_scalar($function_history, $argument_name, $severity = WATCHDOG_ERROR) {
-  if (module_exists('cf_error')) {
+  if (class_exists('cf_error')) {
     cf_error::invalid_scalar($argument_name, $severity);
   }
 }
@@ -383,7 +383,7 @@ function cf_error_invalid_scalar($function_history, $argument_name, $severity = 
  *   of the report.
  */
 function cf_error_invalid_null($function_history, $argument_name, $severity = WATCHDOG_ERROR) {
-  if (module_exists('cf_error')) {
+  if (class_exists('cf_error')) {
     cf_error::invalid_null($argument_name, $severity);
   }
 }
