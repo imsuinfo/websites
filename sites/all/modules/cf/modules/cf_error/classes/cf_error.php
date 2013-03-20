@@ -14,6 +14,7 @@ class cf_error {
   const BACKTRACE_MODE_NONE = 1;
   const BACKTRACE_MODE_SHORT = 2;
   const BACKTRACE_MODE_FULL = 3;
+  const BACKTRACE_MODE_MODERATE = 4;
 
   /**
    * Returns an options array list of available backtrace modes.
@@ -26,6 +27,7 @@ class cf_error {
 
     $backtrace_options_list[cf_error::BACKTRACE_MODE_NONE] = t("No Backtrace");
     $backtrace_options_list[cf_error::BACKTRACE_MODE_SHORT] = t("Short Backtrace");
+    $backtrace_options_list[cf_error::BACKTRACE_MODE_MODERATE] = t("Moderate Backtrace");
     $backtrace_options_list[cf_error::BACKTRACE_MODE_FULL] = t("Full Backtrace");
 
     return $backtrace_options_list;
@@ -1188,7 +1190,7 @@ class cf_error {
     }
 
     if ($show_backtrace != self::BACKTRACE_MODE_NONE) {
-      if ($show_backtrace == self::BACKTRACE_MODE_SHORT) {
+      if ($show_backtrace == self::BACKTRACE_MODE_SHORT || $show_backtrace == self::BACKTRACE_MODE_MODERATE) {
         $short_backtrace = array();
         $full_backtrace = $error->get_backtrace();
         $backtrace_size = count($full_backtrace);
@@ -1204,6 +1206,28 @@ class cf_error {
 
         if ($backtrace_size > 2) {
           $short_backtrace[] = & $full_backtrace[2];
+        }
+
+        if ($show_backtrace == self::BACKTRACE_MODE_MODERATE) {
+          if ($backtrace_size > 3) {
+           $short_backtrace[] = & $full_backtrace[3];
+          }
+
+          if ($backtrace_size > 4) {
+           $short_backtrace[] = & $full_backtrace[4];
+          }
+
+          if ($backtrace_size > 5) {
+           $short_backtrace[] = & $full_backtrace[5];
+          }
+
+          if ($backtrace_size > 6) {
+           $short_backtrace[] = & $full_backtrace[6];
+          }
+
+          if ($backtrace_size > 7) {
+           $short_backtrace[] = & $full_backtrace[7];
+          }
         }
 
         $variables_array['%cf_error-backtrace'] = self::p_generate_backtrace($short_backtrace);
