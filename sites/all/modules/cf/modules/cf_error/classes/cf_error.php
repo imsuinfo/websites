@@ -52,11 +52,7 @@ class cf_error {
     $error = new cf_error_code;
 
     if (empty($argument_name)) {
-      $error2 = new cf_error_code;
-      $error2->set_severity(WATCHDOG_ERROR);
-      $error2->set_backtrace(debug_backtrace());
-      self::p_empty_string($error2, 'argument_name');
-      $argument_name = '(unknown)';
+      $argument_name = self::p_report_invalid_argument_string('argument_name', debug_backtrace());
     }
 
     $error->set_severity($severity);
@@ -100,11 +96,7 @@ class cf_error {
     $error = new cf_error_code;
 
     if (empty($argument_name)) {
-      $error2 = new cf_error_code;
-      $error2->set_severity(WATCHDOG_ERROR);
-      $error2->set_backtrace(debug_backtrace());
-      self::p_empty_string($error2, 'argument_name');
-      $argument_name = '(unknown)';
+      $argument_name = self::p_report_invalid_argument_string('argument_name', debug_backtrace());
     }
 
     $error->set_severity($severity);
@@ -130,11 +122,7 @@ class cf_error {
     $error = new cf_error_code;
 
     if (empty($argument_name)) {
-      $error2 = new cf_error_code;
-      $error2->set_severity(WATCHDOG_ERROR);
-      $error2->set_backtrace(debug_backtrace());
-      self::p_empty_string($error2, 'argument_name');
-      $argument_name = '(unknown)';
+      $argument_name = self::p_report_invalid_argument_string('argument_name', debug_backtrace());
     }
 
     $error->set_severity($severity);
@@ -160,11 +148,7 @@ class cf_error {
     $error = new cf_error_code;
 
     if (empty($argument_name)) {
-      $error2 = new cf_error_code;
-      $error2->set_severity(WATCHDOG_ERROR);
-      $error2->set_backtrace(debug_backtrace());
-      self::p_empty_string($error2, 'argument_name');
-      $argument_name = '(unknown)';
+      $argument_name = self::p_report_invalid_argument_string('argument_name', debug_backtrace());
     }
 
     $error->set_severity($severity);
@@ -190,11 +174,7 @@ class cf_error {
     $error = new cf_error_code;
 
     if (empty($argument_name)) {
-      $error2 = new cf_error_code;
-      $error2->set_severity(WATCHDOG_ERROR);
-      $error2->set_backtrace(debug_backtrace());
-      self::p_empty_string($error2, 'argument_name');
-      $argument_name = '(unknown)';
+      $argument_name = self::p_report_invalid_argument_string('argument_name', debug_backtrace());
     }
 
     $error->set_severity($severity);
@@ -220,11 +200,7 @@ class cf_error {
     $error = new cf_error_code;
 
     if (empty($argument_name)) {
-      $error2 = new cf_error_code;
-      $error2->set_severity(WATCHDOG_ERROR);
-      $error2->set_backtrace(debug_backtrace());
-      self::p_empty_string($error2, 'argument_name');
-      $argument_name = '(unknown)';
+      $argument_name = self::p_report_invalid_argument_string('argument_name', debug_backtrace());
     }
 
     $error->set_severity($severity);
@@ -252,19 +228,11 @@ class cf_error {
     $error = new cf_error_code;
 
     if (empty($argument_name)) {
-      $error2 = new cf_error_code;
-      $error2->set_severity(WATCHDOG_ERROR);
-      $error2->set_backtrace(debug_backtrace());
-      self::p_empty_string($error2, 'argument_name');
-      $argument_name = '(unknown)';
+      $argument_name = self::p_report_invalid_argument_string('argument_name', debug_backtrace());
     }
 
     if (empty($key_name)) {
-      $error2 = new cf_error_code;
-      $error2->set_severity(WATCHDOG_ERROR);
-      $error2->set_backtrace(debug_backtrace());
-      self::p_empty_string($error2, 'key_name');
-      $key_name = '(unknown)';
+      $key_name = self::p_report_invalid_argument_string('key_name', debug_backtrace());
     }
 
     $error->set_severity($severity);
@@ -292,19 +260,11 @@ class cf_error {
     $error = new cf_error_code;
 
     if (empty($argument_name)) {
-      $error2 = new cf_error_code;
-      $error2->set_severity(WATCHDOG_ERROR);
-      $error2->set_backtrace(debug_backtrace());
-      self::p_empty_string($error2, 'argument_name');
-      $argument_name = '(unknown)';
+      $argument_name = self::p_report_invalid_argument_string('argument_name', debug_backtrace());
     }
 
     if (empty($property_name)) {
-      $error2 = new cf_error_code;
-      $error2->set_severity(WATCHDOG_ERROR);
-      $error2->set_backtrace(debug_backtrace());
-      self::p_empty_string($error2, 'property_name');
-      $property_name = '(unknown)';
+      $property_name = self::p_report_invalid_argument_string('property_name', debug_backtrace());
     }
 
     $error->set_severity($severity);
@@ -349,11 +309,7 @@ class cf_error {
     $error = new cf_error_code();
 
     if (empty($argument_name)) {
-      $error2 = new cf_error_code;
-      $error2->set_severity(WATCHDOG_ERROR);
-      $error2->set_backtrace(debug_backtrace());
-      self::p_empty_string($error2, 'argument_name');
-      $argument_name = '(unknown)';
+      $argument_name = self::p_report_invalid_argument_string('argument_name', debug_backtrace());
     }
 
     $error->set_severity($severity);
@@ -384,10 +340,7 @@ class cf_error {
       $query_arguments = print_r($exception->args, TRUE);
     }
     else {
-      $error2 = new cf_error_code;
-      $error2->set_severity(WATCHDOG_ERROR);
-      $error2->set_backtrace(debug_backtrace());
-      self::p_invalid_object($error2, 'exception');
+      self::p_report_invalid_argument_object('exception', debug_backtrace());
       $exception_message = "";
       $query_string = "";
       $query_arguments = "";
@@ -420,10 +373,7 @@ class cf_error {
       $exception_message = $exception->getMessage();
     }
     else {
-      $error2 = new cf_error_code;
-      $error2->set_severity(WATCHDOG_ERROR);
-      $error2->set_backtrace(debug_backtrace());
-      self::p_invalid_object($error2, 'exception');
+      self::p_report_invalid_argument_object('exception', debug_backtrace());
       $exception_message = "";
     }
 
@@ -451,11 +401,7 @@ class cf_error {
     $error = new cf_error_code;
 
     if (empty($argument_name)) {
-      $error2 = new cf_error_code;
-      $error2->set_severity(WATCHDOG_ERROR);
-      $error2->set_backtrace(debug_backtrace());
-      self::p_empty_string($error2, 'argument_name');
-      $argument_name = '(unknown)';
+      $argument_name = self::p_report_invalid_argument_string('argument_name', debug_backtrace());
     }
 
     $error->set_severity($severity);
@@ -481,11 +427,7 @@ class cf_error {
     $error = new cf_error_code;
 
     if (empty($argument_name)) {
-      $error2 = new cf_error_code;
-      $error2->set_severity(WATCHDOG_ERROR);
-      $error2->set_backtrace(debug_backtrace());
-      self::p_empty_string($error2, 'argument_name');
-      $argument_name = '(unknown)';
+      $argument_name = self::p_report_invalid_argument_string('argument_name', debug_backtrace());
     }
 
     $error->set_severity($severity);
@@ -511,11 +453,7 @@ class cf_error {
     $error = new cf_error_code;
 
     if (empty($argument_name)) {
-      $error2 = new cf_error_code;
-      $error2->set_severity(WATCHDOG_ERROR);
-      $error2->set_backtrace(debug_backtrace());
-      self::p_empty_string($error2, 'argument_name');
-      $argument_name = '(unknown)';
+      $argument_name = self::p_report_invalid_argument_string('argument_name', debug_backtrace());
     }
 
     $error->set_severity($severity);
@@ -541,11 +479,7 @@ class cf_error {
     $error = new cf_error_code;
 
     if (empty($argument_name)) {
-      $error2 = new cf_error_code;
-      $error2->set_severity(WATCHDOG_ERROR);
-      $error2->set_backtrace(debug_backtrace());
-      self::p_empty_string($error2, 'argument_name');
-      $argument_name = '(unknown)';
+      $argument_name = self::p_report_invalid_argument_string('argument_name', debug_backtrace());
     }
 
     $error->set_severity($severity);
@@ -571,11 +505,7 @@ class cf_error {
     $error = new cf_error_code;
 
     if (empty($argument_name)) {
-      $error2 = new cf_error_code;
-      $error2->set_severity(WATCHDOG_ERROR);
-      $error2->set_backtrace(debug_backtrace());
-      self::p_empty_string($error2, 'argument_name');
-      $argument_name = '(unknown)';
+      $argument_name = self::p_report_invalid_argument_string('argument_name', debug_backtrace());
     }
 
     $error->set_severity($severity);
@@ -601,11 +531,7 @@ class cf_error {
     $error = new cf_error_code;
 
     if (empty($argument_name)) {
-      $error2 = new cf_error_code;
-      $error2->set_severity(WATCHDOG_ERROR);
-      $error2->set_backtrace(debug_backtrace());
-      self::p_empty_string($error2, 'argument_name');
-      $argument_name = '(unknown)';
+      $argument_name = self::p_report_invalid_argument_string('argument_name', debug_backtrace());
     }
 
     $error->set_severity($severity);
@@ -631,16 +557,298 @@ class cf_error {
     $error = new cf_error_code;
 
     if (empty($argument_name)) {
-      $error2 = new cf_error_code;
-      $error2->set_severity(WATCHDOG_ERROR);
-      $error2->set_backtrace(debug_backtrace());
-      self::p_empty_string($error2, 'argument_name');
-      $argument_name = '(unknown)';
+      $argument_name = self::p_report_invalid_argument_string('argument_name', debug_backtrace());
     }
 
     $error->set_severity($severity);
     self::p_load_backtrace($error);
     self::p_invalid_null($error, $argument_name);
+
+    return $error;
+  }
+
+  /**
+   * Reports that something was unable to load.
+   *
+   * @param string $item
+   *   The name of the item that could not be loaded.
+   * @param int $severity
+   *   (optional) The severity of the message, as per RFC 3164. Possible values
+   *   are WATCHDOG_ERROR, WATCHDOG_WARNING, etc.
+   *
+   * @see: watchdog()
+   * @see: watchdog_severity_levels()
+   */
+  public static function failed_to_load($item, $severity = WATCHDOG_ERROR) {
+    $error = new cf_error_code;
+
+    if (empty($item)) {
+      $item = self::p_report_invalid_argument_string('item', debug_backtrace());
+    }
+
+    $error->set_severity($severity);
+    self::p_load_backtrace($error);
+    self::p_failed_to($error, 'load', $item);
+
+    return $error;
+  }
+
+  /**
+   * Reports that something was unable to unload.
+   *
+   * @param string $item
+   *   The name of the item that could not be unloaded.
+   * @param int $severity
+   *   (optional) The severity of the message, as per RFC 3164. Possible values
+   *   are WATCHDOG_ERROR, WATCHDOG_WARNING, etc.
+   *
+   * @see: watchdog()
+   * @see: watchdog_severity_levels()
+   */
+  public static function failed_to_unload($item, $severity = WATCHDOG_ERROR) {
+    $error = new cf_error_code;
+
+    if (empty($item)) {
+      $item = self::p_report_invalid_argument_string('item', debug_backtrace());
+    }
+
+    $error->set_severity($severity);
+    self::p_load_backtrace($error);
+    self::p_failed_to($error, 'unload', $item);
+
+    return $error;
+  }
+
+  /**
+   * Reports that something was unable to install.
+   *
+   * @param string $item
+   *   The name of the item that could not be installed.
+   * @param int $severity
+   *   (optional) The severity of the message, as per RFC 3164. Possible values
+   *   are WATCHDOG_ERROR, WATCHDOG_WARNING, etc.
+   *
+   * @see: watchdog()
+   * @see: watchdog_severity_levels()
+   */
+  public static function failed_to_install($item, $severity = WATCHDOG_ERROR) {
+    $error = new cf_error_code;
+
+    if (empty($item)) {
+      $item = self::p_report_invalid_argument_string('item', debug_backtrace());
+    }
+
+    $error->set_severity($severity);
+    self::p_load_backtrace($error);
+    self::p_failed_to($error, 'install', $item);
+
+    return $error;
+  }
+
+  /**
+   * Reports that something was unable to uninstall.
+   *
+   * @param string $item
+   *   The name of the item that could not be uninstalled.
+   * @param int $severity
+   *   (optional) The severity of the message, as per RFC 3164. Possible values
+   *   are WATCHDOG_ERROR, WATCHDOG_WARNING, etc.
+   *
+   * @see: watchdog()
+   * @see: watchdog_severity_levels()
+   */
+  public static function failed_to_uninstall($item, $severity = WATCHDOG_ERROR) {
+    $error = new cf_error_code;
+
+    if (empty($item)) {
+      $item = self::p_report_invalid_argument_string('item', debug_backtrace());
+    }
+
+    $error->set_severity($severity);
+    self::p_load_backtrace($error);
+    self::p_failed_to($error, 'uninstall', $item);
+
+    return $error;
+  }
+
+  /**
+   * Reports that something was unable to save.
+   *
+   * @param string $item
+   *   The name of the item that could not be saved.
+   * @param int $severity
+   *   (optional) The severity of the message, as per RFC 3164. Possible values
+   *   are WATCHDOG_ERROR, WATCHDOG_WARNING, etc.
+   *
+   * @see: watchdog()
+   * @see: watchdog_severity_levels()
+   */
+  public static function failed_to_save($item, $severity = WATCHDOG_ERROR) {
+    $error = new cf_error_code;
+
+    if (empty($item)) {
+      $item = self::p_report_invalid_argument_string('item', debug_backtrace());
+    }
+
+    $error->set_severity($severity);
+    self::p_load_backtrace($error);
+    self::p_failed_to($error, 'save', $item);
+
+    return $error;
+  }
+
+  /**
+   * Reports that something was unable to delete.
+   *
+   * @param string $item
+   *   The name of the item that could not be deleted.
+   * @param int $severity
+   *   (optional) The severity of the message, as per RFC 3164. Possible values
+   *   are WATCHDOG_ERROR, WATCHDOG_WARNING, etc.
+   *
+   * @see: watchdog()
+   * @see: watchdog_severity_levels()
+   */
+  public static function failed_to_delete($item, $severity = WATCHDOG_ERROR) {
+    $error = new cf_error_code;
+
+    if (empty($item)) {
+      $item = self::p_report_invalid_argument_string('item', debug_backtrace());
+    }
+
+    $error->set_severity($severity);
+    self::p_load_backtrace($error);
+    self::p_failed_to($error, 'delete', $item);
+
+    return $error;
+  }
+
+  /**
+   * Reports that something was unable to restore.
+   *
+   * @param string $item
+   *   The name of the item that could not be restored.
+   * @param int $severity
+   *   (optional) The severity of the message, as per RFC 3164. Possible values
+   *   are WATCHDOG_ERROR, WATCHDOG_WARNING, etc.
+   *
+   * @see: watchdog()
+   * @see: watchdog_severity_levels()
+   */
+  public static function failed_to_restore($item, $severity = WATCHDOG_ERROR) {
+    $error = new cf_error_code;
+
+    if (empty($item)) {
+      $item = self::p_report_invalid_argument_string('item', debug_backtrace());
+    }
+
+    $error->set_severity($severity);
+    self::p_load_backtrace($error);
+    self::p_failed_to($error, 'restore', $item);
+
+    return $error;
+  }
+
+  /**
+   * Reports that something was unable to backup.
+   *
+   * @param string $item
+   *   The name of the item that could not be backuped.
+   * @param int $severity
+   *   (optional) The severity of the message, as per RFC 3164. Possible values
+   *   are WATCHDOG_ERROR, WATCHDOG_WARNING, etc.
+   *
+   * @see: watchdog()
+   * @see: watchdog_severity_levels()
+   */
+  public static function failed_to_backup($item, $severity = WATCHDOG_ERROR) {
+    $error = new cf_error_code;
+
+    if (empty($item)) {
+      $item = self::p_report_invalid_argument_string('item', debug_backtrace());
+    }
+
+    $error->set_severity($severity);
+    self::p_load_backtrace($error);
+    self::p_failed_to($error, 'backup', $item);
+
+    return $error;
+  }
+
+  /**
+   * Reports that something was unable to validate.
+   *
+   * @param string $item
+   *   The name of the item that could not be validated.
+   * @param int $severity
+   *   (optional) The severity of the message, as per RFC 3164. Possible values
+   *   are WATCHDOG_ERROR, WATCHDOG_WARNING, etc.
+   *
+   * @see: watchdog()
+   * @see: watchdog_severity_levels()
+   */
+  public static function failed_to_validate($item, $severity = WATCHDOG_ERROR) {
+    $error = new cf_error_code;
+
+    if (empty($item)) {
+      $item = self::p_report_invalid_argument_string('item', debug_backtrace());
+    }
+
+    $error->set_severity($severity);
+    self::p_load_backtrace($error);
+    self::p_failed_to($error, 'validate', $item);
+
+    return $error;
+  }
+
+  /**
+   * Reports that something was unable to import.
+   *
+   * @param string $item
+   *   The name of the item that could not be imported.
+   * @param int $severity
+   *   (optional) The severity of the message, as per RFC 3164. Possible values
+   *   are WATCHDOG_ERROR, WATCHDOG_WARNING, etc.
+   *
+   * @see: watchdog()
+   * @see: watchdog_severity_levels()
+   */
+  public static function failed_to_import($item, $severity = WATCHDOG_ERROR) {
+    $error = new cf_error_code;
+
+    if (empty($item)) {
+      $item = self::p_report_invalid_argument_string('item', debug_backtrace());
+    }
+
+    $error->set_severity($severity);
+    self::p_load_backtrace($error);
+    self::p_failed_to($error, 'import', $item);
+
+    return $error;
+  }
+
+  /**
+   * Reports that something was unable to export.
+   *
+   * @param string $item
+   *   The name of the item that could not be exported.
+   * @param int $severity
+   *   (optional) The severity of the message, as per RFC 3164. Possible values
+   *   are WATCHDOG_ERROR, WATCHDOG_WARNING, etc.
+   *
+   * @see: watchdog()
+   * @see: watchdog_severity_levels()
+   */
+  public static function failed_to_export($item, $severity = WATCHDOG_ERROR) {
+    $error = new cf_error_code;
+
+    if (empty($item)) {
+      $item = self::p_report_invalid_argument_string('item', debug_backtrace());
+    }
+
+    $error->set_severity($severity);
+    self::p_load_backtrace($error);
+    self::p_failed_to($error, 'export', $item);
 
     return $error;
   }
@@ -896,6 +1104,20 @@ class cf_error {
   }
 
   /**
+   * Reports that a specific operation failed for a specific item.
+   *
+   * @param cf_error_code $error
+   *   The error code class object associated with the error.
+   * @param string $operation_name
+   *   The name of the operation being performed.
+   * @param string $item_name
+   *   The name of the item being operated on.
+   */
+  private static function p_failed_to(cf_error_code $error, $operation_name, $item_name) {
+    self::p_print_message($error, "Failed to %cf_error-operation_name %cf_error-item_name.",  array('%cf_error-operation_name' => $operation_name, '%cf_error-item_name' =>  $item_name));
+  }
+
+  /**
    * Prints error messages to the screen.
    *
    * This uses drupal_set_message() and watchdog() to print the messages.
@@ -1062,7 +1284,50 @@ class cf_error {
 
     return $string;
   }
+
+  /**
+   * Reports an invalid variable passed to one of this classes functions.
+   *
+   * This is for strings.
+   *
+   * @param string $variable_name
+   *   The name of the variable that is not properly defined.
+   * @param array $backtrace
+   *   A backtrace array to assign.
+   *
+   * @return string
+   *   A string to be passed as the argument name.
+   */
+  private static function p_report_invalid_argument_string($variable_name, $backtrace) {
+    $error2 = new cf_error_code;
+    $error2->set_severity(WATCHDOG_ERROR);
+    $error2->set_backtrace($backtrace);
+    self::p_empty_string($error2, $variable_name);
+    return '(unknown)';
+  }
+
+  /**
+   * Reports an invalid variable passed to one of this classes functions.
+   *
+   * This is for objects.
+   *
+   * @param string $variable_name
+   *   The name of the variable that is not properly defined.
+   * @param array $backtrace
+   *   A backtrace array to assign.
+   *
+   * @return string
+   *   A string to be passed as the argument name.
+   */
+  private static function p_report_invalid_argument_object($variable_name, $backtrace) {
+    $error2 = new cf_error_code;
+    $error2->set_severity(WATCHDOG_ERROR);
+    $error2->set_backtrace($backtrace);
+    self::p_invalid_object($error2, $variable_name);
+    return '(invalid)';
+  }
 }
+
 
 /**
  * @} End of '@addtogroup cf_error'.

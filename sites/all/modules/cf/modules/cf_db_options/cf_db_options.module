@@ -468,8 +468,6 @@ function cf_db_options_machine_name_to_id($table, $name, $machine_name) {
 /**
  * Returns the machine_name for a given option numeric id.
  *
- * Use this to get the machine name that uniquely represents a particular option.
- *
  * @param string $table
  *   A machine name that is prefixed onto the table.
  *   This is often either the name of the module or the name of the table
@@ -482,6 +480,14 @@ function cf_db_options_machine_name_to_id($table, $name, $machine_name) {
  * @return bool|string
  *   Returns an string that uniquely identifies the option.
  *   FALSE is returned on error.
+ *
+ * @deprecated
+ *   Subqueries are possible by using a new query object then passing
+ *   the object as a condition.
+ *
+ * @see: http://drupal.org/node/310086
+ * @see: http://drupal.org/node/310075
+ * @see: http://drupal.org/node/310069
  */
 function cf_db_options_id_to_machine_name($table, $name, $id) {
   if (!cf_is_integer($id)) {
@@ -538,6 +544,14 @@ function cf_db_options_id_to_machine_name($table, $name, $id) {
  * @return bool|string
  *   Returns a subquery select string.
  *   FALSE is returned on error.
+ *
+ * @deprecated
+ *   Subqueries are possible by using a new query object then passing
+ *   the object as a condition.
+ *
+ * @see: http://drupal.org/node/310086
+ * @see: http://drupal.org/node/310075
+ * @see: http://drupal.org/node/310069
  */
 function cf_db_options_machine_name_to_id_subquery($table, $name, $machine_name) {
   if (cf_is_empty_or_non_string('machine_name', $machine_name, WATCHDOG_ERROR)) return FALSE;
