@@ -12,9 +12,9 @@ dependencies[] = cf_db_options
 files[] = cf_settings.module
 files[] = cf_settings.install
 
-; Information added by drupal.org packaging script on 2012-12-04
-version = "7.x-2.0-unstable4"
+; Information added by drupal.org packaging script on 2013-03-20
+version = "7.x-2.0-alpha1"
 core = "7.x"
 project = "cf"
-datestamp = "1354635357"
+datestamp = "1363794612"
 

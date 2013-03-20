@@ -468,6 +468,8 @@ function cf_db_options_machine_name_to_id($table, $name, $machine_name) {
 /**
  * Returns the machine_name for a given option numeric id.
  *
+ * Use this to get the machine name that uniquely represents a particular option.
+ *
  * @param string $table
  *   A machine name that is prefixed onto the table.
  *   This is often either the name of the module or the name of the table
