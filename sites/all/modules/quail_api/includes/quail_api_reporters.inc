@@ -38,7 +38,10 @@ class reportQuail_api extends quailReporter {
     $this->quail_api_report = array('report' => array(), 'total' => 0);
 
     if (!is_object($this->guideline)) {
-      cf_error_invalid_object(get_class(this) . '->' . __FUNCTION__, 'this->guideline', WATCHDOG_WARNING);
+      if (class_exists('cf_error')) {
+        cf_error::invalid_object(get_class(this) . '->guideline');
+      }
+
       return;
     }
 

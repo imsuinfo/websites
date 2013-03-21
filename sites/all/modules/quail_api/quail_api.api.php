@@ -29,7 +29,6 @@ function hook_quail_api_permission(&$permissions) {
   );
 }
 
-
 /**
  * Define quail api standards.
  *
@@ -80,15 +79,11 @@ function hook_quail_api_permission(&$permissions) {
  *   The target, in general, represents the scope in which the standards will
  *   be applied.
  *   The following targets are directly supported: 'snippet', 'page'.
- * - function_history: (optional) An array of function names, ie:
- *   array('0' => 'my_function_name').
  *
  * @see quail_api_get_standards()
  * @see quail_api_get_standards_list()
  */
 function hook_quail_api_get_standards_alter(&$standards, $standard, $other_arguments) {
-  cf_error_append_history($other_arguments['function_history'], __FUNCTION__);
-
   if ($other_arguments['target'] == 'tesseract' || $standard == 'wcag7_4d') {
     $standards['wcag7_4d'] = array(
       'human_name' => t("WCAG 7.0 - 4D"),
@@ -131,16 +126,10 @@ function hook_quail_api_get_standards_alter(&$standards, $standard, $other_argum
  *   - default: A boolean representing whether or not to have this display
  *     level enabled by default.
  *
- * The other_arguments array has the following structure:
- * - function_history: (optional) An array of function names, ie:
- *   array('0' => 'my_function_name').
- *
  * @see quail_api_get_display_levels()
  * @see quail_api_get_display_levels_list()
  */
-function hook_quail_api_get_display_levels(&$display_levels, $display_level, $other_arguments) {
-  cf_error_append_history($other_arguments['function_history'], __FUNCTION__);
-
+function hook_quail_api_get_display_levels(&$display_levels, $display_level) {
   if (!is_numeric($display_level) || $display_level == 4) {
     $display_levels[4] = array(
       'machine_name' => 'quail_test_other',
@@ -154,7 +143,6 @@ function hook_quail_api_get_display_levels(&$display_levels, $display_level, $ot
     );
   }
 }
-
 
 /**
  * Define quail api valodation methods.
@@ -185,16 +173,10 @@ function hook_quail_api_get_display_levels(&$display_levels, $display_level, $ot
  *   - default: A boolean representing whether or not to have this display
  *     level enabled by default.
  *
- * The other_arguments array has the following structure:
- * - function_history: (optional) An array of function names, ie:
- *   array('0' => 'my_function_name').
- *
  * @see quail_api_get_validation_methods()
  * @see quail_api_get_validation_methods_list()
  */
-function hook_quail_api_get_validation_methods(&$validation_methods, $validation_method, $other_arguments) {
-  cf_error_append_history($other_arguments['function_history'], __FUNCTION__);
-
+function hook_quail_api_get_validation_methods(&$validation_methods, $validation_method) {
   if (empty($validation_method) || $validation_methods == 'quail_api_method_stare') {
     $validation_methods['quail_api_method_stare'] = array(
       'human_name' => t("Immediately Stare"),

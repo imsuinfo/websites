@@ -6,7 +6,6 @@ CONTENTS OF THIS FILE
  * Dependencies
  * Installation
  * Contributers
- * ToDo
  * Errata
 
 
@@ -43,7 +42,7 @@ INSTALLATION
 Add the module to /sites/all/modules/.
 
 Download the 3rd-party Quail Library from <code.google.com/p/quail-lib/>.
-Extract the library into /sites/all/libraries/ as a directory called 'quail-lib'.
+Extract the library into /sites/all/libraries/ as a directory called 'quail'.
 Therefore the 3rd-party Quail Library should be located at /sites/all/libraries/quail/.
 
 Although this is optional, I strongly suggest applying the patch located at miscellaneous/quail-bug_fixes.patch.
@@ -57,16 +56,6 @@ CONTRIBUTERS
 ------------
 Drupal 7 version by Kevin Day.
 Original version by Kevin Miller.
-
-
-
-TODO
-----
-(This section will be removed once an official stable version is released.)
-- Review code and ensure that all drupal standards are followed where possible.
-- Have developers review the functionality and make any changes while the API can be safely changed.
-- Look into providing basic usage tutorials and examples, such as views integration.
-- Write documentation for this project.
 
 
 ERRATA
