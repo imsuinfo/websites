@@ -119,9 +119,6 @@ function node_accessibility_drush_help($section) {
  * Import nodes from data.
  */
 function node_accessibility_drush_callback_validate() {
-  $function_history = array();
-  cf_error_append_history($function_history, __FUNCTION__);
-
   $uid = drush_get_option('uid');
   $nids = array();
   $rows = array();
@@ -156,7 +153,9 @@ function node_accessibility_drush_callback_validate() {
       $rows = $query->execute()->fetchAllAssoc('nid');
     }
     catch (Exception $e) {
-      cf_error_on_query_execution($function_history, $e);
+      if (module_exists('cf_error')) {
+        cf_error::on_query_execution($e);
+      }
     }
   }
   else {
@@ -174,7 +173,9 @@ function node_accessibility_drush_callback_validate() {
         $rows = $query->execute()->fetchAllAssoc('nid');
       }
       catch (Exception $e) {
-        cf_error_on_query_execution($function_history, $e);
+        if (module_exists('cf_error')) {
+          cf_error::on_query_execution($e);
+        }
       }
     }
   }
@@ -221,7 +222,7 @@ function node_accessibility_drush_callback_validate() {
           $vid_string = $vid;
         }
 
-        $result = node_accessibility_delete_node_problems($nid, $vid, $function_history);
+        $result = node_accessibility_delete_node_problems($nid, $vid);
 
         if ($result === FALSE) {
           drush_set_error('DRUSH_NOT_COMPLETED', "Failed to delete validation problems for node " . $nid . ":" . $vid_string . ".");
@@ -253,13 +254,13 @@ function node_accessibility_drush_callback_validate() {
         }
       }
 
-      $results = node_accessibility_perform_validation($current_nids, $vids, NULL, NULL, $function_history);
+      $results = node_accessibility_perform_validation($current_nids, $vids, NULL, NULL);
 
       if ($results === FALSE) {
         drush_set_error('DRUSH_NOT_COMPLETED', "Failed to perform accessibility validation.");
       }
       else {
-        $methods = quail_api_get_validation_methods(NULL, $function_history);
+        $methods = quail_api_get_validation_methods(NULL);
 
         foreach ($current_nids as $nid) {
           $node = node_load($nid);
@@ -284,10 +285,10 @@ function node_accessibility_drush_callback_validate() {
                 }
 
                 if ($no_failures) {
-                  node_accessibility_delete_node_problems($nid, $vid, $function_history);
+                  node_accessibility_delete_node_problems($nid, $vid);
                 }
                 else {
-                  node_accessibility_save_node_problems($nid, $vid, $reports, $function_history);
+                  node_accessibility_save_node_problems($nid, $vid, $reports);
                 }
               }
             }

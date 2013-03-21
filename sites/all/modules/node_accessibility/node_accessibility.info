@@ -6,16 +6,15 @@ core = 7.x
 dependencies[] = quail_api
 dependencies[] = filter
 dependencies[] = node
-dependencies[] = cf
 
 files[] = node_accessibility.install
 files[] = node_accessibility.module
 files[] = includes/pages.inc
 files[] = includes/node_accessibility_handler_link_validate_node.inc
 
-; Information added by drupal.org packaging script on 2013-01-23
-version = "7.x-1.1"
+; Information added by drupal.org packaging script on 2013-03-21
+version = "7.x-1.2"
 core = "7.x"
 project = "node_accessibility"
-datestamp = "1358973475"
+datestamp = "1363894512"
 

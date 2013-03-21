@@ -9,15 +9,12 @@
  * Provides the accessibility tab page.
  */
 function node_accessibility_accessibility_tab_page($form, &$form_state, $node, $vid = NULL) {
-  $function_history = array();
-  cf_error_append_history($function_history, __FUNCTION__);
-
   drupal_set_title(t("Accessibility Information for %title", array('%title' => $node->title)), PASS_THROUGH);
 
   $form = array();
   $reports = array();
-  $display_levels = quail_api_get_display_levels(NULL, $function_history);
-  $methods = quail_api_get_validation_methods(NULL, $function_history);
+  $display_levels = quail_api_get_display_levels(NULL);
+  $methods = quail_api_get_validation_methods(NULL);
   $markup_format = 'full_html';
   $automatic = TRUE;
   $database = FALSE;
@@ -87,7 +84,7 @@ function node_accessibility_accessibility_tab_page($form, &$form_state, $node, $
   }
 
   if ($automatic || $perform_validation) {
-    $results = node_accessibility_perform_validation(array($node), $vids, NULL, NULL, $function_history);
+    $results = node_accessibility_perform_validation(array($node), $vids, NULL, NULL);
 
     if (isset($results[$node->nid][$node->vid]['report'])) {
       $reports = $results[$node->nid][$node->vid]['report'];
@@ -106,15 +103,15 @@ function node_accessibility_accessibility_tab_page($form, &$form_state, $node, $
       }
 
       if ($no_failures) {
-        node_accessibility_delete_node_problems($node->nid, $node->vid, $function_history);
+        node_accessibility_delete_node_problems($node->nid, $node->vid);
       }
       else {
-        node_accessibility_save_node_problems($node->nid, $node->vid, $reports, $function_history);
+        node_accessibility_save_node_problems($node->nid, $node->vid, $reports);
       }
     }
   }
   else if ($database) {
-    $reports = node_accessibility_restructure_results($node->nid, $node->vid, $display_levels, $function_history);
+    $reports = node_accessibility_restructure_results($node->nid, $node->vid, $display_levels);
   }
 
   if (!empty($reports)) {

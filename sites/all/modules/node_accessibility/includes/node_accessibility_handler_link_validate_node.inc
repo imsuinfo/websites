@@ -14,11 +14,11 @@ class node_accessibility_handler_link_validate_node extends views_handler_field_
   }
 
   function render_link($data, $values) {
-    $function_history = array();
-    cf_error_append_history($function_history, __FUNCTION__);
-
     if (!is_object($values)) {
-      cf_error_invalid_object($function_history, 'values');
+      if (class_exists('cf_error')) {
+        cf_error::invalid_object('values');
+      }
+
       return;
     }
 

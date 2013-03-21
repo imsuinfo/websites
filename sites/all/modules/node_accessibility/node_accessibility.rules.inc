@@ -110,11 +110,11 @@ function node_accessibility_rules_action_info() {
  *   A node object.
  */
 function node_accessibility_delete_rules_action($node) {
-  $function_history = array();
-  cf_error_append_history($function_history, __FUNCTION__);
-
   if (!is_object($node)) {
-    cf_error_invalid_object($function_history, 'node');
+    if (class_exists('cf_error')) {
+      cf_error::invalid_object('node');
+    }
+
     return array('node' => $node);
   }
 
@@ -134,11 +134,11 @@ function node_accessibility_delete_rules_action($node) {
  *   validation results (if any) stored in the key called 'results'.
  */
 function node_accessibility_validate_rules_action($node) {
-  $function_history = array();
-  cf_error_append_history($function_history, __FUNCTION__);
-
   if (!is_object($node)) {
-    cf_error_invalid_object($function_history, 'node');
+    if (class_exists('cf_error')) {
+      cf_error::invalid_object('node');
+    }
+
     return array('node' => $node);
   }
 
@@ -163,13 +163,14 @@ function node_accessibility_validate_rules_action($node) {
  */
 function node_accessibility_rules_condition_content_is_using_node_accessibility($node) {
   if (!is_object($node)) {
+    if (class_exists('cf_error')) {
+      cf_error::invalid_object('node');
+    }
+
     return FALSE;
   }
 
-  $function_history = array();
-  cf_error_append_history($function_history, __FUNCTION__);
-
-  return node_accessibility_is_enabled($node->type, $function_history);
+  return node_accessibility_is_enabled($node->type);
 }
 
 /**
@@ -184,11 +185,12 @@ function node_accessibility_rules_condition_content_is_using_node_accessibility(
  */
 function node_accessibility_rules_condition_content_is_requiring_node_accessibility_validation($node) {
   if (!is_object($node)) {
+    if (class_exists('cf_error')) {
+      cf_error::invalid_object('node');
+    }
+
     return FALSE;
   }
 
-  $function_history = array();
-  cf_error_append_history($function_history, __FUNCTION__);
-
-  return node_accessibility_is_required($node->type, $function_history);
+  return node_accessibility_is_required($node->type);
 }
