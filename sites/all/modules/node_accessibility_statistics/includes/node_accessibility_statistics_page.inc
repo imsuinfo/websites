@@ -23,9 +23,6 @@
  *
  */
 function node_accessibility_statistics_page($statistics_type = 'all') {
-  $function_history = array();
-  cf_error_append_history($function_history, __FUNCTION__);
-
   $conditions = array();
   $title = "All Content";
   $statistics_type_path = '';
@@ -111,7 +108,7 @@ function node_accessibility_statistics_page($statistics_type = 'all') {
     '#tree' => TRUE,
   );
 
-  $display_levels = quail_api_get_display_levels(NULL, $function_history);
+  $display_levels = quail_api_get_display_levels(NULL);
 
   $form['major_problems']['#attributes'] = array('id' => 'accessibility_problems-' . $display_levels[1]['machine_name']);
   $form['minor_problems']['#attributes'] = array('id' => 'accessibility_problems-' . $display_levels[2]['machine_name']);
@@ -129,8 +126,8 @@ function node_accessibility_statistics_page($statistics_type = 'all') {
   );
 
   if ($save_cache) {
-    $problems = (array) node_accessibility_load_problems($conditions, NULL, $function_history);
-    $tests = quail_api_load_tests(array(), 'id', $function_history);
+    $problems = (array) node_accessibility_load_problems($conditions, NULL);
+    $tests = quail_api_load_tests(array(), 'id');
     $plot_data = array();
     $data = array();
     $information = array();
@@ -195,7 +192,7 @@ function node_accessibility_statistics_page($statistics_type = 'all') {
     }
 
     foreach (array('problem_distribution') as $type_name) {
-      $plot = new phplot_api_plot('pie', $function_history);
+      $plot = new phplot_api_plot('pie');
       $data = array();
       $theme_settings = array();
       $theme_settings['plot_rows'] = array();
@@ -238,7 +235,7 @@ function node_accessibility_statistics_page($statistics_type = 'all') {
 
         // Define the data range. PHPlot can do this automatically, but not as well.
         $plot->set_data('plot_area_world', array(0, 0, 225, 275));
-        $plot->set_data('margin_pixels', array(NULL, NULL, 125));
+        $plot->set_data('margins_pixels', array(NULL, NULL, 10));
 
         // Select the data array representation and store the data:
         $plot->set_data('data_type', 'text-data-single');
@@ -276,7 +273,7 @@ function node_accessibility_statistics_page($statistics_type = 'all') {
     }
 
     foreach (array('major_problems', 'minor_problems') as $type_name) {
-      $plot = new phplot_api_plot('bars', $function_history);
+      $plot = new phplot_api_plot('bars');
       $data = array();
       $display_level = 0;
       $theme_settings = array();
@@ -439,12 +436,13 @@ function node_accessibility_statistics_page($statistics_type = 'all') {
  *   - 'unlive' Restrict loading of problems to non-live content (active revision).
  */
 function node_accessibility_statistics_page_problem($machine_name, $published_type = 'all', $live_type = 'live') {
-  $function_history = array();
-  cf_error_append_history($function_history, __FUNCTION__);
   $form = array();
 
   if (!is_string($machine_name)) {
-    cf_error_not_string($function_history, 'machine_name');
+    if (class_exists('cf_error')) {
+      cf_error::invalid_string('machine_name');
+    }
+
     return $form;
   }
 
@@ -485,7 +483,7 @@ function node_accessibility_statistics_page_problem($machine_name, $published_ty
   static $problem_table = NULL;
 
   if (is_null($problem_description) || is_null($problem_table)) {
-    $test_information = (array) quail_api_load_tests(array('machine_name' => $machine_name), NULL, $function_history);
+    $test_information = (array) quail_api_load_tests(array('machine_name' => $machine_name), NULL);
 
     if (count($test_information) == 0) {
       return $form;
@@ -494,14 +492,14 @@ function node_accessibility_statistics_page_problem($machine_name, $published_ty
     $problem_information = array_pop($test_information);
     unset($test_information);
 
-    $node_type_settings = node_accessibility_load_node_type_settings(array(), 'type', $function_history);
+    $node_type_settings = node_accessibility_load_node_type_settings(array(), 'type');
 
     $conditions['test_id'] = $problem_information->id;
     $conditions['sort_by'] = 'id';
     $conditions['sort_order'] = 'ASC';
     $conditions['node_columns'] = TRUE;
 
-    $display_level = quail_api_get_display_levels($problem_information->severity, $function_history);
+    $display_level = quail_api_get_display_levels($problem_information->severity);
 
     $problem_description = array();
     $problem_description['problem_machine_name'] = $problem_information->machine_name;
@@ -536,7 +534,7 @@ function node_accessibility_statistics_page_problem($machine_name, $published_ty
     }
 
 
-    $problems = (array) node_accessibility_load_problems($conditions, NULL, $function_history);
+    $problems = (array) node_accessibility_load_problems($conditions, NULL);
 
     $problem_table = array();
     $problem_table['header'] = array();

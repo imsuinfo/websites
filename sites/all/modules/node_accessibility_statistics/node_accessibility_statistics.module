@@ -174,9 +174,6 @@ function node_accessibility_statistics_theme($existing, $type, $theme, $path) {
  * Template preprocess function for node_accessibility_statistics_plot.tpl.php.
  */
 function template_preprocess_node_accessibility_statistics_plot(&$variables) {
-  $function_history = array();
-  cf_error_append_history($function_history, __FUNCTION__);
-
   drupal_add_css(drupal_get_path('module', 'node_accessibility_statistics') . '/includes/node_accessibility_statistics.css');
 
   $root_class_name = 'node_accessibility_statistics-plot';
@@ -188,27 +185,42 @@ function template_preprocess_node_accessibility_statistics_plot(&$variables) {
   }
 
   if (!is_string($variables['plot_human_name'])) {
-    cf_error_not_string($function_history, 'plot_human_name');
+    if (class_exists('cf_error')) {
+      cf_error::invalid_string('plot_human_name');
+    }
+
     $variables['plot_human_name'] = t("Plot");
   }
 
   if (!is_string($variables['image_url'])) {
-    cf_error_not_string($function_history, 'image_url');
+    if (class_exists('cf_error')) {
+      cf_error::invalid_string('image_url');
+    }
+
     $variables['image_url'] = '';
   }
 
   if (!is_array($variables['plot_rows'])) {
-    cf_error_invalid_array($function_history, 'plot_rows');
+    if (class_exists('cf_error')) {
+      cf_error::invalid_string('plot_rows');
+    }
+
     $variables['plot_rows'] = array();
   }
 
   if (!is_string($variables['total_human_name'])) {
-    cf_error_not_string($function_history, 'total_human_name');
+    if (class_exists('cf_error')) {
+      cf_error::invalid_string('total_human_name');
+    }
+
     $variables['total_human_name'] = '';
   }
 
   if (!is_string($variables['total_value'])) {
-    cf_error_not_string($function_history, 'total_value');
+    if (class_exists('cf_error')) {
+      cf_error::invalid_string('total_value');
+    }
+
     $variables['total_value'] = '';
   }
 
@@ -227,9 +239,6 @@ function template_preprocess_node_accessibility_statistics_plot(&$variables) {
  * Template preprocess function for node_accessibility_statistics_plot.tpl.php.
  */
 function template_preprocess_node_accessibility_statistics_problem_details(&$variables) {
-  $function_history = array();
-  cf_error_append_history($function_history, __FUNCTION__);
-
   drupal_add_css(drupal_get_path('module', 'node_accessibility_statistics') . '/includes/node_accessibility_statistics.css');
 
   $root_class_name = 'node_accessibility_statistics-problem_details';
@@ -242,22 +251,34 @@ function template_preprocess_node_accessibility_statistics_problem_details(&$var
   }
 
   if (!is_string($variables['problem_human_name'])) {
-    cf_error_not_string($function_history, 'problem_human_name');
+    if (class_exists('cf_error')) {
+      cf_error::invalid_string('problem_human_name');
+    }
+
     $variables['problem_human_name'] = t("Unknown Problem");
   }
 
   if (!is_string($variables['severity_human_name'])) {
-    cf_error_not_string($function_history, 'severity_human_name');
+    if (class_exists('cf_error')) {
+      cf_error::invalid_string('severity_human_name');
+    }
+
     $variables['severity_human_name'] = '';
   }
 
   if (!is_numeric($variables['total'])) {
-    cf_error_not_numeric($function_history, 'total');
+    if (class_exists('cf_error')) {
+      cf_error::invalid_string('total');
+    }
+
     $variables['total'] = array();
   }
 
   if (!is_string($variables['explanation'])) {
-    cf_error_not_string($function_history, 'explanation');
+    if (class_exists('cf_error')) {
+      cf_error::invalid_string('explanation');
+    }
+
     $variables['explanation'] = '';
   }
 
@@ -271,7 +292,10 @@ function template_preprocess_node_accessibility_statistics_problem_details(&$var
   }
 
   if (!is_string($variables['statistics_type_path'])) {
-    cf_error_not_string($function_history, 'statistics_type_path');
+    if (class_exists('cf_error')) {
+      cf_error::invalid_string('statistics_type_path');
+    }
+
     $variables['statistics_type_path'] = '';
   }
 }
@@ -280,11 +304,11 @@ function template_preprocess_node_accessibility_statistics_problem_details(&$var
  * Implements hook_file_delete().
  */
 function node_accessibility_statistics_file_delete($file) {
-  $function_history = array();
-  cf_error_append_history($function_history, __FUNCTION__);
-
   if (!is_object($file)) {
-    cf_error_invalid_object($function_history, 'file');
+    if (class_exists('cf_error')) {
+      cf_error::invalid_object('file');
+    }
+
     return;
   }
 
@@ -309,7 +333,9 @@ function node_accessibility_statistics_file_delete($file) {
       ->execute();
   }
   catch (Exception $e) {
-    cf_error_on_query_execution($function_history, $e);
+    if (class_exists('cf_error')) {
+      cf_error::on_query_execution($e);
+    }
   }
 }
 
@@ -319,9 +345,6 @@ function node_accessibility_statistics_file_delete($file) {
  * @see node_accessibility_form_node_type_form_alter()
  */
 function node_accessibility_statistics_form_node_type_form_alter(&$form, &$form_state, $form_id) {
-  $function_history = array();
-  cf_error_append_history($function_history, __FUNCTION__);
-
   $default_enabled = array('');
   $statistic_options = array();
   $statistic_options['problem_distribution'] = t("Problem Distribution");
@@ -331,7 +354,7 @@ function node_accessibility_statistics_form_node_type_form_alter(&$form, &$form_
   $statistic_options['suggestions'] = t("Suggestions");
 
   if (!empty($form['#node_type']->type)) {
-    $node_type_settings_objects = node_accessibility_statistics_load_node_type_settings(array($form['#node_type']->type), NULL, $function_history);
+    $node_type_settings_objects = node_accessibility_statistics_load_node_type_settings(array($form['#node_type']->type), NULL);
 
     if (!empty($node_type_settings_objects)) {
       $node_type_settings_object = array_pop($node_type_settings_objects);
@@ -361,21 +384,11 @@ function node_accessibility_statistics_form_node_type_form_alter(&$form, &$form_
  *   A form state.
  */
 function node_accessibility_statistics_node_type_form_submit($form, &$form_state) {
-  $function_history = array();
-  cf_error_append_history($function_history, __FUNCTION__);
-
-  if (function_exists('cf_version_exists')) {
-    if (cf_is_empty_or_non_string('form_state[values][type]', $form_state['values']['type'])) {
-      return;
-    }
-  }
-  else {
-    if (cf_is_empty_or_non_string($function_history, 'form_state[values][type]', $form_state['values']['type'])) {
-      return;
-    }
+  if (cf_is_empty_or_non_string('form_state[values][type]', $form_state['values']['type'])) {
+    return;
   }
 
-  $node_type_settings_objects = node_accessibility_statistics_load_node_type_settings(array($form_state['values']['type']), $function_history);
+  $node_type_settings_objects = node_accessibility_statistics_load_node_type_settings(array($form_state['values']['type']));
   $node_type_settings_object = FALSE;
 
   if (!empty($node_type_settings_objects)) {
@@ -409,20 +422,17 @@ function node_accessibility_statistics_form_node_accessibility_accessibility_tab
     return;
   }
 
-  $function_history = array();
-  cf_error_append_history($function_history, __FUNCTION__);
-
   $node = &$form['variables']['node']['#value'];
-  $existing_plots = node_accessibility_statistics_load_plots(array('nid' => $node->nid, 'vid' => $node->vid), 'type', $function_history);
+  $existing_plots = node_accessibility_statistics_load_plots(array('nid' => $node->nid, 'vid' => $node->vid), 'type');
 
   // @todo handle the case when there is an error loading the node type settings
-  $results = node_accessibility_statistics_load_node_type_settings(array($node->type), NULL, $function_history);
+  $results = node_accessibility_statistics_load_node_type_settings(array($node->type), NULL);
   $results = array_pop($results);
   $type_settings = is_object($results) ? unserialize($results->statistics_options) : array();
   unset($results);
 
   if (isset($form_state['perform_validation'])) {
-    node_accessibility_statistics_delete_plots(array(array('nid' => $node->nid, 'vid' => $node->vid)), NULL, $function_history);
+    node_accessibility_statistics_delete_plots(array(array('nid' => $node->nid, 'vid' => $node->vid)), NULL);
   }
 
   $form['about_this_node']['node_statistics'] = array(
@@ -434,11 +444,11 @@ function node_accessibility_statistics_form_node_accessibility_accessibility_tab
   );
 
   $no_statistics = TRUE;
-  $display_levels = quail_api_get_display_levels(NULL, $function_history);
+  $display_levels = quail_api_get_display_levels(NULL);
 
   foreach (array('severity_distribution', 'problem_distribution') as $type_name) {
     if (isset($type_settings[$type_name]) && $type_settings[$type_name]) {
-      $plot = new phplot_api_plot('pie', $function_history);
+      $plot = new phplot_api_plot('pie');
       $data = array();
       $total = 0;
       $theme_settings = array();
@@ -488,7 +498,7 @@ function node_accessibility_statistics_form_node_accessibility_accessibility_tab
             $theme_settings['image_url'] = $plot_file_path;
           }
           else {
-            node_accessibility_statistics_delete_plots(array(array('fid' => $existing_plots[$type_name]->fid)), NULL, $function_history);
+            node_accessibility_statistics_delete_plots(array(array('fid' => $existing_plots[$type_name]->fid)), NULL);
           }
         }
 
@@ -498,7 +508,7 @@ function node_accessibility_statistics_form_node_accessibility_accessibility_tab
 
           // Define the data range. PHPlot can do this automatically, but not as well.
           $plot->set_data('plot_area_world', array(NULL, NULL, 200, 150));
-          $plot->set_data('margin_pixels', array(NULL, NULL, 125));
+          $plot->set_data('margins_pixels', array(NULL, NULL, 10));
 
           // Select the data array representation and store the data:
           $plot->set_data('data_type', 'text-data-single');
@@ -532,7 +542,7 @@ function node_accessibility_statistics_form_node_accessibility_accessibility_tab
             $plot_settings['vid'] = $node->vid;
             $plot_settings['fid'] = $file->fid;
             $plot_settings['type'] = $type_name;
-            node_accessibility_statistics_save_plots(array($plot_settings), $function_history);
+            node_accessibility_statistics_save_plots(array($plot_settings));
           }
         }
 
@@ -546,14 +556,14 @@ function node_accessibility_statistics_form_node_accessibility_accessibility_tab
         );
       }
       else {
-        node_accessibility_statistics_delete_plots(array(array('nid' => $node->nid, 'vid' => $node->vid, 'type' => $type_name)), NULL, $function_history);
+        node_accessibility_statistics_delete_plots(array(array('nid' => $node->nid, 'vid' => $node->vid, 'type' => $type_name)), NULL);
       }
     }
   }
 
   foreach (array('major_problems', 'minor_problems', 'suggestions') as $type_name) {
     if (isset($type_settings[$type_name]) && $type_settings[$type_name]) {
-      $plot = new phplot_api_plot('bars', $function_history);
+      $plot = new phplot_api_plot('bars');
       $data = array();
       $total = 0;
       $display_level = 0;
@@ -617,7 +627,7 @@ function node_accessibility_statistics_form_node_accessibility_accessibility_tab
             $theme_settings['image_url'] = $plot_file_path;
           }
           else {
-            node_accessibility_statistics_delete_plots(array(array('fid' => $existing_plots[$type_name]->fid)), NULL, $function_history);
+            node_accessibility_statistics_delete_plots(array(array('fid' => $existing_plots[$type_name]->fid)), NULL);
           }
         }
 
@@ -684,7 +694,7 @@ function node_accessibility_statistics_form_node_accessibility_accessibility_tab
             $plot_settings['vid'] = $node->vid;
             $plot_settings['fid'] = $file->fid;
             $plot_settings['type'] = $type_name;
-            node_accessibility_statistics_save_plots(array($plot_settings), $function_history);
+            node_accessibility_statistics_save_plots(array($plot_settings));
           }
         }
 
@@ -694,7 +704,7 @@ function node_accessibility_statistics_form_node_accessibility_accessibility_tab
         );
       }
       else {
-        node_accessibility_statistics_delete_plots(array(array('nid' => $node->nid, 'vid' => $node->vid, 'type' => $type_name)), NULL, $function_history);
+        node_accessibility_statistics_delete_plots(array(array('nid' => $node->nid, 'vid' => $node->vid, 'type' => $type_name)), NULL);
       }
     }
   }
@@ -722,18 +732,16 @@ function node_accessibility_statistics_form_node_accessibility_accessibility_tab
  *   it was returned by the database call.
  *   When this is a valid string, the key names of the returned array will use
  *   the specified key name.
- * @param array $function_history
- *   (optional) An array of function names, ie:
- *    array('0' => 'my_function_name').
  *
  * @return array
  *   An array of all images associated with the node, if any.
  */
-function node_accessibility_statistics_load_plots(array $parameters = array(), $keyed = NULL, $function_history = array()) {
-  cf_error_append_history($function_history, __FUNCTION__);
-
+function node_accessibility_statistics_load_plots(array $parameters = array(), $keyed = NULL) {
   if (!is_null($keyed) && !is_string($keyed)) {
-    cf_error_not_string($function_history, 'keyed');
+    if (class_exists('cf_error')) {
+      cf_error::invalid_string('keyed');
+    }
+
     return array();
   }
 
@@ -751,7 +759,10 @@ function node_accessibility_statistics_load_plots(array $parameters = array(), $
 
   if (array_key_exists('id', $parameters)) {
     if (!is_numeric($parameters['id'])) {
-      cf_error_not_numeric($function_history, 'parameters[id]');
+      if (class_exists('cf_error')) {
+        cf_error::invalid_numeric('parameters[id]');
+      }
+
       return FALSE;
     }
 
@@ -762,7 +773,10 @@ function node_accessibility_statistics_load_plots(array $parameters = array(), $
 
   if (array_key_exists('nid', $parameters)) {
     if (!is_numeric($parameters['nid'])) {
-      cf_error_not_numeric($function_history, 'parameters[nid]');
+      if (class_exists('cf_error')) {
+        cf_error::invalid_numeric('parameters[nid]');
+      }
+
       return FALSE;
     }
 
@@ -773,7 +787,10 @@ function node_accessibility_statistics_load_plots(array $parameters = array(), $
 
   if (array_key_exists('vid', $parameters)) {
     if (!is_numeric($parameters['vid'])) {
-      cf_error_not_numeric($function_history, 'parameters[vid]');
+      if (class_exists('cf_error')) {
+        cf_error::invalid_numeric('parameters[vid]');
+      }
+
       return FALSE;
     }
 
@@ -784,7 +801,10 @@ function node_accessibility_statistics_load_plots(array $parameters = array(), $
 
   if (array_key_exists('fid', $parameters)) {
     if (!is_numeric($parameters['fid'])) {
-      cf_error_not_numeric($function_history, 'parameters[fid]');
+      if (class_exists('cf_error')) {
+        cf_error::invalid_numeric('parameters[fid]');
+      }
+
       return FALSE;
     }
 
@@ -795,7 +815,10 @@ function node_accessibility_statistics_load_plots(array $parameters = array(), $
 
   if (array_key_exists('type', $parameters)) {
     if (!is_string($parameters['type'])) {
-      cf_error_not_string($function_history, 'parameters[type]');
+      if (class_exists('cf_error')) {
+        cf_error::invalid_string('parameters[type]');
+      }
+
       return FALSE;
     }
 
@@ -815,7 +838,10 @@ function node_accessibility_statistics_load_plots(array $parameters = array(), $
       $records = $query->execute();
     }
     catch (Exception $e) {
-      cf_error_on_query_execution($function_history, $e);
+      if (class_exists('cf_error')) {
+        cf_error::on_query_execution($e);
+      }
+
       return array();
     }
 
@@ -832,7 +858,9 @@ function node_accessibility_statistics_load_plots(array $parameters = array(), $
     return $query->execute()->fetchAll();
   }
   catch (Exception $e) {
-    cf_error_on_query_execution($function_history, $e);
+    if (class_exists('cf_error')) {
+      cf_error::on_query_execution($e);
+    }
   }
 
   return array();
@@ -851,14 +879,11 @@ function node_accessibility_statistics_load_plots(array $parameters = array(), $
  *   it was returned by the database call.
  *   When this is a valid string, the key names of the returned array will use
  *   the specified key name.
- * @param array $function_history
- *   (optional) An array of function names, ie:
- *   array('0' => 'my_function_name').
  *
  * @return object
  *   A prepared statement object, already executed.
  */
-function node_accessibility_statistics_load_node_type_settings(array $node_types, $keyed = NULL, $function_history = array()) {
+function node_accessibility_statistics_load_node_type_settings(array $node_types, $keyed = NULL) {
   if (count($node_types) == 0) {
     return array();
   }
@@ -888,7 +913,10 @@ function node_accessibility_statistics_load_node_type_settings(array $node_types
       $records = $query->execute();
     }
     catch (Exception $e) {
-      cf_error_on_query_execution($function_history, $e);
+      if (class_exists('cf_error')) {
+        cf_error::on_query_execution($e);
+      }
+
       return array();
     }
 
@@ -905,7 +933,9 @@ function node_accessibility_statistics_load_node_type_settings(array $node_types
     return $query->execute()->fetchAll();
   }
   catch (Exception $e) {
-    cf_error_on_query_execution($function_history, $e);
+    if (class_exists('cf_error')) {
+      cf_error::on_query_execution($e);
+    }
   }
 
   return array();
@@ -920,17 +950,13 @@ function node_accessibility_statistics_load_node_type_settings(array $node_types
  *   - nid: The node id.
  *   - vid: The version id.
  *   - type: A machine-friendly name for the type of the plot.
- * @param array $function_history
- *   (optional) An array of function names, ie: array('0' => 'my_function_name').
  *
  * @return int|false
  *  If the record insert or update failed, returns FALSE.
  *  If it succeeded, returns SAVED_NEW or SAVED_UPDATED, depending on the
  *  operation performed.
  */
-function node_accessibility_statistics_save_plots(array $plots, $function_history = array()) {
-  cf_error_append_history($function_history, __FUNCTION__);
-
+function node_accessibility_statistics_save_plots(array $plots) {
   $transaction = db_transaction();
 
   try {
@@ -945,7 +971,7 @@ function node_accessibility_statistics_save_plots(array $plots, $function_histor
         $results = drupal_write_record('node_accessibility_statistics_plots', $record_plot, array('id'));
       }
       else {
-        $existing_plots = node_accessibility_statistics_load_plots(array('fid' => $record['fid']), 'fid', $function_history);
+        $existing_plots = node_accessibility_statistics_load_plots(array('fid' => $record['fid']), 'fid');
 
         if (array_key_exists($record['fid'], $existing_plots)) {
           $record_plot['id'] = $existing_plots[$record['fid']]->id;
@@ -957,7 +983,7 @@ function node_accessibility_statistics_save_plots(array $plots, $function_histor
       }
 
       if ($results && array_key_exists('nid', $record) && array_key_exists('vid', $record) && array_key_exists('id', $record)) {
-        $existing_plots = node_accessibility_statistics_load_plots(array('pid' => $record['id']), 'pid', $function_history);
+        $existing_plots = node_accessibility_statistics_load_plots(array('pid' => $record['id']), 'pid');
 
         $record_node = array();
         $record_node['pid'] = &$record['id'];
@@ -978,7 +1004,10 @@ function node_accessibility_statistics_save_plots(array $plots, $function_histor
   }
   catch (Exception $e) {
     $transaction->rollback();
-    cf_error_on_query_execution($function_history, $e);
+
+    if (class_exists('cf_error')) {
+      cf_error::on_query_execution($e);
+    }
 
     return FALSE;
   }
@@ -1004,18 +1033,13 @@ function node_accessibility_statistics_save_plots(array $plots, $function_histor
  *   it was returned by the database call.
  *   When this is a valid string, the key names of the returned array will use
  *   the specified key name.
- * @param array $function_history
- *   (optional) An array of function names, ie:
- *   array('0' => 'my_function_name').
  *
  * @return bool
  *   TRUE if nothing went wrong, FALSE otherwise.
  */
-function node_accessibility_statistics_delete_plots(array $plots, $keyed = NULL, $function_history = array()) {
-  cf_error_append_history($function_history, __FUNCTION__);
-
+function node_accessibility_statistics_delete_plots(array $plots, $keyed = NULL) {
   foreach ($plots as $key => &$plot) {
-    $existing_plots = node_accessibility_statistics_load_plots($plot, $keyed, $function_history);
+    $existing_plots = node_accessibility_statistics_load_plots($plot, $keyed);
 
     foreach ($existing_plots as $existing_key => &$existing) {
       if (!empty($existing->fid)) {
@@ -1031,14 +1055,8 @@ function node_accessibility_statistics_delete_plots(array $plots, $keyed = NULL,
 
 /**
  * Resets all static caches provided by this module.
- *
- * @param array $function_history
- *   (optional) An array of function names, ie:
- *   array('0' => 'my_function_name').
  */
-function node_accessibility_statistics_reset_cache($function_history = array()) {
-  cf_error_append_history($function_history, __FUNCTION__);
-
+function node_accessibility_statistics_reset_cache() {
   drupal_static_reset('node_accessibility_statistics_page');
   cache_clear_all('node_accessibility_statistics_page', 'cache', TRUE);
 }
