@@ -249,7 +249,7 @@ function node_accessibility_form_node_type_form_alter(&$form, &$form_state, $for
   $node_type_settings_object = FALSE;
   $node_type_settings_array  = array('type' => NULL, 'required' => NULL, 'standards' => NULL);
 
-  $standards = quail_api_get_standards_list(NULL, 'snippet',);
+  $standards = quail_api_get_standards_list(NULL, 'snippet');
   $display_levels = quail_api_get_display_levels_list(NULL);
   $methods = quail_api_get_validation_methods(NULL);
   $methods_list = quail_api_get_validation_methods_list(NULL);
@@ -1276,7 +1276,7 @@ function node_accessibility_save_problem($problem_data) {
  *   quail_api theme functions.
  */
 function node_accessibility_restructure_results($nid, $vid, $display_levels = NULL) {
-  $problems = (array) node_accessibility_load_problems(array('nid' => $nid, 'vid' => $vid), NULL,);
+  $problems = (array) node_accessibility_load_problems(array('nid' => $nid, 'vid' => $vid), NULL);
   $tests = quail_api_load_tests(array(), 'id');
   $results = array();
 
