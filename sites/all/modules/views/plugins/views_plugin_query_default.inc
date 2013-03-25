@@ -1215,8 +1215,8 @@ class views_plugin_query_default extends views_plugin_query {
       elseif ($this->distinct && !in_array($fieldname, $this->groupby)) {
         // d7cx: This code was there, apparently needed for PostgreSQL
         // $string = db_driver() == 'pgsql' ? "FIRST($string)" : $string;
-        if (!in_array($string, $non_aggregates)) {
-          $non_aggregates[] = $string;
+        if (!in_array($fieldname, $non_aggregates)) {
+          $non_aggregates[] = $fieldname;
         }
         $query->addField(!empty($field['table']) ? $field['table'] : $this->base_table, $field['field'], $fieldname);
       }

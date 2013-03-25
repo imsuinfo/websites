@@ -113,19 +113,19 @@ class ViewsQueryGroupByTest extends ViewsSqlTest {
   public function testAggregateAmbiguity() {
     // Create 4 nodes of type1
     $type1 = $this->drupalCreateContentType();
-    $this->drupalCreateNode($node_1);
-    $this->drupalCreateNode($node_1);
-    $this->drupalCreateNode($node_1);
-    $this->drupalCreateNode($node_1);
 
     $node_1 = array(
       'type' => $type1->type,
     );
+    $this->drupalCreateNode($node_1);
+    $this->drupalCreateNode($node_1);
+    $this->drupalCreateNode($node_1);
+    $this->drupalCreateNode($node_1);
 
     $view = $this->viewsAggregateAmbiguityView();
     $output = $view->execute_display();
 
-    $this->assertEqual(count($view->result), 1, 'Make sure there is no ambiguity problems with the group by operation.');
+    $this->assertEqual(count($view->result), 1, 'Make sure there are no ambiguity problems with the group by operation.');
   }
 
   public function viewsAggregateAmbiguityView() {
