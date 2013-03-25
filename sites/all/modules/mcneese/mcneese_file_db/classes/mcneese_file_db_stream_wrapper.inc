@@ -451,14 +451,17 @@ abstract class mcneese_file_db_stream_wrapper implements DrupalStreamWrapperInte
         if ($parts[3] == $this->get_external()) {
           $parts = array_slice($parts, 4);
         }
+        else if ($parts[3] == $this->get_path_by_hash()) {
+          $parts = array_slice($parts, 3);
+        }
         else {
           return FALSE;
         }
       }
 
-      // allow being passed a path beginning with /MCNEESE_FILE_DB_FILE_PATH .
+      // allow being passed a path beginning with external path such as: /MCNEESE_FILE_DB_FILE_PATH .
       // doing this allows for modules to find the scheme using only the final url.
-      if (empty($parts[0]) && $parts[1] == MCNEESE_FILE_DB_FILE_PATH) {
+      if (empty($parts[0]) && $parts[1] == $this->get_external()) {
         array_shift($parts);
         array_shift($parts);
 
