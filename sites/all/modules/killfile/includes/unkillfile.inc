@@ -15,43 +15,40 @@
  *   The unsoft delete form.
  */
 function killfile_unkillfile_form($form, &$form_state, $node) {
-  $function_history = array();
-
-  if (!function_exists('cf_version_exists')) {
-    cf_error_append_history($function_history, __FUNCTION__);
-  }
-
   if (!is_array($form)){
-    if (!function_exists('cf_version_exists')) {
-      cf_error_invalid_array($function_history, 'form');
+    if (class_exists('cf_error')) {
+      cf_error::invalid_array('form');
     }
+
     return cf_page_not_accessible($form_state);
   }
 
   if (!isset($form['#id'])) $form['#id'] = '';
 
   if (!is_array($form)){
-    if (!function_exists('cf_version_exists')) {
-      cf_error_invalid_array($function_history, 'form');
+    if (class_exists('cf_error')) {
+      cf_error::invalid_array('form');
     }
+
     return cf_page_not_accessible($form_state, $form['#id']);
   }
 
-  if (cf_is_not_form_state($function_history, 'form_state', $form_state)){
+  if (cf_is_not_form_state('form_state', $form_state)){
     return cf_page_not_accessible($form_state, $form['#id']);
   }
 
   if (!is_object($node)){
-    if (!function_exists('cf_version_exists')) {
-      cf_error_invalid_object($function_history, 'node');
+    if (class_exists('cf_error')) {
+      cf_error::invalid_object('node');
     }
+
     return cf_page_not_accessible($form_state, $form['#id']);
   }
 
   $node_type_settings_array = array();
 
   if (!empty($node->type)){
-    $node_type_settings_array = killfile_get_node_type_settings(array($node->type), $function_history);
+    $node_type_settings_array = killfile_get_node_type_settings(array($node->type));
   }
 
   if ($node->deleted === FALSE || !is_array($node_type_settings_array) || count($node_type_settings_array) != 1){
@@ -84,32 +81,19 @@ function killfile_unkillfile_form($form, &$form_state, $node) {
  *   A form state
  */
 function killfile_unkillfile_form_submit($form, &$form_state) {
-  $function_history = array();
-
-  if (!function_exists('cf_version_exists')) {
-    cf_error_append_history($function_history, __FUNCTION__);
-  }
-
   if (!is_array($form)){
-    if (!function_exists('cf_version_exists')) {
-      cf_error_invalid_array($function_history, 'form');
+    if (class_exists('cf_error')) {
+      cf_error::invalid_array('form');
     }
     return;
   }
 
-  if (function_exists('cf_version_exists')) {
-    if (cf_is_not_form_state('form_state', $form_state)){
-      return;
-    }
-  }
-  else {
-    if (cf_is_not_form_state($function_history, 'form_state', $form_state)){
-      return;
-    }
+  if (cf_is_not_form_state('form_state', $form_state)){
+    return;
   }
 
   if (isset($form_state['values']['confirm'])) {
-    $result = killfile_undelete_nodes(array($form['#node']), NULL, $function_history);
+    $result = killfile_undelete_nodes(array($form['#node']), NULL);
 
     if ($result){
       drupal_set_message(t("The node has been undeleted."));

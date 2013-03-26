@@ -155,15 +155,9 @@ function killfile_rules_actions_parameters($node_label) {
  *   TRUE/FALSE depending on if the node is deleted.
  */
 function killfile_rules_condition_node_is_deleted($node) {
-  $function_history = array();
-
-  if (!function_exists('cf_version_exists')) {
-    cf_error_append_history($function_history, __FUNCTION__);
-  }
-
   if (!is_object($node)){
-    if (!function_exists('cf_version_exists')) {
-      cf_error_invalid_object($function_history, 'node', WATCHDOG_WARNING);
+    if (class_exists('cf_error')) {
+      cf_error::invalid_object('node', WATCHDOG_WARNING);
     }
 
     return FALSE;
@@ -186,20 +180,15 @@ function killfile_rules_condition_node_is_deleted($node) {
  *   TRUE/FALSE depending on if the node has killfile support enabled for its node type.
  */
 function killfile_rules_condition_content_is_using_killfile($node) {
-  $function_history = array();
-
-  if (!function_exists('cf_version_exists')) {
-    cf_error_append_history($function_history, __FUNCTION__);
-  }
-
   if (!is_object($node)){
-    if (!function_exists('cf_version_exists')) {
-      cf_error_invalid_object($function_history, 'node', WATCHDOG_WARNING);
+    if (class_exists('cf_error')) {
+      cf_error::invalid_object('node', WATCHDOG_WARNING);
     }
+
     return FALSE;
   }
 
-  $node_type_settings_array = killfile_get_node_type_settings(array($node->type), $function_history);
+  $node_type_settings_array = killfile_get_node_type_settings(array($node->type));
 
   return is_array($node_type_settings_array) && count($node_type_settings_array) == 1;
 }
@@ -216,20 +205,15 @@ function killfile_rules_condition_content_is_using_killfile($node) {
  *   An array containing the node object stored in the key called 'node'.
  */
 function killfile_delete_action($node, $author = NULL) {
-  $function_history = array();
-
-  if (!function_exists('cf_version_exists')) {
-    cf_error_append_history($function_history, __FUNCTION__);
-  }
-
   if (!is_object($node)){
-    if (!function_exists('cf_version_exists')) {
-      cf_error_invalid_object($function_history, 'node');
+    if (class_exists('cf_error')) {
+      cf_error::invalid_object('node');
     }
+
     return array('node' => $node);
   }
 
-  $node_type_settings_array = killfile_get_node_type_settings(array($node->type), $function_history);
+  $node_type_settings_array = killfile_get_node_type_settings(array($node->type));
 
   if (!is_array($node_type_settings_array) || count($node_type_settings_array) != 1){
     watchdog('killfile', "The rules killfile action on node %nid could not be performed. Killfile support is either disabled for this node or there was an error loading the killfile node type settings for this node.", array('%nid' => $node->nid));
@@ -244,7 +228,7 @@ function killfile_delete_action($node, $author = NULL) {
   }
 
   if (node_access('delete', $node, $target_user)) {
-    killfile_fake_delete_nodes(array($node), $target_user, $function_history);
+    killfile_fake_delete_nodes(array($node), $target_user);
   }
 
   return array('node' => $node);
@@ -262,20 +246,15 @@ function killfile_delete_action($node, $author = NULL) {
  *   An array containing the node object stored in the key called 'node'.
  */
 function killfile_undelete_action($node, $author = NULL) {
-  $function_history = array();
-
-  if (!function_exists('cf_version_exists')) {
-    cf_error_append_history($function_history, __FUNCTION__);
-  }
-
   if (!is_object($node)){
-    if (!function_exists('cf_version_exists')) {
-      cf_error_invalid_object($function_history, 'node');
+    if (class_exists('cf_error')) {
+      cf_error::invalid_object('node');
     }
+
     return array('node' => $node);
   }
 
-  $node_type_settings_array = killfile_get_node_type_settings(array($node->type), $function_history);
+  $node_type_settings_array = killfile_get_node_type_settings(array($node->type));
 
   if (!is_array($node_type_settings_array) || count($node_type_settings_array) != 1){
     watchdog('killfile', "The rules unkillfile action on node %nid could not be performed. Killfile support is either disabled for this node or there was an error loading the killfile node type settings for this node.", array('%nid' => $node->nid));
@@ -289,8 +268,8 @@ function killfile_undelete_action($node, $author = NULL) {
     $target_user = cf_current_user();
   }
 
-  if (killfile_can_undelete($node, $target_user, $function_history)) {
-    killfile_undelete_nodes(array($node), $target_user, $function_history);
+  if (killfile_can_undelete($node, $target_user)) {
+    killfile_undelete_nodes(array($node), $target_user);
   }
 
   return array('node' => $node);
