@@ -9,14 +9,11 @@
 
 /**
  * Plot class object for creating phplots.
- *
- * @todo review how function_history is handled here.
  */
 class phplot_api_plot {
   protected $type = NULL;
   protected $data = array();
   protected $settings = array();
-  protected $caller_history = array();
   protected $image = NULL;
   protected $file = NULL;
   protected $plot = NULL;
@@ -27,15 +24,8 @@ class phplot_api_plot {
    *
    * @param string type
    *   A machine name string of the plot type.
-   *
-   * @param array function_history
-   *   (optional) An array of function names, ie: array('0' => 'my_function_name').
    */
-  public function phplot_api_plot($type, $function_history = array()) {
-    $this->caller_history = $function_history;
-
-    $function_history = $this->history(__FUNCTION__);
-
+  public function phplot_api_plot($type) {
     $this->set_type($type);
 
     foreach ($this->settings['defaults'] as $feature => $value) {
@@ -132,9 +122,7 @@ class phplot_api_plot {
    *   A machine name string of the plot type.
    */
   public function set_type($type) {
-    $function_history = $this->history(__FUNCTION__);
-
-    $this->settings = phplot_api_get_plots($type, $function_history);
+    $this->settings = phplot_api_get_plots($type);
     $this->type = $type;
   }
 
@@ -154,10 +142,11 @@ class phplot_api_plot {
    *   TRUE is returned on success and FALSE on any failure.
    */
   public function set_data($feature, $value, $reset = FALSE) {
-    $function_history = $this->history(__FUNCTION__);
-
     if (!cf_has_array_key($feature, $this->settings['features'])) {
-      // @todo watchdog some error here?
+      if (class_exists('cf_error')) {
+        cf_error::missing_array_key('this->settings', 'features', WATCHDOG_WARNING);
+      }
+
       return FALSE;
     }
 
@@ -177,22 +166,21 @@ class phplot_api_plot {
   }
 
   /**
-   * Assigns the object callers history.
-   *
-   * @param array   function_history
-   *   An array of function names, ie: array('0' => 'my_function_name').
-   */
-  public function set_history($function_history) {
-    $caller_history = $function_history;
-  }
-
-  /**
    * Builds the plot image file.
+   *
+   * @return bool
+   *   TRUE on success, FALSE otherwise.
    */
   public function build() {
-    $function_history = $this->history(__FUNCTION__);
+    $library = libraries_load('phplot');
 
-    phplot_api_include_library($function_history);
+    if (empty($library['loaded'])) {
+      if (class_exists('cf_error')) {
+        cf_error::failed_to_load('quail-lib');
+      }
+
+      return FALSE;
+    }
 
     if (isset($this->data['width'])) {
       $width = $this->data['width'];
@@ -569,6 +557,8 @@ class phplot_api_plot {
     }
 
     // @todo provide a modules_invoke call so that modules that provide their own tweaks can alter the plot object.
+
+    return TRUE;
   }
 
   /**
@@ -612,9 +602,6 @@ class phplot_api_plot {
    * @param string|null file_schema
    *   (optional) The file schema to use.
    *   - if NULL, then file_default_scheme() is used.
-   * @param array $function_history
-   *   (optional) An array of function names, ie:
-   *   array('0' => 'my_function_name').
    *
    * @return object|false
    *   The file object that was saved to the database or FALSE on error.
@@ -623,8 +610,6 @@ class phplot_api_plot {
    * @see file_default_scheme()
    */
   function create_file($file_status = 0, $directory = 'statistics/plots', $file_schema = NULL) {
-    $function_history = $this->history(__FUNCTION__);
-
     // @todo how does one validate the image blob?
     if (empty($this->image)) {
       return FALSE;
@@ -668,22 +653,5 @@ class phplot_api_plot {
     }
 
     return $filepath;
-  }
-
-  /**
-   * Initializes and assigns function history.
-   */
-  private function history($function_name) {
-    if (empty($caller_history)) {
-      $function_history = array();
-    }
-    else {
-      $function_history = $caller_history;
-    }
-
-    cf_error_append_history($function_history, __CLASS__);
-    cf_error_append_history($function_history, $function_name);
-
-    return $function_history;
   }
 }

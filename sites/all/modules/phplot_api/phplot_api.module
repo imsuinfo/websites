@@ -22,40 +22,29 @@ define('PHPLOT_API_FEATURE_MULTIPLE', 2);
 
 
 /**
- * Returns the expected path to the phplot library.
- *
- * @param array $function_history
- *   (optional) An array of function names, ie:
- *   array('0' => 'my_function_name').
+ * Implements hook_libraries_info().
  */
-function phplot_api_library_path($function_history = array()) {
-  cf_error_append_history($function_history, __FUNCTION__);
+function phplot_api_libraries_info() {
+  $libraries = array();
 
-  $library_path = libraries_get_path('phplot');
+  $libraries['phplot'] = array();
+  $libraries['phplot']['name'] = "Phplot";
+  $libraries['phplot']['vendor url '] = 'http://sourceforge.net/projects/phplot/';
+  $libraries['phplot']['download url'] = 'http://sourceforge.net/projects/phplot/files/latest/download';
 
-  return $library_path . '/phplot.php';
-}
+  $libraries['phplot']['version arguments'] = array(
+    'file' => 'ChangeLog',
+    'pattern' => '/===== Released as ([0-9a-zA-Z\.-]+) =====/i',
+    'lines' => 10,
+    'cols' => 200,
+  );
 
-/**
- * Loads the quail library.
- *
- * @param array $function_history
- *   (optional) An array of function names, ie:
- *   array('0' => 'my_function_name').
- */
-function phplot_api_include_library($function_history = array()) {
-  static $loaded_phplot_api_library_includes = FALSE;
+  $libraries['phplot']['files'] = array();
+  $libraries['phplot']['files']['php'] = array(
+    'phplot.php',
+  );
 
-  if ($loaded_phplot_api_library_includes) return TRUE;
-  $loaded_phplot_api_library_includes = TRUE;
-
-  cf_error_append_history($function_history, __FUNCTION__);
-
-  $library_path = libraries_get_path('phplot');
-
-  $result = require_once phplot_api_library_path($function_history);
-
-  return $result;
+  return $libraries;
 }
 
 /**
@@ -78,15 +67,12 @@ function phplot_api_theme($existing, $type, $theme, $path) {
  *   When defined, the return value to only contain the plot that matches the
  *   given machine name.
  *   When undefined, all plots will be loaded into the plots array.
- * @param array $function_history
- *   (optional) An array of function names, ie:
- *   array('0' => 'my_function_name').
  *
  * @return array
  *   An array of supported plots.
  *   The array keys are the machine names for each display level.
  */
-function phplot_api_get_plots($plot_type = NULL, $function_history = array()) {
+function phplot_api_get_plots($plot_type = NULL) {
   static $plot_settings = NULL;
 
   if (isset($plot_settings)) {
@@ -100,8 +86,6 @@ function phplot_api_get_plots($plot_type = NULL, $function_history = array()) {
 
     return $plot_settings;
   }
-
-  cf_error_append_history($function_history, __FUNCTION__);
 
   $plot_settings = array();
 
@@ -321,10 +305,7 @@ function phplot_api_get_plots($plot_type = NULL, $function_history = array()) {
     $value['data_types'][] = 'text-data';
   }
 
-  $other_arguments = array();
-  $other_arguments['function_history'] = $function_history;
-
-  drupal_alter('phplot_api_get_plots', $plot_settings, $plot_type, $other_arguments);
+  drupal_alter('phplot_api_get_plots', $plot_settings, $plot_type);
 
   if (!is_null($plot_type)) {
     if (isset($plot_settings[$plot_type])) {
@@ -346,9 +327,6 @@ function phplot_api_get_plots($plot_type = NULL, $function_history = array()) {
  * @param array|null plot_settings
  *   (optional) Providing a valid array of plots as returned by
  *   phplot_api_get_plots() and it will be properly converted into a plots list.
- * @param array $function_history
- *   (optional) An array of function names, ie:
- *   array('0' => 'my_function_name').
  *
  * @return array
  *   An array of plots that are supported by this module or extending modules.
@@ -357,11 +335,9 @@ function phplot_api_get_plots($plot_type = NULL, $function_history = array()) {
  *
  * @see phplot_api_get_plots()
  */
-function phplot_api_get_plots_list($plot_settings = NULL, $function_history = array()) {
-  cf_error_append_history($function_history, __FUNCTION__);
-
+function phplot_api_get_plots_list($plot_settings = NULL) {
   if (is_null($plot_settings)) {
-    $plot_settings = phplot_api_get_plots(NULL, $function_history);
+    $plot_settings = phplot_api_get_plots(NULL);
   }
 
   $plots_list = array();
