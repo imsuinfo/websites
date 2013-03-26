@@ -38,6 +38,7 @@ $arguments = explode('/', $uri);
 if (isset($arguments[1]) && $arguments[1] == 'f') {
   try {
     _drupal_root_db_prepare_();
+
     if (function_exists('mcneese_file_db_return_file')) {
       mcneese_file_db_return_file($arguments);
       unset($uri);
@@ -46,7 +47,8 @@ if (isset($arguments[1]) && $arguments[1] == 'f') {
       unset($uri);
       unset($arguments);
       drupal_bootstrap(DRUPAL_BOOTSTRAP_FULL);
-      menu_execute_active_handler();
+      drupal_not_found();
+      drupal_exit();
     }
   }
   catch (Exception $e) {
@@ -64,7 +66,7 @@ else if (count($arguments) > 6 && $arguments[1] == 'files' && $arguments[2] == '
 
       if (!file_exists($file_uri) || empty($arguments[8])) {
         mcneese_file_db_generate_image_style($arguments);
-        exit();
+        drupal_exit();
       }
     }
   }
