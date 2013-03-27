@@ -593,6 +593,16 @@ function mcneese_file_db_generate_image_style($arguments) {
 
   $file_uri = $wrapper->getTarget($image_source_uri);
 
+  mcneese_file_db_print_image_style($file_uri);
+}
+
+/**
+ * Prunts the appropriate image file.
+ *
+ * @param string $file_uri
+ *   The image uri of the image to print.
+ */
+function mcneese_file_db_print_image_style($file_uri) {
   if (file_exists($file_uri)) {
     $filesize = filesize($file_uri);
     //$checksum = shasum($file_uri);
