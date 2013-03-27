@@ -3,22 +3,23 @@ description = "An alternative menu and breadcrumb system design to utilize the w
 package = Workbench
 core = 7.x
 
-dependencies[] = cf
-dependencies[] = cf_db_options
+dependencies[] = cf (7.x-2.x)
+dependencies[] = cf_db_options (7.x-2.x)
 dependencies[] = taxonomy
 dependencies[] = workbench_access
 
 files[] = workbench_menu.install
 files[] = workbench_menu.module
+files[] = workbench_menu.rules.inc
 files[] = includes/workbench_menu.entity.inc
 files[] = includes/workbench_menu.css
 files[] = includes/workbench_menu.js
 files[] = includes/workbench_menu_admin.css
 files[] = includes/workbench_menu.admin.inc
 
-; Information added by drupal.org packaging script on 2012-10-01
-version = "7.x-1.0-alpha1"
+; Information added by drupal.org packaging script on 2013-03-27
+version = "7.x-1.0-alpha3"
 core = "7.x"
 project = "workbench_menu"
-datestamp = "1349123767"
+datestamp = "1364414723"
 

@@ -606,7 +606,7 @@ function workbench_menu_build_menu_item($menu, $item, &$variables) {
     $item_menus = (array) workbench_menu_get_menus(array('access_id' => $item['item']->properties['menu']), 'id');
 
     if (empty($item_menus)) {
-      if (module_exists('cf_error')) {
+      if (class_exists('cf_error')) {
         cf_error::invalid_variable('item_menus', "Failed to find workbench menu with access id of %access_id" , array('%access_id' => $item['item']->properties['menu']), WATCHDOG_WARNING);
       }
 
@@ -1270,7 +1270,7 @@ function workbench_menu_get_menus_at_paths($paths) {
     $matches = &$paths;
   }
   else {
-    if (module_exists('cf_error')) {
+    if (class_exists('cf_error')) {
       cf_error::invalid_variable('paths', "Must be a string or an array of strings.");
     }
 
@@ -1291,7 +1291,7 @@ function workbench_menu_get_menus_at_paths($paths) {
  */
 function workbench_menu_get_menus_at_node($node_or_nid) {
   if (!is_object($node_or_nid) && !is_numeric($node_or_nid)) {
-    if (module_exists('cf_error')) {
+    if (class_exists('cf_error')) {
       cf_error::invalid_variable('node_or_nid', "Must be either a node object or a number.");
     }
 
@@ -1348,7 +1348,7 @@ function workbench_menu_get_menus_at_node($node_or_nid) {
  */
 function workbench_menu_get_menus($conditions = array(), $keyed = NULL) {
   if (!is_array($conditions)) {
-    if (module_exists('cf_error')) {
+    if (class_exists('cf_error')) {
       cf_error::invalid_array('conditions');
     }
 
@@ -1400,7 +1400,7 @@ function workbench_menu_get_menus($conditions = array(), $keyed = NULL) {
       $records = $query->execute();
     }
     catch (Exception $e) {
-      if (module_exists('cf_error')) {
+      if (class_exists('cf_error')) {
         cf_error::on_query_execution($e);
       }
 
@@ -1418,7 +1418,7 @@ function workbench_menu_get_menus($conditions = array(), $keyed = NULL) {
       $menus = (array) $query->execute()->fetchAll();
     }
     catch (Exception $e) {
-      if (module_exists('cf_error')) {
+      if (class_exists('cf_error')) {
         cf_error::on_query_execution($e);
       }
     }
@@ -1475,7 +1475,7 @@ function workbench_menu_get_menus($conditions = array(), $keyed = NULL) {
  */
 function workbench_menu_save_menus($menus) {
   if (!is_array($menus)) {
-    if (module_exists('cf_error')) {
+    if (class_exists('cf_error')) {
       cf_error::invalid_array('menus');
     }
 
@@ -1492,7 +1492,7 @@ function workbench_menu_save_menus($menus) {
   try {
     foreach ($menus as $key => &$menu) {
       if (!is_array($menu)) {
-        if (module_exists('cf_error')) {
+        if (class_exists('cf_error')) {
           cf_error::invalid_array('menus[' . $key . ']');
         }
 
@@ -1583,7 +1583,7 @@ function workbench_menu_save_menus($menus) {
   catch (Exception $e) {
     $transaction->rollback();
 
-    if (module_exists('cf_error')) {
+    if (class_exists('cf_error')) {
       cf_error::on_query_execution($e);
     }
 
@@ -1625,7 +1625,7 @@ function workbench_menu_get_load_menu_items($conditions = array(), $keyed = NULL
   $sorted_menu_items['nested'] = array();
 
   if (!is_array($conditions)) {
-    if (module_exists('cf_error')) {
+    if (class_exists('cf_error')) {
       cf_error::invalid_array('conditions');
     }
 
@@ -1708,7 +1708,7 @@ function workbench_menu_get_load_menu_items($conditions = array(), $keyed = NULL
       $records = $query->execute();
     }
     catch (Exception $e) {
-      if (module_exists('cf_error')) {
+      if (class_exists('cf_error')) {
         cf_error::on_query_execution($e);
       }
 
@@ -1726,7 +1726,7 @@ function workbench_menu_get_load_menu_items($conditions = array(), $keyed = NULL
       $menu_items = (array) $query->execute()->fetchAll();
     }
     catch (Exception $e) {
-      if (module_exists('cf_error')) {
+      if (class_exists('cf_error')) {
         cf_error::on_query_execution($e);
       }
     }
@@ -1956,7 +1956,7 @@ function workbench_menu_clear_cache_at_path($path) {
  */
 function workbench_menu_autocomplete_nid($string) {
   if (!is_string($string)) {
-    if (module_exists('cf_error')) {
+    if (class_exists('cf_error')) {
       cf_error::not_string('string');
     }
 
@@ -1997,7 +1997,7 @@ function workbench_menu_autocomplete_nid($string) {
  */
 function workbench_menu_autocomplete_menu_id($string) {
   if (!is_string($string)) {
-    if (module_exists('cf_error')) {
+    if (class_exists('cf_error')) {
       cf_error::not_string('string');
     }
 
@@ -2038,7 +2038,7 @@ function workbench_menu_autocomplete_menu_id($string) {
  */
 function workbench_menu_autocomplete_menu_item_id($string) {
   if (!is_string($string)) {
-    if (module_exists('cf_error')) {
+    if (class_exists('cf_error')) {
       cf_error::not_string('string');
     }
 
@@ -2080,7 +2080,7 @@ function workbench_menu_autocomplete_menu_item_id($string) {
  */
 function workbench_menu_menu_exists($menu_id = NULL, $is_access_id = FALSE) {
   if (!is_numeric($menu_id)) {
-    if (module_exists('cf_error')) {
+    if (class_exists('cf_error')) {
       cf_error::not_numeric('menu_id');
     }
 
@@ -2088,7 +2088,7 @@ function workbench_menu_menu_exists($menu_id = NULL, $is_access_id = FALSE) {
   }
 
   if (!is_bool($is_access_id)) {
-    if (module_exists('cf_error')) {
+    if (class_exists('cf_error')) {
       cf_error::invalid_bool('is_access_id');
     }
 
@@ -2129,7 +2129,7 @@ function workbench_menu_menu_exists($menu_id = NULL, $is_access_id = FALSE) {
  */
 function workbench_menu_menu_item_exists($item_id, $menu_id = NULL, $is_access_id = FALSE) {
   if (!is_numeric($item_id)) {
-    if (module_exists('cf_error')) {
+    if (class_exists('cf_error')) {
       cf_error::not_numeric('item_id');
     }
 
@@ -2142,7 +2142,7 @@ function workbench_menu_menu_item_exists($item_id, $menu_id = NULL, $is_access_i
 
   if (!is_null($menu_id)) {
     if (!is_numeric($menu_id)) {
-      if (module_exists('cf_error')) {
+      if (class_exists('cf_error')) {
         cf_error::not_numeric('menu_id');
       }
 
@@ -2150,7 +2150,7 @@ function workbench_menu_menu_item_exists($item_id, $menu_id = NULL, $is_access_i
     }
 
     if (!is_bool($is_access_id)) {
-      if (module_exists('cf_error')) {
+      if (class_exists('cf_error')) {
         cf_error::invalid_bool('is_access_id');
       }
 

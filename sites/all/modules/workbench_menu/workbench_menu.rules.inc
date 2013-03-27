@@ -108,7 +108,7 @@ function workbench_menu_has_path_rules_condition($access_id, $path = '') {
   }
 
   if (!is_string($path)) {
-    if (module_exists('cf_error')) {
+    if (class_exists('cf_error')) {
       cf_error::not_string('path');
     }
     return FALSE;
@@ -139,7 +139,7 @@ function workbench_menu_has_path_rules_condition($access_id, $path = '') {
  */
 function workbench_menu_has_path_by_menu_id_rules_condition($menu_id, $path = '') {
   if (!is_numeric($menu_id)) {
-    if (module_exists('cf_error')) {
+    if (class_exists('cf_error')) {
       cf_error::not_numeric('menu_id');
     }
 
@@ -147,7 +147,7 @@ function workbench_menu_has_path_by_menu_id_rules_condition($menu_id, $path = ''
   }
 
   if (!is_string($path)) {
-    if (module_exists('cf_error')) {
+    if (class_exists('cf_error')) {
       cf_error::not_string('path');
     }
 
@@ -175,7 +175,7 @@ function workbench_menu_has_path_by_menu_id_rules_condition($menu_id, $path = ''
  */
 function workbench_menu_clear_cache_rules_action($menu) {
   if (!is_object($menu)) {
-    if (module_exists('cf_error')) {
+    if (class_exists('cf_error')) {
       cf_error::invalid_object('menu');
     }
 
@@ -232,7 +232,7 @@ function workbench_menu_load_menu_rules_action($access_id) {
  */
 function workbench_menu_load_menus_by_path_rules_action($path) {
   if (!is_string($path)) {
-    if (module_exists('cf_error')) {
+    if (class_exists('cf_error')) {
       cf_error::not_string('path');
     }
 
