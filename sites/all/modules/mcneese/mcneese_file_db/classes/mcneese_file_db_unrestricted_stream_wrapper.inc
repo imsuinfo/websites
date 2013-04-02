@@ -381,7 +381,6 @@ class mcneese_file_db_unrestricted_stream_wrapper extends mcneese_file_db_stream
 
     $stat = array();
     $stat['ino'] = 0;
-    $stat['ino'] = 0;
     $stat['nlink'] = 1;
     $stat['uid'] = 0; // @todo: should this be made to match the drupal uid?
     $stat['gid'] = 0;
@@ -458,6 +457,22 @@ class mcneese_file_db_unrestricted_stream_wrapper extends mcneese_file_db_stream
    * Implements unlink().
    */
   public function unlink($uri) {
+    if (empty($this->uri)) {
+      $this->setUri($uri);
+    }
+
+    if (empty($this->image_style_uri)) {
+      // return TRUE and lie to callers to make them think the file was deleted.
+      // all files, including temporary, are not deleted in this manner for this class.
+      return TRUE;
+    }
+
+    $wrapper = file_stream_wrapper_get_instance_by_uri($this->image_style_uri);
+
+    if (is_object($wrapper)) {
+      return $wrapper->unlink($this->image_style_uri);
+    }
+
     return FALSE;
   }
 
@@ -469,13 +484,40 @@ class mcneese_file_db_unrestricted_stream_wrapper extends mcneese_file_db_stream
       $this->setUri($uri);
     }
 
-    return $this->stream_stat();
+    $stat = FALSE;
+
+    if (empty($this->image_style_uri)) {
+      $stat = $this->stream_stat($uri);
+
+      // 'mode' is required for functions like file_exists() (this is in octal).
+      // calculated from 0100000 (octal for file) + 1204 (octal for 644)
+      $stat['mode'] = 0101204;
+    }
+    else {
+      $wrapper = file_stream_wrapper_get_instance_by_uri($this->image_style_uri);
+
+      if (is_object($wrapper)) {
+        $stat =  $wrapper->url_stat($this->image_style_uri, $flags);
+      }
+    }
+
+    return $stat;
   }
 
   /**
    * Implements get_mimetype().
    */
   public function get_mimetype() {
+    if (!empty($this->image_style_uri)) {
+      $wrapper = file_stream_wrapper_get_instance_by_uri($this->image_style_uri);
+
+      if (is_object($wrapper)) {
+        return $wrapper->getMimeType($this->image_style_uri);
+      }
+
+      return 'application/octet-stream';
+    }
+
     if (empty($this->file_meta)) {
       return 'application/octet-stream';
     }

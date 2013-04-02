@@ -574,7 +574,10 @@ abstract class mcneese_file_db_stream_wrapper implements DrupalStreamWrapperInte
 
         if (!empty($this->image_style_uri)) {
           $this->image_style_uri .= $filename;
-          $this->create_image_style($image_source_uri);
+
+          if (!file_exists($this->image_style_uri)) {
+            $this->create_image_style($image_source_uri);
+          }
         }
 
         return $new_uri;
