@@ -6,7 +6,7 @@
   $target = '';
   $cookie_has_been_set = FALSE;
   $error = NULL;
-  
+
   if (!empty($_GET['dest'])) {
     $destination = $_GET['dest'];
   }
@@ -24,7 +24,7 @@
   $expire = array();
   $matched_session = preg_match('/(\bSSESS\w*\b)=([^;]*)(;|$)/i', $cookie, $session);
   $matched_expire = preg_match('/\bexpires=([^;]*)(;|$)/i', $cookie, $expire);
-  
+
 
   // the following are custom parameters defined on a per-system basis.
   $path = '/';
