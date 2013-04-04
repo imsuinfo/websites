@@ -43,9 +43,13 @@ function mcneese_webform_webform_component_info() {
  *   Array containing the form state.
  */
 function mcneese_webform_validate_banner_id($element, &$form_state) {
-  if (!empty($form_state['values']['submitted']['banner_id'])) {
-    if (cf_is_integer($form_state['values']['submitted']['banner_id']) === FALSE) {
-      form_error($element, t("The %title can only be a number (specifically only an integer), the value of '%value' is invalid.", array('%title' => $element['#title'], '%value' => $form_state['values']['submitted']['banner_id'])));
+  if (!empty($form_state['webform']['component_tree']['children'])) {
+    foreach ($form_state['webform']['component_tree']['children'] as &$component) {
+      if ($component['type'] == 'banner_id') {
+        if (cf_is_integer($form_state['values']['submitted'][$component['name']]) === FALSE) {
+          form_error($element, t("The %title can only be a number (specifically only an integer), the value of '%value' is invalid.", array('%title' => $element['#title'], '%value' => $form_state['values']['submitted'][$component['name']])));
+        }
+      }
     }
   }
 }

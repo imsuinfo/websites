@@ -167,17 +167,12 @@ function _webform_render_banner_id($component, $value = NULL, $filter = TRUE) {
     '#attributes' => $component['extra']['attributes'],
     '#theme_wrappers' => array('webform_element'),
     '#translatable' => array('title', 'description', 'field_prefix', 'field_suffix'),
+    '#element_validate' => array('mcneese_webform_validate_banner_id'),
   );
 
   if (isset($value)) {
     $element['#default_value'] = $value[0];
   }
-
-  if (isset($form['#element_validate']) || !is_array($form['#element_validate'])) {
-    $form['#element_validate'] = array();
-  }
-
-  $element['#element_validate'][] = 'mcneese_webform_validate_banner_id';
 
   // Enforce uniqueness.
   if ($component['extra']['unique']) {
@@ -187,15 +182,6 @@ function _webform_render_banner_id($component, $value = NULL, $filter = TRUE) {
   // Change the 'width' option to the correct 'size' option.
   if ($component['extra']['width'] > 0) {
     $element['#size'] = $component['extra']['width'];
-  }
-
-  if (isset($form['#submit']) || !is_array($form['#submit'])) {
-    $form['#submit'] = array();
-    $form['#submit'][] = 'mcneese_webform_banner_id_submit';
-  }
-  else {
-    $first = array_shift($form['#submit']);
-    array_unshift($form['#submit'], $first, 'mcneese_webform_banner_id_submit');
   }
 
   if ($component['extra']['readonly']) {
