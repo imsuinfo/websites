@@ -55,6 +55,7 @@ function ctools_schema_2() {
   // Update the 'data' field to be type 'blob'.
   $schema['ctools_object_cache']['fields']['data'] = array(
     'type' => 'blob',
+    'size' => 'big',
     'description' => 'Serialized data being stored.',
     'serialize' => TRUE,
   );
@@ -203,7 +204,6 @@ function ctools_update_6007() {
 
 /**
  * ctools_object_cache needs to be defined as a blob.
- * See: https://drupal.org/node/1377634
  */
 function ctools_update_6008() {
   db_delete('ctools_object_cache')
@@ -211,6 +211,7 @@ function ctools_update_6008() {
 
   db_change_field('ctools_object_cache', 'data', 'data', array(
       'type' => 'blob',
+      'size' => 'big',
       'description' => 'Serialized data being stored.',
       'serialize' => TRUE,
     )

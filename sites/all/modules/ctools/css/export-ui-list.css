@@ -3,7 +3,8 @@ body form#ctools-export-ui-list-form {
 }
 
 #ctools-export-ui-list-form .form-item {
-  padding-right: 14px; /* LTR */
+  padding-right: 1em; /* LTR */
+  float: left; /* LTR */
   margin-top: 0;
   margin-bottom: 0;
 }
@@ -18,6 +19,7 @@ body form#ctools-export-ui-list-form {
 
 #ctools-export-ui-list-form .form-submit {
   margin-top: 1.65em;
+  float: left; /* LTR */
 }
 
 tr.ctools-export-ui-disabled td {
