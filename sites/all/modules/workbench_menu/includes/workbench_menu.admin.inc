@@ -31,6 +31,14 @@ function workbench_menu_edit_settings($access_type = NULL, $access_id = NULL) {
   $output = '<h2>' . t("Menus") . '</h2>';
   $output .= '<p>' . t("The following menus are currently available for editing.");
 
+  if ($active === FALSE) {
+    $output .= '<br>' . workbench_access_sections_needed_message();
+
+    $active = array();
+    $active['tree'] = array();
+  }
+
+  $output .= '</p>';
   $sorted = array();
 
   foreach ($active['tree'] as $access_id => &$section) {
@@ -432,9 +440,17 @@ function workbench_menu_admin_settings($access_type = NULL, $access_id = NULL) {
   $output = '<h2>' . t("Menus") . '</h2>';
   $output .= '<p>' . t("The following menus are currently available for editing.");
 
-  if (user_access('administer workbench access')) {
-    $output .= ' ' . t("You may <a href=\"!url\">enable or disable sections</a>.", array('!url' => url('admin/config/workbench/access/sections'))) . '</p>';
+  if ($active === FALSE) {
+    $output .= '<br>' . "\n" . workbench_access_sections_needed_message();
+
+    $active = array();
+    $active['tree'] = array();
   }
+  else if (user_access('administer workbench access')) {
+    $output .= '<br>' . "\n" . t("You may <a href=\"!url\">enable or disable sections</a>.", array('!url' => url('admin/config/workbench/access/sections')));
+  }
+
+  $output .= '</p>';
 
   $menus = (array) workbench_menu_get_menus(array('access_id' => array_keys($active['tree']), 'fast' => NULL), 'access_id');
 
@@ -446,7 +462,7 @@ function workbench_menu_admin_settings($access_type = NULL, $access_id = NULL) {
 
     $row = array();
 
-    if (is_numeric($access_id)) {
+    if (is_numeric($access_id) && !empty($active['access_scheme']['access_type'])) {
       $row[] = str_repeat('- ', $section['depth'] ) . ' ' . l($section['name'], 'admin/config/workbench/access/menus/' . $active['access_scheme']['access_type'] . '/' . $access_id);
     }
     else {

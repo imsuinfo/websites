@@ -170,8 +170,17 @@ function workbench_menu_workbench_access_save($section) {
     return;
   }
 
+  $fields = array();
+  $fields['access_id'] = $section['access_id'];
+  $fields['path'] = '';
+
+  // mysql does not assign defaults on text fields, so fix that.
+  if (db_driver() == 'mysql') {
+    $fields['breadcrumb_name'] = '';
+  }
+
   $query = db_insert('workbench_menus');
-  $query->fields(array('access_id' => $section['access_id'], 'path' => ''));
+  $query->fields($fields);
   $query->execute();
 }
 
