@@ -233,8 +233,10 @@ function drush_ultimate_cron_cron_run($function = NULL) {
         ultimate_cron_cron_run(TRUE);
       }
       $messages = drupal_get_messages();
-      foreach ($messages['status'] as $message) {
-        drush_print(strip_tags($message));
+      if (!empty($messages['status'])) {
+        foreach ($messages['status'] as $message) {
+          drush_print(strip_tags($message));
+        }
       }
       return;
     }
@@ -338,7 +340,8 @@ function drush_ultimate_cron_cron_unlock($function) {
     return drush_set_error(dt('"!function" not found', array('!function' => $function)));
   }
 
-  $handle = 'uc:' . $function;
+  $handle_prefix = variable_get('ultimate_cron_handle_prefix', ULTIMATE_CRON_HANDLE_PREFIX);
+  $handle = $handle_prefix . $function;
   if ($process = background_process_get_process($handle)) {
     // Unlock the process
     if (background_process_remove_process($process->handle, $process->start)) {

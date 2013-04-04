@@ -56,7 +56,7 @@ function ultimate_cron_schema() {
   );
 
   $schema['ultimate_cron_log'] = array(
-    'description' => t('Logs'),
+    'description' => 'Logs',
     'fields' => array(
       'lid' => array(
         'description' => 'Log ID',
@@ -98,6 +98,13 @@ function ultimate_cron_schema() {
         'size' => 'normal',
         'not null' => FALSE,
         'default' => NULL,
+      ),
+      'severity' => array(
+        'description' => 'Log level severity',
+        'type' => 'int',
+        'size' => 'normal',
+        'not null' => TRUE,
+        'default' => -1,
       ),
       'msg' => array(
         'description' => 'Message',
@@ -148,13 +155,25 @@ function ultimate_cron_requirements($phase) {
     case 'install':
       return $response;
     case 'runtime':
+      $t = get_t();
       $response['title'] = 'Ultimate Cron';
-      $response['value'] = 'OK';
+      $response['value'] = $t('OK');
       $response['severity'] = REQUIREMENT_OK;
       if ($modules = _ultimate_cron_incompatible_modules()) {
         $response['severity'] = REQUIREMENT_ERROR;
-        $response['value'] = t('Ultimate Cron is DISABLED!');
-        $response['description'] = t('%modules is installed on the system, but is incompatible with Ultimate Cron.<br/>Please disable the modules %modules.<br/>You might want to !url settings first.', array('%modules' => join(', ', $modules), '!url' => l(t('import'), 'admin/settings/cron/import')));
+        $response['value'] = $t('Ultimate Cron is DISABLED!');
+        $response['description'] = $t('%modules is installed on the system, but is incompatible with Ultimate Cron.<br/>Please disable the modules %modules.<br/>You might want to !url settings first.', array('%modules' => join(', ', $modules), '!url' => l(t('import'), 'admin/settings/cron/import')));
+      }
+      if (ini_get('safe_mode')) {
+        $desc = $t('Safe mode enabled. Ultimate Cron is unable to control maximum execution time for cron jobs. This may cause cron jobs to end prematurely.');
+        if ($response['severity'] < REQUIREMENT_WARNING) {
+          $response['severity'] = REQUIREMENT_WARNING;
+          $response['value'] = $t('Safe mode enabled');
+          $response['description'] = $desc;
+        }
+        else {
+          $response['description'] .= '<br/>' . $desc;
+        }
       }
       $result = array();
       $result['ultimate_cron'] = $response;
@@ -174,6 +193,7 @@ function ultimate_cron_update_7000(&$context) {
     7105 => TRUE,
     7106 => TRUE,
     7107 => TRUE,
+    7108 => FALSE,
   );
 }
 
@@ -367,3 +387,19 @@ function ultimate_cron_update_7107(&$context) {
   ));
 }
 
+/**
+ * Add severity level to log.
+ */
+function ultimate_cron_update_7108(&$context) {
+  if (!empty($context['sandbox']['major_version_upgrade'][7108])) {
+    // This udate is already part of latest 6.x
+    return;
+  }
+  db_add_field('ultimate_cron_log', 'severity', array(
+    'description' => 'Log level severity',
+    'type' => 'int',
+    'size' => 'normal',
+    'not null' => TRUE,
+    'default' => -1,
+  ));
+}
