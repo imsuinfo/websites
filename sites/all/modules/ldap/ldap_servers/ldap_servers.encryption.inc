@@ -1,5 +1,4 @@
 <?php
-// $Id: ldap_servers.encryption.inc,v 1.3.2.1 2011/02/08 06:01:00 johnbarclay Exp $
 
 /**
  * @file
@@ -8,6 +7,27 @@
  */
 
 define('LDAP_SERVERS_MODE', 'CTR');
+/**
+ * Return a random salt of a given length for crypt-style passwords
+ *
+ * @param int length
+ *   The requested length.
+ *
+ * @return string
+ *   A (fairly) random salt of the requested length.
+ *
+ */
+function ldap_servers_random_salt( $length ) {
+  $possible = '0123456789' . 'abcdefghijklmnopqrstuvwxyz' . 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' . './';
+  $salt = "";
+
+  mt_srand((double)microtime() * 1000000);
+  while ( strlen( $salt ) < $length ) {
+    $salt .= substr( $possible, ( rand() % strlen( $possible ) ), 1 );
+  }
+
+  return $salt;
+}
 
 
 function _ldap_servers_encrypt_types($type = 'all') {
@@ -74,7 +94,7 @@ function _ldap_servers_encrypt($clear_txt, $enc_type = NULL) {
   }
 
   if (! ($key = variable_get('ldap_servers_encrypt_key', NULL))) {
-    $key = drupal_random_bytes(10);
+    $key = ldap_servers_random_salt(10);
     variable_set('ldap_servers_encrypt_key', $key);
   }
 

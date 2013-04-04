@@ -1,5 +1,4 @@
 <?php
-// $Id: ldap_servers.settings.inc,v 1.3.2.1 2011/02/08 06:01:00 johnbarclay Exp $
 
 /**
  * @file
@@ -8,7 +7,7 @@
  */
 
 function ldap_servers_settings() {
-  ldap_server_module_load_include('inc', 'ldap_servers', 'ldap_servers.functions');
+  ldap_servers_module_load_include('inc', 'ldap_servers', 'ldap_servers.functions');
 
   if (! ldap_servers_ldap_extension_loaded()) {
     drupal_set_message(t('PHP LDAP Extension is not loaded.'), "warning");
