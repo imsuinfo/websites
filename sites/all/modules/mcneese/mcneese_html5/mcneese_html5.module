@@ -77,6 +77,8 @@ function theme_mcneese_tag($variables) {
     return '';
   }
 
+  $stag = &drupal_static('theme_mcneese_tag', array());
+
   // ensure that the tag name exists.
   $type_css = 'html_tag-' . $variables['name'];
 
@@ -88,7 +90,15 @@ function theme_mcneese_tag($variables) {
     $variables['attributes']['class'][] = $type_css;
   }
 
-  $type_object = cf_db_options_get_options('mcneese_html5', $variables['type'], $variables['name']);
+  if (!isset($stag[$variables['type']])) {
+    $stag[$variables['type']] = (array) cf_db_options_get_options('mcneese_html5', $variables['type']);
+  }
+
+  $type_object = NULL;
+
+  if (isset($stag[$variables['type']][$variables['name']])) {
+    $type_object = &$stag[$variables['type']][$variables['name']];
+  }
 
   if (is_object($type_object)) {
     if ($variables['html5']) {
