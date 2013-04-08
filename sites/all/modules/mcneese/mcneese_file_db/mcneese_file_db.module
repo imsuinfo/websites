@@ -40,7 +40,7 @@ function mcneese_file_db_stream_wrappers() {
     'name' => t("Unrestricted File Database"),
     'class' => 'mcneese_file_db_unrestricted_stream_wrapper',
     'description' => t("Unrestricted files stored in a dedicated file database and shared between multiple servers."),
-    'type' => STREAM_WRAPPERS_NORMAL,
+    'type' => STREAM_WRAPPERS_NORMAL | STREAM_WRAPPERS_REMOTE,
     'dynamic' => TRUE,
     'remote' => TRUE,
   );
@@ -49,7 +49,7 @@ function mcneese_file_db_stream_wrappers() {
     'name' => t("Restricted File Database"),
     'class' => 'mcneese_file_db_restricted_stream_wrapper',
     'description' => t("Restricted files stored in a dedicated file database and shared between multiple servers."),
-    'type' => STREAM_WRAPPERS_NORMAL,
+    'type' => STREAM_WRAPPERS_NORMAL | STREAM_WRAPPERS_REMOTE,
     'dynamic' => TRUE,
     'remote' => TRUE,
   );
