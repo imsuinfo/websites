@@ -271,6 +271,10 @@ function mcneese_file_db_load_available_files($conditions = array()) {
  * @param string $checksum
  *   The checksum to compare against.
  *
+ * @param bool $associated
+ *   (optional) If TRUE, then limit query to associated files.
+ *   If FALSE, then do not limit query to associated files.
+ *
  * @return array|bool
  *   An array of:
  *   - query: The query string.
@@ -278,7 +282,7 @@ function mcneese_file_db_load_available_files($conditions = array()) {
  *
  *   If there is an error, the FALSE is returned.
  */
-function mcneese_file_db_build_query_by_checksum($checksum) {
+function mcneese_file_db_build_query_by_checksum($checksum, $associated = TRUE) {
   global $conf;
 
   if (empty($conf[MCNEESE_FILE_DB_CONF_SERVER_ID])) {
@@ -288,10 +292,13 @@ function mcneese_file_db_build_query_by_checksum($checksum) {
   $built = array();
   $built['query'] = '';
   $built['arguments'] = array();
-  $built['arguments'][':server_id'] = $conf[MCNEESE_FILE_DB_CONF_SERVER_ID];
 
   $built['query'] = 'SELECT mfdf.* FROM {mcneese_file_db_files} mfdf';
-  $built['query'] .= ' INNER JOIN {mcneese_file_db_associations} mfda ON (mfdf.id = mfda.file_id AND mfda.server_id = :server_id)';
+
+  if ($associated) {
+    $built['arguments'][':server_id'] = $conf[MCNEESE_FILE_DB_CONF_SERVER_ID];
+    $built['query'] .= ' INNER JOIN {mcneese_file_db_associations} mfda ON (mfdf.id = mfda.file_id AND mfda.server_id = :server_id)';
+  }
 
   if (count($checksum) == MCNEESE_FILE_DB_SHORT_SUM_SIZE) {
     $built['query'] .= ' WHERE mfdf.checksum LIKE :checksum';

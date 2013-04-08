@@ -148,20 +148,25 @@ class mcneese_file_db_unrestricted_stream_wrapper extends mcneese_file_db_stream
           unset($transaction);
         }
         else {
+          $associated_id = $this->get_checksum_file_id($this->tmp_checksum, FALSE);
           $transaction = db_transaction();
 
           try {
             $file_db = mcneese_file_db_prepare_connection();
             $options = mcneese_file_db_prepare_options();
 
-            $query = $file_db->update('mcneese_file_db_files', $options);
-            $query->fields($fields);
-            $query->condition('id', $this->stream_fid);
+            // if the file is in the database, but is unassociated, then associated it.
+            if ($associated_id === FALSE) {
+              $query = $file_db->update('mcneese_file_db_files', $options);
+              $query->fields($fields);
+              $query->condition('id', $this->stream_fid);
 
-            $write_result = $query->execute();
+              $write_result = $query->execute();
+              $associated_id = $this->stream_fid;
+            }
 
             $query = $file_db->insert('mcneese_file_db_associations', $options);
-            $fields = array('file_id' => $this->stream_fid, 'server_id' => $conf[MCNEESE_FILE_DB_CONF_SERVER_ID]);
+            $fields = array('file_id' => $associated_id, 'server_id' => $conf[MCNEESE_FILE_DB_CONF_SERVER_ID]);
             $query->fields($fields);
 
             $write_result = $query->execute();
@@ -169,7 +174,7 @@ class mcneese_file_db_unrestricted_stream_wrapper extends mcneese_file_db_stream
             $this->load_user();
 
             $query = $file_db->insert('mcneese_file_db_users', $options);
-            $fields = array('file_id' => $this->stream_fid, 'user_id' => $this->user, 'server_id' => $conf[MCNEESE_FILE_DB_CONF_SERVER_ID]);
+            $fields = array('file_id' => $associated_id, 'user_id' => $this->user, 'server_id' => $conf[MCNEESE_FILE_DB_CONF_SERVER_ID]);
             $query->fields($fields);
 
             $write_result = $query->execute();

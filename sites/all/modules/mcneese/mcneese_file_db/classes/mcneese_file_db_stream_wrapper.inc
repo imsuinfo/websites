@@ -367,24 +367,63 @@ abstract class mcneese_file_db_stream_wrapper implements DrupalStreamWrapperInte
   /**
    * Checks to see if a file by the given checksum exists.
    *
-   * At this time, it only confirms the existence of files defined on
-   * this server.
-   *
    * @param string $checksum
    *   Checksum to validate against
+   *
+   * @param bool $associated
+   *   (optional) If TRUE, existance check is against associated files only.
+   *   If FALSE, existence check is against all files in the database.
    *
    * @return bool
    *   TRUE if file exists, FALSE otherwise.
    */
-  protected function checksum_exists($checksum) {
+  protected function checksum_exists($checksum, $associated = TRUE) {
     try {
       $file_db = mcneese_file_db_prepare_connection();
       $options = mcneese_file_db_prepare_options();
 
-      $built = mcneese_file_db_build_query_by_checksum($checksum);
+      $built = mcneese_file_db_build_query_by_checksum($checksum, $associated);
       $results = $file_db->queryRange($built['query'], 0, 1, $built['arguments'], $options);
 
       return $results->rowCount() != 0;
+    }
+    catch (Exception $e) {
+      cf_error::on_query_execution($e);
+
+      throw $e;
+    }
+
+    return FALSE;
+  }
+
+  /**
+   * Returns the file id for a given checksum.
+   *
+   * @param string $checksum
+   *   Checksum to validate against
+   *
+   * @param bool $associated
+   *   (optional) If TRUE, existance check is against associated files only.
+   *   If FALSE, existence check is against all files in the database.
+   *
+   * @return int|bool
+   *   File ID if it exists, FALSE otherwise.
+   */
+  protected function get_checksum_file_id($checksum, $associated = TRUE) {
+    try {
+      $file_db = mcneese_file_db_prepare_connection();
+      $options = mcneese_file_db_prepare_options();
+
+      $built = mcneese_file_db_build_query_by_checksum($checksum, $associated);
+      $results = $file_db->queryRange($built['query'], 0, 1, $built['arguments'], $options);
+
+      $row = (array) $results->fetchAll();
+
+      if (empty($row)) {
+        return FALSE;
+      }
+
+      return $row[0]->id;
     }
     catch (Exception $e) {
       cf_error::on_query_execution($e);
