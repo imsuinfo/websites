@@ -616,7 +616,7 @@ class phplot_api_plot {
     }
 
     if (is_null($file_schema)) {
-      $file_schema = file_default_scheme();
+      $file_schema = phplot_api_default_scheme();
     }
 
     global $user;

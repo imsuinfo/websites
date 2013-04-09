@@ -350,3 +350,23 @@ function phplot_api_get_plots_list($plot_settings = NULL) {
 
   return $plots_list;
 }
+
+/**
+ * A standard way to load the default phplot api file scheme.
+ *
+ * Allows for a custom media scheme 'phplot_api_default_scheme' to be defined in
+ * the sites/default/settings.php file. Otherwise, the default file scheme is
+ * returned.
+ *
+ * @return string
+ *   A formatted scheme string.
+ */
+function phplot_api_default_scheme() {
+  global $conf;
+
+  if (empty($conf['phplot_api_default_scheme'])) {
+    return file_default_scheme();
+  }
+
+  return $conf['phplot_api_default_scheme'];
+}
