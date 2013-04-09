@@ -51,9 +51,19 @@ abstract class mcneese_file_db_stream_wrapper implements DrupalStreamWrapperInte
       return FALSE;
     }
 
-    global $base_path;
+    if (empty($this->image_style_uri)) {
+      global $base_path;
 
-    return $base_path . $this->get_external() . '/' . $parts[1];
+      return $base_path . $this->get_external() . '/' . $parts[1];
+    }
+
+    $wrapper = file_stream_wrapper_get_instance_by_uri($this->image_style_uri);
+
+    if (is_object($wrapper)) {
+      return $wrapper->getExternalUrl();
+    }
+
+    return FALSE;
   }
 
   /**
