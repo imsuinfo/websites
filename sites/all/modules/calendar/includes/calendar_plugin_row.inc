@@ -293,7 +293,8 @@ class calendar_plugin_row extends views_plugin_row_fields {
 
       // Node revisions need special loading.
       if ($this->view->base_table == 'node_revision') {
-        $this->entities[$id] = node_load(NULL, $id);
+        $nid = db_query('SELECT nid FROM node_revision WHERE vid = :vid', array(':vid' => $id))->fetchField();
+        $this->entities[$id] = node_load($nid, $id);
       }
       // For other entities we just create an array of ids to pass
       // to entity_load().
