@@ -91,7 +91,7 @@ class mcneese_file_db_restricted_stream_wrapper extends mcneese_file_db_stream_w
           $filename_parts = explode('.', $this->tmp_filename);
 
           if (count($filename_parts) > 1) {
-            $fields['extension'] = array_pop($filename_parts);
+            $fields['extension'] = strtolower(array_pop($filename_parts));
           }
           else {
             $fields['extension'] = '';
@@ -112,7 +112,7 @@ class mcneese_file_db_restricted_stream_wrapper extends mcneese_file_db_stream_w
             $fields['extension'] = '';
           }
           else {
-            $fields['extension'] = $mapping['extensions'][$mime_id];
+            $fields['extension'] = strtolower($mapping['extensions'][$mime_id]);
           }
         }
         else if ($fields['mimetype'] == 'application/octet-stream') {
