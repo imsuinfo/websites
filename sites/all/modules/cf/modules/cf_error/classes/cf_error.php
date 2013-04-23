@@ -1186,7 +1186,7 @@ class cf_error {
     static $show_backtrace;
 
     if (!isset($show_backtrace)) {
-      $show_backtrace = & variable_get('cf_error_backtrace_mode', self::BACKTRACE_MODE_SHORT);
+      $show_backtrace = variable_get('cf_error_backtrace_mode', self::BACKTRACE_MODE_SHORT);
     }
 
     if ($show_backtrace != self::BACKTRACE_MODE_NONE) {
