@@ -16,7 +16,7 @@ define('MCNEESE_FILE_DB_TARGET', 'default');
 define('MCNEESE_FILE_DB_KEY', 'file_db');
 define('MCNEESE_FILE_DB_CONF_SERVER_ID', 'file_db_server_id');
 define('MCNEESE_FILE_DB_SHORT_SUM_SIZE', 8);
-define('MCNEESE_FILE_DB_BLOCK_SIZE', 4096);
+define('MCNEESE_FILE_DB_BLOCK_SIZE', 131072);
 
 define('MCNEESE_FILE_DB_FILE_PATH', 'f');
 define('MCNEESE_FILE_DB_STYLES', 'styles');
@@ -224,7 +224,7 @@ function mcneese_file_db_load_available_files($conditions = array()) {
           $and .= ' AND';
         }
 
-        $and .= ' mfdf.id LIKE :id';
+        $and .= ' mfdf.id = :id';
         $arguments[':id'] = $conditions['id'];
       }
 
@@ -310,57 +310,6 @@ function mcneese_file_db_build_query_by_checksum($checksum, $associated = TRUE) 
   }
 
   return $built;
-}
-
-/**
- * Build a select query for the file data table.
- *
- * @param string $checksum
- *   The checksum to compare against.
- *
- * @return array|bool
- *   An array of:
- *   - query: The query string.
- *   - arguments: An array of query arguments.
- *
- *   If there is an error, the FALSE is returned.
- */
-function mcneese_file_db_build_data_query($file_id) {
-  global $conf;
-
-  if (empty($conf[MCNEESE_FILE_DB_CONF_SERVER_ID])) {
-    return FALSE;
-  }
-
-  $built = array();
-  $built['query'] = '';
-  $built['arguments'] = array();
-  $built['arguments'][':server_id'] = $conf[MCNEESE_FILE_DB_CONF_SERVER_ID];
-  $built['arguments'][':file_id'] = $file_id;
-
-  $built['query'] = 'SELECT mfdfd.* FROM {mcneese_file_db_file_data} mfdfd';
-  $built['query'] .= ' INNER JOIN {mcneese_file_db_associations} mfda ON (mfdfd.file_id = mfda.file_id AND mfda.server_id = :server_id)';
-  $built['query'] .= ' WHERE mfda.server_id = :server_id';
-  $built['query'] .= ' AND mfda.file_id = :file_id';
-
-  return $built;
-}
-
-/**
- * Converts the postgresql bytea string to a binary string.
- *
- * @param string $bytea
- *   The bytea string as returned by postgresql
- *
- * @return string
- *   The binary data string as translated from bytea.
- */
-function mcneese_file_db_bytea_to_bin($bytea) {
-  // strip the first character of bytea, which is an 'x'.
-  $hex = substr($bytea, 1);
-  $bin = pack('H*', $hex);
-
-  return $bin;
 }
 
 /**
@@ -450,6 +399,11 @@ function mcneese_file_db_load_file($by = '', $arg1 = '', $arg2 = '', $arg3 = '')
     }
 
     if ($by == MCNEESE_FILE_DB_PATH_BY_HASH) {
+      if (ob_get_level()) {
+        ob_end_clean();
+        ob_end_flush();
+      }
+
       $content_location = '/' . MCNEESE_FILE_DB_FILE_PATH . '/' . MCNEESE_FILE_DB_PATH_BY_HASH;
       $content_location .= '/' . $file_meta->checksum . '/';
       $content_location .= $file_meta->filename . '.' . $file_meta->extension;
@@ -473,20 +427,35 @@ function mcneese_file_db_load_file($by = '', $arg1 = '', $arg2 = '', $arg3 = '')
       // ETag cache optimization and other http header responses.
       if ($not_modified) {
         header('HTTP/1.1 304 Not Modified', TRUE, 304);
-        ob_flush();
-        flush();
         exit();
       }
 
-      ob_flush();
-      flush();
+      // TODO: if the filesize is known, turn off the timeout and user a counter below?
+      #@set_time_limit(0);
 
-      // ensure that the file transfer is not cut short by a time limit.
-      @set_time_limit(0);
+      $in = fopen($filepath, 'rb');
 
-      readfile($filepath);
+      stream_set_read_buffer($in, MCNEESE_FILE_DB_BLOCK_SIZE);
+
+      // from php-5.4, this sets the actual read_bvuffer_size, unlike phps stream_set_read_buffer.
+      if (function_exists('stream_set_chunk_size')) {
+        stream_set_chunk_size($in, MCNEESE_FILE_DB_BLOCK_SIZE);
+      }
+
+      $count = 0;
+      while (!feof($in)) {
+        fpassthru($in);
+      }
+
+      fclose($in);
+      exit();
     }
     else if ($by == MCNEESE_FILE_DB_PATH_BY_HASH_SUM) {
+      if (ob_get_level()) {
+        ob_end_clean();
+        ob_end_flush();
+      }
+
       $content_location = '/' . MCNEESE_FILE_DB_FILE_PATH . '/' . MCNEESE_FILE_DB_PATH_BY_HASH_SUM;
       $content_location .= '/' . $file_meta->checksum . '/';
       $content_location .= $file_meta->filename . '.' . $file_meta->extension;
@@ -504,14 +473,9 @@ function mcneese_file_db_load_file($by = '', $arg1 = '', $arg2 = '', $arg3 = '')
       header('Expires: ' . date('r', strtotime('+14 days', REQUEST_TIME)));
       header('Date: ' . date('r', REQUEST_TIME));
 
-      ob_flush();
-      flush();
-
       print($data);
     }
 
-    ob_flush();
-    flush();
     exit();
   }
 
@@ -611,6 +575,11 @@ function mcneese_file_db_generate_image_style($arguments) {
  */
 function mcneese_file_db_print_image_style($file_uri) {
   if (file_exists($file_uri)) {
+    if (ob_get_level()) {
+      ob_end_clean();
+      ob_end_flush();
+    }
+
     $filesize = filesize($file_uri);
     //$checksum = shasum($file_uri);
 
@@ -626,11 +595,7 @@ function mcneese_file_db_print_image_style($file_uri) {
     //header('ETag: "' . $checksum . '"');
     header('Accept-Ranges: bytes');
 
-    ob_flush();
-    flush();
-
     readfile($file_uri);
-    flush();
     exit();
   }
 

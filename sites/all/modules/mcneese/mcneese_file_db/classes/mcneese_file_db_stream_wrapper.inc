@@ -25,12 +25,16 @@ abstract class mcneese_file_db_stream_wrapper implements DrupalStreamWrapperInte
   protected $stream_blocks = 0;
   protected $stream_position = 0;
   protected $stream_last_read = 0;
+  protected $stream_last_write = 0;
+  protected $stream_write_buffer = null;
   protected $stream_fhandle = null;
   protected $stream_fname = null;
   protected $stream_fid = 0;
 
   protected $image_style = null;
   protected $image_style_uri = null;
+
+  protected $read_only = FALSE;
 
 
   /**
@@ -99,6 +103,7 @@ abstract class mcneese_file_db_stream_wrapper implements DrupalStreamWrapperInte
    * Implements chmod().
    */
   public function chmod($mode) {
+    // unsupported
     return TRUE;
   }
 
@@ -157,6 +162,7 @@ abstract class mcneese_file_db_stream_wrapper implements DrupalStreamWrapperInte
    * Implements stream_lock().
    */
   public function stream_lock($operation) {
+    // unsupported
     return FALSE;
   }
 
@@ -179,6 +185,90 @@ abstract class mcneese_file_db_stream_wrapper implements DrupalStreamWrapperInte
    * Implements stream_seek().
    */
   public function stream_seek($offset, $whence) {
+    if (empty($this->stream) || empty($this->stream_fid)) {
+      return FALSE;
+    }
+
+    $target_block = floor(abs($offset) / MCNEESE_FILE_DB_BLOCK_SIZE);
+    $underflow = (($target_block + 1) * MCNEESE_FILE_DB_BLOCK_SIZE) - $offset;
+
+    if ($whence == SEEK_SET) {
+      if ($offset == 0) {
+        return TRUE;
+      }
+
+      if ($offset < 0) {
+        return FALSE;
+      }
+
+      if ($target_block >= $this->stream_blocks) {
+        $target_block = $this->stream_blocks;
+        $underflow = 0;
+      }
+
+      $this->stream_position = $target_block;
+      $this->stream_last_read = $underflow;
+      return TRUE;
+    }
+    else if ($whence == SEEK_CUR || $whence == SEEK_END) {
+      if ($offset == 0) {
+        if ($whence == SEEK_END) {
+          $this->stream_position = $this->stream_blocks;
+          $this->stream_last_read = 0;
+        }
+
+        return TRUE;
+      }
+
+      if ($offset > 0) {
+        if ($whence == SEEK_END) {
+          return FALSE;
+        }
+
+        $difference = $this->stream_last_read + $underflow;
+
+        if ($difference >= MCNEESE_FILE_DB_BLOCK_SIZE) {
+          $target_block++;
+          $underflow = MCNEESE_FILE_DB_BLOCK_SIZE - $difference;
+        }
+
+        $new_position = $this->stream_position + $target_block;
+
+        if ($new_position > $this->stream_blocks) {
+          return FALSE;
+        }
+
+        if ($new_position == $this->stream_blocks && $underflow > 0) {
+          return FALSE;
+        }
+
+        $this->stream_position = $new_position;
+        $this->stream_last_read = $underflow;
+        return TRUE;
+      }
+      else {
+        $difference = $this->stream_last_read - $underflow;
+
+        if ($difference < 0) {
+          $target_block++;
+          $underflow = MCNEESE_FILE_DB_BLOCK_SIZE - $difference;
+        }
+        else {
+          $underflow = $difference;
+        }
+
+        $difference = $this->stream_position - $target_block;
+
+        if ($difference < 0) {
+          return FALSE;
+        }
+
+        $this->stream_position = $difference;
+        $this->stream_last_read = $underflow;
+        return TRUE;
+      }
+    }
+
     return FALSE;
   }
 
@@ -186,6 +276,7 @@ abstract class mcneese_file_db_stream_wrapper implements DrupalStreamWrapperInte
    * Implements stream_flush().
    */
   public function stream_flush() {
+    // unsupported
     return FALSE;
   }
 
@@ -193,6 +284,18 @@ abstract class mcneese_file_db_stream_wrapper implements DrupalStreamWrapperInte
    * Implements stream_tell().
    */
   public function stream_tell() {
+    if (empty($this->stream) || empty($this->stream_fid)) {
+      return FALSE;
+    }
+
+    return ($this->stream_position * $this->stream_blocks) + $this->stream_last_read;
+  }
+
+  /**
+   * Implements stream_metadata().
+   */
+  public function stream_metadata($path, $option, $var) {
+    // @todo
     return FALSE;
   }
 
@@ -200,6 +303,7 @@ abstract class mcneese_file_db_stream_wrapper implements DrupalStreamWrapperInte
    * Implements mkdir().
    */
   public function mkdir($uri, $mode, $options) {
+    // unsupported, but return TRUE and pretend.
     return TRUE;
   }
 
@@ -207,6 +311,7 @@ abstract class mcneese_file_db_stream_wrapper implements DrupalStreamWrapperInte
    * Implements rmdir().
    */
   public function rmdir($uri, $options) {
+    // unsupported, but return TRUE and pretend.
     return TRUE;
   }
 
@@ -229,6 +334,7 @@ abstract class mcneese_file_db_stream_wrapper implements DrupalStreamWrapperInte
    * Implements dir_opendir().
    */
   public function dir_opendir($uri, $options) {
+    // unsupported
     return FALSE;
   }
 
@@ -236,6 +342,7 @@ abstract class mcneese_file_db_stream_wrapper implements DrupalStreamWrapperInte
    * Implements dir_readdir().
    */
   public function dir_readdir() {
+    // unsupported
     return FALSE;
   }
 
@@ -243,6 +350,7 @@ abstract class mcneese_file_db_stream_wrapper implements DrupalStreamWrapperInte
    * Implements dir_rewinddir().
    */
   public function dir_rewinddir() {
+    // unsupported
     return FALSE;
   }
 
@@ -250,6 +358,7 @@ abstract class mcneese_file_db_stream_wrapper implements DrupalStreamWrapperInte
    * Implements dir_closedir().
    */
   public function dir_closedir() {
+    // unsupported
     return FALSE;
   }
 
@@ -257,6 +366,7 @@ abstract class mcneese_file_db_stream_wrapper implements DrupalStreamWrapperInte
    * Implements getDirectoryPath().
    */
   public function getDirectoryPath() {
+    // unsupported
     return '';
   }
 
@@ -624,7 +734,7 @@ abstract class mcneese_file_db_stream_wrapper implements DrupalStreamWrapperInte
         if (!empty($this->image_style_uri)) {
           $this->image_style_uri .= $filename;
 
-          if (!file_exists($this->image_style_uri)) {
+          if (!$this->read_only && !file_exists($this->image_style_uri)) {
             $this->create_image_style($image_source_uri);
           }
         }

@@ -4,7 +4,7 @@
  * @file
  * Provides the stream wrapper: dbr://
  *
- * This class will handle upload & download of restricted files.
+ * This class will handle upload & download of unrestricted files.
  * The following paths are supports:
  * - upload: dbr://[filename]
  * - download: dbr://c/[short_checksum]/[filename (optional)]
@@ -244,18 +244,29 @@ class mcneese_file_db_restricted_stream_wrapper extends mcneese_file_db_stream_w
       return TRUE;
     }
     else {
+      global $conf;
+
+      if (empty($conf[MCNEESE_FILE_DB_CONF_SERVER_ID])) {
+        $this->stream = FALSE;
+        return FALSE;
+      }
+
       try {
         $file_db = mcneese_file_db_prepare_connection();
         $options = mcneese_file_db_prepare_options();
 
-        $built = mcneese_file_db_build_data_query($this->file_meta->id);
+        $built = array();
+        $built['query'] = '';
+        $built['arguments'] = array();
+        $built['arguments'][':server_id'] = $conf[MCNEESE_FILE_DB_CONF_SERVER_ID];
+        $built['arguments'][':file_id'] = $this->file_meta->id;
 
-        if ($built === FALSE) {
-          $this->stream = FALSE;
-        }
-        else {
-          $this->stream = $file_db->query($built['query'], $built['arguments'], $options);
-        }
+        $built['query'] = 'SELECT mfdfd.file_id, mfdfd.block FROM {mcneese_file_db_file_data} mfdfd';
+        $built['query'] .= ' INNER JOIN {mcneese_file_db_associations} mfda ON (mfdfd.file_id = mfda.file_id AND mfda.server_id = :server_id)';
+        $built['query'] .= ' WHERE mfda.server_id = :server_id';
+        $built['query'] .= ' AND mfda.file_id = :file_id';
+
+        $this->stream = $file_db->query($built['query'], $built['arguments'], $options);
 
         if ($this->stream === FALSE) {
           $this->stream_close(); // @todo: is this necessary?
@@ -299,67 +310,52 @@ class mcneese_file_db_restricted_stream_wrapper extends mcneese_file_db_stream_w
 
     // determine the number of blocks to read.
     $offset = $bytes + $this->stream_last_read;
-    $blocks = intval($offset / MCNEESE_FILE_DB_BLOCK_SIZE);
-    $underflow = $offset - ($blocks * MCNEESE_FILE_DB_BLOCK_SIZE);
+    $blocks = ceil($offset / MCNEESE_FILE_DB_BLOCK_SIZE);
+    $underflow = ($blocks * MCNEESE_FILE_DB_BLOCK_SIZE) - $offset;
+    $max_blocks = $this->stream_position + $blocks;
 
-    $stream_blocks = $this->stream_position + $blocks;
-
-    if ($underflow > 0) {
-      $stream_blocks++;
-    }
-
-    if ($stream_blocks > $this->stream_blocks) {
-      $stream_blocks = $this->stream_blocks;
-      $underflow = 0;
+    if ($max_blocks > $this->stream_blocks) {
+      $max_blocks = $this->stream_blocks;
     }
 
     $file_db = mcneese_file_db_prepare_connection();
     $options = mcneese_file_db_prepare_options();
 
-    $query = 'SELECT mfdfd.data FROM {mcneese_file_db_file_data} mfdfd';
+    $query = 'SELECT mfdfd.data, mfdfd.block FROM {mcneese_file_db_file_data} mfdfd';
     $query .= ' INNER JOIN {mcneese_file_db_associations} mfda ON (mfdfd.file_id = mfda.file_id AND mfda.server_id = :server_id)';
     $query .= ' WHERE mfdfd.file_id = :file_id';
-    $query .= ' AND mfdfd.block = :block';
+    $query .= ' AND mfdfd.block >= :stream_position';
+    $query .= ' AND mfdfd.block < :max_blocks';
+    $query .= ' ORDER BY mfdfd.block';
     $arguments = array(':server_id' => $conf[MCNEESE_FILE_DB_CONF_SERVER_ID]);
     $arguments[':file_id'] = $this->stream_fid;
+    $arguments[':stream_position'] = $this->stream_position;
+    $arguments[':max_blocks'] = $max_blocks;
 
-    while ($this->stream_position < $stream_blocks) {
-      try {
-        $arguments[':block'] = $this->stream_position;
+    try {
+      $results = (array) $file_db->query($query, $arguments, $options)->fetchAll();
+      $raw_bytes = '';
 
-        $results = $file_db->queryRange($query, 0, 1, $arguments, $options)->fetchField();
-        $raw_bytes = mcneese_file_db_bytea_to_bin($results);
-
-        if ($underflow > 0 && $this->stream_position + 1 == $stream_blocks) {
-          $substring = substr($raw_bytes, $this->stream_last_read, $underflow);
-          $bytes_read = strlen($substring);
-        }
-        else if ($this->stream_last_read > 0) {
-          // Re-sync reads with the block size to improve performance
-          $substring = substr($raw_bytes, $this->stream_last_read, MCNEESE_FILE_DB_BLOCK_SIZE - $this->stream_last_read);
-          $bytes_read = strlen($substring);
-        }
-        else {
-          $substring = $raw_bytes;
-          $bytes_read = MCNEESE_FILE_DB_BLOCK_SIZE;
-        }
-
-        if ($bytes_read + $this->stream_last_read == MCNEESE_FILE_DB_BLOCK_SIZE) {
-          $this->stream_last_read = 0;
-        }
-        else {
-          $this->stream_last_read += $bytes_read;
-        }
-
-        $output .= $substring;
-      }
-      catch (Exception $e) {
-        cf_error::on_query_execution($e);
-
-        throw $e;
+      // @fixme/@todo: if the results array is empty, there there is a problem. handle this error here and now!
+      foreach ($results as $key => &$result) {
+        $raw_bytes .= $result->data;
       }
 
-      $this->stream_position++;
+      $output = substr($raw_bytes, $this->stream_last_read, $bytes);
+
+      if ($underflow > 0) {
+        $this->stream_last_read += $bytes;
+      }
+      else {
+        $this->stream_last_read = 0;
+        $this->stream_position = $max_blocks;
+      }
+
+    }
+    catch (Exception $e) {
+      cf_error::on_query_execution($e);
+
+      throw $e;
     }
 
     return $output;
@@ -386,7 +382,6 @@ class mcneese_file_db_restricted_stream_wrapper extends mcneese_file_db_stream_w
 
     $stat = array();
     $stat['ino'] = 0;
-    $stat['ino'] = 0;
     $stat['nlink'] = 1;
     $stat['uid'] = 0; // @todo: should this be made to match the drupal uid?
     $stat['gid'] = 0;
@@ -405,8 +400,7 @@ class mcneese_file_db_restricted_stream_wrapper extends mcneese_file_db_stream_w
    * Implements stream_write().
    */
   public function stream_write($data) {
-    // @todo: try to see if the file is already in the database.
-    // if file_meta is already populated, then it in fact is in the database.
+    // if checksum is already populated, then the file is already in the database.
     if (!empty($this->file_meta)) {
       if (!empty($this->file_meta->checksum)) {
         // @todo: finish this, I should be performing a check to see if the specified checksum actually exists.
@@ -419,7 +413,13 @@ class mcneese_file_db_restricted_stream_wrapper extends mcneese_file_db_stream_w
       $this->stream_fname = drupal_tempnam('temporary://', MCNEESE_FILE_DB_KEY);
       $this->stream_position = 0;
       $this->stream_fhandle = fopen($this->stream_fname, 'w+b');
+      $this->stream_last_write = 0;
     }
+
+    // ensure that PHP uses the proper buffer sizes.
+    stream_set_read_buffer($this->stream_fhandle, MCNEESE_FILE_DB_BLOCK_SIZE);
+    stream_set_write_buffer($this->stream_fhandle, MCNEESE_FILE_DB_BLOCK_SIZE);
+    stream_set_chunk_size($this->stream_fhandle, MCNEESE_FILE_DB_BLOCK_SIZE);
 
     $block_length = fwrite($this->stream_fhandle, $data, MCNEESE_FILE_DB_BLOCK_SIZE);
     $block = substr($data, 0, $block_length);
@@ -441,14 +441,34 @@ class mcneese_file_db_restricted_stream_wrapper extends mcneese_file_db_stream_w
         }
       }
 
-      $fields = array('file_id' => $this->stream_fid, 'block' => $this->stream_position, 'data' => $block); // @todo how does one call encode() and respectively decode() with drupal and is this necessary?
+      if ($this->stream_last_write > 0) {
+        $query = $file_db->delete('mcneese_file_db_file_data', $options);
+        $query->condition('file_id', $this->stream_fid);
+        $query->condition('block', $this->stream_position);
+
+        $delete_result = $query->execute();
+
+        $this->stream_write_buffer .= $block;
+      }
+      else {
+        $this->stream_write_buffer = $block;
+      }
+
+      $fields = array('file_id' => $this->stream_fid, 'block' => $this->stream_position, 'data' => $this->stream_write_buffer);
 
       $query = $file_db->insert('mcneese_file_db_file_data', $options);
       $query->fields(array_keys($fields));
       $query->values($fields);
       $write_result = $query->execute();
 
-      $this->stream_position++;
+      if (($this->stream_last_write + $block_length) < MCNEESE_FILE_DB_BLOCK_SIZE) {
+        $this->stream_last_write += $block_length;
+      }
+      else {
+        $this->stream_position++;
+        $this->stream_last_write = 0;
+        $this->stream_write_buffer = null;
+      }
 
       return $block_length;
     }
@@ -464,7 +484,10 @@ class mcneese_file_db_restricted_stream_wrapper extends mcneese_file_db_stream_w
    */
   public function unlink($uri) {
     if (empty($this->uri)) {
+      // set read_only to ensure the image style does to get generated while being deleted.
+      $this->read_only = TRUE;
       $this->setUri($uri);
+      $this->read_only = FALSE;
     }
 
     if (empty($this->image_style_uri)) {
@@ -496,8 +519,8 @@ class mcneese_file_db_restricted_stream_wrapper extends mcneese_file_db_stream_w
       $stat = $this->stream_stat($uri);
 
       // 'mode' is required for functions like file_exists() (this is in octal).
-      // calculated from 0100000 (octal for file) + 1200 (octal for 640)
-      $stat['mode'] = 0101200;
+      // calculated from 0100000 (octal for file) + 1204 (octal for 644)
+      $stat['mode'] = 0101204;
     }
     else {
       $wrapper = file_stream_wrapper_get_instance_by_uri($this->image_style_uri);
@@ -540,7 +563,7 @@ class mcneese_file_db_restricted_stream_wrapper extends mcneese_file_db_stream_w
    */
   public static function getMimeType($uri, $mapping = NULL) {
     // Drupal made getMimeType() static, so getting the mimetype requires creating another object and then calling a custom get_mimetype() function.
-    $wrapper = new mcneese_file_db_restricted_stream_wrapper();
+    $wrapper = new self();
     $wrapper->setUri($uri);
     return $wrapper->get_mimetype();
   }
@@ -549,7 +572,7 @@ class mcneese_file_db_restricted_stream_wrapper extends mcneese_file_db_stream_w
    * Implements get_scheme().
    */
   protected function get_scheme() {
-    return mcneese_file_db_restricted_stream_wrapper::SCHEME;
+    return self::SCHEME;
   }
 
   /**
@@ -570,7 +593,7 @@ class mcneese_file_db_restricted_stream_wrapper extends mcneese_file_db_stream_w
    * Implements get_core().
    */
   protected function get_core() {
-    return mcneese_file_db_restricted_stream_wrapper::CORE;
+    return self::CORE;
   }
 }
 
