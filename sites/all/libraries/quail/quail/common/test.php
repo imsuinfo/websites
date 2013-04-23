@@ -200,8 +200,10 @@ class quailTest {
 	function getAllElements($tags = null, $options = false, $value = true) {
 		if(!is_array($tags))
 			$tags = array($tags);
-		if($options !== false)
-			$tags = htmlElements::getElementsByOption($options, $value);
+		if($options !== false) {
+			$htmlElements = new  htmlElements();
+			$tags = $htmlElements->getElementsByOption($options, $value);
+		}
 		$result = array();
 		
 		if(!is_array($tags))
