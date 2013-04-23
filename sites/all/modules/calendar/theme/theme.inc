@@ -32,6 +32,32 @@ function template_preprocess_calendar_month(&$vars) {
     $rows = array();
   }
 
+  $vars['rows'] = $rows;
+  $vars['day_names'] = $day_names;
+
+  $vars['display_type'] = $view->date_info->granularity;
+  $vars['min_date_formatted'] = date_format($view->date_info->min_date, DATE_FORMAT_DATETIME);
+  $vars['max_date_formatted'] = date_format($view->date_info->max_date, DATE_FORMAT_DATETIME);
+}
+
+/**
+ * Display a mini month view.
+ */
+function template_preprocess_calendar_mini(&$vars) {
+  $view = $vars['view'];
+  $rows = $vars['rows'];
+  if (empty($rows)) {
+    $rows = array();
+    $day_names = array();
+  }
+  elseif (sizeof($rows) > 1) {
+    $day_names = array_shift($rows);
+  }
+  else {
+    $day_names = $rows;
+    $rows = array();
+  }
+
   $month_rows = $rows;
   foreach ($rows as $weekno => $row) {
     foreach ($row as $day => $data) {
@@ -69,16 +95,6 @@ function template_preprocess_calendar_month(&$vars) {
   $vars['display_type'] = $view->date_info->granularity;
   $vars['min_date_formatted'] = date_format($view->date_info->min_date, DATE_FORMAT_DATETIME);
   $vars['max_date_formatted'] = date_format($view->date_info->max_date, DATE_FORMAT_DATETIME);
-}
-
-/**
- * Display a mini month view.
- */
-function template_preprocess_calendar_mini(&$vars) {
-  // Add in all the $vars added by the main calendar preprocessor.
-  template_preprocess_calendar_month($vars);
-
-  $view = $vars['view'];
 
   // Make sure that the calendar title links go to the month view,
   // not the year view (if this is embedded in a year display).
