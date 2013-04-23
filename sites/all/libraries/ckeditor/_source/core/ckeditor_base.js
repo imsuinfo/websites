@@ -138,18 +138,6 @@ if ( !window.CKEDITOR )
 					}
 				}
 
-				// In IE (only) the script.src string is the raw value entered in the
-				// HTML source. Other browsers return the full resolved URL instead.
-				if ( path.indexOf(':/') == -1 )
-				{
-					// Absolute path.
-					if ( path.indexOf( '/' ) === 0 )
-						path = location.href.match( /^.*?:\/\/[^\/]*/ )[0] + path;
-					// Relative path.
-					else
-						path = location.href.match( /^[^\?]*\/(?:)/ )[0] + path;
-				}
-
 				if ( !path )
 						throw 'The CKEditor installation path could not be automatically detected. Please set the global variable "CKEDITOR_BASEPATH" before creating editor instances.';
 
