@@ -584,7 +584,9 @@ function node_accessibility_perform_validation($nodes_or_nids, $vids = array(), 
       }
 
       if (property_exists($revision, 'accessibility') && is_array($revision->accessibility)) {
-        $rendered_node = drupal_render(node_view($revision, 'full', $language));
+        $node_view = node_view($revision, 'full', $language);
+        $rendered_node = drupal_render($node_view);
+        unset($node_view);
 
         if (!empty($revision->accessibility['standards'])) {
           foreach ($revision->accessibility['standards'] as $standard_name) {
