@@ -600,6 +600,10 @@ abstract class mcneese_file_db_stream_wrapper implements DrupalStreamWrapperInte
 
       // A uri may also contain a link to a style path, such as dbu://styles/square_thumbnail/dbu/f/c/01234567/gksu.png .
       if ($parts[0] == MCNEESE_FILE_DB_STYLES) {
+        if (empty($parts[1])) {
+          return FALSE;
+        }
+
         $this->image_style = $parts[1];
         $this->image_style_uri = null;
 
@@ -629,7 +633,7 @@ abstract class mcneese_file_db_stream_wrapper implements DrupalStreamWrapperInte
         }
       }
 
-      if ($parts[0] == $this->get_path_by_hash()) {
+      if ($parts[0] == $this->get_path_by_hash() && !empty($parts[1])) {
         $this->file_meta = $this->load_file_meta($parts[1]);
 
         if ($this->file_meta === FALSE) {
