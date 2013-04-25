@@ -395,15 +395,6 @@ function killfile_views_api() {
 }
 
 /**
- * Implements hook_rdf_namespaces().
- */
-function killfile_rdf_namespaces() {
-  return array(
-    'killfile' => KILLFILE_NAMESPACE,
-  );
-}
-
-/**
  * Implements hook_rdf_mapping().
  */
 function killfile_rdf_mapping() {
