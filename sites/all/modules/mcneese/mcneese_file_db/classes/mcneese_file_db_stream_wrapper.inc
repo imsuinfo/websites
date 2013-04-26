@@ -638,7 +638,7 @@ abstract class mcneese_file_db_stream_wrapper implements DrupalStreamWrapperInte
 
         if ($this->file_meta === FALSE) {
           $this->file_meta = null;
-          $thos->tmp_checksum = $parts[1];
+          $this->tmp_checksum = $parts[1];
 
           if (!empty($parts[2])) {
             $this->tmp_filename = $parts[2];
