@@ -277,7 +277,7 @@ function theme_webform_display_grid($variables) {
     }
 
     $option_count = count($header) - 1;
-    $output = theme('table', array('header' => $header, 'rows' => $rows, 'attributes' => array('class' => array('webform-grid', 'webform-grid-' . $option_count))));
+    $output = theme('table', array('header' => $header, 'rows' => $rows, 'attributes' => array('class' => array('webform-grid', 'webform-grid-' . $option_count)), 'caption' => $element['#title']));
   }
   else {
     $items = array();
@@ -335,7 +335,7 @@ function _webform_analysis_grid($component, $sids = array()) {
     }
     $rows[] = $row;
   }
-  $output = theme('table', array('header' => $header, 'rows' => $rows, 'attributes' => array('class' => array('webform-grid'))));
+  $output = theme('table', array('header' => $header, 'rows' => $rows, 'attributes' => array('class' => array('webform-grid')), 'caption' => $component['name']));
 
 
   return array(array(array('data' => $output, 'colspan' => 2)));
@@ -426,5 +426,5 @@ function theme_webform_grid($variables) {
   }
 
   $option_count = count($header) - 1;
-  return theme('table', array('header' => $header, 'rows' => $rows, 'attributes' => array('class' => array('webform-grid', 'webform-grid-' . $option_count))));
+  return theme('table', array('header' => $header, 'rows' => $rows, 'attributes' => array('class' => array('webform-grid', 'webform-grid-' . $option_count)), 'caption' => $element['#title']));
 }
