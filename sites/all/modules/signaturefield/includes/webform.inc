@@ -63,19 +63,19 @@ function _webform_edit_signaturefield($component) {
   $form['extra']['width'] = array(
     '#type' => 'textfield',
     '#title' => t('Width'),
-    '#default_value' => isset($component['extra']['width']) ? $component['extra']['width'] : '200',
+    '#default_value' => isset($component['extra']['width']) ? $component['extra']['width'] : '400',
     '#description' => t('Set signature width in pixels.'),
-    '#maxlength' => 3,
-    '#size' => 3,
+    '#maxlength' => 6,
+    '#size' => 6,
     '#required' => FALSE,
   );
   $form['extra']['height'] = array(
     '#type' => 'textfield',
     '#title' => t('Height'),
-    '#default_value' => isset($component['extra']['height']) ? $component['extra']['height'] : '55',
+    '#default_value' => isset($component['extra']['height']) ? $component['extra']['height'] : '120',
     '#description' => t('Set signature height in pixels.'),
-    '#maxlength' => 2,
-    '#size' => 2,
+    '#maxlength' => 6,
+    '#size' => 6,
     '#required' => FALSE,
   );
   return $form;
