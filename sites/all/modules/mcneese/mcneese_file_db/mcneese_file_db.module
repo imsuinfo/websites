@@ -512,18 +512,19 @@ function mcneese_file_db_return_file($arguments) {
   $arg2 = '';
   $arg3 = '';
 
+  if (isset($arguments[1])) {
+    $by = $arguments[1];
+  }
   if (isset($arguments[2])) {
-    $by = $arguments[2];
+    $arg1 = $arguments[2];
   }
   if (isset($arguments[3])) {
-    $arg1 = $arguments[3];
+    $arg2 = $arguments[3];
   }
   if (isset($arguments[4])) {
-    $arg2 = $arguments[4];
+    $arg3 = $arguments[4];
   }
-  if (isset($arguments[5])) {
-    $arg3 = $arguments[5];
-  }
+
 
   mcneese_file_db_register_stream_wrappers();
 
@@ -547,11 +548,11 @@ function mcneese_file_db_return_file($arguments) {
  *   An array of the url arguments for this request.
  */
 function mcneese_file_db_generate_image_style($arguments) {
-  if ($arguments[4] == mcneese_file_db_unrestricted_stream_wrapper::SCHEME) {
+  if ($arguments[3] == mcneese_file_db_unrestricted_stream_wrapper::SCHEME) {
     $wrapper = new mcneese_file_db_unrestricted_stream_wrapper();
   }
   // @fixme: currently not implemented.
-  //else if ($arguments[4] == mcneese_file_db_restricted_stream_wrapper::SCHEME) {
+  //else if ($arguments[3] == mcneese_file_db_restricted_stream_wrapper::SCHEME) {
   //  $wrapper = new mcneese_file_db_restricted_stream_wrapper();
   //}
   else {
@@ -559,8 +560,8 @@ function mcneese_file_db_generate_image_style($arguments) {
     drupal_exit();
   }
 
-  $file_args = array_slice($arguments, 2);
-  $image_source_uri = $arguments[4] . '://' . implode('/', $file_args);
+  array_shift($arguments);
+  $image_source_uri = $arguments[2] . '://' . implode('/', $arguments);
 
   $file_uri = $wrapper->getTarget($image_source_uri);
 
