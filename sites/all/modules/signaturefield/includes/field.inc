@@ -177,6 +177,15 @@ function signaturefield_field_widget_settings_form($field, $instance) {
       '#required' => FALSE,
       '#description' => t('Custom height in pixels'),
     );
+    $form['size'] = array(
+      '#type' => 'textfield',
+      '#maxlength' => 6,
+      '#size' => 6,
+      '#title' => t('Size of Textfield'),
+      '#default_value' => $settings['size'],
+      '#required' => FALSE,
+      '#description' => t('Size of the textfield when using "TypeIt" option.'),
+    );
   return $form;
 }
 
@@ -209,8 +218,9 @@ function signaturefield_field_widget_form(&$form, &$form_state, $field, $instanc
     '#type' => 'signaturefield',
     '#default_value' => isset($items[$delta]['data']) ? $items[$delta]['data'] : NULL,
     '#color' => isset($instance['widget']['settings']['color']) ? $instance['widget']['settings']['color'] : '#000',
-    '#width' => isset($instance['widget']['settings']['width']) ? $instance['widget']['settings']['width'] : 400,
-    '#height' => isset($instance['widget']['settings']['height']) ? $instance['widget']['settings']['height'] : 120,
+    '#width' => isset($instance['widget']['settings']['width']) ? $instance['widget']['settings']['width'] : 300,
+    '#height' => isset($instance['widget']['settings']['height']) ? $instance['widget']['settings']['height'] : 60,
+    '#size' => isset($instance['widget']['settings']['size']) ? $instance['widget']['settings']['size'] : 32,
   );
 
   $element['data'] = $widget;

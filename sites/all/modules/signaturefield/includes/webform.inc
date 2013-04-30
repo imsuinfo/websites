@@ -63,7 +63,7 @@ function _webform_edit_signaturefield($component) {
   $form['extra']['width'] = array(
     '#type' => 'textfield',
     '#title' => t('Width'),
-    '#default_value' => isset($component['extra']['width']) ? $component['extra']['width'] : '400',
+    '#default_value' => isset($component['extra']['width']) ? $component['extra']['width'] : '300',
     '#description' => t('Set signature width in pixels.'),
     '#maxlength' => 6,
     '#size' => 6,
@@ -72,8 +72,17 @@ function _webform_edit_signaturefield($component) {
   $form['extra']['height'] = array(
     '#type' => 'textfield',
     '#title' => t('Height'),
-    '#default_value' => isset($component['extra']['height']) ? $component['extra']['height'] : '120',
+    '#default_value' => isset($component['extra']['height']) ? $component['extra']['height'] : '60',
     '#description' => t('Set signature height in pixels.'),
+    '#maxlength' => 6,
+    '#size' => 6,
+    '#required' => FALSE,
+  );
+  $form['extra']['size'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Size of Textfield'),
+    '#default_value' => isset($component['extra']['size']) ? $component['extra']['size'] : '32',
+    '#description' => t('Size of the textfield when using "TypeIt" option.'),
     '#maxlength' => 6,
     '#size' => 6,
     '#required' => FALSE,
@@ -101,6 +110,7 @@ function _webform_render_signaturefield($component, $value = NULL) {
     '#color' => $component['extra']['color'],
     '#width' => $component['extra']['width'],
     '#height' => $component['extra']['height'],
+    '#size' => $component['extra']['size'],
     '#description' => isset($component['extra']['description']) ? _webform_filter_descriptions($component['extra']['description']) : '',
     '#default_value' => $component['value'],
     '#prefix' => '<div class="form-item webform-component-' . $component['type'] . '" id="webform-component-' . $component['form_key'] . '">',

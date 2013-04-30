@@ -43,11 +43,12 @@ function signaturefield_element_info() {
   $type['signaturefield'] = array(
     '#input' => TRUE,
     '#after_build' => array('signaturefield_after_build'),
-    '#height' => 55,
-    '#width' => 200,
+    '#height' => 60,
+    '#width' => 300,
     '#color' => '#000',
     '#lineTop' => 35,
     '#theme' => 'signaturefield',
+    '#size' => 32,
   );
 
   return $type;
@@ -81,18 +82,43 @@ function signaturefield_after_build($element, $form_state) {
   drupal_add_js("{$libpath}/build/json2.min.js");
   drupal_add_js("{$modpath}/signaturefield.js");
 
+  $lineTop = floor($element['#height'] * 0.85);
+
   drupal_add_js(array(
     'signaturefield' => array(
       'settings' => array(
-        'drawOnly' => TRUE,
+        'drawOnly' => FALSE,
+        'displayOnly' => FALSE,
         'validateFields' => FALSE,
+        'defaultAction' => 'typeIt',
         'penColour' => $element['#color'],
-        'lineTop' => $element['#height'] * .85,
+        'lineTop' => $lineTop,
+        'sig' => '.' . $element['#id'] . '-sig',
+        'sigNav' => '.' . $element['#id'] . '-sigNav',
+        'name' => '#' . $element['#id'] . '-name',
+        'typed' => '.' . $element['#id'] . '-typed',
+        'typeIt' => '.' . $element['#id'] . '-typeIt > a',
+        'drawIt' => '.' . $element['#id'] . '-drawIt > a',
+        'typeItDesc' => '.' . $element['#id'] . '-typeItDesc',
+        'drawItDesc' => '.' . $element['#id'] . '-drawItDesc',
+        'output' => '#' . $element['#id'] . '-output',
+        'clear' => '.' . $element['#id'] . '-clearButton',
       ),
     ),
   ), 'setting');
 
   drupal_add_css("{$modpath}/signaturefield.css");
+
+  $lineTop -= 2;
+  
+  if ($lineTop <= 0) $lineTop = 1;
+  $lineTop = floor($element['#height'] * 0.45);
+
+  $css_data = '.' . $element['#id'] . '-sig > .typed { top: ' . $lineTop . 'px; }';
+  $css_options = array();
+  $css_options['type'] = 'inline';
+  $css_options['media'] = 'screen';
+  drupal_add_css($css_data, $css_options);
 
   return $element;
 }
