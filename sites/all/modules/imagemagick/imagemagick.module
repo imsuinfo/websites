@@ -347,7 +347,7 @@ function image_imagemagick_save(stdClass $image, $destination) {
  */
 function image_imagemagick_get_info(stdClass $image) {
   $details = FALSE;
-  $data = getimagesize(drupal_realpath($image->source));
+  $data = getimagesize($image->source);
 
   if (isset($data) && is_array($data)) {
     $extensions = array('1' => 'gif', '2' => 'jpg', '3' => 'png');
@@ -374,6 +374,44 @@ function _imagemagick_convert($source, $destination, $args) {
   $source = drupal_realpath($source);
   $destination = drupal_realpath($destination);
   $destination_format = '';
+  $unlink = FALSE;
+
+  if (!file_exists($source)) {
+    $unlink = TRUE;
+    $source = drupal_tempnam('temporary://', 'imagemagick');
+
+    if (empty($source)) {
+      return FALSE;
+    }
+
+    $source = drupal_realpath($source);
+
+    $fhr = fopen($source_original, 'rb');
+
+    if ($fhr === FALSE) {
+      return FALSE;
+    }
+
+    $fhw = fopen($source, 'w');
+
+    if ($fhr === FALSE) {
+      fclose($fhr);
+      return FALSE;
+    }
+
+    if (function_exists('stream_set_chunk_size')) {
+      stream_set_chunk_size($fhr, 131072);
+      stream_set_chunk_size($fhw, 131072);
+    }
+
+    while (!feof($fhr)) {
+      fwrite($fhw, fread($fhr, 131072), 131072);
+      fflush($fhw);
+    }
+
+    fclose($fhr);
+    fclose($fhw);
+  }
 
   $args['quality'] = '-quality ' . escapeshellarg(variable_get('imagemagick_quality', 75));
 
@@ -416,8 +454,11 @@ function _imagemagick_convert($source, $destination, $args) {
   $command_args = implode(' ', $args);
 
   if (_imagemagick_convert_exec($command_args, $output, $error) !== TRUE) {
+    if ($unlink) unlink($source);
     return FALSE;
   }
+
+  if ($unlink) unlink($source);
   return file_exists($destination);
 }
 
