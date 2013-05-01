@@ -1,6 +1,13 @@
 linkchecker 7.x-dev, nightly
 ----------------------------
 
+* Issue #1923328 by hass: Notice: Undefined property: stdClass::$field_tags
+* Issue #1948782 by jlscott: Linkchecker does not handle link cleanup on 'link' fields
+* Issue #1926558 by hass: Block extraction re-scans fail.
+
+linkchecker 7.x-1.1, February 14, 2012
+--------------------------------------
+
 * Code style review and fixes (minor level)
 * No need to check comment/block enable variables in auto update.
 * Issue #1901018 by hass: ERROR - __clone method called on non-object.
