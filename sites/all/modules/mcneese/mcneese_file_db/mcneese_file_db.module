@@ -411,7 +411,7 @@ function mcneese_file_db_load_file($by = '', $arg1 = '', $arg2 = '', $arg3 = '')
       header('Content-Type: ' . $mimetype);
       header('Content-Length: ' . $filesize);
       header('Content-Location: ' . $content_location);
-      header('ETag: "' . $file_meta->checksum . '"');
+      header('ETag: "' . MCNEESE_FILE_DB_PATH_BY_HASH_ALGORITHM . '://' . $file_meta->checksum . '"');
       header('Accept-Ranges: bytes');
       header('Last-Modified: ' . date('r', strtotime($file_meta->timestamp)));
       header('Expires: ' . date('r', strtotime('+14 days', REQUEST_TIME)));
@@ -593,7 +593,7 @@ function mcneese_file_db_print_image_style($file_uri) {
 
     header('Content-Type: ' . $mimetype);
     header('Content-Length: ' . $filesize);
-    //header('ETag: "' . $checksum . '"');
+    //header('ETag: "'' . MCNEESE_FILE_DB_PATH_BY_HASH_ALGORITHM . '://' . $checksum . '"');
     header('Accept-Ranges: bytes');
 
     readfile($file_uri);
