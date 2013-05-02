@@ -399,13 +399,15 @@ function _imagemagick_convert($source, $destination, $args) {
       return FALSE;
     }
 
+    $chunk_size = 131072;
+
     if (function_exists('stream_set_chunk_size')) {
-      stream_set_chunk_size($fhr, 131072);
-      stream_set_chunk_size($fhw, 131072);
+      stream_set_chunk_size($fhr, $chunk_size);
+      stream_set_chunk_size($fhw, $chunk_size);
     }
 
     while (!feof($fhr)) {
-      fwrite($fhw, fread($fhr, 131072), 131072);
+      fwrite($fhw, fread($fhr, $chunk_size), $chunk_size);
       fflush($fhw);
     }
 
