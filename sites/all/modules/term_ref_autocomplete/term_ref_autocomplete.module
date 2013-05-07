@@ -185,13 +185,26 @@ function term_ref_autocomplete_field_widget_form(&$form, &$form_state, $field, $
     if (count($form_fields) == 1 && empty($element['names']['#default_value'])) {
       $user_data = workbench_access_active_options();
 
-      foreach ($user_data as $key => $tmp_tag) {
-        if (strpos($tmp_tag, ',') !== FALSE || strpos($tmp_tag, '"') !== FALSE) {
-          $tmp_tag = '"' . str_replace('"', '""', $tmp_tag) . '"';
-        }
+      global $user;
 
-        $element['names']['#default_value'][] = $tmp_tag . ' [tid:' . $key . ']';
-        break;
+      if (!property_exists($user, 'workbench_access')) {
+        $user = user_load($user->uid);
+      }
+
+      $sections = (array) $user->workbench_access;
+      $sections = array_keys($sections);
+
+      $element['names']['#description'] .= ' ' . t("See <a href='!url' title='My Sections' target='_blank'>My Sections</a> for a list of possible values.", array('!url' => url('admin/workbench/sections')));
+
+      if (count($sections) == 1) {
+        foreach ($user_data as $key => $tmp_tag) {
+          if (strpos($tmp_tag, ',') !== FALSE || strpos($tmp_tag, '"') !== FALSE) {
+            $tmp_tag = '"' . str_replace('"', '""', $tmp_tag) . '"';
+          }
+
+          $element['names']['#default_value'][] = $tmp_tag . ' [tid:' . $key . ']';
+          break;
+        }
       }
     }
   }
