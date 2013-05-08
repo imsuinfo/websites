@@ -165,7 +165,7 @@ class views_plugin_row_node_rss extends views_plugin_row {
 
     $item = new stdClass();
     $item->description = $item_text;
-    $item->title = $node->title;
+    $item->title = htmlspecialchars($node->title, ENT_HTML5);
     $item->link = $node->link;
     $item->elements = $node->rss_elements;
     $item->nid = $node->nid;
