@@ -94,6 +94,7 @@ function _webform_edit_select($component) {
       '#description' => t('If allowing other options, enter text to be used for other-enabling option.'),
       '#parents' => array('extra', 'other_text'),
       '#weight' => 3,
+      '#dependency' => array('edit-extra-other-option' => array(TRUE)),
     );
   }
 
