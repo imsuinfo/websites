@@ -28,6 +28,8 @@ function _webform_defaults_select() {
       'custom_keys' => FALSE,
       'options_source' => '',
       'private' => FALSE,
+      'empty_value' => FALSE,
+      'empty_value_text' => '',
     ),
   );
 }
@@ -175,6 +177,24 @@ function _webform_edit_select($component) {
     '#default_value' => $component['extra']['optrand'],
     '#description' => t('Randomizes the order of the options when they are displayed in the form.'),
     '#parents' => array('extra', 'optrand'),
+  );
+
+  $form['display']['empty_value'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('Replace "Empty Value Text" of Select List with Custom Text'),
+    '#default_value' => $component['extra']['empty_value'],
+    '#description' => t('Check this option if you want to change the text displayed in a select list to something else for the value="" option.'),
+    '#parents' => array('extra', 'empty_value'),
+    '#weight' => 3,
+  );
+  $form['display']['empty_value_text'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Custom "Empty Value Text" for Select List'),
+    '#default_value' => $component['extra']['empty_value_text'],
+    '#description' => t('Put anything here, can be empty.'),
+    '#parents' => array('extra', 'empty_value_text'),
+    '#weight' => 4,
+    '#dependency' => array('edit-extra-empty-value' => array(TRUE)),
   );
 
   return $form;
@@ -350,6 +370,11 @@ function _webform_render_select($component, $value = NULL, $filter = TRUE) {
   }
   elseif ($component['extra']['multiple']) {
     $element['#default_value'] = array();
+  }
+
+  if (!empty($component['extra']['empty_value']) && isset($component['extra']['empty_value_text'])) {
+    $element['#empty_value'] = '';
+    $element['#empty_option'] = $component['extra']['empty_value_text'];
   }
 
   if ($component['extra']['other_option'] && module_exists('select_or_other')) {

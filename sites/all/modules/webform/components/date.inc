@@ -25,6 +25,10 @@ function _webform_defaults_date() {
       'title_display' => 0,
       'description' => '',
       'private' => FALSE,
+      'empty_value' => FALSE,
+      'empty_value_month' => '',
+      'empty_value_day' => '',
+      'empty_value_year' => '',
     ),
   );
 }
@@ -91,6 +95,45 @@ function _webform_edit_date($component) {
     '#parents' => array('extra', 'year_textfield'),
   );
 
+  $form['display']['empty_value'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('Replace "Empty Value Text" of Select List with Custom Text'),
+    '#default_value' => $component['extra']['empty_value'],
+    '#description' => t('Check this option if you want to change the text displayed in a select list to something else for the value="" option.'),
+    '#parents' => array('extra', 'empty_value'),
+    '#weight' => 3,
+  );
+
+  $form['display']['empty_value_month'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Custom "Empty Value Text" for the Select List "Month" Option'),
+    '#default_value' => $component['extra']['empty_value_month'],
+    '#description' => t('Put anything here, can be empty.'),
+    '#parents' => array('extra', 'empty_value_month'),
+    '#weight' => 4,
+    '#dependency' => array('edit-extra-empty-value' => array(TRUE)),
+  );
+
+  $form['display']['empty_value_day'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Custom "Empty Value Text" for the Select List "Day" Option'),
+    '#default_value' => $component['extra']['empty_value_day'],
+    '#description' => t('Put anything here, can be empty.'),
+    '#parents' => array('extra', 'empty_value_day'),
+    '#weight' => 4,
+    '#dependency' => array('edit-extra-empty-value' => array(TRUE)),
+  );
+
+  $form['display']['empty_value_year'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Custom "Empty Value Text" for the Select List "Year" Option'),
+    '#default_value' => $component['extra']['empty_value_year'],
+    '#description' => t('Put anything here, can be empty.'),
+    '#parents' => array('extra', 'empty_value_year'),
+    '#weight' => 4,
+    '#dependency' => array('edit-extra-empty-value' => array(TRUE)),
+  );
+
   $form['validation']['start_date'] = array(
     '#type' => 'textfield',
     '#title' => t('Start date'),
@@ -136,7 +179,24 @@ function _webform_render_date($component, $value = NULL, $filter = TRUE) {
     '#theme_wrappers' => array('webform_element'),
     '#element_validate' => array('webform_validate_date'),
     '#translatable' => array('title', 'description'),
+    '#empty_value' => array(),
+    '#empty_option' => array(),
   );
+
+  if (!empty($component['extra']['empty_value'])) {
+    if (isset($component['extra']['empty_value_month'])) {
+      $element['#empty_value']['month'] = '';
+      $element['#empty_option']['month'] = $component['extra']['empty_value_month'];
+    }
+    if (isset($component['extra']['empty_value_day'])) {
+      $element['#empty_value']['day'] = '';
+      $element['#empty_option']['day'] = $component['extra']['empty_value_day'];
+    }
+    if (isset($component['extra']['empty_value_year'])) {
+      $element['#empty_value']['year'] = '';
+      $element['#empty_option']['year'] = $component['extra']['empty_value_year'];
+    }
+  }
 
   if ($component['extra']['datepicker']) {
     $element['#datepicker'] = TRUE;
