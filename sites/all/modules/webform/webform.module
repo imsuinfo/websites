@@ -3011,9 +3011,24 @@ function theme_webform_element($variables) {
    'webform-component',
    'webform-component-' . $type,
   );
-  if (isset($element['#title_display']) && strcmp($element['#title_display'], 'inline') === 0) {
-    $wrapper_classes[] = 'webform-container-inline';
+
+  if ($element['#title_display'] == 'before') {
+    $wrapper_classes[] = 'webform-container-outline';
+    $wrapper_classes[] = 'webform-container-before';
   }
+  else if ($element['#title_display'] == 'inline') {
+    $wrapper_classes[] = 'webform-container-inline';
+    $wrapper_classes[] = 'webform-container-inline_left';
+  }
+  else if ($element['#title_display'] == 'inline_right') {
+    $wrapper_classes[] = 'webform-container-inline';
+    $wrapper_classes[] = 'webform-container-inline_right';
+  }
+  else if ($element['#title_display'] == 'after') {
+    $wrapper_classes[] = 'webform-container-outline';
+    $wrapper_classes[] = 'webform-container-after';
+  }
+
   $output = '<div class="' . implode(' ', $wrapper_classes) . '" id="webform-component-' . $parents . '">' . "\n";
 
   // If #title is not set, we don't display any label or required marker.
@@ -3031,6 +3046,7 @@ function theme_webform_element($variables) {
       $output .= ' ' . $prefix . $element['#children'] . $suffix . "\n";
       break;
 
+    case 'inline_right':
     case 'after':
       $output .= ' ' . $prefix . $element['#children'] . $suffix;
       $output .= ' ' . theme('form_element_label', $variables) . "\n";

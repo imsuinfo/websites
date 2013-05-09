@@ -421,7 +421,9 @@ function webform_component_edit_form($form, $form_state, $node, $component, $clo
         '#default_value' => !empty($component['extra']['title_display']) ? $component['extra']['title_display'] : 'before',
         '#options' => array(
           'before' => t('Above'),
-          'inline' => t('Inline'),
+          'inline' => t('Inline (Left)'),
+          'inline_right' => t('Inline (Right)'),
+          'after' => t('Below'),
           'none' => t('None'),
         ),
         '#description' => t('Determines the placement of the component\'s label.'),
