@@ -1622,6 +1622,7 @@ function webform_node_view($node, $view_mode) {
   $total_limit_exceeded = FALSE;
   $user_limit_exceeded = FALSE;
   $closed = FALSE;
+  $locked = FALSE;
   $allowed_roles = array();
 
   // If a teaser, tell the form to load subsequent pages on the node page.
@@ -1640,8 +1641,13 @@ function webform_node_view($node, $view_mode) {
   if ($node->webform['status'] == 0) {
     $closed = TRUE;
     $enabled = FALSE;
+    $locked = TRUE;
   }
   else {
+    if ($node->webform['status'] == 2) {
+      $locked = TRUE;
+    }
+
     // Check if the user's role can submit this webform.
     if (variable_get('webform_submission_access_control', 1)) {
       foreach ($node->webform['roles'] as $rid) {
@@ -1722,6 +1728,7 @@ function webform_node_view($node, $view_mode) {
     '#page' => $page,
     '#form' => $form,
     '#enabled' => $enabled,
+    '#locked' => $locked,
     '#weight' => 10,
   );
 }
@@ -2157,8 +2164,9 @@ function webform_client_form($form, &$form_state, $node, $submission, $is_draft 
       '#weight' => 1000,
     );
 
-    // Add the draft button.
-    if ($node->webform['allow_draft'] && (empty($submission) || $submission->is_draft) && $user->uid != 0) {
+    // Add the draft button (when not locked).
+    if ($node->webform['allow_draft'] && (empty($submission) || $submission->is_draft) && $user->uid != 0 && $node->webform['status'] != 2) {
+      // Add the submit draft button (when not locked)
       $form['actions']['draft'] = array(
         '#type' => 'submit',
         '#value' => t('Save Draft'),
@@ -2180,11 +2188,14 @@ function webform_client_form($form, &$form_state, $node, $submission, $is_draft 
         );
       }
       if ($page_num == $page_count) {
-        $form['actions']['submit'] = array(
-          '#type' => 'submit',
-          '#value' => empty($node->webform['submit_text']) ? t('Submit') : t($node->webform['submit_text']),
-          '#weight' => 10,
-        );
+        // Add the submit button (when not locked)
+        if ($node->webform['status'] != 2) {
+          $form['actions']['submit'] = array(
+            '#type' => 'submit',
+            '#value' => empty($node->webform['submit_text']) ? t('Submit') : t($node->webform['submit_text']),
+            '#weight' => 10,
+          );
+        }
       }
       elseif ($page_num < $page_count) {
         $form['actions']['next'] = array(
@@ -2195,12 +2206,14 @@ function webform_client_form($form, &$form_state, $node, $submission, $is_draft 
       }
     }
     else {
-      // Add the submit button.
-      $form['actions']['submit'] = array(
-        '#type' => 'submit',
-        '#value' => empty($node->webform['submit_text']) ? t('Submit') : t($node->webform['submit_text']),
-        '#weight' => 10,
-      );
+      // Add the submit button (when not locked)
+      if ($node->webform['status'] != 2) {
+        $form['actions']['submit'] = array(
+          '#type' => 'submit',
+          '#value' => empty($node->webform['submit_text']) ? t('Submit') : t($node->webform['submit_text']),
+          '#weight' => 10,
+        );
+      }
     }
   }
 

@@ -22,7 +22,7 @@ function webform_views_data() {
   // status
   $data['webform']['status'] = array(
     'title' => t('Status'),
-    'help' => t('The open or closed status of a webform.'),
+    'help' => t('The open, locked, or closed status of a webform.'),
     'field' => array(
       'handler' => 'webform_handler_field_webform_status',
       'click sortable' => TRUE,

@@ -153,10 +153,10 @@ function webform_configure_form($form, &$form_state, $node) {
   $form['submission']['status'] = array(
     '#type' => 'radios',
     '#title' => t('Status of this form'),
-    '#default_value' => $node->webform['status'] == 0 ? 0 : 1,
+    '#default_value' => isset($node->webform['status']) ? $node->webform['status'] : 1,
     '#description' => t('Closing a form prevents any further submissions by any users.'),
     '#parents' => array('status'),
-    '#options' => array(1 => t('Open'), 0 => t('Closed')),
+    '#options' => array(1 => t('Open'), 2 => t('Locked'), 0 => t('Closed')),
   );
   /* End Edit Form */
 
