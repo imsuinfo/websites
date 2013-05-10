@@ -207,6 +207,12 @@ function webform_configure_form($form, &$form_state, $node) {
     '#default_value' => $node->webform['teaser'],
     '#description' => t('Display the entire form in the teaser display of this node.'),
   );
+  $form['advanced']['delete_after_emailing'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('Delete after e-mailing'),
+    '#default_value' => isset($node->webform['delete_after_emailing']) ? $node->webform['delete_after_emailing'] : FALSE,
+    '#description' => t('When a form is submitted, emails may be sent out. After emails are sent out, then the sumbitted form can be deleted.'),
+  );
   $form['advanced']['allow_draft'] = array(
     '#type' => 'checkbox',
     '#title' => t('Show "Save draft" button'),
@@ -307,6 +313,9 @@ function webform_configure_form_submit($form, &$form_state) {
 
   // Set the Show complete form in teaser setting.
   $node->webform['teaser'] = $form_state['values']['teaser'];
+
+  // Set the delete after emailing option.
+  $node->webform['delete_after_emailing'] = $form_state['values']['delete_after_emailing'];
 
   // Set the draft option.
   $node->webform['allow_draft'] = $form_state['values']['allow_draft'];

@@ -58,6 +58,13 @@ function webform_schema() {
         'not null' => TRUE,
         'default' => 0,
       ),
+      'delete_after_emailing' => array(
+         'description' => 'Boolean value for whether submissions to this form are deleted after sending out emails.',
+         'type' => 'int',
+         'size' => 'tiny',
+         'not null' => FALSE,
+         'default' => 0,
+      ),
       'allow_draft' => array(
          'description' => 'Boolean value for whether submissions to this form be saved as a draft.',
          'type' => 'int',
