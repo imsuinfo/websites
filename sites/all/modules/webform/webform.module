@@ -3006,11 +3006,19 @@ function theme_webform_element($variables) {
   $nested_level = $element['#parents'][0] == 'submitted' ? 1 : 0;
   $parents = str_replace('_', '-', implode('--', array_slice($element['#parents'], $nested_level)));
 
-  $wrapper_classes = array(
-   'form-item',
-   'webform-component',
-   'webform-component-' . $type,
-  );
+  if (isset($element['#wrapper_attributes']['class'])) {
+    $wrapper_classes = $element['#wrapper_attributes']['class'];
+    $wrapper_classes[] = 'form-item';
+    $wrapper_classes[] = 'webform-component';
+    $wrapper_classes[] = 'webform-component-' . $type;
+  }
+  else {
+    $wrapper_classes = array(
+     'form-item',
+     'webform-component',
+     'webform-component-' . $type,
+    );
+  }
 
   if ($element['#title_display'] == 'before') {
     $wrapper_classes[] = 'webform-container-outline';

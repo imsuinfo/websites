@@ -30,6 +30,7 @@ function _webform_defaults_select() {
       'private' => FALSE,
       'empty_value' => FALSE,
       'empty_value_text' => '',
+      'inline_options' => FALSE,
     ),
   );
 }
@@ -198,6 +199,15 @@ function _webform_edit_select($component) {
     '#dependency' => array('edit-extra-empty-value' => array(TRUE)),
   );
 
+  $form['display']['inline_options'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('Display individual options inline'),
+    '#default_value' => $component['extra']['inline_options'],
+    '#description' => t('Check this to have options (checkboxes and radio buttons) to be displayed side-by-side.'),
+    '#parents' => array('extra', 'inline_options'),
+    '#weight' => 5,
+  );
+
   return $form;
 }
 
@@ -308,6 +318,13 @@ function _webform_edit_validate_set_aslist($options, &$form_state) {
  */
 function _webform_render_select($component, $value = NULL, $filter = TRUE) {
   $node = isset($component['nid']) ? node_load($component['nid']) : NULL;
+  $class = array();
+
+  if (empty($component['extra']['inline_options'])) {
+    $class[] = 'webform-component-option-block';
+  } else {
+    $class[] = 'webform-component-option-inline';
+  }
 
   $element = array(
     '#title' => $filter ? _webform_filter_xss($component['name']) : $component['name'],
@@ -318,6 +335,7 @@ function _webform_render_select($component, $value = NULL, $filter = TRUE) {
     '#theme_wrappers' => array('webform_element'),
     '#pre_render' => array(), // Needed to disable double-wrapping of radios and checkboxes.
     '#translatable' => array('title', 'description', 'options'),
+    '#wrapper_attributes' => array('class' => $class),
   );
 
   // Convert the user-entered options list into an array.
