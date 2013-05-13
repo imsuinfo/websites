@@ -349,6 +349,10 @@ function image_imagemagick_get_info(stdClass $image) {
   $details = FALSE;
   $data = getimagesize($image->source);
 
+  if (empty($data)) {
+    $data = getimagesize(drupal_realpath($image->source));
+  }
+
   if (isset($data) && is_array($data)) {
     $extensions = array('1' => 'gif', '2' => 'jpg', '3' => 'png');
     $extension = isset($extensions[$data[2]]) ?  $extensions[$data[2]] : '';
