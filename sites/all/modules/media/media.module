@@ -290,6 +290,12 @@ function media_theme() {
       'variables' => array('file' => NULL, 'attributes' => array()),
       'file' => 'includes/media.theme.inc',
     ),
+
+    // Display a file as a large icon.
+    'media_formatter_link' => array(
+      'variables' => array('file' => NULL, 'attributes' => array()),
+      'file' => 'includes/media.theme.inc',
+    ),
   );
 }
 

@@ -232,3 +232,33 @@ function theme_media_formatter_large_icon($variables) {
   }
   return theme('image', $variables);
 }
+
+
+/**
+ * Field formatter for displaying a file link only (similar to file_link).
+ * Does not display the file icon, unlike file_link.
+ */
+function theme_media_formatter_link($variables) {
+  $file = $variables['file'];
+
+  $url = rawurldecode(file_create_url($file->uri));
+
+  // Set options as per anchor format described at
+  // http://microformats.org/wiki/file-format-examples
+  $options = array(
+    'attributes' => array(
+      'type' => $file->filemime . '; length=' . $file->filesize,
+    ),
+  );
+
+  // Use the description as the link text if available.
+  if (empty($file->description)) {
+    $link_text = $file->filename;
+  }
+  else {
+    $link_text = $file->description;
+    $options['attributes']['title'] = check_plain($file->filename);
+  }
+
+  return '<span class="file">' . l($link_text, $url, $options) . '</span>';
+}

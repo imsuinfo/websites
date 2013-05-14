@@ -45,6 +45,12 @@ function media_field_formatter_info() {
       'field types' => array('file'),
     ),
   );
+
+  $formatters['media_link'] = array(
+    'label' => t('Link to File'),
+    'field types' => array('file'),
+  );
+
   return $formatters;
 }
 
@@ -61,6 +67,14 @@ function media_field_formatter_view($entity_type, $entity, $field, $instance, $l
     foreach ($items as $delta => $item) {
       $element[$delta] = array(
         '#theme' => 'media_formatter_large_icon',
+        '#file' => (object) $item,
+      );
+    }
+  }
+  else if ($display['type'] == 'media_link') {
+    foreach ($items as $delta => $item) {
+      $element[$delta] = array(
+        '#theme' => 'media_formatter_link',
         '#file' => (object) $item,
       );
     }
