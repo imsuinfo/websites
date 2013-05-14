@@ -85,6 +85,11 @@ function media_token_to_markup($match, $wysiwyg = FALSE) {
       throw new Exception('No file Id');
     }
 
+    // Ensure the 'link_text' key is always defined.
+    if (!isset($tag_info['link_text'])) {
+      $tag_info['link_text'] = NULL;
+    }
+
     // Ensure a valid view mode is being requested.
     if (!isset($tag_info['view_mode'])) {
       $tag_info['view_mode'] = media_variable_get('wysiwyg_default_view_mode');
@@ -160,6 +165,14 @@ function media_token_to_markup($match, $wysiwyg = FALSE) {
     return '';
   }
 
+  // If the tag has link text stored with it, override the filename with it for
+  // the rest of this function, so that if the file is themed as a link, the
+  // desired text will be used (see, for example, theme_file_link()).
+  // @todo: Try to find a less hacky way to do this.
+  if (isset($tag_info['link_text'])) {
+    $file->filename = $tag_info['link_text'];
+  }
+
   if ($wysiwyg) {
     $settings['wysiwyg'] = $wysiwyg;
     // If sending markup to a WYSIWYG, we need to pass the file infomation so
@@ -172,6 +185,7 @@ function media_token_to_markup($match, $wysiwyg = FALSE) {
       'type' => 'media',
       'fid' => $file->fid,
       'view_mode' => $tag_info['view_mode'],
+      'link_text' => $tag_info['link_text'],
     ));
     $element['#attributes']['data-file_info'] = urlencode($data);
     $element['#attributes']['class'][] = 'media-element';
