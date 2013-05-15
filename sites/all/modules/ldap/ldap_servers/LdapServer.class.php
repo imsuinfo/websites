@@ -30,6 +30,7 @@ class LdapServer {
   public $address;
   public $port = 389;
   public $tls = FALSE;
+  public $followrefs = FALSE;
   public $bind_method = 0;
   public $basedn = array();
   public $binddn = FALSE; // Default to an anonymous bind.
@@ -94,6 +95,7 @@ class LdapServer {
     'address'  => 'address',
     'port'  => 'port',
     'tls'  => 'tls',
+    'followrefs'  => 'followrefs',
     'bind_method' => 'bind_method',
     'basedn'  => 'basedn',
     'binddn'  => 'binddn',
@@ -203,6 +205,9 @@ class LdapServer {
 
     }
 
+    if ($this->followrefs && !function_exists('ldap_set_rebind_proc')) {
+      $this->followrefs = FALSE;
+    }
 
     if ($bindpw) {
       $this->bindpw = ldap_servers_decrypt($bindpw);
@@ -249,7 +254,7 @@ class LdapServer {
     }
 
     ldap_set_option($con, LDAP_OPT_PROTOCOL_VERSION, 3);
-    ldap_set_option($con, LDAP_OPT_REFERRALS, 0);
+    ldap_set_option($con, LDAP_OPT_REFERRALS, (int)$this->followrefs);
 
     // Use TLS if we are configured and able to.
     if ($this->tls) {
@@ -312,6 +317,11 @@ class LdapServer {
     else {
       $userdn = ($userdn != NULL) ? $userdn : $this->binddn;
       $pass = ($pass != NULL) ? $pass : $this->bindpw;
+
+      if ($this->followrefs) {
+        $rebHandler = new LdapServersRebindHandler($userdn, $pass);
+        ldap_set_rebind_proc($this->connection, array($rebHandler, 'rebind_callback'));
+      }
 
       if (drupal_strlen($pass) == 0 || drupal_strlen($userdn) == 0) {
         watchdog('ldap', "LDAP bind failure for user userdn=%userdn, pass=%pass.", array('%userdn' => $userdn, '%pass' => $pass));
@@ -1022,7 +1032,7 @@ class LdapServer {
 
 			$thumb = isset($ldap_entry[$this->picture_attr][0]) ? $ldap_entry[$this->picture_attr][0] : FALSE;
 			if(!$thumb){
-				return false;
+				return FALSE;
 			}
 
 			//Create md5 check.
@@ -1034,7 +1044,7 @@ class LdapServer {
 			 */
 			if ($drupal_username && $account = user_load_by_name($drupal_username)) {
         if ($account->uid == 0 || $account->uid == 1){
-          return false;
+          return FALSE;
         }
         if (isset($account->picture)){
           // Check if image has changed
@@ -1055,7 +1065,7 @@ class LdapServer {
         }
         elseif (isset($account->data['ldap_user']['init']['thumb5md'])) {
           watchdog('ldap_server', "Some error happened during thumbnailPhoto sync");
-          return false;
+          return FALSE;
         }
       }
 			//Create tmp file to get image format.
@@ -1474,7 +1484,7 @@ class LdapServer {
           };
           $ors = array();
           foreach ($member_ids as $i => $member_id) {
-            $ors[] =  $this->groupMembershipsAttr . '=' . $member_id; // @todo this would be replaced by query template
+            $ors[] =  $this->groupMembershipsAttr . '=' . ldap_pear_escape_filter_value($member_id); // @todo this would be replaced by query template
           }
 
           if (count($ors)) {
@@ -1604,7 +1614,7 @@ class LdapServer {
         else {
           $member_value = ldap_servers_get_first_rdn_value_from_dn($member_group_dn, $this->groupMembershipsAttrMatchingUserAttr);
         }
-        $ors[] =  $this->groupMembershipsAttr . '=' . $member_value;
+        $ors[] =  $this->groupMembershipsAttr . '=' . ldap_pear_escape_filter_value($member_value);
       }
     }
 
@@ -1619,7 +1629,7 @@ class LdapServer {
           // debug("query for parent groups, base_dn=$base_dn, $query_for_parent_groups");
           $group_entries = $this->search($base_dn, $query_for_parent_groups);  // no attributes, just dns needed
           if ($group_entries !== FALSE  && $level < LDAP_SERVER_LDAP_QUERY_RECURSION_LIMIT) {
-            $this->groupMembershipsFromEntryResursive($group_entries, $all_group_dns, $tested_group_ids, $level + 1, LDAP_SERVER_LDAP_QUERY_RECURSION_LIMIT);
+            $this->groupMembershipsFromEntryRecursive($group_entries, $all_group_dns, $tested_group_ids, $level + 1, LDAP_SERVER_LDAP_QUERY_RECURSION_LIMIT);
           }
         }
       }
@@ -1670,14 +1680,14 @@ class LdapServer {
     else {
       $member_value = $user_ldap_entry['attr'][$this->groupMembershipsAttrMatchingUserAttr][0];
     }
-
+    $member_value = ldap_pear_escape_filter_value($member_value);
     $group_query = '(&(objectClass=' . $this->groupObjectClass . ')(' . $this->groupMembershipsAttr . "=$member_value))";
 
     foreach ($this->basedn as $base_dn) {  // need to search on all basedns one at a time
       $group_entries = $this->search($base_dn, $group_query, array()); // only need dn, so empty array forces return of no attributes
       if ($group_entries !== FALSE) {
         $max_levels = ($nested) ? LDAP_SERVER_LDAP_QUERY_RECURSION_LIMIT : 0;
-        $this->groupMembershipsFromEntryResursive($group_entries, $all_group_dns, $tested_group_ids, $level, $max_levels);
+        $this->groupMembershipsFromEntryRecursive($group_entries, $all_group_dns, $tested_group_ids, $level, $max_levels);
       }
     }
 
@@ -1703,7 +1713,7 @@ class LdapServer {
    * @return FALSE for error or misconfiguration, otherwise TRUE.  results are passed by reference.
    */
 
-  public function groupMembershipsFromEntryResursive($current_group_entries, &$all_group_dns, &$tested_group_ids, $level, $max_levels) {
+  public function groupMembershipsFromEntryRecursive($current_group_entries, &$all_group_dns, &$tested_group_ids, $level, $max_levels) {
 
     if (!$this->groupGroupEntryMembershipsConfigured || !is_array($current_group_entries) || count($current_group_entries) == 0) {
       return FALSE;
@@ -1725,11 +1735,11 @@ class LdapServer {
         $tested_group_ids[] = $member_id;
         $all_group_dns[] = $group_entry['dn'];
         // add $group_id (dn, cn, uid) to query
-        $ors[] =  $this->groupMembershipsAttr . '=' . $member_id;
+        $ors[] =  $this->groupMembershipsAttr . '=' .  ldap_pear_escape_filter_value($member_id);
       }
     }
 
-    if (count($ors)) {
+    if ($level < $max_levels && count($ors)) {
       $count = count($ors);
       for ($i=0; $i < $count; $i=$i+LDAP_SERVER_LDAP_QUERY_CHUNK) { // only 50 or so per query
         $current_ors = array_slice($ors, $i, LDAP_SERVER_LDAP_QUERY_CHUNK);
@@ -1738,8 +1748,8 @@ class LdapServer {
 
         foreach ($this->basedn as $base_dn) {  // need to search on all basedns one at a time
           $group_entries = $this->search($base_dn, $query_for_parent_groups);  // no attributes, just dns needed
-          if ($group_entries !== FALSE  && $level < $max_levels) {
-            $this->groupMembershipsFromEntryResursive($group_entries, $all_group_dns, $tested_group_ids, $level + 1, $max_levels);
+          if ($group_entries !== FALSE) {
+            $this->groupMembershipsFromEntryRecursive($group_entries, $all_group_dns, $tested_group_ids, $level + 1, $max_levels);
           }
         }
       }
@@ -1831,4 +1841,32 @@ class LdapServer {
     }
   }
 
+}
+
+/**
+ * Class for enabling rebind functionality for following referrrals.
+ */
+class LdapServersRebindHandler {
+
+  private $bind_dn = 'Anonymous';
+  private $bind_passwd = '';
+
+  public function __construct($bind_user_dn, $bind_user_passwd){
+    $this->bind_dn = $bind_user_dn;
+    $this->bind_passwd = $bind_user_passwd;
+  }
+
+  public function rebind_callback($ldap, $referral){
+    // ldap options
+    ldap_set_option($ldap, LDAP_OPT_PROTOCOL_VERSION, 3);
+    ldap_set_option($ldap, LDAP_OPT_REFERRALS, 1);
+    ldap_set_rebind_proc($ldap, array($this, 'rebind_callback'));
+
+  // Bind to new host, assumes initial bind dn has access to the referred servers.
+    if (!ldap_bind($ldap, $this->bind_dn, $this->bind_passwd)) {
+      echo "Could not bind to referral server: $referral";
+      return 1;
+    }
+    return 0;
+  }
 }

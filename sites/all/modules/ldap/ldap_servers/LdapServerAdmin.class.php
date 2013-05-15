@@ -58,6 +58,7 @@ class LdapServerAdmin extends LdapServer {
     $this->address = trim($values['address']);
     $this->port = trim($values['port']);
     $this->tls = trim($values['tls']);
+    $this->followrefs = trim($values['followrefs']);
     $this->bind_method = trim($values['bind_method']);
     $this->binddn = trim($values['binddn']);
     if (trim($values['bindpw'])) {
@@ -120,6 +121,7 @@ class LdapServerAdmin extends LdapServer {
     }
 
     $values->tls = (int)$this->tls;
+    $values->followrefs = (int)$this->followrefs;
 
     if (module_exists('ctools')) {
       ctools_include('export');
@@ -278,7 +280,14 @@ class LdapServerAdmin extends LdapServer {
   }
 
   $form['server']['sid']['#disabled'] = ($op == 'edit');
+
+  if (!function_exists('ldap_set_rebind_proc')) {
+    $form['server']['followrefs']['#disabled'] = TRUE;
+    $form['server']['followrefs']['#description'] =  t('This functionality is disabled because the function ldap_set_rebind_proc can not be found on this server.  Perhaps your version of php does not have this function.  See php.net/manual/en/function.ldap-set-rebind-proc.php') . $form['server']['followrefs']['#description'];
+  }
+
   $form['server']['tls']['#required'] = FALSE;
+  $form['server']['followrefs']['#required'] = FALSE;
   $form['bind_method']['bind_method']['#default_value'] = ($this->bind_method) ? $this->bind_method : LDAP_SERVERS_BIND_METHOD_DEFAULT;
   $form['users']['basedn']['#default_value'] = $this->arrayToLines($this->basedn);
 
@@ -636,6 +645,21 @@ public function drupalFormSubmit($op, $values) {
         ),
       ),
 
+      'followrefs' => array(
+        'form' => array(
+           'fieldset' => 'server',
+           '#type' => 'checkbox',
+           '#title' => t('Follow LDAP Referrals'),
+           '#description' => t('Makes the LDAP client follow referrals (in the responses from the LDAP server) to other LDAP servers. This requires that the Bind Settings you give, is ALSO valid on these other servers.'),
+          ),
+        'schema' => array(
+           'type' => 'int',
+           'size' => 'tiny',
+           'not null' => FALSE,
+           'default' => 0,
+        ),
+      ),
+
       'bind_method' => array(
         'form' => array(
           'fieldset' => 'bind_method',
@@ -688,7 +712,7 @@ public function drupalFormSubmit($op, $values) {
           '#size' => 80,
           '#states' => array(
              'enabled' => array(   // action to take.
-               ':input[name=bind_method]' => array('value' => LDAP_SERVERS_BIND_METHOD_SERVICE_ACCT),
+               ':input[name=bind_method]' => array('value' => (string)LDAP_SERVERS_BIND_METHOD_SERVICE_ACCT),
               ),
             ),
         ),
@@ -706,7 +730,7 @@ public function drupalFormSubmit($op, $values) {
           '#size' => 20,
           '#states' => array(
              'enabled' => array(   // action to take.
-               ':input[name=bind_method]' => array('value' => LDAP_SERVERS_BIND_METHOD_SERVICE_ACCT),
+               ':input[name=bind_method]' => array('value' => (string)LDAP_SERVERS_BIND_METHOD_SERVICE_ACCT),
               ),
             ),
         ),
