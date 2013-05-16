@@ -14,6 +14,7 @@
 function theme_file_entity_file_link($variables) {
   $file = $variables['file'];
   $icon_directory = $variables['icon_directory'];
+  $icon_postfix = $variables['icon_postfix'];
 
   $url = 'file/' . $file->fid;
   $icon = theme('file_icon', array('file' => $file, 'icon_directory' => $icon_directory));
@@ -35,5 +36,10 @@ function theme_file_entity_file_link($variables) {
     $options['attributes']['title'] = check_plain($file->filename);
   }
 
-  return '<span class="file">' . $icon . ' ' . l($link_text, $url, $options) . '</span>';
+  if ($variables['icon_postfix']) {
+    return '<span class="file">' . l($link_text, $url, $options) . ' ' . $icon . '</span>';
+  }
+  else {
+    return '<span class="file">' . $icon . ' ' . l($link_text, $url, $options) . '</span>';
+  }
 }

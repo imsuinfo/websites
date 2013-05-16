@@ -425,7 +425,7 @@ function file_entity_theme() {
       'file' => 'file_entity.admin.inc',
     ),
     'file_entity_file_link' => array(
-      'variables' => array('file' => NULL, 'icon_directory' => NULL),
+      'variables' => array('file' => NULL, 'icon_directory' => NULL, 'icon_postfix' => FALSE),
       'file' => 'file_entity.theme.inc',
     ),
   );
