@@ -35,7 +35,7 @@ class MediaBrowserView extends MediaBrowserPlugin {
    * Implements MediaBrowserPluginInterface::access().
    */
   public function access($account = NULL) {
-    return !empty($this->view) && $this->view->access($this->view->current_display, $account);
+    return !empty($this->view) && user_access('use media browser library', $account) && $this->view->access($this->view->current_display, $account);
   }
 
   /**

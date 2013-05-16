@@ -15,13 +15,17 @@ class MediaBrowserUpload extends MediaBrowserPlugin {
    * Implements MediaBrowserPluginInterface::access().
    */
   public function access($account = NULL) {
-    return file_entity_access('create', $account);
+    return media_browser_library_access('browse', NULL, $account);
   }
 
   /**
    * Implements MediaBrowserPlugin::view().
    */
   public function view() {
+    if (!file_entity_access('create', NULL, $account)) {
+      return array();
+    }
+
     module_load_include('inc', 'file_entity', 'file_entity.pages');
 
     $build = array();
