@@ -87,6 +87,7 @@
 }
 
 .media-item img {
+  display: inline-block;
   height: auto;
   margin-bottom: 10px;
 }
