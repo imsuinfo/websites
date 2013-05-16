@@ -22,7 +22,7 @@ class MediaBrowserUpload extends MediaBrowserPlugin {
    * Implements MediaBrowserPlugin::view().
    */
   public function view() {
-    if (!file_entity_access('create', NULL, $account)) {
+    if (!file_entity_access('create', NULL)) {
       return array();
     }
 
