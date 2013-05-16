@@ -80,7 +80,14 @@ function file_styles_strstr($haystack, $needle, $before_needle = FALSE){
 function file_styles_preview_image($replace = FALSE) {
   $path = file_styles_variable_get('preview_image');
   if (!$path || $replace) {
-    $dir = file_default_scheme() . '://' . file_styles_variable_get('preview_image_directory');
+    if (function_exists('image_style_default_scheme')) {
+      $scheme = image_style_default_scheme();
+    }
+    else {
+      $scheme = file_default_scheme();
+    }
+
+    $dir = $scheme . '://' . file_styles_variable_get('preview_image_directory');
     if (file_prepare_directory($dir, FILE_CREATE_DIRECTORY)) {
       $source = file_styles_variable_get('image_style_preview_image');
       if ($path = file_unmanaged_copy($source, $dir . '/' . basename($source), FILE_EXISTS_REPLACE)) {
