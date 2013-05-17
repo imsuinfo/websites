@@ -48,7 +48,7 @@ class views_handler_field_file extends views_handler_field {
   function render_link($data, $values) {
     if (!empty($this->options['link_to_file']) && $data !== NULL && $data !== '') {
       $this->options['alter']['make_link'] = TRUE;
-      $this->options['alter']['path'] = file_create_url($this->get_value($values, 'uri'));
+      $this->options['alter']['path'] = rawurldecode(file_create_url($this->get_value($values, 'uri')));
     }
 
     return $data;
