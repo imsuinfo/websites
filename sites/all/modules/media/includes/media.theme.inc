@@ -96,7 +96,6 @@ function theme_media_formatter_large_icon($variables) {
   return theme('image', $variables);
 }
 
-
 /**
  * Field formatter for displaying a file link only (similar to file_link).
  * Does not display the file icon, unlike file_link.
@@ -123,5 +122,33 @@ function theme_media_formatter_link($variables) {
     $options['attributes']['title'] = check_plain($file->filename);
   }
 
-  return '<span class="file">' . l($link_text, $url, $options) . '</span>';
+  return '<span class="file file_link file_link-icon_none">' . l($link_text, $url, $options) . '</span>';
+}
+
+/**
+ * Field formatter for displaying a file link only (similar to file_link).
+ * Display icon, on left side.
+ */
+function theme_media_formatter_link_icon_before($variables) {
+  $variables['icon_postfix'] = FALSE;
+
+  if (empty($variables['icon_directory'])) {
+    $variables['icon_directory'] = variable_get('file_icon_directory', drupal_get_path('module', 'file') . '/icons');
+  }
+
+  return theme_file_link($variables);
+}
+
+/**
+ * Field formatter for displaying a file link only (similar to file_link).
+ * Display icon, on right side.
+ */
+function theme_media_formatter_link_icon_after($variables) {
+  $variables['icon_postfix'] = TRUE;
+
+  if (empty($variables['icon_directory'])) {
+    $variables['icon_directory'] = variable_get('file_icon_directory', drupal_get_path('module', 'file') . '/icons');
+  }
+
+  return theme_file_link($variables);
 }

@@ -51,6 +51,16 @@ function media_field_formatter_info() {
     'field types' => array('file'),
   );
 
+  $formatters['media_link_icon_before'] = array(
+    'label' => t('Link to File, with Icon (Before)'),
+    'field types' => array('file'),
+  );
+
+  $formatters['media_link_icon_after'] = array(
+    'label' => t('Link to File, with Icon (After)'),
+    'field types' => array('file'),
+  );
+
   return $formatters;
 }
 
@@ -84,6 +94,24 @@ function media_field_formatter_view($entity_type, $entity, $field, $instance, $l
       $element[$delta] = array(
         '#theme' => 'media_formatter_link',
         '#file' => (object) $item,
+      );
+    }
+  }
+  else if ($display['type'] == 'media_link_icon_before') {
+    foreach ($items as $delta => $item) {
+      $element[$delta] = array(
+        '#theme' => 'media_formatter_link_icon_before',
+        '#file' => (object) $item,
+        '#smords' => TRUE,
+      );
+    }
+  }
+  else if ($display['type'] == 'media_link_icon_after') {
+    foreach ($items as $delta => $item) {
+      $element[$delta] = array(
+        '#theme' => 'media_formatter_link_icon_after',
+        '#file' => (object) $item,
+        '#words' => TRUE,
       );
     }
   }

@@ -293,8 +293,20 @@ function media_theme() {
       'file' => 'includes/media.theme.inc',
     ),
 
-    // Display a file as a large icon.
+    // Display a link to a file, without an icon
     'media_formatter_link' => array(
+      'variables' => array('file' => NULL, 'attributes' => array()),
+      'file' => 'includes/media.theme.inc',
+    ),
+
+    // Display a link to a file, with an icon on the right side
+    'media_formatter_link_icon_before' => array(
+      'variables' => array('file' => NULL, 'attributes' => array()),
+      'file' => 'includes/media.theme.inc',
+    ),
+
+    // Display a link to a file, with an icon on the right side
+    'media_formatter_link_icon_after' => array(
       'variables' => array('file' => NULL, 'attributes' => array()),
       'file' => 'includes/media.theme.inc',
     ),
