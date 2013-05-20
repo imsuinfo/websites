@@ -60,13 +60,6 @@ class mcneese_file_db_unrestricted_stream_wrapper extends mcneese_file_db_stream
   }
 
   /**
-   * Implements getUri().
-   */
-  public function getUri() {
-    return $this->uri;
-  }
-
-  /**
    * Implements stream_close().
    */
   public function stream_close() {

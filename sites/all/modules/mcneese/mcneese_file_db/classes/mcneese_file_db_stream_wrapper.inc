@@ -38,6 +38,17 @@ abstract class mcneese_file_db_stream_wrapper implements DrupalStreamWrapperInte
 
 
   /**
+   * Implements getUri().
+   */
+  public function getUri() {
+    if (empty($this->uri)) {
+      return $this->get_scheme() . '://';
+    }
+
+    return $this->uri;
+  }
+
+  /**
    * Implements getExternalUrl().
    *
    * Return the HTML URI of a dynamic file.
