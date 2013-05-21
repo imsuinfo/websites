@@ -1258,27 +1258,28 @@ function workbench_menu_admin_item_settings_form_settings($item, $menu) {
     '#dependency' => array('edit-settings-item-type' => array('item_label')),
   );
 
-  $file_settings_description = t("Select a file to use as a menu item");
+  $form['settings']['file'] = array(
+    '#type' => 'textfield',
+    '#title' => t("File"),
+    '#default_value' => $defaults['properties']['file'],
+    '#description' => t("Select specify a file id or file to use as a file as menu item"),
+    '#dependency' => array('edit-settings-item-type' => array('item_file')),
+    '#size' => 64,
+    '#maxlength' => 1024,
+  );
 
   if (module_exists('imce')) {
     $imce_javascript = 'window.open(\'/imce?app=workbench_menu_item_file|url@edit-settings-file\', \'\', \'width=760,height=560,resizable=1\');';
-    $file_settings_description = t(
-      "!select a file to use as the menu item.",
+    $form['settings']['file']['#description'] =  t(
+      "!select a file id or file to use as the menu item.",
       array(
         '!select' => '<a class="filefield-sources-imce-browse" href="#" onclick="' . $imce_javascript . '" title="' . t("Select a file using the IMCE wysiwyg") . '">' . t("Select") . '</a>',
       )
     );
   }
-
-  $form['settings']['file'] = array(
-    '#type' => 'textfield',
-    '#title' => t("File"),
-    '#default_value' => $defaults['properties']['file'],
-    '#description' => $file_settings_description,
-    '#dependency' => array('edit-settings-item-type' => array('item_file')),
-    '#size' => 64,
-    '#maxlength' => 1024,
-  );
+  else {
+    $form['settings']['file']['#autocomplete_path'] = 'workbench_menu/autocomplete_fid';
+  }
 
   $form['settings']['menu'] = array(
     '#type' => 'textfield',
@@ -1542,6 +1543,8 @@ function workbench_menu_admin_item_settings_edit_form($form, &$form_state, $acce
  *   The form state array as defined by drupals form api.
  */
 function workbench_menu_admin_item_settings_edit_form_validate($form, &$form_state) {
+  global $base_path;
+
   if (workbench_menu_menu_exists($form['menu_id']['#value']) !== TRUE) {
     form_set_error('menu_id', t("An invalid menu id has been specified."));
   }
@@ -1667,16 +1670,106 @@ function workbench_menu_admin_item_settings_edit_form_validate($form, &$form_sta
       break;
 
     case 'item_file':
-      if (empty($form_state['values']['settings']['file'])) {
+      $field = &$form_state['values']['settings']['file'];
+
+      if (empty($field)) {
         form_set_error('settings][file', t("The file is required for an item type of %item.", array('%item' => $item_type_name)));
       }
       else {
-        // be user-friendly and allow normal whitespaces on insert.
-        $form_state['values']['settings']['file'] = preg_replace('/ /', '%20', $form_state['values']['settings']['file']);
+        $wrappers = file_get_stream_wrappers(STREAM_WRAPPERS_READ | STREAM_WRAPPERS_VISIBLE);
+        if (empty($wrappers)) {
+          form_set_error('settings][file', t("There are no valid file wrappers enabled."));
+        }
+        else {
+          $invalid_msg = t("'%file' is neither a valid file URL nor a valid file ID.", array('%file' => $field));
 
-        if (!valid_url($form_state['values']['settings']['file'], TRUE)) {
-          if (!valid_url($form_state['values']['settings']['file'])) {
-            form_set_error('settings][file', t("'%file' is not a valid URL.", array('%file' => $form_state['values']['settings']['file'])));
+          // Alwaus re-validate and update filename for [fid: XX] entries.
+          $matches = array();
+          $matched = preg_match('@\[fid: (\d+)\]\s*$@i', $field, $matches);
+
+          if ($matched > 0) {
+            $match = array_pop($matches);
+
+            if (cf_is_integer($match)) {
+              $field = $match;
+            }
+          }
+
+          try {
+            $query = db_select('file_managed', 'fm');
+            $query->fields('fm', array('fid', 'filename'));
+            $query->condition('fm.status', 1);
+
+            if (cf_is_integer($field)) {
+              $or = db_or();
+              foreach ($wrappers as $w => &$wrapper) {
+                $or->condition('fm.uri', db_like($w) . '://%', 'LIKE');
+              }
+
+              $query->condition($or);
+              $query->condition('fm.fid', $field);
+
+              $results = $query->execute()->fetchAll();
+
+              if (empty($results)) {
+                form_set_error('settings][file', $invalid_msg);
+              }
+              else {
+                $result = array_pop($results);
+                $field = $result->filename . ' [fid: ' . $result->fid . ']';
+              }
+            }
+            else {
+              // be user-friendly and allow normal whitespaces on insert.
+              $field = preg_replace('/%20/', ' ', $field);
+
+              $matched = FALSE;
+              $matched_uri = '';
+              foreach ($wrappers as $w => &$wrapper) {
+                if (preg_match('@^' . $w . '://@i', $field) > 0) {
+                  $matched = TRUE;
+                  break;
+                }
+
+                $instance = file_stream_wrapper_get_instance_by_scheme($w);
+                $directory = $instance->getDirectoryPath();
+
+                if (empty($directory)) continue;
+
+                if (preg_match('@' . $base_path . $directory . '@i', $field) > 0) {
+                  $matched = TRUE;
+                  $field = $w . '://' . preg_replace('@' . $base_path . $directory . '/@i', '', $field);
+                  break;
+                }
+              }
+
+              if ($matched) {
+                // @todo: auto-convert files that are in the database via an update script
+                $query->condition('fm.uri', $field);
+
+                $results = $query->execute()->fetchAll();
+
+                if (empty($results)) {
+                  form_set_error('settings][file', $invalid_msg);
+                }
+
+                $result = array_pop($results);
+                $field = $result->filename . ' [fid: ' . $result->fid . ']';
+              }
+              else {
+                if (!valid_url($field, TRUE)) {
+                  if (!valid_url($field)) {
+                    form_set_error('settings][file', $invalid_msg);
+                  }
+                }
+              }
+            }
+          } catch (Exception $e) {
+            if (class_exists('cf_error')) {
+              cf_error::on_query_execution($e);
+            }
+
+            form_set_error('settings][file', $invalid_msg);
           }
         }
       }

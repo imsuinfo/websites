@@ -141,6 +141,13 @@ function workbench_menu_menu() {
     'type' => MENU_CALLBACK,
   );
 
+  $items['workbench_menu/autocomplete_fid'] = array(
+    'title' => '',
+    'page callback' => 'workbench_menu_autocomplete_fid',
+    'access callback' => 'workbench_menu_edit_access',
+    'type' => MENU_CALLBACK,
+  );
+
   $items['workbench_menu/autocomplete_menu_id'] = array(
     'title' => '',
     'page callback' => 'workbench_menu_autocomplete_menu_id',
@@ -825,38 +832,70 @@ function workbench_menu_build_menu_item($menu, $item, &$variables) {
     $icon = check_plain($item['item']->properties['file_type']);
     $filename = '';
     $link_path = '';
+    $process = TRUE;
 
     $matches = array();
-    $matched = preg_match('@^/node/(\d+)(/.*|$|\?.*|#.*)@', $item['item']->properties['file'], $matches);
+    $matched = preg_match('@\[fid: (\d+)\]\s*$@i', $item['item']->properties['file'], $matches);
 
     if ($matched > 0) {
-      $path_alias = drupal_get_path_alias('node/' . $matches[1] . $matches[2]);
-      $parsed_url = parse_url($path_alias);
+      $match = array_pop($matches);
 
-      if (!empty($parsed_url['path'])) {
-        $link_path = '/' . $parsed_url['path'];
-        $active_path = $parsed_url['path'];
+      if (cf_is_integer($match)) {
+        $query = db_select('file_managed', 'fm');
+        $query->fields('fm', array('uri', 'filename'));
+        $query->condition('fm.fid', $match);
+        $query->condition('fm.status', 1);
 
-        $path_node = node_load($matches[1]);
-        if (is_object($path_node)) {
-          $filename = $path_node->title;
-          unset($path_node);
+        $results = $query->execute()->fetchAll();
+
+        if (!empty($results)) {
+          $result = array_pop($results);
+          $filename = $result->filename;
+          $parts = explode('://', $result->uri, 2);
+          $instance = file_stream_wrapper_get_instance_by_scheme($parts[0]);
+          $instance->setUri($result->uri);
+          $link_path = $instance->getExternalUrl();
         }
-        else {
-          $filename = $settings[$item['item']->id]['label'];
-        }
-      }
 
-      if (!empty($parsed_url['query'])) {
-        $link_path .= '?' . $parsed_url['query'];
-      }
-
-      if (!empty($parsed_url['fragment'])) {
-        $link_path .= '#' . $parsed_url['fragment'];
+        $process = FALSE;
       }
     }
 
-    if (empty($link_path)) {
+    if ($process) {
+      // it is possible for a local node to generate/return itself as a file.
+      $matches = array();
+      $matched = preg_match('@^/node/(\d+)(/.*|$|\?.*|#.*)@', $item['item']->properties['file'], $matches);
+
+      if ($matched > 0) {
+        $path_alias = drupal_get_path_alias('node/' . $matches[1] . $matches[2]);
+        $parsed_url = parse_url($path_alias);
+
+        if (!empty($parsed_url['path'])) {
+          $link_path = '/' . $parsed_url['path'];
+          $active_path = $parsed_url['path'];
+          $process = FALSE;
+
+          $path_node = node_load($matches[1]);
+          if (is_object($path_node)) {
+            $filename = $path_node->title;
+            unset($path_node);
+          }
+          else {
+            $filename = $settings[$item['item']->id]['label'];
+          }
+        }
+
+        if (!empty($parsed_url['query'])) {
+          $link_path .= '?' . $parsed_url['query'];
+        }
+
+        if (!empty($parsed_url['fragment'])) {
+          $link_path .= '#' . $parsed_url['fragment'];
+        }
+      }
+    }
+
+    if ($process) {
       $link_path = $item['item']->properties['file'];
       $filename = check_plain(rawurldecode(basename($link_path)));
 
@@ -875,10 +914,17 @@ function workbench_menu_build_menu_item($menu, $item, &$variables) {
     }
     else {
       $settings[$item['item']->id]['prefix'] .= '<div class="' . 'menu_item-icon ' . 'menu_item-icon_' . $icon . '"></div>';
-      $settings[$item['item']->id]['attributes']['title'] = array(t("View or Download: !filename.", array('!filename' => $filename)));
+      $settings[$item['item']->id]['attributes']['title'] = array(t("Download: !filename.", array('!filename' => $filename)));
+
+      if (empty($link_path)) {
+        $settings[$item['item']->id]['attributes']['title'] = array(t("File Not Found: !filename.", array('!filename' => $filename)));
+      }
     }
 
-    $settings[$item['item']->id]['attributes']['href'] = array($link_path);
+    if (!empty($link_path)) {
+      $settings[$item['item']->id]['attributes']['href'] = array($link_path);
+    }
+
     $settings[$item['item']->id]['postfix'] = '';
 
     unset($icon);
@@ -1195,6 +1241,13 @@ function template_preprocess_workbench_menu_item(&$vars) {
   $variables['settings'][$variables['id']]['attributes']['class'][] = 'row-' . $variables['count_item'];
   $variables['settings'][$variables['id']]['attributes']['class'][] = 'local_row-' . $variables['count_item_local'];
   $variables['settings'][$variables['id']]['attributes']['class'][] = 'depth-' . $variables['depth'];
+
+  // if href is empty for items that require href, then append a broken link css class.
+  if ($variables['settings'][$variables['id']]['type'] != 'item_label') {
+    if (!isset($variables['settings'][$variables['id']]['attributes']['href'])) {
+      $variables['settings'][$variables['id']]['attributes']['class'][] = 'menu_item-broken_link';
+    }
+  }
 
   $variables['count_item']++;
   $variables['even_item_local'] = !$variables['even_item_local'];
@@ -1989,6 +2042,90 @@ function workbench_menu_autocomplete_nid($string) {
     foreach ($results as $node) {
       $matches[$node->nid] = check_plain($node->title);
     }
+  }
+
+  drupal_json_output($matches);
+}
+
+/**
+ * Generates the JS array for workbench file id autocomplete fields.
+ *
+ * This pulls the first 10 results that match the specified string.
+ *
+ * @param string $string
+ *   A string to match node titles against.
+ * @return array
+ *   An array of string matches.
+ */
+function workbench_menu_autocomplete_fid($string) {
+  if (!is_string($string)) {
+    if (class_exists('cf_error')) {
+      cf_error::not_string('string');
+    }
+
+    return array();
+  }
+
+  // do not allow anonymous to utilize this jquery search
+  $user = cf_current_user();
+  if ($user->uid = 0) {
+    return array();
+  }
+
+  // only allowed wrappers are processed
+  $wrappers = file_get_stream_wrappers(STREAM_WRAPPERS_READ | STREAM_WRAPPERS_VISIBLE);
+  if (empty($wrappers)) {
+    return array();
+  }
+
+  try {
+    $or = db_or();
+    foreach ($wrappers as $w => &$wrapper) {
+      $or->condition('fm.uri', db_like($w) . '://%', 'LIKE');
+    }
+
+    $lstring = drupal_strtolower($string);
+
+    $query = db_select('file_managed', 'fm');
+
+    $query->fields('fm', array('fid', 'filename'));
+    $query->condition('fm.filename', db_like($lstring) . '%', 'LIKE');
+    $query->condition('fm.status', 1);
+    $query->condition($or);
+    $query->range(0, 9);
+
+    $matches = array();
+    $results = $query->execute();
+
+    foreach ($results as $result) {
+      $name = $result->filename . ' [fid: ' . $result->fid . ']';
+      $matches[$name] = check_plain($name);
+    }
+
+    if (count($matches) < 9) {
+      $query->condition('fm.filename', '%' . db_like($lstring) . '%', 'LIKE');
+      $query->condition($or);
+      $query->condition('fm.status', 1);
+      $query->range(0, 9 - count($matches));
+
+      $results = $query->execute();
+
+      foreach ($results as $result) {
+        $name = $result->filename . ' [fid: ' . $result->fid . ']';
+        $matches[$name] = check_plain($name);
+      }
+    }
+  }
+  catch (Exception $e) {
+    if (class_exists('cf_error')) {
+      cf_error::on_query_execution($e);
+    }
+
+    return array();
+  }
+
+  if (module_exists('devel')) {
+    $GLOBALS['devel_shutdown'] = FALSE;
   }
 
   drupal_json_output($matches);
