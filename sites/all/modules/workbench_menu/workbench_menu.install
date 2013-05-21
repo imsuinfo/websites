@@ -312,3 +312,16 @@ function workbench_menu_enable() {
     throw $e;
   }
 }
+
+/**
+ * Re-attach dangling menu items due to a design flaw when deleting menu items.
+ *
+ * The problem was that when a menu item was deleted, its children were not
+ * updated. This created dangling menu items.
+ *
+ * The solution provided here is to attach the dangling hooks to the parent
+ * menu item.
+ */
+function workbench_menu_update_7100() {
+  db_query('UPDATE {workbench_menu_items} SET parent_id = 0 WHERE NOT parent_id IN (SELECT id FROM {workbench_menu_items}) AND NOT parent_id = 0');
+}

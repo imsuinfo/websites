@@ -2096,22 +2096,56 @@ function workbench_menu_admin_item_settings_delete_form_validate($form, &$form_s
  *   The form state array as defined by drupals form api.
  */
 function workbench_menu_admin_item_settings_delete_form_submit($form, &$form_state) {
-  $transaction = db_transaction();
-
   $user = cf_current_user();
+  $child_items = array();
+  $item_id = & $form['item_id']['#value'];
 
-  watchdog('Workbench Menu', "The user %user has deleted the item %item (%item_id) from the menu %menu (%menu_id)", array('%user' => $user->name, '%item' => $form_state['values']['item_human_name'], '%item_id' => $form['item_id']['#value'], '%menu' => $form_state['values']['menu_human_name'], '%menu_id' => $form['menu_id']['#value']), WATCHDOG_INFO);
+  try {
+    $query = db_select('workbench_menu_items', 'wmi');
+    $query->fields('wmi', array('parent_id'));
+    $query->condition('wmi.id', $item_id);
+
+    $parent_id = (int) $query->execute()->fetchField();
+
+    $query = db_select('workbench_menu_items', 'wmi');
+    $query->fields('wmi', array('id', 'human_name'));
+    $query->condition('wmi.parent_id', $item_id);
+
+    $menu_item_children = array();
+    $results = (array) $query->execute()->fetchAll();
+    foreach ($results as &$result) {
+      $menu_item_children[$result->id] = $result->human_name;
+    }
+  }
+  catch (Exception $e) {
+    if (class_exists('cf_error')) {
+      cf_error::on_query_execution($e);
+    }
+
+    watchdog('Workbench Menu', t("An unexpected error happened while trying to process child menu items with a parent id of %item_id."), array('%item_id' => $item_id), WATCHDOG_ERROR);
+  }
+
+  watchdog('Workbench Menu', "The user %user has deleted the item %item (%item_id) from the menu %menu (%menu_id)", array('%user' => $user->name, '%item' => $form_state['values']['item_human_name'], '%item_id' => $item_id, '%menu' => $form_state['values']['menu_human_name'], '%menu_id' => $form['menu_id']['#value']), WATCHDOG_INFO);
+  watchdog('Workbench Menu', "Due to deletion of %item (%item_id), the following child items are being re-assigned to the item %parent_item_id: %child_items", array('%item' => $form_state['values']['item_human_name'], '%item_id' => $item_id, '%parent_item_id' => $parent_id, '%child_items' => print_r($menu_item_children, TRUE)), WATCHDOG_INFO);
+
+  $transaction = db_transaction();
 
   try {
     $query = db_delete('workbench_menu_items');
-    $query->condition('id', $form['item_id']['#value']);
+    $query->condition('id', $item_id);
     $query->execute();
 
     foreach (array('expand', 'item_type') as $name) {
       $query = db_delete('workbench_menu_' . $name . 's');
-      $query->condition('item_id', $form['item_id']['#value']);
+      $query->condition('item_id', $item_id);
       $query->execute();
     }
+
+    // re-attach all child menu items to the parent of the deleted menu item to prevent dangling items.
+    $query = db_update('workbench_menu_items');
+    $query->condition('parent_id', $item_id);
+    $query->fields(array('parent_id' => $parent_id));
+    $query->execute();
 
     // enforce transaction execution
     unset($transaction);
