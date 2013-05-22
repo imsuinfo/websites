@@ -894,22 +894,18 @@ function workbench_menu_build_menu_item($menu, $item, &$variables) {
       $matched = preg_match('@^/node/(\d+)(/.*|$|\?.*|#.*)@', $item['item']->properties['file'], $matches);
 
       if ($matched > 0) {
-        $path_alias = drupal_get_path_alias('node/' . $matches[1] . $matches[2]);
+        $path_alias = drupal_get_path_alias('node/' . $matches[1]);
+
+        if (isset($matches[2])) {
+          $path_alias .= $matches[2];
+        }
+
         $parsed_url = parse_url($path_alias);
 
         if (!empty($parsed_url['path'])) {
           $link_path = '/' . $parsed_url['path'];
           $active_path = $parsed_url['path'];
           $process = FALSE;
-
-          $path_node = node_load($matches[1]);
-          if (is_object($path_node)) {
-            $filename = $path_node->title;
-            unset($path_node);
-          }
-          else {
-            $filename = $settings[$item['item']->id]['label'];
-          }
         }
 
         if (!empty($parsed_url['query'])) {
@@ -918,6 +914,22 @@ function workbench_menu_build_menu_item($menu, $item, &$variables) {
 
         if (!empty($parsed_url['fragment'])) {
           $link_path .= '#' . $parsed_url['fragment'];
+        }
+
+        // check to see if the node still exists and use the node title.
+        $query = db_select('node', 'n');
+        $query->fields('n', array('nid', 'title'));
+        $query->condition('n.nid', $matches[1]);
+
+        $results = $query->execute()->fetchAll();
+
+        if (empty($results)) {
+          $link_path = '';
+          $filename = $path_alias;
+        }
+        else {
+          $result = array_pop($results);
+          $filename = $result->title;
         }
       }
     }

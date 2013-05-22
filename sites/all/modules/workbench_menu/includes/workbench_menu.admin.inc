@@ -1703,94 +1703,114 @@ function workbench_menu_admin_item_settings_edit_form_validate($form, &$form_sta
         }
         else {
           $invalid_msg = t("'%file' is neither a valid file URL nor a valid file ID.", array('%file' => $field));
+          $normal_file = TRUE;
 
-          // Alwaus re-validate and update filename for [fid: XX] entries.
+          // Always re-validate and update filename for [fid: XX] entries.
           $matches = array();
           $matched = preg_match('@\[fid: (\d+)\]\s*$@i', $field, $matches);
 
           if ($matched > 0) {
-            $match = array_pop($matches);
+            if (cf_is_integer($matches[1])) {
+              $field = $matches[1];
+            }
+          }
+          else {
+            $matched = preg_match('@^/node/(\d+)(/.*|$|\?.*|#.*)@', $field, $matches);
 
-            if (cf_is_integer($match)) {
-              $field = $match;
+            if ($matched > 0) {
+              $normal_file = FALSE;
+
+              if (cf_is_integer($matches[1])) {
+                $query = db_select('node', 'n');
+                $query->fields('n', array('nid', 'title'));
+                $query->condition('n.nid', $matches[1]);
+
+                $results = (array) $query->execute()->fetchAll();
+
+                if (empty($results)) {
+                  form_set_error('settings][file_id', t("There is no node with an id of %nid .", array('%nid' => $matches[1])));
+                }
+              }
             }
           }
 
-          try {
-            $query = db_select('file_managed', 'fm');
-            $query->fields('fm', array('fid', 'filename'));
-            $query->condition('fm.status', 1);
+          if ($normal_file) {
+            try {
+              $query = db_select('file_managed', 'fm');
+              $query->fields('fm', array('fid', 'filename'));
+              $query->condition('fm.status', 1);
 
-            if (cf_is_integer($field)) {
-              $or = db_or();
-              foreach ($wrappers as $w => &$wrapper) {
-                $or->condition('fm.uri', db_like($w) . '://%', 'LIKE');
-              }
-
-              $query->condition($or);
-              $query->condition('fm.fid', $field);
-
-              $results = $query->execute()->fetchAll();
-
-              if (empty($results)) {
-                form_set_error('settings][file', $invalid_msg);
-              }
-              else {
-                $result = array_pop($results);
-                $field = $result->filename . ' [fid: ' . $result->fid . ']';
-              }
-            }
-            else {
-              // be user-friendly and allow normal whitespaces on insert.
-              $field = preg_replace('/%20/', ' ', $field);
-
-              $matched = FALSE;
-              $matched_uri = '';
-              foreach ($wrappers as $w => &$wrapper) {
-                if (preg_match('@^' . $w . '://@i', $field) > 0) {
-                  $matched = TRUE;
-                  break;
+              if (cf_is_integer($field)) {
+                $or = db_or();
+                foreach ($wrappers as $w => &$wrapper) {
+                  $or->condition('fm.uri', db_like($w) . '://%', 'LIKE');
                 }
 
-                $instance = file_stream_wrapper_get_instance_by_scheme($w);
-                $directory = $instance->getDirectoryPath();
-
-                if (empty($directory)) continue;
-
-                if (preg_match('@' . $base_path . $directory . '@i', $field) > 0) {
-                  $matched = TRUE;
-                  $field = $w . '://' . preg_replace('@' . $base_path . $directory . '/@i', '', $field);
-                  break;
-                }
-              }
-
-              if ($matched) {
-                // @todo: auto-convert files that are in the database via an update script
-                $query->condition('fm.uri', $field);
+                $query->condition($or);
+                $query->condition('fm.fid', $field);
 
                 $results = $query->execute()->fetchAll();
 
                 if (empty($results)) {
                   form_set_error('settings][file', $invalid_msg);
                 }
-
-                $result = array_pop($results);
-                $field = $result->filename . ' [fid: ' . $result->fid . ']';
+                else {
+                  $result = array_pop($results);
+                  $field = $result->filename . ' [fid: ' . $result->fid . ']';
+                }
               }
               else {
-                if (!valid_url($field, TRUE)) {
-                  if (!valid_url($field)) {
+                // be user-friendly and allow normal whitespaces on insert.
+                $field = preg_replace('/%20/', ' ', $field);
+
+                $matched = FALSE;
+                $matched_uri = '';
+                foreach ($wrappers as $w => &$wrapper) {
+                  if (preg_match('@^' . $w . '://@i', $field) > 0) {
+                    $matched = TRUE;
+                    break;
+                  }
+
+                  $instance = file_stream_wrapper_get_instance_by_scheme($w);
+                  $directory = $instance->getDirectoryPath();
+
+                  if (empty($directory)) continue;
+
+                  if (preg_match('@' . $base_path . $directory . '@i', $field) > 0) {
+                    $matched = TRUE;
+                    $field = $w . '://' . preg_replace('@' . $base_path . $directory . '/@i', '', $field);
+                    break;
+                  }
+                }
+
+                if ($matched) {
+                  // @todo: auto-convert files that are in the database via an update script
+                  $query->condition('fm.uri', $field);
+
+                  $results = $query->execute()->fetchAll();
+
+                  if (empty($results)) {
                     form_set_error('settings][file', $invalid_msg);
+                  }
+
+                  $result = array_pop($results);
+                  $field = $result->filename . ' [fid: ' . $result->fid . ']';
+                }
+                else {
+                  if (!valid_url($field, TRUE)) {
+                    if (!valid_url($field)) {
+                      form_set_error('settings][file', $invalid_msg);
+                    }
                   }
                 }
               }
-            }
-          } catch (Exception $e) {
-            if (class_exists('cf_error')) {
-              cf_error::on_query_execution($e);
-            }
+            } catch (Exception $e) {
+              if (class_exists('cf_error')) {
+                cf_error::on_query_execution($e);
+              }
 
-            form_set_error('settings][file', $invalid_msg);
+              form_set_error('settings][file', $invalid_msg);
+            }
           }
         }
       }
