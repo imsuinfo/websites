@@ -2066,7 +2066,7 @@ function workbench_menu_autocomplete_nid($string) {
 
   // do not allow anonymous to utilize this jquery search
   $user = cf_current_user();
-  if ($user->uid = 0) {
+  if ($user->uid == 0) {
     return array();
   }
 
@@ -2115,7 +2115,7 @@ function workbench_menu_autocomplete_fid($string) {
 
   // do not allow anonymous to utilize this jquery search
   $user = cf_current_user();
-  if ($user->uid = 0) {
+  if ($user->uid == 0) {
     return array();
   }
 
