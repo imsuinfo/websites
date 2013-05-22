@@ -1626,29 +1626,50 @@ function workbench_menu_admin_item_settings_edit_form_validate($form, &$form_sta
 
   switch ($item_type) {
     case 'item_node':
-      if (empty($form_state['values']['settings']['node_id'])) {
+      $field = & $form_state['values']['settings']['node_id'];
+
+      if (empty($field)) {
         form_set_error('settings][node_id', t("The node id is required for an item type of %type.", array('%type' => $item_type_name)));
       }
       else {
         $matches = array();
-        $node_id = $form_state['values']['settings']['node_id'];
+        $node_id = $field;
+        $link_extras = '';
         $matched = preg_match('@^(\d+)(/.*|$|\?.*|#.*)@', $node_id, $matches);
+
+        if ($matched == 0) {
+          $matched = preg_match('@\[nid: (\d+)\]\s*($|\?.*|#.*)@', $field, $matches);
+        }
 
         if ($matched > 0) {
           $node_id = $matches[1];
-        }
 
-        if (!is_numeric($node_id) || (float) $node_id !== round($node_id)) {
-          form_set_error('settings][node_id', t("%nid is not a valid node id, the node id can only be a positive integer.", array('%nid' => $form_state['values']['settings']['node_id'])));
-        }
-        else {
-          if ($matched > 0) {
-            $results = db_query('SELECT nid FROM {node} WHERE nid = :nid', array(':nid' => $node_id));
+          if (isset($matches[2])) {
+            $link_extras = $matches[2];
           }
+        }
 
-          if (!is_object($results) || $results->rowCount() == 0) {
+        if (cf_is_integer($node_id)) {
+          $query = db_select('node', 'n');
+          $query->fields('n', array('nid', 'title'));
+          $query->condition('n.nid', $node_id);
+
+          $results = (array) $query->execute()->fetchAll();
+
+          if (empty($results)) {
             form_set_error('settings][node_id', t("There is no node with an id of %nid .", array('%nid' => $node_id)));
           }
+          else {
+            $result = array_pop($results);
+            $field = $result->title . ' [nid: ' . $result->nid . ']';
+
+            if (!empty($link_extras)) {
+              $field .= ' ' . $link_extras;
+            }
+          }
+        }
+        else {
+          form_set_error('settings][node_id', t("%nid is not a valid node id, the node id can only be a positive integer.", array('%nid' => $field)));
         }
       }
       break;

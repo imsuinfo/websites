@@ -760,35 +760,59 @@ function workbench_menu_build_menu_item($menu, $item, &$variables) {
   // menu item links are parts of a menu that link to some url, file, or id (local or remote).
   if ($settings[$item['item']->id]['type'] == 'item_link' || $settings[$item['item']->id]['type'] == 'item_node') {
     $link_path = '';
-
+    $process = TRUE;
+    $parsed_url = array();
     $matches = array();
 
     if ($settings[$item['item']->id]['type'] == 'item_link') {
       $matched = preg_match('@^/node/(\d+)(/.*|$|\?.*|#.*)@', $item['item']->properties['url'], $matches);
     }
     else {
-      $matched = preg_match('@^(\d+)(/.*|$|\?.*|#.*)@', $item['item']->properties['node_id'], $matches);
+      $matched = preg_match('@^(\d+)($|\?.*|#.*)@', $item['item']->properties['node_id'], $matches);
+
+      if ($matched == 0) {
+        $matched = preg_match('@\[nid: (\d+)\]\s*($|\?.*|#.*)@', $item['item']->properties['node_id'], $matches);
+      }
     }
 
     if ($matched > 0) {
-      $path_alias = drupal_get_path_alias('node/' . $matches[1] . $matches[2]);
-      $parsed_url = parse_url($path_alias);
-
-      if (!empty($parsed_url['path'])) {
-        $link_path = '/' . $parsed_url['path'];
-        $active_path = $parsed_url['path'];
+      if (isset($matches[2])) {
+        $link_extras = $matches[2];
       }
 
-      if (!empty($parsed_url['query'])) {
-        $link_path .= '?' . $parsed_url['query'];
-      }
+      if (cf_is_integer($matches[1])) {
+        $path_alias = drupal_get_path_alias('node/' . $matches[1]) . $link_extras;
+        $parsed_url = parse_url($path_alias);
 
-      if (!empty($parsed_url['fragment'])) {
-        $link_path .= '#' . $parsed_url['fragment'];
+        if (!empty($parsed_url['path'])) {
+          $link_path = '/' . $parsed_url['path'];
+          $active_path = $parsed_url['path'];
+        }
+
+        if (!empty($parsed_url['query'])) {
+          $link_path .= '?' . $parsed_url['query'];
+        }
+
+        if (!empty($parsed_url['fragment'])) {
+          $link_path .= '#' . $parsed_url['fragment'];
+        }
+
+        // check to see if the node still exists.
+        $query = db_select('node', 'n');
+        $query->fields('n', array('nid'));
+        $query->condition('n.nid', $matches[1]);
+
+        $results = $query->execute()->fetchAll();
+
+        if (empty($results)) {
+          $settings[$item['item']->id]['attributes']['title'] = array(t("Page Not Found: !path_alias.", array('!path_alias' => check_plain($path_alias))));
+          $process = FALSE;
+          $link_path = '';
+        }
       }
     }
 
-    if (empty($link_path)) {
+    if ($process && empty($link_path)) {
       if ($item['item']->properties['url'] == '<top>') {
         $settings[$item['item']->id]['attributes']['class'][] = 'menu_item-menu_top';
         $settings[$item['item']->id]['top_link'] = TRUE;
@@ -820,7 +844,10 @@ function workbench_menu_build_menu_item($menu, $item, &$variables) {
       }
     }
 
-    $settings[$item['item']->id]['attributes']['href'] = array($link_path);
+    if (!empty($link_path)) {
+      $settings[$item['item']->id]['attributes']['href'] = array($link_path);
+    }
+
     $settings[$item['item']->id]['outside_link'] = (preg_match('@^' . $menu->path . '/@', $link_path) > 0);
 
     unset($matches);
@@ -2025,23 +2052,31 @@ function workbench_menu_autocomplete_nid($string) {
     return array();
   }
 
+  // do not allow anonymous to utilize this jquery search
+  $user = cf_current_user();
+  if ($user->uid = 0) {
+    return array();
+  }
+
   $matches = array();
   $results = db_query_range('SELECT nid, title FROM {node} WHERE LOWER(title) LIKE LOWER(:string) ORDER BY title', 0, 9, array(':string' => $string . '%'));
 
-  foreach ($results as $node) {
-    $matches[$node->nid] = check_plain($node->title);
-  }
-
-  if (module_exists('devel')) {
-    $GLOBALS['devel_shutdown'] = FALSE;
+  foreach ($results as $result) {
+    $name = $result->title . ' [nid: ' . $result->nid . ']';
+    $matches[$name] = check_plain($name);
   }
 
   if (count($matches) < 9) {
     $results = db_query_range('SELECT nid, title FROM {node} WHERE LOWER(title) LIKE LOWER(:string) ORDER BY title', 0, 9 - count($matches), array(':string' => '%' . $string . '%'));
 
-    foreach ($results as $node) {
-      $matches[$node->nid] = check_plain($node->title);
+    foreach ($results as $result) {
+      $name = $result->title . ' [nid: ' . $result->nid . ']';
+      $matches[$name] = check_plain($name);
     }
+  }
+
+  if (module_exists('devel')) {
+    $GLOBALS['devel_shutdown'] = FALSE;
   }
 
   drupal_json_output($matches);
