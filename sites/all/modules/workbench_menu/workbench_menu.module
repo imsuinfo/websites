@@ -772,6 +772,11 @@ function workbench_menu_build_menu_item($menu, $item, &$variables) {
       return array('structure' => array(), 'settings' => $settings);
     }
 
+    // do not process item_menu and item_menu_item types
+    if ($item_menu_item['item']->item_type[0]->machine_name == 'item_menu' || $item_menu_item['item']->item_type[0]->machine_name == 'item_menu_item') {
+      return array('structure' => array(), 'settings' => $settings);
+    }
+
     $data = workbench_menu_build_menu_item($item_menu, $item_menu_item, $item_menu_item_variables);
 
     // failed to find the menu item.
