@@ -44,17 +44,9 @@ if (!empty($data['settings'])) {
 ?>
 <li class="<?php print($classes); ?>">
   <?php if (!empty($settings['attributes']['href'])) { ?>
-    <a<?php print($attributes); ?>>
-      <?php print($settings['prefix']); ?>
-      <?php print($settings['label'] . $data['active_text']); ?>
-      <?php print($settings['postfix']); ?>
-    </a>
+    <a<?php print($attributes); ?>><?php print($settings['prefix']); ?><?php print($settings['label'] . $data['active_text']); ?><?php print($settings['postfix']); ?></a>
   <?php } else { ?>
-    <span<?php print($attributes); ?>>
-      <?php print($settings['prefix']); ?>
-      <?php print($settings['label'] . $data['active_text']); ?>
-      <?php print($settings['postfix']); ?>
-    </span>
+    <span<?php print($attributes); ?>><?php print($settings['prefix']); ?><?php print($settings['label'] . $data['active_text']); ?><?php print($settings['postfix']); ?></span>
   <?php } ?>
 
   <?php if (!empty($data['child_list'])) {
