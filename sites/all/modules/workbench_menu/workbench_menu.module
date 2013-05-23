@@ -768,7 +768,7 @@ function workbench_menu_build_menu_item($menu, $item, &$variables) {
     unset($current_stack);
 
     if (is_null($item_menu_item)) {
-      return array('structure' => array(), 'settings' => $settings);
+      return array('structure' => array(), 'settings' => array());
     }
 
     // do not process item_menu and item_menu_item types
@@ -802,7 +802,9 @@ function workbench_menu_build_menu_item($menu, $item, &$variables) {
     unset($data['settings'][$item_menu_item_id]);
 
     foreach ($data['settings'] as $child_id => &$child_settings) {
-      $settings[$child_id] = $child_settings;
+      if (!isset($settings[$child_id])) {
+        $settings[$child_id] = $child_settings;
+      }
     }
 
     $built_menu['structure'] = $structure;

@@ -37,8 +37,10 @@
 if (!empty($data['settings'])) {
   $settings = & $data['settings'][$data['id']];
   $classes = implode(' ', (array) $settings['attributes']['class']);
-  $settings['attributes']['class'] = array('menu_item-text');
-  $attributes = ' ' . drupal_attributes($settings['attributes']);
+
+  $custom = $settings['attributes'];
+  $custom['class'] = array('menu_item-text');
+  $attributes = ' ' . drupal_attributes($custom);
 ?>
 <li class="<?php print($classes); ?>">
   <?php if (!empty($settings['attributes']['href'])) { ?>
