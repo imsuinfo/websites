@@ -827,13 +827,19 @@ function workbench_menu_build_menu_item($menu, $item, &$variables) {
   }
 
   // menu item links are parts of a menu that link to some url, file, or id (local or remote).
-  if ($item_settings['type'] == 'item_link' || $item_settings['type'] == 'item_node') {
+  if ($item_settings['type'] == 'item_link' || $item_settings['type'] == 'item_node' || $item_settings['type'] == 'item_top') {
     $link_path = '';
     $process = TRUE;
     $parsed_url = array();
     $matches = array();
+    $matched = FALSE;
 
-    if ($item_settings['type'] == 'item_link') {
+    // top item types force active path and link path to be set to '<top>'.
+    if ($item_settings['type'] == 'item_top') {
+      $item['item']->active_path = '<top>';
+      $item['item']->properties['url'] = '<top>';
+    }
+    else if ($item_settings['type'] == 'item_link') {
       $matched = preg_match('@^/node/(\d+)(/.*|$|\?.*|#.*)@', $item['item']->properties['url'], $matches);
     }
     else {

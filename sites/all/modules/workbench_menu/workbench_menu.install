@@ -254,6 +254,12 @@ function workbench_menu_install() {
     );
 
     $item_type[] = array(
+      'machine_name' => 'item_top',
+      'human_name' => $t("Top"),
+      'description' => $t("This is an item that points to the menu path."),
+    );
+
+    $item_type[] = array(
       'machine_name' => 'item_menu',
       'human_name' => $t("Menu"),
       'description' => $t("Represents and loads another menu."),
@@ -346,5 +352,25 @@ function workbench_menu_update_7101() {
       $query->fields(array('properties' => $properties));
       $query->execute();
     }
+  }
+}
+
+/**
+ * Insert the new item type top into the database if it does not yet exist.
+ */
+function workbench_menu_update_7102() {
+  $result = db_query("SELECT count(*) FROM {workbench_menu_options_item_type} WHERE machine_name = 'item_top'")->fetchField();
+
+  if ($result == 0) {
+    $t = get_t();
+
+    $item_type = array();
+    $item_type[] = array(
+      'machine_name' => 'item_top',
+      'human_name' => $t("Top"),
+      'description' => $t("This is an item that points to the menu path."),
+    );
+
+    cf_db_options_add_options('workbench_menu', 'item_type', $item_type);
   }
 }

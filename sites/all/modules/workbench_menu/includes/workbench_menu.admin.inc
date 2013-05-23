@@ -1195,6 +1195,9 @@ function workbench_menu_admin_item_settings_form_settings($item, $menu) {
     '#default_value' => $defaults['weight'],
   );
 
+  $active_path_types = $available['item_types'];
+  unset($active_path_types['item_top']);
+
   $form['settings']['active_path'] = array(
     '#type' => 'textfield',
     '#title' => t("Active Path"),
@@ -1207,6 +1210,7 @@ function workbench_menu_admin_item_settings_form_settings($item, $menu) {
     '#size' => 64,
     '#maxlength' => 255,
     '#default_value' => $defaults['active_path'],
+    '#dependency' => array('edit-settings-item-type' => array_keys($active_path_types)),
   );
 
   $form['settings']['item_type'] = array(
@@ -1223,8 +1227,7 @@ function workbench_menu_admin_item_settings_form_settings($item, $menu) {
     '#default_value' => $defaults['properties']['url'],
     '#description' =>
       t("Specify the url this link points to.") . '<br>' .
-      t("Relative paths that do not begin with / will have their group's path prefixed onto them.") . '<br>' .
-      t("Use &lt;top&gt; if this menu item needs to link to the group path."),
+      t("Relative paths that do not begin with / will have their group's path prefixed onto them."),
     '#dependency' => array('edit-settings-item-type' => array('item_link')),
     '#size' => 64,
   );
@@ -1682,7 +1685,7 @@ function workbench_menu_admin_item_settings_edit_form_validate($form, &$form_sta
       if (empty($form_state['values']['settings']['url'])) {
         form_set_error('settings][url', t("The URL is required for an item type of %type.", array('%type' => $item_type_name)));
       }
-      elseif ($form_state['values']['settings']['url'] !== '<top>') {
+      else {
         $field = & $form_state['values']['settings']['url'];
 
         // be user-friendly and allow normal whitespaces on insert.
