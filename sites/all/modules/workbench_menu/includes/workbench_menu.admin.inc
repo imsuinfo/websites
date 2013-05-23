@@ -1155,6 +1155,7 @@ function workbench_menu_admin_item_settings_form_settings($item, $menu) {
     'pdf' => t("PDF"),
     'powerpoint' => t("Powerpoint"),
     'webdocument' => t("Web Document"),
+    'webform' => t("Web Form"),
     'word' => t("Word"),
     'writer' => t("Writer"),
   );

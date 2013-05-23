@@ -618,6 +618,7 @@ function workbench_menu_build_menu_item($menu, $item, &$variables) {
   $alter_settings['active_path'] = $active_path;
   $alter_settings['variables'] = &$variables;
 
+
   // menu item menus are other menus embedded inside the current menu.
   if ($item_settings['type'] == 'item_menu') {
     $field = & $item['item']->properties['menu'];
@@ -676,6 +677,7 @@ function workbench_menu_build_menu_item($menu, $item, &$variables) {
 
     return $data;
   }
+
 
   // menu item menu items are parts of another menu embeded inside of the current menu.
   if ($item_settings['type'] == 'item_menu_item') {
@@ -1056,21 +1058,26 @@ function workbench_menu_build_menu_item($menu, $item, &$variables) {
     unset($link_path);
   }
 
-  if ($item['item']->active_path == '<top>') {
+
+  // process active paths.
+  if ($item['item']->item_type[0]->machine_name == 'item_top') {
     $active_path = $variables['menu_path'];
   }
-  elseif (empty($item_settings['active_path']) && !empty($item['item']->active_path)) {
-    if (preg_match('@^/@', $item['item']->active_path) == 0) {
-      $active_path = $variables['parent_path'] . '/' . $item['item']->active_path;
-    }
-    else {
-      $active_path = $variables['menu_path'] . $item['item']->active_path;
+  else {
+    if (empty($item_settings['active_path']) && !empty($item['item']->active_path)) {
+      if (preg_match('@^/@', $item['item']->active_path) == 0) {
+        $active_path = $variables['parent_path'] . '/' . $item['item']->active_path;
+      }
+      else {
+        $active_path = $variables['menu_path'] . $item['item']->active_path;
+      }
     }
   }
 
+
+  // process breadcrumbs.
   if (!empty($active_path)) {
     $active_path = preg_replace('/%20/', ' ', $active_path);
-
     $item_settings['active_path'] = $active_path;
 
     if ($active_path != $variables['menu_path']) {
@@ -1093,6 +1100,7 @@ function workbench_menu_build_menu_item($menu, $item, &$variables) {
   else {
     $item_settings['breadcrumbs'] = $variables['breadcrumbs'];
   }
+
 
   if ($process_children && !empty($item['children'])) {
     foreach ($item['children'] as &$child) {
@@ -1236,8 +1244,10 @@ function template_preprocess_workbench_menu_item(&$vars) {
   $variables['invalid_trail_active'] = FALSE;
   $variables['clickable_label'] = FALSE;
 
-  if ($variables['settings'][$variables['id']]['type'] == 'item_label') {
-    if (!empty($variables['settings'][$variables['id']]['clickable'])) {
+  $settings = & $variables['settings'][$variables['id']];
+
+  if ($settings['type'] == 'item_label') {
+    if (!empty($settings['clickable'])) {
       $variables['clickable_label'] = TRUE;
     }
   }
@@ -1247,20 +1257,20 @@ function template_preprocess_workbench_menu_item(&$vars) {
   // provide an active text string for purposes of accessibility.
   $variables['active_text'] = '';
 
-  if ($variables['settings'][$variables['id']]['active_path'] == $variables['path_current']) {
+  if ($settings['active_path'] == $variables['path_current']) {
     $variables['trail_is_active'] = TRUE;
-    $variables['settings'][$variables['id']]['attributes']['class'][] = 'active';
+    $settings['attributes']['class'][] = 'active';
     $variables['active_text'] =' <span class="element-invisible">' . t("(active menu item)") . '</span>';
   }
   else {
-    if (preg_match('@' . $variables['settings'][$variables['id']]['active_path'] . '@', $variables['path_current']) > 0) {
+    if (preg_match('@' . $settings['active_path'] . '@', $variables['path_current']) > 0) {
       $path_current_parts = explode('/', $variables['path_current']);
 
       while (!empty($path_current_parts)) {
-        if (implode('/', $path_current_parts) == $variables['settings'][$variables['id']]['active_path']) {
+        if (implode('/', $path_current_parts) == $settings['active_path']) {
           $variables['invalid_trail_active'] = TRUE;
           $variables['trail_is_active'] = TRUE;
-          $variables['settings'][$variables['id']]['attributes']['class'][] = 'invalid_active';
+          $settings['attributes']['class'][] = 'invalid_active';
           break;
         }
 
@@ -1269,14 +1279,15 @@ function template_preprocess_workbench_menu_item(&$vars) {
     }
   }
 
-  if ($variables['trail_is_active'] && isset($variables['settings'][$variables['id']]['breadcrumbs'])) {
-    $bc = array_merge(array('<a href="' . base_path() . '">' . t("Home") . '</a>'), $variables['settings'][$variables['id']]['breadcrumbs']);
+  if ($variables['trail_is_active'] && isset($settings['breadcrumbs'])) {
+    $bc = array_merge(array('<a href="' . base_path() . '">' . t("Home") . '</a>'), $settings['breadcrumbs']);
 
     drupal_set_breadcrumb($bc);
+    #drupal_set_message("DEBUG: " . $variables['id'] . " = " . $settings['type'] . ", " . print_r($bc, TRUE));
   }
 
   if (empty($variables['children'])) {
-    $variables['settings'][$variables['id']]['attributes']['class'][] = 'leaf';
+    $settings['attributes']['class'][] = 'leaf';
   }
   else {
     $child_variables = array();
@@ -1311,63 +1322,63 @@ function template_preprocess_workbench_menu_item(&$vars) {
     }
 
     if ($variables['trail_is_active'] || $variables['clickable_label']) {
-      if ($variables['settings'][$variables['id']]['expand'] == 'expand_always' || $variables['settings'][$variables['id']]['expand'] == 'expand_auto') {
+      if ($settings['expand'] == 'expand_always' || $settings['expand'] == 'expand_auto') {
         $variables['child_list'] = &$child_list;
 
         if ($variables['clickable_label']) {
-          $variables['settings'][$variables['id']]['attributes']['class'][] = 'collapsed';
+          $settings['attributes']['class'][] = 'collapsed';
         }
         else {
-          $variables['settings'][$variables['id']]['attributes']['class'][] = 'expanded';
+          $settings['attributes']['class'][] = 'expanded';
         }
       }
-      elseif ($variables['settings'][$variables['id']]['expand'] == 'expand_never') {
-        $variables['settings'][$variables['id']]['attributes']['class'][] = 'collapsed';
+      elseif ($settings['expand'] == 'expand_never') {
+        $settings['attributes']['class'][] = 'collapsed';
 
         if ($variables['invalid_trail_active']) {
-          $variables['settings'][$variables['id']]['attributes']['class'][] = 'invalid_active';
+          $settings['attributes']['class'][] = 'invalid_active';
         }
         else {
-          $variables['settings'][$variables['id']]['attributes']['class'][] = 'active';
+          $settings['attributes']['class'][] = 'active';
           $variables['active_text'] =' <span class="element-invisible">' . t("(active menu item)") . '</span>';
         }
       }
     }
     else {
-      if ($variables['settings'][$variables['id']]['expand'] == 'expand_always') {
-        $variables['settings'][$variables['id']]['attributes']['class'][] = 'expanded';
+      if ($settings['expand'] == 'expand_always') {
+        $settings['attributes']['class'][] = 'expanded';
         $variables['child_list'] = &$child_list;
       }
-      elseif ($variables['settings'][$variables['id']]['expand'] == 'expand_never' || $variables['settings'][$variables['id']]['expand'] == 'expand_auto') {
-        $variables['settings'][$variables['id']]['attributes']['class'][] = 'collapsed';
+      elseif ($settings['expand'] == 'expand_never' || $settings['expand'] == 'expand_auto') {
+        $settings['attributes']['class'][] = 'collapsed';
       }
     }
   }
 
-  if ($variables['trail_is_active'] || preg_match('@^' . $variables['settings'][$variables['id']]['active_path'] . '/@', $variables['path_current']) > 0) {
-    $variables['settings'][$variables['id']]['attributes']['class'][] = 'active-trail';
+  if ($variables['trail_is_active'] || preg_match('@^' . $settings['active_path'] . '/@', $variables['path_current']) > 0) {
+    $settings['attributes']['class'][] = 'active-trail';
 
     if ($variables['clickable_label']) {
-      $noscript_key = array_search('noscript', $variables['settings'][$variables['id']]['attributes']['class']);
+      $noscript_key = array_search('noscript', $settings['attributes']['class']);
 
       if ($noscript_key !== FALSE) {
-        unset($variables['settings'][$variables['id']]['attributes']['class'][$noscript_key]);
+        unset($settings['attributes']['class'][$noscript_key]);
       }
 
       unset($noscript_key);
     }
   }
 
-  $variables['settings'][$variables['id']]['attributes']['class'][] = ($variables['even_item'] ? 'even' : 'odd') ;
-  $variables['settings'][$variables['id']]['attributes']['class'][] = ($variables['even_item_local'] ? 'local_even' : 'local_odd') ;
-  $variables['settings'][$variables['id']]['attributes']['class'][] = 'row-' . $variables['count_item'];
-  $variables['settings'][$variables['id']]['attributes']['class'][] = 'local_row-' . $variables['count_item_local'];
-  $variables['settings'][$variables['id']]['attributes']['class'][] = 'depth-' . $variables['depth'];
+  $settings['attributes']['class'][] = ($variables['even_item'] ? 'even' : 'odd') ;
+  $settings['attributes']['class'][] = ($variables['even_item_local'] ? 'local_even' : 'local_odd') ;
+  $settings['attributes']['class'][] = 'row-' . $variables['count_item'];
+  $settings['attributes']['class'][] = 'local_row-' . $variables['count_item_local'];
+  $settings['attributes']['class'][] = 'depth-' . $variables['depth'];
 
   // if href is empty for items that require href, then append a broken link css class.
-  if ($variables['settings'][$variables['id']]['type'] != 'item_label') {
-    if (!isset($variables['settings'][$variables['id']]['attributes']['href'])) {
-      $variables['settings'][$variables['id']]['attributes']['class'][] = 'menu_item-broken_link';
+  if ($settings['type'] != 'item_label') {
+    if (!isset($settings['attributes']['href'])) {
+      $settings['attributes']['class'][] = 'menu_item-broken_link';
     }
   }
 
