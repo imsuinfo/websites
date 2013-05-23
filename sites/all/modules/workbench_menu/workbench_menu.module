@@ -768,7 +768,6 @@ function workbench_menu_build_menu_item($menu, $item, &$variables) {
     unset($current_stack);
 
     if (is_null($item_menu_item)) {
-      drupal_alter(__FUNCTION__, $alter_settings);
       return array('structure' => array(), 'settings' => $settings);
     }
 
