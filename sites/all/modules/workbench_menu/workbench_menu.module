@@ -484,7 +484,7 @@ function workbench_menu_build_menus($path_string, &$menus_processed, &$breadcrum
       continue;
     }
 
-    $menus_processed[$menu->access_id] = NULL;
+    $menus_processed[$menu->id] = NULL;
 
     $built_menu = array();
     $built_menu['structure'] = array();
@@ -615,15 +615,25 @@ function workbench_menu_build_menu_item($menu, $item, &$variables) {
 
   // menu item menus are other menus embedded inside the current menu.
   if ($settings[$item['item']->id]['type'] == 'item_menu') {
-    if ($menu->access_id == $item['item']->properties['menu'] || array_key_exists($item['item']->properties['menu'], $variables['menus_processed'])) {
-      return array('structure' => array(), 'settings' => array());
-    }
+    $field = & $item['item']->properties['menu'];
+    $item_menus = array();
 
-    $item_menus = (array) workbench_menu_get_menus(array('access_id' => $item['item']->properties['menu']), 'id');
+    if (cf_is_integer($field)) {
+      $item_menus = (array) workbench_menu_get_menus(array('id' => $field), 'id');
+    }
+    else {
+      $matched = preg_match('@\[id: (\d+)\]\s*$@', $field, $matches);
+
+      if ($matched > 0) {
+        if (cf_is_integer($matches[1])) {
+          $item_menus = (array) workbench_menu_get_menus(array('id' => $matches[1]), 'id');
+        }
+      }
+    }
 
     if (empty($item_menus)) {
       if (class_exists('cf_error')) {
-        cf_error::invalid_variable('item_menus', "Failed to find workbench menu with access id of %access_id" , array('%access_id' => $item['item']->properties['menu']), WATCHDOG_WARNING);
+        cf_error::invalid_variable('item_menus', "Failed to find workbench menu with menu id of %id" , array('%id' => $field), WATCHDOG_WARNING);
       }
 
       return array('structure' => array(), 'settings' => array());
@@ -631,7 +641,12 @@ function workbench_menu_build_menu_item($menu, $item, &$variables) {
 
     $item_menu = array_pop($item_menus);
 
-    $variables['menus_processed'][$item_menu->access_id] = NULL;
+    // prevent infinite loops, only process menus once and do not process menus that point to self.
+    if ($menu->id == $field || array_key_exists($item_menu->id, $variables['menus_processed'])) {
+      return array('structure' => array(), 'settings' => array());
+    }
+
+    $variables['menus_processed'][$item_menu->id] = NULL;
 
     $breadcrumbs_temporary = FALSE;
     $built_menus = workbench_menu_build_menus($item_menu->path, $variables['menus_processed'], $breadcrumbs_temporary, FALSE);
@@ -659,11 +674,51 @@ function workbench_menu_build_menu_item($menu, $item, &$variables) {
 
   // menu item menu items are parts of another menu embeded inside of the current menu.
   if ($settings[$item['item']->id]['type'] == 'item_menu_item') {
-    $item_menus = (array) workbench_menu_get_menus(array('id' => $item['item']->properties['menu']), 'id');
+    $field_menu = & $item['item']->properties['menu'];
+    $field_menu_item = & $item['item']->properties['menu_item'];
+    $item_menus = array();
+
+    if (cf_is_integer($field_menu)) {
+      $item_menus = (array) workbench_menu_get_menus(array('id' => $field_menu), 'id');
+    }
+    else {
+      $matches = array();
+      $matched = preg_match('@\[id: (\d+)\]\s*$@', $field_menu, $matches);
+
+      if ($matched > 0) {
+        if (cf_is_integer($matches[1])) {
+          $item_menus = (array) workbench_menu_get_menus(array('id' => $matches[1]), 'id');
+        }
+      }
+    }
+
+    // return if not items were found.
+    if (empty($item_menus)) {
+      return array('structure' => array(), 'settings' => array());
+    }
+
     $item_menu = array_pop($item_menus);
     $item_menu_item = NULL;
+    $item_menu_item_id = NULL;
 
-    // @todo handle error case where menu or item is not found.
+    if (cf_is_integer($field_menu_item)) {
+      $item_menu_item_id = $field_menu_item;
+    }
+    else {
+      $matches = array();
+      $matched = preg_match('@\[id: (\d+)\]\s*$@', $field_menu_item, $matches);
+
+      if ($matched > 0) {
+        if (cf_is_integer($matches[1])) {
+          $item_menu_item_id = $matches[1];
+        }
+      }
+    }
+
+    // Unable to determine the item menu item id.
+    if (is_null($item_menu_item_id)) {
+      return array('structure' => array(), 'settings' => array());
+    }
 
     $process_children = FALSE;
 
@@ -686,7 +741,7 @@ function workbench_menu_build_menu_item($menu, $item, &$variables) {
     while (!empty($current_stack)) {
       $nested_item = array_pop($current_stack);
 
-      if ($nested_item['item']->id == $item['item']->properties['menu_item']) {
+      if ($nested_item['item']->id == $item_menu_item_id) {
         $item_menu_item = &$nested_item;
         array_push($item_menu->items['nested'], $nested_item);
         break;
@@ -714,25 +769,28 @@ function workbench_menu_build_menu_item($menu, $item, &$variables) {
 
     $data = workbench_menu_build_menu_item($item_menu, $item_menu_item, $item_menu_item_variables);
 
-    // @todo handle error case where menu item is not found.
+    // failed to find the menu item.
+    if (empty($data['structure'])) {
+      return array('structure' => array(), 'settings' => array());
+    }
 
-    $structure[$item['item']->weight][$item['item']->id] = $data['structure'][$item_menu_item['item']->weight][$item_menu_item['item']->id];
+    $structure[$item['item']->weight][$item['item']->id] = $data['structure'][$item_menu_item['item']->weight][$item_menu_item_id];
 
-    $settings[$item['item']->id]['label'] = $data['settings'][$item_menu_item['item']->id]['label'];
-    $settings[$item['item']->id]['prefix'] = $data['settings'][$item_menu_item['item']->id]['prefix'];
-    $settings[$item['item']->id]['postfix'] = $data['settings'][$item_menu_item['item']->id]['postfix'];
-    $settings[$item['item']->id]['outside_link'] = $data['settings'][$item_menu_item['item']->id]['outside_link'];
-    $settings[$item['item']->id]['top_link'] = $data['settings'][$item_menu_item['item']->id]['top_link'];
-    $settings[$item['item']->id]['active_path'] = $data['settings'][$item_menu_item['item']->id]['active_path'];
+    $settings[$item['item']->id]['label'] = $data['settings'][$item_menu_item_id]['label'];
+    $settings[$item['item']->id]['prefix'] = $data['settings'][$item_menu_item_id]['prefix'];
+    $settings[$item['item']->id]['postfix'] = $data['settings'][$item_menu_item_id]['postfix'];
+    $settings[$item['item']->id]['outside_link'] = $data['settings'][$item_menu_item_id]['outside_link'];
+    $settings[$item['item']->id]['top_link'] = $data['settings'][$item_menu_item_id]['top_link'];
+    $settings[$item['item']->id]['active_path'] = $data['settings'][$item_menu_item_id]['active_path'];
 
-    foreach ($data['settings'][$item_menu_item['item']->id]['attributes'] as $attribute => &$value) {
+    foreach ($data['settings'][$item_menu_item_id]['attributes'] as $attribute => &$value) {
       if ($attribute == 'id' || $attribute == 'class') continue;
       $settings[$item['item']->id]['attributes'][$attribute] = $value;
     }
 
-    $settings[$item['item']->id]['attributes']['class'][] = 'menu_item-type-' . $data['settings'][$item_menu_item['item']->id]['type'];
+    $settings[$item['item']->id]['attributes']['class'][] = 'menu_item-type-' . $data['settings'][$item_menu_item_id]['type'];
 
-    unset($data['settings'][$item_menu_item['item']->id]);
+    unset($data['settings'][$item_menu_item_id]);
 
     foreach ($data['settings'] as $child_id => &$child_settings) {
       $settings[$child_id] = $child_settings;
@@ -2197,23 +2255,33 @@ function workbench_menu_autocomplete_menu_id($string) {
     return array();
   }
 
-  $matches = array();
-  $results = db_query_range('SELECT ttd.name AS name, wm.id AS id FROM {taxonomy_term_data} AS ttd INNER JOIN {workbench_menus AS wm ON ttd.tid = CAST(wm.access_id AS integer) WHERE LOWER(name) LIKE LOWER(:string) ORDER BY name', 0, 9, array(':string' => $string . '%'));
+  // do not allow anonymous to utilize this jquery search
+  $user = cf_current_user();
+  if ($user->uid == 0) {
+    return array();
+  }
 
-  foreach ($results as $menu) {
-    $matches[$menu->id] = check_plain($menu->name . ' [id:' . $menu->id . ']');
+  $query_string = 'SELECT ttd.name AS name, wm.id AS id FROM {taxonomy_term_data} AS ttd INNER JOIN {workbench_menus AS wm ON ttd.tid = CAST(wm.access_id AS integer) WHERE LOWER(name) LIKE LOWER(:string) ORDER BY name';
+
+  $matches = array();
+  $results = db_query_range($query_string, 0, 9, array(':string' => db_like($string) . '%'));
+
+  foreach ($results as $result) {
+    $name = $result->name . ' [id: ' . $result->id . ']';
+    $matches[$name] = check_plain($name);
+  }
+
+  if (count($matches) < 9) {
+    $results = db_query_range($query_string, 0, 9 - count($matches), array(':string' => '%' . db_like($string) . '%'));
+
+    foreach ($results as $result) {
+      $name = $result->name . ' [id: ' . $result->id . ']';
+      $matches[$name] = check_plain($name);
+    }
   }
 
   if (module_exists('devel')) {
     $GLOBALS['devel_shutdown'] = FALSE;
-  }
-
-  if (count($matches) < 9) {
-    $results = db_query_range('SELECT ttd.name AS name, wm.id AS id FROM {taxonomy_term_data} AS ttd INNER JOIN {workbench_menus AS wm ON ttd.tid = CAST(wm.access_id AS integer) WHERE LOWER(name) LIKE LOWER(:string) ORDER BY name', 0, 9 - count($matches), array(':string' => '%' . $string . '%'));
-
-    foreach ($results as $menu) {
-      $matches[$menu->id] = check_plain($menu->name . ' [id:' . $menu->id . ']');
-    }
   }
 
   drupal_json_output($matches);
@@ -2238,23 +2306,27 @@ function workbench_menu_autocomplete_menu_item_id($string) {
     return array();
   }
 
-  $matches = array();
-  $results = db_query_range('SELECT id, human_name FROM {workbench_menu_items} WHERE LOWER(human_name) LIKE LOWER(:string) ORDER BY human_name', 0, 9, array(':string' => $string . '%'));
+  $query_string = 'SELECT wmi.id, wmi.human_name FROM {workbench_menu_items} wmi inner join {workbench_menu_item_types} wmit on wmi.id = wmit.item_id left join workbench_menu_options_item_type wmoit on wmit.item_type_id = wmoit.id WHERE LOWER(wmi.human_name) LIKE LOWER(:string) AND NOT (wmoit.machine_name = \'item_menu\' OR wmoit.machine_name = \'item_menu_item\') ORDER BY wmi.human_name';
 
-  foreach ($results as $item) {
-    $matches[$item->id] = check_plain($item->human_name . ' [id:' . $item->id . ']');
+  $matches = array();
+  $results = db_query_range($query_string, 0, 9, array(':string' => db_like($string) . '%'));
+
+  foreach ($results as $result) {
+    $name = $result->human_name . ' [id: ' . $result->id . ']';
+    $matches[$name] = check_plain($name);
+  }
+
+  if (count($matches) < 9) {
+    $results = db_query_range($query_string, 0, 9, array(':string' => '%' . db_like($string) . '%'));
+
+    foreach ($results as $result) {
+      $name = $result->human_name . ' [id: ' . $result->id . ']';
+      $matches[$name] = check_plain($name);
+    }
   }
 
   if (module_exists('devel')) {
     $GLOBALS['devel_shutdown'] = FALSE;
-  }
-
-  if (count($matches) < 9) {
-    $results = db_query_range('SELECT id, human_name FROM {workbench_menu_items} WHERE LOWER(human_name) LIKE LOWER(:string) ORDER BY human_name', 0, 9 - count($matches), array(':string' => '%' . $string . '%'));
-
-    foreach ($results as $item) {
-      $matches[$item->id] = check_plain($item->human_name . ' [id:' . $item->id . ']');
-    }
   }
 
   drupal_json_output($matches);

@@ -325,3 +325,26 @@ function workbench_menu_enable() {
 function workbench_menu_update_7100() {
   db_query('UPDATE {workbench_menu_items} SET parent_id = 0 WHERE NOT parent_id IN (SELECT id FROM {workbench_menu_items}) AND NOT parent_id = 0');
 }
+
+/**
+ * Change Menu ID menu items to use menu id and not access id.
+ */
+function workbench_menu_update_7101() {
+  $results = (array) db_query("SELECT wmi.id, wmi.properties FROM {workbench_menu_items} wmi INNER JOIN {workbench_menu_item_types} wmit ON wmi.id = wmit.item_id LEFT JOIN {workbench_menu_options_item_type} wmoit ON wmit.item_type_id = wmoit.id WHERE wmoit.machine_name = 'item_menu' OR wmoit.machine_name = 'item_menu_type'")->fetchAll();
+
+  foreach ($results as &$result) {
+    $unserialized = unserialize($result->properties);
+
+    $field = db_query("SELECT wm.id FROM {workbench_menus} wm WHERE wm.access_id = :access_id", array(':access_id' => $unserialized['menu']))->fetchField();
+
+    if (cf_is_integer($field[0])) {
+      $unserialized['menu'] = $field;
+      $properties = serialize($unserialized);
+
+      $query = db_update('workbench_menu_items');
+      $query->condition('id', $result->id);
+      $query->fields(array('properties' => $properties));
+      $query->execute();
+    }
+  }
+}

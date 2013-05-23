@@ -1578,7 +1578,7 @@ function workbench_menu_admin_item_settings_edit_form_validate($form, &$form_sta
       $items = (array) workbench_menu_get_load_menu_items(array('id' => $form_state['values']['settings']['parent_id']), 'id');
 
       if (empty($items)) {
-        form_set_error('settings][parent_id', t("The specified item parent is invalid."));
+        form_set_error('settings][parent_id', t("The specified item parent (@parent_id) is invalid.", array('@parent_id' => $form_state['values']['settings']['parent_id'])));
       }
       else {
         if (!isset($items['flat'][$form_state['values']['settings']['parent_id']])) {
@@ -1817,51 +1817,120 @@ function workbench_menu_admin_item_settings_edit_form_validate($form, &$form_sta
       break;
 
     case 'item_menu':
-      if (empty($form_state['values']['settings']['menu'])) {
-        form_set_error('settings][menu', t("The menu is required for an item type of %type.", array('%type' => $item_type_name)));
+      $field = & $form_state['values']['settings']['menu'];
+      $menu_id = $field;
+
+      $matches = array();
+      $matched = preg_match('@\[id: (\d+)\]\s*$@', $field, $matches);
+
+      if ($matched > 0) {
+        $menu_id = $matches[1];
       }
 
-      // if the current it has children, do not allow it to be changed into an item type that is not allowed to have children.
-      $items = (array) workbench_menu_get_load_menu_items(array('parent_id' => $form['item_id']['#value']));
+      // if the current item has children, do not allow it to be changed into an item type that is not allowed to have children.
+      if (isset($form['item_id']['#value'])) {
+        $items = (array) workbench_menu_get_load_menu_items(array('parent_id' => $form['item_id']['#value']));
 
-      if (!empty($items)) {
-        form_set_error('settings][item_type', t("This item cannot be changed to an item type of %type because that item type does not support child items. You must remove all child items from this item to use this item type.", array('%type' => $item_type_name)));
+        if (!empty($items['flat'])) {
+          form_set_error('settings][item_type', t("This item cannot be changed to an item type of %type because that item type does not support child items. You must remove all child items from this item to use this item type.", array('%type' => $item_type_name)));
+        }
       }
+
+      if (cf_is_integer($menu_id)) {
+        $query = db_select('workbench_menus', 'wm');
+        $query->fields('wm', array('id', 'access_id', 'breadcrumb_name'));
+        $query->condition('wm.id', $menu_id);
+
+        $results = (array) $query->execute()->fetchAll();
+
+        if (empty($results)) {
+          form_set_error('settings][menu', t("There is no menuu with an id of %menu_id .", array('%menu_id' => $menu_id)));
+        }
+        else {
+          $name = (string) db_query('SELECT ttd.name AS name FROM {taxonomy_term_data} AS ttd INNER JOIN {workbench_menus AS wm ON ttd.tid = CAST(wm.access_id AS integer) WHERE wm.id = :menu_id', array(':menu_id' => $menu_id))->fetchField();
+
+          $field = $name . ' [id: ' . $menu_id . ']';
+        }
+      }
+      else {
+        form_set_error('settings][menu', t("An invalid menu has been specified."));
+      }
+
       break;
 
     case 'item_menu_item':
-      if (empty($form_state['values']['settings']['menu_item'])) {
-        form_set_error('settings][menu_item', t("The menu item is required for an item type of %type.", array('%type' => $item_type_name)));
+      $field_menu = & $form_state['values']['settings']['menu'];
+      $field_menu_item = & $form_state['values']['settings']['menu_item'];
+
+      $menu_id = $field_menu;
+      $menu_item_id = $field_menu_item;
+
+      $matches = array();
+      $matched = preg_match('@\[id: (\d+)\]\s*$@', $field_menu, $matches);
+
+      if ($matched > 0) {
+        $menu_id = $matches[1];
       }
-      elseif (!is_numeric($form_state['values']['settings']['menu_item'])) {
-        form_set_error('settings][menu_item', t("The menu item '%value' is not and must be a number.", array('%value' => $form_state['values']['settings']['menu_item'], '%type' => $item_type_name)));
+
+      $matches = array();
+      $matched = preg_match('@\[id: (\d+)\]\s*$@', $field_menu_item, $matches);
+
+      if ($matched > 0) {
+        $menu_item_id = $matches[1];
       }
-      else {
+
+      // if the current item has children, do not allow it to be changed into an item type that is not allowed to have children.
+      if (isset($form['item_id']['#value'])) {
+        $items = (array) workbench_menu_get_load_menu_items(array('parent_id' => $form['item_id']['#value']));
+
+        if (!empty($items['flat'])) {
+          form_set_error('settings][item_type', t("This item cannot be changed to an item type of %type because that item type does not support child items. You must remove all child items from this item to use this item type.", array('%type' => $item_type_name)));
+        }
+      }
+
+      if (cf_is_integer($menu_item_id)) {
         $query = db_select('workbench_menu_items', 'wmi');
 
         $query->fields('wmi');
         $query->orderBy('wmi.id', 'ASC');
 
-        $query->condition('wmi.id', $form_state['values']['settings']['menu_item']);
+        $query->condition('wmi.id', $menu_item_id);
 
-        $records = (array) $query->execute()->fetchAll();
+        $results = (array) $query->execute()->fetchAll();
 
-        if (empty($records)) {
-          form_set_error('settings][menu_item', t("There exists no item with the id of '%value'.", array('%value' => $form_state['values']['settings']['menu_item'])));
+        if (empty($results)) {
+          form_set_error('settings][menu_item', t("There exists no item with the id of '%value'.", array('%value' => $menu_item_id)));
         }
         else {
-          $record = array_pop($records);
-
-          $form_state['values']['settings']['menu'] = $record->menu_id;
+          $result = array_pop($results);
+          $menu_id = $result->menu_id;
         }
       }
-
-      // if the current it has children, do not allow it to be changed into an item type that is not allowed to have children.
-      $items = (array) workbench_menu_get_load_menu_items(array('parent_id' => $form['item_id']['#value']));
-
-      if (!empty($items)) {
-        form_set_error('settings][item_type', t("This item cannot be changed to an item type of %type because that item type does not support child items. You must remove all child items from this item to use this item type.", array('%type' => $item_type_name)));
+      else {
+        form_set_error('settings][menu_item', t("An invalid menu item has been specified."));
       }
+
+      if (cf_is_integer($menu_id)) {
+        $query = db_select('workbench_menus', 'wm');
+        $query->fields('wm', array('id', 'access_id', 'breadcrumb_name'));
+        $query->condition('wm.id', $menu_id);
+
+        $results = (array) $query->execute()->fetchAll();
+
+        if (empty($results)) {
+          form_set_error('settings][menu', t("There is no menuu with an id of %menu_id .", array('%menu_id' => $menu_id)));
+        }
+        else {
+          $result = array_pop($results);
+          $name = (string) db_query('SELECT ttd.name AS name FROM {taxonomy_term_data} AS ttd INNER JOIN {workbench_menus AS wm ON ttd.tid = CAST(wm.access_id AS integer) WHERE wm.id = :menu_id', array(':menu_id' => $menu_id))->fetchField();
+
+          $field_menu = $name . ' [id: ' . $menu_id . ']';
+        }
+      }
+      else {
+        form_set_error('settings][menu', t("An invalid menu has been specified."));
+      }
+
       break;
 
     case 'item_label':
