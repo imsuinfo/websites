@@ -2129,7 +2129,7 @@ function workbench_menu_autocomplete_nid($string) {
   }
 
   $matches = array();
-  $results = db_query_range('SELECT nid, title FROM {node} WHERE LOWER(title) LIKE LOWER(:string) ORDER BY title', 0, 9, array(':string' => $string . '%'));
+  $results = db_query_range('SELECT nid, title FROM {node} WHERE LOWER(title) LIKE LOWER(:string) ORDER BY title', 0, 9, array(':string' => db_like($string) . '%'));
 
   foreach ($results as $result) {
     $name = $result->title . ' [nid: ' . $result->nid . ']';
@@ -2137,7 +2137,7 @@ function workbench_menu_autocomplete_nid($string) {
   }
 
   if (count($matches) < 9) {
-    $results = db_query_range('SELECT nid, title FROM {node} WHERE LOWER(title) LIKE LOWER(:string) ORDER BY title', 0, 9 - count($matches), array(':string' => '%' . $string . '%'));
+    $results = db_query_range('SELECT nid, title FROM {node} WHERE LOWER(title) LIKE LOWER(:string) ORDER BY title', 0, 9 - count($matches), array(':string' => '%' . db_like($string) . '%'));
 
     foreach ($results as $result) {
       $name = $result->title . ' [nid: ' . $result->nid . ']';
@@ -2303,6 +2303,12 @@ function workbench_menu_autocomplete_menu_item_id($string) {
       cf_error::not_string('string');
     }
 
+    return array();
+  }
+
+  // do not allow anonymous to utilize this jquery search
+  $user = cf_current_user();
+  if ($user->uid == 0) {
     return array();
   }
 
