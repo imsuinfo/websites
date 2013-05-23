@@ -374,3 +374,93 @@ function workbench_menu_update_7102() {
     cf_db_options_add_options('workbench_menu', 'item_type', $item_type);
   }
 }
+
+/**
+ * Re-organize the database structure based on the new item types available.
+ *
+ * Mass convert all links that point to nodes to proper node item types.
+ * Mass convert all links that use <top> into top itemp types.
+ */
+function workbench_menu_update_7103() {
+  $results = db_query("SELECT * FROM {workbench_menu_options_item_type}");
+  $item_types = array();
+
+  foreach ($results as $result) {
+    $item_types[$result->machine_name] = $result->id;
+  }
+
+  $arguments = array(':item_type_id' => $item_types['item_link']);
+  $results = db_query("SELECT * FROM {workbench_menu_items} wmi INNER JOIN {workbench_menu_item_types} wmit ON wmi.id = wmit.item_id WHERE wmit.item_type_id = :item_type_id AND wmi.properties LIKE '%/node/%'", $arguments);
+
+  foreach ($results as $result) {
+    $properties = unserialize($result->properties);
+    $matches = array();
+
+    $matched = preg_match('@^/node/(\d+)($|\?.*|#.*)@', $properties['url'], $matches);
+
+    if ($matched > 0) {
+      if (cf_is_integer($matches[1])) {
+        $query = db_select('node', 'n');
+        $query->fields('n', array('nid', 'title'));
+        $query->condition('n.nid', $matches[1]);
+
+        $subresults = (array) $query->execute()->fetchAll();
+
+        if (!empty($subresults)) {
+          $subresult = array_pop($subresults);
+          $properties['url'] = '';
+          $properties['node_id'] = $subresult->title . ' [nid: ' . $subresult->nid . ']';
+
+          if (!empty($matches[2])) {
+            $properties['node_id'] .= ' ' . $matches[2];
+          }
+
+          $serialized = serialize($properties);
+          $transaction = db_transaction();
+
+          $query = db_update('workbench_menu_items');
+          $query->condition('id', $result->id);
+          $query->fields(array('properties' => $serialized));
+          $query->execute();
+
+
+          $query = db_update('workbench_menu_item_types');
+          $query->condition('item_id', $result->id);
+          $query->fields(array('item_type_id' => $item_types['item_node']));
+          $query->execute();
+
+          // force execution of transaction
+          unset($transaction);
+        }
+      }
+    }
+  }
+
+  $arguments = array(':item_type_id' => $item_types['item_link']);
+  $results = db_query("SELECT * FROM {workbench_menu_items} wmi INNER JOIN {workbench_menu_item_types} wmit ON wmi.id = wmit.item_id WHERE wmit.item_type_id = :item_type_id AND wmi.properties LIKE '%<top>%'", $arguments);
+
+  foreach ($results as $result) {
+    $properties = unserialize($result->properties);
+
+    if ($properties['url'] == '<top>') {
+      $properties['url'] = '';
+
+      $serialized = serialize($properties);
+      $transaction = db_transaction();
+
+      $query = db_update('workbench_menu_items');
+      $query->condition('id', $result->id);
+      $query->fields(array('properties' => $serialized, 'active_path' => ''));
+      $query->execute();
+
+
+      $query = db_update('workbench_menu_item_types');
+      $query->condition('item_id', $result->id);
+      $query->fields(array('item_type_id' => $item_types['item_top']));
+      $query->execute();
+
+      // force execution of transaction
+      unset($transaction);
+    }
+  }
+}
