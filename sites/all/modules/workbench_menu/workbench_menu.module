@@ -697,7 +697,7 @@ function workbench_menu_build_menu_item($menu, $item, &$variables) {
       }
     }
 
-    // return if not items were found.
+    // return if no items were found.
     if (empty($item_menus)) {
       return array('structure' => array(), 'settings' => array());
     }
@@ -927,6 +927,7 @@ function workbench_menu_build_menu_item($menu, $item, &$variables) {
     $filename = '';
     $link_path = '';
     $process = TRUE;
+    $to_node = FALSE;
 
     $matches = array();
     $matched = preg_match('@\[fid: (\d+)\]\s*$@i', $item['item']->properties['file'], $matches);
@@ -961,6 +962,7 @@ function workbench_menu_build_menu_item($menu, $item, &$variables) {
       $matched = preg_match('@^/node/(\d+)(/.*|$|\?.*|#.*)@', $item['item']->properties['file'], $matches);
 
       if ($matched > 0) {
+        $to_node = TRUE;
         $path_alias = drupal_get_path_alias('node/' . $matches[1]);
 
         if (isset($matches[2])) {
@@ -1020,7 +1022,13 @@ function workbench_menu_build_menu_item($menu, $item, &$variables) {
     }
     else {
       $item_settings['prefix'] .= '<div class="' . 'menu_item-icon ' . 'menu_item-icon_' . $icon . '"></div>';
-      $item_settings['attributes']['title'] = array(t("Download: !filename.", array('!filename' => $filename)));
+
+      if ($to_node) {
+        $item_settings['attributes']['title'] = array(t("View or Download: !filename.", array('!filename' => $filename)));
+      }
+      else {
+        $item_settings['attributes']['title'] = array(t("Download: !filename.", array('!filename' => $filename)));
+      }
 
       if (empty($link_path)) {
         $item_settings['attributes']['title'] = array(t("File Not Found: !filename.", array('!filename' => $filename)));
