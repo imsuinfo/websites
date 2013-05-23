@@ -35,22 +35,23 @@
  */
 
 if (!empty($data['settings'])) {
-  $classes = implode(' ', (array) $data['settings'][$data['id']]['attributes']['class']);
-  $data['settings'][$data['id']]['attributes']['class'] = array('menu_item-text');
-  $attributes = ' ' . drupal_attributes($data['settings'][$data['id']]['attributes']);
+  $settings = & $data['settings'][$data['id']];
+  $classes = implode(' ', (array) $settings['attributes']['class']);
+  $settings['attributes']['class'] = array('menu_item-text');
+  $attributes = ' ' . drupal_attributes($settings['attributes']);
 ?>
 <li class="<?php print($classes); ?>">
-  <?php if (!empty($data['settings'][$data['id']]['attributes']['href'])) { ?>
+  <?php if (!empty($settings['attributes']['href'])) { ?>
     <a<?php print($attributes); ?>>
-      <?php print($data['settings'][$data['id']]['prefix']); ?>
-      <?php print($data['settings'][$data['id']]['label'] . $data['active_text']); ?>
-      <?php print($data['settings'][$data['id']]['postfix']); ?>
+      <?php print($settings['prefix']); ?>
+      <?php print($settings['label'] . $data['active_text']); ?>
+      <?php print($settings['postfix']); ?>
     </a>
   <?php } else { ?>
     <span<?php print($attributes); ?>>
-      <?php print($data['settings'][$data['id']]['prefix']); ?>
-      <?php print($data['settings'][$data['id']]['label'] . $data['active_text']); ?>
-      <?php print($data['settings'][$data['id']]['postfix']); ?>
+      <?php print($settings['prefix']); ?>
+      <?php print($settings['label'] . $data['active_text']); ?>
+      <?php print($settings['postfix']); ?>
     </span>
   <?php } ?>
 

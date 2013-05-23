@@ -1568,24 +1568,26 @@ function workbench_menu_admin_item_settings_edit_form_validate($form, &$form_sta
   $item_type_name = &$form['settings']['settings']['item_type']['#options'][$item_type];
 
   if (isset($form_state['values']['settings']['parent_id'])) {
+    $field = & $form_state['values']['settings']['parent_id'];
+
     if (isset($form['item_id']['#value'])) {
-      if ($form['item_id']['#value'] === $form_state['values']['settings']['parent_id']) {
+      if ($form['item_id']['#value'] === $field) {
         form_set_error('settings][parent_id', t("The menu item cannot be its own parent."));
       }
     }
 
-    if ($form_state['values']['settings']['parent_id'] != 0) {
-      $items = (array) workbench_menu_get_load_menu_items(array('id' => $form_state['values']['settings']['parent_id']), 'id');
+    if ($field != 0) {
+      $items = (array) workbench_menu_get_load_menu_items(array('id' => $field), 'id');
 
       if (empty($items)) {
-        form_set_error('settings][parent_id', t("The specified item parent (@parent_id) is invalid.", array('@parent_id' => $form_state['values']['settings']['parent_id'])));
+        form_set_error('settings][parent_id', t("The specified item parent (@parent_id) is invalid.", array('@parent_id' => $field)));
       }
       else {
-        if (!isset($items['flat'][$form_state['values']['settings']['parent_id']])) {
+        if (!isset($items['flat'][$field])) {
           form_set_error('settings][parent_id', t("The specified item parent is invalid."));
         }
         else {
-          $item = &$items['flat'][$form_state['values']['settings']['parent_id']];
+          $item = &$items['flat'][$field];
           $type = '';
 
           foreach ($item['item']->item_type as &$t) {
@@ -1607,15 +1609,17 @@ function workbench_menu_admin_item_settings_edit_form_validate($form, &$form_sta
   }
 
   if (!empty($form_state['values']['settings']['active_path'])) {
-    if ($form_state['values']['settings']['active_path'] !== '<top>') {
-      // be user-friendly and allow normal whitespaces on insert.
-      $form_state['values']['settings']['active_path'] = preg_replace('/ /', '%20', $form_state['values']['settings']['active_path']);
+    $field = & $form_state['values']['settings']['active_path'];
 
-      if (valid_url($form_state['values']['settings']['active_path'], TRUE)) {
+    if ($field !== '<top>') {
+      // be user-friendly and allow normal whitespaces on insert.
+      $field = preg_replace('/ /', '%20', $field);
+
+      if (valid_url($field, TRUE)) {
         form_set_error('settings][active_path', t("The active path cannot be a full URL."));
       }
-      elseif (!valid_url($form_state['values']['settings']['active_path'])) {
-        form_set_error('settings][active_path', t("'%path' is not a valid path.", array('%path' => $form_state['values']['settings']['active_path'])));
+      elseif (!valid_url($field)) {
+        form_set_error('settings][active_path', t("'%path' is not a valid path.", array('%path' => $field)));
       }
     }
   }
@@ -1679,19 +1683,21 @@ function workbench_menu_admin_item_settings_edit_form_validate($form, &$form_sta
         form_set_error('settings][url', t("The URL is required for an item type of %type.", array('%type' => $item_type_name)));
       }
       elseif ($form_state['values']['settings']['url'] !== '<top>') {
-        // be user-friendly and allow normal whitespaces on insert.
-        $form_state['values']['settings']['url'] = preg_replace('/ /', '%20', $form_state['values']['settings']['url']);
+        $field = & $form_state['values']['settings']['url'];
 
-        if (!valid_url($form_state['values']['settings']['url'], TRUE)) {
-          if (!valid_url($form_state['values']['settings']['url'])) {
-            form_set_error('settings][url', t("'%url' is not a valid URL.", array('%url' => $form_state['values']['settings']['url'])));
+        // be user-friendly and allow normal whitespaces on insert.
+        $field = preg_replace('/ /', '%20', $field);
+
+        if (!valid_url($field, TRUE)) {
+          if (!valid_url($field)) {
+            form_set_error('settings][url', t("'%url' is not a valid URL.", array('%url' => $field)));
           }
         }
       }
       break;
 
     case 'item_file':
-      $field = &$form_state['values']['settings']['file'];
+      $field = & $form_state['values']['settings']['file'];
 
       if (empty($field)) {
         form_set_error('settings][file', t("The file is required for an item type of %item.", array('%item' => $item_type_name)));

@@ -571,36 +571,41 @@ function workbench_menu_build_menus($path_string, &$menus_processed, &$breadcrum
 function workbench_menu_build_menu_item($menu, $item, &$variables) {
   $built_menu = array();
 
+  $item_id = & $item['item']->id;
+
   $structure = array();
-  $structure[$item['item']->weight] = array($item['item']->id => array());
+  $structure[$item['item']->weight] = array($item_id => array());
 
   $settings = array();
-  $settings[$item['item']->id] = array();
-  $settings[$item['item']->id]['type'] = '';
-  $settings[$item['item']->id]['expand'] = 'expand_auto';
-  $settings[$item['item']->id]['label'] = check_plain($item['item']->human_name);
-  $settings[$item['item']->id]['attributes'] = array();
-  $settings[$item['item']->id]['attributes']['class'] = array();
-  $settings[$item['item']->id]['attributes']['class'][] = 'menu_item';
-  $settings[$item['item']->id]['attributes']['class'][] = 'menu_item-id-' . $item['item']->id;
-  $settings[$item['item']->id]['prefix'] = '';
-  $settings[$item['item']->id]['postfix'] = '';
-  $settings[$item['item']->id]['outside_link'] = FALSE;
-  $settings[$item['item']->id]['top_link'] = FALSE;
-  $settings[$item['item']->id]['active_path'] = '';
-  $settings[$item['item']->id]['breadcrumbs'] = array();
+  $settings[$item_id] = array();
+
+  $item_settings = & $settings[$item_id];
+
+  $item_settings['type'] = '';
+  $item_settings['expand'] = 'expand_auto';
+  $item_settings['label'] = check_plain($item['item']->human_name);
+  $item_settings['attributes'] = array();
+  $item_settings['attributes']['class'] = array();
+  $item_settings['attributes']['class'][] = 'menu_item';
+  $item_settings['attributes']['class'][] = 'menu_item-id-' . $item_id;
+  $item_settings['prefix'] = '';
+  $item_settings['postfix'] = '';
+  $item_settings['outside_link'] = FALSE;
+  $item_settings['top_link'] = FALSE;
+  $item_settings['active_path'] = '';
+  $item_settings['breadcrumbs'] = array();
 
   $process_children = TRUE;
 
   foreach ($item['item']->item_type as &$type) {
-    $settings[$item['item']->id]['type'] = $type->machine_name;
-    $settings[$item['item']->id]['attributes']['class'][] = 'menu_item-type-' . $type->machine_name;
+    $item_settings['type'] = $type->machine_name;
+    $item_settings['attributes']['class'][] = 'menu_item-type-' . $type->machine_name;
     break;
   }
 
   foreach ($item['item']->expand as &$expand) {
-    $settings[$item['item']->id]['expand'] = $expand->machine_name;
-    $settings[$item['item']->id]['attributes']['class'][] = 'menu_item-expand-' . $expand->machine_name;
+    $item_settings['expand'] = $expand->machine_name;
+    $item_settings['attributes']['class'][] = 'menu_item-expand-' . $expand->machine_name;
     break;
   }
 
@@ -609,12 +614,12 @@ function workbench_menu_build_menu_item($menu, $item, &$variables) {
   $alter_settings = array();
   $alter_settings['menu'] = clone($menu);
   $alter_settings['item'] = $item;
-  $alter_settings['settings'] = &$settings[$item['item']->id];
+  $alter_settings['settings'] = &$item_settings;
   $alter_settings['active_path'] = $active_path;
   $alter_settings['variables'] = &$variables;
 
   // menu item menus are other menus embedded inside the current menu.
-  if ($settings[$item['item']->id]['type'] == 'item_menu') {
+  if ($item_settings['type'] == 'item_menu') {
     $field = & $item['item']->properties['menu'];
     $item_menus = array();
 
@@ -661,10 +666,10 @@ function workbench_menu_build_menu_item($menu, $item, &$variables) {
       $data['settings'] = array();
     }
 
-    if ($settings[$item['item']->id]['expand'] != "expand_auto") {
+    if ($item_settings['expand'] != "expand_auto") {
       foreach ($data['structure'] as $row_key => &$row_value) {
         foreach ($row_value as $key => &$value) {
-          $data['settings'][$key]['expand'] = $settings[$item['item']->id]['expand'];
+          $data['settings'][$key]['expand'] = $item_settings['expand'];
         }
       }
     }
@@ -673,7 +678,7 @@ function workbench_menu_build_menu_item($menu, $item, &$variables) {
   }
 
   // menu item menu items are parts of another menu embeded inside of the current menu.
-  if ($settings[$item['item']->id]['type'] == 'item_menu_item') {
+  if ($item_settings['type'] == 'item_menu_item') {
     $field_menu = & $item['item']->properties['menu'];
     $field_menu_item = & $item['item']->properties['menu_item'];
     $item_menus = array();
@@ -774,21 +779,21 @@ function workbench_menu_build_menu_item($menu, $item, &$variables) {
       return array('structure' => array(), 'settings' => array());
     }
 
-    $structure[$item['item']->weight][$item['item']->id] = $data['structure'][$item_menu_item['item']->weight][$item_menu_item_id];
+    $structure[$item['item']->weight][$item_id] = $data['structure'][$item_menu_item['item']->weight][$item_menu_item_id];
 
-    $settings[$item['item']->id]['label'] = $data['settings'][$item_menu_item_id]['label'];
-    $settings[$item['item']->id]['prefix'] = $data['settings'][$item_menu_item_id]['prefix'];
-    $settings[$item['item']->id]['postfix'] = $data['settings'][$item_menu_item_id]['postfix'];
-    $settings[$item['item']->id]['outside_link'] = $data['settings'][$item_menu_item_id]['outside_link'];
-    $settings[$item['item']->id]['top_link'] = $data['settings'][$item_menu_item_id]['top_link'];
-    $settings[$item['item']->id]['active_path'] = $data['settings'][$item_menu_item_id]['active_path'];
+    $item_settings['label'] = $data['settings'][$item_menu_item_id]['label'];
+    $item_settings['prefix'] = $data['settings'][$item_menu_item_id]['prefix'];
+    $item_settings['postfix'] = $data['settings'][$item_menu_item_id]['postfix'];
+    $item_settings['outside_link'] = $data['settings'][$item_menu_item_id]['outside_link'];
+    $item_settings['top_link'] = $data['settings'][$item_menu_item_id]['top_link'];
+    $item_settings['active_path'] = $data['settings'][$item_menu_item_id]['active_path'];
 
     foreach ($data['settings'][$item_menu_item_id]['attributes'] as $attribute => &$value) {
       if ($attribute == 'id' || $attribute == 'class') continue;
-      $settings[$item['item']->id]['attributes'][$attribute] = $value;
+      $item_settings['attributes'][$attribute] = $value;
     }
 
-    $settings[$item['item']->id]['attributes']['class'][] = 'menu_item-type-' . $data['settings'][$item_menu_item_id]['type'];
+    $item_settings['attributes']['class'][] = 'menu_item-type-' . $data['settings'][$item_menu_item_id]['type'];
 
     unset($data['settings'][$item_menu_item_id]);
 
@@ -802,27 +807,27 @@ function workbench_menu_build_menu_item($menu, $item, &$variables) {
   }
 
   // menu item labels are parts of a menu that do not link to anything.
-  if ($settings[$item['item']->id]['type'] == 'item_label') {
+  if ($item_settings['type'] == 'item_label') {
     if (isset($item['item']->properties['disabled']) && $item['item']->properties['disabled']) {
-      $settings[$item['item']->id]['attributes']['class'][] = 'disabled';
-      $settings[$item['item']->id]['clickable'] = FALSE;
+      $item_settings['attributes']['class'][] = 'disabled';
+      $item_settings['clickable'] = FALSE;
     }
     elseif (isset($item['item']->properties['clickable']) && $item['item']->properties['clickable']) {
-      $settings[$item['item']->id]['attributes']['class'][] = 'clickable';
-      $settings[$item['item']->id]['attributes']['class'][] = 'noscript';
-      $settings[$item['item']->id]['attributes']['href'] = array('');
-      $settings[$item['item']->id]['clickable'] = TRUE;
+      $item_settings['attributes']['class'][] = 'clickable';
+      $item_settings['attributes']['class'][] = 'noscript';
+      $item_settings['attributes']['href'] = array('');
+      $item_settings['clickable'] = TRUE;
     }
   }
 
   // menu item links are parts of a menu that link to some url, file, or id (local or remote).
-  if ($settings[$item['item']->id]['type'] == 'item_link' || $settings[$item['item']->id]['type'] == 'item_node') {
+  if ($item_settings['type'] == 'item_link' || $item_settings['type'] == 'item_node') {
     $link_path = '';
     $process = TRUE;
     $parsed_url = array();
     $matches = array();
 
-    if ($settings[$item['item']->id]['type'] == 'item_link') {
+    if ($item_settings['type'] == 'item_link') {
       $matched = preg_match('@^/node/(\d+)(/.*|$|\?.*|#.*)@', $item['item']->properties['url'], $matches);
     }
     else {
@@ -863,7 +868,7 @@ function workbench_menu_build_menu_item($menu, $item, &$variables) {
         $results = $query->execute()->fetchAll();
 
         if (empty($results)) {
-          $settings[$item['item']->id]['attributes']['title'] = array(t("Page Not Found: !path_alias.", array('!path_alias' => check_plain($path_alias))));
+          $item_settings['attributes']['title'] = array(t("Page Not Found: !path_alias.", array('!path_alias' => check_plain($path_alias))));
           $process = FALSE;
           $link_path = '';
         }
@@ -872,8 +877,8 @@ function workbench_menu_build_menu_item($menu, $item, &$variables) {
 
     if ($process && empty($link_path)) {
       if ($item['item']->properties['url'] == '<top>') {
-        $settings[$item['item']->id]['attributes']['class'][] = 'menu_item-menu_top';
-        $settings[$item['item']->id]['top_link'] = TRUE;
+        $item_settings['attributes']['class'][] = 'menu_item-menu_top';
+        $item_settings['top_link'] = TRUE;
 
         $link_path = '/' . $menu->path;
         $active_path = $menu->path;
@@ -885,15 +890,15 @@ function workbench_menu_build_menu_item($menu, $item, &$variables) {
           $parsed_url = parse_url($link_path);
           $remote_url = check_plain($parsed_url['host']);
 
-          $settings[$item['item']->id]['prefix'] .= '<div class="' . 'menu_item-icon ' . 'menu_item-icon_external"></div>';
-          $settings[$item['item']->id]['attributes']['title'] = array(t("This links to the external website: !remote_url.", array('!remote_url' => $remote_url)));
+          $item_settings['prefix'] .= '<div class="' . 'menu_item-icon ' . 'menu_item-icon_external"></div>';
+          $item_settings['attributes']['title'] = array(t("This links to the external website: !remote_url.", array('!remote_url' => $remote_url)));
         }
         else {
           $matches = array();
 
           if (preg_match('/^mailto:(.*)/', $link_path, $matches) > 0) {
-            $settings[$item['item']->id]['prefix'] .= '<div class="' . 'menu_item-icon ' . 'menu_item-icon_mail"></div>';
-            $settings[$item['item']->id]['attributes']['title'] = array(t("Send an e-mail to: !email_address.", array('!email_address' => check_plain($matches[1]))));
+            $item_settings['prefix'] .= '<div class="' . 'menu_item-icon ' . 'menu_item-icon_mail"></div>';
+            $item_settings['attributes']['title'] = array(t("Send an e-mail to: !email_address.", array('!email_address' => check_plain($matches[1]))));
           }
           elseif (preg_match('@^(/|#)@', $link_path) === 0) {
             $link_path = '/' . $menu->path . '/' . $link_path;
@@ -903,17 +908,17 @@ function workbench_menu_build_menu_item($menu, $item, &$variables) {
     }
 
     if (!empty($link_path)) {
-      $settings[$item['item']->id]['attributes']['href'] = array($link_path);
+      $item_settings['attributes']['href'] = array($link_path);
     }
 
-    $settings[$item['item']->id]['outside_link'] = (preg_match('@^' . $menu->path . '/@', $link_path) > 0);
+    $item_settings['outside_link'] = (preg_match('@^' . $menu->path . '/@', $link_path) > 0);
 
     unset($matches);
     unset($matched);
     unset($link_path);
   }
 
-  if ($settings[$item['item']->id]['type'] == 'item_file') {
+  if ($item_settings['type'] == 'item_file') {
     $icon = check_plain($item['item']->properties['file_type']);
     $filename = '';
     $link_path = '';
@@ -1000,29 +1005,29 @@ function workbench_menu_build_menu_item($menu, $item, &$variables) {
         $parsed_url = parse_url($link_path);
         $remote_url = check_plain($parsed_url['host']);
 
-        $settings[$item['item']->id]['prefix'] = '<div class="' . 'menu_item-icon ' . 'menu_item-icon_' . $icon . '"></div>';
-        $settings[$item['item']->id]['attributes']['title'] = array(t("Download !filename from the external website: !remote_url.", array('!filename' => $filename, '!remote_url' => $remote_url)));
-        $settings[$item['item']->id]['attributes']['class'][] = 'menu_item-external_url';
+        $item_settings['prefix'] = '<div class="' . 'menu_item-icon ' . 'menu_item-icon_' . $icon . '"></div>';
+        $item_settings['attributes']['title'] = array(t("Download !filename from the external website: !remote_url.", array('!filename' => $filename, '!remote_url' => $remote_url)));
+        $item_settings['attributes']['class'][] = 'menu_item-external_url';
       }
       else {
-        $settings[$item['item']->id]['prefix'] .= '<div class="' . 'menu_item-icon ' . 'menu_item-icon_' . $icon . '"></div>';
-        $settings[$item['item']->id]['attributes']['title'] = array(t("Download !filename.", array('!filename' => $filename)));
+        $item_settings['prefix'] .= '<div class="' . 'menu_item-icon ' . 'menu_item-icon_' . $icon . '"></div>';
+        $item_settings['attributes']['title'] = array(t("Download !filename.", array('!filename' => $filename)));
       }
     }
     else {
-      $settings[$item['item']->id]['prefix'] .= '<div class="' . 'menu_item-icon ' . 'menu_item-icon_' . $icon . '"></div>';
-      $settings[$item['item']->id]['attributes']['title'] = array(t("Download: !filename.", array('!filename' => $filename)));
+      $item_settings['prefix'] .= '<div class="' . 'menu_item-icon ' . 'menu_item-icon_' . $icon . '"></div>';
+      $item_settings['attributes']['title'] = array(t("Download: !filename.", array('!filename' => $filename)));
 
       if (empty($link_path)) {
-        $settings[$item['item']->id]['attributes']['title'] = array(t("File Not Found: !filename.", array('!filename' => $filename)));
+        $item_settings['attributes']['title'] = array(t("File Not Found: !filename.", array('!filename' => $filename)));
       }
     }
 
     if (!empty($link_path)) {
-      $settings[$item['item']->id]['attributes']['href'] = array($link_path);
+      $item_settings['attributes']['href'] = array($link_path);
     }
 
-    $settings[$item['item']->id]['postfix'] = '';
+    $item_settings['postfix'] = '';
 
     unset($icon);
     unset($filename);
@@ -1034,7 +1039,7 @@ function workbench_menu_build_menu_item($menu, $item, &$variables) {
   if ($item['item']->active_path == '<top>') {
     $active_path = $variables['menu_path'];
   }
-  elseif (empty($settings[$item['item']->id]['active_path']) && !empty($item['item']->active_path)) {
+  elseif (empty($item_settings['active_path']) && !empty($item['item']->active_path)) {
     if (preg_match('@^/@', $item['item']->active_path) == 0) {
       $active_path = $variables['parent_path'] . '/' . $item['item']->active_path;
     }
@@ -1046,10 +1051,10 @@ function workbench_menu_build_menu_item($menu, $item, &$variables) {
   if (!empty($active_path)) {
     $active_path = preg_replace('/%20/', ' ', $active_path);
 
-    $settings[$item['item']->id]['active_path'] = $active_path;
+    $item_settings['active_path'] = $active_path;
 
     if ($active_path != $variables['menu_path']) {
-      $variables['breadcrumbs'][] = l($settings[$item['item']->id]['label'], $active_path, array('html' => TRUE));
+      $variables['breadcrumbs'][] = l($item_settings['label'], $active_path, array('html' => TRUE));
     }
 
     if ($variables['breadcrumbs_all'] !== FALSE) {
@@ -1059,14 +1064,14 @@ function workbench_menu_build_menu_item($menu, $item, &$variables) {
     }
   }
   else {
-    $variables['breadcrumbs'][] = '<span>' . $settings[$item['item']->id]['label'] . '</span>';
+    $variables['breadcrumbs'][] = '<span>' . $item_settings['label'] . '</span>';
   }
 
   if ($variables['breadcrumbs_all'] === FALSE) {
-    unset($settings[$item['item']->id]['breadcrumbs']);
+    unset($item_settings['breadcrumbs']);
   }
   else {
-    $settings[$item['item']->id]['breadcrumbs'] = $variables['breadcrumbs'];
+    $item_settings['breadcrumbs'] = $variables['breadcrumbs'];
   }
 
   if ($process_children && !empty($item['children'])) {
@@ -1092,7 +1097,7 @@ function workbench_menu_build_menu_item($menu, $item, &$variables) {
 
       foreach ($data['structure'] as $structure_id => &$structure_data) {
         foreach ($structure_data as $structure_data_id => $structure_data_data) {
-          $structure[$item['item']->weight][$item['item']->id][$structure_id][$structure_data_id] = $structure_data_data;
+          $structure[$item['item']->weight][$item_id][$structure_id][$structure_data_id] = $structure_data_data;
         }
       }
 
@@ -2008,11 +2013,13 @@ function workbench_menu_get_load_menu_items_select_list_options_recursive_walk(&
     $data['depth'] = 0;
   }
 
+  $item_id = & $item['item']->id;
+
   if ($data['depth'] > 0) {
-    $data['options'][$item['item']->id] = str_repeat('- ', $data['depth']) . $item['item']->human_name;
+    $data['options'][$item_id] = str_repeat('- ', $data['depth']) . $item['item']->human_name;
   }
   else {
-    $data['options'][$item['item']->id] = $item['item']->human_name;
+    $data['options'][$item_id] = $item['item']->human_name;
   }
 
   if (!empty($item['children'])) {
