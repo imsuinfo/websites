@@ -5,9 +5,9 @@ package = Webform
 
 dependencies[] = webform
 
-; Information added by drupal.org packaging script on 2012-08-26
+; Information added by drupal.org packaging script on 2013-05-17
 version = "7.x-1.x-dev"
 core = "7.x"
 project = "webform_boolean"
-datestamp = "1345945152"
+datestamp = "1368808377"
 
