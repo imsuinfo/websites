@@ -1283,7 +1283,6 @@ function template_preprocess_workbench_menu_item(&$vars) {
     $bc = array_merge(array('<a href="' . base_path() . '">' . t("Home") . '</a>'), $settings['breadcrumbs']);
 
     drupal_set_breadcrumb($bc);
-    #drupal_set_message("DEBUG: " . $variables['id'] . " = " . $settings['type'] . ", " . print_r($bc, TRUE));
   }
 
   if (empty($variables['children'])) {
@@ -2077,7 +2076,7 @@ function workbench_menu_get_load_menu_items_select_list_options_recursive_walk(&
  *   If NULL is passed, then this simply returnes whether or not the
  *   user has 'edit workbench menu' access.
  *
- * @see workbench_access_get_access_tree()
+ * @see workbench_menu_access_menu()
  */
 function workbench_menu_edit_access($access_type = NULL, $access_id = NULL) {
   if (user_access('admin workbench menu')) {
@@ -2091,14 +2090,8 @@ function workbench_menu_edit_access($access_type = NULL, $access_id = NULL) {
   if (!user_access('edit workbench menu')) return FALSE;
 
   if ($access_type == 'taxonomy') {
-    $access = workbench_access_get_access_tree();
-
-    if (array_key_exists($access_id, $access)) {
-      return TRUE;
-    }
+    return workbench_menu_access_menu($access_id);
   }
-
-  return FALSE;
 }
 
 /**
@@ -2478,4 +2471,58 @@ function workbench_menu_menu_item_exists($item_id, $menu_id = NULL, $is_access_i
   $executed = $query->execute();
 
   return $executed->rowCount() > 0;
+}
+
+/**
+ * Validate that a user has workbench access for a given access id.
+ *
+ * @param int $access_id
+ *   The access_id to validate against.
+ *
+ * @param object $account
+ *   The user account to test access for, defaults to current user.
+ */
+function workbench_menu_access_menu($access_id, $account = NULL) {
+  if (!cf_is_integer($access_id)) {
+    if (class_exists('cf_error')) {
+      cf_error::not_numeric('access_id');
+    }
+
+    return FALSE;
+  }
+
+  if (is_null($account)) {
+    $account = cf_current_user();
+  }
+  else if (!is_object($account)) {
+    if (class_exists('cf_error')) {
+      cf_error::invalid_object('account');
+    }
+
+    return FALSE;
+  }
+
+  try {
+    $query = db_select('workbench_access', 'wa');
+    $query->join('workbench_access_user', 'wau', 'wa.access_id = wau.access_id AND wa.access_scheme = wau.access_scheme');
+    $query->join('workbench_access_role', 'war', 'wa.access_id = war.access_id AND wa.access_scheme = war.access_scheme');
+    $query->fields('wa', array('access_id'));
+    $query->condition('wa.access_id', $access_id);
+
+    $or = db_or();
+    $or->condition('wau.uid', $account->uid);
+    $or->condition('war.rid', array_keys($account->roles), 'IN');
+    $query->condition($or);
+
+    $count = $query->execute()->fetchField();
+  }
+  catch (Exception $e) {
+    if (class_exists('cf_error')) {
+      cf_error::on_query_execution($e);
+    }
+
+    return FALSE;
+  }
+
+  return !empty($count);
 }
