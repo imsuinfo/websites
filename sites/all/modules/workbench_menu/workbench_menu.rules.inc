@@ -81,7 +81,7 @@ function workbench_menu_rules_action_info() {
     'group' => t("Workbench"),
     'base' => 'workbench_menu_load_menus_by_path_rules_action',
     'parameter' => array(
-      'access_id' => array('type' => 'text', 'label' => t("Path"), 'optional' => TRUE),
+      'path' => array('type' => 'text', 'label' => t("Path"), 'optional' => TRUE),
     ),
     'provides' => array(
       'menus' => array('type' => 'list<workbench_menu>', 'label' => t("Menus")),
