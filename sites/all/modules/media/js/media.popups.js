@@ -83,12 +83,10 @@ Drupal.media.popups.mediaBrowser = function (onSelect, globalOptions, pluginOpti
     }
     onSelect(selected);
     $(this).dialog("destroy");
-    $(this).remove();
   };
 
   dialogOptions.buttons[cancel] = function () {
     $(this).dialog("destroy");
-    $(this).remove();
   };
 
   Drupal.media.popups.setDialogPadding(mediaIframe.dialog(dialogOptions));
@@ -132,7 +130,6 @@ Drupal.media.popups.mediaBrowser.finalizeSelection = function () {
   }
   onSelect(selected);
   $(this).dialog("destroy");
-  $(this).remove();
 }
 
 /**
@@ -184,12 +181,10 @@ Drupal.media.popups.mediaStyleSelector = function (mediaFile, onSelect, options)
     }
     onSelect(formattedMedia);
     $(this).dialog("destroy");
-    $(this).remove();
   };
 
   dialogOptions.buttons[cancel] = function () {
     $(this).dialog("destroy");
-    $(this).remove();
   };
 
   Drupal.media.popups.setDialogPadding(mediaIframe.dialog(dialogOptions));
@@ -263,12 +258,10 @@ Drupal.media.popups.mediaFieldEditor = function (fid, onSelect, options) {
     }
     onSelect(formattedMedia);
     $(this).dialog("destroy");
-    $(this).remove();
   };
 
   dialogOptions.buttons[cancel] = function () {
     $(this).dialog("destroy");
-    $(this).remove();
   };
 
   Drupal.media.popups.setDialogPadding(mediaIframe.dialog(dialogOptions));
@@ -313,7 +306,10 @@ Drupal.media.popups.getDialogOptions = function () {
       backgroundColor: '#000000',
       opacity: 0.4
     },
-    zIndex: 10000
+    zIndex: 10000,
+    close: function (event, ui) {
+      $(event.target).remove();
+    }
   };
 };
 
