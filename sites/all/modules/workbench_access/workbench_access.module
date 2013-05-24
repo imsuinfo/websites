@@ -506,15 +506,31 @@ function workbench_access_get_access_tree($account_access = array()) {
   if (empty($account_access)) {
     return $trees[$key];
   }
-  $access_scheme = db_select('workbench_access', 'wa')
-    ->addTag('workbench_access')
-    ->fields('wa', array('access_id', 'access_type', 'access_scheme', 'access_type_id'))
-    ->condition('wa.access_id', $account_access, 'IN')
-    ->condition('wa.access_type', variable_get('workbench_access'))
-    ->execute()->fetchAllAssoc('access_id', PDO::FETCH_ASSOC);
-  foreach ($access_scheme as $id => $info) {
-    $trees[$key][$id] = workbench_access_tree($info, TRUE);
+
+  global $user;
+  $account = user_load($user->uid);
+
+  try {
+    $query = db_select('workbench_access', 'wa');
+    $query->join('workbench_access_user', 'wau', 'wa.access_id = wau.access_id AND wa.access_scheme = wau.access_scheme');
+    $query->join('workbench_access_role', 'war', 'wa.access_id = war.access_id AND wa.access_scheme = war.access_scheme');
+    $query->fields('wa', array('access_id', 'access_type', 'access_scheme', 'access_type_id'));
+
+    $or = db_or();
+    $or->condition('wau.uid', $account->uid);
+    $or->condition('war.rid', array_keys($account->roles), 'IN');
+    $query->condition($or);
+
+    $access_scheme = $query->execute();
+
+    foreach ($access_scheme as $info) {
+      $trees[$key][$info->access_id] = workbench_access_tree((array)$info, TRUE);
+    }
   }
+  catch (Exception $e) {
+    return $trees[$key];
+  }
+
   return $trees[$key];
 }
 
