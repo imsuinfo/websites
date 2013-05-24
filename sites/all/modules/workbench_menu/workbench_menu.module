@@ -2092,6 +2092,8 @@ function workbench_menu_edit_access($access_type = NULL, $access_id = NULL) {
   if ($access_type == 'taxonomy') {
     return workbench_menu_access_menu($access_id);
   }
+
+  return FALSE;
 }
 
 /**
