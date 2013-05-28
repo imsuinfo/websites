@@ -68,6 +68,10 @@
   background-image: url(../images/icon_webdocument.png);
 }
 
+.menu_item-icon_webform {
+  background-image: url(../images/icon_webform.png);
+}
+
 .menu_item-icon_word {
   background-image: url(../images/icon_word.png);
 }
