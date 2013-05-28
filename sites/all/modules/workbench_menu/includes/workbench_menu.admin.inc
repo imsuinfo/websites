@@ -1077,7 +1077,7 @@ function workbench_menu_admin_item_settings_form_settings($item, $menu) {
   $defaults['properties']['disabled'] = FALSE;
   $defaults['properties']['clickable'] = FALSE;
   $defaults['properties']['file'] = '';
-  $defaults['properties']['file_type'] = 'file_type_file';
+  $defaults['properties']['file_type'] = 'file';
   $defaults['properties']['menu'] = NULL;
   $defaults['properties']['menu_item'] = NULL;
   $defaults['properties']['never_suppress'] = FALSE;
