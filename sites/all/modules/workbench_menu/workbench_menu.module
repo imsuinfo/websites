@@ -594,6 +594,7 @@ function workbench_menu_build_menu_item($menu, $item, &$variables) {
   $item_settings['top_link'] = FALSE;
   $item_settings['active_path'] = '';
   $item_settings['breadcrumbs'] = array();
+  $item_settings['suppress_active'] = FALSE;
 
   $process_children = TRUE;
 
@@ -872,6 +873,11 @@ function workbench_menu_build_menu_item($menu, $item, &$variables) {
 
         if (!empty($parsed_url['fragment'])) {
           $link_path .= '#' . $parsed_url['fragment'];
+
+          // suppress active links that have fragments.
+          if (!(isset($item['item']->properties['never_suppress']) && $item['item']->properties['never_suppress'])) {
+            $item_settings['suppress_active'] = TRUE;
+          }
         }
 
         // check to see if the node still exists.
@@ -993,6 +999,11 @@ function workbench_menu_build_menu_item($menu, $item, &$variables) {
 
         if (!empty($parsed_url['fragment'])) {
           $link_path .= '#' . $parsed_url['fragment'];
+
+          // suppress active links that have fragments.
+          if (!(isset($item['item']->properties['never_suppress']) && $item['item']->properties['never_suppress'])) {
+            $item_settings['suppress_active'] = TRUE;
+          }
         }
 
         // check to see if the node still exists and use the node title.
@@ -1257,10 +1268,17 @@ function template_preprocess_workbench_menu_item(&$vars) {
   // provide an active text string for purposes of accessibility.
   $variables['active_text'] = '';
 
+
   if ($settings['active_path'] == $variables['path_current']) {
     $variables['trail_is_active'] = TRUE;
-    $settings['attributes']['class'][] = 'active';
     $variables['active_text'] =' <span class="element-invisible">' . t("(active menu item)") . '</span>';
+
+    if ($settings['suppress_active']) {
+      $settings['attributes']['class'][] = 'suppressed_active';
+    }
+    else {
+      $settings['attributes']['class'][] = 'active';
+    }
   }
   else {
     if (preg_match('@' . $settings['active_path'] . '@', $variables['path_current']) > 0) {
@@ -1270,7 +1288,14 @@ function template_preprocess_workbench_menu_item(&$vars) {
         if (implode('/', $path_current_parts) == $settings['active_path']) {
           $variables['invalid_trail_active'] = TRUE;
           $variables['trail_is_active'] = TRUE;
-          $settings['attributes']['class'][] = 'invalid_active';
+
+          if ($settings['suppress_active']) {
+            $settings['attributes']['class'][] = 'suppressed_invalid_active';
+          }
+          else {
+            $settings['attributes']['class'][] = 'invalid_active';
+          }
+
           break;
         }
 

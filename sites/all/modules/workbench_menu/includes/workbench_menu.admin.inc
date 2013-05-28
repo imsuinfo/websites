@@ -1080,6 +1080,7 @@ function workbench_menu_admin_item_settings_form_settings($item, $menu) {
   $defaults['properties']['file_type'] = 'file_type_file';
   $defaults['properties']['menu'] = NULL;
   $defaults['properties']['menu_item'] = NULL;
+  $defaults['properties']['never_suppress'] = FALSE;
 
   if (is_object($item)) {
     $item_id = &$item->id;
@@ -1133,6 +1134,10 @@ function workbench_menu_admin_item_settings_form_settings($item, $menu) {
 
     if (!empty($defaults['properties']['node_id'])) {
       $defaults['properties']['node_id'] = $defaults['properties']['node_id'];
+    }
+
+    if (isset($defaults['properties']['never_suppress']) && is_bool($defaults['properties']['never_suppress'])) {
+      $defaults['properties']['never_suppress'] = $defaults['properties']['never_suppress'];
     }
   }
 
@@ -1329,6 +1334,14 @@ function workbench_menu_admin_item_settings_form_settings($item, $menu) {
   if (!(user_access('change workbench menu item active path') || user_access('administer workbench menu'))) {
     $form['settings']['active_path']['#type'] = 'value';
   }
+
+  $form['settings']['never_suppress'] = array(
+    '#type' => 'checkbox',
+    '#title' => t("Never Suppress"),
+    '#default_value' => $defaults['properties']['never_suppress'],
+    '#description' => t("Never suppress active links. In certain conditions, such as using 'url fragments', the menu item will not be suppressed from being reported as 'active'. Url fragments are links that include the '#'."),
+    '#dependency' => array('edit-settings-item-type' => array('item_node', 'item_file', 'item_link')),
+  );
 
   return $form;
 }
@@ -1987,7 +2000,7 @@ function workbench_menu_admin_item_settings_edit_form_submit($form, &$form_state
 
   $properties = array();
 
-  foreach (array('url', 'node_id', 'disabled', 'clickable', 'file', 'file_type', 'menu', 'menu_item') as $property) {
+  foreach (array('url', 'node_id', 'disabled', 'clickable', 'file', 'file_type', 'menu', 'menu_item', 'never_suppress') as $property) {
     if (isset($form_state['values']['settings'][$property])) {
       $properties[$property] = &$form_state['values']['settings'][$property];
     }
