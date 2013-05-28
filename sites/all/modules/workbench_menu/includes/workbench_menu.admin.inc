@@ -1323,6 +1323,14 @@ function workbench_menu_admin_item_settings_form_settings($item, $menu) {
     '#dependency' => array('edit-settings-item-type' => array('item_file')),
   );
 
+  $form['settings']['never_suppress'] = array(
+    '#type' => 'checkbox',
+    '#title' => t("Never Suppress"),
+    '#default_value' => $defaults['properties']['never_suppress'],
+    '#description' => t("Never suppress active links. In certain conditions, such as using 'url fragments', the menu item will not be suppressed from being reported as 'active'. Url fragments are links that include the '#'."),
+    '#dependency' => array('edit-settings-item-type' => array('item_node', 'item_file', 'item_link')),
+  );
+
   $form['settings']['expand'] = array(
     '#type' => 'select',
     '#title' => t("When to Expand"),
@@ -1334,14 +1342,6 @@ function workbench_menu_admin_item_settings_form_settings($item, $menu) {
   if (!(user_access('change workbench menu item active path') || user_access('administer workbench menu'))) {
     $form['settings']['active_path']['#type'] = 'value';
   }
-
-  $form['settings']['never_suppress'] = array(
-    '#type' => 'checkbox',
-    '#title' => t("Never Suppress"),
-    '#default_value' => $defaults['properties']['never_suppress'],
-    '#description' => t("Never suppress active links. In certain conditions, such as using 'url fragments', the menu item will not be suppressed from being reported as 'active'. Url fragments are links that include the '#'."),
-    '#dependency' => array('edit-settings-item-type' => array('item_node', 'item_file', 'item_link')),
-  );
 
   return $form;
 }
