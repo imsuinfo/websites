@@ -372,7 +372,7 @@ function node_accessibility_statistics_page($statistics_type = 'all') {
 
         $plot->create_image();
 
-        $plot_file_uri = $plot->create_file(FILE_STATUS_PERMANENT);
+        $plot_file_uri = $plot->create_file();
         $plot_file_path = preg_replace('`^' . $GLOBALS['base_url'] . '`i', '', file_create_url($plot_file_uri));
 
         $theme_settings['image_url'] = $plot_file_path;
