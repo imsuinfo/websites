@@ -21,7 +21,7 @@
  */
 function theme_media_colorbox($variables) {
   $entity_id = $variables['entity_id'];
-  $file_id = $variables['file_id'];
+  $file = $variables['file'];
   $field = $variables['field'];
   $field_name = isset($field['field_name']) ? $field['field_name'] : '';
   $settings = $variables['display_settings'];
@@ -67,9 +67,11 @@ function theme_media_colorbox($variables) {
   }
 
   //load file and render for select view mode
-  if($file_id!=NULL){
-   $file = file_load($file_id);
-   $fview = file_view($file, $settings['file_view_mode'], $variables['langcode']);
+  $wysiwyg = FALSE;
+  if($file!=NULL){
+   $wysiwyg = !empty($file->override['wysiwyg']);
+   // TODO Guard against recursive calls?
+   $fview = file_view_file($file, $settings['file_view_mode'], $variables['langcode']);
    $text = drupal_render($fview);
   }elseif(isset($variables['item'])) {
    $text=drupal_render($variables['item']);
@@ -77,23 +79,28 @@ function theme_media_colorbox($variables) {
   //strip anchor tags as rendered output will be wrapped by another anchor tag
   //fix for issue #1477662
   $stripped_text = media_colorbox_strip_only($text, 'a');
-  $output = theme('link', array(
-    //'text' => drupal_render($variables['item']),
-    'text' => $stripped_text,
-    'path' => $variables['path'],
-    'options' => array(
-      'html' => TRUE,
-      'attributes' => array(
-        'title' => $caption,
-        'class' => 'media-colorbox ' . $variables['item_class'],
-        'style' => $variables['item_style'],
-        'rel' => $gallery_id,
-        'data-mediaColorboxFixedWidth' => $settings['fixed_width'],
-        'data-mediaColorboxFixedHeight' => $settings['fixed_height'],
-        'data-mediaColorboxAudioPlaylist' => $settings['audio_playlist'],
+  if ($wysiwyg) {
+    $output = $stripped_text;
+  }
+  else {
+    $output = theme('link', array(
+      //'text' => drupal_render($variables['item']),
+      'text' => $stripped_text,
+      'path' => $variables['path'],
+      'options' => array(
+        'html' => TRUE,
+        'attributes' => array(
+          'title' => $caption,
+          'class' => 'media-colorbox ' . $variables['item_class'],
+          'style' => $variables['item_style'],
+          'rel' => $gallery_id,
+          'data-mediaColorboxFixedWidth' => $settings['fixed_width'],
+          'data-mediaColorboxFixedHeight' => $settings['fixed_height'],
+          'data-mediaColorboxAudioPlaylist' => $settings['audio_playlist'],
+        ),
       ),
-    ),
-  ));
+    ));
+  }
 
   return $output;
 }
