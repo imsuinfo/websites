@@ -638,7 +638,20 @@ function mcneese_file_db_file_validate($file) {
 
   if (empty($loaded)) return $errors;
 
-  $errors[] = t("The file already exist.");
+
+  // If the file is not in the file_managed database table, then it must be added.
+  $look_for = $outer_parts[0] . '://' . MCNEESE_FILE_DB_PATH_BY_HASH . '/' . $shortsum;
+
+  $query = db_select('file_managed', 'fm');
+  $query->fields('fm');
+  $query->condition('fm.uri', db_like($look_for) . '%', 'LIKE');
+
+  $found = (array) $query->execute()->fetchAll();
+
+  if (empty($found)) return $errors;
+
+
+  $errors[] = t("The file already exists.");
   return $errors;
 }
 
