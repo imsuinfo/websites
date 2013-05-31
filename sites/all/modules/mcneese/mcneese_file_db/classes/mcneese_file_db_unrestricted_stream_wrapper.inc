@@ -484,8 +484,30 @@ class mcneese_file_db_unrestricted_stream_wrapper extends mcneese_file_db_stream
     }
 
     if (empty($this->image_style_uri)) {
-      // return TRUE and lie to callers to make them think the file was deleted.
-      // all files, including temporary, are not deleted in this manner for this class.
+      // file does not exist?
+      if (empty($this->file_meta)) {
+        return FALSE;
+      }
+
+      $file_db = mcneese_file_db_prepare_connection();
+      $options = mcneese_file_db_prepare_options();
+
+      $query = 'DELETE FROM {mcneese_file_db_associations}';
+      $query .= ' WHERE server_id = :server_id AND file_id = :file_id';
+
+      $arguments = array();
+      $arguments[':server_id'] = mcneese_file_db_get_server_id();
+      $arguments[':file_id'] = $this->file_meta->id;
+
+      try {
+        $file_db->query($query, $arguments, $options)->fetchAll();
+      }
+      catch (Exception $e) {
+        cf_error::on_query_execution($e);
+
+        throw $e;
+      }
+
       return TRUE;
     }
 
