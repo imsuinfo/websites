@@ -516,9 +516,7 @@ function workbench_access_get_access_tree($account_access = array()) {
     $query->join('users_roles', 'ur', 'ur.uid = wau.uid OR ur.rid = war.rid');
     $query->fields('wa', array('access_id', 'access_type', 'access_scheme', 'access_type_id'));
 
-    $or = db_or();
-    $or->condition('ur.uid', $user->uid);
-    $query->condition($or);
+    $query->condition('ur.uid', $user->uid);
 
     $access_scheme = $query->execute();
 
@@ -531,6 +529,58 @@ function workbench_access_get_access_tree($account_access = array()) {
   }
 
   return $trees[$key];
+}
+
+/**
+ * Get the access ids for a user in a single-depth array.
+ *
+ * @param $account
+ *   User account to load.
+ *
+ * @return
+ *   An array of access ids, in a single depth.
+ */
+function workbench_access_get_access_list($account = NULL) {
+  $lists = &drupal_static(__FUNCTION__);
+
+  global $user;
+
+  if (is_null($account)) {
+    global $user;
+    $uid = $user->uid;
+  }
+  else {
+    $uid = $account->uid;
+  }
+
+  if (isset($lists[$uid])) {
+    return $lists[$uid];
+  }
+  else {
+    $lists[$uid] = array();
+  }
+
+  try {
+    $query = db_select('workbench_access', 'wa');
+    $query->join('workbench_access_user', 'wau', 'wa.access_id = wau.access_id AND wa.access_scheme = wau.access_scheme');
+    $query->join('workbench_access_role', 'war', 'wa.access_id = war.access_id AND wa.access_scheme = war.access_scheme');
+    $query->join('users_roles', 'ur', 'ur.uid = wau.uid OR ur.rid = war.rid');
+    $query->fields('wa', array('access_id'));
+    $query->distinct();
+
+    $query->condition('ur.uid', $uid);
+
+    $access_scheme = $query->execute();
+
+    foreach ($access_scheme as $info) {
+      $lists[$uid][] = $info->access_id;
+    }
+  }
+  catch (Exception $e) {
+    return $lists[$uid];
+  }
+
+  return $lists[$uid];
 }
 
 /**
