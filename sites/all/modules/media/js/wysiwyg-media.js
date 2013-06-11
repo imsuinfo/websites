@@ -120,16 +120,7 @@ Drupal.wysiwyg.plugins.media = {
     // Media requests a WYSIWYG place holder rendering of the file by passing
     // the wysiwyg => 1 flag in the settings array when calling
     // media_get_file_without_label().
-    //
-    // Finds the media-element class.
-    var classRegex = 'class=[\'"][^\'"]*?media-element';
-    // Image tag with the media-element class.
-    var regex = '<img[^>]+' + classRegex + '[^>]*?>';
-    // Or a span with the media-element class (used for documents).
-    // \S\s catches any character, including a linebreak; JavaScript does not
-    // have a dotall flag.
-    regex += '|<span[^>]+' + classRegex + '[^>]*?>[\\S\\s]+?</span>';
-    var matches = content.match(RegExp(regex, 'gi'));
+    var matches = content.match(/<img[^>]+class=[\'"]([^"']+ )?media-element[^>]*>/gi);
     if (matches) {
       for (i = 0; i < matches.length; i++) {
         markup = matches[i];
@@ -180,8 +171,7 @@ InsertMedia.prototype = {
   insert: function (formatted_media) {
     var element = create_element(formatted_media.html, {
           fid: this.mediaFile.fid,
-          view_mode: formatted_media.type,
-          attributes: formatted_media.options
+          view_mode: formatted_media.type
         });
 
     var markup = outerHTML(element),
@@ -214,11 +204,6 @@ function ensure_tagmap () {
  *    A object containing the media file information (fid, view_mode, etc).
  */
 function create_element (html, info) {
-  if ($('<div></div>').append(html).text().length === html.length) {
-    // Element is not an html tag. Surround it in a span element
-    // so we can pass the file attributes.
-    html = '<span>' + html + '</span>';
-  }
   var element = $(html);
 
   // Move attributes from the file info array to the placeholder element.
@@ -289,14 +274,6 @@ function extract_file_info (element) {
       }
     });
     delete(file_info.attributes['data-file_info']);
-
-    // Extract the link text, if there is any.
-    if (link_text = element.find('a').html()) {
-      file_info.link_text = link_text;
-    }
-    else {
-      file_info.link_text = null;
-    }
   }
 
   return file_info;
