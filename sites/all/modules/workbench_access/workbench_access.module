@@ -2379,3 +2379,22 @@ function workbench_access_unassign_section_presave_action($node, $context) {
     }
   }
 }
+
+/**
+ * Implements hook_workbench_moderation_access_alter().
+ */
+function workbench_access_workbench_moderation_access_alter(&$access, $op, $node) {
+  if ($access === FALSE || empty($node->workbench_access) || !is_array($node->workbench_access)) {
+    return;
+  }
+
+  if ($op == 'moderate') {
+    global $user;
+
+    $node_access = workbench_access_node_access($node, 'update', $user);
+
+    if ($node_access == 'deny') {
+      $access = FALSE;
+    }
+  }
+}
