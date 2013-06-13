@@ -126,7 +126,9 @@ function node_accessibility_workbench_moderation_overview($node) {
       $revision_operations['view'] = l(t('View'), $url);
     }
 
-    $revision_operations['accessibility'] = l(t("accessibility"), 'node/' . $node->nid . '/accessibility/' . $revision->vid . '/revision');
+    if (function_exists('node_accessibility_is_enabled') && node_accessibility_is_enabled($node->type)) {
+      $revision_operations['accessibility'] = l(t("accessibility"), 'node/' . $node->nid . '/accessibility/' . $revision->vid . '/revision');
+    }
 
     // Revert operation.
     if (_workbench_moderation_revision_access($node_revision, 'update')) {
