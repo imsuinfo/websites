@@ -1,9 +1,0 @@
-name = "Node Accessibility Workbench"
-description = "Alters the workbench moderation moderation pages, adding revision-specific accessibility links."
-package = Accessibility
-core = 7.x
-
-dependencies[] = node_accessibility
-dependencies[] = workbench_moderation
-
-files[] = node_accessibility_workbench.module
