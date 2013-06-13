@@ -109,7 +109,6 @@ function workbench_moderation_node_history_view($node) {
       'data' => array(
         'vid' => '',
         'info' => '',
-        'date' => '',
         'revision' => '',
         'moderation' => '',
       ),
@@ -132,7 +131,6 @@ function workbench_moderation_node_history_view($node) {
     $row['data']['info'] .= '<div class="revision-title">' . check_plain($revision->title) . '</div>';
     $row['data']['info'] .= '<div class="revision-log description">' . filter_xss($revision->log) . '</div>';
     $row['data']['info'] .= '<div class="revision-user description">' . t('Revised by !user', array('!user' => theme('username', array('account' => $revision)))) . '</div>';
-    $row['data']['date'] = format_date($revision->timestamp, 'short');
 
     // Revision operations.
     $revision_operations = array();
@@ -163,6 +161,10 @@ function workbench_moderation_node_history_view($node) {
       $revision_operations['view'] = l(t('View'), $url);
     }
 
+    if (function_exists('node_accessibility_is_enabled') && node_accessibility_is_enabled($node->type)) {
+      $revision_operations['accessibility'] = l(t("accessibility"), 'node/' . $node->nid . '/accessibility/' . $revision->vid . '/revision');
+    }
+
     // Revert operation.
     if (_workbench_moderation_revision_access($node_revision, 'update')) {
       $revision_operations['revert'] = l(t('Revert'), "node/{$revision->nid}/revisions/{$revision->vid}/revert");
@@ -172,8 +174,6 @@ function workbench_moderation_node_history_view($node) {
     if (_workbench_moderation_revision_access($node_revision, 'delete')) {
       $revision_operations['delete'] = l(t('Delete'), "node/{$revision->nid}/revisions/{$revision->vid}/delete");
     }
-
-    $row['data']['revision'] = implode(' | ', array_filter($revision_operations));
 
     // Get the moderation history of this revision.
     $query = db_select('workbench_moderation_node_history', 'm');
@@ -201,8 +201,11 @@ function workbench_moderation_node_history_view($node) {
       // Provide an unpublish link.
       $next_states = workbench_moderation_states_next(workbench_moderation_state_published(), $user, $node);
       if (!empty($next_states)) {
+        $attributes = array();
+        $attributes['class'] = array('moderation-action-unpublish');
+
         if (_workbench_moderation_access('unpublish', $node)) {
-          $row['data']['moderation'] .= '<div class="moderation-actions">' . l(t('Unpublish'), "node/{$revision->nid}/moderation/{$revision->live_revision}/unpublish") . '</div>';
+          $row['data']['revision'] .= '<div class="moderation-actions">' . l(t('Unpublish'), "node/{$revision->nid}/moderation/{$revision->live_revision}/unpublish", array('attributes' => $attributes)) . '</div>';
         }
       }
     }
@@ -213,10 +216,12 @@ function workbench_moderation_node_history_view($node) {
       if (workbench_moderation_node_type_moderated($node_current->type)) {
         if (_node_revision_access($node_current, 'update')) {
           $moderate_form = drupal_get_form('workbench_moderation_moderate_form', $node_current);
-          $row['data']['moderation'] .= '<div class="moderation-actions">' . t('Set moderation state: !moderation-actions-form', array('!moderation-actions-form' => drupal_render($moderate_form))) . '</div>';
+          $row['data']['revision'] .= '<div class="moderation-actions"><div class="moderation-action-set-state">' . t('Set moderation state:') . '</div>' . t(' !moderation-actions-form', array('!moderation-actions-form' => drupal_render($moderate_form))) . '</div>';
         }
       }
     }
+
+    $row['data']['revision'] .= '<div class="revision-actions">' . implode(' | ', array_filter($revision_operations)) . '</div>';
 
     // Build a table of the moderation history.
     $moderation_rows = array();
@@ -242,13 +247,19 @@ function workbench_moderation_node_history_view($node) {
         );
       }
     }
-    $row['data']['moderation'] .= theme('item_list', array('items' => $items));
+
+    if (empty($items)) {
+      $row['data']['moderation'] = format_date($revision->timestamp, 'short');
+    }
+    else {
+      $row['data']['moderation'] .= theme('item_list', array('items' => $items));
+    }
 
     $rows[] = $row;
   }
 
   // Set the table header.
-  $header = array(t('Revision'), t('Title'), t('Date'), t('Revision actions'), t('Moderation actions'));
+  $header = array(t('Revision'), t('Title'), t('Actions'), t('Moderation Log'));
 
   // Return properly styled output.
   return array(
