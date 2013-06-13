@@ -211,7 +211,19 @@ function cf_theme_get_variables(array &$variables) {
   $node_id_matches = array();
   if (preg_match('@^node/(\d+)(/.*|$|\?.*|#.*)@', current_path(), $node_id_matches)) {
     if (!empty($node_id_matches[1])) {
-      $node_object = node_load($node_id_matches[1]);
+      $revision_id_matches = array();
+
+      if (!empty($node_id_matches[2]) && preg_match('@^/revisions/(\d+)(/.*|$|\?.*|#.*)@', $node_id_matches[2], $revision_id_matches)) {
+        if (!empty($revision_id_matches[1])) {
+          $node_object = node_load($node_id_matches[1], $revision_id_matches[1]);
+        }
+        else {
+          $node_object = node_load($node_id_matches[1]);
+        }
+      }
+      else {
+        $node_object = node_load($node_id_matches[1]);
+      }
     }
   }
   unset($node_id_matches);
