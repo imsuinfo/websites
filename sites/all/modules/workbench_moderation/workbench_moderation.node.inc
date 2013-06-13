@@ -201,14 +201,21 @@ function workbench_moderation_node_history_view($node) {
       // Provide an unpublish link.
       $next_states = workbench_moderation_states_next(workbench_moderation_state_published(), $user, $node);
       if (!empty($next_states)) {
-        $row['data']['moderation'] .= '<div class="moderation-actions">' . l(t('Unpublish'), "node/{$revision->nid}/moderation/{$revision->live_revision}/unpublish") . '</div>';
+        if (_workbench_moderation_access('unpublish', $node)) {
+          $row['data']['moderation'] .= '<div class="moderation-actions">' . l(t('Unpublish'), "node/{$revision->nid}/moderation/{$revision->live_revision}/unpublish") . '</div>';
+        }
       }
     }
     elseif ($revision->vid == $node->workbench_moderation['current']->vid) {
       $node_current = workbench_moderation_node_current_load($node);
       $row['data']['moderation'] = '<div class="moderation-state"><strong>' . t('This is the current revision. The current state is %state.', array('%state' => workbench_moderation_state_label($node->workbench_moderation['current']->state))) . '</strong></div>';
-      $moderate_form = drupal_get_form('workbench_moderation_moderate_form', $node_current);
-      $row['data']['moderation'] .= '<div class="moderation-actions">' . t('Set moderation state: !moderation-actions-form', array('!moderation-actions-form' => drupal_render($moderate_form))) . '</div>';
+
+      if (workbench_moderation_node_type_moderated($node_current->type)) {
+        if (_node_revision_access($node_current, 'update')) {
+          $moderate_form = drupal_get_form('workbench_moderation_moderate_form', $node_current);
+          $row['data']['moderation'] .= '<div class="moderation-actions">' . t('Set moderation state: !moderation-actions-form', array('!moderation-actions-form' => drupal_render($moderate_form))) . '</div>';
+        }
+      }
     }
 
     // Build a table of the moderation history.
