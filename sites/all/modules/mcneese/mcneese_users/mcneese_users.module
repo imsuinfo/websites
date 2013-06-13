@@ -18,6 +18,12 @@ function mcneese_users_form_user_profile_form_alter(&$form, &$form_state) {
   if ($form['#user_category'] == 'account') {
     $account = $form['#user'];
 
+    $enable_options = array();
+    $enable_options['always'] = "Enabled (always)";
+    $enable_options['on'] = "Enabled (auto)";
+    $enable_options['off'] = "Disabled (auto)";
+    $enable_options['never'] = "Disabled (always)";
+
     if (!isset($form['additional_settings']['#type'])) {
       $form['additional_settings'] = array(
         '#type' => 'vertical_tabs',
@@ -91,11 +97,26 @@ function mcneese_users_form_user_profile_form_alter(&$form, &$form_state) {
       '#tree' => TRUE,
     );
 
+    $default_value = 'on';
+
+    if (isset($account->data['mcneese_settings']['navigation']['menu_tabs']['sticky'])) {
+      $sticky = & $account->data['mcneese_settings']['navigation']['menu_tabs']['sticky'];
+      if ($sticky) {
+        if ($sticky == 'on' || $sticky == 'off' || $sticky == 'always' || $sticky == 'never') {
+          $default_value = $sticky;
+        }
+      }
+      else {
+        $default_value = 'off';
+      }
+    }
+
     $form['mcneese_settings']['navigation']['menu_tabs']['sticky'] = array(
-      '#type' => 'checkbox',
+      '#type' => 'select',
       '#title' => t("Enable a sticky menu tabs"),
       '#description' => t("Normally the menu tabs will float on the left side of the page, enable this to make the menu tabs stick (embed) on the page just above the breadcrumbs. (Non-HTML5 compliant browsers will always be sticky.)"),
-      '#default_value' => isset($account->data['mcneese_settings']['navigation']['menu_tabs']['sticky']) ? $account->data['mcneese_settings']['navigation']['menu_tabs']['sticky'] : TRUE,
+      '#default_value' => $default_value,
+      '#options' => $enable_options,
     );
 
 
@@ -108,11 +129,26 @@ function mcneese_users_form_user_profile_form_alter(&$form, &$form_state) {
       '#tree' => TRUE,
     );
 
+    $default_value = 'on';
+
+    if (isset($account->data['mcneese_settings']['navigation']['breadcrumb']['sticky'])) {
+      $sticky = & $account->data['mcneese_settings']['navigation']['breadcrumb']['sticky'];
+      if ($sticky) {
+        if ($sticky == 'on' || $sticky == 'off' || $sticky == 'always' || $sticky == 'never') {
+          $default_value = $sticky;
+        }
+      }
+      else {
+        $default_value = 'off';
+      }
+    }
+
     $form['mcneese_settings']['navigation']['breadcrumb']['sticky'] = array(
-      '#type' => 'checkbox',
+      '#type' => 'select',
       '#title' => t("Enable a sticky breadcrumb"),
       '#description' => t("Normally the breadcrumb will float on the left side of the page, enable this to make the menu tabs stick (embed) on the page just below the page title. (Non-HTML5 compliant browsers will always be sticky.)"),
-      '#default_value' => isset($account->data['mcneese_settings']['navigation']['breadcrumb']['sticky']) ? $account->data['mcneese_settings']['navigation']['breadcrumb']['sticky'] : TRUE,
+      '#default_value' => $default_value,
+      '#options' => $enable_options,
     );
 
 
@@ -125,11 +161,26 @@ function mcneese_users_form_user_profile_form_alter(&$form, &$form_state) {
       '#tree' => TRUE,
     );
 
+    $default_value = 'on';
+
+    if (isset($account->data['mcneese_settings']['navigation']['action_links']['sticky'])) {
+      $sticky = & $account->data['mcneese_settings']['navigation']['action_links']['sticky'];
+      if ($sticky) {
+        if ($sticky == 'on' || $sticky == 'off' || $sticky == 'always' || $sticky == 'never') {
+          $default_value = $sticky;
+        }
+      }
+      else {
+        $default_value = 'off';
+      }
+    }
+
     $form['mcneese_settings']['navigation']['action_links']['sticky'] = array(
-      '#type' => 'checkbox',
+      '#type' => 'select',
       '#title' => t("Enable a sticky action links"),
       '#description' => t("Normally the action links will float on the right side of the page, enable this to make the action links stick (embed) on the page just below the breadcrumbs. (Non-HTML5 compliant browsers will always be sticky.)"),
-      '#default_value' => isset($account->data['mcneese_settings']['navigation']['action_links']['sticky']) ? $account->data['mcneese_settings']['navigation']['action_links']['sticky'] : TRUE,
+      '#default_value' => $default_value,
+      '#options' => $enable_options,
     );
 
 
@@ -153,11 +204,27 @@ function mcneese_users_form_user_profile_form_alter(&$form, &$form_state) {
       '#tree' => TRUE,
     );
 
+    $default_value = 'on';
+
+    if (isset($account->data['mcneese_settings']['region']['help']['sticky'])) {
+      $sticky = & $account->data['mcneese_settings']['region']['help']['sticky'];
+      if ($sticky) {
+        if ($sticky == 'on' || $sticky == 'off' || $sticky == 'always' || $sticky == 'never') {
+          $default_value = $sticky;
+        }
+      }
+      else {
+        $default_value = 'off';
+      }
+    }
+
     $form['mcneese_settings']['region']['help']['sticky'] = array(
-      '#type' => 'checkbox',
+      '#type' => 'select',
       '#title' => t("Enable a sticky help region"),
       '#description' => t("Normally the help will float on the right side of the page, enable this to make the help stick (embed) on the page, above the page title. (Non-HTML5 compliant browsers will always be sticky.)"),
       '#default_value' => isset($account->data['mcneese_settings']['region']['help']['sticky']) ? $account->data['mcneese_settings']['region']['help']['sticky'] : TRUE,
+      '#default_value' => $default_value,
+      '#options' => $enable_options,
     );
 
 
@@ -170,11 +237,26 @@ function mcneese_users_form_user_profile_form_alter(&$form, &$form_state) {
       '#tree' => TRUE,
     );
 
+    $default_value = 'on';
+
+    if (isset($account->data['mcneese_settings']['region']['messages']['sticky'])) {
+      $sticky = & $account->data['mcneese_settings']['region']['messages']['sticky'];
+      if ($sticky) {
+        if ($sticky == 'on' || $sticky == 'off' || $sticky == 'always' || $sticky == 'never') {
+          $default_value = $sticky;
+        }
+      }
+      else {
+        $default_value = 'off';
+      }
+    }
+
     $form['mcneese_settings']['region']['messages']['sticky'] = array(
-      '#type' => 'checkbox',
+      '#type' => 'select',
       '#title' => t("Enable a sticky messages region"),
       '#description' => t("Normally the messages will float on the right side of the page, enable this to make the messages stick (embed) on the page, above the page title. (Non-HTML5 compliant browsers will always be sticky.)"),
-      '#default_value' => isset($account->data['mcneese_settings']['region']['messages']['sticky']) ? $account->data['mcneese_settings']['region']['messages']['sticky'] : TRUE,
+      '#default_value' => $default_value,
+      '#options' => $enable_options,
     );
 
 
@@ -187,11 +269,26 @@ function mcneese_users_form_user_profile_form_alter(&$form, &$form_state) {
       '#tree' => TRUE,
     );
 
+    $default_value = 'on';
+
+    if (isset($account->data['mcneese_settings']['region']['information']['sticky'])) {
+      $sticky = & $account->data['mcneese_settings']['region']['information']['sticky'];
+      if ($sticky) {
+        if ($sticky == 'on' || $sticky == 'off' || $sticky == 'always' || $sticky == 'never') {
+          $default_value = $sticky;
+        }
+      }
+      else {
+        $default_value = 'off';
+      }
+    }
+
     $form['mcneese_settings']['region']['information']['sticky'] = array(
-      '#type' => 'checkbox',
+      '#type' => 'select',
       '#title' => t("Enable a sticky information region"),
       '#description' => t("Normally the information region will float on the right side of the page, enable this to make the information region stick (embed) on the page, above the page title. (Non-HTML5 compliant browsers will always be sticky.)"),
-      '#default_value' => isset($account->data['mcneese_settings']['region']['information']['sticky']) ? $account->data['mcneese_settings']['region']['information']['sticky'] : TRUE,
+      '#default_value' => $default_value,
+      '#options' => $enable_options,
     );
 
 
@@ -204,11 +301,26 @@ function mcneese_users_form_user_profile_form_alter(&$form, &$form_state) {
       '#tree' => TRUE,
     );
 
+    $default_value = 'on';
+
+    if (isset($account->data['mcneese_settings']['region']['side']['sticky'])) {
+      $sticky = & $account->data['mcneese_settings']['region']['side']['sticky'];
+      if ($sticky) {
+        if ($sticky == 'on' || $sticky == 'off' || $sticky == 'always' || $sticky == 'never') {
+          $default_value = $sticky;
+        }
+      }
+      else {
+        $default_value = 'off';
+      }
+    }
+
     $form['mcneese_settings']['region']['side']['sticky'] = array(
-      '#type' => 'checkbox',
+      '#type' => 'select',
       '#title' => t("Enable a sticky side region"),
       '#description' => t("Normally the side region is on the left side of the page, disable this to make the side region float on the left side of the page, freeing up room for the main content. (Non-HTML5 compliant browsers will always be sticky.)"),
-      '#default_value' => isset($account->data['mcneese_settings']['region']['side']['sticky']) ? $account->data['mcneese_settings']['region']['side']['sticky'] : TRUE,
+      '#default_value' => $default_value,
+      '#options' => $enable_options,
     );
 
 
