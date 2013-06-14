@@ -213,12 +213,17 @@ function cf_theme_get_variables(array &$variables) {
     if (!empty($node_id_matches[1])) {
       $revision_id_matches = array();
 
-      if (!empty($node_id_matches[2]) && preg_match('@^/revisions/(\d+)(/.*|$|\?.*|#.*)@', $node_id_matches[2], $revision_id_matches)) {
-        if (!empty($revision_id_matches[1])) {
-          $node_object = node_load($node_id_matches[1], $revision_id_matches[1]);
+      if (!empty($node_id_matches[2]) && preg_match('@^/(revisions|accessibility)/(\d+)(/.*|$|\?.*|#.*)@', $node_id_matches[2], $revision_id_matches)) {
+        if (!empty($revision_id_matches[2])) {
+          $node_object = node_load($node_id_matches[1], $revision_id_matches[2]);
         }
         else {
-          $node_object = node_load($node_id_matches[1]);
+          if (function_exists('workbench_moderation_node_current_load') && preg_match('@^/(draft|edit|moderation)(/.*|$|\?.*|#.*)@', $node_id_matches[2])) {
+            $node_object = workbench_moderation_node_current_load($node);
+          }
+          else {
+            $node_object = node_load($node_id_matches[1]);
+          }
         }
       }
       else {
