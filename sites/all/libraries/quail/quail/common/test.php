@@ -229,6 +229,9 @@ class quailTest {
 	*				 the given tag name, otherwise FALSE
 	*/
 	function elementHasChild($element, $child_tag) {
+		if (!$element->hasChildNodes()) {
+			return false;
+		}
 		foreach($element->childNodes as $child) {
 			if(property_exists($child, 'tagName') && $child->tagName == $child_tag)
 				return true;
@@ -506,35 +509,15 @@ class quailTableTest extends quailTest {
 	
 	/**
 	*	Finds whether or not the table is a data table. Checks that the
-	*	table has a logical order and uses 'th' or 'thead' tags to illustrate
-	*	the page author thought it was a data table.
+	*	table has a thead.
 	*	@param object $table The DOMElement object of the table tag
 	*	@return bool TRUE if the element is a data table, otherwise false
 	*/
 	function isData($table) {
 		if($table->tagName != 'table') 
 			return false;
-		foreach($table->childNodes as $child) {
-			if(property_exists($child, 'tagName')){
-				if ($child->tagName == 'tr') {
-					foreach($child->childNodes as $row_child) {
-						if(property_exists($row_child, 'tagName') && $row_child->tagName == 'th')
-							return true;
-					}
-				}
-				else if ($child->tagName == 'tbody') {
-					foreach($child->childNodes as $tbody_child) {
-						if (property_exists($tbody_child, 'tagName') && $tbody_child->tagName == 'tr') {
-							foreach($tbody_child->childNodes as $row_child) {
-								if(property_exists($row_child, 'tagName') && $row_child->tagName == 'th')
-									return true;
-							}
-						}
-					}
-				}
-			}
-			if(property_exists($child, 'tagName') && $child->tagName == 'thead')
-				return true;
+		if ($this->elementHasChild($table, 'thead')) {
+			return true;
 		}
 		return false;
 	}

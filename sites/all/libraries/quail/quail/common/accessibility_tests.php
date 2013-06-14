@@ -5208,10 +5208,8 @@ class tableComplexHasSummary extends quailTableTest {
 	*/
 	function check() {
 		foreach($this->getAllElements('table') as $table) {
-			if(!$table->hasAttribute('summary') && $table->firstChild->tagName != 'caption') {
+			if($this->isData($table) && !$table->hasAttribute('summary')) {
 				$this->addReport($table);
-			
-			
 			}
 		}
 	
@@ -5235,9 +5233,15 @@ class tableDataShouldHaveTh extends quailTableTest {
 	*/
 	function check() {
 		foreach($this->getAllElements('table') as $table) {
-			if(!$this->isData($table))
-				$this->addReport($table);
-		
+			if($this->isData($table)) {
+				foreach($table->childNodes as $child) {
+					if (property_exists($child, 'tagName') && $child->tagName == 'thead') {
+						if (!$this->elementHasChild($table, 'th')) {
+							$this->addReport($table);
+						}
+					}
+				}
+			}
 		}
 	
 	}
@@ -5339,13 +5343,18 @@ class tableLayoutDataShouldNotHaveTh extends quailTableTest {
 	*/
 	function check() {
 		foreach($this->getAllElements('table') as $table) {
-			if($this->isData($table))
-				$this->addReport($table);
-		
+			if(!$this->isData($table)) {
+				foreach($table->childNodes as $child) {	
+					if (property_exists($child, 'tagName') && $child->tagName == 'th') {
+						$this->addReport($table);
+					}
+					else if ($this->elementHasChild($child, 'th')) {
+						$this->addReport($table);
+					}
+				}
+			}
 		}
-	
 	}
-
 }
 
 /**
@@ -5365,15 +5374,8 @@ class tableLayoutHasNoCaption extends quailTableTest {
 	*/
 	function check() {
 		foreach($this->getAllElements('table') as $table) {
-			if($this->elementHasChild($table, 'caption')) {
-				$first_row = true;
-				foreach($table->childNodes as $child) {
-					if($this->propertyIsEqual($child, 'tagName', 'tr') && $first_row) {
-						if(!$this->elementHasChild($child, 'th'))
-							$this->addReport($table);
-						$first_row = false;
-					}
-				}
+			if(!$this->isData($table) && $this->elementHasChild($table, 'caption')) {
+				$this->addReport($table);
 			}
 		}
 	
@@ -5397,23 +5399,9 @@ class tableLayoutHasNoSummary extends quailTableTest {
 	*/
 	function check() {
 		foreach($this->getAllElements('table') as $table) {
-			if($table->hasAttribute('summary') && strlen(trim($table->getAttribute('summary'))) > 1) {
-				$first_row = true;
-				foreach($table->childNodes as $child) {
-					if($this->propertyIsEqual($child, 'tagName', 'tr') && $first_row) {
-						if(!$this->elementHasChild($child, 'th'))
-							$this->addReport($table);
-						$first_row = false;
-					}
-					else if($this->propertyIsEqual($child, 'tagName', 'tbody') && $first_row) {
-						foreach($child->childNodes as $tbody_child) {
-							if($this->propertyIsEqual($tbody_child, 'tagName', 'tr') && $first_row) {
-								if(!$this->elementHasChild($tbody_child, 'th'))
-									$this->addReport($table);
-								$first_row = false;
-							}
-						}
-					}
+			if (!$this->elementHasChild($table, 'thead') && !$this->elementHasChild($table, 'tbody')) {
+				if($table->hasAttribute('summary') && strlen(trim($table->getAttribute('summary'))) > 1) {
+					$this->addReport($table);
 				}
 			}
 		}
@@ -5631,7 +5619,7 @@ class tableUsesCaption extends quailTableTest {
 	*/
 	function check() {
 		foreach($this->getAllElements('table') as $table) {
-			if($table->firstChild->tagName != 'caption')
+			if($this->isData($table) && !$this->elementHasChild($table, 'caption'))
 				$this->addReport($table);
 			
 		}
