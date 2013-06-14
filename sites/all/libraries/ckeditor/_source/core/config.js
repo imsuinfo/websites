@@ -159,7 +159,7 @@ CKEDITOR.config =
 	 * // Not recommended.
 	 * config.enterMode = CKEDITOR.ENTER_BR;
 	 */
-	enterMode : CKEDITOR.ENTER_P,
+	enterMode : CKEDITOR.ENTER_BR,
 
 	/**
 	 * Force the use of <code>{@link CKEDITOR.config.enterMode}</code> as line break regardless
