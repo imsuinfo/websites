@@ -5234,12 +5234,30 @@ class tableDataShouldHaveTh extends quailTableTest {
 	function check() {
 		foreach($this->getAllElements('table') as $table) {
 			if($this->isData($table)) {
-				foreach($table->childNodes as $child) {
-					if (property_exists($child, 'tagName') && $child->tagName == 'thead') {
-						if (!$this->elementHasChild($table, 'th')) {
-							$this->addReport($table);
+				if ($table->hasChildNodes()) {
+					foreach($table->childNodes as $child) {
+						if (property_exists($child, 'tagName') && $child->tagName == 'thead') {
+							if ($child->hasChildNodes()) {
+								$missing_th = TRUE;
+								foreach ($child->childNodes as $element) {
+									if ($this->elementHasChild($element, 'th')) {
+										$missing_th = FALSE;
+										break;
+									}
+								}
+
+								if ($missing_th) {
+									$this->addReport($table);
+								}
+							}
+							else {
+								$this->addReport($table);
+							}
 						}
 					}
+				}
+				else {
+					$this->addReport($table);
 				}
 			}
 		}
