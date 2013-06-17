@@ -503,9 +503,12 @@ function _workbench_moderation_revision_access($node, $op) {
   }
 
   // Prevent reverting to (ie, update) or deleting the current and published revisions.
-  if (($node->workbench_moderation['current']->vid == $node->workbench_moderation['my_revision']->vid
-    || (isset($node->workbench_moderation['published']) && $node->workbench_moderation['published']->vid == $node->workbench_moderation['my_revision']->vid))
-      && ($op == 'update' || $op == 'delete')) {
+  if ($node->workbench_moderation['current']->vid == $node->workbench_moderation['my_revision']->vid && ($op == 'update' || $op == 'delete')) {
+    return FALSE;
+  }
+
+  // Prevent deleting the published revisions.
+  if (isset($node->workbench_moderation['published']) && $node->workbench_moderation['published']->vid == $node->workbench_moderation['my_revision']->vid && $op == 'delete') {
     return FALSE;
   }
 
