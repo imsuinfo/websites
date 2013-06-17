@@ -1,6 +1,9 @@
 /**
  * @file
  * Styles for the media library.
+ *
+ * The display and layout of the Media browser assumes Drupal's Seven theme as
+ * the theme active when this is displayed.
  */
 
 /* jQuery UI Resets */
@@ -17,6 +20,10 @@ body > .ui-dialog.media-wrapper .ui-dialog-content {
 body > .ui-dialog.media-wrapper .ui-dialog-buttonpane,
 body > .ui-dialog.media-wrapper .ui-dialog-buttonpane {
   display: none;
+}
+
+#media-browser-tabset .ui-widget-header {
+  background: none;
 }
 
 /* Remove the default border */
@@ -59,8 +66,18 @@ body > .ui-dialog.media-wrapper .ui-widget-content {
   margin-right: 0;
 }
 
+/* Reset the height to match the browser */
+#media-browser-tabset ul.tabs.primary li a:link {
+  font-weight: bold;
+  margin-right: 0;
+}
+
 #media-browser-tabset {
   border: none;
+}
+
+.media-browser-tab.ui-tabs-panel {
+  border: 1px solid #cccccc;
 }
 
 /* *********************************************************** */
@@ -69,34 +86,14 @@ body > .ui-dialog.media-wrapper .ui-widget-content {
 #media-browser-page .media-item {
   display: block;
 
-  border: 1px solid #cccccc;
+  background: #FFFFFF;
+  border: 1px solid #CCCCCC;
   padding: 5px;
 }
 
-/* Media Item Url */
-
-#media-format-form .media-item-url,
-#file-entity-admin-files .media-item-url,
-#media-browser-page .media-item-url {
-  display: inline-block;
-  margin: 5px;
-
-  width: 12px;
-  height: 12px;
-
-  background-image: url(../images/icons/default/link-external.png);
-  background-repeat: none;
-  background-position: center;
-
-  float: right;
-}
-
-#media-format-form .media-item img,
-#file-entity-admin-files .media-item img,
-#media-browser-page .media-item img {
-  display: inline-block;
+.media-item img {
   height: auto;
-  width: 100%;
+  margin-bottom: 10px;
 }
 
 #media-format-form .media-item > .media-thumbnail,
@@ -130,16 +127,16 @@ body > .ui-dialog.media-wrapper .ui-widget-content {
   margin-left: auto;
   margin-right: auto;
   width: 95%;
-}
+ }
 
 #media-format-form .media-item > .media-thumbnail > .label-wrapper label,
 #file-entity-admin-files .media-item > .media-thumbnail > .label-wrapper label,
 #media-browser-page .media-item > .media-thumbnail > .label-wrapper label {
-  font-size: 10px;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
+   font-size: 10px;
+   overflow: hidden;
+   text-overflow: ellipsis;
+   white-space: nowrap;
+ }
 
 #media-format-form > .form-wrapper-inner > .media-item {
   float: left;
@@ -151,9 +148,29 @@ body > .ui-dialog.media-wrapper .ui-widget-content {
 }
 
 #file-entity-admin-files #media-browser-library-list > li > .media-item > .media-thumbnail > a:nth-of-type(2) {
+  display: none;
 }
 
-/* Media item list */
+/* Media Item Url */
+#media-format-form .media-item-url,
+#file-entity-admin-files .media-item-url,
+#media-browser-library-list .media-item-url {
+  display: inline-block;
+  margin: 4px;
+
+  width: 12px;
+  height: 12px;
+
+  background-image: url(../images/icons/default/link-external.png);
+  background-repeat: none;
+  background-position: center;
+
+  float: right;
+}
+
+
+/* Media item lists */
+
 #media-browser-library-list {
   margin: 0;
   padding: 0;
@@ -161,6 +178,8 @@ body > .ui-dialog.media-wrapper .ui-widget-content {
 
 #media-browser-library-list.media-list-thumbnails li {
   display: inline-block;
+
+  font-size: 12px;
   list-style: none;
   margin: 0px 10px 25px 0px;
 
@@ -183,6 +202,13 @@ body > .ui-dialog.media-wrapper .ui-widget-content {
 
 #media-browser-library-list.media-list-thumbnails .media-item .label-wrapper label {
   color: #058AC5;
+
+  word-wrap: break-word;
+  word-break: break-word;
+
+  width: 100px;
+  min-width: 100px;
+  max-width: 100px;
 }
 
 #media-browser-library-list.media-list-thumbnails .media-item .label-wrapper label:hover {
@@ -191,7 +217,6 @@ body > .ui-dialog.media-wrapper .ui-widget-content {
 
 #media-browser-library-list.media-list-thumbnails .form-type-checkbox {
   display: inline-block;
-
   margin: 0;
   padding: 0;
 }
