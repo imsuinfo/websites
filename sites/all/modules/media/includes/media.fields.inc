@@ -195,7 +195,6 @@ function media_field_widget_form(&$form, &$form_state, $field, $instance, $langc
     // @todo This should be a fieldset, but throws a warning about
     // element_children.
     '#type' => 'media',
-    '#collapsed' => TRUE,
     '#default_value' => $current_value,
     '#required' => $instance['required'],
     '#media_options' => array(
@@ -211,20 +210,57 @@ function media_field_widget_form(&$form, &$form_state, $field, $instance, $langc
     ),
   );
 
+  $fields = array();
   if ($field['type'] == 'file') {
-    $element['display'] = array(
+    $fields['display'] = array(
       '#type' => 'value',
       '#value' => 1,
     );
+
+    // Add the description field if enabled.
+    if (!empty($field_settings['description_field'])) {
+      $fields['description'] = array(
+        '#type' => 'textfield',
+        '#title' => t('Description'),
+        '#value' => isset($current_value['description']) ? $current_value['description'] : '',
+        '#type' => variable_get('file_description_type', 'textfield'),
+        '#maxlength' => variable_get('file_description_length', 128),
+        '#description' => t('The description may be used as the label of the link to the file.'),
+      );
+    }
   }
 
   // Add image field specific validators.
   if ($field['type'] == 'image') {
     if ($field_settings['min_resolution'] || $field_settings['max_resolution']) {
-      $element['#media_options']['global']['min_resolution'] = $field_settings['min_resolution'];
-      $element['#media_options']['global']['max_resolution'] = $field_settings['max_resolution'];
+      $fields['media']['#media_options']['global']['min_resolution'] = $field_settings['min_resolution'];
+      $fields['media']['#media_options']['global']['max_resolution'] = $field_settings['max_resolution'];
     }
+
+    // Add the additional alt and title fields.
+    $fields['alt'] = array(
+      '#title' => t('Alternate text'),
+      '#type' => 'textfield',
+      '#default_value' => isset($current_value['alt']) ? $current_value['alt'] : '',
+      '#description' => t('This text will be used by screen readers, search engines, or when the image cannot be loaded.<br />
+        <em>(Notice: this field is not fetched on -all- formatters yet. For example: If the Rendered file formatter will be used, this field is not available at the moment.)</em>'),
+      '#maxlength' => variable_get('image_alt_length', 80),
+      '#weight' => 1,
+      '#access' => $field_settings['alt_field'],
+    );
+    $fields['title'] = array(
+      '#type' => 'textfield',
+      '#title' => t('Title'),
+      '#default_value' => isset($current_value['title']) ? $current_value['title'] : '',
+      '#description' => t('The title is used as a tool tip when the user hovers the mouse over the image.<br />
+        <em>(Notice: this field is not fetched on -all- formatters yet. For example: If the Rendered file formatter will be used, this field is not available at the moment.)</em>'),
+      '#maxlength' => variable_get('image_title_length', 500),
+      '#weight' => 2,
+      '#access' => $field_settings['title_field'],
+    );
   }
+
+  $element += $fields;
 
   return $element;
 }
