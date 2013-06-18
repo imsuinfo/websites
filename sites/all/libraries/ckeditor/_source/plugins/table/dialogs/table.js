@@ -328,7 +328,7 @@ For licensing, see LICENSE.html or http://ckeditor.com/license
 										{
 											type : 'select',
 											id : 'selHeaders',
-											'default' : '',
+											'default' : 'row',
 											label : editor.lang.table.headers,
 											items :
 											[
