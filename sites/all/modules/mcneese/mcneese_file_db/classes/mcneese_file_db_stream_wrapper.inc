@@ -789,8 +789,10 @@ abstract class mcneese_file_db_stream_wrapper implements DrupalStreamWrapperInte
 
     $style = image_style_load($this->image_style);
 
-    foreach ($style['effects'] as $effect) {
-      image_effect_apply($image, $effect);
+    if (isset($style['effects']) && is_array($style['effects'])) {
+      foreach ($style['effects'] as $effect) {
+        image_effect_apply($image, $effect);
+      }
     }
 
     if (!image_save($image, $this->image_style_uri)) {
