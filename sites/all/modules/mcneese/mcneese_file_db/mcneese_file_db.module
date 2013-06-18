@@ -380,7 +380,7 @@ function mcneese_file_db_load_file($by = '', $arg1 = '', $arg2 = '', $arg3 = '')
       }
     }
     else {
-      $filename = $arg2;
+      $filename = rawurldecode($arg2);
     }
 
     $filesize = $file_meta->size;
