@@ -1643,7 +1643,7 @@ function workbench_menu_get_menus($conditions = array(), $keyed = NULL) {
     }
   }
 
-  // load all menu additional menu data
+  // load all additional menu data
   if (!empty($menus) && !array_key_exists('fast', $conditions)) {
     $static_menus = &drupal_static(__FUNCTION__, NULL);
 
@@ -1989,9 +1989,19 @@ function workbench_menu_get_load_menu_items($conditions = array(), $keyed = NULL
         $menu_item->$name = array($results);
       }
 
-      $sorted_menu_items['flat'][$id] = array();
-      $sorted_menu_items['flat'][$id]['children'] = array();
-      $sorted_menu_items['flat'][$id]['item'] = $menu_item;
+      if (!isset($sorted_menu_items['flat'][$id])) {
+        $sorted_menu_items['flat'][$id] = array();
+        $sorted_menu_items['flat'][$id]['children'] = array();
+        $sorted_menu_items['flat'][$id]['item'] = $menu_item;
+      }
+      else {
+        if (!isset($sorted_menu_items['flat'][$id]['children'])) {
+          $sorted_menu_items['flat'][$id]['children'] = array();
+        }
+        if (!isset($sorted_menu_items['flat'][$id]['item'])) {
+          $sorted_menu_items['flat'][$id]['item'] = $menu_item;
+        }
+      }
 
       if ($menu_item->parent_id == 0) {
         $sorted_menu_items['nested'][$id] = &$sorted_menu_items['flat'][$id];
