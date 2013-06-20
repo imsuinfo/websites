@@ -682,8 +682,9 @@ function mcneese_file_db_file_validate($file) {
 
   if (empty($found)) return $errors;
 
+  $existing_file = '<a href="' . file_create_url($found[0]->uri) . '" class="file_db-file_exists">' . check_plain($found[0]->filename) . '</a>';
 
-  $errors[] = t("The file already exists.");
+  $errors[] = t("The file already exists: !filename.", array('!filename' => $existing_file));
   return $errors;
 }
 
