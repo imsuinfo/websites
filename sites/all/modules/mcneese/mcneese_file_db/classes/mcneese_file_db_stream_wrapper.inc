@@ -20,6 +20,7 @@ abstract class mcneese_file_db_stream_wrapper implements DrupalStreamWrapperInte
 
   protected $tmp_filename = null;
   protected $tmp_checksum = null;
+  protected $tmp_fid = null;
 
   protected $stream = null;
   protected $stream_blocks = 0;
@@ -406,6 +407,14 @@ abstract class mcneese_file_db_stream_wrapper implements DrupalStreamWrapperInte
   abstract protected function get_path_by_hash();
 
   /**
+   * Wrapper function to load the current path by its numeric id.
+   *
+   * @return string
+   *   The path by id string.
+   */
+  abstract protected function get_path_by_id();
+
+  /**
    * Wrapper function to load the associated drupal core scheme.
    *
    * @return string
@@ -589,6 +598,7 @@ abstract class mcneese_file_db_stream_wrapper implements DrupalStreamWrapperInte
   protected function parse_uri($uri) {
     $this->file_meta = null;
     $this->tmp_checksum = null;
+    $this->tmp_fid = null;
     $this->tmp_filename = null;
     $this->image_style = null;
     $this->image_style_uri = null;
@@ -625,7 +635,7 @@ abstract class mcneese_file_db_stream_wrapper implements DrupalStreamWrapperInte
         if ($parts[3] == $this->get_external()) {
           $parts = array_slice($parts, 4);
         }
-        else if ($parts[3] == $this->get_path_by_hash()) {
+        else if ($parts[3] == $this->get_path_by_hash() || $parts[3] == $this->get_path_by_id()) {
           $parts = array_slice($parts, 3);
         }
         else {
@@ -659,6 +669,39 @@ abstract class mcneese_file_db_stream_wrapper implements DrupalStreamWrapperInte
         }
 
         $this->tmp_checksum = $this->file_meta->checksum;
+        $this->tmp_fid = $this->file_meta->id;
+
+        // look for the custom filename that overrides the one saved in the database if provided.
+        if (empty($parts[2])) {
+          $this->tmp_filename = $this->file_meta->filename;
+
+          if (!empty($this->file_meta->extension)) {
+            $this->tmp_filename .= '.' . $this->file_meta->extension;
+          }
+        }
+        else {
+          $this->tmp_filename = $parts[2];
+        }
+
+        return TRUE;
+      }
+
+      if ($parts[0] == $this->get_path_by_id() && !empty($parts[1])) {
+        $this->file_meta = $this->load_file_meta_by_fid($parts[1]);
+
+        if ($this->file_meta === FALSE) {
+          $this->file_meta = null;
+          $this->tmp_fid = $parts[1];
+
+          if (!empty($parts[2])) {
+            $this->tmp_filename = $parts[2];
+          }
+
+          return TRUE;
+        }
+
+        $this->tmp_checksum = $this->file_meta->checksum;
+        $this->tmp_fid = $this->file_meta->id;
 
         // look for the custom filename that overrides the one saved in the database if provided.
         if (empty($parts[2])) {
@@ -701,6 +744,9 @@ abstract class mcneese_file_db_stream_wrapper implements DrupalStreamWrapperInte
     if (empty($this->file_meta)) {
       if (!empty($this->stream_fid)) {
         $this->load_file_meta_by_fid($this->stream_fid);
+      }
+      else if (!empty($this->tmp_fid)) {
+        $this->load_file_meta_by_fid($this->tmp_fid);
       }
       else if (!empty($this->tmp_checksum)) {
         $this->load_file_meta($this->tmp_checksum);

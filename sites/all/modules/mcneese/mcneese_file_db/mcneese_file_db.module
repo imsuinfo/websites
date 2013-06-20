@@ -24,6 +24,7 @@ define('MCNEESE_FILE_DB_PATH_BY_HASH', 'c');
 define('MCNEESE_FILE_DB_PATH_BY_HASH_SUM', 's');
 define('MCNEESE_FILE_DB_PATH_BY_HASH_SUM_EXTENSION', 'sha256sum');
 define('MCNEESE_FILE_DB_PATH_BY_HASH_ALGORITHM', 'sha256');
+define('MCNEESE_FILE_DB_PATH_BY_ID', 'i');
 
 
 /**
@@ -366,6 +367,37 @@ function mcneese_file_db_load_file($by = '', $arg1 = '', $arg2 = '', $arg3 = '')
     }
   }
 
+  if ($by == MCNEESE_FILE_DB_PATH_BY_ID) {
+    // $arg1 = id
+    // $arg2 = custom filename
+
+    $if_none_match = '';
+
+    if (isset($_SERVER['HTTP_IF_NONE_MATCH'])) {
+      $if_none_match = substr($_SERVER['HTTP_IF_NONE_MATCH'], 1);
+      $if_none_match = substr($if_none_match, 0, -1);
+    }
+
+    if (!empty($arg1)) {
+      $filepath = mcneese_file_db_unrestricted_stream_wrapper::SCHEME . '://';
+
+      if ($arg1 == $if_none_match) {
+        $filepath .= MCNEESE_FILE_DB_PATH_BY_ID . '/' . $if_none_match;
+        $files = (array) mcneese_file_db_load_available_files(array('id' => $if_none_match));
+        $not_modified = TRUE;
+      }
+      else {
+        $filepath .= MCNEESE_FILE_DB_PATH_BY_ID . '/' . $arg1;
+        $files = (array) mcneese_file_db_load_available_files(array('id' => $arg1));
+      }
+
+      if (!empty($files)) {
+        $file_meta = array_pop($files);
+        unset($files);
+      }
+    }
+  }
+
   if (!empty($file_meta) && !empty($filepath)) {
     // prevent devel_shutdown from being called.
     $GLOBALS['devel_shutdown'] = FALSE;
@@ -398,13 +430,13 @@ function mcneese_file_db_load_file($by = '', $arg1 = '', $arg2 = '', $arg3 = '')
       $filesize = 0;
     }
 
-    if ($by == MCNEESE_FILE_DB_PATH_BY_HASH) {
+    if ($by == MCNEESE_FILE_DB_PATH_BY_HASH || $by == MCNEESE_FILE_DB_PATH_BY_ID) {
       if (ob_get_level()) {
         ob_end_clean();
         ob_end_flush();
       }
 
-      $content_location = '/' . MCNEESE_FILE_DB_FILE_PATH . '/' . MCNEESE_FILE_DB_PATH_BY_HASH;
+      $content_location = '/' . MCNEESE_FILE_DB_FILE_PATH . '/' . $by;
       $content_location .= '/' . $file_meta->checksum . '/';
       $content_location .= $file_meta->filename . '.' . $file_meta->extension;
 

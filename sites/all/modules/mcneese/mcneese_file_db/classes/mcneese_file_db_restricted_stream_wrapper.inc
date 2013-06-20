@@ -228,7 +228,10 @@ class mcneese_file_db_restricted_stream_wrapper extends mcneese_file_db_stream_w
     }
 
     if (empty($this->file_meta)) {
-      if (!empty($this->tmp_checksum)) {
+      if (!empty($this->tmp_fid)) {
+        $this->load_file_meta_by_fid($this->tmp_fid);
+      }
+      elseif (!empty($this->tmp_checksum)) {
         $this->load_file_meta($this->tmp_checksum);
       }
     }
@@ -361,6 +364,9 @@ class mcneese_file_db_restricted_stream_wrapper extends mcneese_file_db_stream_w
     if (empty($this->file_meta)) {
       if (!empty($this->stream_fid)) {
         $this->load_file_meta_by_fid($this->stream_fid);
+      }
+      else if (!empty($this->tmp_fid)) {
+        $this->load_file_meta_by_fid($this->tmp_fid);
       }
       else if (!empty($this->tmp_checksum)) {
         $this->load_file_meta($this->tmp_checksum);
@@ -602,6 +608,13 @@ class mcneese_file_db_restricted_stream_wrapper extends mcneese_file_db_stream_w
    */
   protected function get_path_by_hash() {
     return MCNEESE_FILE_DB_PATH_BY_HASH;
+  }
+
+  /**
+   * Implements get_path_by_hash().
+   */
+  protected function get_path_by_id() {
+    return MCNEESE_FILE_DB_PATH_BY_ID;
   }
 
   /**
