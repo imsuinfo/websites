@@ -506,7 +506,7 @@ class mcneese_file_db_unrestricted_stream_wrapper extends mcneese_file_db_stream
       $arguments[':file_id'] = $this->file_meta->id;
 
       try {
-        $file_db->query($query, $arguments, $options)->fetchAll();
+        $file_db->query($query, $arguments, $options)->execute();
       }
       catch (Exception $e) {
         cf_error::on_query_execution($e);
