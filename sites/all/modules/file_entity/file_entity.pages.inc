@@ -148,6 +148,11 @@ function file_entity_add_upload_step_filetype($form, &$form_state, array $option
  * Generate form fields for the third step in the add file wizard.
  */
 function file_entity_add_upload_step_scheme($form, &$form_state, array $options = array()) {
+  if (!user_access('select file scheme')) {
+    drupal_access_denied();
+    drupal_exit();
+  }
+
   $file = file_load($form_state['storage']['upload']);
 
   $options = array();
@@ -296,6 +301,7 @@ function file_entity_add_upload_submit($form, &$form_state) {
   // This var is set to TRUE when we are ready to save the file.
   $save = FALSE;
   $trigger = $form_state['triggering_element']['#id'];
+  $select_scheme = user_access('select file scheme');
 
   // We have the file, check if we can skip step 2.
   // The next step is step 2 when we are on step 1 and clicking "next" or
@@ -316,10 +322,16 @@ function file_entity_add_upload_submit($form, &$form_state) {
   if (($form['#step'] == 2 && $trigger == 'edit-next') || ($form['#step'] == 4 && $trigger == 'edit-previous')) {
     $file = file_load($form_state['storage']['upload']);
     $schemes = file_get_stream_wrappers(STREAM_WRAPPERS_WRITE_VISIBLE);
-    if (count($schemes) == 1) {
-      // There is only one possible stream wrapper for this file. Skip the third page.
-      $form['#step'] += ($trigger == 'edit-previous') ? -1 : 1;
-      $form_state['storage']['scheme'] = key($schemes);
+    if ($select_scheme) {
+      if (count($schemes) == 1) {
+        // There is only one possible stream wrapper for this file. Skip the third page.
+        $form['#step'] += ($trigger == 'edit-previous') ? -1 : 1;
+        $form_state['storage']['scheme'] = key($schemes);
+      }
+    }
+    else {
+     $form['#step'] += ($trigger == 'edit-previous') ? -1 : 1;
+     $form_state['storage']['scheme'] = file_default_scheme();
     }
   }
 
@@ -562,34 +574,44 @@ function file_entity_edit($form, &$form_state, $file) {
   );
 
   // File destination information for administrators
-  $form['destination'] = array(
-    '#type' => 'fieldset',
-    '#access' => user_access('administer files') && file_entity_file_is_writeable($file),
-    '#title' => t('Destination'),
-    '#collapsible' => TRUE,
-    '#collapsed' => TRUE,
-    '#group' => 'additional_settings',
-    '#attributes' => array(
-      'class' => array('file-form-destination'),
-    ),
-    '#attached' => array(
-      'js' => array(
-        drupal_get_path('module', 'file_entity') . '/file_entity.js',
+  if (user_access('select file scheme')) {
+    $form['destination'] = array(
+      '#type' => 'fieldset',
+      '#access' => user_access('administer files') && file_entity_file_is_writeable($file),
+      '#title' => t('Destination'),
+      '#collapsible' => TRUE,
+      '#collapsed' => TRUE,
+      '#group' => 'additional_settings',
+      '#attributes' => array(
+        'class' => array('file-form-destination'),
       ),
-    ),
-  );
+      '#attached' => array(
+        'js' => array(
+          drupal_get_path('module', 'file_entity') . '/file_entity.js',
+        ),
+      ),
+    );
+  }
 
   $options = array();
   foreach (file_get_stream_wrappers(STREAM_WRAPPERS_WRITE_VISIBLE) as $scheme => $info) {
     $options[$scheme] = check_plain($info['name']);
   }
 
-  $form['destination']['scheme'] = array(
-    '#type' => 'radios',
-    '#title' => t('Destination'),
-    '#options' => $options,
-    '#default_value' => file_uri_scheme($file->uri),
-  );
+  if (user_access('select file scheme')) {
+    $form['destination']['scheme'] = array(
+      '#type' => 'radios',
+      '#title' => t('Destination'),
+      '#options' => $options,
+      '#default_value' => file_uri_scheme($file->uri),
+    );
+  }
+  else {
+    $form['destination']['scheme'] = array(
+      '#type' => 'hidden',
+      '#value' => !empty($file->uri) ? file_uri_scheme($file->uri) : file_default_scheme(),
+    );
+  }
 
   // File user information for administrators
   $form['user'] = array(
