@@ -498,15 +498,23 @@ class mcneese_file_db_restricted_stream_wrapper extends mcneese_file_db_stream_w
       $file_db = mcneese_file_db_prepare_connection();
       $options = mcneese_file_db_prepare_options();
 
-      $query = 'DELETE FROM {mcneese_file_db_associations}';
-      $query .= ' WHERE server_id = :server_id AND file_id = :file_id';
+      try {
+        $query = $file_db->delete('mcneese_file_db_associations', $options);
+        $query->condition('server_id', mcneese_file_db_get_server_id());
+        $query->condition('file_id', $this->file_meta->id);
+        $query->execute();
+      }
+      catch (Exception $e) {
+        cf_error::on_query_execution($e);
 
-      $arguments = array();
-      $arguments[':server_id'] = mcneese_file_db_get_server_id();
-      $arguments[':file_id'] = $this->file_meta->id;
+        throw $e;
+      }
 
       try {
-        $file_db->query($query, $arguments, $options)->execute();
+        $query = $file_db->delete('mcneese_file_db_users', $options);
+        $query->condition('server_id', mcneese_file_db_get_server_id());
+        $query->condition('file_id', $this->file_meta->id);
+        $query->execute();
       }
       catch (Exception $e) {
         cf_error::on_query_execution($e);
