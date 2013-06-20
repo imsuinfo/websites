@@ -199,6 +199,9 @@ class mcneese_file_db_restricted_stream_wrapper extends mcneese_file_db_stream_w
       if (!empty($uri)) {
         $this->uri = $uri;
       }
+
+      $user = cf_current_user();
+      watchdog('File DB', "The user %name (%uid) has added the file %uri (%fid)", array('%name' => $user->name, '%uid' => $user->uid, '%uri' => $this->uri, '%fid' => $associated_id), WATCHDOG_INFO);
     }
 
     unset($this->stream);
@@ -522,6 +525,14 @@ class mcneese_file_db_restricted_stream_wrapper extends mcneese_file_db_stream_w
         throw $e;
       }
 
+      $fid = '';
+      $user = cf_current_user();
+
+      if (is_object($this->file_meta)) {
+        $fid = $this->file_meta->id;
+      }
+
+      watchdog('File DB', "The user %name (%uid) has deleted the file %uri (%fid)", array('%name' => $user->name, '%uid' => $user->uid, '%uri' => $uri, '%fid' => $fid), WATCHDOG_INFO);
       return TRUE;
     }
 
