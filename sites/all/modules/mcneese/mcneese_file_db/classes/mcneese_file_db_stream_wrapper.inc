@@ -445,7 +445,7 @@ abstract class mcneese_file_db_stream_wrapper implements DrupalStreamWrapperInte
       return $this->file_meta;
     }
 
-    $files = (array) mcneese_file_db_load_available_files(array('checksum' => $checksum));
+    $files = (array) mcneese_file_db_load_available_files(array('checksum' => $checksum, 'range' => array('from' => 0, 'count' => 1)));
 
     if (!empty($files)) {
       $file_meta = array_pop($files);
@@ -486,7 +486,7 @@ abstract class mcneese_file_db_stream_wrapper implements DrupalStreamWrapperInte
       return $this->file_meta;
     }
 
-    $files = (array) mcneese_file_db_load_available_files(array('id' => $fid));
+    $files = (array) mcneese_file_db_load_available_files(array('id' => $fid, 'range' => array('from' => 0, 'count' => 1)));
 
     if (!empty($files)) {
       $file_meta = array_pop($files);

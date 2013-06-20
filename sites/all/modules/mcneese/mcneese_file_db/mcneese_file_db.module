@@ -131,8 +131,8 @@ function mcneese_file_db_get_server_id() {
  *   (optional) An array of conditions to apply to the database query.
  *    The following are supported:
  *    - range: an array of:
- *      - start: start range.
- *      - stop: stop range.
+ *      - from: start range.
+ *      - count: max number of rows to select.
  *    - filename: Perform a like test against the files filename.
  *    - extension: Perform a like test against the filesextension.
  *    - mimetype: Perform a like test against the filesmimetype.
@@ -248,8 +248,8 @@ function mcneese_file_db_load_available_files($conditions = array()) {
       }
     }
 
-    if (isset($conditions['range']['start']) && isset($conditions['range']['stop'])) {
-      $results = $file_db->queryRange($query, $conditions['range']['start'], $conditions['range']['stop'], $arguments, $options);
+    if (isset($conditions['range']['from']) && isset($conditions['range']['count'])) {
+      $results = $file_db->queryRange($query, $conditions['range']['from'], $conditions['range']['count'], $arguments, $options);
     }
     else {
       $results = $file_db->query($query, $arguments, $options);
@@ -352,12 +352,12 @@ function mcneese_file_db_load_file($by = '', $arg1 = '', $arg2 = '', $arg3 = '')
 
       if (!strncmp($arg1, $if_none_match, MCNEESE_FILE_DB_SHORT_SUM_SIZE)) {
         $filepath .= MCNEESE_FILE_DB_PATH_BY_HASH . '/' . $if_none_match;
-        $files = (array) mcneese_file_db_load_available_files(array('checksum' => $if_none_match));
+        $files = (array) mcneese_file_db_load_available_files(array('checksum' => $if_none_match, 'range' => array('from' => 0, 'count' => 1)));
         $not_modified = TRUE;
       }
       else {
         $filepath .= MCNEESE_FILE_DB_PATH_BY_HASH . '/' . $arg1;
-        $files = (array) mcneese_file_db_load_available_files(array('checksum' => $arg1));
+        $files = (array) mcneese_file_db_load_available_files(array('checksum' => $arg1, 'range' => array('from' => 0, 'count' => 1)));
       }
 
       if (!empty($files)) {
@@ -383,12 +383,12 @@ function mcneese_file_db_load_file($by = '', $arg1 = '', $arg2 = '', $arg3 = '')
 
       if ($arg1 == $if_none_match) {
         $filepath .= MCNEESE_FILE_DB_PATH_BY_ID . '/' . $if_none_match;
-        $files = (array) mcneese_file_db_load_available_files(array('id' => $if_none_match));
+        $files = (array) mcneese_file_db_load_available_files(array('id' => $if_none_match, 'range' => array('from' => 0, 'count' => 1)));
         $not_modified = TRUE;
       }
       else {
         $filepath .= MCNEESE_FILE_DB_PATH_BY_ID . '/' . $arg1;
-        $files = (array) mcneese_file_db_load_available_files(array('id' => $arg1));
+        $files = (array) mcneese_file_db_load_available_files(array('id' => $arg1, 'range' => array('from' => 0, 'count' => 1)));
       }
 
       if (!empty($files)) {
@@ -666,7 +666,7 @@ function mcneese_file_db_file_validate($file) {
     $file->destination .= '/' . $file->filename;
   }
 
-  $loaded = (array) mcneese_file_db_load_available_files(array('checksum' => $checksum));
+  $loaded = (array) mcneese_file_db_load_available_files(array('checksum' => $checksum, 'range' => array('from' => 0, 'count' => 1)));
 
   if (empty($loaded)) return $errors;
 
