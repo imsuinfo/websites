@@ -65,7 +65,7 @@ function theme_media_thumbnail($variables) {
     $external_url = $wrapper->getExternalUrl();
 
     if (!empty($external_url)) {
-      $link_to_file = '<a href="' . $external_url . '" class="media-item-url" title="link to file" alt="link to file"></a>';
+      $link_to_file = '<a href="' . $external_url . '" class="media-item-url" title="URL: ' . check_plain($external_url) . '" alt="link to file"></a>';
     }
   }
 
