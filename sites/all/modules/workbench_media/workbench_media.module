@@ -90,16 +90,18 @@ function workbench_media_preprocess_views_view_table(&$vars) {
   // Custom handling for the workbench files view
   if ($vars['view']->name == 'workbench_files') {
     foreach ($vars['rows'] as $id => $row) {
+      $uri = & $vars['result'][$id]->file_managed_uri;
       // Is this file an image?
-      if (strstr(file_get_mimetype($row['uri']), 'image')) {
+      if (strstr(file_get_mimetype($uri), 'image')) {
         // Is this file on the local file system?
-        if (file_exists($row['uri_1'])) {
+        if (file_exists($uri)) {
           $row['filemime'] = theme('image_style', array(
-            'path' => $row['uri_1'],
+            'path' => $uri,
             'style_name' => 'thumbnail',
           ));
         }
       }
+
       // Assign the databack
       $vars['rows'][$id] = $row;
     }
