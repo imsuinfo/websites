@@ -121,3 +121,13 @@ function node_accessibility_statistics_disable() {
     node_accessibility_statistics_reset_cache();
   }
 }
+
+
+/**
+ * Remove caching of node accessibility statistics page.
+ *
+ * Using caching, while saved performance, ended up being too confusing.
+ */
+function node_accessibility_statistics_update_7100() {
+  cache_clear_all('node_accessibility_statistics_page', 'cache', TRUE);
+}

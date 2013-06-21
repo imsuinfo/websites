@@ -54,30 +54,17 @@ function node_accessibility_statistics_page($statistics_type = 'all') {
   drupal_set_title(t("Node Accessibility Statistics - @title", array('@title' => $title)), PASS_THROUGH);
 
   $static_variables = &drupal_static(__FUNCTION__, array());
-  $save_cache = FALSE;
-
-  if (empty($static_variables)) {
-    if ($cache = cache_get('node_accessibility_statistics_page')) {
-      $static_variables = $cache->data;
-    }
-    else {
-      $save_cache = TRUE;
-    }
-  }
 
   if (!isset($static_variables[$statistics_type]['major_problems'])) {
     $static_variables[$statistics_type]['major_problems'] = NULL;
-    $save_cache = TRUE;
   }
 
   if (!isset($static_variables[$statistics_type]['minor_problems'])) {
     $static_variables[$statistics_type]['minor_problems'] = NULL;
-    $save_cache = TRUE;
   }
 
   if (!isset($static_variables[$statistics_type]['grand_total'])) {
     $static_variables[$statistics_type]['grand_total'] = 0;
-    $save_cache = TRUE;
   }
 
   if (!isset($static_variables[$statistics_type]['statistics'])) {
@@ -86,7 +73,6 @@ function node_accessibility_statistics_page($statistics_type = 'all') {
       '#collapsed' => FALSE,
       '#tree' => TRUE,
     );
-    $save_cache = TRUE;
   }
 
   $major_problems = &$static_variables[$statistics_type]['major_problems'];
@@ -125,272 +111,266 @@ function node_accessibility_statistics_page($statistics_type = 'all') {
     '#weight' => -100,
   );
 
-  if ($save_cache) {
-    $problems = (array) node_accessibility_load_problems($conditions, NULL);
-    $tests = quail_api_load_tests(array(), 'id');
-    $plot_data = array();
+  $problems = (array) node_accessibility_load_problems($conditions, NULL);
+  $tests = quail_api_load_tests(array(), 'id');
+  $plot_data = array();
+  $data = array();
+  $information = array();
+  $markup_format = 'full_html';
+  $grand_total = 0;
+
+  $major_problems = array();
+  $minor_problems = array();
+
+  foreach ($display_levels as $key => &$value) {
+    if (empty($value['id'])) continue;
+
+    $information[$value['id']] = array('total' => 0);
+  }
+
+  foreach ($problems as $problem_key => &$problem_data) {
+    if (!is_object($problem_data)) continue;
+
+    $test = $tests[$problem_data->test_id];
+
+    if ($test->severity == 1) {
+      $problems = &$major_problems;
+    }
+    else if ($test->severity == 2) {
+      $problems = &$minor_problems;
+    }
+    else {
+      continue;
+    }
+
+    if (!isset($information[$test->severity])) {
+      $information[$test->severity] = array('total' => 0);
+    }
+
+    if (!isset($problems[$test->machine_name])) {
+      $problems[$test->machine_name]['problem_machine_name'] = $test->machine_name;
+      $problems[$test->machine_name]['problem_human_name'] = $test->human_name;
+      $problems[$test->machine_name]['severity_human_name'] = $display_levels[$test->severity]['human_name'];
+      $problems[$test->machine_name]['total'] = 0;
+      $problems[$test->machine_name]['explanation'] = $test->description;
+      $problems[$test->machine_name]['statistics_type_path'] = $statistics_type_path;
+      $problems[$test->machine_name]['title_block'] = 'h4';
+    }
+
+    if (!isset($information[$test->severity][$test->machine_name])) {
+      $information[$test->severity][$test->machine_name] = array();
+      $information[$test->severity][$test->machine_name]['body'] = array();
+      $information[$test->severity][$test->machine_name]['body']['title'] = $test->human_name;
+      $information[$test->severity][$test->machine_name]['body']['description'] = $test->description;
+      $information[$test->severity][$test->machine_name]['total'] = 0;
+    }
+
+    $problem = array();
+    $problem['line'] = $problem_data->line;
+    $problem['element'] = $problem_data->element;
+    $information[$test->severity][$test->machine_name]['problems'][] = $problem;
+
+    $problems[$test->machine_name]['total']++;
+    $information[$test->severity][$test->machine_name]['total']++;
+    $information[$test->severity]['total']++;
+    $grand_total++;
+  }
+
+  foreach (array('problem_distribution') as $type_name) {
+    $plot = new phplot_api_plot('pie');
     $data = array();
-    $information = array();
-    $markup_format = 'full_html';
-    $grand_total = 0;
+    $theme_settings = array();
+    $theme_settings['plot_rows'] = array();
+    $total = 0;
 
-    $major_problems = array();
-    $minor_problems = array();
-
-    foreach ($display_levels as $key => &$value) {
-      if (empty($value['id'])) continue;
-
-      $information[$value['id']] = array('total' => 0);
+    switch ($type_name) {
+      case 'problem_distribution':
+        $theme_settings['plot_human_name'] = t("Problem Distribution");
+        break;
     }
 
-    foreach ($problems as $problem_key => &$problem_data) {
-      if (!is_object($problem_data)) continue;
-
-      $test = $tests[$problem_data->test_id];
-
-      if ($test->severity == 1) {
-        $problems = &$major_problems;
-      }
-      else if ($test->severity == 2) {
-        $problems = &$minor_problems;
-      }
-      else {
-        continue;
-      }
-
-      if (!isset($information[$test->severity])) {
-        $information[$test->severity] = array('total' => 0);
-      }
-
-      if (!isset($problems[$test->machine_name])) {
-        $problems[$test->machine_name]['problem_machine_name'] = $test->machine_name;
-        $problems[$test->machine_name]['problem_human_name'] = $test->human_name;
-        $problems[$test->machine_name]['severity_human_name'] = $display_levels[$test->severity]['human_name'];
-        $problems[$test->machine_name]['total'] = 0;
-        $problems[$test->machine_name]['explanation'] = $test->description;
-        $problems[$test->machine_name]['statistics_type_path'] = $statistics_type_path;
-        $problems[$test->machine_name]['title_block'] = 'h4';
-      }
-
-      if (!isset($information[$test->severity][$test->machine_name])) {
-        $information[$test->severity][$test->machine_name] = array();
-        $information[$test->severity][$test->machine_name]['body'] = array();
-        $information[$test->severity][$test->machine_name]['body']['title'] = $test->human_name;
-        $information[$test->severity][$test->machine_name]['body']['description'] = $test->description;
-        $information[$test->severity][$test->machine_name]['total'] = 0;
-      }
-
-      $problem = array();
-      $problem['line'] = $problem_data->line;
-      $problem['element'] = $problem_data->element;
-      $information[$test->severity][$test->machine_name]['problems'][] = $problem;
-
-      $problems[$test->machine_name]['total']++;
-      $information[$test->severity][$test->machine_name]['total']++;
-      $information[$test->severity]['total']++;
-      $grand_total++;
-    }
-
-    foreach (array('problem_distribution') as $type_name) {
-      $plot = new phplot_api_plot('pie');
-      $data = array();
-      $theme_settings = array();
-      $theme_settings['plot_rows'] = array();
-      $total = 0;
-
-      switch ($type_name) {
-        case 'problem_distribution':
-          $theme_settings['plot_human_name'] = t("Problem Distribution");
-          break;
-      }
-
-      foreach ($information as $display_level => &$value) {
-         if ($type_name == 'problem_distribution') {
-           if ($display_levels[$display_level]['machine_name'] == 'quail_test_suggestion') {
-             continue;
-           }
+    foreach ($information as $display_level => &$value) {
+       if ($type_name == 'problem_distribution') {
+         if ($display_levels[$display_level]['machine_name'] == 'quail_test_suggestion') {
+           continue;
          }
+       }
 
-        $data_row = array($display_levels[$display_level]['human_name'], $value['total']);
-        $data[] = $data_row;
+      $data_row = array($display_levels[$display_level]['human_name'], $value['total']);
+      $data[] = $data_row;
+      $total += $value['total'];
+      $plot->set_data('legend', implode(': ', $data_row));
+
+      $theme_setting = array();
+      $theme_setting['machine_name'] = $display_levels[$display_level]['machine_name'];
+      $theme_setting['human_name'] = $display_levels[$display_level]['human_name'];
+      $theme_setting['show_human_name'] = TRUE;
+      $theme_setting['link'] = '#accessibility_problems-' . $display_levels[$display_level]['machine_name'];
+      $theme_setting['value'] = $data_row[1];
+      $theme_settings['plot_rows'][] = $theme_setting;
+    }
+
+    if ($total > 0) {
+      $no_statistics = FALSE;
+      $theme_settings['total_human_name'] = t("Total");
+      $theme_settings['total_value'] = '' . $total;
+
+      $plot->set_data('width', 225);
+      $plot->set_data('height', 275);
+
+      // Define the data range. PHPlot can do this automatically, but not as well.
+      $plot->set_data('plot_area_world', array(0, 0, 225, 275));
+      $plot->set_data('margins_pixels', array(NULL, NULL, 10));
+
+      // Select the data array representation and store the data:
+      $plot->set_data('data_type', 'text-data-single');
+      $plot->set_data('data_values', $data);
+
+      // Select an overall image background color and another color under the plot:
+      $plot->set_data('background_color', '#ffffff');
+      $plot->set_data('plot_area_background_draw', FALSE);
+      $plot->set_data('plot_background_color', '#ffffff');
+
+      // Do not use decimal places
+      $plot->set_data('precision_y', FALSE);
+
+      // Make the pie chart flat
+      $plot->set_data('shading', 0);
+      $plot->set_data('label_scale_position', 0.2);
+
+      $plot->build();
+      $plot->create_image();
+
+      $plot_file_uri = $plot->create_file();
+      $plot_file_path = preg_replace('`^' . $GLOBALS['base_url'] . '`i', '', file_create_url($plot_file_uri));
+
+      $theme_settings['image_url'] = $plot_file_path;
+
+      foreach ($theme_settings['plot_rows'] as $key => &$row) {
+        $row['value'] = $row['value'] . ' (' . round((($row['value']) / $total) * 100) . '%)';
+      }
+
+      $statistics[$type_name] = array(
+        '#type' => 'markup',
+        '#markup' => theme('node_accessibility_statistics_plot', $theme_settings),
+      );
+    }
+  }
+
+  foreach (array('major_problems', 'minor_problems') as $type_name) {
+    $plot = new phplot_api_plot('bars');
+    $data = array();
+    $display_level = 0;
+    $theme_settings = array();
+    $total = 0;
+    $count = 0;
+    $available_colors = array('DarkGreen', 'DimGrey', 'SkyBlue', 'SlateBlue', 'YellowGreen', 'brown', 'gold', 'maroon', 'orange', 'tan', 'yellow', 'navy');
+    $total_available_colors = count($available_colors);
+    $data_colors = array();
+
+    $theme_settings = array();
+    $theme_settings['plot_rows'] = array();
+
+    switch ($type_name) {
+      case 'major_problems':
+        $theme_settings['plot_human_name'] = t("Major Problems");
+        $display_level = 1;
+        break;
+
+      case 'minor_problems':
+        $theme_settings['plot_human_name'] = t("Minor Problems");
+        $display_level = 2;
+        break;
+    }
+
+    if (!empty($information[$display_level])) {
+      foreach ($information[$display_level] as $problem => &$value) {
+        if ($problem == 'total') continue;
+
         $total += $value['total'];
-        $plot->set_data('legend', implode(': ', $data_row));
+        $count++;
+        $problem_total = count($value['problems']);
+        $data_colors[] = $available_colors[$count % $total_available_colors];
+        $data_row = array($count, $problem_total);
+        $data[] = $data_row;
 
         $theme_setting = array();
-        $theme_setting['machine_name'] = $display_levels[$display_level]['machine_name'];
-        $theme_setting['human_name'] = $display_levels[$display_level]['human_name'];
-        $theme_setting['show_human_name'] = TRUE;
-        $theme_setting['link'] = '#accessibility_problems-' . $display_levels[$display_level]['machine_name'];
+        $theme_setting['machine_name'] = $problem;
+        $theme_setting['human_name'] = isset($value['body']['title']) ? check_plain($value['body']['title']) : $problem;
+        $theme_setting['show_human_name'] = FALSE;
+        $theme_setting['link'] = '#accessibility_problem-' . $problem;
         $theme_setting['value'] = $data_row[1];
+        $theme_settings['list_block'] = 'ol';
         $theme_settings['plot_rows'][] = $theme_setting;
       }
-
-      if ($total > 0) {
-        $no_statistics = FALSE;
-        $theme_settings['total_human_name'] = t("Total");
-        $theme_settings['total_value'] = '' . $total;
-
-        $plot->set_data('width', 225);
-        $plot->set_data('height', 275);
-
-        // Define the data range. PHPlot can do this automatically, but not as well.
-        $plot->set_data('plot_area_world', array(0, 0, 225, 275));
-        $plot->set_data('margins_pixels', array(NULL, NULL, 10));
-
-        // Select the data array representation and store the data:
-        $plot->set_data('data_type', 'text-data-single');
-        $plot->set_data('data_values', $data);
-
-        // Select an overall image background color and another color under the plot:
-        $plot->set_data('background_color', '#ffffff');
-        $plot->set_data('plot_area_background_draw', FALSE);
-        $plot->set_data('plot_background_color', '#ffffff');
-
-        // Do not use decimal places
-        $plot->set_data('precision_y', FALSE);
-
-        // Make the pie chart flat
-        $plot->set_data('shading', 0);
-        $plot->set_data('label_scale_position', 0.2);
-
-        $plot->build();
-        $plot->create_image();
-
-        $plot_file_uri = $plot->create_file();
-        $plot_file_path = preg_replace('`^' . $GLOBALS['base_url'] . '`i', '', file_create_url($plot_file_uri));
-
-        $theme_settings['image_url'] = $plot_file_path;
-
-        foreach ($theme_settings['plot_rows'] as $key => &$row) {
-          $row['value'] = $row['value'] . ' (' . round((($row['value']) / $total) * 100) . '%)';
-        }
-
-        $statistics[$type_name] = array(
-          '#type' => 'markup',
-          '#markup' => theme('node_accessibility_statistics_plot', $theme_settings),
-        );
-      }
     }
 
-    foreach (array('major_problems', 'minor_problems') as $type_name) {
-      $plot = new phplot_api_plot('bars');
-      $data = array();
-      $display_level = 0;
-      $theme_settings = array();
-      $total = 0;
-      $count = 0;
-      $available_colors = array('DarkGreen', 'DimGrey', 'SkyBlue', 'SlateBlue', 'YellowGreen', 'brown', 'gold', 'maroon', 'orange', 'tan', 'yellow', 'navy');
-      $total_available_colors = count($available_colors);
-      $data_colors = array();
+    if ($total > 0) {
+      $no_statistics = FALSE;
+      $theme_settings['total_human_name'] = t("Total");
+      $theme_settings['total_value'] = '' . $total;
 
-      $theme_settings = array();
-      $theme_settings['plot_rows'] = array();
+      $width = 350;
+      $height = 100 + $count * 10;
 
-      switch ($type_name) {
-        case 'major_problems':
-          $theme_settings['plot_human_name'] = t("Major Problems");
-          $display_level = 1;
-          break;
+      if ($height < 275) $height = 275;
+      if ($height > 550) $height = 550;
 
-        case 'minor_problems':
-          $theme_settings['plot_human_name'] = t("Minor Problems");
-          $display_level = 2;
-          break;
+      $plot->set_data('width', $width);
+      $plot->set_data('height', $height);
+
+      // Select the data array representation and store the data:
+      $plot->set_data('data_type', 'text-data-yx');
+      $plot->set_data('data_values', array_reverse($data));
+
+      // Select an overall image background color and another color under the plot:
+      $plot->set_data('background_color', '#ffffff');
+      $plot->set_data('plot_area_background_draw', FALSE);
+      $plot->set_data('plot_background_color', '#ffffff');
+
+      // Do not use decimal places
+      $plot->set_data('precision_x', FALSE);
+
+      // Turn off Y tick labels and ticks because they don't apply here:
+      $plot->set_data('tick_label_position_y', 'none');
+      $plot->set_data('tick_position_y', 'none');
+
+      // Turn on X data labels:
+      $plot->set_data('data_label_position_x', 'plotin');
+
+      // With X data labels, we don't need Y ticks or their labels, so turn them off.
+      $plot->set_data('tick_label_position_x', 'none');
+      $plot->set_data('tick_position_x', 'none');
+
+      // draw x ticks every 20 units for large plots
+      if ($total > 100) {
+        $plot->set_data('tick_increment_x', 20);
       }
 
-      if (!empty($information[$display_level])) {
-        foreach ($information[$display_level] as $problem => &$value) {
-          if ($problem == 'total') continue;
+      // Make the pie chart flat
+      $plot->set_data('shading', 0);
 
-          $total += $value['total'];
-          $count++;
-          $problem_total = count($value['problems']);
-          $data_colors[] = $available_colors[$count % $total_available_colors];
-          $data_row = array($count, $problem_total);
-          $data[] = $data_row;
+      // manually set the data colors
+      $plot->set_data('data_colors', array_reverse(array($data_colors)));
 
-          $theme_setting = array();
-          $theme_setting['machine_name'] = $problem;
-          $theme_setting['human_name'] = isset($value['body']['title']) ? check_plain($value['body']['title']) : $problem;
-          $theme_setting['show_human_name'] = FALSE;
-          $theme_setting['link'] = '#accessibility_problem-' . $problem;
-          $theme_setting['value'] = $data_row[1];
-          $theme_settings['list_block'] = 'ol';
-          $theme_settings['plot_rows'][] = $theme_setting;
-        }
-      }
+      $plot->build();
 
-      if ($total > 0) {
-        $no_statistics = FALSE;
-        $theme_settings['total_human_name'] = t("Total");
-        $theme_settings['total_value'] = '' . $total;
+      $plot->create_image();
 
-        $width = 350;
-        $height = 100 + $count * 10;
+      $plot_file_uri = $plot->create_file();
+      $plot_file_path = preg_replace('`^' . $GLOBALS['base_url'] . '`i', '', file_create_url($plot_file_uri));
 
-        if ($height < 275) $height = 275;
-        if ($height > 550) $height = 550;
+      $theme_settings['image_url'] = $plot_file_path;
 
-        $plot->set_data('width', $width);
-        $plot->set_data('height', $height);
-
-        // Select the data array representation and store the data:
-        $plot->set_data('data_type', 'text-data-yx');
-        $plot->set_data('data_values', array_reverse($data));
-
-        // Select an overall image background color and another color under the plot:
-        $plot->set_data('background_color', '#ffffff');
-        $plot->set_data('plot_area_background_draw', FALSE);
-        $plot->set_data('plot_background_color', '#ffffff');
-
-        // Do not use decimal places
-        $plot->set_data('precision_x', FALSE);
-
-        // Turn off Y tick labels and ticks because they don't apply here:
-        $plot->set_data('tick_label_position_y', 'none');
-        $plot->set_data('tick_position_y', 'none');
-
-        // Turn on X data labels:
-        $plot->set_data('data_label_position_x', 'plotin');
-
-        // With X data labels, we don't need Y ticks or their labels, so turn them off.
-        $plot->set_data('tick_label_position_x', 'none');
-        $plot->set_data('tick_position_x', 'none');
-
-        // draw x ticks every 20 units for large plots
-        if ($total > 100) {
-          $plot->set_data('tick_increment_x', 20);
-        }
-
-        // Make the pie chart flat
-        $plot->set_data('shading', 0);
-
-        // manually set the data colors
-        $plot->set_data('data_colors', array_reverse(array($data_colors)));
-
-        $plot->build();
-
-        $plot->create_image();
-
-        $plot_file_uri = $plot->create_file();
-        $plot_file_path = preg_replace('`^' . $GLOBALS['base_url'] . '`i', '', file_create_url($plot_file_uri));
-
-        $theme_settings['image_url'] = $plot_file_path;
-
-        $statistics[$type_name] = array(
-          '#type' => 'markup',
-          '#markup' => theme('node_accessibility_statistics_plot', $theme_settings),
-        );
-      }
+      $statistics[$type_name] = array(
+        '#type' => 'markup',
+        '#markup' => theme('node_accessibility_statistics_plot', $theme_settings),
+      );
     }
+  }
 
-    if ($grand_total == 0) {
-      $statistics['#description'] = t("There are no accessibility statistics available.");
-    }
-
-    if ($save_cache) {
-      cache_set('node_accessibility_statistics_page', $static_variables, 'cache', CACHE_TEMPORARY);
-    }
+  if ($grand_total == 0) {
+    $statistics['#description'] = t("There are no accessibility statistics available.");
   }
 
   if (count($major_problems) == 0) {

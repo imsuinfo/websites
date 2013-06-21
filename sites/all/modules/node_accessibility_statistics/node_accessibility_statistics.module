@@ -1058,5 +1058,4 @@ function node_accessibility_statistics_delete_plots(array $plots, $keyed = NULL)
  */
 function node_accessibility_statistics_reset_cache() {
   drupal_static_reset('node_accessibility_statistics_page');
-  cache_clear_all('node_accessibility_statistics_page', 'cache', TRUE);
 }
