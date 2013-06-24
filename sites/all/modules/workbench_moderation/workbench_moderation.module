@@ -182,8 +182,8 @@ function workbench_moderation_menu_alter(&$items) {
   $items['node/%node/view']['title arguments'] = array(1);
 
   // Redirect node/%node/revisions
+  $items['node/%node/revisions']['page arguments'] = array(1, $items['node/%node/revisions']['page callback']);
   $items['node/%node/revisions']['page callback'] = 'workbench_moderation_node_revisions_redirect';
-  $items['node/%node/revisions']['page arguments'] = array(1);
 
   // Override the node revision view callback.
  $items['node/%node/revisions/%/view']['page callback'] = 'workbench_moderation_node_view_revision';
@@ -219,17 +219,19 @@ function workbench_moderation_menu_alter(&$items) {
  *
  * @param $node
  *   The node being acted upon.
+ * @param $function
+ *   The original function for node/%node/revisions.
+ *   This is called if workbench_moderation is disabled for the node.
  */
-function workbench_moderation_node_revisions_redirect($node) {
+function workbench_moderation_node_revisions_redirect($node, $function) {
   // Redirect node types subject to moderation.
   if (workbench_moderation_node_type_moderated($node->type) === TRUE) {
     drupal_goto('node/' . $node->nid . '/moderation');
   }
   // Return the normal node revisions page for unmoderated types.
   else {
-
-    if (module_exists('diff')) {
-      return diff_diffs_overview($node);
+    if (function_exists($function)) {
+      return $function($node);
     }
     else {
       return node_revision_overview($node);
