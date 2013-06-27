@@ -167,7 +167,10 @@ abstract class mcneese_file_db_stream_wrapper implements DrupalStreamWrapperInte
       return FALSE;
     }
 
-    return url($this->get_external() . '/' . $parts[1], array('absolute' => TRUE));
+    global $base_path;
+    global $base_url;
+
+    return $base_url . $base_path . $this->get_external() . '/' . $parts[1];
   }
 
   /**
