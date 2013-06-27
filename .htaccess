@@ -101,14 +101,6 @@ DirectoryIndex index.php index.html index.htm
   # RewriteBase /
 
 
-  # begin custom redirects
-  RewriteRule ^police/parking.htm$ police/parking [R=301,L]
-
-  # Campus mailing list used invalid page url - Fri Oct  7 08:11:24 CDT 2011
-  RewriteRule ^campus/strategic-planning$ president/strategic-planning [R=301,L]
-  # end custom redirects
-
-
   # Pass all requests not referring directly to files in the filesystem to
   # index.php. Clean URLs are handled in drupal_environment_initialize().
   RewriteCond %{REQUEST_FILENAME} !-f
