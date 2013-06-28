@@ -332,6 +332,10 @@ function mcneese_file_db_load_file($by = '', $arg1 = '', $arg2 = '', $arg3 = '')
   $filepath = '';
   $file_meta = FALSE;
   $not_modified = FALSE;
+  $request_range = FALSE;
+  $request_range_begin = 0;
+  $request_range_end = 0;
+  $request_range_length = 0;
 
   // @todo: perform access control
 
@@ -345,6 +349,18 @@ function mcneese_file_db_load_file($by = '', $arg1 = '', $arg2 = '', $arg3 = '')
     if (isset($_SERVER['HTTP_IF_NONE_MATCH'])) {
       $if_none_match = substr($_SERVER['HTTP_IF_NONE_MATCH'], 1);
       $if_none_match = substr($if_none_match, 0, -1);
+    }
+
+    if (isset($_SERVER['HTTP_RANGE'])) {
+      $matches = array();
+      $matched = preg_match('/^bytes=(\d+)-(\d+)$/i', $_SERVER['HTTP_RANGE'], $matches);
+
+      if ($matched) {
+        $request_range_begin = $matches[1];
+        $request_range_end = $matches[2];
+        $request_range_length = ($request_range_end - $request_range_begin) + 1;
+        //$request_range = TRUE; // @todo
+      }
     }
 
     if (!empty($arg1)) {
@@ -436,24 +452,46 @@ function mcneese_file_db_load_file($by = '', $arg1 = '', $arg2 = '', $arg3 = '')
         ob_end_flush();
       }
 
-      $content_location = '/' . MCNEESE_FILE_DB_FILE_PATH . '/' . $by;
-      $content_location .= '/' . $file_meta->checksum . '/';
+
+      $short_location = '/' . MCNEESE_FILE_DB_FILE_PATH . '/' . $by;
+      $short_location .= '/' . substr($file_meta->checksum, 0, MCNEESE_FILE_DB_SHORT_SUM_SIZE);
+
+      $content_location = $short_location . '/';
       $content_location .= $file_meta->filename . '.' . $file_meta->extension;
 
+      if ($not_modified) {
+        header('HTTP/1.1 304 Not Modified', TRUE, 304);
+      }
+      elseif ($request_range) {
+        if ($request_range_end >= $filesize) {
+          header('HTTP/1.1 416 Requested Range Not Satisfiable', TRUE, 416);
+          header('Content-Length: ' . $filesize);
+          header("Content-Range: bytes " . $filesize);
+          exit();
+        }
+
+        header('HTTP/1.1 206 Partial Content', TRUE, 206);
+        header('Content-Length: ' . $request_range_length);
+        header("Content-Range: bytes " . $request_range_begin . "-" . $request_range_end . "/" . $filesize);
+      }
+      else {
+        header('HTTP/1.1 200 OK', TRUE, 200);
+        header('Content-Length: ' . $filesize);
+      }
+
       header('Content-Type: ' . $mimetype);
-      header('Content-Length: ' . $filesize);
       header('Content-Location: ' . $content_location);
+      header('Content-Transfer-Encoding: binary');
+      header('Content-Disposition: inline; filename="' . $filename . '."');
+      header('Content-Description: File Transfer');
       header('ETag: "' . MCNEESE_FILE_DB_PATH_BY_HASH_ALGORITHM . '://' . $file_meta->checksum . '"');
       header('Accept-Ranges: bytes');
       header('Last-Modified: ' . date('r', strtotime($file_meta->timestamp)));
       header('Expires: ' . date('r', strtotime('+14 days', REQUEST_TIME)));
       header('Date: ' . date('r', REQUEST_TIME));
-      header('Content-Transfer-Encoding: binary');
-      header('Content-Description: File Transfer');
 
       // ETag cache optimization and other http header responses.
       if ($not_modified) {
-        header('HTTP/1.1 304 Not Modified', TRUE, 304);
         exit();
       }
 
@@ -469,9 +507,13 @@ function mcneese_file_db_load_file($by = '', $arg1 = '', $arg2 = '', $arg3 = '')
         stream_set_chunk_size($in, MCNEESE_FILE_DB_BLOCK_SIZE);
       }
 
-      $count = 0;
-      while (!feof($in)) {
-        fpassthru($in);
+      if ($request_range) {
+        // @todo
+      }
+      else {
+        while (!feof($in)) {
+          fpassthru($in);
+        }
       }
 
       fclose($in);
@@ -483,17 +525,20 @@ function mcneese_file_db_load_file($by = '', $arg1 = '', $arg2 = '', $arg3 = '')
         ob_end_flush();
       }
 
-      $content_location = '/' . MCNEESE_FILE_DB_FILE_PATH . '/' . MCNEESE_FILE_DB_PATH_BY_HASH_SUM;
-      $content_location .= '/' . $file_meta->checksum . '/';
+      $short_location = '/' . MCNEESE_FILE_DB_FILE_PATH . '/' . $by;
+      $short_location .= '/' . substr($file_meta->checksum, 0, MCNEESE_FILE_DB_SHORT_SUM_SIZE);
+
+      $content_location = $short_location . '/';
       $content_location .= $file_meta->filename . '.' . $file_meta->extension;
       $content_location .= '.' . MCNEESE_FILE_DB_PATH_BY_HASH_SUM_EXTENSION;
 
       $data = $file_meta->checksum . '  ' . $filename;
 
+      header('HTTP/1.1 200 OK', TRUE, 200);
       header('Content-Type: text/plain');
       header('Content-Length: ' . strlen($data));
       header('Content-Transfer-Encoding: binary');
-      header('Content-Disposition: attachment; filename="' . $filename . '.' . MCNEESE_FILE_DB_PATH_BY_HASH_SUM_EXTENSION . '"');
+      header('Content-Disposition: inline; filename="' . $filename . '.' . MCNEESE_FILE_DB_PATH_BY_HASH_SUM_EXTENSION . '"');
       header('Content-Description: File Transfer');
       header('Content-Location: ' . $content_location);
       header('Last-Modified: ' . date('r', strtotime($file_meta->timestamp)));
