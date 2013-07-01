@@ -380,7 +380,7 @@ class date_views_argument_handler_simple extends views_handler_argument_date {
       $this->min_date[$key] = $this->date_range[$key][0];
       $this->max_date[$key] = $this->date_range[$key][1];
 
-      if (!$this->forbid) {
+      if (!isset($this->forbid) || !$this->forbid) {
         // See if we're outside the allowed date range for our argument.
         if (date_format($this->min_date[$key], 'Y') < $this->limit[0] || date_format($this->max_date[$key], 'Y') > $this->limit[1]) {
           $this->forbid = TRUE;
@@ -389,7 +389,7 @@ class date_views_argument_handler_simple extends views_handler_argument_date {
       }
     }
 
-    if ($this->forbid) {
+    if (isset($this->forbid) && $this->forbid) {
       return TRUE;
     }
 
