@@ -653,20 +653,31 @@ function mcneese_file_db_print_image_style($file_uri) {
       ob_end_flush();
     }
 
+    $filename = basename($file_uri);
     $filesize = filesize($file_uri);
-    //$checksum = shasum($file_uri);
+    $modified = filemtime($file_uri);
+    $checksum = hash_file(MCNEESE_FILE_DB_PATH_BY_HASH_ALGORITHM, $file_uri);
 
     include_once DRUPAL_ROOT . '/includes/file.mimetypes.inc';
     $mapping = file_mimetype_mapping();
     $mimetype = file_get_mimetype($file_uri, $mapping);
 
+
     // prevent devel_shutdown from being called.
     $GLOBALS['devel_shutdown'] = FALSE;
 
-    header('Content-Type: ' . $mimetype);
+    header('HTTP/1.1 200 OK', TRUE, 200);
     header('Content-Length: ' . $filesize);
-    //header('ETag: "'' . MCNEESE_FILE_DB_PATH_BY_HASH_ALGORITHM . '://' . $checksum . '"');
+    header('Content-Type: ' . $mimetype);
+    header('Content-Transfer-Encoding: binary');
+    header('Content-Disposition: inline; filename="' . $filename . '.' . $file->extension . '"');
+    header('Content-Description: File Transfer');
+    header('ETag: "' . MCNEESE_FILE_DB_PATH_BY_HASH_ALGORITHM . '://' . $checksum . '"');
     header('Accept-Ranges: bytes');
+    header('Last-Modified: ' . date('r', $modified));
+    header('Expires: ' . date('r', strtotime('+14 days', REQUEST_TIME)));
+    header('Date: ' . date('r', REQUEST_TIME));
+
 
     readfile($file_uri);
     exit();
