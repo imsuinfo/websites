@@ -90,6 +90,8 @@ class date_views_argument_handler_simple extends views_handler_argument_date {
     $options['use_fromto'] = array('default' => '');
     $options['title_format'] = array('default' => '');
     $options['title_format_custom'] = array('default' => '');
+    $options['break_phrase'] = array('default' => FALSE, 'bool' => TRUE);
+    // @todo: add 'not' option for break_phrase.
     return $options;
   }
 
@@ -176,6 +178,14 @@ class date_views_argument_handler_simple extends views_handler_argument_date {
       '#access' => $access,
     );
 
+    // allow + for or, , for and
+    $form['break_phrase'] = array(
+      '#type' => 'checkbox',
+      '#title' => t('Allow multiple values'),
+      '#description' => t('If selected, users can enter multiple values in the form of 1+2+3 (for OR) or 1,2,3 (for AND).'),
+      '#default_value' => !empty($this->options['break_phrase']),
+      '#fieldset' => 'more',
+    );
   }
 
   function options_validate(&$form, &$form_state) {
@@ -207,7 +217,9 @@ class date_views_argument_handler_simple extends views_handler_argument_date {
    */
   function title() {
     $format = !empty($this->options['title_format_custom']) && !empty($this->options['title_format_custom']) ? $this->options['title_format_custom'] : $this->date_handler->views_formats($this->options['granularity'], 'display');
-    $range = $this->date_handler->arg_range($this->argument);
+    $this->fix_argument();
+    // @todo: this needs to be handled differently when there is more than 1 argument.
+    $range = $this->date_handler->arg_range($this->argument[0]);
     return date_format_date($range[0], 'custom', $format);
  }
 
@@ -264,59 +276,87 @@ class date_views_argument_handler_simple extends views_handler_argument_date {
       return;
     }
 
-    // See if we need to reset granularity based on an argument value.
-    // Make sure we don't try to reset to some bogus value if someone has typed in an unexpected argument.
-    $granularity = $this->date_handler->arg_granularity($this->argument);
-    if (!empty($granularity)) {
-      $this->date_handler->granularity = $granularity;
-      $this->format = $this->date_handler->views_formats($this->date_handler->granularity, 'display');
-      $this->sql_format = $this->date_handler->views_formats($this->date_handler->granularity, 'sql');
-    }
-    $this->granularity = $this->date_handler->granularity;
-    $this->ensure_my_table();
+    $this->fix_argument();
     $group = !empty($this->options['date_group']) ? $this->options['date_group'] : 0;
 
-    // If requested, add the delta field to the view so we can later find the value that matched our query.
-    if (!empty($this->options['add_delta']) && (substr($this->real_field, -6) == '_value' || substr($this->real_field, -7) == '_value2')) {
-      $this->query->add_field($this->table_alias, 'delta');
-      $real_field_name = str_replace(array('_value', '_value2'), '', $this->real_field);
-      $this->query->add_field($this->table_alias, 'entity_id', 'date_id_' . $real_field_name);
-      $this->query->add_field($this->table_alias, 'delta', 'date_delta_' . $real_field_name);
+    foreach ($this->argument as $key => &$argument) {
+      // See if we need to reset granularity based on an argument value.
+      // Make sure we don't try to reset to some bogus value if someone has typed in an unexpected argument.
+      $granularity = $this->date_handler->arg_granularity($argument);
+      if (!empty($granularity)) {
+        $this->date_handler->granularity = $granularity;
+        $this->format = $this->date_handler->views_formats($this->date_handler->granularity, 'display');
+        $this->sql_format = $this->date_handler->views_formats($this->date_handler->granularity, 'sql');
+      }
+      $this->granularity = $this->date_handler->granularity;
+      $this->ensure_my_table();
+
+      // If requested, add the delta field to the view so we can later find the value that matched our query.
+      if (!empty($this->options['add_delta']) && (substr($this->real_field, -6) == '_value' || substr($this->real_field, -7) == '_value2')) {
+        $this->query->add_field($this->table_alias, 'delta');
+        $real_field_name = str_replace(array('_value', '_value2'), '', $this->real_field);
+        $this->query->add_field($this->table_alias, 'entity_id', 'date_id_' . $real_field_name);
+        $this->query->add_field($this->table_alias, 'delta', 'date_delta_' . $real_field_name);
+      }
+
+      $format = $this->date_handler->granularity == 'week' ? DATE_FORMAT_DATETIME : $this->sql_format;
+      $view_min = date_format($this->min_date[$key], $format);
+      $view_max = date_format($this->max_date[$key], $format);
+      $view_min_placeholder = $this->placeholder();
+      $view_max_placeholder = $this->placeholder();
+      $this->date_handler->placeholders = array($view_min_placeholder => $view_min, $view_max_placeholder => $view_max);
+
+      // Are we comparing this field only or the Start/End date range to the view criteria?
+      if (!empty($this->options['use_fromto'])) {
+
+        // The simple case, match the field to the view range.
+        $field = $this->date_handler->sql_field($this->table_alias . '.' . $this->real_field, NULL, $this->min_date[$key]);
+        $field = $this->date_handler->sql_format($format, $field);
+        $expressions[] = array("$field >= $view_min_placeholder AND $field <= $view_max_placeholder", array($view_min_placeholder => $view_min, $view_max_placeholder => $view_max));
+        $this->query->add_where_expression($group, "$field >= $view_min_placeholder AND $field <= $view_max_placeholder", array($view_min_placeholder => $view_min, $view_max_placeholder => $view_max), $this->operator);
+      }
+      else {
+
+        // Look for the intersection of the range of the date field with the range of the view.
+        // Get the Start/End values for this field. Retrieve using the original table name.
+        // Swap the current table name (adjusted for relationships) into the query.
+        // @TODO We may be able to use Views substitutions here, investigate that later.
+        $fields = date_views_fields($this->base_table);
+        $fields = $fields['name'];
+        $fromto = $fields[$this->original_table . '.' . $this->real_field]['fromto'];
+
+        $value_min = str_replace($this->original_table, $this->table_alias, $fromto[0]);
+        $value_max = str_replace($this->original_table, $this->table_alias, $fromto[1]);
+        $field_min = $this->date_handler->sql_field($value_min, NULL, $this->min_date[$key]);
+        $field_min = $this->date_handler->sql_format($format, $field_min);
+        $field_max = $this->date_handler->sql_field($value_max, NULL, $this->max_date[$key]);
+        $field_max = $this->date_handler->sql_format($format, $field_max);
+
+        $expressions[] = array("$field_max >= $view_min_placeholder AND $field_min <= $view_max_placeholder", array($view_min_placeholder => $view_min, $view_max_placeholder => $view_max));
+        $this->query->add_where_expression($group, "$field_max >= $view_min_placeholder AND $field_min <= $view_max_placeholder", array($view_min_placeholder => $view_min, $view_max_placeholder => $view_max), $this->operator);
+      }
     }
+  }
 
-    $format = $this->date_handler->granularity == 'week' ? DATE_FORMAT_DATETIME : $this->sql_format;
-    $view_min = date_format($this->min_date, $format);
-    $view_max = date_format($this->max_date, $format);
-    $view_min_placeholder = $this->placeholder();
-    $view_max_placeholder = $this->placeholder();
-    $this->date_handler->placeholders = array($view_min_placeholder => $view_min, $view_max_placeholder => $view_max);
-
-    // Are we comparing this field only or the Start/End date range to the view criteria?
-    if (!empty($this->options['use_fromto'])) {
-
-      // The simple case, match the field to the view range.
-      $field = $this->date_handler->sql_field($this->table_alias . '.' . $this->real_field, NULL, $this->min_date);
-      $field = $this->date_handler->sql_format($format, $field);
-      $this->query->add_where_expression($group, "$field >= $view_min_placeholder AND $field <= $view_max_placeholder", array($view_min_placeholder => $view_min, $view_max_placeholder => $view_max));
-
+ /**
+  * Turns the argument into an array.
+  */
+  function fix_argument() {
+    if (empty($this->options['break_phrase'])) {
+      if (!is_array($this->argument)) {
+        $this->argument = array($this->argument);
+      }
     }
     else {
+      if (!is_array($this->argument)) {
+        $handler = views_break_phrase($this->argument);
+        $this->operator = $handler->operator;
+        $this->argument = $handler->value;
+      }
+    }
 
-      // Look for the intersection of the range of the date field with the range of the view.
-      // Get the Start/End values for this field. Retrieve using the original table name.
-      // Swap the current table name (adjusted for relationships) into the query.
-      // @TODO We may be able to use Views substitutions here, investigate that later.
-      $fields = date_views_fields($this->base_table);
-      $fields = $fields['name'];
-      $fromto = $fields[$this->original_table . '.' . $this->real_field]['fromto'];
-
-      $value_min = str_replace($this->original_table, $this->table_alias, $fromto[0]);
-      $value_max = str_replace($this->original_table, $this->table_alias, $fromto[1]);
-      $field_min = $this->date_handler->sql_field($value_min, NULL, $this->min_date);
-      $field_min = $this->date_handler->sql_format($format, $field_min);
-      $field_max = $this->date_handler->sql_field($value_max, NULL, $this->max_date);
-      $field_max = $this->date_handler->sql_format($format, $field_max);
-      $this->query->add_where_expression($group, "$field_max >= $view_min_placeholder AND $field_min <= $view_max_placeholder", array($view_min_placeholder => $view_min, $view_max_placeholder => $view_max));
+    if (empty($this->operator)) {
+      $this->operator = 'AND';
     }
   }
 
@@ -327,18 +367,32 @@ class date_views_argument_handler_simple extends views_handler_argument_date {
     if (empty($this->argument)) {
       return TRUE;
     }
-    $this->date_range = $this->date_handler->arg_range($this->argument);
-    $this->min_date = $this->date_range[0];
-    $this->max_date = $this->date_range[1];
-    $this->limit = date_range_years($this->options['year_range']);
-    $group = !empty($this->options['date_group']) ? $this->options['date_group'] : 0;
 
-    // See if we're outside the allowed date range for our argument.
-    if (date_format($this->min_date, 'Y') < $this->limit[0] || date_format($this->max_date, 'Y') > $this->limit[1]) {
-      $this->forbid = TRUE;
-      $this->view->build_info['fail'] = TRUE;
+    $this->limit = date_range_years($this->options['year_range']);
+
+    $this->fix_argument();
+    $this->min_date = array();
+    $this->max_date = array();
+    $this->date_range = array();
+
+    foreach ($this->argument as $key => &$argument) {
+      $this->date_range[$key] = $this->date_handler->arg_range($argument);
+      $this->min_date[$key] = $this->date_range[$key][0];
+      $this->max_date[$key] = $this->date_range[$key][1];
+
+      if (!$this->forbid) {
+        // See if we're outside the allowed date range for our argument.
+        if (date_format($this->min_date[$key], 'Y') < $this->limit[0] || date_format($this->max_date[$key], 'Y') > $this->limit[1]) {
+          $this->forbid = TRUE;
+          $this->view->build_info['fail'] = TRUE;
+        }
+      }
+    }
+
+    if ($this->forbid) {
       return TRUE;
     }
+
     return FALSE;
   }
 
