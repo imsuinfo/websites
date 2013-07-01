@@ -670,7 +670,7 @@ function mcneese_file_db_print_image_style($file_uri) {
     header('Content-Length: ' . $filesize);
     header('Content-Type: ' . $mimetype);
     header('Content-Transfer-Encoding: binary');
-    header('Content-Disposition: inline; filename="' . $filename . '.' . $file->extension . '"');
+    header('Content-Disposition: inline; filename="' . $filename . '"');
     header('Content-Description: File Transfer');
     header('ETag: "' . MCNEESE_FILE_DB_PATH_BY_HASH_ALGORITHM . '://' . $checksum . '"');
     header('Accept-Ranges: bytes');
