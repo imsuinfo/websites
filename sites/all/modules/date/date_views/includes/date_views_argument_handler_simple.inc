@@ -217,9 +217,8 @@ class date_views_argument_handler_simple extends views_handler_argument_date {
    */
   function title() {
     $format = !empty($this->options['title_format_custom']) && !empty($this->options['title_format_custom']) ? $this->options['title_format_custom'] : $this->date_handler->views_formats($this->options['granularity'], 'display');
-    $this->fix_argument();
-    // @todo: this needs to be handled differently when there is more than 1 argument.
-    $range = $this->date_handler->arg_range($this->argument[0]);
+    $this->fix_arguments();
+    $range = $this->date_handler->arg_range($this->argument);
     return date_format_date($range[0], 'custom', $format);
  }
 
@@ -276,10 +275,10 @@ class date_views_argument_handler_simple extends views_handler_argument_date {
       return;
     }
 
-    $this->fix_argument();
+    $this->fix_arguments();
     $group = !empty($this->options['date_group']) ? $this->options['date_group'] : 0;
 
-    foreach ($this->argument as $key => &$argument) {
+    foreach ($this->arguments as $key => &$argument) {
       // See if we need to reset granularity based on an argument value.
       // Make sure we don't try to reset to some bogus value if someone has typed in an unexpected argument.
       $granularity = $this->date_handler->arg_granularity($argument);
@@ -300,8 +299,8 @@ class date_views_argument_handler_simple extends views_handler_argument_date {
       }
 
       $format = $this->date_handler->granularity == 'week' ? DATE_FORMAT_DATETIME : $this->sql_format;
-      $view_min = date_format($this->min_date[$key], $format);
-      $view_max = date_format($this->max_date[$key], $format);
+      $view_min = date_format($this->min_dates[$key], $format);
+      $view_max = date_format($this->max_dates[$key], $format);
       $view_min_placeholder = $this->placeholder();
       $view_max_placeholder = $this->placeholder();
       $this->date_handler->placeholders = array($view_min_placeholder => $view_min, $view_max_placeholder => $view_max);
@@ -310,7 +309,7 @@ class date_views_argument_handler_simple extends views_handler_argument_date {
       if (!empty($this->options['use_fromto'])) {
 
         // The simple case, match the field to the view range.
-        $field = $this->date_handler->sql_field($this->table_alias . '.' . $this->real_field, NULL, $this->min_date[$key]);
+        $field = $this->date_handler->sql_field($this->table_alias . '.' . $this->real_field, NULL, $this->min_dates[$key]);
         $field = $this->date_handler->sql_format($format, $field);
         $expressions[] = array("$field >= $view_min_placeholder AND $field <= $view_max_placeholder", array($view_min_placeholder => $view_min, $view_max_placeholder => $view_max));
         $this->query->add_where_expression($group, "$field >= $view_min_placeholder AND $field <= $view_max_placeholder", array($view_min_placeholder => $view_min, $view_max_placeholder => $view_max), $this->operator);
@@ -327,9 +326,9 @@ class date_views_argument_handler_simple extends views_handler_argument_date {
 
         $value_min = str_replace($this->original_table, $this->table_alias, $fromto[0]);
         $value_max = str_replace($this->original_table, $this->table_alias, $fromto[1]);
-        $field_min = $this->date_handler->sql_field($value_min, NULL, $this->min_date[$key]);
+        $field_min = $this->date_handler->sql_field($value_min, NULL, $this->min_dates[$key]);
         $field_min = $this->date_handler->sql_format($format, $field_min);
-        $field_max = $this->date_handler->sql_field($value_max, NULL, $this->max_date[$key]);
+        $field_max = $this->date_handler->sql_field($value_max, NULL, $this->max_dates[$key]);
         $field_max = $this->date_handler->sql_format($format, $field_max);
 
         $expressions[] = array("$field_max >= $view_min_placeholder AND $field_min <= $view_max_placeholder", array($view_min_placeholder => $view_min, $view_max_placeholder => $view_max));
@@ -341,17 +340,18 @@ class date_views_argument_handler_simple extends views_handler_argument_date {
  /**
   * Turns the argument into an array.
   */
-  function fix_argument() {
+  function fix_arguments() {
     if (empty($this->options['break_phrase'])) {
-      if (!is_array($this->argument)) {
-        $this->argument = array($this->argument);
+      if (!isset($this->arguments)) {
+        $this->arguments = array($this->argument);
       }
     }
     else {
-      if (!is_array($this->argument)) {
+      if (!isset($this->arguments)) {
         $handler = views_break_phrase($this->argument);
         $this->operator = $handler->operator;
-        $this->argument = $handler->value;
+        $this->arguments = $handler->value;
+        $this->argument = $handler->value[0];
       }
     }
 
@@ -370,19 +370,38 @@ class date_views_argument_handler_simple extends views_handler_argument_date {
 
     $this->limit = date_range_years($this->options['year_range']);
 
-    $this->fix_argument();
-    $this->min_date = array();
-    $this->max_date = array();
-    $this->date_range = array();
+    $this->fix_arguments();
+    $this->min_dates = array();
+    $this->max_dates = array();
+    $this->date_ranges = array();
 
-    foreach ($this->argument as $key => &$argument) {
-      $this->date_range[$key] = $this->date_handler->arg_range($argument);
-      $this->min_date[$key] = $this->date_range[$key][0];
-      $this->max_date[$key] = $this->date_range[$key][1];
+    $min_year = NULL;
+    $max_year = NULL;
+    $this->date_range = array(0 => NULL, 1 => NULL);
+
+    foreach ($this->arguments as $key => &$argument) {
+      $this->date_ranges[$key] = $this->date_handler->arg_range($argument);
+      $this->min_dates[$key] = $this->date_ranges[$key][0];
+      $this->max_dates[$key] = $this->date_ranges[$key][1];
+
+      $arg_min_year = date_format($this->min_dates[$key], 'Y');
+      $arg_max_year = date_format($this->max_dates[$key], 'Y');
+
+      if (is_null($this->date_range[0]) || $arg_min_year < $this->date_range[0]) {
+        $this->date_range[0] = $this->min_dates[$key];
+        $this->min_date = $this->min_dates[$key];
+        $min_year = date_format($this->min_dates[$key], 'Y');
+      }
+
+      if (is_null($this->date_range[1]) || $arg_max_year > $this->date_range[1]) {
+        $this->date_range[1] = $this->max_dates[$key];
+        $this->max_date = $this->max_dates[$key];
+        $max_year = date_format($this->max_dates[$key], 'Y');
+      }
 
       if (!isset($this->forbid) || !$this->forbid) {
         // See if we're outside the allowed date range for our argument.
-        if (date_format($this->min_date[$key], 'Y') < $this->limit[0] || date_format($this->max_date[$key], 'Y') > $this->limit[1]) {
+        if ($arg_min_year < $this->limit[0] || $arg_max_year > $this->limit[1]) {
           $this->forbid = TRUE;
           $this->view->build_info['fail'] = TRUE;
         }
