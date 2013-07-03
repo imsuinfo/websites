@@ -519,7 +519,7 @@ class quailTableTest extends quailTest {
 		if ($this->elementHasChild($table, 'thead')) {
 			return true;
 		}
-		return false;
+		return !($this->elementHasChild($table, 'thead') && $this->elementHasChild($table, 'tbody'));
 	}
 	
 }
