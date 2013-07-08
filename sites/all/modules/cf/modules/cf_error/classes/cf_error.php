@@ -890,7 +890,7 @@ class cf_error {
    *   Locale safe parameter handling for all text found in the 'why' parameter.
    */
   private static function p_invalid_variable(cf_error_code $error, $argument_name, $why, array $variables) {
-    self::p_print_message($error, "The argument '%cf_error-argument_name' is invalid or has a problem, reason: " . $why, array_merge($variables, array('%cf_error-argument_name' =>  $argument_name)));
+    self::p_print_message($error, "The variable '%cf_error-argument_name' is invalid or has a problem, reason: " . $why, array_merge($variables, array('%cf_error-argument_name' =>  $argument_name)));
   }
 
   /**
