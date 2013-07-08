@@ -42,6 +42,8 @@ function cf_http_init() {
  *  The file/path on the server to
  * @param int $port
  *   (optional) port number of the page to read (defaults to 80).
+ * @param string $headers
+ *   (optional) additional headers to pass when requesting the url.
  *
  * @return array
  *   An array containing the connection status and return http response.
@@ -53,7 +55,7 @@ function cf_http_init() {
  *
  * @see: cf_http_get_webpage()
  */
-function cf_http_get_response($server, $path, $port = 80) {
+function cf_http_get_response($server, $path, $port = 80, $headers = "Accept-Encoding: deflate\r\n") {
   $results = array('connected' => FALSE, 'response' => '', 'is_local' => FALSE);
 
   if (cf_is_empty_or_non_string('server', $server, WATCHDOG_ERROR)) {
@@ -72,6 +74,11 @@ function cf_http_get_response($server, $path, $port = 80) {
     return $results;
   }
 
+  if (!empty($headers) && !is_string($headers)) {
+    cf_error::invalid_string('headers');
+    return $results;
+  }
+
   $fp = fsockopen($server, $port, $errno, $errstr, 8);
 
   $server_address = preg_replace('@^\w+://@i', '', $server);
@@ -80,7 +87,11 @@ function cf_http_get_response($server, $path, $port = 80) {
     return $results;
   }
   else {
-    fwrite($fp, 'GET ' . $path . ' HTTP/1.1' . "\r\n" . 'Host: ' . $server_address . "\r\n" . 'Accept-Encoding: deflate' . "\r\n"  . 'Connection: Close' . "\r\n\r\n");
+    $request = 'GET ' . $path . ' HTTP/1.1' . "\r\n";
+    $request .= 'Host: ' . $server_address . "\r\n";
+    $request .= $headers;
+    $request .= 'Connection: Close' . "\r\n\r\n";
+    fwrite($fp, $request);
     stream_set_timeout($fp, 4);
 
     $results['is_local'] = stream_is_local($fp);
@@ -434,6 +445,8 @@ function cf_http_adjust_urls($text, $server, $relative_path, $scheme = 'http', $
  *  The file/path on the server to.
  * @param int $port
  *   (optional) Port number of the page to read (defaults to 80).
+ * @param string $headers
+ *   (optional) additional headers to pass when requesting the url.
  *
  * @return array
  *   An array containing the connection status and return http response.
@@ -443,12 +456,12 @@ function cf_http_adjust_urls($text, $server, $relative_path, $scheme = 'http', $
  *   - headers: The http header from the httpd response.
  *   - document: The complete html document from the http response.
  */
-function cf_http_get_webpage($server, $path, $port = 80) {
+function cf_http_get_webpage($server, $path, $port = 80, $headers = "Accept-Encoding: deflate\r\n") {
   $results = array('read' => FALSE, 'headers' => '', 'document' => '', 'http_error' => array('error_code' => 0, 'key' => '', 'value' => ''));
 
-  $result = cf_http_get_response($server, $path, $port);
+  $result = cf_http_get_response($server, $path, $port, $headers);
 
-  if ($result['connected']) {
+  if (isset($result['connected']) && $result['connected'] && isset($result['response'])) {
     $result = cf_http_parse_response($result['response']);
 
     if ($result['parsed']) {
