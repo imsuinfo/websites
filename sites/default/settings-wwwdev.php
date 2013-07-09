@@ -219,7 +219,6 @@ $databases = array (
     array (
       'database' => 'web_files',
       'username' => 'www_user',
-      'password' => 'LkamsnSA_o)wqq.6',
       'password' => $dbp['www_user'],
       'host' => '192.251.101.223',
       'port' => '5192',
