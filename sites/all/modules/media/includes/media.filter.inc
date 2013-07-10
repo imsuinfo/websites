@@ -350,7 +350,10 @@ function media_token_to_markup($match, $wysiwyg = FALSE) {
   // desired text will be used (see, for example, theme_file_link()).
   // @todo: Try to find a less hacky way to do this.
   if (isset($tag_info['link_text'])) {
-    $file->filename = $tag_info['link_text'];
+    // The link text will have characters such as "&" encoded for HTML, but the
+    // filename itself needs the raw value when it is used to build the link,
+    // in order to avoid double encoding.
+    $file->filename = htmlspecialchars_decode($tag_info['link_text'], ENT_NOQUOTES);
   }
 
   if ($wysiwyg) {
