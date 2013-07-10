@@ -1,0 +1,119 @@
+<?php
+
+/**
+ * @file
+ * McNeese State University Filters module.
+ */
+
+/**
+ * @defgroup mcneese_content McNeese Filters
+ * @{
+ * Provides filter functionality to drupal 7.
+ */
+
+/**
+ * Implements hook_filter_info().
+ */
+function mcneese_filters_filter_info() {
+  $data = array();
+
+  $data['mcneese_filters_allowed_tags'] = array();
+  $data['mcneese_filters_allowed_tags']['title'] = t("McNeese Filters - Allowed Tags");
+  $data['mcneese_filters_allowed_tags']['description'] = t("Provides standard McNeese functionality that only allows specific HTML markup to be used.");
+  $data['mcneese_filters_allowed_tags']['process callback'] = 'mcneese_filters_allowed_tags_process';
+  $data['mcneese_filters_allowed_tags']['settings callback'] = 'mcneese_filters_allowed_tags_settings';
+  $data['mcneese_filters_allowed_tags']['default settings'] = array(
+    'mcneese_filters_allowed_tags' => 'a abbr address area article aside audio base base bdi bdo blockquote br button canvas caption cite code col colgroup command datalist dd del details dfn dialog div dl dt em embed fieldset figcaption figure form h1 h2 h3 h4 h5 h6 header hr iframe img input ins kbd keygen label legend li link map mark menu meter nav noscript object ol optgroup option output p param pre progress q rp rt ruby s samp section select small source span strong sub summary sup table tbody td textarea tfoot th thead time title tr track u ul var video wbr',
+  );
+
+  $data['mcneese_filters_allowed_tags']['tips callback'] = 'mcneese_filters_allowed_tags_tips';
+  $data['mcneese_filters_allowed_tags']['weight'] = -20;
+
+  return $data;
+}
+
+/**
+ * Tips callback, used by mcneese_filters_filter_info().
+ */
+function mcneese_filters_allowed_tags_tips($delta, $format, $long = FALSE) {
+  if (!empty($delta->settings['mcneese_filters_allowed_tags_help'])) {
+    return t('Restricts the type of HTML tags that are allowed to be used.');
+  }
+}
+
+/**
+ * Settings callback, used by mcneese_filters_filter_info().
+ */
+function mcneese_filters_allowed_tags_settings($form, &$form_state, $filter, $format, $defaults) {
+  $settings = array();
+
+  $settings['mcneese_filters_allowed_tags'] = array(
+    '#type' => 'textfield',
+    '#title' => t("Allowed HTML Tags"),
+    '#maxlength' => 4096,
+    '#default_value' => isset($defaults['mcneese_filters_allowed_tags']) ? $defaults['mcneese_filters_allowed_tags'] : '',
+    '#description' => t("A list of HTML tag names that can be used."),
+  );
+
+  return $settings;
+}
+
+/**
+ * Process callback, used by mcneese_filters_filter_info().
+ *
+ * @param string $text
+ *    Text to purify
+ * @param object $filter
+ *   The filter object containing settings for the given format.
+ * @param object $format
+ *    The format object of the text to be filtered.
+ * @param string $langcode
+ *    The language code of the text to be filtered.
+ * @param boolean $cache
+ *    Whether or not to check the cache.
+ */
+function mcneese_filters_allowed_tags_process($text, $filter, $format, $langcode, $cache) {
+  if (empty($text)) return '';
+
+  $dom = new DOMDocument();
+
+  $allowed_tags = $filter->settings['mcneese_filters_allowed_tags'];
+  $allowed = explode(' ', $allowed_tags);
+
+  $xml_errors = libxml_use_internal_errors(true);
+  $dom->loadHTML('<!DOCTYPE html>' . $text);
+  libxml_use_internal_errors($xml_errors);
+
+  if ($dom->hasChildNodes()) {
+    global $user;
+
+    $tags = array();
+    $bodys = $dom->getElementsByTagName('body');
+
+    if ($bodys->length > 0) {
+      $body = $bodys->item(0);
+      $tags = $body->getElementsByTagName('*');
+    }
+    
+    foreach ($tags as $tag) {
+      if (!in_array($tag->tagName, $allowed)) {
+        watchdog('mcneese_filters', 'The tag :tag is not allowed and has been removed.', array(':tag' => $tag->tagName), WATCHDOG_WARNING);
+
+        try {
+          $tag->parentNode->removeChild($tag);
+        } catch (Exception $ex) {
+          // @todo: write to the logger.
+        }
+      }
+    }
+
+    return $dom->saveHTML($body);
+  }
+
+  return $text;
+}
+
+
+/**
+ * @} End of '@defgroup mcneese_filters McNeese Filters'.
+ */

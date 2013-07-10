@@ -21,6 +21,11 @@ function mcneese_content_formats_mcneese_content_permission_alter(&$permissions)
     'title' => t("Bypass Deny Abused Codes"),
     'description' => t("Grants permissions to bypass the removal of abused codes for text formats in which the deny abused codes filter is enabled."),
   );
+
+  $permissions['bypass allowed tags'] = array(
+    'title' => t("Bypass Allowed Tags"),
+    'description' => t("Grants permissions to bypass the restriction of saving content with unauthorized tags."),
+  );
 }
 
 /**
@@ -29,13 +34,22 @@ function mcneese_content_formats_mcneese_content_permission_alter(&$permissions)
 function mcneese_content_formats_mcneese_content_node_type_form_alter(&$form, &$form_state, &$form_id) {
   if (empty($form_id)) return;
 
-  $mcneese_content_formats_variable = variable_get('mcneese_content_formats_deny_abused_codes_' . $form['#node_type']->type, FALSE);
+  $deny_abused_codes_default = variable_get('mcneese_content_formats_deny_abused_codes_' . $form['#node_type']->type, FALSE);
+  $allowed_tags_default = variable_get('mcneese_content_formats_allowed_tags_' . $form['#node_type']->type, 'a abbr address area article aside audio base base bdi bdo blockquote br button canvas caption cite code col colgroup command datalist dd del details dfn dialog div dl dt em embed fieldset figcaption figure form h1 h2 h3 h4 h5 h6 header hr iframe img input ins kbd keygen label legend li link map mark menu meter nav noscript object ol optgroup option output p param pre progress q rp rt ruby s samp section select small source span strong sub summary sup table tbody td textarea tfoot th thead time title tr track u ul var video wbr');
 
   $form['mcneese_content']['deny_abused_codes'] = array(
     '#type' => 'checkbox',
     '#title' => t("Deny Abused Codes"),
-    '#default_value' => $mcneese_content_formats_variable,
+    '#default_value' => $deny_abused_codes_default,
     '#description' => t("This enables the denial of certain html codes that have been identified as commonly abused or mis-used by end-user."),
+  );
+
+  $form['mcneese_content']['allowed_tags'] = array(
+    '#type' => 'textfield',
+    '#title' => t("Allowed Tags"),
+    '#maxlength' => 4096,
+    '#default_value' => $allowed_tags_default,
+    '#description' => t("This prevents saving content with tags that are not in this list. Set this to nothing to disable this functionality."),
   );
 }
 
@@ -46,6 +60,7 @@ function mcneese_content_formats_mcneese_content_node_type_form_submit_alter($fo
   if (!isset($form['#node_type']) && !is_object($form['#node_type'])) return;
 
   cf_settings_register('mcneese_content_formats_deny_abused_codes_' . $form['#node_type']->type, 'drupal_variables', 'mcneese_content_formats', TRUE);
+  cf_settings_register('mcneese_content_formats_allowed_tags_' . $form['#node_type']->type, 'drupal_variables', 'mcneese_content_formats', TRUE);
 
   if (isset($form_state['values']['mcneese_content']['deny_abused_codes']) && $form_state['values']['mcneese_content']['deny_abused_codes']) {
     variable_set('mcneese_content_formats_deny_abused_codes_' . $form['#node_type']->type, TRUE);
@@ -54,15 +69,98 @@ function mcneese_content_formats_mcneese_content_node_type_form_submit_alter($fo
     variable_set('mcneese_content_formats_deny_abused_codes_' . $form['#node_type']->type, FALSE);
   }
 
+  if (isset($form_state['values']['mcneese_content']['allowed_tags'])) {
+    variable_set('mcneese_content_formats_allowed_tags_' . $form['#node_type']->type, $form_state['values']['mcneese_content']['allowed_tags']);
+  }
+  else {
+    variable_set('mcneese_content_formats_allowed_tags_' . $form['#node_type']->type, '');
+  }
+}
+
+/**
+ * Implements hook_node_validate().
+ */
+function mcneese_content_formats_node_validate($node) {
+  $allowed_tags = variable_get('mcneese_content_formats_allowed_tags_' . $node->type, '');
+
+  if (!empty($allowed_tags) && !user_access('bypass allowed tags')) {
+    // at this time, this only focuses on the body tag for simplicity.
+    // use the filter module text format to completely remove all instances of unallowed tags.
+    // this is provided to make users aware of the problem.
+    if (property_exists($node, 'body') && is_array($node->body)) {
+      $allowed = explode(' ', $allowed_tags);
+
+      foreach ($node->body as $language => &$language_value) {
+        foreach ($language_value as $index => &$index_value) {
+          if (!empty($index_value['summary'])) {
+           // process things after the filter is generated.
+            $markup = check_markup($index_value['summary'], $index_value['format']);
+
+            $dom = new DOMDocument();
+
+            $xml_errors = libxml_use_internal_errors(true);
+            $dom->loadHTML('<!DOCTYPE html>' . $markup);
+            libxml_use_internal_errors($xml_errors);
+
+            if ($dom->hasChildNodes()) {
+              $tags = array();
+              $bodys = $dom->getElementsByTagName('body');
+              if ($bodys->length > 0) {
+                $body = $bodys->item(0);
+                $tags = $body->getElementsByTagName('*');
+              }
+
+              foreach ($tags as $tag) {
+                if (!in_array($tag->tagName, $allowed)) {
+                  form_set_error('body', t('The HTML tag :tag is not allowed.', array(':tag' => $tag->tagName)));
+                  watchdog('mcneese_content_formats', 'The HTML tag :tag is not allowed.', array(':tag' => $tag->tagName), WATCHDOG_ERROR);
+                }
+              }
+            }
+
+            unset($dom);
+          }
+
+          if (!empty($index_value['value'])) {
+           // process things after the filter is generated.
+            $markup = check_markup($index_value['value'], $index_value['format']);
+            $dom = new DOMDocument();
+
+            $xml_errors = libxml_use_internal_errors(true);
+            $dom->loadHTML('<!DOCTYPE html>' . $markup);
+            libxml_use_internal_errors($xml_errors);
+
+            if ($dom->hasChildNodes()) {
+              $tags = array();
+              $bodys = $dom->getElementsByTagName('body');
+              if ($bodys->length > 0) {
+                $body = $bodys->item(0);
+                $tags = $body->getElementsByTagName('*');
+              }
+
+              foreach ($tags as $tag) {
+                if (!in_array($tag->tagName, $allowed)) {
+                  form_set_error('body', t('The HTML tag :tag is not allowed.', array(':tag' => $tag->tagName)));
+                  watchdog('mcneese_content_formats', 'The HTML tag :tag is not allowed.', array(':tag' => $tag->tagName), WATCHDOG_ERROR);
+                }
+              }
+            }
+
+            unset($dom);
+          }
+        }
+      }
+    }
+  }
 }
 
 /**
  * Implements hook_node_presave().
  */
 function mcneese_content_formats_node_presave($node) {
-  $mcneese_content_formats_variable = variable_get('mcneese_content_formats_deny_abused_codes_' . $node->type, FALSE);
+  $deny_abused_codes = variable_get('mcneese_content_formats_deny_abused_codes_' . $node->type, FALSE);
 
-  if ($mcneese_content_formats_variable && !user_access('bypass deny abused codes')) {
+  if ($deny_abused_codes && !user_access('bypass deny abused codes')) {
     $abused_codes = array();
 
     $abused_codes['&#34;'] = '"';
