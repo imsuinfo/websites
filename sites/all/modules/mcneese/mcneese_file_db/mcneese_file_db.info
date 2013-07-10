@@ -4,8 +4,8 @@ core = 7.x
 php = 5.3
 package = McNeese
 
-dependencies[] = cf
-dependencies[] = cf_settings
+dependencies[] = cf (7.x-2.x)
+dependencies[] = cf_settings (7.x-2.x)
 
 files[] = classes/mcneese_file_db_stream_wrapper.inc
 files[] = classes/mcneese_file_db_unrestricted_stream_wrapper.inc

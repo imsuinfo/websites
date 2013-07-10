@@ -4,7 +4,7 @@ core = 7.x
 php = 5.3
 package = McNeese
 
-dependencies[] = cf
-dependencies[] = cf_error
+dependencies[] = cf (7.x-2.x)
+dependencies[] = cf_error (7.x-2.x)
 
 files[] = mcneese_users.module

@@ -4,10 +4,10 @@ core = 7.x
 php = 5.3
 package = McNeese
 
-dependencies[] = cf
-dependencies[] = cf_error
-dependencies[] = cf_settings
-dependencies[] = cf_theme
+dependencies[] = cf (7.x-2.x)
+dependencies[] = cf_error (7.x-2.x)
+dependencies[] = cf_settings (7.x-2.x)
+dependencies[] = cf_theme (7.x-2.x)
 dependencies[] = mcneese_html5
 
 files[] = mcneese_block.module
