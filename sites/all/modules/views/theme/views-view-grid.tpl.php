@@ -9,14 +9,23 @@
  *
  * @ingroup views_templates
  */
+  $tcaption = '';
+
+  if (empty($caption)) {
+    if (!empty($title)) {
+      $tcaption = $title;
+    }
+  }
 ?>
-<?php if (!empty($title)) : ?>
+<?php if (!empty($title) && empty($tcaption)) : ?>
   <h3><?php print $title; ?></h3>
 <?php endif; ?>
 <table class="<?php print $class; ?>"<?php print $attributes; ?>>
-  <?php if (!empty($caption)) : ?>
-    <caption><?php print $caption; ?></caption>
-  <?php endif; ?>
+  <?php if (!empty($tcaption)) { ?>
+    <caption><?php print $tcaption; ?></caption>
+  <?php } else if (!empty($caption)) { ?>
+    <?php print $caption; ?>
+  <?php } ?>
 
   <tbody>
     <?php foreach ($rows as $row_number => $columns): ?>
