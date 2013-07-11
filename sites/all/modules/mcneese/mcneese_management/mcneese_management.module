@@ -42,7 +42,6 @@ function mcneese_management_menu() {
     'access callback' => 'user_access',
     'access arguments' => array('mcneese management emergency'),
     'tab_parent' => 'admin/content/management',
-    'tab_root' => 'admin/content/management',
     'type' => MENU_LOCAL_TASK,
   );
 
