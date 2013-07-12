@@ -1286,14 +1286,28 @@ function template_preprocess_workbench_menu_item(&$vars) {
 
       while (!empty($path_current_parts)) {
         if (implode('/', $path_current_parts) == $settings['active_path']) {
-          $variables['invalid_trail_active'] = TRUE;
-          $variables['trail_is_active'] = TRUE;
+          // for nodes, the unique path of the node should be considered an normal active and not an invalid.
+          if (preg_match('@node/\d+/@i', current_path())) {
+            $variables['trail_is_active'] = TRUE;
+            $variables['active_text'] =' <span class="element-invisible">' . t("(active menu item)") . '</span>';
 
-          if ($settings['suppress_active']) {
-            $settings['attributes']['class'][] = 'suppressed_invalid_active';
+            if ($settings['suppress_active']) {
+              $settings['attributes']['class'][] = 'suppressed_active';
+            }
+            else {
+              $settings['attributes']['class'][] = 'active';
+            }
           }
           else {
-            $settings['attributes']['class'][] = 'invalid_active';
+            $variables['invalid_trail_active'] = TRUE;
+            $variables['trail_is_active'] = TRUE;
+
+            if ($settings['suppress_active']) {
+              $settings['attributes']['class'][] = 'suppressed_invalid_active';
+            }
+            else {
+              $settings['attributes']['class'][] = 'invalid_active';
+            }
           }
 
           break;
