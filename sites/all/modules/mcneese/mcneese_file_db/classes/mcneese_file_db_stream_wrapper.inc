@@ -756,9 +756,15 @@ abstract class mcneese_file_db_stream_wrapper implements DrupalStreamWrapperInte
       }
     }
 
-    if (!empty($this->file_meta)) {
+    if (!empty($this->file_meta) || (!empty($this->uri) && !empty($this->tmp_checksum))) {
       if ($method == $this->get_path_by_hash()) {
-        $checksum = substr($this->file_meta->checksum, 0, MCNEESE_FILE_DB_SHORT_SUM_SIZE);
+
+        if (empty($this->file_meta)) {
+          $checksum = substr($this->tmp_checksum, 0, MCNEESE_FILE_DB_SHORT_SUM_SIZE);
+        }
+        else {
+          $checksum = substr($this->file_meta->checksum, 0, MCNEESE_FILE_DB_SHORT_SUM_SIZE);
+        }
 
         $new_uri = $this->get_scheme() . '://';
         $new_uri .= $this->get_path_by_hash() . '/';
@@ -820,7 +826,11 @@ abstract class mcneese_file_db_stream_wrapper implements DrupalStreamWrapperInte
    *   TRUE on success, FALSE otherwise.
    */
   protected function create_image_style($image_source_uri) {
-    if (empty($this->image_style) || empty($this->image_style_uri) || empty($this->file_meta) || empty($image_source_uri)) {
+    if (empty($this->image_style) || empty($this->image_style_uri) || empty($image_source_uri)) {
+      return FALSE;
+    }
+
+    if (empty($this->file_meta) && (empty($this->uri) || empty($this->tmp_checksum))) {
       return FALSE;
     }
 
