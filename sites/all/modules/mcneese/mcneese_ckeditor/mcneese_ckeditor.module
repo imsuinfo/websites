@@ -39,6 +39,7 @@ function mcneese_ckeditor_wysiwyg_editor_settings_alter(&$settings, $context) {
 
     $current_path = current_path();
     $node_type = '';
+    $additional_css = array();
 
     $matches = array();
     $matched = preg_match('@^node/add/(\w*)($|/$|\?.*)@', $current_path, $matches);
@@ -55,6 +56,18 @@ function mcneese_ckeditor_wysiwyg_editor_settings_alter(&$settings, $context) {
 
         if (is_object($node)){
           $node_type = check_plain($node->type);
+
+          $custom_tag = $node_type . '_type-default';
+          $custom_property = 'field_' . $node_type . '_theme';
+
+          if (property_exists($node, $custom_property)) {
+            $custom_prop = & $node->$custom_property;
+            if (!empty($custom_prop['und'][0]['tid'])) {
+              $custom_tag = 'is-' . $node_type . '_type-' . $custom_prop['und'][0]['tid'];
+            }
+          }
+
+          $additional_css[] = $custom_tag;
         }
       }
     }
@@ -194,6 +207,10 @@ function mcneese_ckeditor_wysiwyg_editor_settings_alter(&$settings, $context) {
 
     if (!empty($node_type)) {
       $settings['bodyClass'] .= ' node-type-' . $node_type;
+    }
+
+    if (!empty($additional_css)) {
+      $settings['bodyClass'] .= ' ' . implode(' ', $additional_css);
     }
 
     // http://docs.cksource.com/ckeditor_api/symbols/CKEDITOR.config.html#.baseHref
