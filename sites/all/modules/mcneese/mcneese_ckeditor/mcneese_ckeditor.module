@@ -204,7 +204,7 @@ function mcneese_ckeditor_wysiwyg_editor_settings_alter(&$settings, $context) {
     //$settings['bodyId'] = '';
 
     // http://docs.cksource.com/ckeditor_api/symbols/CKEDITOR.config.html#.bodyClass
-    $settings['bodyClass'] = 'mcneese mcneese-wysiwyg mcneese-wysiwyg-ckeditor';
+    $settings['bodyClass'] = 'mcneese mcneese-content mcneese-wysiwyg mcneese-wysiwyg-ckeditor';
 
     if (!empty($node_type)) {
       $settings['bodyClass'] .= ' node-type-' . $node_type;
