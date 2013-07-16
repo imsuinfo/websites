@@ -46,7 +46,7 @@ For licensing, see LICENSE.html or http://ckeditor.com/license
 
 				sHTML =
 					editor.config.docType +
-					'<html dir="' + editor.config.contentsLangDirection + '">' +
+					'<html dir="' + editor.config.contentsLangDirection + '" class=" mcneese mcneese-ckeditor">' +
 					'<head>' +
 					baseTag +
 					'<title>' + editor.lang.preview + '</title>' +
