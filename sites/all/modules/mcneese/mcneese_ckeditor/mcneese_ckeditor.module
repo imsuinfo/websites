@@ -67,6 +67,7 @@ function mcneese_ckeditor_wysiwyg_editor_settings_alter(&$settings, $context) {
             }
           }
 
+          $additional_css[] = 'node';
           $additional_css[] = $custom_tag;
         }
       }
