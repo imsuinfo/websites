@@ -347,10 +347,18 @@ function image_imagemagick_save(stdClass $image, $destination) {
  */
 function image_imagemagick_get_info(stdClass $image) {
   $details = FALSE;
-  $data = getimagesize($image->source);
+  $data = NULL;
+
+  if (file_exists($image->source)) {
+    $data = getimagesize($image->source);
+  }
 
   if (empty($data)) {
-    $data = getimagesize(drupal_realpath($image->source));
+    $realpath = drupal_realpath($image->source);
+
+    if (file_exists($realpath)) {
+      $data = getimagesize($realpath);
+    }
   }
 
   if (isset($data) && is_array($data)) {
