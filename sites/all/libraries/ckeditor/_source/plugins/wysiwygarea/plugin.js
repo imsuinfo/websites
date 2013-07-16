@@ -1052,6 +1052,12 @@ For licensing, see LICENSE.html or http://ckeditor.com/license
 								if ( editor.dataProcessor )
 									data = editor.dataProcessor.toHtml( data, fixForBody );
 
+								var htmlClass = 'wysiwyg wysiwyg-ckeditor mcneese mcneese-ckeditor';
+
+								if ( config.htmlClass )
+									htmlClass = config.htmlClass;
+
+
 								if ( fullPage )
 								{
 									// Check if the <body> tag is available.
@@ -1060,7 +1066,7 @@ For licensing, see LICENSE.html or http://ckeditor.com/license
 
 									// Check if the <html> tag is available.
 									if ( !(/<html[\s|>]/).test( data ) )
-										data = '<html class="wysiwyg wysiwyg-ckeditor mcneese mcneese-ckeditor">' + data + '</html>';
+										data = '<html class="' + htmlClass + '">' + data + '</html>';
 
 									// Check if the <head> tag is available.
 									if ( !(/<head[\s|>]/).test( data ) )
@@ -1086,7 +1092,7 @@ For licensing, see LICENSE.html or http://ckeditor.com/license
 								{
 									data =
 										config.docType +
-										'<html class="wysiwyg wysiwyg-ckeditor mcneese mcneese-ckeditor" dir="' + config.contentsLangDirection + '"' +
+										'<html class="' + htmlClass + '" dir="' + config.contentsLangDirection + '"' +
 											' lang="' + ( config.contentsLanguage || editor.langCode ) + '">' +
 										'<head>' +
 											'<title>' + frameLabel + '</title>' +

@@ -242,6 +242,11 @@ CKEDITOR.config =
 	bodyClass : '',
 
 	/**
+	 * Hack to allow dynamic changing of html classes.
+	 */
+	htmlClass : 'wysiwyg wysiwyg-ckeditor mcneese mcneese-ckeditor',
+
+	/**
 	 * Indicates whether the contents to be edited are being input as a full
 	 * HTML page. A full page includes the <code>&lt;html&gt;</code>,
 	 * <code>&lt;head&gt;</code>, and <code>&lt;body&gt;</code> elements.
