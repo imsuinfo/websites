@@ -38,6 +38,7 @@ function media_hook_info() {
     'media_wysiwyg_allowed_view_modes_alter',
     'media_format_form_prepare_alter',
     'media_token_to_markup_alter',
+    'media_file_displays_alter',
     'query_media_browser_alter',
   );
 
@@ -496,6 +497,14 @@ function media_form_field_ui_field_edit_form_alter(&$form, &$form_state) {
     $form['instance']['settings']['file_extensions']['#title'] = t('Allowed file extensions for uploaded files');
     // Do not increase maxlength of file extensions for image fields, since
     // presumably they will not need a long list of extensions.
+  }
+  if ($form['#instance']['entity_type'] == 'file') {
+    $form['instance']['settings']['wysiwyg_override'] = array(
+      '#type' => 'checkbox',
+      '#title' => t('Override in WYSIWYG'),
+      '#description' => t('If checked, then this field may be overridden in the WYSIWYG editor.'),
+      '#default_value' => isset($form['#instance']['settings']['wysiwyg_override']) ? $form['#instance']['settings']['wysiwyg_override'] : TRUE,
+    );
   }
 }
 
@@ -1093,6 +1102,15 @@ function media_file_displays_alter(&$displays, $file, $view_mode) {
       'status' => 1,
       'settings' => NULL,
     );
+  }
+
+  // Override the fields of the file when requested by the WYSIWYG.
+  if (isset($file->override) && isset($file->override['fields'])) {
+    $instance = field_info_instances('file', $file->type);
+    foreach ($file->override['fields'] as $field_name => $value) {
+      if (!isset($instance[$field_name]['settings']) || !isset($instance[$field_name]['settings']['wysiwyg_override']) || $instance[$field_name]['settings']['wysiwyg_override']) {
+        $file->{$field_name} = $value;}
+    }
   }
 }
 
