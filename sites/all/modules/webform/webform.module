@@ -3098,7 +3098,7 @@ function theme_webform_element($variables) {
     $wrapper_classes[] = 'webform-container-after';
   }
 
-  $wrapper_attributes['class'] = array($wrapper_classes);
+  $wrapper_attributes['class'] = $wrapper_classes;
   $wrapper_attributes['id'] = 'webform-component-' . $parents;
   $output = '<div ' . drupal_attributes($wrapper_attributes) . '>' . "\n";
 
