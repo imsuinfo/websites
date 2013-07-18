@@ -39,7 +39,8 @@ function mcneese_ckeditor_wysiwyg_editor_settings_alter(&$settings, $context) {
 
     $current_path = current_path();
     $node_type = '';
-    $additional_css = array();
+    $html_css = array();
+    $body_css = array();
 
     $matches = array();
     $matched = preg_match('@^node/add/(\w*)($|/$|\?.*)@', $current_path, $matches);
@@ -57,18 +58,20 @@ function mcneese_ckeditor_wysiwyg_editor_settings_alter(&$settings, $context) {
         if (is_object($node)){
           $node_type = check_plain($node->type);
 
+          $html_css[] = 'is-node node-type-' . $node_type;
+          $body_css[] = 'node node-type-' . $node_type;
+
           $custom_tag = $node_type . '_type-default';
           $custom_property = 'field_' . $node_type . '_theme';
 
           if (property_exists($node, $custom_property)) {
             $custom_prop = & $node->$custom_property;
             if (!empty($custom_prop['und'][0]['tid'])) {
-              $custom_tag = 'is-' . $node_type . '_type-' . $custom_prop['und'][0]['tid'];
+              $custom_tag = 'node-theme-' . $node_type . '-' . $custom_prop['und'][0]['tid'];
             }
           }
 
-          $additional_css[] = 'node';
-          $additional_css[] = $custom_tag;
+          $html_css[] = $custom_tag;
         }
       }
     }
@@ -208,12 +211,12 @@ function mcneese_ckeditor_wysiwyg_editor_settings_alter(&$settings, $context) {
 
     $settings['htmlClass'] = 'wysiwyg wysiwyg-ckeditor mcneese mcneese-ckeditor mcneese-content';
 
-    if (!empty($node_type)) {
-      $settings['htmlClass'] .= ' node-type-' . $node_type;
+    if (!empty($html_css)) {
+      $settings['htmlClass'] .= ' ' . implode(' ', $html_css);
     }
 
-    if (!empty($additional_css)) {
-      $settings['htmlClass'] .= ' ' . implode(' ', $additional_css);
+    if (!empty($body_css)) {
+      $settings['bodyClass'] .= ' ' . implode(' ', $body_css);
     }
 
     // http://docs.cksource.com/ckeditor_api/symbols/CKEDITOR.config.html#.baseHref
