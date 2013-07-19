@@ -54,7 +54,15 @@ class cf_error {
     $error = new cf_error_code;
 
     if (empty($argument_name)) {
-      $argument_name = self::p_report_invalid_argument_string('argument_name', debug_backtrace());
+      if (version_compare(PHP_VERSION, '5.4.0', '>=')) {
+        $backtrace = debug_backtrace(DEBUG_BACKTRACE_PROVIDE_OBJECT, self::p_backtrace_limit());
+      }
+      else {
+        $backtrace = debug_backtrace();
+      }
+
+      $argument_name = self::p_report_invalid_argument_string('argument_name', $backtrace);
+      unset($backtrace);
     }
 
     $error->set_severity($severity);
@@ -98,7 +106,15 @@ class cf_error {
     $error = new cf_error_code;
 
     if (empty($argument_name)) {
-      $argument_name = self::p_report_invalid_argument_string('argument_name', debug_backtrace());
+      if (version_compare(PHP_VERSION, '5.4.0', '>=')) {
+        $backtrace = debug_backtrace(DEBUG_BACKTRACE_PROVIDE_OBJECT, self::p_backtrace_limit());
+      }
+      else {
+        $backtrace = debug_backtrace();
+      }
+
+      $argument_name = self::p_report_invalid_argument_string('argument_name', $backtrace);
+      unset($backtrace);
     }
 
     $error->set_severity($severity);
@@ -124,7 +140,15 @@ class cf_error {
     $error = new cf_error_code;
 
     if (empty($argument_name)) {
-      $argument_name = self::p_report_invalid_argument_string('argument_name', debug_backtrace());
+      if (version_compare(PHP_VERSION, '5.4.0', '>=')) {
+        $backtrace = debug_backtrace(DEBUG_BACKTRACE_PROVIDE_OBJECT, self::p_backtrace_limit());
+      }
+      else {
+        $backtrace = debug_backtrace();
+      }
+
+      $argument_name = self::p_report_invalid_argument_string('argument_name', $backtrace);
+      unset($backtrace);
     }
 
     $error->set_severity($severity);
@@ -150,7 +174,15 @@ class cf_error {
     $error = new cf_error_code;
 
     if (empty($argument_name)) {
-      $argument_name = self::p_report_invalid_argument_string('argument_name', debug_backtrace());
+      if (version_compare(PHP_VERSION, '5.4.0', '>=')) {
+        $backtrace = debug_backtrace(DEBUG_BACKTRACE_PROVIDE_OBJECT, self::p_backtrace_limit());
+      }
+      else {
+        $backtrace = debug_backtrace();
+      }
+
+      $argument_name = self::p_report_invalid_argument_string('argument_name', $backtrace);
+      unset($backtrace);
     }
 
     $error->set_severity($severity);
@@ -176,7 +208,15 @@ class cf_error {
     $error = new cf_error_code;
 
     if (empty($argument_name)) {
-      $argument_name = self::p_report_invalid_argument_string('argument_name', debug_backtrace());
+      if (version_compare(PHP_VERSION, '5.4.0', '>=')) {
+        $backtrace = debug_backtrace(DEBUG_BACKTRACE_PROVIDE_OBJECT, self::p_backtrace_limit());
+      }
+      else {
+        $backtrace = debug_backtrace();
+      }
+
+      $argument_name = self::p_report_invalid_argument_string('argument_name', $backtrace);
+      unset($backtrace);
     }
 
     $error->set_severity($severity);
@@ -202,7 +242,14 @@ class cf_error {
     $error = new cf_error_code;
 
     if (empty($argument_name)) {
-      $argument_name = self::p_report_invalid_argument_string('argument_name', debug_backtrace());
+      if (version_compare(PHP_VERSION, '5.4.0', '>=')) {
+        $backtrace = debug_backtrace(DEBUG_BACKTRACE_PROVIDE_OBJECT, self::p_backtrace_limit());
+      }
+      else {
+        $backtrace = debug_backtrace();
+      }
+
+      $argument_name = self::p_report_invalid_argument_string('argument_name', $backtrace);
     }
 
     $error->set_severity($severity);
@@ -229,12 +276,22 @@ class cf_error {
   public static function missing_array_key($argument_name, $key_name, $severity = WATCHDOG_ERROR) {
     $error = new cf_error_code;
 
+    if (version_compare(PHP_VERSION, '5.4.0', '>=')) {
+      $backtrace = debug_backtrace(DEBUG_BACKTRACE_PROVIDE_OBJECT, self::p_backtrace_limit());
+    }
+    else {
+      $backtrace = debug_backtrace();
+    }
+
+
     if (empty($argument_name)) {
-      $argument_name = self::p_report_invalid_argument_string('argument_name', debug_backtrace());
+      $argument_name = self::p_report_invalid_argument_string('argument_name', $backtrace);
+      unset($backtrace);
     }
 
     if (empty($key_name)) {
-      $key_name = self::p_report_invalid_argument_string('key_name', debug_backtrace());
+      $key_name = self::p_report_invalid_argument_string('key_name', $backtrace);
+      unset($backtrace);
     }
 
     $error->set_severity($severity);
@@ -262,11 +319,27 @@ class cf_error {
     $error = new cf_error_code;
 
     if (empty($argument_name)) {
-      $argument_name = self::p_report_invalid_argument_string('argument_name', debug_backtrace());
+      if (version_compare(PHP_VERSION, '5.4.0', '>=')) {
+        $backtrace = debug_backtrace(DEBUG_BACKTRACE_PROVIDE_OBJECT, self::p_backtrace_limit());
+      }
+      else {
+        $backtrace = debug_backtrace();
+      }
+
+      $argument_name = self::p_report_invalid_argument_string('argument_name', $backtrace);
+      unset($backtrace);
     }
 
     if (empty($property_name)) {
-      $property_name = self::p_report_invalid_argument_string('property_name', debug_backtrace());
+      if (version_compare(PHP_VERSION, '5.4.0', '>=')) {
+        $backtrace = debug_backtrace(DEBUG_BACKTRACE_PROVIDE_OBJECT, self::p_backtrace_limit());
+      }
+      else {
+        $backtrace = debug_backtrace();
+      }
+
+      $property_name = self::p_report_invalid_argument_string('property_name', $backtrace);
+      unset($backtrace);
     }
 
     $error->set_severity($severity);
@@ -311,7 +384,15 @@ class cf_error {
     $error = new cf_error_code();
 
     if (empty($argument_name)) {
-      $argument_name = self::p_report_invalid_argument_string('argument_name', debug_backtrace());
+      if (version_compare(PHP_VERSION, '5.4.0', '>=')) {
+        $backtrace = debug_backtrace(DEBUG_BACKTRACE_PROVIDE_OBJECT, self::p_backtrace_limit());
+      }
+      else {
+        $backtrace = debug_backtrace();
+      }
+
+      $argument_name = self::p_report_invalid_argument_string('argument_name', $backtrace);
+      unset($backtrace);
     }
 
     $error->set_severity($severity);
@@ -342,7 +423,15 @@ class cf_error {
       $query_arguments = print_r($exception->args, TRUE);
     }
     else {
-      self::p_report_invalid_argument_object('exception', debug_backtrace());
+      if (version_compare(PHP_VERSION, '5.4.0', '>=')) {
+        $backtrace = debug_backtrace(DEBUG_BACKTRACE_PROVIDE_OBJECT, self::p_backtrace_limit());
+      }
+      else {
+        $backtrace = debug_backtrace();
+      }
+
+      self::p_report_invalid_argument_object('exception', $backtrace);
+      unset($backtrace);
       $exception_message = "";
       $query_string = "";
       $query_arguments = "";
@@ -375,7 +464,15 @@ class cf_error {
       $exception_message = $exception->getMessage();
     }
     else {
-      self::p_report_invalid_argument_object('exception', debug_backtrace());
+      if (version_compare(PHP_VERSION, '5.4.0', '>=')) {
+        $backtrace = debug_backtrace(DEBUG_BACKTRACE_PROVIDE_OBJECT, self::p_backtrace_limit());
+      }
+      else {
+        $backtrace = debug_backtrace();
+      }
+
+      self::p_report_invalid_argument_object('exception', $backtrace);
+      unset($backtrace);
       $exception_message = "";
     }
 
@@ -403,7 +500,15 @@ class cf_error {
     $error = new cf_error_code;
 
     if (empty($argument_name)) {
-      $argument_name = self::p_report_invalid_argument_string('argument_name', debug_backtrace());
+      if (version_compare(PHP_VERSION, '5.4.0', '>=')) {
+        $backtrace = debug_backtrace(DEBUG_BACKTRACE_PROVIDE_OBJECT, self::p_backtrace_limit());
+      }
+      else {
+        $backtrace = debug_backtrace();
+      }
+
+      $argument_name = self::p_report_invalid_argument_string('argument_name', $backtrace);
+      unset($backtrace);
     }
 
     $error->set_severity($severity);
@@ -429,7 +534,15 @@ class cf_error {
     $error = new cf_error_code;
 
     if (empty($argument_name)) {
-      $argument_name = self::p_report_invalid_argument_string('argument_name', debug_backtrace());
+      if (version_compare(PHP_VERSION, '5.4.0', '>=')) {
+        $backtrace = debug_backtrace(DEBUG_BACKTRACE_PROVIDE_OBJECT, self::p_backtrace_limit());
+      }
+      else {
+        $backtrace = debug_backtrace();
+      }
+
+      $argument_name = self::p_report_invalid_argument_string('argument_name', $backtrace);
+      unset($backtrace);
     }
 
     $error->set_severity($severity);
@@ -455,7 +568,15 @@ class cf_error {
     $error = new cf_error_code;
 
     if (empty($argument_name)) {
-      $argument_name = self::p_report_invalid_argument_string('argument_name', debug_backtrace());
+      if (version_compare(PHP_VERSION, '5.4.0', '>=')) {
+        $backtrace = debug_backtrace(DEBUG_BACKTRACE_PROVIDE_OBJECT, self::p_backtrace_limit());
+      }
+      else {
+        $backtrace = debug_backtrace();
+      }
+
+      $argument_name = self::p_report_invalid_argument_string('argument_name', $backtrace);
+      unset($backtrace);
     }
 
     $error->set_severity($severity);
@@ -481,7 +602,15 @@ class cf_error {
     $error = new cf_error_code;
 
     if (empty($argument_name)) {
-      $argument_name = self::p_report_invalid_argument_string('argument_name', debug_backtrace());
+      if (version_compare(PHP_VERSION, '5.4.0', '>=')) {
+        $backtrace = debug_backtrace(DEBUG_BACKTRACE_PROVIDE_OBJECT, self::p_backtrace_limit());
+      }
+      else {
+        $backtrace = debug_backtrace();
+      }
+
+      $argument_name = self::p_report_invalid_argument_string('argument_name', $backtrace);
+      unset($backtrace);
     }
 
     $error->set_severity($severity);
@@ -507,7 +636,15 @@ class cf_error {
     $error = new cf_error_code;
 
     if (empty($argument_name)) {
-      $argument_name = self::p_report_invalid_argument_string('argument_name', debug_backtrace());
+      if (version_compare(PHP_VERSION, '5.4.0', '>=')) {
+        $backtrace = debug_backtrace(DEBUG_BACKTRACE_PROVIDE_OBJECT, self::p_backtrace_limit());
+      }
+      else {
+        $backtrace = debug_backtrace();
+      }
+
+      $argument_name = self::p_report_invalid_argument_string('argument_name', $backtrace);
+      unset($backtrace);
     }
 
     $error->set_severity($severity);
@@ -533,7 +670,15 @@ class cf_error {
     $error = new cf_error_code;
 
     if (empty($argument_name)) {
-      $argument_name = self::p_report_invalid_argument_string('argument_name', debug_backtrace());
+      if (version_compare(PHP_VERSION, '5.4.0', '>=')) {
+        $backtrace = debug_backtrace(DEBUG_BACKTRACE_PROVIDE_OBJECT, self::p_backtrace_limit());
+      }
+      else {
+        $backtrace = debug_backtrace();
+      }
+
+      $argument_name = self::p_report_invalid_argument_string('argument_name', $backtrace);
+      unset($backtrace);
     }
 
     $error->set_severity($severity);
@@ -559,7 +704,15 @@ class cf_error {
     $error = new cf_error_code;
 
     if (empty($argument_name)) {
-      $argument_name = self::p_report_invalid_argument_string('argument_name', debug_backtrace());
+      if (version_compare(PHP_VERSION, '5.4.0', '>=')) {
+        $backtrace = debug_backtrace(DEBUG_BACKTRACE_PROVIDE_OBJECT, self::p_backtrace_limit());
+      }
+      else {
+        $backtrace = debug_backtrace();
+      }
+
+      $argument_name = self::p_report_invalid_argument_string('argument_name', $backtrace);
+      unset($backtrace);
     }
 
     $error->set_severity($severity);
@@ -585,7 +738,15 @@ class cf_error {
     $error = new cf_error_code;
 
     if (empty($item)) {
-      $item = self::p_report_invalid_argument_string('item', debug_backtrace());
+      if (version_compare(PHP_VERSION, '5.4.0', '>=')) {
+        $backtrace = debug_backtrace(DEBUG_BACKTRACE_PROVIDE_OBJECT, self::p_backtrace_limit());
+      }
+      else {
+        $backtrace = debug_backtrace();
+      }
+
+      $item = self::p_report_invalid_argument_string('item', $backtrace);
+      unset($backtrace);
     }
 
     $error->set_severity($severity);
@@ -611,7 +772,15 @@ class cf_error {
     $error = new cf_error_code;
 
     if (empty($item)) {
-      $item = self::p_report_invalid_argument_string('item', debug_backtrace());
+      if (version_compare(PHP_VERSION, '5.4.0', '>=')) {
+        $backtrace = debug_backtrace(DEBUG_BACKTRACE_PROVIDE_OBJECT, self::p_backtrace_limit());
+      }
+      else {
+        $backtrace = debug_backtrace();
+      }
+
+      $item = self::p_report_invalid_argument_string('item', $backtrace);
+      unset($backtrace);
     }
 
     $error->set_severity($severity);
@@ -637,7 +806,15 @@ class cf_error {
     $error = new cf_error_code;
 
     if (empty($item)) {
-      $item = self::p_report_invalid_argument_string('item', debug_backtrace());
+      if (version_compare(PHP_VERSION, '5.4.0', '>=')) {
+        $backtrace = debug_backtrace(DEBUG_BACKTRACE_PROVIDE_OBJECT, self::p_backtrace_limit());
+      }
+      else {
+        $backtrace = debug_backtrace();
+      }
+
+      $item = self::p_report_invalid_argument_string('item', $backtrace);
+      unset($backtrace);
     }
 
     $error->set_severity($severity);
@@ -663,7 +840,15 @@ class cf_error {
     $error = new cf_error_code;
 
     if (empty($item)) {
-      $item = self::p_report_invalid_argument_string('item', debug_backtrace());
+      if (version_compare(PHP_VERSION, '5.4.0', '>=')) {
+        $backtrace = debug_backtrace(DEBUG_BACKTRACE_PROVIDE_OBJECT, self::p_backtrace_limit());
+      }
+      else {
+        $backtrace = debug_backtrace();
+      }
+
+      $item = self::p_report_invalid_argument_string('item', $backtrace);
+      unset($backtrace);
     }
 
     $error->set_severity($severity);
@@ -689,7 +874,15 @@ class cf_error {
     $error = new cf_error_code;
 
     if (empty($item)) {
-      $item = self::p_report_invalid_argument_string('item', debug_backtrace());
+      if (version_compare(PHP_VERSION, '5.4.0', '>=')) {
+        $backtrace = debug_backtrace(DEBUG_BACKTRACE_PROVIDE_OBJECT, self::p_backtrace_limit());
+      }
+      else {
+        $backtrace = debug_backtrace();
+      }
+
+      $item = self::p_report_invalid_argument_string('item', $backtrace);
+      unset($backtrace);
     }
 
     $error->set_severity($severity);
@@ -715,7 +908,15 @@ class cf_error {
     $error = new cf_error_code;
 
     if (empty($item)) {
-      $item = self::p_report_invalid_argument_string('item', debug_backtrace());
+      if (version_compare(PHP_VERSION, '5.4.0', '>=')) {
+        $backtrace = debug_backtrace(DEBUG_BACKTRACE_PROVIDE_OBJECT, self::p_backtrace_limit());
+      }
+      else {
+        $backtrace = debug_backtrace();
+      }
+
+      $item = self::p_report_invalid_argument_string('item', $backtrace);
+      unset($backtrace);
     }
 
     $error->set_severity($severity);
@@ -741,7 +942,15 @@ class cf_error {
     $error = new cf_error_code;
 
     if (empty($item)) {
-      $item = self::p_report_invalid_argument_string('item', debug_backtrace());
+      if (version_compare(PHP_VERSION, '5.4.0', '>=')) {
+        $backtrace = debug_backtrace(DEBUG_BACKTRACE_PROVIDE_OBJECT, self::p_backtrace_limit());
+      }
+      else {
+        $backtrace = debug_backtrace();
+      }
+
+      $item = self::p_report_invalid_argument_string('item', $backtrace);
+      unset($backtrace);
     }
 
     $error->set_severity($severity);
@@ -767,7 +976,15 @@ class cf_error {
     $error = new cf_error_code;
 
     if (empty($item)) {
-      $item = self::p_report_invalid_argument_string('item', debug_backtrace());
+      if (version_compare(PHP_VERSION, '5.4.0', '>=')) {
+        $backtrace = debug_backtrace(DEBUG_BACKTRACE_PROVIDE_OBJECT, self::p_backtrace_limit());
+      }
+      else {
+        $backtrace = debug_backtrace();
+      }
+
+      $item = self::p_report_invalid_argument_string('item', $backtrace);
+      unset($backtrace);
     }
 
     $error->set_severity($severity);
@@ -793,7 +1010,15 @@ class cf_error {
     $error = new cf_error_code;
 
     if (empty($item)) {
-      $item = self::p_report_invalid_argument_string('item', debug_backtrace());
+      if (version_compare(PHP_VERSION, '5.4.0', '>=')) {
+        $backtrace = debug_backtrace(DEBUG_BACKTRACE_PROVIDE_OBJECT, self::p_backtrace_limit());
+      }
+      else {
+        $backtrace = debug_backtrace();
+      }
+
+      $item = self::p_report_invalid_argument_string('item', $backtrace);
+      unset($backtrace);
     }
 
     $error->set_severity($severity);
@@ -819,7 +1044,15 @@ class cf_error {
     $error = new cf_error_code;
 
     if (empty($item)) {
-      $item = self::p_report_invalid_argument_string('item', debug_backtrace());
+      if (version_compare(PHP_VERSION, '5.4.0', '>=')) {
+        $backtrace = debug_backtrace(DEBUG_BACKTRACE_PROVIDE_OBJECT, self::p_backtrace_limit());
+      }
+      else {
+        $backtrace = debug_backtrace();
+      }
+
+      $item = self::p_report_invalid_argument_string('item', $backtrace);
+      unset($backtrace);
     }
 
     $error->set_severity($severity);
@@ -845,7 +1078,15 @@ class cf_error {
     $error = new cf_error_code;
 
     if (empty($item)) {
-      $item = self::p_report_invalid_argument_string('item', debug_backtrace());
+      if (version_compare(PHP_VERSION, '5.4.0', '>=')) {
+        $backtrace = debug_backtrace(DEBUG_BACKTRACE_PROVIDE_OBJECT, self::p_backtrace_limit());
+      }
+      else {
+        $backtrace = debug_backtrace();
+      }
+
+      $item = self::p_report_invalid_argument_string('item', $backtrace);
+      unset($backtrace);
     }
 
     $error->set_severity($severity);
@@ -866,7 +1107,12 @@ class cf_error {
    *   The error code class object associated with the error.
    */
   private static function p_load_backtrace(cf_error_code &$error) {
-    $backtrace = debug_backtrace();
+    if (version_compare(PHP_VERSION, '5.4.0', '>=')) {
+      $backtrace = debug_backtrace(DEBUG_BACKTRACE_PROVIDE_OBJECT, self::p_backtrace_limit());
+    }
+    else {
+      $backtrace = debug_backtrace();
+    }
 
     // Remove the backtrace log for p_load_backtrace().
     array_shift($backtrace);
@@ -875,6 +1121,7 @@ class cf_error {
     array_shift($backtrace);
 
     $error->set_backtrace($backtrace);
+    unset($backtrace);
   }
 
   /**
@@ -1349,6 +1596,33 @@ class cf_error {
     $error2->set_backtrace($backtrace);
     self::p_invalid_object($error2, $variable_name);
     return '(invalid)';
+  }
+
+  /**
+   * Returns the backtrace mode setting.
+   *
+   * @return int
+   *   The numeric backtrace limit.
+   */
+  private static function p_backtrace_limit() {
+    static $show_backtrace;
+
+    if (!isset($show_backtrace)) {
+      $show_backtrace = variable_get('cf_error_backtrace_mode', self::BACKTRACE_MODE_SHORT);
+    }
+
+    switch ($show_backtrace) {
+      case  cf_error::BACKTRACE_MODE_NONE:
+        return 1;
+      case  cf_error::BACKTRACE_MODE_SHORT:
+        return 5;
+      case  cf_error::BACKTRACE_MODE_MODERATE:
+        return 10;
+      case  cf_error::BACKTRACE_MODE_FULL:
+        return 0;
+    }
+
+    return 5;
   }
 }
 
