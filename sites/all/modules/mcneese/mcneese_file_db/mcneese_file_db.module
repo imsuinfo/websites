@@ -149,8 +149,9 @@ function mcneese_file_db_get_server_id() {
  *      - operation: one of '>', '>=', '<', '<=', '<>', '=='.
  *      - stamp: timestamp to compare against.
  *
- * @return bool
- *   TRUE/FALSE depending on whether the file listing was loaded.
+ * @return array|bool
+ *   An array of loaded files.
+ *   FALSE is returned on error.
  */
 function mcneese_file_db_load_available_files($conditions = array()) {
   global $conf;

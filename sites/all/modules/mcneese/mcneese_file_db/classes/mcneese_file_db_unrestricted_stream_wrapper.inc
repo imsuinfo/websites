@@ -640,35 +640,35 @@ class mcneese_file_db_unrestricted_stream_wrapper extends mcneese_file_db_stream
   /**
    * Implements get_scheme().
    */
-  protected function get_scheme() {
+  public function get_scheme() {
     return self::SCHEME;
   }
 
   /**
    * Implements get_external().
    */
-  protected function get_external() {
+  public function get_external() {
     return MCNEESE_FILE_DB_FILE_PATH;
   }
 
   /**
    * Implements get_path_by_hash().
    */
-  protected function get_path_by_hash() {
+  public function get_path_by_hash() {
     return MCNEESE_FILE_DB_PATH_BY_HASH;
   }
 
   /**
    * Implements get_path_by_hash().
    */
-  protected function get_path_by_id() {
+  public function get_path_by_id() {
     return MCNEESE_FILE_DB_PATH_BY_ID;
   }
 
   /**
    * Implements get_core().
    */
-  protected function get_core() {
+  public function get_core() {
     return self::CORE;
   }
 }

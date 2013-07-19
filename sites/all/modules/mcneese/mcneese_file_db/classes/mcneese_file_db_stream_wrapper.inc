@@ -391,7 +391,7 @@ abstract class mcneese_file_db_stream_wrapper implements DrupalStreamWrapperInte
    * @return string
    *   The scheme string.
    */
-  abstract protected function get_scheme();
+  abstract public function get_scheme();
 
   /**
    * Wrapper function to load the current external string.
@@ -399,7 +399,7 @@ abstract class mcneese_file_db_stream_wrapper implements DrupalStreamWrapperInte
    * @return string
    *   The external string.
    */
-  abstract protected function get_external();
+  abstract public function get_external();
 
   /**
    * Wrapper function to load the current path by hash string.
@@ -407,7 +407,7 @@ abstract class mcneese_file_db_stream_wrapper implements DrupalStreamWrapperInte
    * @return string
    *   The path by hash string.
    */
-  abstract protected function get_path_by_hash();
+  abstract public function get_path_by_hash();
 
   /**
    * Wrapper function to load the current path by its numeric id.
@@ -415,7 +415,7 @@ abstract class mcneese_file_db_stream_wrapper implements DrupalStreamWrapperInte
    * @return string
    *   The path by id string.
    */
-  abstract protected function get_path_by_id();
+  abstract public function get_path_by_id();
 
   /**
    * Wrapper function to load the associated drupal core scheme.
@@ -423,7 +423,7 @@ abstract class mcneese_file_db_stream_wrapper implements DrupalStreamWrapperInte
    * @return string
    *   The drupal core scheme, such as 'public' or 'private'.
    */
-  abstract protected function get_core();
+  abstract public function get_core();
 
   /**
    * Loads the file meta if a valid checksum is supplied.
