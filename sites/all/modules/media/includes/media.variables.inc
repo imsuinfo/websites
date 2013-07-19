@@ -160,6 +160,7 @@ function media_variable_default($name = NULL) {
       'browser_library_empty_message' => NULL,
       'browser_pager_limit' => NULL,
       'browser_viewtype_default' => NULL,
+      'display_types_migration_mess' => TRUE,
     );
   }
 

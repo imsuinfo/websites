@@ -202,6 +202,24 @@ function media_menu() {
     'type' => MENU_CALLBACK,
   );
 
+  // Upgrade interface for old file types.
+  $items['admin/structure/file-types/upgrade'] = array(
+    'title' => 'Upgrade types',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('media_upgrade_file_types'),
+    'access arguments' => array('administer file types'),
+    'file' => 'includes/media.pages.inc',
+    'type' => MENU_CALLBACK,
+  );
+  $items['admin/structure/file-types/upgrade/confirm'] = array(
+    'title' => 'Upgrade types',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('media_upgrade_file_types_confirm'),
+    'access arguments' => array('administer file types'),
+    'file' => 'includes/media.pages.inc',
+    'type' => MENU_CALLBACK,
+  );
+
   return $items;
 }
 
@@ -378,6 +396,15 @@ function media_page_alter(&$page) {
   else if ($count == 3) {
     if ($parts[0] == 'media' && is_numeric($parts[1]) && $parts[2] == 'format-form') {
       $page['#theme'] = 'media_dialog_page';
+    }
+  }
+
+  // Check if there are file types that need migration and display a message
+  // to user if so.
+  $menu = menu_get_item();
+  if (media_variable_get('display_types_migration_mess') && $menu['path'] == 'admin/structure/file-types') {
+    if ($migratable_types = _media_get_migratable_file_types()) {
+      drupal_set_message(t('There are disabled/deleted file types that can be migrated to their new alternatives. Visit <a href="!url">migration page</a> to get more information.', array('!url' => url('admin/structure/file-types/upgrade'))));
     }
   }
 }
@@ -1287,6 +1314,26 @@ function media_get_remote_stream_wrappers() {
   $wrappers = array_diff_key($wrappers, file_get_stream_wrappers(STREAM_WRAPPERS_LOCAL_NORMAL));
   $wrappers = array_diff_key($wrappers, file_get_stream_wrappers(STREAM_WRAPPERS_LOCAL_HIDDEN));
   return $wrappers;
+}
+
+/**
+ * Checks if there are any files that belong to disabled or deleted file
+ * types.
+ *
+ * @return Array of file types (machine names) that are candidates for
+ *   migration.
+ */
+function _media_get_migratable_file_types() {
+  $query = db_select('file_managed', 'f')
+    ->fields('f', array('type'))
+    ->distinct();
+  $types = $query->execute()->fetchCol();
+  $enabled_types = array();
+  foreach (file_type_get_enabled_types() as $type) {
+    $enabled_types[] = $type->type;
+  }
+
+  return array_diff($types, $enabled_types);
 }
 
 /**
