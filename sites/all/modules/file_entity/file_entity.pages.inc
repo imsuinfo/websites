@@ -700,6 +700,27 @@ function file_entity_edit_validate($form, &$form_state) {
     if (!empty($file)) {
       // Put the temporary file in form_values so we can save it on submit.
       $form_state['values']['replace_upload'] = $file;
+      $file_scheme = file_uri_scheme($form_state['file']->uri);
+      $wrappers = (array) file_get_stream_wrappers(STREAM_WRAPPERS_REMOTE);
+
+      // handle special case file scheme
+      if (array_key_exists($file_scheme, $wrappers) && ($file_scheme == 'dbr' || $file_scheme == 'dbu')) {
+        // check to see if replacement file already exists.
+        $hash = hash_file(MCNEESE_FILE_DB_PATH_BY_HASH_ALGORITHM, $file->uri);
+        $shash = substr($hash, 0, MCNEESE_FILE_DB_SHORT_SUM_SIZE);
+        $wrapper = file_stream_wrapper_get_instance_by_scheme($file_scheme);
+        $new_uri = $file_scheme . '://' . $wrapper->get_path_by_hash() . '/' . $shash . '/' . $form_state['file']->filename;
+
+        $query = db_select('file_managed', 'fm');
+        $query->fields('fm');
+        $query->condition('fm.uri', $new_uri);
+        $field = $query->execute()->fetchField();
+
+        if ($field !== FALSE) {
+          $existing_path = base_path() . $wrapper->get_external() . '/' . $wrapper->get_path_by_hash() . '/' . $shash;
+          form_set_error('replace_upload', t('The replacement file already exists at <a href="@existing_path">:existing_path</a>.', array('@existing_path' => $existing_path, ':existing_path' => $existing_path)));
+        }
+      }
     }
     elseif ($file === FALSE) {
       // File uploaded failed.
@@ -716,12 +737,42 @@ function file_entity_edit_validate($form, &$form_state) {
  */
 function file_entity_edit_submit($form, &$form_state) {
   $file = $form_state['file'];
+  $do_move = TRUE;
 
   // Check if a replacement file has been uploaded.
   if (!empty($form_state['values']['replace_upload'])) {
-    $replacement = $form_state['values']['replace_upload'];
-    // Move file from temp to permanent home.
-    file_unmanaged_copy($replacement->uri, $file->uri, FILE_EXISTS_REPLACE);
+    $replacement = & $form_state['values']['replace_upload'];
+    $file_scheme = file_uri_scheme($file->uri);
+
+    $wrappers = (array) file_get_stream_wrappers(STREAM_WRAPPERS_REMOTE);
+
+    // handle special case file scheme
+    if (array_key_exists($file_scheme, $wrappers) && ($file_scheme == 'dbr' || $file_scheme == 'dbu')) {
+      // check to see if replacement file already exists.
+      $hash = hash_file(MCNEESE_FILE_DB_PATH_BY_HASH_ALGORITHM, $replacement->uri);
+      $shash = substr($hash, 0, MCNEESE_FILE_DB_SHORT_SUM_SIZE);
+      $wrapper = file_stream_wrapper_get_instance_by_scheme($file_scheme);
+      $new_uri = $file_scheme . '://' . $wrapper->get_path_by_hash() . '/' . $shash . '/' . $file->filename;
+
+      // Perform the copy operation.
+      if (!@copy($replacement->uri, $new_uri)) {
+        // If the copy failed and realpaths exist, retry the operation using them instead.
+        watchdog('file', 'The specified file %file could not be copied to %destination.', array('%file' => $source, '%destination' => $destination), WATCHDOG_ERROR);
+      }
+      else {
+        $file->uri = $new_uri;
+        $file->filesize = $replacement->filesize;
+        $file->timestamp = $replacement->timestamp;
+        $file->type = $replacement->type;
+        $file->uid = $replacement->uid;
+      }
+
+      $do_move = FALSE;
+    }
+    else {
+      // Move file from temp to permanent home.
+      file_unmanaged_copy($replacement->uri, $file->uri, FILE_EXISTS_REPLACE);
+    }
   }
 
   // Run entity form submit handling and save the file.
@@ -744,7 +795,7 @@ function file_entity_edit_submit($form, &$form_state) {
     $file->name = $user->name;
   }
 
-  if (file_uri_scheme($file->uri) != $form_state['values']['scheme']) {
+  if ($do_move && file_uri_scheme($file->uri) != $form_state['values']['scheme']) {
     if ($moved_file = file_move($file, $form_state['values']['scheme'] . '://' . file_uri_target($file->uri), FILE_EXISTS_RENAME)) {
       // Only re-assign the file object if file_move() did not fail.
       $file = $moved_file;
