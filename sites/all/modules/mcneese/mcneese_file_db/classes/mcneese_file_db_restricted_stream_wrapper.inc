@@ -582,6 +582,11 @@ class mcneese_file_db_restricted_stream_wrapper extends mcneese_file_db_stream_w
     if (empty($this->image_style_uri)) {
       $stat = $this->stream_stat($uri);
 
+      // return FALSE when the stream cannot be stat'd.
+      if ($stat === FALSE) {
+        return FALSE;
+      }
+
       // 'mode' is required for functions like file_exists() (this is in octal).
       // calculated from 0100000 (octal for file) + 1204 (octal for 644)
       $stat['mode'] = 0101204;
