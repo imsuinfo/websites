@@ -525,6 +525,10 @@ abstract class mcneese_file_db_stream_wrapper implements DrupalStreamWrapperInte
       $file_db = mcneese_file_db_prepare_connection();
       $options = mcneese_file_db_prepare_options();
 
+      if ($file_db === FALSE) {
+        return FALSE;
+      }
+
       $built = mcneese_file_db_build_query_by_checksum($checksum, $associated);
       $results = $file_db->queryRange($built['query'], 0, 1, $built['arguments'], $options);
 
@@ -556,6 +560,10 @@ abstract class mcneese_file_db_stream_wrapper implements DrupalStreamWrapperInte
     try {
       $file_db = mcneese_file_db_prepare_connection();
       $options = mcneese_file_db_prepare_options();
+
+      if ($file_db === FALSE) {
+        return FALSE;
+      }
 
       $built = mcneese_file_db_build_query_by_checksum($checksum, $associated);
       $results = $file_db->queryRange($built['query'], 0, 1, $built['arguments'], $options);

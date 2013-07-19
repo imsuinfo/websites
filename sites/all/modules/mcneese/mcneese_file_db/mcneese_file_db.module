@@ -84,11 +84,19 @@ function mcneese_file_db_load_file_access($by = '', $arg1 = '', $arg2 = '', $arg
 /**
  * Builds and returns a file_db query object.
  *
- * @return object
+ * @return object|FALSE
  *   A file_db query object.
+ *   FALSE is returned on error.
  */
 function mcneese_file_db_prepare_connection() {
-  $file_db = Database::getConnection(MCNEESE_FILE_DB_TARGET, MCNEESE_FILE_DB_KEY);
+  try {
+    $file_db = Database::getConnection(MCNEESE_FILE_DB_TARGET, MCNEESE_FILE_DB_KEY);
+  }
+  catch (exception $ex) {
+    // do not allow exceptions to stop the functioning of the website.
+    cf_error::on_exception($ex);
+    return FALSE;
+  }
 
   return $file_db;
 }
@@ -154,6 +162,10 @@ function mcneese_file_db_load_available_files($conditions = array()) {
   try {
     $file_db = mcneese_file_db_prepare_connection();
     $options = mcneese_file_db_prepare_options();
+
+    if ($file_db === FALSE) {
+      return FALSE;
+    }
 
     $query = 'SELECT mfdf.* FROM {mcneese_file_db_files} mfdf';
     $query .= ' INNER JOIN {mcneese_file_db_associations} mfda ON (mfdf.id = mfda.file_id AND mfda.server_id = :server_id)';

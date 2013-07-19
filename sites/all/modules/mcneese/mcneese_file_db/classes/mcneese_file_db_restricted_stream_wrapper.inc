@@ -126,6 +126,10 @@ class mcneese_file_db_restricted_stream_wrapper extends mcneese_file_db_stream_w
             $file_db = mcneese_file_db_prepare_connection();
             $options = mcneese_file_db_prepare_options();
 
+            if ($file_db === FALSE) {
+              return FALSE;
+            }
+
             $query = $file_db->delete('mcneese_file_db_files', $options);
             $query->condition('id', $this->stream_fid);
             $query->execute();
@@ -147,6 +151,10 @@ class mcneese_file_db_restricted_stream_wrapper extends mcneese_file_db_stream_w
           try {
             $file_db = mcneese_file_db_prepare_connection();
             $options = mcneese_file_db_prepare_options();
+
+            if ($file_db === FALSE) {
+              return FALSE;
+            }
 
             // if the file is in the database, but is unassociated, then associated it.
             if ($associated_id === FALSE) {
@@ -254,6 +262,10 @@ class mcneese_file_db_restricted_stream_wrapper extends mcneese_file_db_stream_w
         $file_db = mcneese_file_db_prepare_connection();
         $options = mcneese_file_db_prepare_options();
 
+            if ($file_db === FALSE) {
+              return FALSE;
+            }
+
         $built = array();
         $built['query'] = '';
         $built['arguments'] = array();
@@ -319,6 +331,10 @@ class mcneese_file_db_restricted_stream_wrapper extends mcneese_file_db_stream_w
 
     $file_db = mcneese_file_db_prepare_connection();
     $options = mcneese_file_db_prepare_options();
+
+    if ($file_db === FALSE) {
+      return FALSE;
+    }
 
     $query = 'SELECT mfdfd.data, mfdfd.block FROM {mcneese_file_db_file_data} mfdfd';
     $query .= ' INNER JOIN {mcneese_file_db_associations} mfda ON (mfdfd.file_id = mfda.file_id AND mfda.server_id = :server_id)';
@@ -430,6 +446,10 @@ class mcneese_file_db_restricted_stream_wrapper extends mcneese_file_db_stream_w
       $file_db = mcneese_file_db_prepare_connection();
       $options = mcneese_file_db_prepare_options();
 
+      if ($file_db === FALSE) {
+        return FALSE;
+      }
+
       if (empty($this->stream_fid)) {
         try {
           $query = $file_db->insert('mcneese_file_db_files', $options);
@@ -500,6 +520,10 @@ class mcneese_file_db_restricted_stream_wrapper extends mcneese_file_db_stream_w
 
       $file_db = mcneese_file_db_prepare_connection();
       $options = mcneese_file_db_prepare_options();
+
+      if ($file_db === FALSE) {
+        return FALSE;
+      }
 
       try {
         $query = $file_db->delete('mcneese_file_db_associations', $options);
