@@ -81,6 +81,10 @@ class reportQuail_api extends quailReporter {
       $this->quail_api_report['report'][$severity][$test_name]['body'] = $this->guideline->getTranslation($test_name);
     }
 
+    if (!property_exists($this, 'quail_api_total_problems')) {
+      $this->quail_api_total_problems = 0;
+    }
+
     if (is_array($test)) {
       foreach ($test as $problem_id => $problem) {
         if (is_object($problem)) {
