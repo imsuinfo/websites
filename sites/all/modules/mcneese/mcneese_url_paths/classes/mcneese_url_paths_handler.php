@@ -266,7 +266,11 @@ class mcneese_url_paths_node_handler {
     }
 
     if (is_string($sanitized)) {
-      $sanitized = preg_replace('/(`|~|!|@|#|\$|\||\^|%|\&|\*|\(|\)|\+|\\\\|=|{|}|[|]|:|;|\'|"|,|\?|<|>|\s)/i', '_', $sanitized);
+      $sanitized = preg_replace('/(`|~|!|@|#|\$|\||\^|%|\&|\*|\(|\)|\+|\\\\|=|{|}|[|]|:|;|\'|"|,|\?|<|>)/i', '', $sanitized);
+    }
+
+    if (is_string($sanitized)) {
+      $sanitized = preg_replace('/\s/i', '_', $sanitized);
     }
 
     if (is_string($sanitized)) {
