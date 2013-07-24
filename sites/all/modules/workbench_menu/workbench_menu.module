@@ -1284,10 +1284,16 @@ function template_preprocess_workbench_menu_item(&$vars) {
     if (preg_match('@' . $settings['active_path'] . '@', $variables['path_current']) > 0) {
       $path_current_parts = explode('/', $variables['path_current']);
 
+      $current_path = current_path();
+
       while (!empty($path_current_parts)) {
         if (implode('/', $path_current_parts) == $settings['active_path']) {
+
+          $matches = array();
+          $matched = preg_match('@node/\d+/(.+)$@i', $current_path, $matches);
+
           // for nodes, the unique path of the node should be considered an normal active and not an invalid.
-          if (preg_match('@node/\d+/@i', current_path())) {
+          if ($matched > 0 && $settings['active_path'] . '/' . $matches[1] == $variables['path_current']) {
             $variables['trail_is_active'] = TRUE;
             $variables['active_text'] =' <span class="element-invisible">' . t("(active menu item)") . '</span>';
 
