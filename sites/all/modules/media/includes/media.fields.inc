@@ -211,8 +211,14 @@ function media_field_widget_form(&$form, &$form_state, $field, $instance, $langc
   );
 
   $fields = array();
+
+  if ($field['cardinality'] != 1) {
+    $element['#title'] = check_plain($instance['label']);
+    $element['#title_display'] = 'invisible';
+  }
+
   if ($field['type'] == 'file') {
-    $fields['display'] = array(
+    $element['display'] = array(
       '#type' => 'value',
       '#value' => 1,
     );

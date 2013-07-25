@@ -248,9 +248,6 @@ Drupal.media.popups.mediaFieldEditor = function (fid, onSelect, options) {
   var dialogOptions = Drupal.media.popups.getDialogOptions();
 
   dialogOptions.buttons[ok] = function () {
-    alert('hell yeah');
-    return "poo";
-
     var formattedMedia = this.contentWindow.Drupal.media.formatForm.getFormattedMedia();
     if (!formattedMedia) {
       alert(notSelected);
