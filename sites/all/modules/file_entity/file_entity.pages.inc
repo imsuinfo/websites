@@ -322,6 +322,11 @@ function file_entity_add_upload_submit($form, &$form_state) {
           $form['#step'] += ($trigger == 'edit-previous') ? -1 : 1;
           $form_state['storage']['type'] = reset($candidates_keys);
         }
+        elseif (variable_get('file_entity_file_upload_wizard_skip_file_type', FALSE)) {
+          // Do not assign the file a file type.
+          $form['#step'] += ($trigger == 'edit-previous') ? -1 : 1;
+          $form_state['storage']['type'] = FILE_TYPE_NONE;
+        }
       }
       else {
         //check if we can skip step 3
@@ -337,6 +342,11 @@ function file_entity_add_upload_submit($form, &$form_state) {
           $form['#step'] += ($trigger == 'edit-previous') ? -1 : 1;
           $form_state['storage']['scheme'] = file_default_scheme();
         }
+        elseif (variable_get('file_entity_file_upload_wizard_skip_scheme', FALSE)) {
+          // Assign the file the default scheme.
+          $form['#step'] += ($trigger == 'edit-previous') ? -1 : 1;
+          $form_state['storage']['scheme'] = file_default_scheme();
+        }
       }
     }
   }
@@ -346,6 +356,10 @@ function file_entity_add_upload_submit($form, &$form_state) {
     $file = file_load($form_state['storage']['upload']);
     if (!field_info_instances('file', $form_state['storage']['type'])) {
       // This filetype doesn't have fields, save the file.
+      $save = TRUE;
+    }
+    elseif (variable_get('file_entity_file_upload_wizard_skip_fields', FALSE)) {
+      // Save the file with blanks fields.
       $save = TRUE;
     }
   }
