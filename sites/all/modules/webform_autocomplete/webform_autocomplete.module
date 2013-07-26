@@ -41,7 +41,7 @@ function webform_autocomplete_webform_component_info() {
 }
 
 /**
- * Access callback. Check if user has permission to view form component.
+ * Access callback. Check if user has permission to view autocomplete results.
  */
 function webform_autocomplete_access($node, $cid) {
   global $user;
@@ -69,7 +69,7 @@ function webform_autocomplete_access($node, $cid) {
  * Validation callback for webform component.
  */
 function webform_autocomplete_validate_restricted($element, &$form_state) {
-  $options = explode("\n", $element['#webform_component']['extra']['items']);
+  $options = preg_split('/\r\n|\r|\n/', $element['#webform_component']['extra']['autocomplete_items']);
   if (!in_array($element['#value'], $options)) {
     form_error($element, t('Invalid choice for @field.', array('@field' => $element['#title'])));
   }
@@ -94,14 +94,17 @@ function webform_autocomplete_form_builder_types() {
         'size',
         'maxlength',
         'disabled',
-        'items',
+        'autocomplete_items',
         'autocomplete_existing',
+        'autocomplete_match_rule',
         'autocomplete_restrict',
         'unique',
       ),
     ),
   );
-  $fields['autocomplete']['default'] = _form_builder_webform_default('autocomplete');
+  if (function_exists('_form_builder_webform_default')) {
+    $fields['autocomplete']['default'] = _form_builder_webform_default('autocomplete');
+  }
   $fields['autocomplete']['default']['#title'] = t('New autocomplete');
 
   // Return the array of supported fields, with a key for the form type that
@@ -115,6 +118,7 @@ function webform_autocomplete_form_builder_types() {
  * Implements hook_form_builder_preview_alter().
  */
 function webform_autocomplete_form_builder_preview_alter(&$element, $form_type, $form_id) {
+  // Disable live autocomplete during preview
   if ($form_type == 'webform' && $element['#webform_component']['type'] == 'autocomplete') {
     $element['#attributes']['class'][] = 'form-autocomplete';
     $element['#autocomplete_path'] = '';

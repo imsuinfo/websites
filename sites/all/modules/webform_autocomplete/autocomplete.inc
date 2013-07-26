@@ -12,27 +12,15 @@ module_load_include('inc', 'webform', 'components/textfield');
  * Implements _webform_defaults_component().
  */
 function _webform_defaults_autocomplete() {
-  return array(
-    'name' => '',
-    'form_key' => NULL,
-    'pid' => 0,
-    'weight' => 0,
-    'value' => '',
-    'mandatory' => 0,
-    'extra' => array(
-      'items' => '',
-      'width' => '',
-      'field_prefix' => '',
-      'field_suffix' => '',
-      'unique' => 0,
-      'autocomplete_existing' => 0,
-      'autocomplete_restrict' => 0,
-      'title_display' => 0,
-      'description' => '',
-      'attributes' => array(),
-      'private' => FALSE,
-    ),
+  $defaults = _webform_defaults_textfield();
+  $defaults['extra'] += array(
+    'autocomplete_items' => '',
+    'autocomplete_existing' => 0,
+    'autocomplete_match_rule' => 1,
+    'autocomplete_restrict' => 0,
+    'autocomplete_result_count' => 20,
   );
+  return $defaults;
 }
 
 /**
@@ -49,17 +37,28 @@ function _webform_edit_autocomplete($component) {
     '#maxlength' => 1024,
     '#weight' => 0,
   );
-  $form['options']['items'] = array(
+  $form['options']['autocomplete_items'] = array(
     '#type' => 'textarea',
     '#title' => t('Options'),
-    '#default_value' => $component['extra']['items'],
+    '#default_value' => $component['extra']['autocomplete_items'],
     '#description' => t('One value per line. Unlike select elements, this field does not use key|value pairs - enter values only.'),
     '#cols' => 60,
     '#rows' => 5,
     '#weight' => 0,
     '#required' => FALSE,
     '#wysiwyg' => FALSE,
-    '#parents' => array('extra', 'items'),
+    '#parents' => array('extra', 'autocomplete_items'),
+  );
+  $form['display']['autocomplete_result_count'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Result Count'),
+    '#default_value' => $component['extra']['autocomplete_result_count'],
+    '#description' => t('Maximum number of autocomplete results to display.'),
+    '#size' => 5,
+    '#weight' => -1,
+    '#maxlength' => 2,
+    '#required' => TRUE,
+    '#parents' => array('extra', 'autocomplete_result_count'),
   );
   $form['display']['width'] = array(
     '#type' => 'textfield',
@@ -95,10 +94,21 @@ function _webform_edit_autocomplete($component) {
     '#type' => 'checkbox',
     '#title' => t('Autocomplete from existing submissions'),
     '#return_value' => 1,
-    '#description' => t('Autocomplete values from previous form submissions. If options are entered above, autocomplete will select from both.'),
+    '#description' => t('Autocomplete from previous values entered in this field. If options are entered above, autocomplete will select from both.'),
     '#weight' => 1,
     '#default_value' => $component['extra']['autocomplete_existing'],
     '#parents' => array('extra', 'autocomplete_existing'),
+  );
+  $form['options']['autocomplete_match_rule'] = array(
+    '#type' => 'select',
+    '#title' => t('Match Rule'),
+    '#options' => array(
+      0 => t('starts with'),
+      1 => t('contains'),
+      2 => t('ends with'),
+    ),
+    '#parents' => array('extra', 'autocomplete_match_rule'),
+    '#default_value' => $component['extra']['autocomplete_match_rule'],
   );
   $form['validation']['unique'] = array(
     '#type' => 'checkbox',
@@ -127,11 +137,14 @@ function _webform_edit_autocomplete($component) {
  */
 function _webform_autocomplete_admin_validate($form, &$form_state) {
   $extra = $form_state['values']['extra'];
-  if ($extra['autocomplete_restrict'] && !$extra['items']) {
+  if ($extra['autocomplete_restrict'] && !$extra['autocomplete_items']) {
     form_error($form['validation']['autocomplete_restrict'], t('You have chosen to restrict submissions to listed options, but have not entered any options.'));
   }
   if ($extra['autocomplete_restrict'] && $extra['autocomplete_existing']) {
     form_error($form['validation']['autocomplete_restrict'], t('You cannot choose both "Restrict to listed values" and "Autocomplete from existing submissions."'));
+  }
+  if (!is_numeric($extra['autocomplete_result_count']) || $extra['autocomplete_result_count'] < 1) {
+    form_error($form['display']['autocomplete_result_count'], t('You must choose to display at least one result'));
   }
 }
 
@@ -221,30 +234,57 @@ function _webform_csv_data_autocomplete($component, $export_options, $value) {
  * Autocomplete callback.
  */
 function webform_autocomplete_js($node, $cid, $str = '') {
-  if ($str) {
+  if ($str !== '') {
     $component = $node->webform['components'][$cid];
+    $result_count = (int) $component['extra']['autocomplete_result_count'];
+    $match_rule = $component['extra']['autocomplete_match_rule'];
     $results = array();
     $count = 0;
     // Search from prepulated options
-    if (!empty($component['extra']['items'])) {
-      $items = explode("\n", $component['extra']['items']);
-      foreach ($items as $val) {
-        if (stripos($val, $str) !== FALSE) {
+    if (!empty($component['extra']['autocomplete_items'])) {
+      $options = preg_split('/\r\n|\r|\n/', $component['extra']['autocomplete_items']);
+      foreach ($options as $val) {
+        $is_match = FALSE;
+        if ($match_rule == 0) {
+          if (strpos($val, $str, 0) === 0) {
+            $is_match = TRUE;
+          }
+        }
+        elseif ($match_rule == 1) {
+          if (stripos($val, $str) !== FALSE) {
+            $is_match = TRUE;
+          }
+        }
+        else {
+          if (strpos($val, $str) + strlen($str) == strlen(trim($val))) {
+            $is_match = TRUE;
+          }
+        }
+        
+        if ($is_match) {
           $results[$val] = $val;
           // Limit to 20 results
-          if (++$count >= 20) {
+          if (++$count >= $result_count) {
             break;
           }
         }
       }
     }
     // Search from existing submissions
-    // Only fire the query if we have fewer than 20 results already
-    if (!empty($component['extra']['autocomplete_existing']) && $count < 20) {
-      $db = db_query("SELECT DISTINCT data 
+    // Only fire the query if we have fewer than $result_count results already
+    if (!empty($component['extra']['autocomplete_existing']) && $count < $result_count) {
+      $str_like = db_like($str);
+      if ($match_rule == 1 || $match_rule == 2) {
+        $str_like = '%' . $str_like;
+      }
+      if ($match_rule == 0 || $match_rule == 1) {
+        $str_like = $str_like . '%';
+      }
+      
+      $db = db_query("SELECT DISTINCT data
         FROM {webform_submitted_data}
-        WHERE nid = :nid AND cid = :cid AND data LIKE :str LIMIT " . (20 - $count),
-        array(':nid' => $node->nid, ':cid' => $cid, ':str' => '%' . db_like($str) . '%')
+        WHERE nid = :nid AND cid = :cid AND data LIKE :str LIMIT " . ($result_count - $count),
+        array(':nid' => $node->nid, ':cid' => $cid, ':str' => $str_like)
       );
       foreach ($db as $row) {
         $results[$row->data] = $row->data;
@@ -280,13 +320,17 @@ function _webform_form_builder_map_autocomplete() {
         'form_parents' => array('display', 'field_suffix'),
         'storage_parents' => array('extra', 'field_suffix'),
       ),
-      'items' => array(
-        'form_parents' => array('options', 'items'),
-        'storage_parents' => array('extra', 'items'),
+      'autocomplete_items' => array(
+        'form_parents' => array('options', 'autocomplete_items'),
+        'storage_parents' => array('extra', 'autocomplete_items'),
       ),
       'autocomplete_existing' => array(
         'form_parents' => array('options', 'autocomplete_existing'),
         'storage_parents' => array('extra', 'autocomplete_existing'),
+      ),
+      'autocomplete_match_rule' => array(
+        'form_parents' => array('options', 'autocomplete_match_rule'),
+        'storage_parents' => array('extra', 'autocomplete_match_rule'),
       ),
       'autocomplete_restrict' => array(
         'form_parents' => array('validation', 'autocomplete_restrict'),
