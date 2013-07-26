@@ -98,6 +98,7 @@ function _media_filter_add_file_usage_from_fields($entity_type, $entity) {
       file_usage_add($file, 'media', $entity_type, $entity_id, $entity_count);
     }
   }
+
 }
 
 /**

@@ -21,9 +21,9 @@ files[] = tests/media.file.usage.test
 
 configure = admin/config/media/browser
 
-; Information added by drupal.org packaging script on 2013-07-18
-version = "7.x-2.0-unstable7+56-dev"
+; Information added by drupal.org packaging script on 2013-07-24
+version = "7.x-2.0-unstable7+62-dev"
 core = "7.x"
 project = "media"
-datestamp = "1374110611"
+datestamp = "1374687166"
 

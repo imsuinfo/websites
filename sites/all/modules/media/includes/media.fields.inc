@@ -218,7 +218,7 @@ function media_field_widget_form(&$form, &$form_state, $field, $instance, $langc
   }
 
   if ($field['type'] == 'file') {
-    $element['display'] = array(
+    $fields['display'] = array(
       '#type' => 'value',
       '#value' => 1,
     );
