@@ -5,6 +5,7 @@ core = 7.x
 dependencies[] = field
 dependencies[] = file
 dependencies[] = ctools
+dependencies[] = system (>=7.9)
 files[] = views/views_handler_argument_file_type.inc
 files[] = views/views_handler_field_file_rendered.inc
 files[] = views/views_handler_field_file_type.inc
@@ -23,9 +24,9 @@ configure = admin/structure/file-types
 ; We have to add a fake version so Git checkouts do not fail Media dependencies
 version = 7.x-2.x-dev
 
-; Information added by drupal.org packaging script on 2013-07-18
-version = "7.x-2.0-unstable7+91-dev"
+; Information added by drupal.org packaging script on 2013-07-24
+version = "7.x-2.0-unstable7+95-dev"
 core = "7.x"
 project = "file_entity"
-datestamp = "1374109430"
+datestamp = "1374686053"
 
