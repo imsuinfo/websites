@@ -178,25 +178,29 @@ class mcneese_url_paths_node_handler {
         $path = $this->group_path_legacy;
       }
     }
-    else if (empty($path)) {
-      if ($type == 0) {
+    else if ($type == 0) {
+      if (empty($this->group_path)) {
         $path = $this->alias_path;
       }
-      else if ($type == 1) {
+      else if (!empty($this->alias_path)) {
+        $path = $this->group_path . '/' . $this->alias_path;
+      }
+    }
+    else if ($type == 1) {
+      if (empty($this->group_path_alternate)) {
         $path = $this->alias_path_alternate;
       }
-      else if ($type == 2) {
-        $path = $this->alias_path_legacy;
+      else if (!empty($this->alias_path_alternate)) {
+        $path = $this->group_path_alternate . '/' . $this->alias_path_alternate;
       }
     }
-    else if ($type == 0 && !empty($this->alias_path)) {
-      $path = $this->group_path . '/' . $this->alias_path;
-    }
-    else if ($type == 1 && !empty($this->alias_path_alternate)) {
-      $path = $this->group_path_alternate . '/' . $this->alias_path_alternate;
-    }
-    else if ($type == 2 && !empty($this->alias_path_legacy)) {
-      $path = $this->group_path_legacy . '/' . $this->alias_path_legacy;
+    else if ($type == 2) {
+      if (empty($this->group_path_legacy)) {
+        $path = $this->alias_path_legacy;
+      }
+      else if (!empty($this->alias_path_legacy)) {
+        $path = $this->group_path_legacy . '/' . $this->alias_path_legacy;
+      }
     }
 
     $path = drupal_strtolower($path);
