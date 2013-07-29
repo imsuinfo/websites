@@ -11,10 +11,13 @@
  */
 class mcneese_url_paths_node_handler {
   const FAILSAFE_GROUP_PATH = 'campus';
-  const PLACEHOLDER = '_';
 
   private $alias_path;
+  private $alias_path_alternate;
+  private $alias_path_legacy;
   private $group_path;
+  private $group_path_alternate;
+  private $group_path_legacy;
   private $group_representative;
   private $node_id;
   private $access_id;
@@ -78,6 +81,8 @@ class mcneese_url_paths_node_handler {
     }
 
     $this->alias_path = $this->p_sanitize_partial_path($alias_path);
+    $this->alias_path_alternate = $this->p_sanitize_partial_path($alias_path, TRUE);
+    $this->alias_path_legacy = $this->p_sanitize_partial_path_legacy($alias_path);
     return TRUE;
   }
 
@@ -122,6 +127,8 @@ class mcneese_url_paths_node_handler {
 
     if (isset($menus[$this->access_id])) {
       $this->group_path = $this->p_sanitize_partial_path($menus[$this->access_id]->path);
+      $this->group_path_alternate = $this->p_sanitize_partial_path($menus[$this->access_id]->path, TRUE);
+      $this->group_path_legacy = $this->p_sanitize_partial_path_legacy($menus[$this->access_id]->path);
     }
     else {
       $this->group_path = $this->p_sanitize_partial_path($this::FAILSAFE_GROUP_PATH);
@@ -149,22 +156,47 @@ class mcneese_url_paths_node_handler {
   /**
    * Returns the generated destination path.
    *
+   * @param int $type
+   *   When set to 0, returns the normal path.
+   *   When set to 1, returns the alternate path.
+   *   When set to 2, returns the legacy path.
+   *
    * @return string
    *   The generated destination path.
    */
-  public function get_destination_path() {
+  public function get_destination_path($type = 0) {
     $path = '';
 
     if ($this->group_representative) {
-      if (!empty($this->group_path)) {
+      if ($type == 0 && !empty($this->group_path)) {
         $path = $this->group_path;
       }
+      else if ($type == 1 && !empty($this->group_path_alternate)) {
+        $path = $this->group_path_alternate;
+      }
+      else if ($type == 1 && !empty($this->group_path_legacy)) {
+        $path = $this->group_path_legacy;
+      }
     }
-    else if (empty($this->group_path)) {
-      $path = $this->alias_path;
+    else if (empty($path)) {
+      if ($type == 0) {
+        $path = $this->alias_path;
+      }
+      else if ($type == 1) {
+        $path = $this->alias_path_alternate;
+      }
+      else if ($type == 2) {
+        $path = $this->alias_path_legacy;
+      }
     }
-    else if (!empty($this->alias_path)) {
+    else if ($type == 0 && !empty($this->alias_path)) {
       $path = $this->group_path . '/' . $this->alias_path;
+    }
+    else if ($type == 1 && !empty($this->alias_path_alternate)) {
+      $path = $this->group_path_alternate . '/' . $this->alias_path_alternate;
+    }
+    else if ($type == 2 && !empty($this->alias_path_legacy)) {
+      $path = $this->group_path_legacy . '/' . $this->alias_path_legacy;
     }
 
     $path = drupal_strtolower($path);
@@ -210,15 +242,27 @@ class mcneese_url_paths_node_handler {
    */
   public function delete_path_alias() {
     $source = $this->get_source_path();
-    $destination = $this->get_destination_path();
+    $destination_0 = $this->get_destination_path(0);
+    $destination_1 = $this->get_destination_path(1);
+    $destination_2 = $this->get_destination_path(2);
 
-    if (empty($source) || empty($destination)) {
+    if (empty($source) || empty($destination_0)) {
       return FALSE;
     }
    
     $transaction = db_transaction();
 
-    return $this->p_delete_path_alias($source, $destination, $transaction);
+    $deleted = $this->p_delete_path_alias($source, $destination_0, $transaction);
+
+    if ($deleted && !empty($destination_1)) {
+      $deleted = $this->p_delete_path_alias($source, $destination_1, $transaction);
+    }
+
+    if ($deleted && !empty($destination_2)) {
+      $deleted = $this->p_delete_path_alias($source, $destination_2, $transaction);
+    }
+
+    return $deleted;
   }
 
   /**
@@ -231,19 +275,39 @@ class mcneese_url_paths_node_handler {
    */
   public function create_path_alias() {
     $source = $this->get_source_path();
-    $destination = $this->get_destination_path();
+    $destination_0 = $this->get_destination_path(0);
+    $destination_1 = $this->get_destination_path(1);
+    $destination_2 = $this->get_destination_path(2);
 
-    if (empty($source) || empty($destination)) {
+    if (empty($source) || empty($destination_0)) {
       return FALSE;
     }
 
     $transaction = db_transaction();
 
-    if (!$this->p_delete_path_alias($source, $destination, $transaction)) {
+    if (!$this->p_delete_path_alias($source, $destination_0, $transaction)) {
       return FALSE;
     }
 
-    return $this->p_create_path_alias($source, $destination, $transaction);
+    if (!empty($destination_1)) {
+      if (!$this->p_delete_path_alias($source, $destination_1, $transaction)) {
+        return FALSE;
+      }
+    }
+
+    if (!empty($destination_2)) {
+      if (!$this->p_delete_path_alias($source, $destination_2, $transaction)) {
+        return FALSE;
+      }
+    }
+
+    $created = $this->p_create_path_alias($source, $destination_0, $transaction);
+
+    if ($created && !empty($destination_1)) {
+      $this->p_create_path_alias($source, $destination_1, $transaction);
+    }
+
+    return $created;
   }
 
   /**
@@ -255,10 +319,14 @@ class mcneese_url_paths_node_handler {
    *   A partial url path.
    *   All '/' will be removed/converted.
    *
+   * @param bool $alternate
+   *   When TRUE generates the alternate path.
+   *   WHen FALSE generates the normal path.
+   *
    * @return string
    *   A sanitized partial path.
    */
-  private function p_sanitize_partial_path($path) {
+  private function p_sanitize_partial_path($path, $alternate = FALSE) {
     $sanitized = preg_replace('/^(\s*\/)+/i', '', $path);
 
     if (is_string($sanitized)) {
@@ -270,7 +338,75 @@ class mcneese_url_paths_node_handler {
     }
 
     if (is_string($sanitized)) {
-      $sanitized = preg_replace('/\s/i', '_', $sanitized);
+      if ($alternate) {
+        $sanitized = preg_replace('/\s/i', '-', $sanitized);
+      }
+      else {
+        $sanitized = preg_replace('/\s/i', '_', $sanitized);
+      }
+    }
+
+    if (is_string($sanitized)) {
+      if ($alternate) {
+        $sanitized = preg_replace('/_-/i', '-', $sanitized);
+
+        if (is_string($sanitized)) {
+          $sanitized = preg_replace('/-_/i', '-', $sanitized);
+        }
+      }
+      else {
+        $sanitized = preg_replace('/_-/i', '_', $sanitized);
+
+        if (is_string($sanitized)) {
+          $sanitized = preg_replace('/-_/i', '_', $sanitized);
+        }
+      }
+    }
+
+    if (is_string($sanitized)) {
+      $sanitized = preg_replace('/_+/i', '_', $sanitized);
+    }
+
+    if (is_string($sanitized)) {
+      $sanitized = preg_replace('/-+/i', '-', $sanitized);
+    }
+
+    if (is_string($sanitized)) {
+      $sanitized = preg_replace('/^(_|-)+/i', '', $sanitized);
+    }
+
+    if (is_string($sanitized)) {
+      $sanitized = preg_replace('/(_|-)+$/i', '', $sanitized);
+    }
+
+    if (is_string($sanitized)) {
+      return $sanitized;
+    }
+
+    return '';
+  }
+
+  /**
+   * Sanitize a url path piece using the legacy method.
+   *
+   * Partial paths do not have '/' in them.
+   *
+   * @param string $path
+   *   A partial url path.
+   *   All '/' will be removed/converted.
+   *
+   * @return string
+   *   A sanitized partial path.
+   */
+  private function p_sanitize_partial_path_legacy($path) {
+    $sanitized = preg_replace('/^(\s*\/)+/i', '', $path);
+
+    if (is_string($sanitized)) {
+      $sanitized = preg_replace('/\s*$/i', '', $sanitized);
+    }
+
+    if (is_string($sanitized)) {
+      $sanitized = preg_replace('/(`|~|!|@|#|\$|\||\^|%|\&|\*|\(|\)|\+|\\\\|=|{|}|[|]|:|;|\'|"|,|\?|<|>|\s)/i', '_', $sanitized);
     }
 
     if (is_string($sanitized)) {
