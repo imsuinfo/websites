@@ -26,6 +26,7 @@ function mcneese_ckeditor_wysiwyg_editor_settings_alter(&$settings, $context) {
     $full_toolbar[] = array('Cut', 'Copy', 'Paste', 'PasteText', 'PasteFromWord');
     $full_toolbar[] = array('Undo', 'Redo', 'Find', 'Replace', '-', 'SelectAll', 'RemoveFormat');
     $full_toolbar[] = array('media', 'Image', 'Table', 'HorizontalRule', 'SpecialChar', 'CreateDiv');
+    $full_toolbar[] = array('Iframe');
     $full_toolbar[] = '/';
     $full_toolbar[] = array('Bold', 'Italic', 'Underline', 'Strike', '-', 'Subscript', 'Superscript');
     $full_toolbar[] = array('NumberedList', 'BulletedList', '-', 'Outdent', 'Indent', 'Blockquote');
