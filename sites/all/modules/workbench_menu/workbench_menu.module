@@ -1369,7 +1369,7 @@ function template_preprocess_workbench_menu_item(&$vars) {
       if ($settings['expand'] == 'expand_always' || $settings['expand'] == 'expand_auto') {
         $variables['child_list'] = &$child_list;
 
-        if ($variables['clickable_label']) {
+        if ($variables['clickable_label'] && !$variables['trail_is_active']) {
           $settings['attributes']['class'][] = 'collapsed';
         }
         else {
