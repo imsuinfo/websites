@@ -400,6 +400,9 @@ function file_entity_permission() {
     'view files' => array(
       'title' => t('View files'),
     ),
+    'select file scheme' => array(
+      'title' => t('Select File Scheme'),
+    ),
   );
 
   // Add description for the 'View file details' and 'View own private file
