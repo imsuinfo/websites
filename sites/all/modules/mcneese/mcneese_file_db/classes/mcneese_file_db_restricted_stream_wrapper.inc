@@ -47,13 +47,13 @@ class mcneese_file_db_restricted_stream_wrapper extends mcneese_file_db_stream_w
       return FALSE;
     }
 
-    $new_uri = $this->build_uri();
+    $built = $this->build_uri();
 
-    if (empty($new_uri)) {
+    if ($built === FALSE || empty($built['uri'])) {
       $this->uri = $uri;
     }
     else {
-      $this->uri = $new_uri;
+      $this->uri = $built['uri'];
     }
 
     return TRUE;
@@ -202,10 +202,10 @@ class mcneese_file_db_restricted_stream_wrapper extends mcneese_file_db_stream_w
       $this->stream_fhandle = null;
       $this->stream_fname = null;
 
-      $uri = $this->build_uri();
+      $built = $this->build_uri();
 
-      if (!empty($uri)) {
-        $this->uri = $uri;
+      if ($built !== FALSE && !empty($built['uri'])) {
+        $this->uri = $built['uri'];
       }
 
       $user = cf_current_user();

@@ -17,6 +17,7 @@ abstract class mcneese_file_db_stream_wrapper implements DrupalStreamWrapperInte
   protected $file_meta = null;
   protected $user = 0;
   protected $uri = null;
+  protected $sri = null;
 
   protected $tmp_filename = null;
   protected $tmp_checksum = null;
@@ -55,13 +56,13 @@ abstract class mcneese_file_db_stream_wrapper implements DrupalStreamWrapperInte
    * Return the HTML URI of a dynamic file.
    */
   public function getExternalUrl() {
-    $built_uri = $this->build_uri();
+    $built = $this->build_uri();
 
-    if ($built_uri === FALSE) {
+    if ($built === FALSE) {
       return FALSE;
     }
 
-    $parts = explode('://', $built_uri, 2);
+    $parts = explode('://', $built['sri'], 2);
 
     if (empty($parts[1])) {
       return FALSE;
@@ -96,13 +97,13 @@ abstract class mcneese_file_db_stream_wrapper implements DrupalStreamWrapperInte
       }
     }
 
-    $built_uri = $this->build_uri();
+    $built = $this->build_uri();
 
-    if ($built_uri === FALSE) {
+    if ($built === FALSE) {
       return FALSE;
     }
 
-    $parts = explode('://', $built_uri, 2);
+    $parts = explode('://', $built['uri'], 2);
 
     if (empty($parts[1])) {
       return FALSE;
@@ -129,14 +130,14 @@ abstract class mcneese_file_db_stream_wrapper implements DrupalStreamWrapperInte
       if ($parsed === FALSE) return FALSE;
     }
 
-    $built_uri = $this->build_uri();
+    $built = $this->build_uri();
 
     if (empty($this->image_style) || empty($this->image_style_uri)) {
-      if ($built_uri === FALSE) {
+      if ($built === FALSE) {
         return FALSE;
       }
 
-      $parts = explode('://', $built_uri, 2);
+      $parts = explode('://', $built['uri'], 2);
 
       if (empty($parts[1])) {
         return FALSE;
@@ -155,13 +156,13 @@ abstract class mcneese_file_db_stream_wrapper implements DrupalStreamWrapperInte
    * Implements realpath().
    */
   public function realpath() {
-    $built_uri = $this->build_uri();
+    $built = $this->build_uri();
 
-    if ($built_uri === FALSE) {
+    if ($built === FALSE) {
       return FALSE;
     }
 
-    $parts = explode('://', $built_uri, 2);
+    $parts = explode('://', $built['uri'], 2);
 
     if (empty($parts[1])) {
       return FALSE;
@@ -340,9 +341,13 @@ abstract class mcneese_file_db_stream_wrapper implements DrupalStreamWrapperInte
       if ($parsed === FALSE) return '';
     }
 
-    $directory = $this->build_uri(NULL, FALSE);
+    $built = $this->build_uri(NULL);
 
-    return $directory;
+    if ($built == FALSE) {
+      return FALSE;
+    }
+
+    return $built['sri'];
   }
 
   /**
@@ -738,14 +743,17 @@ abstract class mcneese_file_db_stream_wrapper implements DrupalStreamWrapperInte
    *
    * @param string $method
    *   Designates the method followed when building the uri.
-   * @param bool $include_filename
-   *   Designates to include the filename string as part of the path.
-   *   This string is not necessary to return the file, but it is 'pretty'.
    *
-   * @return string
-   *   The built uri.
+   * @return array|bool
+   *   And array with the following keys:
+   *   - uri: The full uri, containing the filename.
+   *   - sri: The shirt uri, without the filename.
+   *   FALSE is returned on error.
    */
-  protected function build_uri($method = NULL, $include_filename = TRUE) {
+  protected function build_uri($method = NULL) {
+    $built = array();
+    $built['uri'] = '';
+    $built['sri'] = '';
 
     // Give $method a default argument that is determed by a function call.
     if (is_null($method)) {
@@ -774,10 +782,12 @@ abstract class mcneese_file_db_stream_wrapper implements DrupalStreamWrapperInte
           $checksum = substr($this->file_meta->checksum, 0, MCNEESE_FILE_DB_SHORT_SUM_SIZE);
         }
 
-        $new_uri = $this->get_scheme() . '://';
-        $new_uri .= $this->get_path_by_hash() . '/';
-        $new_uri .= $checksum;
+        $built['sri'] = $this->get_scheme() . '://';
+        $built['sri'] .= $this->get_path_by_hash() . '/';
+        $built['sri'] .= $checksum;
         $filename = '';
+
+        if (empty($built['sri'])) return FALSE;
 
         if (!empty($this->image_style)) {
           $image_source_uri = $this->get_scheme() . '://';
@@ -805,9 +815,7 @@ abstract class mcneese_file_db_stream_wrapper implements DrupalStreamWrapperInte
           $filename .= '/' . $this->tmp_filename;
         }
 
-        if ($include_filename) {
-          $new_uri .= $filename;
-        }
+        $built['uri'] = $built['sri'] . $filename;
 
         if (!empty($this->image_style_uri)) {
           $this->image_style_uri .= $filename;
@@ -817,11 +825,11 @@ abstract class mcneese_file_db_stream_wrapper implements DrupalStreamWrapperInte
           }
         }
 
-        return $new_uri;
+        return $built;
       }
     }
 
-    return '';
+    return FALSE;
   }
 
   /***
