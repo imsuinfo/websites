@@ -80,4 +80,5 @@ The following (optional) patches have been provided to help reduce the number of
   - I have found that the pNotUsedAsHeader has a tendency to improperly mark a significant amount of bold sentences as headers.
   - This patch is an attempt to reduce the number of false-positives by throwing out text that ends in a period.
   - Such cases are more likely to be sentences rather than headers.
-
+- quail-php_54.patch
+  - Fixes a bug in the qual library when using php 5.4+.
