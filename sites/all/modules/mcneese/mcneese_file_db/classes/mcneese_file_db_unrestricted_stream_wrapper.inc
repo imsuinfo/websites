@@ -435,6 +435,7 @@ class mcneese_file_db_unrestricted_stream_wrapper extends mcneese_file_db_stream
     }
 
     // ensure that PHP uses the proper buffer sizes.
+    stream_set_timeout($this->stream_fhandle, 3);
     stream_set_read_buffer($this->stream_fhandle, MCNEESE_FILE_DB_BLOCK_SIZE);
     stream_set_write_buffer($this->stream_fhandle, MCNEESE_FILE_DB_BLOCK_SIZE);
     stream_set_chunk_size($this->stream_fhandle, MCNEESE_FILE_DB_BLOCK_SIZE);
@@ -450,6 +451,8 @@ class mcneese_file_db_unrestricted_stream_wrapper extends mcneese_file_db_stream
         return FALSE;
       }
 
+      $transaction = $file_db->startTransaction("mcneese_file_db_stream_write");
+
       if (empty($this->stream_fid)) {
         try {
           $query = $file_db->insert('mcneese_file_db_files', $options);
@@ -457,6 +460,7 @@ class mcneese_file_db_unrestricted_stream_wrapper extends mcneese_file_db_stream
           $this->stream_fid = $query->execute();
         }
         catch (Exception $e) {
+          $transaction->rollback();
           cf_error::on_query_execution($e);
 
           throw $e;
@@ -495,6 +499,7 @@ class mcneese_file_db_unrestricted_stream_wrapper extends mcneese_file_db_stream
       return $block_length;
     }
     catch (Exception $e) {
+      if (isset($transaction)) $transaction->rollback();
       cf_error::on_query_execution($e);
 
       throw $e;
