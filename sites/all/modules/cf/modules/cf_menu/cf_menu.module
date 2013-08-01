@@ -27,7 +27,6 @@
  * Implements hook_menu().
  *
  * @see: cf_menu_accessibility_page()
- * @see: cf_menu_management_page()
  */
 function cf_menu_menu() {
   $items = array();

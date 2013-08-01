@@ -9,9 +9,9 @@ dependencies[] = user
 
 files[] = cf_user.module
 
-; Information added by drupal.org packaging script on 2013-03-20
-version = "7.x-2.0-alpha1"
+; Information added by drupal.org packaging script on 2013-07-31
+version = "7.x-2.0-beta1"
 core = "7.x"
 project = "cf"
-datestamp = "1363794612"
+datestamp = "1375305668"
 
