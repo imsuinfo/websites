@@ -1296,6 +1296,11 @@ function webform_node_insert($node) {
   foreach (array_filter($node->webform['roles']) as $rid) {
     db_insert('webform_roles')->fields(array('nid' => $node->nid, 'rid' => $rid))->execute();
   }
+
+  // Flush the block cache if creating a block.
+  if ($node->webform['block']) {
+    block_flush_caches();
+  }
 }
 
 /**
@@ -1397,6 +1402,11 @@ function webform_node_update($node) {
     foreach (array_filter($node->webform['roles']) as $rid) {
       db_insert('webform_roles')->fields(array('nid' => $node->nid, 'rid' => $rid))->execute();
     }
+  }
+
+  // Flush the block cache if block settings have been changed.
+  if ($node->webform['block'] != $original->webform['block']) {
+    block_flush_caches();
   }
 }
 
@@ -2767,7 +2777,7 @@ function webform_client_form_pages($form, &$form_state) {
   }
 
   // Inform the submit handlers that a draft will be saved.
-  $form_state['save_draft'] = $form_state['values']['op'] == $draft_op || ($node->webform['auto_save'] && !$form_state['webform_completed']);
+  $form_state['save_draft'] = $form_state['values']['op'] == $draft_op || ($node->webform['auto_save'] && !$form_state['webform_completed'] && user_is_logged_in());
 
   // Determine what we need to do on the next page.
   if (!empty($form_state['save_draft']) || !$form_state['webform_completed']) {
@@ -3269,19 +3279,21 @@ function theme_webform_inline_radio_label($variables) {
   // select elements.
   $title = $element['#title'];
 
-  $attributes = array();
+  $attributes = isset($element['#attributes']) ? $element['#attributes'] : array();
+
   // Style the label as class option to display inline with the element.
   if ($element['#title_display'] == 'after') {
-    $attributes['class'] = 'option';
+    $attributes['class'][] = 'option';
   }
   // Show label only to screen readers to avoid disruption in visual flows.
   elseif ($element['#title_display'] == 'invisible') {
-    $attributes['class'] = 'element-invisible';
+    $attributes['class'][] = 'element-invisible';
   }
 
-  if (!empty($element['#id'])) {
-    $attributes['for'] = $element['#id'];
-  }
+   $attributes['class'][] = 'webform-inline-radio';
+   if (!empty($element['#id'])) {
+     $attributes['for'] = $element['#id'];
+   }
 
   // The leading whitespace helps visually separate fields from inline labels.
   return ' <label' . drupal_attributes($attributes) . '>' . $t('!title !required', array('!title' => $title, '!required' => $required)) . "</label>\n";
@@ -3568,7 +3580,14 @@ function webform_format_email_address($address, $name, $node = NULL, $submission
   }
   elseif (is_numeric($name) && isset($node->webform['components'][$name])) {
     if (isset($submission->data[$name])) {
+      $component = $node->webform['components'][$name];
       $name = $submission->data[$name];
+
+      // Convert the FROM name to be the label of select lists.
+      if (webform_component_implements($component['type'], 'options')) {
+        $options = webform_component_invoke($component['type'], 'options', $component);
+        $name = isset($options[$name[0]]) ? $options[$name[0]] : $name;
+      }
     }
     else {
       $name = t('Value of !component', array('!component' => $node->webform['components'][$name]['name']));
