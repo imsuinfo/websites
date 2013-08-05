@@ -287,6 +287,14 @@ class mcneese_url_paths_node_handler {
       return FALSE;
     }
 
+    // if the exact same alias already exists, do nothing.
+    $exists_0 = $this->p_alias_exists($source, $destination_0);
+    $exists_1 = $this->p_alias_exists($source, $destination_1);
+
+    if ($exists_0 && ($exists_1 || $destination_0 == $destination_1)) {
+      return TRUE;
+    }
+
     $transaction = db_transaction();
 
     if (!$this->p_delete_path_alias($source, $destination_0, $transaction)) {
@@ -307,7 +315,7 @@ class mcneese_url_paths_node_handler {
 
     $created = $this->p_create_path_alias($source, $destination_0, $transaction);
 
-    if ($created && !empty($destination_1)) {
+    if ($created && !empty($destination_1) && $destination_0 != $destination_1) {
       $this->p_create_path_alias($source, $destination_1, $transaction);
     }
 
@@ -529,6 +537,41 @@ class mcneese_url_paths_node_handler {
     }
 
     return TRUE;
+  }
+
+  /**
+   * Checks to see if the exact source and destination already exist.
+   *
+   * @param string $source
+   *   The source path string.
+   * @param $string $destination
+   *   The destination path string.
+   *
+   * @return bool
+   *   Returns TRUE on exists, FALSE otherwise.
+   */
+  private function p_alias_exists($source, $destination) {
+    try {
+      if ($this->node_id > 0) {
+        $query = db_select('url_alias', 'ua');
+
+        $query->fields('ua');
+        $query->condition('alias', $destination);
+        $query->condition('source', $source);
+        $results = $query->execute();
+
+        if ($results->rowCount() > 0) {
+          return TRUE;
+        }
+      }
+    }
+    catch (Exception $e) {
+      $transaction->rollback();
+      cf_error::on_query_execution($e);
+      return FALSE;
+    }
+
+    return FALSE;
   }
 }
 
