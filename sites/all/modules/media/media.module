@@ -907,7 +907,7 @@ function media_element_info() {
       ),
     ),
     '#attributes' => array(
-      'class' => array('media-widget'),
+      'class' => array('media-widget', 'form-item'),
     ),
     '#attached' => array(
       'library' => array(

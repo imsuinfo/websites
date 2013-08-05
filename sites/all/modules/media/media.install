@@ -110,6 +110,10 @@ function media_update_dependencies() {
   $dependencies['media'][7204] = array(
     'file_entity' => 7201,
   );
+  // Require {file_type}.mimetypes column before updating them.
+  $dependencies['media'][7208] = array(
+    'file_entity' => 7210,
+  );
   return $dependencies;
 }
 
