@@ -291,7 +291,7 @@ function background_process_init() {
     return;
   }
   // Don't determine on check-token page, to avoid infinite loop
-  if ($_GET['q'] == 'background-process/check-token') {
+  if (strpos($_GET['q'], 'background-process/check-token') === 0) {
     return;
   }
   // Only determine when installation of site is finished
@@ -989,7 +989,7 @@ function background_process_build_request($url, $service_hostname = NULL, $optio
   $headers = _background_process_request_headers();
   $headers = _background_process_filter_headers($headers);
   $headers['Host'] = $host;
-  $headers['Connection'] = 'Close';
+  $headers['Connection'] = 'close';
 
   if (isset($parsed['user'])) {
     $headers['Authorization'] = 'Basic ' . base64_encode($parsed['user'] . ':' . $parsed['pass']);

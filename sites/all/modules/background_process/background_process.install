@@ -31,6 +31,7 @@ function background_process_schema() {
       ),
       'args' => array(
         'type' => 'blob',
+        'size' => 'big',
         'not null' => FALSE,
       ),
       'uid' => array(
@@ -126,6 +127,7 @@ function background_process_update_7000(&$context) {
     7104 => TRUE,
     7105 => TRUE,
     7106 => TRUE,
+    7107 => TRUE,
   );
 }
 
@@ -202,5 +204,20 @@ function background_process_update_7106() {
     'size' => 'normal',
     'not null' => TRUE,
     'default' => 0,
+  ));
+}
+
+/**
+ * Increase size of args column
+ */
+function background_process_update_7107() {
+  if (!empty($context['sandbox']['major_version_upgrade'][7107])) {
+    // This udate is already part of latest 6.x
+    return;
+  }
+  db_change_field('background_process', 'args', 'args', array(
+    'type' => 'blob',
+    'size' => 'big',
+    'not null' => FALSE,
   ));
 }
