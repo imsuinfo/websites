@@ -11,11 +11,11 @@
  */
 ?>
 <div class="workbench_menu menu_settings-table-wrapper">
-  <h3 class="menu_settings-table-header"><?php print(t("Menu Items")); ?></h3>
-
-  <?php print(theme('table', $table)); ?>
+  <?php print(theme('table', $menu_items_table)); ?>
 
   <div class="menu_settings-add_item_link">
     <?php print(l(t("Add new menu item."), $add_path)); ?>
   </div>
+
+  <?php if (!empty($disabled_items_table['rows'])) print(theme('table', $disabled_items_table)); ?>
 </div>

@@ -134,7 +134,7 @@ function workbench_menu_schema() {
         'type' => 'int',
         'size' => 'big',
         'unsigned' => TRUE,
-        'not null' => TRUE,
+        'not null' => FALSE,
       ),
       'human_name' => array(
         'description' => $t("This is the human-friendly name used to represent the menu item."),
@@ -142,13 +142,6 @@ function workbench_menu_schema() {
         'size' => 'normal',
         'not null' => TRUE,
         'default' => '',
-      ),
-      'parent_id' => array(
-        'description' => $t("The workbench menu parent id from {workbench_menu_items}.id."),
-        'type' => 'int',
-        'size' => 'big',
-        'unsigned' => TRUE,
-        'not null' => TRUE,
       ),
       'weight' => array(
         'description' => $t("Menu item weight within menu."),
@@ -462,5 +455,56 @@ function workbench_menu_update_7103() {
       // force execution of transaction
       unset($transaction);
     }
+  }
+}
+
+/**
+ * The parent menu item can now be NULL.
+ *
+ * Menu items may now be disabled, this requires the parent to be NULL.
+ *
+ * This requires altering the table and moving data over.
+ * You SHOULD backup your database before doing this update.
+ */
+function workbench_menu_update_7104() {
+  $new_parent_column = array(
+    'description' => "The workbench menu parent id from {workbench_menu_items}.id.",
+    'type' => 'int',
+    'size' => 'big',
+    'unsigned' => TRUE,
+    'not null' => FALSE,
+  );
+
+  $query = db_select('workbench_menu_items', 'wmi');
+  $query->fields('wmi');
+
+  $results = (array) $query->execute()->fetchAll();
+
+  $transaction = db_transaction();
+
+  try {
+    db_query('ALTER TABLE {workbench_menu_items} RENAME COLUMN parent_id TO parent_id_old');
+    db_add_field('workbench_menu_items', 'parent_id', $new_parent_column);
+
+    foreach ($results as $result) {
+      $subquery = db_update('workbench_menu_items');
+      $subquery->condition('id', $result->id);
+      $subquery->fields(array('parent_id' => $result->parent_id));
+      $subquery->execute();
+    }
+
+    db_query('ALTER TABLE {workbench_menu_items} DROP COLUMN parent_id_old');
+
+    // force execution of transaction
+    unset($transaction);
+  }
+  catch (Exception $e) {
+    if (module_exists('cf_error')) {
+      cf_error::on_query_execution($e);
+    }
+
+    $transaction->rollback();
+
+    throw $e;
   }
 }

@@ -573,6 +573,11 @@ function workbench_menu_build_menu_item($menu, $item, &$variables) {
 
   $item_id = & $item['item']->id;
 
+  // menu items with a null parent_id are disabled.
+  if (is_null($item['item']->parent_id)) {
+    return array('structure' => array(), 'settings' => array());
+  }
+
   $structure = array();
   $structure[$item['item']->weight] = array($item_id => array());
 
@@ -2069,7 +2074,9 @@ function workbench_menu_get_load_menu_items_select_list_options($conditions = ar
     }
 
     $data = array();
-    $data['options'] = array('0' => "<No Parent>");
+    $data['options'] = array();
+    $data['options']['-1'] = "<Disabled>";
+    $data['options']['0'] = "<No Parent>";
 
     foreach ($items['nested'] as &$nested_item) {
       workbench_menu_get_load_menu_items_select_list_options_recursive_walk($nested_item, $data);

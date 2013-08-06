@@ -284,6 +284,11 @@ function workbench_menu_edit_settings_form($form, &$form_state, $access_type, $a
     '#value' => $menu->id,
   );
 
+  $form['menu_human_name']= array(
+    '#type' => 'value',
+    '#value' => $term->name,
+  );
+
   $form['redirect_to'] = array(
     '#type' => 'value',
     '#value' => $destination . '/taxonomy/' . $access_id,
@@ -680,6 +685,11 @@ function workbench_menu_admin_settings_form($form, &$form_state, $access_type, $
     '#value' => $menu->id,
   );
 
+  $form['menu_human_name']= array(
+    '#type' => 'value',
+    '#value' => $term->name,
+  );
+
   $form['redirect_to'] = array(
     '#type' => 'value',
     '#value' => $destination . '/taxonomy/' . $access_id,
@@ -762,20 +772,29 @@ function workbench_menu_admin_settings_form_submit($form, &$form_state) {
   $menu['breadcrumb_name'] = &$form_state['values']['breadcrumb_name'];
   $menu['items'] = array();
 
+  $user = cf_current_user();
+
   $results = workbench_menu_save_menus(array($menu));
 
   if (!empty($form_state['values']['items'])) {
     foreach ($form_state['values']['items'] as $id => &$item) {
       if (!is_numeric($id)) continue;
+      if (!isset($item['parent'])) continue;
+
+      $form_item = & $form['items'][$id]['object']['#value']['item'];
+      if (!is_object($form_item)) continue;
 
       $primary_keys = array('id');
 
       $record = array();
       $record['id'] = $id;
-      $record['parent_id'] = $item['parent'];
       $record['weight'] = $item['weight'];
+      $record['parent_id'] = $item['parent'];
 
-      drupal_write_record('workbench_menu_items', $record, $primary_keys);
+      if ($form_item->weight != $item['weight'] || $form_item->parent_id != $item['parent']) {
+        drupal_write_record('workbench_menu_items', $record, $primary_keys);
+        watchdog('Workbench Menu', "The user %user has changed the item %item (%item_id) from the menu %menu (%menu_id)", array('%user' => $user->name, '%item' => $form_item->human_name, '%item_id' => $id, '%menu' => $form['menu_human_name']['#value'], '%menu_id' => $form['menu_id']['#value']), WATCHDOG_INFO);
+      }
     }
   }
 
@@ -856,21 +875,23 @@ function workbench_menu_build_item_editing_form_recursive_nest(&$item, &$data) {
     '#depth' =>  $data['depth'],
   );
 
-  $data['fields'][$id]['weight'] = array(
-    '#type' => 'textfield',
-    '#title' => t("Weight"),
-    '#default_value' => $item['item']->weight,
-    '#size' => 6,
-    '#attributes' => array('class' => array('workbench_menu-menu_items_table-weight')),
-  );
+  if (!is_null($item['item']->parent_id)) {
+    $data['fields'][$id]['weight'] = array(
+      '#type' => 'textfield',
+      '#title' => t("Weight"),
+      '#default_value' => $item['item']->weight,
+      '#size' => 6,
+      '#attributes' => array('class' => array('workbench_menu-menu_items_table-weight')),
+    );
 
-  $data['fields'][$id]['parent'] = array(
-    '#type' => 'textfield',
-    '#title' => t("Parent"),
-    '#default_value' => $item['item']->parent_id,
-    '#size' => 6,
-    '#attributes' => array('class' => array('workbench_menu-menu_items_table-parent')),
-  );
+    $data['fields'][$id]['parent'] = array(
+      '#type' => 'textfield',
+      '#title' => t("Parent"),
+      '#default_value' => $item['item']->parent_id,
+      '#size' => 6,
+      '#attributes' => array('class' => array('workbench_menu-menu_items_table-parent')),
+    );
+  }
 
   $data['fields'][$id]['item'] = array(
     '#type' => 'hidden',
@@ -905,61 +926,90 @@ function workbench_menu_build_item_editing_form_recursive_nest(&$item, &$data) {
 function theme_workbench_menu_admin_settings_form($element) {
   $form = &$element['form'];
 
-  $table_id = 'workbench_menu-menu_items_table';
-  $header = array(t("Item Name"), t("Order"), t("Item Type"), t("Operations"), t("ID"));
+  $active_table_id = 'workbench_menu-menu_items_table';
+  $active_header = array(t("Item Name"), t("Order"), t("Item Type"), t("Operations"), t("ID"));
 
-  drupal_add_tabledrag($table_id, 'match', 'parent', 'workbench_menu-menu_items_table-parent', 'workbench_menu-menu_items_table-parent', 'workbench_menu-menu_items_table-item');
-  drupal_add_tabledrag($table_id, 'order', 'sibling', 'workbench_menu-menu_items_table-weight');
+  drupal_add_tabledrag($active_table_id, 'match', 'parent', 'workbench_menu-menu_items_table-parent', 'workbench_menu-menu_items_table-parent', 'workbench_menu-menu_items_table-item');
+  drupal_add_tabledrag($active_table_id, 'order', 'sibling', 'workbench_menu-menu_items_table-weight');
 
-  $rows = array();
+  $disabled_table_id = 'workbench_menu-menu_items_table-disabled';
+  $disabled_header = array(t("Item Name"), t("Item Type"), t("Operations"), t("ID"));
+
+  $active_rows = array();
+  $disabled_rows = array();
   $path_prefix = &$form['path_prefix']['#value'];
 
   foreach ($form['items'] as $id => &$nested_item) {
     if (!is_numeric($id)) continue;
     $item = &$nested_item['object']['#value'];
-    $depth = &$nested_item['#depth'];
+    $disabled = is_null($item['item']->parent_id);
 
-    $row = array('data' => array(), 'class' => array('draggable'));
+    $row = array('data' => array(), 'class' => array());
     $name = '';
     $type = '';
     $operations = '';
+
+    if ($disabled) {
+      $depth = 0;
+      $name = $item['item']->human_name;
+    }
+    else  {
+      $depth = &$nested_item['#depth'];
+      $row['class'][] = 'draggable';
+
+      if (property_exists($item['item'], 'human_name')) {
+        $name = theme('indentation', array('size' => $depth)) . $item['item']->human_name;
+      }
+    }
 
     $operations .= l(t("edit"), $path_prefix . '/items/edit/' . $id);
     $operations .= ' ';
     $operations .= l(t("delete"), $path_prefix . '/items/delete/' . $id);
 
-    if (property_exists($item['item'], 'human_name')) {
-      $name = theme('indentation', array('size' => $depth)) . $item['item']->human_name;
-    }
-
     if (!empty($item['item']->item_type)) {
       $value = array_pop($item['item']->item_type);
       $type = $value->human_name;
 
-      if ($value->machine_name == 'item_menu' || $value->machine_name == 'item_menu_item') {
-        $row['class'][] = 'tabledrag-leaf';
-      }
+      if (!$disabled) {
+        if ($value->machine_name == 'item_menu' || $value->machine_name == 'item_menu_item') {
+          $row['class'][] = 'tabledrag-leaf';
+        }
 
-      if ($value->machine_name == 'item_menu') {
-        $row['class'][] = 'tabledrag-leaf';
+        if ($value->machine_name == 'item_menu') {
+          $row['class'][] = 'tabledrag-leaf';
+        }
       }
     }
 
     $row['data'][] = $name;
-    $row['data'][] = drupal_render($nested_item['weight']) . drupal_render($nested_item['parent']) . drupal_render($nested_item['item']);
+
+    if (!$disabled) {
+      $row['data'][] = drupal_render($nested_item['weight']) . drupal_render($nested_item['parent']) . drupal_render($nested_item['item']);
+    }
+
     $row['data'][] = $type;
     $row['data'][] = $operations;
     $row['data'][] = $id;
 
-    $rows[] = $row;
+
+    if ($disabled) {
+      $disabled_rows[] = $row;
+    }
+    else {
+      $active_rows[] = $row;
+    }
   }
 
   // ensure that the actions are presented below the table.
   $actions = array(&$form['actions']);
   unset($form['actions']);
 
+  $menu_items_table_summary = t("A listing of enabled menu items and links to change their settings.");
+  $disabled_items_table_summary = t("A listing of disabled menu items and links to change their settings.");
+
   $variables = array();
-  $variables['table'] =  array('header' => $header, 'rows' => $rows, 'empty' => t("This menu has no items."), 'attributes' => array('id' => $table_id, 'class' => array('menu_settings-table')));
+  $variables['menu_items_table'] =  array('caption' => t("Menu Items"), 'header' => $active_header, 'rows' => $active_rows, 'empty' => t("This menu has no items."), 'attributes' => array('id' => $active_table_id, 'class' => array('menu_settings-table', 'menu_settings-table-active'), 'summary' => $menu_items_table_summary));
+  $variables['disabled_items_table'] =  array('caption' => t("Disabled Items"), 'header' => $disabled_header, 'rows' => $disabled_rows, 'empty' => t("There are no disabled menu items."), 'attributes' => array('id' => $disabled_table_id, 'class' => array('menu_settings-table', 'menu_settings-table-disabled'), 'summary' => $disabled_items_table_summary));
   $variables['add_path'] = $path_prefix . '/items/add';
 
   $output = '';
@@ -1089,8 +1139,13 @@ function workbench_menu_admin_item_settings_form_settings($item, $menu) {
       $defaults['human_name'] = $item->human_name;
     }
 
-    if (property_exists($item, 'parent_id') && is_numeric($item->parent_id)) {
-      $defaults['parent_id'] = $item->parent_id;
+    if (property_exists($item, 'parent_id')) {
+      if (is_numeric($item->parent_id)) {
+        $defaults['parent_id'] = $item->parent_id;
+      }
+      elseif (is_null($item->parent_id)) {
+        $defaults['parent_id'] = -1;
+      }
     }
 
     if (property_exists($item, 'weight') && is_numeric($item->weight)) {
@@ -1593,7 +1648,20 @@ function workbench_menu_admin_item_settings_edit_form_validate($form, &$form_sta
       }
     }
 
-    if ($field != 0) {
+    if ($field == -1) {
+      // assign a value of NULL in the database.
+      $field = null;
+
+      // if the current item has children, do not allow it to be disabled.
+      if (isset($form['item_id']['#value'])) {
+        $items = (array) workbench_menu_get_load_menu_items(array('parent_id' => $form['item_id']['#value']));
+
+        if (!empty($items['flat'])) {
+          form_set_error('settings][parent_id', t("This item cannot be disabled. You must remove all child items from this item before it can be disabled.", array('%type' => $item_type_name)));
+        }
+      }
+    }
+    elseif ($field != 0) {
       $items = (array) workbench_menu_get_load_menu_items(array('id' => $field), 'id');
 
       if (empty($items)) {
