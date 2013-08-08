@@ -640,6 +640,14 @@ $conf['ip_php_ini']['max_input_time'] = array('127.0.0.1' => '960');
 
 
 /**
+ * Batch Operation Overrides
+ */
+$conf['batch_foreground'] = array();
+$conf['batch_foreground'][] = 'webform_results_download_form';
+$conf['batch_background'] = array();
+
+
+/**
  * Additional file_db variables.
  */
 $conf['file_db_server_id'] = 2;
