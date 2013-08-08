@@ -1244,6 +1244,10 @@ function webform_download_sids($nid, $range_options, $uid = NULL) {
     ->condition('nid', $nid)
     ->addTag('webform_download_sids');
 
+  if (!isset($range_options['range_type'])) {
+    $range_options['range_type'] = 'all';
+  }
+
   switch ($range_options['range_type']) {
     case 'all':
       // All Submissions.
