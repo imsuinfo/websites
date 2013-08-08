@@ -384,6 +384,38 @@ function webform_menu() {
     'type' => MENU_CALLBACK,
   );
 
+  // Devel integration for submissions.
+  if (module_exists('devel')) {
+    $items['node/%webform_menu/submission/%webform_menu_submission/devel'] = array(
+      'title' => 'Devel',
+      'load arguments' => array(1),
+      'page callback' => 'devel_load_object',
+      'page arguments' => array('submission', 3),
+      'access arguments' => array('access devel information'),
+      'type' => MENU_LOCAL_TASK,
+      'file' => 'devel.pages.inc',
+      'file path' => drupal_get_path('module', 'devel'),
+      'weight' => 100,
+    );
+    $items['node/%webform_menu/submission/%webform_menu_submission/devel/load'] = array(
+      'title' => 'Load',
+      'type' => MENU_DEFAULT_LOCAL_TASK,
+    );
+    if (module_exists('token')) {
+      $items['node/%webform_menu/submission/%webform_menu_submission/devel/token'] = array(
+        'title' => 'Tokens',
+        'load arguments' => array(1),
+        'page callback' => 'token_devel_token_object',
+        'page arguments' => array('webform-submission', 3, 'submission'),
+        'access arguments' => array('access devel information'),
+        'type' => MENU_LOCAL_TASK,
+        'file' => 'token.pages.inc',
+        'file path' => drupal_get_path('module', 'token'),
+        'weight' => 5,
+      );
+    }
+  }
+
   return $items;
 }
 
@@ -627,7 +659,7 @@ function webform_theme() {
       'render element' => 'webform',
     ),
     'webform_view_messages' => array(
-      'variables' => array('node' => NULL, 'teaser' => NULL, 'page' => NULL, 'submission_count' => NULL, 'user_limit_exceeded' => NULL, 'total_limit_exceeded' => NULL, 'allowed_roles' => NULL, 'closed' => NULL, 'cached' => NULL),
+      'variables' => array('node' => NULL, 'page' => NULL, 'submission_count' => NULL, 'user_limit_exceeded' => NULL, 'total_limit_exceeded' => NULL, 'allowed_roles' => NULL, 'closed' => NULL, 'cached' => NULL),
     ),
     'webform_form' => array(
       'render element' => 'form',
@@ -650,6 +682,10 @@ function webform_theme() {
     ),
     'webform_inline_radio_label' => array(
       'render element' => 'element',
+    ),
+    'webform_progressbar' => array(
+      'variables' => array('node' => NULL, 'page_num' => NULL, 'page_count' => NULL, 'page_labels' => array()),
+      'template' => 'templates/webform-progressbar',
     ),
     'webform_mail_message' => array(
       'variables' => array('node' => NULL, 'submission' => NULL, 'email' => NULL),
@@ -974,7 +1010,6 @@ function webform_webform_component_info() {
       'file' => 'components/textarea.inc',
       'features' => array(
         'spam_analysis' => TRUE,
-        'title_inline' => FALSE,
       ),
     ),
     'textfield' => array(
@@ -1194,16 +1229,30 @@ function webform_file_download($uri) {
     $submission = reset($submissions);
   }
 
-  // Grant access based on access to the submission.
+  // Grant or deny file access based on access to the submission.
   if (!empty($submission)) {
     $node = node_load($submission->nid);
     if (webform_submission_access($node, $submission)) {
       return file_get_content_headers($file);
     }
+    else {
+      return -1;
+    }
   }
   // Grant access to files uploaded by a user before the submission is saved.
   elseif (!empty($file) && !empty($_SESSION['webform_files'][$file->fid])) {
     return file_get_content_headers($file);
+  }
+
+  // Ensure we never completely ignore a webform file request.
+  if (strpos(file_uri_target($uri), 'webform/') === 0) {
+    // The file is not part of a submission or a submission-in-progress (by
+    // the current user), however it may be part of a submission-in-progress
+    // (or an abandoned submission) by another user. We assume that all files
+    // under our enforced directory prefix are in fact webform files, and so
+    // we deny access to the file. Abandoned uploads will be deleted by
+    // system_cron() in due course.
+    return -1;
   }
 }
 
@@ -1440,11 +1489,11 @@ function webform_node_delete($node) {
  * Default settings for a newly created webform node.
  */
 function webform_node_defaults() {
+  $progress_bar_defaults = webform_variable_get('webform_progressbar_style');
   $defaults = array(
     'confirmation' => '',
     'confirmation_format' => NULL,
     'redirect_url' => '<confirmation>',
-    'teaser' => '0',
     'block' => '0',
     'delete_after_emailing' => FALSE,
     'allow_draft' => '0',
@@ -1455,6 +1504,13 @@ function webform_node_defaults() {
     'submit_interval' => '-1',
     'total_submit_limit' => '-1',
     'total_submit_interval' => '-1',
+    'progressbar_page_number' => in_array('progressbar_page_number', $progress_bar_defaults) ? '1' : '0',
+    'progressbar_percent' => in_array('progressbar_percent', $progress_bar_defaults) ? '1' : '0',
+    'progressbar_bar' => in_array('progressbar_bar', $progress_bar_defaults) ? '1' : '0',
+    'progressbar_pagebreak_labels' => in_array('progressbar_pagebreak_labels', $progress_bar_defaults) ? '1' : '0',
+    'progressbar_include_confirmation' => in_array('progressbar_include_confirmation', $progress_bar_defaults) ? '1' : '0',
+    'progressbar_label_first' => webform_variable_get('webform_progressbar_label_first'),
+    'progressbar_label_confirmation' => webform_variable_get('webform_progressbar_label_confirmation'),
     'status' => '1',
     'record_exists' => FALSE,
     'roles' => array('1', '2'),
@@ -1582,24 +1638,6 @@ function webform_node_load($nodes, $types) {
 }
 
 /**
- * Implements hook_link().
- * Always add a "view form" link.
- */
-function webform_link($type, $node = NULL, $teaser = FALSE) {
-  $links = array();
-  if (isset($node->type) && $node->type === 'webform') {
-    if ($teaser && !$node->webform['teaser']) {
-      $links['webform_goto'] = array(
-        'title' => t('Go to form'),
-        'href' => 'node/' . $node->nid,
-        'attributes' => array('title' => t('View this form.'), 'class' => array('read-more'))
-      );
-    }
-  }
-  return $links;
-}
-
-/**
  * Implements hook_form_alter().
  */
 function webform_form_alter(&$form, $form_state, $form_id) {
@@ -1640,12 +1678,8 @@ function webform_node_view($node, $view_mode) {
     return;
   }
 
-  // Set teaser and page variables a la Drupal 6.
-  $teaser = $view_mode == 'teaser';
-  $page = arg(0) == 'node' && arg(1) == $node->nid;
-
-  // If empty, a teaser, or a new node (during preview) do not display.
-  if (empty($node->webform['components']) || ($teaser && !$node->webform['teaser']) || empty($node->nid)) {
+  // If empty or a new node (during preview) do not display.
+  if (empty($node->webform['components']) || empty($node->nid)) {
     return;
   }
 
@@ -1657,6 +1691,7 @@ function webform_node_view($node, $view_mode) {
   $info = array();
   $submission = array();
   $submission_count = 0;
+  $page = node_is_page($node);
   $enabled = TRUE;
   $logging_in = FALSE;
   $total_limit_exceeded = FALSE;
@@ -1666,7 +1701,7 @@ function webform_node_view($node, $view_mode) {
   $allowed_roles = array();
 
   // If a teaser, tell the form to load subsequent pages on the node page.
-  if ($teaser && !isset($node->webform['action'])) {
+  if ($view_mode == 'teaser' && !isset($node->webform['action'])) {
     $query = array_diff_key($_GET, array('q' => ''));
     $node->webform['action'] = url('node/' . $node->nid, array('query' => $query));
   }
@@ -1757,14 +1792,13 @@ function webform_node_view($node, $view_mode) {
 
   // Print out messages for the webform.
   if (empty($node->in_preview) && !isset($node->webform_block) && !$logging_in) {
-    theme('webform_view_messages', array('node' => $node, 'teaser' => $teaser, 'page' => $page, 'submission_count' => $submission_count, 'user_limit_exceeded' => $user_limit_exceeded, 'total_limit_exceeded' => $total_limit_exceeded, 'allowed_roles' => $allowed_roles, 'closed' => $closed, 'cached' => $cached));
+    theme('webform_view_messages', array('node' => $node, 'page' => $page, 'submission_count' => $submission_count, 'user_limit_exceeded' => $user_limit_exceeded, 'total_limit_exceeded' => $total_limit_exceeded, 'allowed_roles' => $allowed_roles, 'closed' => $closed, 'cached' => $cached));
   }
 
   // Add the output to the node.
   $node->content['webform'] = array(
     '#theme' => 'webform_view',
     '#node' => $node,
-    '#teaser' => $teaser,
     '#page' => $page,
     '#form' => $form,
     '#enabled' => $enabled,
@@ -1778,8 +1812,6 @@ function webform_node_view($node, $view_mode) {
  *
  * @param $node
  *   The webform node object.
- * @param $teaser
- *   If this webform is being displayed as the teaser view of the node.
  * @param $page
  *   If this webform node is being viewed as the main content of the page.
  * @param $form
@@ -1799,8 +1831,6 @@ function theme_webform_view($variables) {
  *
  * @param $node
  *   The webform node object.
- * @param $teaser
- *   If this webform is being displayed as the teaser view of the node.
  * @param $page
  *   If this webform node is being viewed as the main content of the page.
  * @param $submission_count
@@ -1819,7 +1849,6 @@ function theme_webform_view_messages($variables) {
   global $user;
 
   $node = $variables['node'];
-  $teaser = $variables['teaser'];
   $page = $variables['page'];
   $submission_count = $variables['submission_count'];
   $user_limit_exceeded = $variables['user_limit_exceeded'];
@@ -1979,8 +2008,7 @@ function webform_block_view($delta = '') {
     $content = $node->content['webform'];
   }
   else {
-    $teaser = ($settings['display'] == 'teaser') ? 'teaser' : 'full';
-    $content = node_view($node, $teaser);
+    $content = node_view($node, $settings['display']);
   }
 
   // Add contextual links for the webform node if they aren't already there.
@@ -2002,32 +2030,44 @@ function webform_block_view($delta = '') {
  * Implements hook_block_configure().
  */
 function webform_block_configure($delta = '') {
+  $nid = str_replace('client-block-', '', $delta);
+  $node = node_load($nid);
+
   // Load the block-specific configuration settings.
   $webform_blocks = variable_get('webform_blocks', array());
   $settings = isset($webform_blocks[$delta]) ? $webform_blocks[$delta] : array();
   $settings += array(
     'display' => 'form',
-    'pages_block' => 0,
+    'pages_block' => 1,
   );
+
+  // Build a list of view modes for this node.
+  $entity_info = entity_get_info('node');
+  $view_modes = array(
+    'form' => t('Form only'),
+  );
+  foreach ($entity_info['view modes'] as $view_mode_key => $view_mode_info) {
+    $view_modes[$view_mode_key] = $view_mode_info['label'];
+  }
 
   $form = array();
   $form['display'] = array(
-    '#type' => 'radios',
-    '#title' => t('Display mode'),
+    '#type' => 'select',
+    '#title' => t('View mode'),
     '#default_value' => $settings['display'],
-    '#options' => array(
-      'form' => t('Form only'),
-      'full' => t('Full node'),
-      'teaser' => t('Teaser'),
-    ),
-    '#description' => t('The display mode determines how much of the webform to show within the block.'),
+    '#options' => $view_modes,
+    '#description' => t('The view mode determines how much of the webform to show within the block. You may <a href="!view_modes">customize different view modes</a> (other than the "Form only" mode) or even create new custom view modes if either the <a href="http://drupal.org/project/entity_view_mode">Entity view modes</a> or <a href="http://drupal.org/project/ds">Display Suite</a> modules are installed.', array('!view_modes' => url('admin/structure/types/manage/' . $node->type . '/display'))),
   );
 
   $form['pages_block'] = array(
-    '#type' => 'checkbox',
-    '#title' => t('Show all webform pages in block'),
+    '#type' => 'radios',
+    '#title' => t('Multi-page handling'),
+    '#options' => array(
+      1 => t('Display all pages inside block'),
+      0 => t('Redirect to the node page after the first page'),
+    ),
     '#default_value' => $settings['pages_block'],
-    '#description' => t('By default multi-page webforms redirect to the node page for all pages after the first one. If checked, all pages will be shown in the block instead.'),
+    '#description' => t('If your webform has multiple pages, you may change the behavior of the "Next" button. This will also affect where validation messages show up after an error.'),
   );
 
   return $form;
@@ -2160,6 +2200,17 @@ function webform_client_form($form, &$form_state, $node, $submission, $is_draft 
       }
     }
 
+    if ($page_count > 1) {
+      $form['progressbar'] = array(
+        '#theme' => 'webform_progressbar',
+        '#node' => $node,
+        '#page_num' => $page_num,
+        '#page_count' => $page_count + ($node->webform['progressbar_include_confirmation'] ? 1 : 0),
+        '#page_labels' => webform_page_labels($node),
+        '#weight' => -100
+      );
+    }
+
     // Recursively add components to the form. The unfiltered version of the
     // form (typically used in Form Builder), includes all components.
     foreach ($component_tree['children'] as $cid => $component) {
@@ -2180,7 +2231,7 @@ function webform_client_form($form, &$form_state, $node, $submission, $is_draft 
     );
     $form['details']['sid'] = array(
       '#type' => 'hidden',
-      '#value' => isset($submission->sid) ? $submission->sid : '',
+      '#value' => isset($submission->sid) ? $submission->sid : NULL,
     );
     $form['details']['uid'] = array(
       '#type' => 'value',
@@ -2569,7 +2620,7 @@ function webform_client_form_validate($form, &$form_state) {
 
   // Prevent submission by throwing an error.
   if ((!$allowed_role || $total_limit_exceeded || $user_limit_exceeded) && $GLOBALS['user']->uid != 1) {
-    theme('webform_view_messages', array('node' => $node, 'teaser' => 0, 'page' => 1, 'submission_count' => 0, 'user_limit_exceeded' => $user_limit_exceeded, 'total_limit_exceeded' => $total_limit_exceeded, 'allowed_roles' => $allowed_roles, 'closed' => FALSE, 'cached' => FALSE));
+    theme('webform_view_messages', array('node' => $node, 'page' => 1, 'submission_count' => 0, 'user_limit_exceeded' => $user_limit_exceeded, 'total_limit_exceeded' => $total_limit_exceeded, 'allowed_roles' => $allowed_roles, 'closed' => FALSE, 'cached' => FALSE));
     form_set_error('', NULL);
     return;
   }
@@ -2578,7 +2629,7 @@ function webform_client_form_validate($form, &$form_state) {
   // certain elements need validation at all.
   if (!empty($node->webform['conditionals'])) {
     $input_values = isset($form_state['storage']['submitted']) ? $form_state['storage']['submitted'] : array();
-    $new_values = _webform_client_form_submit_flatten($form['#node'], $form_state['values']['submitted']);
+    $new_values = isset($form_state['values']['submitted']) ? _webform_client_form_submit_flatten($form['#node'], $form_state['values']['submitted']) : array();
     foreach ($new_values as $cid => $values) {
       $input_values[$cid] = $values;
     }
@@ -2965,20 +3016,20 @@ function _webform_client_form_submit_process($node, &$form_values) {
 }
 
 /**
- * Flattens a submitted form back into a single array representation (rather than nested fields)
+ * Flattens a submitted values back into a single flat array representation.
  */
 function _webform_client_form_submit_flatten($node, $fieldset, $parent = 0) {
   $values = array();
 
   if (is_array($fieldset)) {
     foreach ($fieldset as $form_key => $value) {
-      $cid = webform_get_cid($node, $form_key, $parent);
-
-      if (is_array($value) && webform_component_feature($node->webform['components'][$cid]['type'], 'group')) {
-        $values += _webform_client_form_submit_flatten($node, $value, $cid);
-      }
-      else {
-        $values[$cid] = $value;
+      if ($cid = webform_get_cid($node, $form_key, $parent)) {
+        if (is_array($value) && webform_component_feature($node->webform['components'][$cid]['type'], 'group')) {
+          $values += _webform_client_form_submit_flatten($node, $value, $cid);
+        }
+        else {
+          $values[$cid] = $value;
+        }
       }
     }
   }
@@ -3029,6 +3080,33 @@ function template_preprocess_webform_confirmation(&$vars) {
 
   // Strip out empty tags added by WYSIWYG editors if needed.
   $vars['confirmation_message'] = strlen(trim(strip_tags($confirmation))) ? $confirmation : '';
+
+  // Progress bar.
+  $vars['progressbar'] = '';
+  if ($vars['node']->webform['progressbar_include_confirmation']) {
+    $page_labels = webform_page_labels($vars['node']);
+    $vars['progressbar'] = theme('webform_progressbar', array(
+      'node' => $vars['node'],
+      'page_num' => count($page_labels),
+      'page_count' => count($page_labels),
+      'page_labels' => $page_labels,
+    ));
+  }
+}
+
+/**
+ * Prepare for theming of the webform progressbar.
+ */
+function template_preprocess_webform_progressbar(&$vars) {
+  // Add CSS used by the progress bar.
+  drupal_add_css(drupal_get_path('module', 'webform') . '/css/webform.css');
+
+  $vars['progressbar_page_number'] = $vars['node']->webform['progressbar_page_number'];
+  $vars['progressbar_percent'] = $vars['node']->webform['progressbar_percent'];
+  $vars['progressbar_bar'] = $vars['node']->webform['progressbar_bar'];
+  $vars['progressbar_pagebreak_labels'] = $vars['node']->webform['progressbar_pagebreak_labels'];
+  $vars['progressbar_include_confirmation'] = $vars['node']->webform['progressbar_include_confirmation'];
+  $vars['percent'] = ($vars['page_num'] - 1) / ($vars['page_count'] - 1) * 100;
 }
 
 /**
@@ -3192,10 +3270,8 @@ function theme_webform_element_text($variables) {
     $value = implode("\n", $lines);
   }
 
-  // Add the value to the output.
-  if ($value) {
-    $output .= (strpos($value, "\n") === FALSE ? ' ' : "\n") . $value;
-  }
+  // Add the value to the output. Add a newline before the response if needed.
+  $output .= (strpos($value, "\n") === FALSE ? ' ' : "\n") . $value;
 
   // Indent fieldsets.
   if ($is_group) {
@@ -3392,7 +3468,6 @@ function _webform_filter_xss($string) {
   return filter_xss($string, $allowed_tags);
 }
 
-
 /**
  * Utility function to ensure that a webform record exists in the database.
  *
@@ -3463,7 +3538,31 @@ function webform_get_cid(&$node, $form_key, $pid) {
 }
 
 /**
- * Retreive a Drupal variable with the appropriate default value.
+ * Find the label of a given page based on page breaks.
+ *
+ * @param $webform
+ *   The webform node.
+ * @return array
+ *   An array of all page labels, indexed by page number.
+ */
+function webform_page_labels($node) {
+  $page_count = 1;
+  $page_labels = array();
+  $page_labels[0] = t($node->webform['progressbar_label_first']);
+  foreach ($node->webform['components'] as $component) {
+    if ($component['type'] == 'pagebreak') {
+      $page_labels[$page_count] = $component['name'];
+      $page_count++;
+    }
+  }
+  if ($node->webform['progressbar_include_confirmation']) {
+    $page_labels[] = t($node->webform['progressbar_label_confirmation']);
+  }
+  return $page_labels;
+}
+
+/**
+ * Retrieve a Drupal variable with the appropriate default value.
  */
 function webform_variable_get($variable) {
   switch ($variable) {
@@ -3486,10 +3585,22 @@ function webform_variable_get($variable) {
       $result = variable_get('webform_node_types_primary', array('webform'));
       break;
     case 'webform_export_format':
+      module_load_include('inc', 'webform', 'includes/webform.export');
+      $options = webform_export_list();
       $result = variable_get('webform_export_format', 'excel');
+      $result = isset($options[$result]) ? $result : key($options);
       break;
     case 'webform_csv_delimiter':
       $result = variable_get('webform_csv_delimiter', '\t');
+      break;
+    case 'webform_progressbar_style':
+      $result = variable_get('webform_progressbar_style', array('progressbar_bar', 'progressbar_pagebreak_labels', 'progressbar_include_confirmation'));
+      break;
+    case 'webform_progressbar_label_first':
+      $result = variable_get('webform_progressbar_label_first', t('Start'));
+      break;
+    case 'webform_progressbar_label_confirmation':
+      $result = variable_get('webform_progressbar_label_confirmation', t('Complete'));
       break;
   }
   return $result;

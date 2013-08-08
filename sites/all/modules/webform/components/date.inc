@@ -260,6 +260,8 @@ function webform_expand_date($element) {
         break;
     }
     unset($element[$type]['#value']);
+    $element[$type]['#title'] = $none;
+    $element[$type]['#title_display'] = 'invisible';
     $element[$type]['#default_value'] = isset($default_values[$type]) ? $default_values[$type] : NULL;
     $element[$type]['#options'] = array('' => $none) + $element[$type]['#options'];
   }
@@ -484,7 +486,12 @@ function _webform_csv_headers_date($component, $export_options) {
 function _webform_csv_data_date($component, $export_options, $value) {
   if ($value[0]) {
     $timestamp = webform_strtotime($value[0]);
-    $format = webform_date_format('short');
+    if (!empty($export_options['iso8601_date'])) {
+      $format = 'Y-m-d'; // ISO 8601 date: 2004-02-12
+    }
+    else {
+      $format = webform_date_format('short');
+    }
     return format_date($timestamp, 'custom', $format, 'UTC');
   }
   else {
