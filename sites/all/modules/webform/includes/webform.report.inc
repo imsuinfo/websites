@@ -353,6 +353,22 @@ function webform_results_download_form($form, &$form_state, $node) {
     ),
   );
 
+  if (function_exists('mb_convert_encoding')) {
+    $form['encoding'] = array(
+      '#type' => 'select',
+      '#title' => t('Character encoding'),
+      '#options' => webform_encoding_list(),
+      '#default_value' => isset($form_state['values']['encoding']) ? $form_state['values']['encoding'] : variable_get('webform_export_encoding', 'UTF16-LE'),
+      '#description' => t("This is the format in which the CSV/TSV file is encoding as."),
+    );
+  }
+  else {
+    $form['encoding'] = array(
+      '#type' => 'value',
+      '#value' => isset($form_state['values']['encoding']) ? $form_state['values']['encoding'] : variable_get('webform_export_encoding', 'UTF16-LE'),
+    );
+  }
+
   $form['header_keys'] = array(
     '#type' => 'radios',
     '#title' => t('Column header format'),
@@ -646,6 +662,7 @@ function theme_webform_results_download_select_format($variables) {
 function webform_results_download_form_submit(&$form, &$form_state) {
   $options = array(
     'delimiter' => $form_state['values']['delimiter'],
+    'encoding' => $form_state['values']['encoding'],
     'components' => array_keys(array_filter($form_state['values']['components'])),
     'header_keys' => $form_state['values']['header_keys'],
     'select_keys' => $form_state['values']['select_keys'],
@@ -942,6 +959,7 @@ function webform_results_download_default_options($node) {
 
   $options = array(
     'delimiter' => variable_get('webform_csv_delimiter', '\t'),
+    'encoding' => variable_get('webform_export_encoding', 'UTF-16LE'),
     'components' => array_merge(array_keys($submission_information), array_keys(webform_component_list($node, 'csv', TRUE))),
     'header_keys' => 0,
     'select_keys' => 0,

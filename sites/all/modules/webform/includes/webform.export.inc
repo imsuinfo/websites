@@ -46,6 +46,21 @@ function webform_export_list() {
 }
 
 /**
+ * Return a list of exporters suitable for display in a select list.
+ */
+function webform_encoding_list() {
+  $list = array();
+  $list['UTF-16'] = t("UTF-16");
+  $list['UTF-16LE'] = t("UTF-16LE");
+  $list['UTF-16BE'] = t("UTF-16BE");
+  $list['UTF-8'] = t("UTF-8");
+  $list['UTF-7'] = t("UTF-7");
+  $list['ASCII'] = t("ASCII");
+
+  return $list;
+}
+
+/**
  * Returns a Webform exporter definition.
  */
 function webform_export_fetch_definition($format = NULL) {
@@ -107,9 +122,11 @@ class webform_exporter {
 
 class webform_exporter_delimited extends webform_exporter {
   var $delimiter;
+  var $encoding;
 
   function webform_exporter_delimited($options) {
     $this->delimiter = isset($options['delimiter']) ? $options['delimiter'] : ',';
+    $this->encoding = isset($options['encoding']) ? $options['encoding'] : variable_get('webform_export_encoding', 'UTF-16LE');
     // Convert tabs.
     if ($this->delimiter == '\t') {
       $this->delimiter = "\t";
@@ -123,6 +140,12 @@ class webform_exporter_delimited extends webform_exporter {
     // This makes tab-separated imports work correctly in MS Excel.
     if (function_exists('mb_convert_encoding') && $this->delimiter == "\t") {
       $output = chr(255) . chr(254);
+
+      $encoding_current = mb_detect_encoding($output, array_keys(webform_encoding_list()));
+
+      if ($this->encoding != $encoding_current) {
+        $output = mb_convert_encoding($output, $this->encoding, $encoding_current);
+      }
     }
     @fwrite($file_handle, $output);
   }
@@ -138,7 +161,10 @@ class webform_exporter_delimited extends webform_exporter {
     $row = implode($this->delimiter, $data) . "\n";
 
     if (function_exists('mb_convert_encoding')) {
-      $row = mb_convert_encoding($row, 'UTF-16LE', 'UTF-8');
+      $encoding_current = mb_detect_encoding($row, array_keys(webform_encoding_list()));
+      if ($this->encoding != $encoding_current) {
+        $row = mb_convert_encoding($row, $this->encoding, $encoding_current);
+      }
     }
 
     @fwrite($file_handle, $row);
@@ -157,6 +183,8 @@ class webform_exporter_delimited extends webform_exporter {
       $content_type = 'text/csv';
     }
 
+    $content_type .= '; charset=' . drupal_strtolower($this->encoding);
+
     drupal_add_http_header('Content-Type', $content_type);
     drupal_add_http_header('Content-Disposition', "attachment; filename=$filename.$extension");
   }
@@ -174,7 +202,7 @@ class webform_exporter_excel extends webform_exporter_delimited {
   }
 
   function set_headers($filename) {
-    drupal_add_http_header('Content-Type', 'application/x-msexcel');
+    drupal_add_http_header('Content-Type', 'application/x-msexcel; charset=' . drupal_strtolower($this->encoding));
     drupal_add_http_header('Content-Disposition', "attachment; filename=$filename.xls");
     drupal_add_http_header('Pragma', 'public');
     drupal_add_http_header('Cache-Control', 'max-age=0');
