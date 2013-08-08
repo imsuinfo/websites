@@ -48,27 +48,24 @@ function background_batch_overview_page() {
 
   foreach ($bids as $bid) {
     $progress = progress_get_progress('_background_batch:' . $bid);
-    $eta = 0;
-    if (is_object($progress)) {
-      $eta = progress_estimate_completion($progress);
 
-      $data[] = array(
-        $progress->end ? $bid : l($bid, 'batch', array('query' => array('op' => 'start', 'id' => $bid))),
-        sprintf("%.2f%%", $progress->progress * 100),
-        $progress->message,
-        $progress->start ? format_date((int)$progress->start, 'small') : t('N/A'),
-        $progress->end ? format_date((int)$progress->end, 'small') : ($eta ? format_date((int)$eta, 'small') : t('N/A')),
+    if (!$progress) {
+      $progress = (object)array(
+        'start' => 0,
+        'end' => 0,
+        'progress' => 0,
+        'message' => t('N/A'),
       );
     }
-    else {
-      $data[] = array(
-        l($bid, 'batch', array('query' => array('op' => 'start', 'id' => $bid))),
-        sprintf("%.2f%%", 0),
-        '',
-        t('N/A'),
-        t('N/A'),
-      );
-    }
+
+    $eta = progress_estimate_completion($progress);
+    $data[] = array(
+      $progress->end ? $bid : l($bid, 'batch', array('query' => array('op' => 'start', 'id' => $bid))),
+      sprintf("%.2f%%", $progress->progress * 100),
+      $progress->message,
+      $progress->start ? format_date((int)$progress->start, 'small') : t('N/A'),
+      $progress->end ? format_date((int)$progress->end, 'small') : ($eta ? format_date((int)$eta, 'small') : t('N/A')),
+    );
   }
   $header = array('Batch ID', 'Progress', 'Message', 'Started', 'Finished/ETA');
   return theme('table', array(
