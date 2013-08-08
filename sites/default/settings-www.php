@@ -648,6 +648,12 @@ $conf['batch_background'] = array();
 
 
 /**
+ * Webform default settings
+ */
+$conf['webform_export_encoding'] = 'UTF-8';
+
+
+/**
  * Additional file_db variables.
  */
 $conf['file_db_server_id'] = 1;
