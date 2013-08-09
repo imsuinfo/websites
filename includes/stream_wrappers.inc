@@ -555,41 +555,6 @@ abstract class DrupalLocalStreamWrapper implements DrupalStreamWrapperInterface 
   }
 
   /**
-   * Support for stream_set_options().
-   *
-   * @return
-   *   TRUE if stream option was successfully set.
-   *   FALSE or EOF on failure.
-   *
-   * @see http://php.net/manual/en/streamwrapper.stream-set-option.php
-   */
-  public function stream_set_option($option, $arg1, $arg2) {
-    if (is_null($this->handle)) {
-      return FALSE;
-    }
-
-    switch ($option) {
-      case STREAM_OPTION_BLOCKING:
-        return stream_set_blocking($this->handle, $arg1);
-
-      case STREAM_OPTION_READ_TIMEOUT:
-        return stream_set_timeout($this->handle, $arg1, $arg2);
-
-      case STREAM_OPTION_WRITE_BUFFER:
-        if ($arg1 == STREAM_BUFFER_NONE) {
-          return stream_set_write_buffer($this->handle, 0);
-        }
-        else {
-          return stream_set_write_buffer($this->handle, $arg2);
-        }
-
-      default:
-     }
-
-    return FALSE;
-  }
-
-  /**
    * Support for unlink().
    *
    * @param $uri

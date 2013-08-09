@@ -9,7 +9,5 @@ files
 
 # Custom ignores
 sites/default/deprecated
-sites/private_files
-sites/public_files
+files
 *.swp
-
