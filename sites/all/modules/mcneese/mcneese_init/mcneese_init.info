@@ -1,0 +1,7 @@
+name = McNeese Module - Init
+description = "Provides initializion specific module functionality."
+core = 7.x
+php = 5.3
+package = McNeese
+
+files[] = mcneese_init.module
