@@ -310,10 +310,14 @@ function file_entity_admin_files() {
     'size' => array('data' => t('Size'), 'field' => 'fm.filesize'),
     'author' => t('Author'),
     'timestamp' => array('data' => t('Updated'), 'field' => 'fm.timestamp', 'sort' => 'desc'),
+    'usage' => array('data' => t('Usage'), 'field' => 'total_count'),
     'operations' => array('data' => t('Operations')),
   );
 
   $query = db_select('file_managed', 'fm')->extend('PagerDefault')->extend('TableSort');
+  $query->leftJoin('file_usage', 'fu', 'fm.fid = fu.fid');
+  $query->groupBy('fm.fid');
+  $query->addExpression('SUM(fu.count)', 'total_count');
   file_entity_build_filter_query($query);
 
   $result = $query
@@ -322,14 +326,15 @@ function file_entity_admin_files() {
     ->orderByHeader($header)
     ->addTag('file_access')
     ->execute()
-    ->fetchAllKeyed();
+    ->fetchAllAssoc('fid');
   $files = file_load_multiple(array_keys($result));
-  $accounts = user_load_multiple(array_unique($result));
 
   // Prepare the list of files.
   $destination = drupal_get_destination();
   $options = array();
+  $accounts = array();
   foreach ($files as $file) {
+    $accounts[$file->uid] = isset($accounts[$file->uid]) ? $accounts[$file->uid] : user_load($file->uid);
     $file_type = file_type_load($file->type);
     $options[$file->fid] = array(
       'title' => array(
@@ -343,6 +348,7 @@ function file_entity_admin_files() {
       'size' => format_size($file->filesize),
       'author' => theme('username', array('account' => $accounts[$file->uid])),
       'timestamp' => format_date($file->timestamp, 'short'),
+      'usage' => $result[$file->fid]->total_count == NULL ? 0 : $result[$file->fid]->total_count,
     );
 
     // Show a warning for files that do not exist.
@@ -611,7 +617,7 @@ function file_entity_file_display_form($form, &$form_state, $file_type, $view_mo
   // filters for existing text formats.
   $formatters = file_info_formatter_types();
   foreach ($formatters as $name => $formatter) {
-    if (isset($formatter['file types']) && !in_array($file_type, $formatter['file types'])) {
+    if (!empty($formatter['hidden']) || isset($formatter['file types']) && !in_array($file_type, $formatter['file types'])) {
       unset($formatters[$name]);
     }
   }

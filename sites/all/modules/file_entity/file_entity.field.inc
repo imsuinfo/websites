@@ -14,6 +14,7 @@ function file_entity_field_formatter_info() {
     'description' => t('Display the file in a specific view mode'),
     'field types' => array('file', 'image'),
     'settings' => array('file_view_mode' => 'default'),
+    'hidden file formatter' => TRUE,
   );
   $info['file_download_link'] = array(
     'label' => t('Download link'),
@@ -122,7 +123,9 @@ function file_entity_field_formatter_view($entity_type, $entity, $field, $instan
         $files_display[$fid]->referencing_entity = $entity;
         $files_display[$fid]->referencing_field = $field['field_name'];
       }
-      $files_built = file_view_multiple($files_display, $view_mode);
+      $output = file_view_multiple($files_display, $view_mode);
+      // Remove the first level from the output array.
+      $files_built = reset($output);
     }
 
     // Assemble the render array.
