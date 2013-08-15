@@ -8,9 +8,9 @@ dependencies[] = wysiwyg
 
 configure = admin/config/media/wysiwyg-view-mode
 
-; Information added by drupal.org packaging script on 2013-07-24
-version = "7.x-2.0-unstable7+62-dev"
+; Information added by drupal.org packaging script on 2013-08-11
+version = "7.x-2.0-alpha1"
 core = "7.x"
 project = "media"
-datestamp = "1374687166"
+datestamp = "1376258226"
 

@@ -358,7 +358,7 @@ function media_token_to_markup($match, $wysiwyg = FALSE) {
     // The link text will have characters such as "&" encoded for HTML, but the
     // filename itself needs the raw value when it is used to build the link,
     // in order to avoid double encoding.
-    $file->filename = htmlspecialchars_decode($tag_info['link_text'], ENT_NOQUOTES);
+    $file->filename = decode_entities($tag_info['link_text']);
   }
 
   if ($wysiwyg) {
@@ -751,4 +751,99 @@ function media_filter_track_usage($fid) {
   if (!$timestamp || $timestamp <= REQUEST_TIME - 86400 * 30) {
     db_merge('media_filter_usage')->key(array('fid' => $fid))->fields(array('fid' => $fid, 'timestamp' => REQUEST_TIME))->execute();
   }
+}
+
+/**
+ * Implements hook_entity_dependencies().
+ */
+function media_entity_dependencies($entity, $entity_type) {
+  // Go through all the entity's text fields and add a dependency on any files
+  // that are referenced there.
+  $dependencies = array();
+  foreach (media_filter_parse_from_fields($entity_type, $entity) as $file_reference) {
+    $dependencies[] = array('type' => 'file', 'id' => $file_reference['fid']);
+  }
+  return $dependencies;
+}
+
+/**
+ * Implements hook_entity_uuid_load().
+ */
+function media_entity_uuid_load(&$entities, $entity_type) {
+  // Go through all the entity's text fields and replace file IDs in media
+  // tokens with the corresponding UUID.
+  foreach ($entities as $entity) {
+    media_filter_replace_tokens_in_all_text_fields($entity_type, $entity, 'media_token_fid_to_uuid');
+  }
+}
+
+/**
+ * Implements hook_entity_uuid_presave().
+ */
+function media_entity_uuid_presave(&$entity, $entity_type) {
+  // Go through all the entity's text fields and replace UUIDs in media tokens
+  // with the corresponding file ID.
+  media_filter_replace_tokens_in_all_text_fields($entity_type, $entity, 'media_token_uuid_to_fid');
+}
+
+/**
+ * Replaces media tokens in an entity's text fields, using the specified callback function.
+ */
+function media_filter_replace_tokens_in_all_text_fields($entity_type, $entity, $callback) {
+  $text_field_names = _media_filter_fields_with_text_filtering($entity_type, $entity);
+  foreach ($text_field_names as $field_name) {
+    if (!empty($entity->{$field_name})) {
+      $field = field_info_field($field_name);
+      $all_languages = field_available_languages($entity_type, $field);
+      $field_languages = array_intersect($all_languages, array_keys($entity->{$field_name}));
+      foreach ($field_languages as $language) {
+        if (!empty($entity->{$field_name}[$language])) {
+          foreach ($entity->{$field_name}[$language] as &$item) {
+            $item['value'] = preg_replace_callback(MEDIA_TOKEN_REGEX, $callback, $item['value']);
+          }
+        }
+      }
+    }
+  }
+}
+
+/**
+ * Callback to replace file IDs with UUIDs in a media token.
+ */
+function media_token_fid_to_uuid($matches) {
+  return _media_token_uuid_replace($matches, 'entity_get_uuid_by_id');
+}
+
+/**
+ * Callback to replace UUIDs with file IDs in a media token.
+ */
+function media_token_uuid_to_fid($matches) {
+  return _media_token_uuid_replace($matches, 'entity_get_id_by_uuid');
+}
+
+/**
+ * Helper function to replace UUIDs with file IDs or vice versa.
+ *
+ * @param array $matches
+ *   An array of matches for media tokens, from a preg_replace_callback()
+ *   callback function.
+ * @param string $entity_uuid_function
+ *   Either 'entity_get_uuid_by_id' (to replace file IDs with UUIDs in the
+ *   token) or 'entity_get_id_by_uuid' (to replace UUIDs with file IDs).
+ *
+ * @return string
+ *   A string representing the JSON-encoded token, with the appropriate
+ *   replacement between file IDs and UUIDs.
+ */
+function _media_token_uuid_replace($matches, $entity_uuid_function) {
+  $tag = $matches[0];
+  $tag = str_replace(array('[[', ']]'), '', $tag);
+  $tag_info = drupal_json_decode($tag);
+  if (isset($tag_info['fid'])) {
+    if ($new_ids = $entity_uuid_function('file', array($tag_info['fid']))) {
+      $new_id = reset($new_ids);
+      $tag_info['fid'] = $new_id;
+    }
+  }
+  return '[[' . drupal_json_encode($tag_info) . ']]';
 }
