@@ -2995,6 +2995,7 @@ function workbench_menu_delete_menu_item($item_id) {
   $menu = current($menus);
 
   $user = cf_current_user();
+  $taxonomy_term = taxonomy_term_load($menu->access_id);
   $child_items = array();
 
   try {
