@@ -583,7 +583,29 @@ function node_accessibility_perform_validation($nodes_or_nids, $vids = array(), 
         }
       }
 
-      if (property_exists($revision, 'accessibility') && is_array($revision->accessibility)) {
+      // manually load accessibility settings if not currently loaded.
+      if (!property_exists($revision, 'accessibility')) {
+        $revision->accessibility = FALSE;
+        $type_settings = node_accessibility_load_node_type_settings(array($revision->nid => $revision), NULL);
+
+        if (!empty($type_settings)) {
+          $revision->accessibility = array();
+
+          reset($type_settings);
+          $type_setting = current($type_settings);
+
+          foreach ($type_setting as $key => $value) {
+            if ($key == 'standards') {
+              $revision->accessibility[$key] = unserialize($value);
+            }
+            else {
+              $revision->accessibility[$key] = $value;
+            }
+          }
+        }
+      }
+
+      if (is_array($revision->accessibility)) {
         $node_view = node_view($revision, 'full', $language);
         $rendered_node = drupal_render($node_view);
         unset($node_view);
@@ -1349,7 +1371,7 @@ function node_accessibility_validate_action($node) {
     return FALSE;
   }
 
-  $results = node_accessibility_perform_validation(array($node), array(), NULL, NULL);
+  $results = node_accessibility_perform_validation(array($node));
   $reports = array();
 
   if (isset($results[$node->nid][$node->vid]['report'])) {
