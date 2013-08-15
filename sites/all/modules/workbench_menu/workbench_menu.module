@@ -3022,7 +3022,7 @@ function workbench_menu_delete_menu_item($item_id) {
     watchdog('Workbench Menu', t("An unexpected error happened while trying to process child menu items with a parent id of %item_id."), array('%item_id' => $item_id), WATCHDOG_ERROR);
   }
 
-  watchdog('Workbench Menu', "The user %user has deleted the item %item (%item_id) from the menu %menu (%menu_id)", array('%user' => $user->name, '%item' => $item->human_name, '%item_id' => $item_id, '%menu' => $menu->human_name, '%menu_id' => $menu->id), WATCHDOG_INFO);
+  watchdog('Workbench Menu', "The user %user has deleted the item %item (%item_id) from the menu %menu (%menu_id)", array('%user' => $user->name, '%item' => $item->human_name, '%item_id' => $item_id, '%menu' => $taxonomy_term->name, '%menu_id' => $menu->id), WATCHDOG_INFO);
   watchdog('Workbench Menu', "Due to deletion of %item (%item_id), the following child items are being re-assigned to the item %parent_item_id: %child_items", array('%item' => $item->human_name, '%item_id' => $item_id, '%parent_item_id' => $parent_id, '%child_items' => print_r($menu_item_children, TRUE)), WATCHDOG_INFO);
 
   $transaction = db_transaction();
