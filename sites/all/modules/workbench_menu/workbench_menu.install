@@ -508,3 +508,33 @@ function workbench_menu_update_7104() {
     throw $e;
   }
 }
+
+/**
+ * Remove constraing from parent_id that was altered in update 7104.
+ *
+ * The constraint did not get removed, so try to remove it manually.
+ * This seems to apply to PostgreSQL only.
+ */
+function workbench_menu_update_7105() {
+  if (db_driver() != 'pgsql') {
+    return;
+  }
+
+  $transaction = db_transaction();
+
+  try {
+    db_query('ALTER TABLE {workbench_menu_items} DROP CONSTRAINT workbench_menu_items_parent_id_check1');
+
+    // force execution of transaction
+    unset($transaction);
+  }
+  catch (Exception $e) {
+    if (module_exists('cf_error')) {
+      cf_error::on_query_execution($e);
+    }
+
+    $transaction->rollback();
+
+    throw $e;
+  }
+}

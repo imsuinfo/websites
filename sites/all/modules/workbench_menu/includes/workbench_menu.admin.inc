@@ -131,7 +131,20 @@ function workbench_menu_edit_settings_form($form, &$form_state, $access_type, $a
   $active = workbench_access_get_active_tree();
   $active['access_scheme']['access_id'] = $access_id;
 
-  if ($active['access_scheme']['access_type'] != $access_type || !isset($active['active'][$access_id])) {
+  if ($active['access_scheme']['access_type'] != $access_type) {
+    if (class_exists('cf_error')) {
+      cf_error::invalid_variable('access_type', "At this time only taxonomy access_type is supported.");
+    }
+
+    drupal_access_denied();
+    drupal_exit();
+  }
+
+  if (!isset($active['active'][$access_id])) {
+    if (class_exists('cf_error')) {
+      cf_error::invalid_variable('access_type', "The specified term id is not defined in the currently active access type.");
+    }
+
     drupal_access_denied();
     drupal_exit();
   }
@@ -150,7 +163,8 @@ function workbench_menu_edit_settings_form($form, &$form_state, $access_type, $a
   $menus = (array) workbench_menu_get_menus(array('access_id' => $access_id), NULL);
 
   if (!empty($menus)) {
-    $menu = array_pop($menus);
+    reset($menus);
+    $menu = current($menus);
 
     if (property_exists($menu, 'path')) {
       $default_path = &$menu->path;
@@ -299,14 +313,12 @@ function workbench_menu_edit_settings_form($form, &$form_state, $access_type, $a
     '#value' => t("Update Menu"),
   );
 
-  if (!empty($default_path)) {
-    $form['actions']['reset_cache'] = array(
-      '#type' => 'submit',
-      '#value' => t("Reset Cache"),
-      '#weight' => 10,
-      '#submit' => array('workbench_menu_reset_cache_form'),
-    );
-  }
+  $form['actions']['reset_cache'] = array(
+    '#type' => 'submit',
+    '#value' => t("Reset Cache"),
+    '#weight' => 10,
+    '#submit' => array('workbench_menu_reset_cache_form'),
+  );
 
   $form['actions']['cancel'] = array(
     '#type' => 'link',
@@ -540,7 +552,20 @@ function workbench_menu_admin_settings_form($form, &$form_state, $access_type, $
   $active = workbench_access_get_active_tree();
   $active['access_scheme']['access_id'] = $access_id;
 
-  if ($active['access_scheme']['access_type'] != $access_type || !isset($active['active'][$access_id])) {
+  if ($active['access_scheme']['access_type'] != $access_type) {
+    if (class_exists('cf_error')) {
+      cf_error::invalid_variable('access_type', "At this time only taxonomy access_type is supported.");
+    }
+
+    drupal_access_denied();
+    drupal_exit();
+  }
+
+  if (!isset($active['active'][$access_id])) {
+    if (class_exists('cf_error')) {
+      cf_error::invalid_variable('access_type', "The specified term id is not defined in the currently active access type.");
+    }
+
     drupal_access_denied();
     drupal_exit();
   }
@@ -559,7 +584,8 @@ function workbench_menu_admin_settings_form($form, &$form_state, $access_type, $
   $menus = (array) workbench_menu_get_menus(array('access_id' => $access_id), NULL);
 
   if (!empty($menus)) {
-    $menu = array_pop($menus);
+    reset($menus);
+    $menu = current($menus);
 
     if (property_exists($menu, 'path')) {
       $default_path = &$menu->path;
@@ -700,14 +726,12 @@ function workbench_menu_admin_settings_form($form, &$form_state, $access_type, $
     '#value' => t("Update Menu"),
   );
 
-  if (!empty($default_path)) {
-    $form['actions']['reset_cache'] = array(
-      '#type' => 'submit',
-      '#value' => t("Reset Cache"),
-      '#weight' => 10,
-      '#submit' => array('workbench_menu_reset_cache_form'),
-    );
-  }
+  $form['actions']['reset_cache'] = array(
+    '#type' => 'submit',
+    '#value' => t("Reset Cache"),
+    '#weight' => 10,
+    '#submit' => array('workbench_menu_reset_cache_form'),
+  );
 
   $form['actions']['cancel'] = array(
     '#type' => 'link',
@@ -805,13 +829,14 @@ function workbench_menu_admin_settings_form_submit($form, &$form_state) {
     $form_state['redirect'] = $form_state['values']['redirect_to'];
   }
 
+  $processed = array();
   if ($form['path']['#default_value'] != $form_state['values']['path']) {
     workbench_menu_clear_cache_at_path($form['path']['#default_value']);
-    workbench_menu_clear_cache_at_path($form_state['values']['path']);
+    workbench_menu_clear_cache_by_access_id($menu['access_id'], $processed);
   }
   elseif (isset($form['advanced']['breadcrumb_name']['#default_value']) && $form['advanced']['breadcrumb_name']['#default_value'] != $form_state['values']['breadcrumb_name']) {
     workbench_menu_clear_cache_at_path($form['path']['#default_value']);
-    workbench_menu_clear_cache_at_path($form_state['values']['path']);
+    workbench_menu_clear_cache_by_access_id($menu['access_id'], $processed);
   }
 }
 
@@ -1113,91 +1138,14 @@ function workbench_menu_admin_item_settings_form_settings($item, $menu) {
   }
 
   $item_id = NULL;
-
-  $defaults = array();
-  $defaults['human_name'] = '';
-  $defaults['parent_id'] = '0';
-  $defaults['weight'] = '0';
-  $defaults['active_path'] = '';
-  $defaults['item_type'] = 'item_node';
-  $defaults['expand'] = 'expand_auto';
-  $defaults['properties'] = array();
-  $defaults['properties']['url'] = '';
-  $defaults['properties']['node_id'] = '';
-  $defaults['properties']['disabled'] = FALSE;
-  $defaults['properties']['clickable'] = FALSE;
-  $defaults['properties']['file'] = '';
-  $defaults['properties']['file_type'] = 'file';
-  $defaults['properties']['menu'] = NULL;
-  $defaults['properties']['menu_item'] = NULL;
-  $defaults['properties']['never_suppress'] = FALSE;
-
   if (is_object($item)) {
     $item_id = &$item->id;
-
-    if (property_exists($item, 'human_name') && is_string($item->human_name)) {
-      $defaults['human_name'] = $item->human_name;
-    }
-
-    if (property_exists($item, 'parent_id')) {
-      if (is_numeric($item->parent_id)) {
-        $defaults['parent_id'] = $item->parent_id;
-      }
-      elseif (is_null($item->parent_id)) {
-        $defaults['parent_id'] = -1;
-      }
-    }
-
-    if (property_exists($item, 'weight') && is_numeric($item->weight)) {
-      $defaults['weight'] = $item->weight;
-    }
-
-    if (property_exists($item, 'active_path') && is_string($item->active_path)) {
-      $defaults['active_path'] = $item->active_path;
-
-      // be user-friendly and show normal spaces instead of %20.
-      $defaults['active_path'] = preg_replace('/%20/', ' ', $defaults['active_path']);
-    }
-
-    if (property_exists($item, 'item_type') && is_array($item->item_type)) {
-      foreach ($item->item_type as &$type) {
-        $defaults['item_type'] = $type->machine_name;
-      }
-    }
-
-    if (property_exists($item, 'expand') && is_array($item->expand)) {
-      foreach ($item->expand as &$expand) {
-        $defaults['expand'] = $expand->machine_name;
-      }
-    }
-
-    if (property_exists($item, 'properties') && is_array($item->properties)) {
-      foreach ($item->properties as $key => &$value) {
-        $defaults['properties'][$key] = $value;
-      }
-    }
-
-    if (!empty($defaults['properties']['url'])) {
-      // be user-friendly and show normal spaces instead of %20.
-      $defaults['properties']['url'] = preg_replace('/%20/', ' ', $defaults['properties']['url']);
-    }
-
-    if (!empty($defaults['properties']['file'])) {
-      // be user-friendly and show normal spaces instead of %20.
-      $defaults['properties']['file'] = preg_replace('/%20/', ' ', $defaults['properties']['file']);
-    }
-
-    if (!empty($defaults['properties']['node_id'])) {
-      $defaults['properties']['node_id'] = $defaults['properties']['node_id'];
-    }
-
-    if (isset($defaults['properties']['never_suppress']) && is_bool($defaults['properties']['never_suppress'])) {
-      $defaults['properties']['never_suppress'] = $defaults['properties']['never_suppress'];
-    }
   }
 
+  $defaults = workbench_menu_get_menu_item_defaults($item);
+
   $available = array();
-  $available['parents'] = workbench_menu_get_load_menu_items_select_list_options(array('menu_id' => $menu->id), 'id');
+  $available['parents'] = workbench_menu_get_menu_items_select_list_options(array('menu_id' => $menu->id), 'id');
   $available['item_types'] = cf_db_options_get_options_list('workbench_menu', 'item_type');
   $available['expand'] = cf_db_options_get_options_list('workbench_menu', 'expand');
 
@@ -1425,7 +1373,8 @@ function workbench_menu_admin_item_settings_add_form($form, &$form_state, $acces
     drupal_exit();
   }
 
-  $menu = array_pop($menus);
+  reset($menus);
+  $menu = current($menus);
 
   drupal_set_title(t("Add New Item to %menu Menu (ID: %id)", array('%menu' => $term->name, '%id' => $menu->id)), PASS_THROUGH);
 
@@ -1547,7 +1496,8 @@ function workbench_menu_admin_item_settings_edit_form($form, &$form_state, $acce
     drupal_exit();
   }
 
-  $menu = array_pop($menus);
+  reset($menus);
+  $menu = current($menus);
 
   // do not allow operating on items that do not exist in the selected menu.
   if (!array_key_exists($item_id, $menu->items['flat'])) {
@@ -1654,15 +1604,15 @@ function workbench_menu_admin_item_settings_edit_form_validate($form, &$form_sta
 
       // if the current item has children, do not allow it to be disabled.
       if (isset($form['item_id']['#value'])) {
-        $items = (array) workbench_menu_get_load_menu_items(array('parent_id' => $form['item_id']['#value']));
+        $items = (array) workbench_menu_get_menu_items(array('parent_id' => $form['item_id']['#value'], 'fast' => NULL));
 
-        if (!empty($items['flat'])) {
+        if (!empty($items)) {
           form_set_error('settings][parent_id', t("This item cannot be disabled. You must remove all child items from this item before it can be disabled.", array('%type' => $item_type_name)));
         }
       }
     }
     elseif ($field != 0) {
-      $items = (array) workbench_menu_get_load_menu_items(array('id' => $field), 'id');
+      $items = (array) workbench_menu_get_menu_items(array('id' => $field), 'id');
 
       if (empty($items)) {
         form_set_error('settings][parent_id', t("The specified item parent (@parent_id) is invalid.", array('@parent_id' => $field)));
@@ -1920,7 +1870,7 @@ function workbench_menu_admin_item_settings_edit_form_validate($form, &$form_sta
 
       // if the current item has children, do not allow it to be changed into an item type that is not allowed to have children.
       if (isset($form['item_id']['#value'])) {
-        $items = (array) workbench_menu_get_load_menu_items(array('parent_id' => $form['item_id']['#value']));
+        $items = (array) workbench_menu_get_menu_items(array('parent_id' => $form['item_id']['#value']));
 
         if (!empty($items['flat'])) {
           form_set_error('settings][item_type', t("This item cannot be changed to an item type of %type because that item type does not support child items. You must remove all child items from this item to use this item type.", array('%type' => $item_type_name)));
@@ -1972,9 +1922,9 @@ function workbench_menu_admin_item_settings_edit_form_validate($form, &$form_sta
 
       // if the current item has children, do not allow it to be changed into an item type that is not allowed to have children.
       if (isset($form['item_id']['#value'])) {
-        $items = (array) workbench_menu_get_load_menu_items(array('parent_id' => $form['item_id']['#value']));
+        $items = (array) workbench_menu_get_menu_items(array('parent_id' => $form['item_id']['#value'], 'fast' => NULL));
 
-        if (!empty($items['flat'])) {
+        if (!empty($items)) {
           form_set_error('settings][item_type', t("This item cannot be changed to an item type of %type because that item type does not support child items. You must remove all child items from this item to use this item type.", array('%type' => $item_type_name)));
         }
       }
@@ -2041,7 +1991,20 @@ function workbench_menu_admin_item_settings_edit_form_validate($form, &$form_sta
  *   The form state array as defined by drupals form api.
  */
 function workbench_menu_admin_item_settings_edit_form_submit($form, &$form_state) {
-  $transaction = db_transaction();
+  if (!empty($form['menu_id']['#value'])) {
+    $menus = (array) workbench_menu_get_menus(array('id' => $form['menu_id']['#value'], 'fast' => NULL), 'id');
+  }
+
+  if (empty($menus)) {
+    if (class_exists('cf_error')) {
+      cf_error::invalid_variable('form[menu_id][#value]', "The specified menu id %menu_id is invalid or does not exist.", array('%menu_id' => isset($form['menu_id']['#value']) ? $form['menu_id']['#value'] : ''));
+    }
+
+    return;
+  }
+
+  reset($menus);
+  $menu = current($menus);
 
   if (isset($form['item_id']['#value'])) {
     $item_id = $form['item_id']['#value'];
@@ -2050,98 +2013,23 @@ function workbench_menu_admin_item_settings_edit_form_submit($form, &$form_state
     $item_id = NULL;
   }
 
-  if (isset($form_state['value']['settings']['item_type'])) {
-    $item_type = &$form_state['value']['settings']['item_type'];
-  }
-  else {
-    $item_type = NULL;
-  }
-
-  $user = cf_current_user();
-
-  if (is_null($item_id)) {
-    watchdog('Workbench Menu', "The user %user has added a new item %item to the menu %menu (%menu_id)", array('%user' => $user->name, '%item' => $form_state['values']['settings']['human_name'], '%menu' => $form['menu_human_name']['#value'], '%menu_id' => $form['menu_id']['#value']), WATCHDOG_INFO);
-  }
-  else {
-    watchdog('Workbench Menu', "The user %user has changed the item %item (%item_id) from the menu %menu (%menu_id)", array('%user' => $user->name, '%item' => $form_state['values']['settings']['human_name'], '%item_id' => $form['item_id']['#value'], '%menu' => $form['menu_human_name']['#value'], '%menu_id' => $form['menu_id']['#value']), WATCHDOG_INFO);
-  }
-
-  $properties = array();
+  $settings = array();
+  $settings['item_type'] = $form_state['values']['settings']['item_type'];
+  $settings['menu_id'] = $menu->id;
+  $settings['parent_id'] = $form_state['values']['settings']['parent_id'];
+  $settings['human_name'] = $form_state['values']['settings']['human_name'];
+  $settings['weight'] = $form_state['values']['settings']['weight'];
+  $settings['active_path'] = $form_state['values']['settings']['active_path'];
+  $settings['expand'] = $form_state['values']['settings']['expand'];
+  $settings['properties'] = array();
 
   foreach (array('url', 'node_id', 'disabled', 'clickable', 'file', 'file_type', 'menu', 'menu_item', 'never_suppress') as $property) {
     if (isset($form_state['values']['settings'][$property])) {
-      $properties[$property] = &$form_state['values']['settings'][$property];
+      $settings['properties'][$property] = &$form_state['values']['settings'][$property];
     }
   }
 
-  try {
-    if (is_null($item_id)) {
-      $existing = NULL;
-    }
-    else {
-      $query = db_select('workbench_menu_items', 'wmi');
-      $query->fields('wmi');
-      $query->condition('id', $item_id);
-      $existing = $query->execute()->fetchAll();
-    }
-
-    $columns = array('menu_id', 'parent_id', 'human_name', 'weight', 'active_path', 'properties');
-    $record = array();
-
-    $record['menu_id'] = $form['menu_id']['#value'];
-    $record['parent_id'] = $form_state['values']['settings']['parent_id'];
-    $record['human_name'] = $form_state['values']['settings']['human_name'];
-    $record['weight'] = $form_state['values']['settings']['weight'];
-    $record['active_path'] = $form_state['values']['settings']['active_path'];
-    $record['properties'] = $properties;
-
-    if (empty($existing)) {
-      drupal_write_record('workbench_menu_items', $record);
-      $item_id = $record['id'];
-    }
-    else {
-      $primary_keys = array('id');
-      $record['id'] = $item_id;
-      drupal_write_record('workbench_menu_items', $record, $primary_keys);
-    }
-
-    if (is_null($item_id)) {
-      $query = db_select('workbench_menu_items', 'wmi');
-      $query->fields('wmi');
-      $query->condition('id', $item_id);
-      $results = $query->execute()->fetchAll();
-    }
-
-    foreach (array('expand', 'item_type') as $name) {
-      if (!empty($existing)) {
-        $query = db_delete('workbench_menu_' . $name . 's');
-        $query->condition('item_id', $item_id);
-        $query->execute();
-      }
-
-      $options = (array) cf_db_options_get_options('workbench_menu', $name);
-
-      if (!empty($form_state['values']['settings'][$name]) && isset($options[$form_state['values']['settings'][$name]])) {
-        $record = array();
-        $record['item_id'] = $item_id;
-        $record[$name . '_id'] = $options[$form_state['values']['settings'][$name]]->id;
-
-        $query = db_insert('workbench_menu_' . $name . 's');
-        $query->fields($record);
-        $query->execute();
-      }
-    }
-
-    // enforce transaction execution
-    unset($transaction);
-  }
-  catch (Exception $e) {
-    $transaction->rollback();
-
-    if (class_exists('cf_error')) {
-      cf_error::on_query_execution($e);
-    }
-  }
+  workbench_menu_update_menu_item($menu, $settings, $item_id);
 
   if (empty($form_state['values']['redirect_to'])) {
     $form_state['redirect'] = 'admin/config/workbench/access/menus';
@@ -2203,7 +2091,8 @@ function workbench_menu_admin_item_settings_delete_form($form, &$form_state, $ac
     drupal_exit();
   }
 
-  $menu = array_pop($menus);
+  reset($menus);
+  $menu = current($menus);
 
   // do not allow operating on items that do not exist in the selected menu.
   if (!array_key_exists($item_id, $menu->items['flat'])) {
@@ -2211,7 +2100,7 @@ function workbench_menu_admin_item_settings_delete_form($form, &$form_state, $ac
     drupal_exit();
   }
 
-  $items = (array) workbench_menu_get_load_menu_items(array('id' => $item_id), 'id');
+  $items = (array) workbench_menu_get_menu_items(array('id' => $item_id), 'id');
 
   if (!isset($items['flat'][$item_id])) {
     drupal_not_found();
@@ -2297,67 +2186,7 @@ function workbench_menu_admin_item_settings_delete_form_validate($form, &$form_s
  *   The form state array as defined by drupals form api.
  */
 function workbench_menu_admin_item_settings_delete_form_submit($form, &$form_state) {
-  $user = cf_current_user();
-  $child_items = array();
-  $item_id = & $form['item_id']['#value'];
-
-  try {
-    $query = db_select('workbench_menu_items', 'wmi');
-    $query->fields('wmi', array('parent_id'));
-    $query->condition('wmi.id', $item_id);
-
-    $parent_id = (int) $query->execute()->fetchField();
-
-    $query = db_select('workbench_menu_items', 'wmi');
-    $query->fields('wmi', array('id', 'human_name'));
-    $query->condition('wmi.parent_id', $item_id);
-
-    $menu_item_children = array();
-    $results = (array) $query->execute()->fetchAll();
-    foreach ($results as &$result) {
-      $menu_item_children[$result->id] = $result->human_name;
-    }
-  }
-  catch (Exception $e) {
-    if (class_exists('cf_error')) {
-      cf_error::on_query_execution($e);
-    }
-
-    watchdog('Workbench Menu', t("An unexpected error happened while trying to process child menu items with a parent id of %item_id."), array('%item_id' => $item_id), WATCHDOG_ERROR);
-  }
-
-  watchdog('Workbench Menu', "The user %user has deleted the item %item (%item_id) from the menu %menu (%menu_id)", array('%user' => $user->name, '%item' => $form_state['values']['item_human_name'], '%item_id' => $item_id, '%menu' => $form_state['values']['menu_human_name'], '%menu_id' => $form['menu_id']['#value']), WATCHDOG_INFO);
-  watchdog('Workbench Menu', "Due to deletion of %item (%item_id), the following child items are being re-assigned to the item %parent_item_id: %child_items", array('%item' => $form_state['values']['item_human_name'], '%item_id' => $item_id, '%parent_item_id' => $parent_id, '%child_items' => print_r($menu_item_children, TRUE)), WATCHDOG_INFO);
-
-  $transaction = db_transaction();
-
-  try {
-    $query = db_delete('workbench_menu_items');
-    $query->condition('id', $item_id);
-    $query->execute();
-
-    foreach (array('expand', 'item_type') as $name) {
-      $query = db_delete('workbench_menu_' . $name . 's');
-      $query->condition('item_id', $item_id);
-      $query->execute();
-    }
-
-    // re-attach all child menu items to the parent of the deleted menu item to prevent dangling items.
-    $query = db_update('workbench_menu_items');
-    $query->condition('parent_id', $item_id);
-    $query->fields(array('parent_id' => $parent_id));
-    $query->execute();
-
-    // enforce transaction execution
-    unset($transaction);
-  }
-  catch (Exception $e) {
-    $transaction->rollback();
-
-    if (class_exists('cf_error')) {
-      cf_error::on_query_execution($e);
-    }
-  }
+  workbench_menu_delete_menu_item($form['item_id']['#value']);
 
   if (empty($form_state['values']['redirect_to'])) {
     $form_state['redirect'] = 'admin/config/workbench/access/menus';
@@ -2389,12 +2218,7 @@ function workbench_menu_reset_cache_form($form, &$form_state) {
     return;
   }
 
-  if (!empty($form['path']['#default_value'])) {
-    workbench_menu_clear_cache_at_path($form['path']['#default_value']);
-
-    drupal_set_message(t("The menu cache for the path '%path' has been reset.", array('%path' => $form['path']['#default_value'])));
-  }
-  else {
-    drupal_set_message(t("Unable to reset the menu cache because no path was given."), 'warning');
-  }
+  $processed = array();
+  workbench_menu_clear_cache_by_access_id($form['access_id']['#value'], $processed);
+  drupal_set_message(t("The menu cache for the menu '%menu_human_name' has been reset.", array('%menu_human_name' => $form['menu_human_name']['#value'])));
 }

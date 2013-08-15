@@ -66,6 +66,8 @@ function workbench_menu_permission() {
  * Implements hook_entity_info().
  */
 function workbench_menu_entity_info() {
+  $types = array();
+
   $types['workbench_menu'] = array(
     'label' => t('Workbench menu'),
     'base table' => 'workbench_menus',
@@ -75,6 +77,17 @@ function workbench_menu_entity_info() {
       'id' => 'id',
     ),
   );
+
+  $types['workbench_menu_item'] = array(
+    'label' => t('Workbench menu item'),
+    'base table' => 'workbench_menu_items',
+    'controller class' => 'WorkbenchMenuItemController',
+    'fieldable' => FALSE,
+    'entity keys' => array(
+      'id' => 'id',
+    ),
+  );
+
   return $types;
 }
 
@@ -1685,7 +1698,7 @@ function workbench_menu_get_menus($conditions = array(), $keyed = NULL) {
         $static_menus['menu'][$menu->id] = &$menu;
       }
 
-      $menu->items = (array) workbench_menu_get_load_menu_items(array('menu_id' => $menu->id), 'id');
+      $menu->items = (array) workbench_menu_get_menu_items(array('menu_id' => $menu->id), 'id');
 
       // only load the taxonomy name to get the term name if one is not already defined in the breadcrumb name.
       if (empty($menu->breadcrumb_name)) {
@@ -1852,6 +1865,12 @@ function workbench_menu_save_menus($menus) {
  *   human name strings.
  *   - 'weight' A number representing the weight or an array of
  *   weight numbers.
+ *   - 'active path' Active path of the items to load, may be set to.
+ *   - 'item_type' The item type id or item type machine name of the items to
+ *   load.
+ *   - fast: An array key whose value should be NULL. When specified, this will
+ *   perform a fast load. The fast load does not perform the additional
+ *   (expensive) operations that build the menu items.
  * @param string|null $keyed
  *   (optional) A string matching one of the following: 'id',
  *   'menu_id'.
@@ -1861,9 +1880,15 @@ function workbench_menu_save_menus($menus) {
  *   will use the specified key name.
  *
  * @return array
- *   An array of menu objects for the given node.
+ *   An array of menu items.
+ *   Normally, this is a sorted array with the keys:
+ *   - 'flat' An array of menu items using a single depth structure.
+ *   - 'nested' An array of menu items using a parent child structure.
+ *
+ *   When 'fast' is specified, this is simply an unsorted array as returned
+ *   by the database.
  */
-function workbench_menu_get_load_menu_items($conditions = array(), $keyed = NULL) {
+function workbench_menu_get_menu_items($conditions = array(), $keyed = NULL) {
   $sorted_menu_items = array();
   $sorted_menu_items['flat'] = array();
   $sorted_menu_items['nested'] = array();
@@ -1889,8 +1914,8 @@ function workbench_menu_get_load_menu_items($conditions = array(), $keyed = NULL
     $wmo = 'wmko' . $key;
     $wm = 'wmk' . $key;
 
-    $query->innerjoin('workbench_menu_' . $name . 's',  $wm, 'wmi.id = ' . $wm . '.item_id');
-    $query->innerjoin('workbench_menu_options_' . $name,  $wmo, $wm . '.' . $name . '_id = ' . $wmo . '.id');
+    $query->leftjoin('workbench_menu_' . $name . 's',  $wm, 'wmi.id = ' . $wm . '.item_id');
+    $query->leftjoin('workbench_menu_options_' . $name,  $wmo, $wm . '.' . $name . '_id = ' . $wmo . '.id');
     $query->addField($wmo, 'id', $name . '_id');
     $query->addField($wmo, 'machine_name', $name . '_machine_name');
     $query->addField($wmo, 'human_name', $name . '_human_name');
@@ -1944,6 +1969,45 @@ function workbench_menu_get_load_menu_items($conditions = array(), $keyed = NULL
     }
   }
 
+  if (isset($conditions['active_path'])) {
+    if (is_numeric($conditions['active_path'])) {
+      $and->condition('wmi.active_path', $conditions['active_path']);
+    }
+    elseif (is_string($conditions['item_type'])) {
+      $and->condition('wmi.active_path', $conditions['active_path']);
+    }
+  }
+
+  if (isset($conditions['item_type'])) {
+    if (is_numeric($conditions['item_type'])) {
+      $and->condition('wmkoit.id', $conditions['item_type']);
+    }
+    elseif (is_string($conditions['item_type'])) {
+      $and->condition('wmkoit.machine_name', $conditions['item_type']);
+    }
+    elseif (is_array($conditions['item_type']) && !empty($conditions['item_type'])) {
+      $item_type_ids = array();
+      $item_type_names = array();
+
+      foreach ($conditions['item_type'] as $key => $item_type) {
+        if (is_numeric($item_type)) {
+          $item_type_ids[] = $item_type;
+        }
+        elseif (is_string($item_type)) {
+          $item_type_names[] = $item_type;
+        }
+      }
+
+      if (!empty($item_type_ids)) {
+        $and->condition('wmkoit.id', $item_type_ids, 'IN');
+      }
+
+      if (!empty($item_type_names)) {
+        $and->condition('wmkoit.machine_name', $item_type_names, 'IN');
+      }
+    }
+  }
+
   $query->condition($and);
   $menu_items = array();
 
@@ -1954,6 +2018,10 @@ function workbench_menu_get_load_menu_items($conditions = array(), $keyed = NULL
     catch (Exception $e) {
       if (class_exists('cf_error')) {
         cf_error::on_query_execution($e);
+      }
+
+      if (array_key_exists('fast', $conditions)) {
+        return $menu_items;
       }
 
       return $sorted_menu_items;
@@ -1974,6 +2042,10 @@ function workbench_menu_get_load_menu_items($conditions = array(), $keyed = NULL
         cf_error::on_query_execution($e);
       }
     }
+  }
+
+  if (array_key_exists('fast', $conditions)) {
+    return $menu_items;
   }
 
   if (!empty($menu_items)) {
@@ -2052,22 +2124,22 @@ function workbench_menu_get_load_menu_items($conditions = array(), $keyed = NULL
  *
  * @param array $conditions
  *   (optional)An array that is passed directly to
- *   workbench_menu_get_load_menu_items().
+ *   workbench_menu_get_menu_items().
  * @param string|null $keyed
  *   (optional) A string that is passed directly to
- *   workbench_menu_get_load_menu_items().
+ *   workbench_menu_get_menu_items().
  *
  * @return array
  *   A processed array select list of menu objects for the given
  *   node.
  *
- * @see workbench_menu_get_load_menu_items()
+ * @see workbench_menu_get_menu_items()
  */
-function workbench_menu_get_load_menu_items_select_list_options($conditions = array(), $keyed = NULL) {
+function workbench_menu_get_menu_items_select_list_options($conditions = array(), $keyed = NULL) {
   $options_list = &drupal_static(__FUNCTION__, NULL);
 
   if (is_null($options_list)) {
-    $items = (array) workbench_menu_get_load_menu_items($conditions, $keyed);
+    $items = (array) workbench_menu_get_menu_items($conditions, $keyed);
 
     foreach ($items['flat'] as &$i) {
       $available_parents[$i['item']->id] = $i['item']->human_name;
@@ -2079,7 +2151,7 @@ function workbench_menu_get_load_menu_items_select_list_options($conditions = ar
     $data['options']['0'] = "<No Parent>";
 
     foreach ($items['nested'] as &$nested_item) {
-      workbench_menu_get_load_menu_items_select_list_options_recursive_walk($nested_item, $data);
+      workbench_menu_get_menu_items_select_list_options_recursive_walk($nested_item, $data);
     }
 
     $options_list = $data['options'];
@@ -2098,9 +2170,9 @@ function workbench_menu_get_load_menu_items_select_list_options($conditions = ar
  * @param array $data
  *   An array of data globally shared between the different recursive calls.
  *
- * @see workbench_menu_get_load_menu_items_select_list_options()
+ * @see workbench_menu_get_menu_items_select_list_options()
  */
-function workbench_menu_get_load_menu_items_select_list_options_recursive_walk(&$item, &$data) {
+function workbench_menu_get_menu_items_select_list_options_recursive_walk(&$item, &$data) {
   if (!isset($data['depth'])) {
     $data['depth'] = 0;
   }
@@ -2118,7 +2190,7 @@ function workbench_menu_get_load_menu_items_select_list_options_recursive_walk(&
     $data['depth']++;
 
     foreach ($item['children'] as &$child) {
-      workbench_menu_get_load_menu_items_select_list_options_recursive_walk($child, $data);
+      workbench_menu_get_menu_items_select_list_options_recursive_walk($child, $data);
     }
 
     $data['depth']--;
@@ -2156,6 +2228,72 @@ function workbench_menu_edit_access($access_type = NULL, $access_id = NULL) {
   }
 
   return FALSE;
+}
+
+/**
+ * Clears the given workbench menus by the access id.
+ *
+ * @param int $access_id
+ *   The access id of the menu to clear.
+ * @param array $processed
+ *   A collection of menus whose cache has already been cleared.
+ *   This prevents infinite recursion.
+ */
+function workbench_menu_clear_cache_by_access_id($access_id, &$processed) {
+  if (!is_array($processed)) {
+    $processed = array();
+  }
+
+  if (in_array($access_id, $processed)) {
+    return;
+  }
+
+  $menus = (array) workbench_menu_get_menus(array('access_id' => $access_id, 'fast' => NULL), 'id');
+
+  foreach ($menus as $menu) {
+    workbench_menu_clear_cache_at_path($menu->path);
+    $processed[$menu->id] = $menu->access_id;
+
+    // recursively process each associated menu.
+    $items = (array) workbench_menu_get_menu_items(array('menu_id' => $menu->id, 'item_type' => array('item_menu', 'item_menu_item'), 'fast' => NULL), 'id');
+
+    foreach ($items as $item) {
+      workbench_menu_clear_cache_by_menu_id($item->menu_id, $processed);
+    }
+  }
+}
+
+/**
+ * Clears the given workbench menus by the menu id.
+ *
+ * @param int $id
+ *   The menu id of the menu to clear.
+ * @param array $processed
+ *   A collection of menus whose cache has already been cleared.
+ *   This prevents infinite recursion.
+ */
+function workbench_menu_clear_cache_by_menu_id($id, &$processed) {
+  if (!is_array($processed)) {
+    $processed = array();
+  }
+
+  if (array_key_exists($id, $processed)) {
+    return;
+  }
+
+  $menus = (array) workbench_menu_get_menus(array('id' => $id, 'fast' => NULL), 'id');
+
+  foreach ($menus as $menu) {
+    workbench_menu_clear_cache_at_path($menu->path);
+    $processed[$menu->id] = $menu->access_id;
+
+    // recursively process each associated menu.
+    $items = (array) workbench_menu_get_menu_items(array('menu_id' => $menu->id, 'item_type' => array('item_menu', 'item_menu_item'), 'fast' => NULL), 'id');
+
+    foreach ($items as $item) {
+      workbench_menu_clear_cache_by_menu_id($item->menu_id, $processed);
+    }
+  }
 }
 
 /**
@@ -2589,4 +2727,314 @@ function workbench_menu_access_menu($access_id, $account = NULL) {
   }
 
   return !empty($count);
+}
+
+/**
+ * Return an array of default menu item settings/
+ *
+ * @param object|null $item
+ *   (optional) An already loaded menu item object.
+ *
+ * @return array
+ *   An array of default menu item settings.
+ */
+function workbench_menu_get_menu_item_defaults($item = NULL) {
+  $defaults = array();
+  $defaults['human_name'] = '';
+  $defaults['parent_id'] = '0';
+  $defaults['weight'] = '0';
+  $defaults['active_path'] = '';
+  $defaults['item_type'] = 'item_node';
+  $defaults['expand'] = 'expand_auto';
+  $defaults['properties'] = array();
+  $defaults['properties']['url'] = '';
+  $defaults['properties']['node_id'] = '';
+  $defaults['properties']['disabled'] = FALSE;
+  $defaults['properties']['clickable'] = FALSE;
+  $defaults['properties']['file'] = '';
+  $defaults['properties']['file_type'] = 'file';
+  $defaults['properties']['menu'] = NULL;
+  $defaults['properties']['menu_item'] = NULL;
+  $defaults['properties']['never_suppress'] = FALSE;
+
+  if (is_object($item)) {
+    if (property_exists($item, 'human_name') && is_string($item->human_name)) {
+      $defaults['human_name'] = $item->human_name;
+    }
+
+    if (property_exists($item, 'parent_id')) {
+      if (is_numeric($item->parent_id)) {
+        $defaults['parent_id'] = $item->parent_id;
+      }
+      elseif (is_null($item->parent_id)) {
+        $defaults['parent_id'] = -1;
+      }
+    }
+
+    if (property_exists($item, 'weight') && is_numeric($item->weight)) {
+      $defaults['weight'] = $item->weight;
+    }
+
+    if (property_exists($item, 'active_path') && is_string($item->active_path)) {
+      $defaults['active_path'] = $item->active_path;
+
+      // be user-friendly and show normal spaces instead of %20.
+      $defaults['active_path'] = preg_replace('/%20/', ' ', $defaults['active_path']);
+    }
+
+    if (property_exists($item, 'item_type') && is_array($item->item_type)) {
+      foreach ($item->item_type as &$type) {
+        $defaults['item_type'] = $type->machine_name;
+      }
+    }
+
+    if (property_exists($item, 'expand') && is_array($item->expand)) {
+      foreach ($item->expand as &$expand) {
+        $defaults['expand'] = $expand->machine_name;
+      }
+    }
+
+    if (property_exists($item, 'properties') && is_array($item->properties)) {
+      foreach ($item->properties as $key => &$value) {
+        $defaults['properties'][$key] = $value;
+      }
+    }
+
+    if (!empty($defaults['properties']['url'])) {
+      // be user-friendly and show normal spaces instead of %20.
+      $defaults['properties']['url'] = preg_replace('/%20/', ' ', $defaults['properties']['url']);
+    }
+
+    if (!empty($defaults['properties']['file'])) {
+      // be user-friendly and show normal spaces instead of %20.
+      $defaults['properties']['file'] = preg_replace('/%20/', ' ', $defaults['properties']['file']);
+    }
+
+    if (!empty($defaults['properties']['node_id'])) {
+      $defaults['properties']['node_id'] = $defaults['properties']['node_id'];
+    }
+
+    if (isset($defaults['properties']['never_suppress']) && is_bool($defaults['properties']['never_suppress'])) {
+      $defaults['properties']['never_suppress'] = $defaults['properties']['never_suppress'];
+    }
+  }
+
+  return $defaults;
+}
+
+/**
+ * Adds or Updates a menu item.
+ *
+ * @param object menu
+ *   The menu object that the item will be added to.
+ * @param array settings
+ *   An array containin the menu item settings.
+ * @param int|null item_id
+ *   Set this to null to add a new item.
+ *   Set this to the numeric menu item id to update an existing item.
+ *
+ * @return bool
+ *   TRUE on success, FALSE otherwise.
+ */
+function workbench_menu_update_menu_item($menu, $settings, $item_id = NULL) {
+  if (!is_object($menu)) {
+    if (class_exists('cf_error')) {
+      cf_error::invalid_object('menu');
+    }
+    return FALSE;
+  }
+
+  if (!is_array($settings)) {
+    if (class_exists('cf_error')) {
+      cf_error::invalid_array('settings');
+    }
+    return FALSE;
+  }
+
+  if (!is_null($item_id) && !is_numeric($item_id)) {
+    if (class_exists('cf_error')) {
+      cf_error::invalid_numeric('item_id');
+    }
+    return FALSE;
+  }
+
+  $transaction = db_transaction();
+  $user = cf_current_user();
+  $taxonomy_term = taxonomy_term_load($menu->access_id);
+
+  if (is_null($item_id)) {
+    watchdog('Workbench Menu', "The user %user has added a new item %item to the menu %menu (%menu_id)", array('%user' => $user->name, '%item' => $settings['human_name'], '%menu' => $taxonomy_term->name, '%menu_id' => $menu->id), WATCHDOG_INFO);
+  }
+  else {
+    watchdog('Workbench Menu', "The user %user has changed the item %item (%item_id) from the menu %menu (%menu_id)", array('%user' => $user->name, '%item' => $settings['human_name'], '%item_id' => $item_id, '%menu' => $taxonomy_term->name, '%menu_id' => $menu->id), WATCHDOG_INFO);
+  }
+
+  try {
+    if (is_null($item_id)) {
+      $existing = NULL;
+    }
+    else {
+      $query = db_select('workbench_menu_items', 'wmi');
+      $query->fields('wmi');
+      $query->condition('id', $item_id);
+      $existing = $query->execute()->fetchAll();
+    }
+
+    $columns = array('menu_id', 'parent_id', 'human_name', 'weight', 'active_path', 'properties');
+    $record = array();
+    $record['menu_id'] = $menu->id;
+    $record['parent_id'] = $settings['parent_id'];
+    $record['human_name'] = $settings['human_name'];
+    $record['weight'] = $settings['weight'];
+    $record['active_path'] = $settings['active_path'];
+    $record['properties'] = $settings['properties'];
+
+    if (empty($existing)) {
+      drupal_write_record('workbench_menu_items', $record);
+      $item_id = $record['id'];
+    }
+    else {
+      $primary_keys = array('id');
+      $record['id'] = $item_id;
+      drupal_write_record('workbench_menu_items', $record, $primary_keys);
+    }
+
+    foreach (array('expand', 'item_type') as $name) {
+      if (!empty($existing)) {
+        $query = db_delete('workbench_menu_' . $name . 's');
+        $query->condition('item_id', $item_id);
+        $query->execute();
+      }
+
+      $options = (array) cf_db_options_get_options('workbench_menu', $name);
+
+      if (!empty($settings[$name]) && isset($options[$settings[$name]])) {
+        $record = array();
+        $record['item_id'] = $item_id;
+        $record[$name . '_id'] = $options[$settings[$name]]->id;
+
+        $query = db_insert('workbench_menu_' . $name . 's');
+        $query->fields($record);
+        $query->execute();
+      }
+    }
+
+    // enforce transaction execution
+    unset($transaction);
+  }
+  catch (Exception $e) {
+    $transaction->rollback();
+
+    if (class_exists('cf_error')) {
+      cf_error::on_query_execution($e);
+    }
+
+    return FALSE;
+  }
+
+  return TRUE;
+}
+
+/**
+ * Deletes an existing menu item.
+ *
+ * @param int item_id
+ *   The numeric menu item id..
+ *
+ * @return bool
+ *   TRUE on success, FALSE otherwise.
+ */
+function workbench_menu_delete_menu_item($item_id) {
+  if (!is_numeric($item_id)) {
+    if (class_exists('cf_error')) {
+      cf_error::invalid_numeric('item_id');
+    }
+    return FALSE;
+  }
+
+  // load the item settings.
+  $items = (array) workbench_menu_get_menu_items(array('id' => $item_id, 'fast' => NULL), 'id');
+
+  if (empty($items)) {
+    if (class_exists('cf_error')) {
+      cf_error::invalid_variable('item_id', "There is no item with an id of %item_id", array('%item_id' => $item_id));
+    }
+    return FALSE;
+  }
+
+  reset($items);
+  $item = current($items);
+
+  $menus = (array) workbench_menu_get_menus(array('id' => $item->menu_id, 'fast' => NULL), 'id');
+
+  if (empty($menus)) {
+    if (class_exists('cf_error')) {
+      cf_error::invalid_variable('item->menu_id', "There is no menu with an id of %menu_id", array('%menu_id' => $item->menu_id));
+    }
+    return FALSE;
+  }
+
+  reset($menus);
+  $menu = current($menus);
+
+  $user = cf_current_user();
+  $child_items = array();
+
+  try {
+    $query = db_select('workbench_menu_items', 'wmi');
+    $query->fields('wmi', array('parent_id'));
+    $query->condition('wmi.id', $item_id);
+
+    $parent_id = (int) $query->execute()->fetchField();
+
+    $query = db_select('workbench_menu_items', 'wmi');
+    $query->fields('wmi', array('id', 'human_name'));
+    $query->condition('wmi.parent_id', $item_id);
+
+    $menu_item_children = array();
+    $results = (array) $query->execute()->fetchAll();
+    foreach ($results as &$result) {
+      $menu_item_children[$result->id] = $result->human_name;
+    }
+  }
+  catch (Exception $e) {
+    if (class_exists('cf_error')) {
+      cf_error::on_query_execution($e);
+    }
+
+    watchdog('Workbench Menu', t("An unexpected error happened while trying to process child menu items with a parent id of %item_id."), array('%item_id' => $item_id), WATCHDOG_ERROR);
+  }
+
+  watchdog('Workbench Menu', "The user %user has deleted the item %item (%item_id) from the menu %menu (%menu_id)", array('%user' => $user->name, '%item' => $item->human_name, '%item_id' => $item_id, '%menu' => $menu->human_name, '%menu_id' => $menu->id), WATCHDOG_INFO);
+  watchdog('Workbench Menu', "Due to deletion of %item (%item_id), the following child items are being re-assigned to the item %parent_item_id: %child_items", array('%item' => $item->human_name, '%item_id' => $item_id, '%parent_item_id' => $parent_id, '%child_items' => print_r($menu_item_children, TRUE)), WATCHDOG_INFO);
+
+  $transaction = db_transaction();
+
+  try {
+    $query = db_delete('workbench_menu_items');
+    $query->condition('id', $item_id);
+    $query->execute();
+
+    foreach (array('expand', 'item_type') as $name) {
+      $query = db_delete('workbench_menu_' . $name . 's');
+      $query->condition('item_id', $item_id);
+      $query->execute();
+    }
+
+    // re-attach all child menu items to the parent of the deleted menu item to prevent dangling items.
+    $query = db_update('workbench_menu_items');
+    $query->condition('parent_id', $item_id);
+    $query->fields(array('parent_id' => $parent_id));
+    $query->execute();
+
+    // enforce transaction execution
+    unset($transaction);
+  }
+  catch (Exception $e) {
+    $transaction->rollback();
+
+    if (class_exists('cf_error')) {
+      cf_error::on_query_execution($e);
+    }
+  }
 }
