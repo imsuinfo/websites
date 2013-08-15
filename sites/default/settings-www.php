@@ -654,6 +654,12 @@ $conf['webform_export_encoding'] = 'UTF-8';
 
 
 /**
+ * Workbench menu default settings
+ */
+$conf['workbench_menu_item_use_normal_path'] = TRUE;
+
+
+/**
  * Additional file_db variables.
  */
 $conf['file_db_server_id'] = 1;

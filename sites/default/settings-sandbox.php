@@ -648,6 +648,12 @@ $conf['batch_background'] = array();
 
 
 /**
+ * Workbench menu default settings
+ */
+$conf['workbench_menu_item_use_normal_path'] = TRUE;
+
+
+/**
  * Webform default settings
  */
 $conf['webform_export_encoding'] = 'UTF-8';

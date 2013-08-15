@@ -511,6 +511,7 @@ function workbench_menu_build_menus($path_string, &$menus_processed, &$breadcrum
 
     $variables = array();
     $variables['menus_processed'] = &$menus_processed;
+    $variables['use_normal_path'] = variable_get('workbench_menu_item_use_normal_path', FALSE);
 
     if ($breadcrumbs === FALSE) {
       $variables['breadcrumbs_all'] = FALSE;
@@ -755,6 +756,7 @@ function workbench_menu_build_menu_item($menu, $item, &$variables) {
     $item_menu_item_variables['parent_path'] = $item_menu->path;
     $item_menu_item_variables['menu_path'] = $item_menu->path;
     $item_menu_item_variables['breadcrumbs'] = array(l($item_menu->breadcrumb_name, $item_menu->path));
+    $item_menu_item_variables['use_normal_path'] = $variables['use_normal_path'];
 
     if ($variables['breadcrumbs_all'] === FALSE) {
       $item_menu_item_variables['breadcrumbs_all'] = FALSE;
@@ -878,7 +880,13 @@ function workbench_menu_build_menu_item($menu, $item, &$variables) {
       }
 
       if (cf_is_integer($matches[1])) {
-        $path_alias = drupal_get_path_alias('node/' . $matches[1]) . $link_extras;
+        if ($variables['use_normal_path']) {
+          $path_alias = 'node/' . $matches[1] . $link_extras;
+        }
+        else {
+          $path_alias = drupal_get_path_alias('node/' . $matches[1]) . $link_extras;
+        }
+
         $parsed_url = parse_url($path_alias);
 
         if (!empty($parsed_url['path'])) {
@@ -919,8 +927,15 @@ function workbench_menu_build_menu_item($menu, $item, &$variables) {
         $item_settings['attributes']['class'][] = 'menu_item-menu_top';
         $item_settings['top_link'] = TRUE;
 
-        $link_path = '/' . $menu->path;
-        $active_path = $menu->path;
+        if ($variables['use_normal_path']) {
+          $normal_path = drupal_get_normal_path($menu->path);
+          $link_path = '/' . $normal_path;
+          $active_path = $normal_path;
+        }
+        else {
+          $link_path = '/' . $menu->path;
+          $active_path = $menu->path;
+        }
       }
       else {
         $link_path = $item['item']->properties['url'];
@@ -1139,6 +1154,7 @@ function workbench_menu_build_menu_item($menu, $item, &$variables) {
       $child_variables['parent_path'] = $variables['parent_path'];
       $child_variables['menu_path'] = $variables['menu_path'];
       $child_variables['breadcrumbs'] = $variables['breadcrumbs'];
+      $child_variables['use_normal_path'] = $variables['use_normal_path'];
 
       if ($variables['breadcrumbs_all'] === FALSE) {
         $child_variables['breadcrumbs_all'] = FALSE;
