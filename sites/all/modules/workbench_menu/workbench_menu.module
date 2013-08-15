@@ -664,7 +664,8 @@ function workbench_menu_build_menu_item($menu, $item, &$variables) {
       return array('structure' => array(), 'settings' => array());
     }
 
-    $item_menu = array_pop($item_menus);
+    reset($item_menus);
+    $item_menu = current($item_menus);
 
     // prevent infinite loops, only process menus once and do not process menus that point to self.
     if ($menu->id == $field || array_key_exists($item_menu->id, $variables['menus_processed'])) {
@@ -723,7 +724,8 @@ function workbench_menu_build_menu_item($menu, $item, &$variables) {
       return array('structure' => array(), 'settings' => array());
     }
 
-    $item_menu = array_pop($item_menus);
+    reset($item_menus);
+    $item_menu = current($item_menus);
     $item_menu_item = NULL;
     $item_menu_item_id = NULL;
 
@@ -806,7 +808,6 @@ function workbench_menu_build_menu_item($menu, $item, &$variables) {
 
     $structure[$item['item']->weight][$item_id] = $data['structure'][$item_menu_item['item']->weight][$item_menu_item_id];
 
-    $item_settings['label'] = $data['settings'][$item_menu_item_id]['label'];
     $item_settings['prefix'] = $data['settings'][$item_menu_item_id]['prefix'];
     $item_settings['postfix'] = $data['settings'][$item_menu_item_id]['postfix'];
     $item_settings['outside_link'] = $data['settings'][$item_menu_item_id]['outside_link'];
