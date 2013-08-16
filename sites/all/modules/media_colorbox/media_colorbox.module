@@ -15,7 +15,7 @@ function media_colorbox_theme() {
         'item_style' => NULL,
         'item_class' => NULL,
         'entity_id' => NULL,
-        'file' => NULL,
+        'file_id' => NULL,
         'field' => array(),
         'display_settings' => array(),
         'langcode' => NULL,
@@ -38,7 +38,7 @@ function media_colorbox_menu() {
     'page callback' => 'media_colorbox_callback',
     'page arguments' => array(1, 2, 3),
     'access callback' => 'file_entity_access',
-    'access arguments' => array('view'),
+    'access arguments' => array('view', 1),
     'type' => MENU_CALLBACK,
     'file' => 'media_colorbox.pages.inc',
   );
@@ -142,7 +142,7 @@ function media_colorbox_field_formatter_settings_form($field, $instance, $view_m
     
     if($display['type'] == 'colorbox_link'){
       //had an issue when using this formatter in a View, results in a Fatal error: undefined function field_ui_formatter_options()
-      if (!function_exists(field_ui_formatter_options)) {
+      if (!function_exists('field_ui_formatter_options')) {
         module_load_include('inc', 'field_ui', 'field_ui.admin');
       } 
       if($field['type'] == 'text'){
@@ -398,7 +398,7 @@ function media_colorbox_field_formatter_view($entity_type, $entity, $field, $ins
         '#item_class' => $class,
         '#item_style' => isset($items[0]['override']['style']) ? $items[0]['override']['style'] : NULL,
         '#entity_id' => $nid,
-        '#file' => $entity,
+        '#file_id' => $entity->fid,
         '#field' => $field,
         '#display_settings' => $display['settings'],
         '#langcode' => $langcode,
@@ -421,7 +421,7 @@ function media_colorbox_field_formatter_view($entity_type, $entity, $field, $ins
       $element[$item['fid']] = array(
         '#theme' => 'media_colorbox',
         '#entity_id' => $nid,
-        '#file' => file_load($item['fid']),
+        '#file_id' => $item['fid'],
         '#field' => $field,
         '#display_settings' => $display['settings'],
         '#langcode' => $langcode,
