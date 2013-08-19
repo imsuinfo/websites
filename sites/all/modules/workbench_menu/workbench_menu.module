@@ -292,7 +292,7 @@ function workbench_menu_theme($existing, $type, $theme, $path) {
   $data['count_item_local'] = 0;
   $data['depth'] = 0;
   $data['trail_is_active'] = FALSE;
-  $data['path_current'] = '';
+  $data['path_current'] = array('original' => '', 'normal' => '', 'alias' => '');
 
   $themes['workbench_menu_item'] = array(
     'template' => 'workbench_menu_item',
@@ -326,31 +326,21 @@ function workbench_menu_block_info() {
  * Implements hook_block_view().
  */
 function workbench_menu_block_view($delta = '') {
-  $path = request_path();
+  $path_current = request_path();
+  $path_alias = drupal_get_path_alias($path_current);
 
-  if (empty($path)) {
+  if (empty($path_alias)) {
     return array();
   }
 
-  $parts = explode('/', $path);
+  // build menus based on the alias path.
+  $parts = explode('/', $path_alias);
   $paths = array();
-  $path_string = '';
-
-  $path2 = current_path();
-  $matches = array();
-
-  // not all /node/[nid]* paths have aliases (such as: /node/123/edit might not have an alias and /node/123 might have an alias).
-  // be sure to handle the /node/[nid]* paths as if they were invalid_trail paths for the /node/[nid] alias.
-  $matched = preg_match('@^node/(\d+)(/.*|$|\?.*|#.*)@', $path, $matches);
-
-  if ($matched > 0) {
-    $path_alias = drupal_get_path_alias('node/' . $matches[1]);
-    $parts = explode('/', $path_alias . $matches[2]);
-  }
 
   if (count($parts) == 0) {
     return array();
   }
+
 
   // Load the cached menus or to do the initial processing.
   $markup = array();
@@ -365,6 +355,7 @@ function workbench_menu_block_view($delta = '') {
   $menu_depth = -1;
   $menu_count = 0;
   $breadcrumb_tree = array();
+  $path_string = array('original' => '', 'normal' => '', 'alias' => '');
 
   if ($cached_menu = cache_get($menu_cache_id, 'cache_menu')) {
     $menus_cached = $cached_menu->data;
@@ -376,43 +367,84 @@ function workbench_menu_block_view($delta = '') {
     unset($cached_breadcrumb);
   }
 
+  $last_alias = FALSE;
   foreach ($parts as &$part) {
-    $path_string .= $part;
-    $paths[] = $path_string;
+    $path_string['original'] .= $part;
+    $path_string['normal'] = drupal_get_normal_path($path_string['original']);
+    $path_string['alias'] = drupal_get_path_alias($path_string['original']);
 
-    if (empty($menus_cached[$path_string])) {
-      $menus_cached[$path_string] = (array) workbench_menu_build_menus($path_string, $menus_processed, $breadcrumbs_cached);
-
-      if (!empty($menus_cached[$path_string])) $save_cache = TRUE;
+    if ($path_string['normal'] != $path_string['alias']) {
+      $last_alias = $path_string['alias'];
     }
 
-    if (!empty($menus_cached[$path_string])) {
-      $path_tree[] = $path_string;
+    if (empty($menus_cached[$path_string['alias']])) {
+      $menus_cached[$path_string['alias']] = (array) workbench_menu_build_menus($path_string['alias'], $menus_processed, $breadcrumbs_cached);
+
+      if (!empty($menus_cached[$path_string['alias']]['structure'])) $save_cache = TRUE;
+    }
+
+    if (!empty($menus_cached[$path_string['original']]['structure'])) {
+      $path_tree[] = $path_string['original'];
       $menu_depth++;
     }
 
-    $path_string .= '/';
+    $path_string['original'] .= '/';
   }
+
+  // if there is no menu found, try to find a menu for the last alias in the path.
+  if ($last_alias && $last_alias != $path_string['alias']) {
+    $parts = explode('/', $last_alias);
+    $path_string = array('original' => '', 'normal' => '', 'alias' => '');
+    $path_tree = array();
+    $menu_depth = -1;
+
+    foreach ($parts as &$part) {
+      $path_string['original'] .= $part;
+      $path_string['normal'] = drupal_get_normal_path($path_string['original']);
+      $path_string['alias'] = drupal_get_path_alias($path_string['original']);
+
+       if (empty($menus_cached[$path_string['alias']])) {
+         $menus_cached[$path_string['alias']] = (array) workbench_menu_build_menus($path_string['alias'], $menus_processed, $breadcrumbs_cached);
+
+         if (!empty($menus_cached[$path_string['alias']]['structure'])) $save_cache = TRUE;
+       }
+
+       if (!empty($menus_cached[$path_string['original']]['structure'])) {
+         $path_tree[] = $path_string['original'];
+         $menu_depth++;
+       }
+
+       $path_string['original'] .= '/';
+     }
+   }
 
   if ($save_cache) {
     cache_set($menu_cache_id, $menus_cached, 'cache_menu');
     cache_set($breadcrumb_cache_id, $breadcrumbs_cached, 'cache_menu');
   }
 
-  $path_string = preg_replace('|/$|', '', $path_string);
+  $path_string['original'] = preg_replace('|/$|', '', $path_string['original']);
+  $path_string['normal'] = drupal_get_normal_path($path_string['original']);
+  $path_string['alias'] = drupal_get_path_alias($path_string['original']);
   $show_parents = TRUE;
   $assign_breadcrumbs = TRUE;
   $path_tree2 = $path_tree;
 
   while (!empty($path_tree) && $show_parents) {
-    $current_path = array_pop($path_tree);
+    $current_path = array();
+    $current_path['original'] = array_pop($path_tree);
+    $current_path['normal'] = drupal_get_normal_path($current_path['original']);
+    $current_path['alias'] = drupal_get_path_alias($current_path['original']);
 
     if ($assign_breadcrumbs) {
       while (!empty($path_tree2)) {
-        $current_path2 = array_pop($path_tree2);
+        $current_path2 = array();
+        $current_path2['original'] = array_pop($path_tree2);
+        $current_path2['normal'] = drupal_get_normal_path($current_path2['original']);
+        $current_path2['alias'] = drupal_get_path_alias($current_path2['original']);
 
-        if (!empty($breadcrumbs_cached[$current_path2])) {
-          $bc = array_merge(array('<a href="' . base_path() . '">' . t("Home") . '</a>'), $breadcrumbs_cached[$current_path2]);
+        if (!empty($breadcrumbs_cached[$current_path2['original']])) {
+          $bc = array_merge(array('<a href="' . base_path() . '">' . t("Home") . '</a>'), $breadcrumbs_cached[$current_path2['original']]);
 
           drupal_set_breadcrumb($bc);
           break;
@@ -422,8 +454,8 @@ function workbench_menu_block_view($delta = '') {
       $assign_breadcrumbs = FALSE;
     }
 
-    if (!empty($menus_cached[$current_path]['structure'])) {
-      $data = workbench_menu_render_menus($menus_cached[$current_path], $path_string, $show_parents, $menu_depth, $menu_count);
+    if (!empty($menus_cached[$current_path['alias']]['structure'])) {
+      $data = workbench_menu_render_menus($menus_cached[$current_path['alias']], $path_string, $show_parents, $menu_depth, $menu_count);
 
       foreach ($data as $key => &$value) {
         if (isset($menu_markup[$key])) {
@@ -584,7 +616,6 @@ function workbench_menu_build_menus($path_string, &$menus_processed, &$breadcrum
  */
 function workbench_menu_build_menu_item($menu, $item, &$variables) {
   $built_menu = array();
-
   $item_id = & $item['item']->id;
 
   // menu items with a null parent_id are disabled.
@@ -611,7 +642,7 @@ function workbench_menu_build_menu_item($menu, $item, &$variables) {
   $item_settings['postfix'] = '';
   $item_settings['outside_link'] = FALSE;
   $item_settings['top_link'] = FALSE;
-  $item_settings['active_path'] = '';
+  $item_settings['active_path'] = array('original' => '', 'normal' => '', 'alias' => '');
   $item_settings['breadcrumbs'] = array();
   $item_settings['suppress_active'] = FALSE;
 
@@ -629,13 +660,16 @@ function workbench_menu_build_menu_item($menu, $item, &$variables) {
     break;
   }
 
-  $active_path = preg_replace('/%20/', ' ', $item['item']->active_path);
+  $active_path['original'] = preg_replace('/%20/', ' ', $item['item']->active_path);
+  $active_path['normal'] = drupal_get_normal_path($active_path['original']);
+  $active_path['alias'] = drupal_get_path_alias($active_path['original']);
+
 
   $alter_settings = array();
   $alter_settings['menu'] = clone($menu);
   $alter_settings['item'] = $item;
   $alter_settings['settings'] = &$item_settings;
-  $alter_settings['active_path'] = $active_path;
+  $alter_settings['active_path']= $active_path;
   $alter_settings['variables'] = &$variables;
 
 
@@ -814,7 +848,9 @@ function workbench_menu_build_menu_item($menu, $item, &$variables) {
     $item_settings['postfix'] = $data['settings'][$item_menu_item_id]['postfix'];
     $item_settings['outside_link'] = $data['settings'][$item_menu_item_id]['outside_link'];
     $item_settings['top_link'] = $data['settings'][$item_menu_item_id]['top_link'];
-    $item_settings['active_path'] = $data['settings'][$item_menu_item_id]['active_path'];
+    $item_settings['active_path']['original'] = $data['settings'][$item_menu_item_id]['active_path'];
+    $item_settings['active_path']['normal'] = drupal_get_normal_path($item_settings['active_path']['original']);
+    $item_settings['active_path']['alias'] = drupal_get_path_alias($item_settings['active_path']['original']);
 
     foreach ($data['settings'][$item_menu_item_id]['attributes'] as $attribute => &$value) {
       if ($attribute == 'id' || $attribute == 'class') continue;
@@ -860,7 +896,7 @@ function workbench_menu_build_menu_item($menu, $item, &$variables) {
 
     // top item types force active path and link path to be set to '<top>'.
     if ($item_settings['type'] == 'item_top') {
-      $item['item']->active_path = '<top>';
+      $item['item']->active_path['original'] = '<top>';
       $item['item']->properties['url'] = '<top>';
     }
     else if ($item_settings['type'] == 'item_link') {
@@ -1109,7 +1145,7 @@ function workbench_menu_build_menu_item($menu, $item, &$variables) {
     $active_path = $variables['menu_path'];
   }
   else {
-    if (empty($item_settings['active_path']) && !empty($item['item']->active_path)) {
+    if (empty($item_settings['active_path']['original']) && !empty($item['item']->active_path)) {
       if (preg_match('@^/@', $item['item']->active_path) == 0) {
         $active_path = $variables['parent_path'] . '/' . $item['item']->active_path;
       }
@@ -1123,7 +1159,9 @@ function workbench_menu_build_menu_item($menu, $item, &$variables) {
   // process breadcrumbs.
   if (!empty($active_path)) {
     $active_path = preg_replace('/%20/', ' ', $active_path);
-    $item_settings['active_path'] = $active_path;
+    $item_settings['active_path']['original'] = $active_path;
+    $item_settings['active_path']['normal'] = drupal_get_normal_path($item_settings['active_path']['original']);
+    $item_settings['active_path']['alias'] = drupal_get_path_alias($item_settings['active_path']['original']);
 
     if ($active_path != $variables['menu_path']) {
       $variables['breadcrumbs'][] = l($item_settings['label'], $active_path, array('html' => TRUE));
@@ -1196,9 +1234,13 @@ function workbench_menu_build_menu_item($menu, $item, &$variables) {
  *   An array with the following structure:
  *   - weight: A nested array containing the weights and item ids.
  *   - settings: A flat array containing the properties of each item.
- * @param string $path_current
- *   A string containing the complete url path that is currently
+ * @param array $path_current
+ *   An array of strings containing the complete url path that is currently
  *   active.
+ *   The array keys are:
+ *   original: the original current path as defined by drupal.
+ *   normal: the normalized current path.
+ *   alias: the alias of the current path.
  * @param bool $show_parents
  *   A boolean representing whether or not the parent menus should be
  *   renderred.
@@ -1303,8 +1345,34 @@ function template_preprocess_workbench_menu_item(&$vars) {
   // provide an active text string for purposes of accessibility.
   $variables['active_text'] = '';
 
+  $matched = FALSE;
 
-  if ($settings['active_path'] == $variables['path_current']) {
+  switch ($variables['path_current']['original']) {
+    case $settings['active_path']['original']:
+    case $settings['active_path']['normal']:
+    case $settings['active_path']['alias']:
+      $matched = TRUE;
+  }
+
+  if (!$matched) {
+    switch ($variables['path_current']['normal']) {
+      case $settings['active_path']['original']:
+      case $settings['active_path']['normal']:
+      case $settings['active_path']['alias']:
+        $matched = TRUE;
+    }
+  }
+
+  if (!$matched) {
+    switch ($variables['path_current']['alias']) {
+      case $settings['active_path']['original']:
+      case $settings['active_path']['normal']:
+      case $settings['active_path']['alias']:
+        $matched = TRUE;
+    }
+  }
+
+  if ($matched) {
     $variables['trail_is_active'] = TRUE;
     $variables['active_text'] =' <span class="element-invisible">' . t("(active menu item)") . '</span>';
 
@@ -1316,45 +1384,18 @@ function template_preprocess_workbench_menu_item(&$vars) {
     }
   }
   else {
-    if (preg_match('@' . $settings['active_path'] . '@', $variables['path_current']) > 0) {
-      $path_current_parts = explode('/', $variables['path_current']);
+    foreach (array('original', 'normal', 'alias') as $path_type) {
+      $matched = FALSE;
+      switch ($variables['path_current'][$path_type]) {
+        case $settings['active_path']['original']:
+        case $settings['active_path']['normal']:
+        case $settings['active_path']['alias']:
+          $matched = TRUE;
+      }
 
-      $current_path = current_path();
-
-      while (!empty($path_current_parts)) {
-        if (implode('/', $path_current_parts) == $settings['active_path']) {
-
-          $matches = array();
-          $matched = preg_match('@node/\d+/(.+)$@i', $current_path, $matches);
-
-          // for nodes, the unique path of the node should be considered an normal active and not an invalid.
-          if ($matched > 0 && $settings['active_path'] . '/' . $matches[1] == $variables['path_current']) {
-            $variables['trail_is_active'] = TRUE;
-            $variables['active_text'] =' <span class="element-invisible">' . t("(active menu item)") . '</span>';
-
-            if ($settings['suppress_active']) {
-              $settings['attributes']['class'][] = 'suppressed_active';
-            }
-            else {
-              $settings['attributes']['class'][] = 'active';
-            }
-          }
-          else {
-            $variables['invalid_trail_active'] = TRUE;
-            $variables['trail_is_active'] = TRUE;
-
-            if ($settings['suppress_active']) {
-              $settings['attributes']['class'][] = 'suppressed_invalid_active';
-            }
-            else {
-              $settings['attributes']['class'][] = 'invalid_active';
-            }
-          }
-
-          break;
-        }
-
-        array_pop($path_current_parts);
+      if ($matched) {
+        $variables['trail_is_active'] = TRUE;
+        break;
       }
     }
   }
@@ -1434,7 +1475,7 @@ function template_preprocess_workbench_menu_item(&$vars) {
     }
   }
 
-  if ($variables['trail_is_active'] || preg_match('@^' . $settings['active_path'] . '/@', $variables['path_current']) > 0) {
+  if ($variables['trail_is_active']) {
     $settings['attributes']['class'][] = 'active-trail';
 
     if ($variables['clickable_label']) {
