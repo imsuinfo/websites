@@ -848,9 +848,7 @@ function workbench_menu_build_menu_item($menu, $item, &$variables) {
     $item_settings['postfix'] = $data['settings'][$item_menu_item_id]['postfix'];
     $item_settings['outside_link'] = $data['settings'][$item_menu_item_id]['outside_link'];
     $item_settings['top_link'] = $data['settings'][$item_menu_item_id]['top_link'];
-    $item_settings['active_path']['original'] = $data['settings'][$item_menu_item_id]['active_path'];
-    $item_settings['active_path']['normal'] = drupal_get_normal_path($item_settings['active_path']['original']);
-    $item_settings['active_path']['alias'] = drupal_get_path_alias($item_settings['active_path']['original']);
+    $item_settings['active_path'] = $data['settings'][$item_menu_item_id]['active_path'];
 
     foreach ($data['settings'][$item_menu_item_id]['attributes'] as $attribute => &$value) {
       if ($attribute == 'id' || $attribute == 'class') continue;
@@ -2298,6 +2296,14 @@ function workbench_menu_edit_access($access_type = NULL, $access_id = NULL) {
  *   This prevents infinite recursion.
  */
 function workbench_menu_clear_cache_by_access_id($access_id, &$processed) {
+  if (!is_numeric($id)) {
+    if (class_exists('cf_error')) {
+      cf_error::invalid_integer('access_id');
+    }
+
+    return;
+  }
+
   if (!is_array($processed)) {
     $processed = array();
   }
@@ -2308,14 +2314,34 @@ function workbench_menu_clear_cache_by_access_id($access_id, &$processed) {
 
   $menus = (array) workbench_menu_get_menus(array('access_id' => $access_id, 'fast' => NULL), 'id');
 
-  foreach ($menus as $menu) {
-    workbench_menu_clear_cache_at_path($menu->path);
-    $processed[$menu->id] = $menu->access_id;
+  if (empty($menus)) {
+    return;
+  }
 
-    // recursively process each associated menu.
-    $items = (array) workbench_menu_get_menu_items(array('menu_id' => $menu->id, 'item_type' => array('item_menu', 'item_menu_item'), 'fast' => NULL), 'id');
+  reset($menus);
+  $menu = current($menus);
 
-    foreach ($items as $item) {
+  $menu_items = (array) workbench_menu_get_menus(array('menu_id' => $menu->id, 'fast' => NULL), 'id');
+
+  workbench_menu_clear_cache_at_path($menu->path);
+  $processed[$menu->id] = $menu->access_id;
+
+  // recursively process each associated menu.
+  $items = (array) workbench_menu_get_menu_items(array('item_type' => array('item_menu'), 'fast' => NULL), 'id');
+
+  foreach ($items as $item) {
+    $properties = unserialize($item->properties);
+    if ($properties['menu'] == $menu->id) {
+      workbench_menu_clear_cache_by_menu_id($item->menu_id, $processed);
+    }
+  }
+
+  // recursively process each associated menu items.
+  $items = (array) workbench_menu_get_menu_items(array('item_type' => array('item_menu_item'), 'fast' => NULL), 'id');
+
+  foreach ($items as $item) {
+    $properties = unserialize($item->properties);
+    if (array_key_exists($properties['menu_item'], $menu_items)) {
       workbench_menu_clear_cache_by_menu_id($item->menu_id, $processed);
     }
   }
@@ -2331,6 +2357,14 @@ function workbench_menu_clear_cache_by_access_id($access_id, &$processed) {
  *   This prevents infinite recursion.
  */
 function workbench_menu_clear_cache_by_menu_id($id, &$processed) {
+  if (!is_numeric($id)) {
+    if (class_exists('cf_error')) {
+      cf_error::invalid_integer('id');
+    }
+
+    return;
+  }
+
   if (!is_array($processed)) {
     $processed = array();
   }
@@ -2341,14 +2375,34 @@ function workbench_menu_clear_cache_by_menu_id($id, &$processed) {
 
   $menus = (array) workbench_menu_get_menus(array('id' => $id, 'fast' => NULL), 'id');
 
-  foreach ($menus as $menu) {
-    workbench_menu_clear_cache_at_path($menu->path);
-    $processed[$menu->id] = $menu->access_id;
+  if (empty($menus)) {
+    return;
+  }
 
-    // recursively process each associated menu.
-    $items = (array) workbench_menu_get_menu_items(array('menu_id' => $menu->id, 'item_type' => array('item_menu', 'item_menu_item'), 'fast' => NULL), 'id');
+  reset($menus);
+  $menu = current($menus);
 
-    foreach ($items as $item) {
+  $menu_items = (array) workbench_menu_get_menus(array('menu_id' => $menu->id, 'fast' => NULL), 'id');
+
+  workbench_menu_clear_cache_at_path($menu->path);
+  $processed[$menu->id] = $menu->access_id;
+
+  // recursively process each associated menu.
+  $items = (array) workbench_menu_get_menu_items(array('item_type' => array('item_menu'), 'fast' => NULL), 'id');
+
+  foreach ($items as $item) {
+    $properties = unserialize($item->properties);
+    if ($properties['menu'] == $menu->id) {
+      workbench_menu_clear_cache_by_menu_id($item->menu_id, $processed);
+    }
+  }
+
+  // recursively process each associated menu items.
+  $items = (array) workbench_menu_get_menu_items(array('item_type' => array('item_menu_item'), 'fast' => NULL), 'id');
+
+  foreach ($items as $item) {
+    $properties = unserialize($item->properties);
+    if (array_key_exists($properties['menu_item'], $menu_items)) {
       workbench_menu_clear_cache_by_menu_id($item->menu_id, $processed);
     }
   }
@@ -2361,6 +2415,14 @@ function workbench_menu_clear_cache_by_menu_id($id, &$processed) {
  *   A string representing the path to clear.
  */
 function workbench_menu_clear_cache_at_path($path) {
+  if (!is_string($path)) {
+    if (class_exists('cf_error')) {
+      cf_error::invalid_string('path');
+    }
+
+    return;
+  }
+
   $parts = explode('/', $path);
   $menu_cache_id = 'workbench_menu-menus_at-' . $parts[0];
   $breadcrumb_cache_id = 'workbench_menu-breadcrumbs_at-' . $parts[0];

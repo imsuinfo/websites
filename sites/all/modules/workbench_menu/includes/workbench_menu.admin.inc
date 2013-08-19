@@ -2219,6 +2219,6 @@ function workbench_menu_reset_cache_form($form, &$form_state) {
   }
 
   $processed = array();
-  workbench_menu_clear_cache_by_access_id($form['access_id']['#value'], $processed);
+  workbench_menu_clear_cache_by_menu_id($form['menu_id']['#value'], $processed);
   drupal_set_message(t("The menu cache for the menu '%menu_human_name' has been reset.", array('%menu_human_name' => $form['menu_human_name']['#value'])));
 }
