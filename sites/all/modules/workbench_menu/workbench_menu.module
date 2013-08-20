@@ -2884,26 +2884,37 @@ function workbench_menu_access_menu($access_id, $account = NULL) {
   try {
     $query = db_select('workbench_access', 'wa');
     $query->join('workbench_access_user', 'wau', 'wa.access_id = wau.access_id AND wa.access_scheme = wau.access_scheme');
-    $query->join('workbench_access_role', 'war', 'wa.access_id = war.access_id AND wa.access_scheme = war.access_scheme');
-    $query->fields('wa', array('access_id'));
+    $query->join('users_roles', 'ur', 'ur.uid = wau.uid');
+    $query->fields('wa', array('access_id', 'access_type', 'access_scheme', 'access_type_id'));
+    $query->distinct();
+
     $query->condition('wa.access_id', $access_id);
+    $query->condition('wau.uid', $account->uid);
 
-    $or = db_or();
-    $or->condition('wau.uid', $account->uid);
-    $or->condition('war.rid', array_keys($account->roles), 'IN');
-    $query->condition($or);
+    $field = $query->execute()->fetchField();
 
-    $count = $query->execute()->fetchField();
+    if (!empty($field)) return TRUE;
+
+    $query = db_select('workbench_access', 'wa');
+    $query->join('workbench_access_role', 'war', 'wa.access_id = war.access_id AND wa.access_scheme = war.access_scheme');
+    $query->join('users_roles', 'ur', 'ur.rid = war.rid');
+    $query->fields('wa', array('access_id', 'access_type', 'access_scheme', 'access_type_id'));
+    $query->distinct();
+
+    $query->condition('wa.access_id', $access_id);
+    $query->condition('war.rid', array_keys($account->roles), 'IN');
+
+    $field = $query->execute()->fetchField();
+
+    if (!empty($field)) return TRUE;
   }
   catch (Exception $e) {
     if (class_exists('cf_error')) {
       cf_error::on_query_execution($e);
     }
-
-    return FALSE;
   }
 
-  return !empty($count);
+  return FALSE;
 }
 
 /**
