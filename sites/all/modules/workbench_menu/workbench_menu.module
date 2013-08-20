@@ -553,9 +553,19 @@ function workbench_menu_build_menus($path_string, &$menus_processed, &$breadcrum
     }
 
 
-    $menu_name = $menu->breadcrumb_name;
-    $top_level = array(l($menu_name, $menu->path));
-    $breadcrumbs[$menu->path] = $top_level;
+    $menu_path_normal = drupal_get_normal_path($menu->path);
+    $menu_path_alias = drupal_get_path_alias($menu->path);
+
+    if ($variables['use_normal_path']) {
+      $path_to_use = $menu_path_normal;
+    }
+    else {
+      $path_to_use = $menu_path_alias;
+    }
+
+    $top_level = array('<a href="' . base_path() . check_plain($path_to_use) . '" class="workbench_menu-breadcrumb">' . $menu->breadcrumb_name . '</a>');
+    $breadcrumbs[$menu_path_normal] = $top_level;
+    unset($path_to_use);
 
     if (empty($menu->items['nested'])) {
       $menu_total--;
@@ -563,8 +573,14 @@ function workbench_menu_build_menus($path_string, &$menus_processed, &$breadcrum
     }
 
     foreach ($menu->items['nested'] as &$item) {
-      $variables['parent_path'] = $menu->path;
-      $variables['menu_path'] = $menu->path;
+      $variables['parent_path'] = array();
+      $variables['parent_path']['original'] = $menu->path;
+      $variables['parent_path']['normal'] = $menu_path_normal;
+      $variables['parent_path']['alias'] = $menu_path_alias;
+      $variables['menu_path'] = array();
+      $variables['menu_path']['original'] = $menu->path;
+      $variables['menu_path']['normal'] = $menu_path_normal;
+      $variables['menu_path']['alias'] = $menu_path_alias;
       $variables['breadcrumbs'] = $top_level;
 
       $data = workbench_menu_build_menu_item($menu, $item, $variables);
@@ -600,7 +616,11 @@ function workbench_menu_build_menus($path_string, &$menus_processed, &$breadcrum
  *   - 'breadcrumbs_all':
  *   An array of breadcrumbs whose keys are path strings or FALSE.
  *   If it is FALSE, then breadcrumbs will not be processed.
- *   - 'parent_path': A string of the path of a parent menu item.
+ *   - 'parent_path': An array of strings with the following structure:
+ *     - 'original': the unchanged parent path string.
+ *     - 'normal': the normalized parent path string.
+ *     - 'alias': the alias for the parent path string.
+ *     The 'normal' and 'alias' are created by this function.
  *   - 'breadcrumbs': A breadcrumb array associated with this menu
  *   item.
  *   It is structured such that it can be directly passed to
@@ -661,15 +681,13 @@ function workbench_menu_build_menu_item($menu, $item, &$variables) {
   }
 
   $active_path['original'] = preg_replace('/%20/', ' ', $item['item']->active_path);
-  $active_path['normal'] = drupal_get_normal_path($active_path['original']);
-  $active_path['alias'] = drupal_get_path_alias($active_path['original']);
 
 
   $alter_settings = array();
   $alter_settings['menu'] = clone($menu);
   $alter_settings['item'] = $item;
   $alter_settings['settings'] = &$item_settings;
-  $alter_settings['active_path']= $active_path;
+  $alter_settings['active_path']= &$active_path;
   $alter_settings['variables'] = &$variables;
 
 
@@ -787,10 +805,22 @@ function workbench_menu_build_menu_item($menu, $item, &$variables) {
 
     $item_menu_item_variables = array();
     $item_menu_item_variables['menus_processed'] = $variables['menus_processed'];
-    $item_menu_item_variables['parent_path'] = $item_menu->path;
-    $item_menu_item_variables['menu_path'] = $item_menu->path;
-    $item_menu_item_variables['breadcrumbs'] = array(l($item_menu->breadcrumb_name, $item_menu->path));
+    $item_menu_item_variables['parent_path'] = array();
+    $item_menu_item_variables['parent_path']['original'] = $item_menu->path;
+    $item_menu_item_variables['parent_path']['normal'] = drupal_get_normal_path($item_menu_item_variables['parent_path']['original']);
+    $item_menu_item_variables['parent_path']['alias'] = drupal_get_path_alias($item_menu_item_variables['parent_path']['original']);
+    $item_menu_item_variables['menu_path'] = array();
+    $item_menu_item_variables['menu_path']['original'] = $item_menu->path;
+    $item_menu_item_variables['menu_path']['normal'] = drupal_get_normal_path($item_menu_item_variables['menu_path']['original']);
+    $item_menu_item_variables['menu_path']['alias'] = drupal_get_path_alias($item_menu_item_variables['menu_path']['original']);
     $item_menu_item_variables['use_normal_path'] = $variables['use_normal_path'];
+
+    if ($variables['use_normal_path']) {
+      $item_menu_item_variables['breadcrumbs'] = array('<a href="' . base_path() . check_plain($item_menu_item_variables['parent_path']['normal']) . '" class="workbench_menu-breadcrumb">' . $item_menu->breadcrumb_name . '</a>');
+    }
+    else {
+      $item_menu_item_variables['breadcrumbs'] = array('<a href="' . base_path() . check_plain($item_menu_item_variables['parent_path']['alias']) . '" class="workbench_menu-breadcrumb">' . $item_menu->breadcrumb_name . '</a>');
+    }
 
     if ($variables['breadcrumbs_all'] === FALSE) {
       $item_menu_item_variables['breadcrumbs_all'] = FALSE;
@@ -894,7 +924,7 @@ function workbench_menu_build_menu_item($menu, $item, &$variables) {
 
     // top item types force active path and link path to be set to '<top>'.
     if ($item_settings['type'] == 'item_top') {
-      $item['item']->active_path['original'] = '<top>';
+      $item['item']->active_path = '<top>';
       $item['item']->properties['url'] = '<top>';
     }
     else if ($item_settings['type'] == 'item_link') {
@@ -925,7 +955,7 @@ function workbench_menu_build_menu_item($menu, $item, &$variables) {
 
         if (!empty($parsed_url['path'])) {
           $link_path = '/' . $parsed_url['path'];
-          $active_path = $parsed_url['path'];
+          $active_path['original'] = $parsed_url['path'];
         }
 
         if (!empty($parsed_url['query'])) {
@@ -961,14 +991,15 @@ function workbench_menu_build_menu_item($menu, $item, &$variables) {
         $item_settings['attributes']['class'][] = 'menu_item-menu_top';
         $item_settings['top_link'] = TRUE;
 
+        $active_path['original'] = $menu->path;
+        $active_path['normal'] = drupal_get_normal_path($active_path['original']);
+        $active_path['alias'] = drupal_get_path_alias($active_path['original']);
+
         if ($variables['use_normal_path']) {
-          $normal_path = drupal_get_normal_path($menu->path);
-          $link_path = '/' . $normal_path;
-          $active_path = $normal_path;
+          $link_path = '/' . $active_path['normal'];
         }
         else {
-          $link_path = '/' . $menu->path;
-          $active_path = $menu->path;
+          $link_path = '/' . $active_path['alias'];
         }
       }
       else {
@@ -1057,7 +1088,7 @@ function workbench_menu_build_menu_item($menu, $item, &$variables) {
 
         if (!empty($parsed_url['path'])) {
           $link_path = '/' . $parsed_url['path'];
-          $active_path = $parsed_url['path'];
+          $active_path['original'] = $parsed_url['path'];
           $process = FALSE;
         }
 
@@ -1145,31 +1176,71 @@ function workbench_menu_build_menu_item($menu, $item, &$variables) {
   else {
     if (empty($item_settings['active_path']['original']) && !empty($item['item']->active_path)) {
       if (preg_match('@^/@', $item['item']->active_path) == 0) {
-        $active_path = $variables['parent_path'] . '/' . $item['item']->active_path;
+        $active_path['original'] = $variables['parent_path']['original'] . '/' . $item['item']->active_path;
       }
       else {
-        $active_path = $variables['menu_path'] . $item['item']->active_path;
+        $active_path['original'] = $variables['menu_path']['original'] . $item['item']->active_path;
       }
     }
   }
 
+  $active_path['normal'] = drupal_get_normal_path($active_path['original']);
+  $active_path['alias'] = drupal_get_path_alias($active_path['original']);
+
+
 
   // process breadcrumbs.
-  if (!empty($active_path)) {
-    $active_path = preg_replace('/%20/', ' ', $active_path);
-    $item_settings['active_path']['original'] = $active_path;
-    $item_settings['active_path']['normal'] = drupal_get_normal_path($item_settings['active_path']['original']);
-    $item_settings['active_path']['alias'] = drupal_get_path_alias($item_settings['active_path']['original']);
+  if (!empty($active_path['original'])) {
+    $item_settings['active_path'] = $active_path;
 
-    if ($active_path != $variables['menu_path']) {
-      $variables['breadcrumbs'][] = l($item_settings['label'], $active_path, array('html' => TRUE));
+    $matched = FALSE;
+    foreach (array('original', 'normal', 'alias') as $key) {
+      switch ($active_path[$key]) {
+        case $variables['menu_path']['original']:
+        case $variables['menu_path']['normal']:
+        case $variables['menu_path']['alias']:
+          $matched = TRUE;
+
+          // this breaks out of the for loop and not the switch, which is desired in this case.
+          break;
+      }
+    }
+
+    if (!$matched) {
+      if ($variables['use_normal_path']) {
+        $path_to_use = $active_path['normal'];
+      }
+      else {
+        $path_to_use = $active_path['alias'];
+      }
+
+      $variables['breadcrumbs'][] = '<a href="' . base_path() . check_plain($path_to_use) . '" class="workbench_menu-breadcrumb">' . $item_settings['label'] . '</a>';
+      unset($path_to_use);
     }
 
     if ($variables['breadcrumbs_all'] !== FALSE) {
-      if (preg_match('@^' . $variables['parent_path'] . '/@', $active_path) > 0) {
-        $variables['breadcrumbs_all'][$active_path] = $variables['breadcrumbs'];
+      $matched = FALSE;
+      foreach (array('original', 'normal', 'alias') as $key) {
+        if (preg_match('@^' . $variables['parent_path'][$key] . '/@', $active_path['original']) > 0) {
+          $matched = TRUE;
+          break;
+        }
+        elseif (preg_match('@^' . $variables['parent_path'][$key] . '/@', $active_path['normal']) > 0) {
+          $matched = TRUE;
+          break;
+        }
+        elseif (preg_match('@^' . $variables['parent_path'][$key] . '/@', $active_path['alias']) > 0) {
+          $matched = TRUE;
+          break;
+        }
+      }
+
+      if ($matched) {
+        $variables['breadcrumbs_all'][$active_path['normal']] = $variables['breadcrumbs'];
       }
     }
+
+    unset($matched);
   }
   else {
     $variables['breadcrumbs'][] = '<span>' . $item_settings['label'] . '</span>';
@@ -1344,29 +1415,15 @@ function template_preprocess_workbench_menu_item(&$vars) {
   $variables['active_text'] = '';
 
   $matched = FALSE;
-
-  switch ($variables['path_current']['original']) {
-    case $settings['active_path']['original']:
-    case $settings['active_path']['normal']:
-    case $settings['active_path']['alias']:
-      $matched = TRUE;
-  }
-
-  if (!$matched) {
-    switch ($variables['path_current']['normal']) {
+  foreach (array('original', 'normal', 'alias') as $key) {
+    switch ($variables['path_current'][$key]) {
       case $settings['active_path']['original']:
       case $settings['active_path']['normal']:
       case $settings['active_path']['alias']:
         $matched = TRUE;
-    }
-  }
 
-  if (!$matched) {
-    switch ($variables['path_current']['alias']) {
-      case $settings['active_path']['original']:
-      case $settings['active_path']['normal']:
-      case $settings['active_path']['alias']:
-        $matched = TRUE;
+        // this breaks out of the for loop and not the switch, which is desired in this case.
+        break;
     }
   }
 
