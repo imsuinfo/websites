@@ -134,8 +134,7 @@ function media_variable_default($name = NULL) {
       // Name of the theme to use in the media popup dialog, defaults to
       // admin_theme.
       'dialog_theme' => '',
-      // @TODO: Make a configuration form with this.
-      'file_extensions' => variable_get('file_entity_default_allowed_extensions', 'jpg jpeg gif png txt doc docx xls xlsx pdf ppt pptx pps ppsx odt ods odp') . ' mp3 mov mp4 m4a m4v mpeg avi ogg oga ogv wmv ico',
+
       'max_filesize' => '',
       'debug' => FALSE,
 
@@ -146,7 +145,7 @@ function media_variable_default($name = NULL) {
 
       'import_batch_size' => 20,
       'fromurl_supported_schemes' => array('http', 'https', 'ftp', 'smb', 'ftps'),
-      'icon_base_directory' => drupal_get_path('module', 'media') . '/images/icons',
+      'icon_base_directory' => file_default_scheme() . '://media-icons/',
       'icon_set' => 'default',
 
       // Whether to show the legacy Link and Original view modes. Set to TRUE
