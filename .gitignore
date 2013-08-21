@@ -6,6 +6,7 @@ sites/default/settings.php
 sites/*/files
 sites/*/private
 files
+private
 
 # Custom ignores
 sites/default/deprecated
