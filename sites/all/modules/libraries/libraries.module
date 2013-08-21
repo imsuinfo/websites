@@ -606,6 +606,7 @@ function libraries_load($name, $variant = NULL) {
       // Ensure that the $variant key exists, and if it does not, set its
       // 'installed' property to FALSE by default. This will prevent the loading
       // of the library files below.
+      if (!isset($library['variants'])) $library['variants'] = array();
       $library['variants'] += array($variant => array('installed' => FALSE));
       $library = array_merge($library, $library['variants'][$variant]);
     }
