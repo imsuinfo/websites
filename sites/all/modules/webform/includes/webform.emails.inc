@@ -345,10 +345,21 @@ function webform_email_edit_form($form, $form_state, $node, $email = array()) {
     '#wysiwyg' => FALSE,
   );
 
+
+  // Add the always send option
+  $form['send_email'] = array(
+    '#type' => 'select',
+    '#title' => t('Conditionally send e-mail'),
+    '#options' => array('always' => t("Always Send E-mails"), 'default_enabled' => t("Send E-mails by Default"), 'default_disabled' => t("Don't Send E-mails by Default")),
+    '#description' => t('Always send e-mail when a webform is submitted. When disabled, the only way to send an e-mail is through webform conditionals.'),
+    '#weight' => 25,
+    '#default_value' => isset($email['extra']['send_email']) ? $email['extra']['send_email'] : 'always',
+  );
+
   // Add the submit button.
   $form['actions'] = array(
     '#type' => 'actions',
-    '#weight' => 20,
+    '#weight' => 30,
   );
   $form['actions']['submit'] = array(
     '#type' => 'submit',
@@ -536,6 +547,9 @@ function webform_email_edit_form_submit($form, &$form_state) {
       }
     }
   }
+
+  // add send_email to the 'extra' column
+  $email['extra']['send_email'] = $form_state['values']['send_email'];
 
   // Ensure templates are unaffected by differences in line breaks.
   $form_state['values']['template'] = str_replace(array("\r", "\n"), array('', "\n"), $form_state['values']['template']);

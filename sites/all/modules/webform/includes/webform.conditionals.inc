@@ -48,6 +48,11 @@ function webform_conditionals_form($form, &$form_state, $node) {
 
   $source_list = webform_component_list($node, 'conditional', TRUE, TRUE);
   $target_list = webform_component_list($node, TRUE);
+
+  foreach ($node->webform['emails'] as $eid => $email) {
+    $target_list['eid:' . $eid] = check_plain($email['email']) . ' [eid:' . check_plain($eid) .']';
+  }
+
   $delta = $form_state['conditional_count'];
   $weight = -$delta - 1;
   foreach ($conditionals as $rgid => $conditional_group) {
@@ -60,6 +65,8 @@ function webform_conditionals_form($form, &$form_state, $node) {
       '#actions' => array(
         'hide' => t('hide'),
         'show' => t('show'),
+        'email' => t('Send E-mail'),
+        'no_email' => t('Don\'t E-mail'),
       ),
       '#targets' => $target_list,
       '#weight' => $weight,
@@ -130,6 +137,29 @@ function webform_conditionals_form_add($form, &$form_state) {
   // Add the conditional to form state and rebuild the form.
   $form_state['values']['conditionals'][] = $conditional;
   $form_state['rebuild'] = TRUE;
+}
+
+/**
+ * Validate handler for webform_conditionals_form().
+ */
+function webform_conditionals_form_validate($form, &$form_state) {
+  if (!empty($form_state['values']['conditionals'])) {
+    foreach ($form_state['values']['conditionals'] as $conditional) {
+      if (!isset($conditional['target'])) continue;
+      $numeric_target = is_numeric($conditional['target']);
+
+      if ($conditional['action'] == 'email' || $conditional['action'] == 'no_email') {
+        if ($numeric_target) {
+          form_set_error('', t('Only e-mails may be used with show e-mail or don\' e-mail conditions.'));
+        }
+      }
+      else {
+        if (!$numeric_target) {
+          form_set_error('', t('E-mails can only be used in conjunction with show e-mail or don\'t e-mail conditions.'));
+        }
+      }
+    }
+  }
 }
 
 /**

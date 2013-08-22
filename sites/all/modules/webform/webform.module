@@ -2374,6 +2374,11 @@ function _webform_client_form_rule_check($node, $component, $page_num, $input_va
   if (!isset($target_maps[$node->nid])) {
     $target_map = array();
     foreach ($node->webform['conditionals'] as $conditional) {
+      // remove actions that  do not apply here.
+      if ($condition['action'] == 'email' || $condition['action'] == 'no_email') {
+        continue;
+      }
+
       if ($conditional['target_type'] == 'component') {
         $target_map[$conditional['target']][] = $conditional;
       }
@@ -2944,6 +2949,7 @@ function webform_client_form_submit($form, &$form_state) {
   if (!$is_draft && !$form_state['values']['details']['finished']) {
     drupal_static_reset('webform_get_submission');
     $submission = webform_get_submission($node->webform['nid'], $sid);
+    $submission->input_values = $form_state['values']['submitted'];
     $send_count = webform_submission_send_mail($node, $submission);
   }
 

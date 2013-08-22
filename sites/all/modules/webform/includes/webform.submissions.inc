@@ -181,9 +181,92 @@ function webform_submission_send_mail($node, $submission, $emails = NULL) {
   // Get the list of e-mails we'll be sending.
   $emails = isset($emails) ? $emails : $node->webform['emails'];
 
+  $send_emails = array();
+  $dont_emails = array();
+  $operators = webform_conditional_operators();
+
+  if (!empty($node->webform['conditionals'])) {
+    foreach($node->webform['conditionals'] as $cid => $condition) {
+      // remove actions that do not apply here.
+      if ($condition['action'] != 'email' && $condition['action'] != 'no_email') {
+        continue;
+      }
+
+      $matches = array();
+      preg_match('/eid:(\d+)/', $condition['target'], $matches);
+
+      // this should never happen.
+      if (empty($matches[1])) continue;
+      $eid = $matches[1];
+      unset($matches);
+
+      $conditional_results = array();
+      foreach ($condition['rules'] as $rule) {
+        if ($rule['source_type'] !== 'component') continue;
+        if (!isset($node->webform['components'][$rule['source']])) continue;
+
+        $source_component = $node->webform['components'][$rule['source']];
+        $source_cid = $source_component['cid'];
+
+        $source_values = array();
+        if (isset($submission->input_values[$source_cid])) {
+          $source_values = is_array($submission->input_values[$source_cid]) ? $submission->input_values[$source_cid] : array($submission->input_values[$source_cid]);
+        }
+
+        // Determine the operator and callback.
+        $conditional_type = webform_component_property($source_component['type'], 'conditional_type');
+        $operator_info = $operators[$conditional_type];
+
+        // Perform the comparison callback and build the results for this group.
+        $comparison_callback = $operator_info[$rule['operator']]['comparison callback'];
+        $conditional_results[] = $comparison_callback($source_values, $rule['value']);
+      }
+
+      // Calculate the and/or result.
+      $filtered_results = array_filter($conditional_results);
+      if ($conditional['andor'] === 'or') {
+        $conditional_result = count($filtered_results) > 0;
+      }
+      else {
+        $conditional_result = count($filtered_results) === count($conditional_results);
+      }
+
+      if ($conditional_result) {
+        if ($condition['action'] == 'email') {
+          $send_emails[] = $eid;
+        }
+        elseif ($condition['action'] == 'no_email') {
+          $dont_emails[] = $eid;
+        }
+      }
+    }
+  }
+
   // Create a themed message for mailing.
   $send_count = 0;
   foreach ($emails as $eid => $email) {
+    // conditionally send e-mails.
+    if (isset($email['extra']['send_email']) && $email['extra']['send_email'] != 'always') {
+      if (property_exists($submission, 'send_email')) {
+        if (!$submission->send_email) {
+          continue;
+        }
+      }
+      else {
+        $send_email = TRUE;
+        if ($email['extra']['send_email'] == 'default_enabled') {
+          if (in_array($eid, $dont_emails)) {
+            continue;
+          }
+        }
+        elseif ($email['extra']['send_email'] == 'default_disabled') {
+          if (!in_array($eid, $send_emails)) {
+            continue;
+          }
+        }
+      }
+    }
+
     // Set the HTML property based on availablity of MIME Mail.
     $email['html'] = ($email['html'] && webform_email_html_capable());
 
@@ -512,6 +595,7 @@ function webform_submission_resend_validate($form, &$form_state) {
 function webform_submission_resend_submit($form, &$form_state) {
   $node = $form['#node'];
   $submission = $form['#submission'];
+  $submission->send_mail = TRUE;
 
   $emails = array();
   foreach ($form_state['values']['resend'] as $eid => $checked) {
@@ -530,6 +614,8 @@ function webform_submission_resend_submit($form, &$form_state) {
   else {
     drupal_set_message(t('No e-mails were able to be sent due to a server error.'), 'error');
   }
+
+  unset($submission->send_mail);
 }
 
 /**
