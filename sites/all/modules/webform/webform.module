@@ -1700,6 +1700,8 @@ function webform_node_view($node, $view_mode) {
   $locked = FALSE;
   $allowed_roles = array();
 
+  $redirect_url = trim($node->webform['redirect_url']);
+
   // If a teaser, tell the form to load subsequent pages on the node page.
   if ($view_mode == 'teaser' && !isset($node->webform['action'])) {
     $query = array_diff_key($_GET, array('q' => ''));
@@ -2952,6 +2954,10 @@ function webform_client_form_submit($form, &$form_state) {
   }
   elseif ($redirect_url == '<none>') {
     $redirect = NULL;
+  }
+  elseif ($redirect_url == '<rebuild>') {
+    $redirect = NULL;
+    $form_state['rebuild'] = TRUE;
   }
   elseif ($redirect_url == '<confirmation>') {
     $query = array('sid' => $sid);

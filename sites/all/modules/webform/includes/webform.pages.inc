@@ -73,6 +73,7 @@ function webform_configure_form($form, &$form_state, $node) {
       'confirmation' => t('Confirmation page'),
       'url' => t('Custom URL'),
       'none' => t('No redirect (reload current page)'),
+      'rebuild' => t('Rebuild Form'),
     ),
     '#parents' => array('redirect'),
   );
@@ -331,6 +332,9 @@ function webform_configure_form_validate($form, &$form_state) {
   }
   elseif ($form_state['values']['redirect'] == 'confirmation') {
     form_set_value($form['submission']['redirection']['redirect_url'], '<confirmation>', $form_state);
+  }
+  elseif ($form_state['values']['redirect'] == 'rebuild') {
+    form_set_value($form['submission']['redirection']['redirect_url'], '<rebuild>', $form_state);
   }
   else {
     form_set_value($form['submission']['redirection']['redirect_url'], '<none>', $form_state);
