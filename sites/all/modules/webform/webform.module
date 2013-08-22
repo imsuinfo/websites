@@ -2375,7 +2375,7 @@ function _webform_client_form_rule_check($node, $component, $page_num, $input_va
     $target_map = array();
     foreach ($node->webform['conditionals'] as $conditional) {
       // remove actions that  do not apply here.
-      if ($condition['action'] == 'email' || $condition['action'] == 'no_email') {
+      if ($conditional['action'] == 'email' || $conditional['action'] == 'no_email') {
         continue;
       }
 
