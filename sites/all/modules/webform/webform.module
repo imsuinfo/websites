@@ -2139,6 +2139,16 @@ function webform_client_form($form, &$form_state, $node, $submission, $is_draft 
   $form['#submission'] = $submission;
   $form['#is_draft'] = $is_draft;
   $form['#filter'] = $filter;
+  $form['#reset_webform_id'] = FALSE;
+
+  if (isset($form_state['rebuild_info']['reset_webform_id']) && $form_state['rebuild_info']['reset_webform_id']) {
+    $form['#reset_webform_id'] = TRUE;
+    $form['details']['finished'] = array(
+      '#type' => 'hidden',
+      '#value' => isset($submission->is_draft) ? (!$submission->is_draft) : 0,
+    );
+    $form_state['values']['details']['finished'] = FALSE;
+  }
 
   // Add a theme function for this form.
   $form['#theme'] = array('webform_form_' . $node->nid, 'webform_form');
@@ -2862,6 +2872,15 @@ function webform_client_form_submit($form, &$form_state) {
   // Check if user is submitting as a draft.
   $is_draft = (int) !empty($form_state['save_draft']);
 
+  if ($form['#reset_webform_id']) {
+    $form_state['values']['details']['sid'] = NULL;
+    $sid = NULL;
+
+    if (!$is_draft) {
+      $form_state['values']['details']['finished'] = FALSE;
+    }
+  }
+
   if (!$sid) {
     // Create a new submission object.
     $submission = (object) array(
@@ -2958,6 +2977,10 @@ function webform_client_form_submit($form, &$form_state) {
   elseif ($redirect_url == '<rebuild>') {
     $redirect = NULL;
     $form_state['rebuild'] = TRUE;
+    if (!is_array($form_state['rebuild_info'])) {
+      $form_state['rebuild_info'] = array();
+    }
+    $form_state['rebuild_info']['reset_webform_id'] = TRUE;
   }
   elseif ($redirect_url == '<confirmation>') {
     $query = array('sid' => $sid);
