@@ -191,8 +191,7 @@ function webform_schema() {
       ),
       'name' => array(
         'description' => 'The label for this component.',
-        'type' => 'varchar',
-        'length' => 255,
+        'type' => 'text',
       ),
       'type' => array(
         'description' => 'The field type of this component (textfield, select, hidden, etc.).',
@@ -1589,5 +1588,44 @@ function webform_update_7411(&$sandbox) {
   else {
     // Indicate our current progress to the batch update system.
     $sandbox['#finished'] = $sandbox['progress'] / $sandbox['max'];
+  }
+}
+
+/**
+ * Change the schema for a components label to allow for longer names.
+ */
+function webform_update_7412() {
+  $new_name_column = array(
+    'description' => 'The label for this component.',
+    'type' => 'text',
+  );
+
+  $query = db_select('webform_component', 'wc');
+  $query->fields('wc');
+
+  $results = (array) $query->execute()->fetchAll();
+
+  $transaction = db_transaction();
+
+  try {
+    db_query('ALTER TABLE {webform_component} RENAME COLUMN name TO name_old');
+    db_add_field('webform_component', 'name', $new_name_column);
+
+    foreach ($results as $result) {
+      $subquery = db_update('webform_component');
+      $subquery->condition('nid', $result->nid);
+      $subquery->condition('cid', $result->cid);
+      $subquery->fields(array('name' => $result->name));
+      $subquery->execute();
+    }
+
+    db_query('ALTER TABLE {webform_component} DROP COLUMN name_old');
+
+    // force execution of transaction
+    unset($transaction);
+  }
+  catch (Exception $e) {
+    $transaction->rollback();
+    throw $e;
   }
 }

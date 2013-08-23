@@ -390,13 +390,12 @@ function webform_component_edit_form($form, $form_state, $node, $component, $clo
 
   if (webform_component_feature($component['type'], 'title')) {
     $form['name'] = array(
-      '#type' => 'textfield',
+      '#type' => 'textarea',
       '#default_value' => $component['name'],
       '#title' => t('Label'),
       '#description' => t('This is used as a descriptive label when displaying this form element.'),
       '#required' => TRUE,
       '#weight' => -10,
-      '#maxlength' => 255,
     );
   }
 
