@@ -20,6 +20,7 @@ function _webform_defaults_fieldset() {
       'collapsed' => 0,
       'description' => '',
       'private' => FALSE,
+      'as_div' => FALSE,
     ),
   );
 }
@@ -45,6 +46,14 @@ function _webform_edit_fieldset($component) {
     '#weight' => 3,
     '#parents' => array('extra', 'collapsed'),
   );
+  $form['display']['as_div'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('Display fieldset as a Divider'),
+    '#default_value' => $component['extra']['as_div'],
+    '#description' => t('Fieldsets do not print properly and have a tendency to get cut off. To ensure that this can be properly printed, enabled this. This does not display the fieldsets title. This is also not collapsible.'),
+    '#weight' => 3,
+    '#parents' => array('extra', 'as_div'),
+  );
   return $form;
 }
 
@@ -65,6 +74,7 @@ function _webform_render_fieldset($component, $value = NULL, $filter = TRUE) {
     '#attributes' => array('class' => array('webform-component-fieldset')),
     '#pre_render' => array('webform_fieldset_prerender', 'webform_element_title_display'),
     '#translatable' => array('title', 'description'),
+    '#as_div' => $component['extra']['as_div'],
   );
 
   return $element;
