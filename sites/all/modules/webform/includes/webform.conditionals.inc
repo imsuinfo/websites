@@ -849,6 +849,11 @@ function webform_conditional_prepare_javascript($node, $submission_data) {
   );
   $operators = webform_conditional_operators();
   foreach ($node->webform['conditionals'] as $conditional) {
+    // skip eid: conditionals as they do not apply here.
+    if (preg_match('/^eid:/', $conditional['target']) > 0) {
+      continue;
+    }
+
     // Assemble the main conditional group settings.
     if ($conditional['target_type'] == 'component') {
       $target_component = $node->webform['components'][$conditional['target']];
