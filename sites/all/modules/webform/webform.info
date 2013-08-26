@@ -12,6 +12,16 @@ files[] = includes/exporters/webform_exporter_excel_delimited.inc
 files[] = includes/exporters/webform_exporter_excel_xlsx.inc
 files[] = includes/exporters/webform_exporter.inc
 
+files[] = includes/webform.admin.inc
+files[] = includes/webform.components.inc
+files[] = includes/webform.conditionals.inc
+files[] = includes/webform.emails.inc
+files[] = includes/webform.export.inc
+files[] = includes/webform.options.inc
+files[] = includes/webform.pages.inc
+files[] = includes/webform.report.inc
+files[] = includes/webform.submissions.inc
+
 files[] = views/webform_handler_field_form_body.inc
 files[] = views/webform_handler_field_is_draft.inc
 files[] = views/webform_handler_field_node_link_edit.inc

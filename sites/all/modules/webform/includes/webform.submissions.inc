@@ -178,6 +178,9 @@ function webform_submission_delete($node, $submission) {
 function webform_submission_send_mail($node, $submission, $emails = NULL) {
   global $user;
 
+  // force the conditionals to be loaded so that webform_conditional_operators() may be called below.
+  module_load_include('inc', 'webform', 'includes/webform.conditionals');
+
   // Get the list of e-mails we'll be sending.
   $emails = isset($emails) ? $emails : $node->webform['emails'];
 
