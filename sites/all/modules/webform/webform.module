@@ -502,6 +502,10 @@ function webform_confirmation_page_access($node) {
   if ($sid) {
     module_load_include('inc', 'webform', 'includes/webform.submissions');
     $submission = webform_get_submission($node->nid, $sid);
+
+    if (!is_object($submission)) {
+      return FALSE;
+    }
   }
   else {
     if (is_null($sid)) {
