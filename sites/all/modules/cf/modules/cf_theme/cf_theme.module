@@ -533,6 +533,8 @@ function cf_theme_generate_headers(array $cf) {
   $supported_link_rel[] = 'stylesheet';
   $supported_link_rel[] = 'subsection';
   $supported_link_rel[] = 'shortcut icon';
+  $supported_link_rel[] = 'apple-touch-icon';
+  $supported_link_rel[] = 'apple-touch-icon-precomposed';
 
   foreach ($cf['link'] as $key => &$link) {
     if (empty($link['href'])) continue;
