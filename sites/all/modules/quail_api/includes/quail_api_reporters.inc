@@ -39,7 +39,7 @@ class reportQuail_api extends quailReporter {
 
     if (!is_object($this->guideline)) {
       if (class_exists('cf_error')) {
-        cf_error::invalid_object(get_class(this) . '->guideline');
+        cf_error::invalid_object(get_class($this) . '->guideline');
       }
 
       return;
