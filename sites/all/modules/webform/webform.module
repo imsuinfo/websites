@@ -3245,7 +3245,7 @@ function theme_webform_element($variables) {
   $suffix = isset($element['#field_suffix']) ? ' <span class="field-suffix">' . webform_filter_xss($element['#field_suffix']) . '</span>' : '';
 
   // managed_file uses a different id, make sure the label points to the correct id.
-  if ($element['#type'] == 'managed_file') {
+  if (isset($element['#type']) && $element['#type'] == 'managed_file') {
     if (!empty($variables['element']['#id'])) {
       $variables['element']['#id'] = $variables['element']['#id'] . '-upload';
     }
