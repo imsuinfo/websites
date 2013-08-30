@@ -538,3 +538,12 @@ function workbench_menu_update_7105() {
     throw $e;
   }
 }
+
+/**
+ * Force the cache to be reset.
+ *
+ * This fixes a problem during updating from 7.x-alpha4 or earlier.
+ */
+function workbench_menu_update_7106() {
+  drupal_flush_all_caches();
+}
