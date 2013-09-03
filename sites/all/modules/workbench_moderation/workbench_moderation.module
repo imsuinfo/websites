@@ -1786,6 +1786,23 @@ function workbench_moderation_messages($context, $node = NULL) {
   $info_block_messages = array();
 
   if ($context == 'view') {
+    $owner_account = check_plain($owner->name);
+    $owner_name = check_plain($owner->name);
+    $owner_mail = check_plain($owner->mail);
+
+    if (property_exists($owner, 'field_user_first_name') && !empty($owner->field_user_first_name['und'][0]['safe_value'])) {
+      $owner_name = $owner->field_user_first_name['und'][0]['safe_value'];
+
+      if (property_exists($owner, 'field_user_last_name') && !empty($owner->field_user_last_name['und'][0]['safe_value'])) {
+        $owner_name .= ' ' . $owner->field_user_last_name['und'][0]['safe_value'];
+      }
+
+      $owner_message = $owner_name . ' (<a href="mailto:' . $owner_mail . '" title="E-Mail: ' . $owner_name . ' &lt;' . $owner_mail . '&gt;">' . $owner_account . '</a>)';
+    }
+    else {
+      $owner_message = '<a href="mailto:' . $owner_mail . '" title="E-Mail: ' . $owner_mail . '">' . $owner_account . '</a>';
+    }
+
     $info_block_messages[] = array(
       'label' => t('Revision State'),
       'message' => check_plain(workbench_moderation_state_label($state['my_revision']->state)),
@@ -1796,7 +1813,7 @@ function workbench_moderation_messages($context, $node = NULL) {
     );
     $info_block_messages[] = array(
       'label' => t('Page Owner'),
-      'message' => check_plain($owner->name),
+      'message' => $owner_message,
     );
 
     // Check node access.
