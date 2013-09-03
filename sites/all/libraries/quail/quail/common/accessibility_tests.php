@@ -2238,7 +2238,7 @@ class formWithRequiredLabel extends quailTest {
 			}
 			if($k) {
 				foreach($this->suspect_styles as $style) {
-					if(isset($styles[$k][$style]) && $styles[$k][$style] != $styles[($k - 1)][$style]) {
+					if(isset($styles[$k][$style]) && (!isset($styles[($k - 1)][$style]) || $styles[$k][$style] != $styles[($k - 1)][$style])) {
 						$form = $this->getElementAncestor($label, 'form');
 						if($form) {
 							$this->addReport($form);
