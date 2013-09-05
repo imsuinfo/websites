@@ -265,10 +265,10 @@ function field_group_field_ui_overview_form_alter(&$form, &$form_state, $display
         '#type' => 'select',
         '#options' => $formatter_options,
         '#default_value' => 'fieldset',
+        '#prefix' => '<div class="add-new-placeholder">&nbsp;</div>',
       ),
+      '#cell_attributes' => array('colspan' => 3),
     ),
-    'settings_summary' => array(),
-    'settings_edit' => array(),
   );
 
   if (!$display_overview) {
@@ -326,10 +326,10 @@ function field_group_field_ui_overview_form_alter(&$form, &$form_state, $display
     }
 
     foreach ($form['#groups'] as $group_name) {
-      $group = field_group_load_field_group($group_name, $params->entity_type, $params->bundle, $params->mode);
-      if (isset($parent_requirements[$group->format_type])) {
-        if (!$group->parent_name || field_group_load_field_group($group->parent_name, $params->entity_type, $params->bundle, $params->mode)->format_type != $parent_requirements[$group->format_type]['parent']) {
-          drupal_set_message(t($parent_requirements[$group->format_type]['message']), 'warning', FALSE);
+      $group_check = field_group_load_field_group($group_name, $params->entity_type, $params->bundle, $params->mode);
+      if (isset($parent_requirements[$group_check->format_type])) {
+        if (!$group_check->parent_name || field_group_load_field_group($group_check->parent_name, $params->entity_type, $params->bundle, $params->mode)->format_type != $parent_requirements[$group_check->format_type]['parent']) {
+          drupal_set_message(t($parent_requirements[$group_check->format_type]['message']), 'warning', FALSE);
         }
       }
     }
@@ -362,6 +362,8 @@ function field_group_add_row($name, $parent_options, $params) {
     '#js_settings' => array('rowHandler' => 'group'),
     '#region_callback' => $params->region_callback,
     'label' => array(
+      '#title_display' => 'invisible',
+      '#title' => t('Label for new group'),
       '#type' => 'textfield',
       '#size' => 15,
       '#description' => t('Label'),
@@ -379,6 +381,8 @@ function field_group_add_row($name, $parent_options, $params) {
     ),
     'parent_wrapper' => array(
       'parent' => array(
+        '#title_display' => 'invisible',
+        '#title' => t('Parent for new group'),
         '#type' => 'select',
         '#options' => $parent_options,
         '#empty_value' => '',
@@ -394,6 +398,8 @@ function field_group_add_row($name, $parent_options, $params) {
     ),
     'group_name' => array(
       '#type' => 'textfield',
+      '#title_display' => 'invisible',
+      '#title' => t('Machine name for new group'),
       // This field should stay LTR even for RTL languages.
       '#field_prefix' => '<span dir="ltr">group_',
       '#field_suffix' => '</span>&lrm;',
@@ -460,26 +466,15 @@ function field_group_formatter_row_update(& $group, $settings) {
  */
 function field_group_formatter_settings_update(& $group, $settings) {
 
-  // Fetch the field_group formatter defaults.
-  $field_group_types = field_group_formatter_info();
-  $mode = $group->mode == 'form' ? 'form' : 'display';
-  $formatter = $field_group_types[$mode][$group->format_type];
-
   // for format changes we load the defaults.
   if (empty($settings['format_settings']['settings'])) {
-    $group->format_settings = array(
-      'formatter' => isset($formatter['default_formatter']) ? $formatter['default_formatter'] : '',
-      'instance_settings' => $formatter['instance_settings']
-    );
+    $mode = $group->mode == 'form' ? 'form' : 'display';
+    $group->format_settings = _field_group_get_default_formatter_settings($group->format_type, $mode);
   }
   else {
     $group->format_type = $settings['format']['type'];
     $group->label = $settings['format_settings']['settings']['label'];
     $group->format_settings = $settings['format_settings']['settings'];
-    // This is avoided now, cause of the form_state['field_group']
-    // ctools_include('export');
-    // ctools_export_crud_save('field_group', $group);
-    // cache_clear_all('field_groups', 'cache_field');
   }
 }
 
@@ -637,7 +632,10 @@ function field_group_field_overview_submit($form, &$form_state) {
       $new_group->format_settings['instance_settings'] = $formatter['instance_settings'];
     }
 
-    // Save and enable it in ctools
+    $classes = _field_group_get_html_classes($new_group);
+    $new_group->format_settings['instance_settings']['classes'] = implode(' ', $classes->optional);
+
+    // Save and enable it in ctools.
     ctools_export_crud_save('field_group', $new_group);
     ctools_export_crud_enable('field_group', $new_group->identifier);
 
@@ -663,10 +661,21 @@ function field_group_field_overview_submit($form, &$form_state) {
     $group->children = array_keys($children[$group_name]);
     $group->parent_name = $form_values[$group_name]['parent'];
     $group->weight = $form_values[$group_name]['weight'];
+
+    $old_format_type = $group->format_type;
     $group->format_type = isset($form_values[$group_name]['format']['type']) ? $form_values[$group_name]['format']['type'] : 'visible';
     if (isset($form_state['field_group'][$group_name]->format_settings)) {
       $group->format_settings = $form_state['field_group'][$group_name]->format_settings;
     }
+
+    // If the format type is changed, make sure we have all required format settings.
+    if ($group->format_type != $old_format_type) {
+      $mode = $group->mode == 'form' ? 'form' : 'display';
+      $default_formatter_settings = _field_group_get_default_formatter_settings($group->format_type, $mode);
+      $group->format_settings += $default_formatter_settings;
+      $group->format_settings['instance_settings'] += $default_formatter_settings['instance_settings'];
+    }
+
     ctools_export_crud_save('field_group', $group);
   }
 
@@ -681,6 +690,17 @@ function field_group_field_overview_submit($form, &$form_state) {
 function field_group_validate_css_class($element, &$form_state) {
   if (!empty($form_state['values']['fields'][$form_state['formatter_settings_edit']]['format_settings']['settings']['instance_settings']['classes']) && !preg_match('!^[A-Za-z0-9-_ ]+$!', $form_state['values']['fields'][$form_state['formatter_settings_edit']]['format_settings']['settings']['instance_settings']['classes'])) {
     form_error($element, t('The css class must include only letters, numbers, underscores and dashes.'));
+  }
+}
+
+/**
+ * Validate the entered id attribute from the submitted format settings.
+ * @param Array $element The validated element
+ * @param Array $form_state The state of the form.
+ */
+function field_group_validate_id($element, &$form_state) {
+  if (!empty($form_state['values']['fields'][$form_state['formatter_settings_edit']]['format_settings']['settings']['instance_settings']['id']) && !preg_match('!^[A-Za-z0-9-_]+$!', $form_state['values']['fields'][$form_state['formatter_settings_edit']]['format_settings']['settings']['instance_settings']['id'])) {
+    form_error($element, t('The id must include only letters, numbers, underscores and dashes.'));
   }
 }
 
@@ -744,6 +764,52 @@ function field_group_delete_form_submit($form, &$form_state) {
 }
 
 /**
+ * Menu callback; present a form for re-enabling a group.
+ */
+function field_group_enable_form($form, &$form_state, $group, $view_mode = 'form') {
+
+  $form['#group'] = $group;
+  $admin_path = _field_ui_bundle_admin_path($group->entity_type, $group->bundle);
+  if ($view_mode == 'form') {
+    $admin_path .= '/fields';
+  }
+  else {
+    $admin_path .= '/display/' . $view_mode;
+  }
+  $form['#redirect'] = array($admin_path);
+  $output = confirm_form($form,
+    t('Are you sure you want to enable the group %group?', array('%group' => t($group->label))),
+    $admin_path,
+    '',
+    t('Enable'), t('Cancel'),
+    'confirm'
+  );
+  return $output;
+}
+
+/**
+ * Re-enable the group on a bundle.
+ */
+function field_group_enable_form_submit($form, &$form_state) {
+
+  $group = $form['#group'];
+  $bundle = $group->bundle;
+  $entity_type = $group->entity_type;
+  $group->mode = $form_state['build_info']['args'][1];
+
+  $bundles = field_info_bundles();
+  $bundle_label = $bundles[$entity_type][$bundle]['label'];
+
+  ctools_include('export');
+  ctools_export_crud_enable('field_group', $group->identifier);
+
+  drupal_set_message(t('The group %group has been enabled on the %type content type.', array('%group' => t($group->label), '%type' => $bundle_label)));
+
+  // Redirect.
+  $form_state['redirect'] = $form['#redirect'];
+}
+
+/**
  * Create vertical tabs.
  */
 function field_group_field_ui_create_vertical_tabs(&$form, &$form_state, $params) {
@@ -799,6 +865,26 @@ function field_group_field_ui_create_vertical_tabs(&$form, &$form_state, $params
     '#validate' => array('field_group_field_ui_clone_field_groups_validate'),
     '#submit' => array('field_group_field_ui_clone_field_groups')
   );
+
+  $disabled_groups = field_group_read_groups(array(), FALSE);
+
+  // Show disabled fieldgroups, and make it possible to enable them again.
+  if ($disabled_groups && isset($disabled_groups[$params->entity_type][$params->bundle][$params->mode])) {
+    $form['additional_settings']['disabled_field_groups'] = array(
+
+      '#type' => 'fieldset',
+
+      '#title' => t('Disabled fieldgroups'),
+
+      '#collapsible' => TRUE,
+
+      '#collapsed' => FALSE,
+
+      '#parents' => array('additional_settings'),
+
+    );
+    $form['additional_settings']['disabled_field_groups']['overview'] = field_group_disabled_groups_overview($disabled_groups[$params->entity_type][$params->bundle][$params->mode], $entity_info, $params);
+  }
 
 }
 
@@ -872,6 +958,49 @@ function field_group_field_ui_clone_field_groups($form, &$form_state) {
 
     }
   }
+
+}
+
+/**
+ * Show an overview of all the disabled fieldgroups, and make it possible to activate them again.
+ * @param $disabled_groups Array with all disabled groups.
+ */
+function field_group_disabled_groups_overview($disabled_groups, $entity_info, $params) {
+
+  $formatter_options = field_group_field_formatter_options($params->mode != 'form' ? 'display' : 'form');
+
+  $table = array(
+    '#theme' => 'table',
+    '#header' => array(
+      t('Label'),
+      t('Machine name'),
+      t('Field'),
+      t('Widget'),
+      t('Operations'),
+    ),
+    '#attributes' => array(
+      'class' => array('field-ui-overview'),
+    ),
+    '#rows' => array(),
+  );
+
+  // Add all of the disabled groups as a row on the table.
+  foreach ($disabled_groups as $group) {
+
+    $summary = field_group_format_settings_summary($group->group_name, $group);
+
+    $row = array();
+    $row[] = $group->label;
+    $row[] = $group->group_name;
+    $row[] = $formatter_options[$group->format_type];
+    $row[] = render($summary);
+    $path = (isset($entity_info['bundles'][$params->bundle]['admin']['real path']) ? $entity_info['bundles'][$params->bundle]['admin']['real path'] : $entity_info['bundles'][$params->bundle]['admin']['path']);
+    $row[] = l(t('Enable'), $path . '/groups/' . $group->group_name . '/enable/' . $group->mode);
+
+    $table['#rows'][] = $row;
+  }
+
+  return $table;
 
 }
 /**

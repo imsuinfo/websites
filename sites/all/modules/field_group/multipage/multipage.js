@@ -50,8 +50,8 @@ Drupal.behaviors.MultiPage = {
         }
         
       });
-      
-      if (!paneWithFocus) {
+
+      if (paneWithFocus === undefined) {
         // If the current URL has a fragment and one of the tabs contains an
         // element that matches the URL fragment, activate that tab.
         if (window.location.hash && $(window.location.hash, this).length) {
@@ -61,7 +61,7 @@ Drupal.behaviors.MultiPage = {
           paneWithFocus = $('multipage-open', this).length ? $('multipage-open', this) : $('> .multipage-pane:first', this);
         }
       }
-      if (paneWithFocus.length) {
+      if (paneWithFocus !== undefined) {
         paneWithFocus.data('multipageControl').focus();
       }
     });
@@ -239,13 +239,28 @@ Drupal.FieldGroup.Effects = Drupal.FieldGroup.Effects || {};
 Drupal.FieldGroup.Effects.processMultipage = {
   execute: function (context, settings, type) {
     if (type == 'form') {
+      
+      var $firstErrorItem = false;
+      
       // Add required fields mark to any element containing required fields
       $('div.multipage-pane').each(function(i){
         if ($('.error', $(this)).length) {
+          
+          // Save first error item, for focussing it.
+          if (!$firstErrorItem) {
+            $firstErrorItem = $(this).data('multipageControl');
+          }          
+          
           Drupal.FieldGroup.setGroupWithfocus($(this));
           $(this).data('multipageControl').focus();
         }
       });
+
+      // Focus on first multipage that has an error.
+      if ($firstErrorItem) {
+        $firstErrorItem.focus();
+      }
+      
     }
   }
 }
