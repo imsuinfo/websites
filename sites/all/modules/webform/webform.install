@@ -191,7 +191,13 @@ function webform_schema() {
       ),
       'name' => array(
         'description' => 'The label for this component.',
+        'type' => 'varchar',
+        'length' => 255,
+      ),
+      'name_html' => array(
+        'description' => 'The label with HTML for this component.',
         'type' => 'text',
+        'size' => 'big',
       ),
       'type' => array(
         'description' => 'The field type of this component (textfield, select, hidden, etc.).',
@@ -1592,12 +1598,20 @@ function webform_update_7411(&$sandbox) {
 }
 
 /**
- * Change the schema for a components label to allow for longer names.
+ * Add column for HTML label (laborange patch).
  */
 function webform_update_7412() {
+  db_drop_field('webform_component', 'name_html');
+  if (!db_field_exists('describe', 'name_html')) {
+    db_add_field('webform_component', 'name_html', array('type' => 'text', 'size' => 'big'));
+  }
+
+  // the code below is for undoing the hack that was previousl update 7412 as per www-664
+  // can be commented out for sites that did not use this hack to workaroun www-664.
   $new_name_column = array(
     'description' => 'The label for this component.',
-    'type' => 'text',
+    'type' => 'varchar',
+    'length' => 255,
   );
 
   $query = db_select('webform_component', 'wc');
@@ -1615,7 +1629,7 @@ function webform_update_7412() {
       $subquery = db_update('webform_component');
       $subquery->condition('nid', $result->nid);
       $subquery->condition('cid', $result->cid);
-      $subquery->fields(array('name' => $result->name));
+      $subquery->fields(array('name' => substr($result->name, 0, 254)));
       $subquery->execute();
     }
 

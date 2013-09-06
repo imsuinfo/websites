@@ -390,11 +390,29 @@ function webform_component_edit_form($form, $form_state, $node, $component, $clo
 
   if (webform_component_feature($component['type'], 'title')) {
     $form['name'] = array(
-      '#type' => 'textarea',
+      '#type' => 'textfield',
       '#default_value' => $component['name'],
       '#title' => t('Label'),
       '#description' => t('This is used as a descriptive label when displaying this form element.'),
       '#required' => TRUE,
+      '#weight' => -12,
+      '#maxlength' => 255,
+    );
+
+    $form['use_name_html'] = array(
+      '#type' => 'fieldset',
+      '#title' => t('Use a question label with HTML'),
+      '#collapsible' => TRUE,
+      '#collapsed' => TRUE,
+      '#weight' => -11,
+    );
+
+    $form['use_name_html']['name_html'] = array(
+      '#type' => 'text_format',
+      '#title' => t('label with HTML'),
+      '#default_value' => empty($component['name_html']) ? '' : $component['name_html'],
+      '#base_type' => 'textarea',
+      '#format' => 'filtered_html',
       '#weight' => -10,
     );
   }
@@ -628,6 +646,12 @@ function webform_component_edit_form_submit($form, &$form_state) {
     }
   }
 
+  // HTML label
+  if(!empty($form_state['values']['use_name_html']['name_html']['value'])) {
+    $form_state['values']['name_html'] = $form_state['values']['use_name_html']['name_html']['value'];
+    unset($form_state['values']['use_name_html']);
+  }
+
   // Remove empty attribute values.
   if (isset($form_state['values']['extra']['attributes'])) {
     foreach ($form_state['values']['extra']['attributes'] as $key => $value) {
@@ -758,6 +782,7 @@ function webform_component_insert(&$component) {
       'pid' => $component['pid'],
       'form_key' => $component['form_key'],
       'name' => $component['name'],
+      'name_html' => empty($component['name_html']) ? '' : $component['name_html'],
       'type' => $component['type'],
       'value' => (string) $component['value'],
       'extra' => serialize($component['extra']),
@@ -794,6 +819,7 @@ function webform_component_update($component) {
       'pid' => $component['pid'],
       'form_key' => $component['form_key'],
       'name' => $component['name'],
+      'name_html' => empty($component['name_html']) ? '' : $component['name_html'],
       'type' => $component['type'],
       'value' => isset($component['value']) ? $component['value'] : '',
       'extra' => serialize($component['extra']),
