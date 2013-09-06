@@ -412,7 +412,6 @@ function webform_component_edit_form($form, $form_state, $node, $component, $clo
       '#title' => t('label with HTML'),
       '#default_value' => empty($component['name_html']) ? '' : $component['name_html'],
       '#base_type' => 'textarea',
-      '#format' => 'filtered_html',
       '#weight' => -10,
     );
   }
