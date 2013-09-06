@@ -227,7 +227,7 @@ function webform_submission_send_mail($node, $submission, $emails = NULL) {
 
       // Calculate the and/or result.
       $filtered_results = array_filter($conditional_results);
-      if ($conditional['andor'] === 'or') {
+      if ($condition['andor'] === 'or') {
         $conditional_result = count($filtered_results) > 0;
       }
       else {
