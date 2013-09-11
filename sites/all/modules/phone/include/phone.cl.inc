@@ -5,7 +5,7 @@
  * CCK Field for Chili phone numbers.
  */
 
-function phone_cl_metadata() {
+function phone_cl_metadata($field = NULL) {
   // These strings are translated using t() on output.
   return array(
     'error' => '"%value" is not a valid Chilean mobile phone number<br>Chili phone numbers should only ...',
@@ -16,9 +16,10 @@ function phone_cl_metadata() {
  * Verifies that $phonenumber is valid
  *
  * @param string $phonenumber
+ * @param array|null $field
  * @return boolean Returns boolean FALSE if the phone number is not valid.
  */
-function valid_cl_phone_number($phonenumber) {
+function valid_cl_phone_number($phonenumber, $field = NULL) {
   // define regular expression
   $regex = "/^((\(\d{3}\) ?)|(\d{3}-)|(\(\d{2}\) ?)|(\d{2}-)|(\(\d{1}\) ?)|(\d{1}-))?\d{3}-(\d{3}|\d{4})$/i";
 
@@ -30,6 +31,7 @@ function valid_cl_phone_number($phonenumber) {
  * Formatting for Chili Phone Numbers.
  *
  * @param string $phonenumber
+ * @param array $field
  * @return string Returns a string containting the phone number with some formatting.
  */
 function format_cl_phone_number($phonenumber, $field) {

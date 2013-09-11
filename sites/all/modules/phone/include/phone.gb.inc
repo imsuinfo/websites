@@ -5,7 +5,7 @@
  * CCK Field for British phone numbers.
  */
 
-function phone_gb_metadata() {
+function phone_gb_metadata($field = NULL) {
   // These strings are translated using t() on output.
   return array(
     'error' => '"%value" is not a valid British (UK) phone number<br>British Phone numbers should .... ',
@@ -18,10 +18,11 @@ function phone_gb_metadata() {
  * Regular expression adapted from Amos Hurd's regex at RegExLib.com
  *
  * @param string $phonenumber
+ * @param array|null $field
  * @return boolean Returns boolean FALSE if the phone number is not valid.
  */
 
-function valid_gb_phone_number($phonenumber) {
+function valid_gb_phone_number($phonenumber, $field = NULL) {
 
   /*
     Accepts:
@@ -61,7 +62,8 @@ function valid_gb_phone_number($phonenumber) {
 /**
  * Convert a valid United Kingdom phone number into standard +44 (0)1970 123 456 #001 international format
  *
- * @param $phonenumber must be a valid eleven-digit number (with optional extension)
+ * @param string $phonenumber must be a valid eleven-digit number (with optional extension)
+ * @param array|bool $field
  *
  */
 function format_gb_phone_number($phonenumber, $field = FALSE) {

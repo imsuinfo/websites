@@ -5,7 +5,7 @@
  * CCK Field for Costa Rican phone numbers.
  */
 
- function phone_cr_metadata() {
+ function phone_cr_metadata($field = NULL) {
    // These strings are translated using t() on output.
    return array(
      'error' => '"%value" is not a valid Costa Rican phone number!<br>Costa Rican phone numbers should contain only numbers and spaces be like 99 99 99 99 with an optional prefix of "+506" or "00506".',
@@ -16,9 +16,10 @@
  * Verifies that $phonenumber is a valid eight-digit Costa Rican phone number
  *
  * @param string $phonenumber
+ * @param array|null $field
  * @return boolean Returns boolean FALSE if the phone number is not valid.
  */
-function valid_cr_phone_number($phonenumber) {
+function valid_cr_phone_number($phonenumber, $field = NULL) {
 
   //$phonenumber = trim($phonenumber);
 
@@ -32,7 +33,8 @@ function valid_cr_phone_number($phonenumber) {
 /**
  * Convert a valid Costa Rican phone number into standard (+506) 5555 55 55 format
  *
- * @param $phonenumber must be a valid eight-digit number (with optional international prefix)
+ * @param string $phonenumber must be a valid eight-digit number (with optional international prefix)
+ * @param array|bool $field
  *
  */
 

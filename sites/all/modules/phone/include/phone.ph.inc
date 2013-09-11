@@ -5,7 +5,7 @@
  * CCK Field for Philippine phone numbers.
  */
 
- function phone_ph_metadata() {
+ function phone_ph_metadata($field = NULL) {
    // These strings are translated using t() on output.
    return array(
      'error' => '"%value" is not a valid Philippine phone number<br />Example of valid Philippine phone numbers: +63 (2) 123-4567 or +63 (2) 123-4567 loc. 123	or mobile +63 (919) 123-4567',
@@ -16,10 +16,11 @@
  * Verifies that $phonenumber is a valid ten-digit Philippine phone number
  *
  * @param string $phonenumber
+ * @param array|null $field
  * @return boolean Returns boolean FALSE if the phone number is not valid.
  */
 
-function valid_ph_phone_number($phonenumber) {
+function valid_ph_phone_number($phonenumber, $field = NULL) {
 
   /*
     Accepts:
@@ -58,7 +59,8 @@ function valid_ph_phone_number($phonenumber) {
 /**
  * Convert a valid Philippine phone number into standard +63 (2) 123-4567 or	+63 (2) 123-4567 loc. 123	or mobile +63 (919) 123-4567
  *
- * @param $phonenumber must be a valid ten-digit number (with optional extension)
+ * @param string $phonenumber must be a valid ten-digit number (with optional extension)
+ * @param array|bool $field
  *
  */
 function format_ph_phone_number($phonenumber, $field = FALSE) {

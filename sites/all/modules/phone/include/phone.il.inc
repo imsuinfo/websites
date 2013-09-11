@@ -6,7 +6,7 @@
 * CCK Field for Isreali phone numbers.
 */
 
-function phone_il_metadata() {
+function phone_il_metadata($field = NULL) {
   return array(
     'error' => '"%value" is not a valid Israeli phone number',
   );
@@ -16,9 +16,10 @@ function phone_il_metadata() {
 * Verification for Israel Phone Numbers.
 *
 * @param string $phonenumber
+* @param array|null $field
 * @return boolean Returns boolean FALSE if the phone number is not valid.
 */
-function valid_il_phone_number($phonenumber) {
+function valid_il_phone_number($phonenumber, $field = NULL) {
 
   //$phonenumber = trim($phonenumber);
 

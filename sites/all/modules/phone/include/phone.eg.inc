@@ -64,7 +64,7 @@ define('TELEPHONE_REGEX', "
 		(\s\#\s\d+)?																# optional extension number shown with a hash divider
 ");
 
-function phone_eg_metadata() {
+function phone_eg_metadata($field = NULL) {
   // These strings are translated using t() on output.
   return array(
     'error' => '"%value" is not a valid phone number in Egypt. Telephone numbers in Egypt have the format +20 (#[#]) 1234567[8], where the digts between ( ) is the area or network code, without a leading zero; and digits between [ ] are optional',
@@ -73,7 +73,7 @@ function phone_eg_metadata() {
 }#end function phone_eg_metadata;
 
 
-function valid_eg_phone_number($phonenumber) {
+function valid_eg_phone_number($phonenumber, $field = NULL) {
 /*
 	accepts:
 	properly formatted: [+20][ ][(]#[#][)][ ]1234[ ]567[#]

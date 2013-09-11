@@ -7,7 +7,7 @@
 
 define('PHONE_FR_REGEX', '/(\+33|0)([1-9]\d{8}|85\d{7}|87[0-57-9]\d{6})$/');
 
-function phone_fr_metadata() {
+function phone_fr_metadata($field = NULL) {
   // These strings are translated using t() on output.
   return array(
     'error' => '"%value" is not a valid French phone number<br>French phone numbers should only contain numbers and spaces and be like 99 99 99 99 99',
@@ -20,9 +20,10 @@ function phone_fr_metadata() {
  *    (Released 2006/01/26, retrieved 2008/08/12)
  *
  * @param string $phonenumber
+ * @param array|null $field
  * @return boolean Returns boolean FALSE if the phone number is not valid.
  */
-function valid_fr_phone_number($phonenumber) {
+function valid_fr_phone_number($phonenumber, $field = NULL) {
 
   //$phonenumber = trim($phonenumber);
 
@@ -34,6 +35,7 @@ function valid_fr_phone_number($phonenumber) {
  * Formatting for French Phone Numbers.
  *
  * @param string $phonenumber
+ * @param array|bool $field
  * @return string Returns a string containting the phone number with some formatting.
  */
 function format_fr_phone_number($phonenumber, $field = FALSE) {

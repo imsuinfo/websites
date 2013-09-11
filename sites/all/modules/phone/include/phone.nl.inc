@@ -5,7 +5,7 @@
  * CCK Field for Dutch phone numbers.
  */
 
-function phone_nl_metadata() {
+function phone_nl_metadata($field = NULL) {
   // These strings are translated using t() on output.
   return array(
     'error' => '"%value" is not a valid Dutch phone number!<br>Dutch phone numbers should contain only numbers and spaces and - and be like 099-9999999 with an optional prefix of "+31".',
@@ -18,9 +18,10 @@ function phone_nl_metadata() {
  * Regular expression adapted from Nico Lubbers's regex at RegExLib.com
  *
  * @param string $phonenumber
+ * @param array|null $field
  * @return boolean Returns boolean FALSE if the phone number is not valid.
  */
-function valid_nl_phone_number($phonenumber) {
+function valid_nl_phone_number($phonenumber, $field = NULL) {
 
   //$phonenumber = trim($phonenumber);
 
@@ -55,6 +56,7 @@ function valid_nl_phone_number($phonenumber) {
  * Formatting for Dutch Phone Numbers into standard area-phonenumber or with extra country code +31 international format
  *
  * @param string $phonenumber
+ * @param array $field
  * @return string Returns a string containting the phone number with some formatting.
  */
 function format_nl_phone_number($phonenumber, $field) {

@@ -7,7 +7,7 @@
  * CCK Field for Jordanian phone numbers.
  */
 
-function phone_jo_metadata(){
+function phone_jo_metadata($field = NULL){
   // These strings are translated using t() on output.
   return array(
     'error' => '"%value" is not a valid Jordanian phone number, Please check the spaces and dashes in your number.',
@@ -18,9 +18,10 @@ function phone_jo_metadata(){
  * Verification for Jordanian Phone Numbers.
  *
  * @param string $phonenumber
+ * @param array|null $field
  * @return boolean Returns boolean FALSE if the phone number is not valid.
  */
-function valid_jo_phone_number($phonenumber){
+function valid_jo_phone_number($phonenumber, $field = NULL){
 
   /**
   Accepts:
@@ -84,6 +85,7 @@ function valid_jo_phone_number($phonenumber){
  * Formatting for Jordanian Phone Numbers.
  *
  * @param string $phonenumber
+ * @param array|bool $field
  * @return string Returns a string containting the phone number with some formatting.
  */
 function format_jo_phone_number($phonenumber, $field = FALSE){

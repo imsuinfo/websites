@@ -1,6 +1,6 @@
 <?php
 
-function phone_int_metadata() {
+function phone_int_metadata($field = NULL) {
   // These strings are translated using t() on output.
   return array(
     'error' => '"%value" is not a valid Italian phone number<br>Italian phone numbers should only ...',
@@ -15,10 +15,11 @@ function phone_int_metadata() {
  *
  * @param $phonenumber
  *   International phone number to validate
+ * @param array|null $field
  * @return
  *   TRUE if valid, FALSE if otherwise.
  */
-function valid_int_phone_number($phonenumber) {
+function valid_int_phone_number($phonenumber, $field = NULL) {
   $phonenumber = trim($phonenumber);
   if ($phonenumber === '') {
     return FALSE;
@@ -76,6 +77,7 @@ function valid_int_phone_number($phonenumber) {
  *
  * @param $phonenumber
  *   International phone number to format
+ * @param array $field
  * @return
  *   Formatted international phone number
  */

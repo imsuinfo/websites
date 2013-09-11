@@ -5,7 +5,7 @@
  * CCK Field for Pakistanese phone numbers.
  */
 
-function phone_pk_metadata() {
+function phone_pk_metadata($field = NULL) {
   // These strings are translated using t() on output.
   return array(
     'error' => '"%value" is not a valid Pakistanese mobile phone number<br>Pakistanese phone numbers should only ...',
@@ -16,9 +16,10 @@ function phone_pk_metadata() {
  * Verifies that $phonenumber is valid
  *
  * @param string $phonenumber
+ * @param array|null $field
  * @return boolean Returns boolean FALSE if the phone number is not valid.
  */
-function valid_pk_phone_number($phonenumber) {
+function valid_pk_phone_number($phonenumber, $field = NULL) {
   // define regular expression
   $regex = "/^(\+)?([9]{1}[2]{1})?-? ?(\()?([0]{1})?[1-9]{2,4}(\))?-? ??(\()?[1-9]{4,7}(\))?$/i";
 
@@ -30,6 +31,7 @@ function valid_pk_phone_number($phonenumber) {
  * Formatting for Pakistan Phone Numbers.
  *
  * @param string $phonenumber
+ * @param array $field
  * @return string Returns a string containting the phone number with some formatting.
  */
 function format_pk_phone_number($phonenumber, $field) {

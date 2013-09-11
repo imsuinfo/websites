@@ -5,7 +5,7 @@
  * CCK Field for Singapore phone numbers.
  */
 
-function phone_sg_metadata() {
+function phone_sg_metadata($field = NULL) {
   // These strings are translated using t() on output.
   return array(
     'error' => '"%value" is not a valid Singaporean phone number<br>Singaporean phone numbers should only ...',
@@ -16,9 +16,10 @@ function phone_sg_metadata() {
  * Verifies that $phonenumber is valid
  *
  * @param string $phonenumber
+ * @param array|null $field
  * @return boolean Returns boolean FALSE if the phone number is not valid.
  */
-function valid_sg_phone_number($phonenumber) {
+function valid_sg_phone_number($phonenumber, $field = NULL) {
   // define regular expression
   /*
     See: http://en.wikipedia.org/wiki/Telephone_numbers_in_Singapore
@@ -40,6 +41,7 @@ function valid_sg_phone_number($phonenumber) {
  * Formatting for Singapore Phone Numbers.
  *
  * @param string $phonenumber
+ * @param array $field
  * @return string Returns a string containting the phone number with some formatting.
  */
 function format_sg_phone_number($phonenumber, $field) {

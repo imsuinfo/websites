@@ -522,7 +522,7 @@ function _phone_ua_get_valid_masks() {
 
 }
 
-function phone_ua_metadata() {
+function phone_ua_metadata($field = NULL) {
   // These strings are translated using t() on output.
   return array(
     'error' => '"%value" is not a valid Ukrainian mobile phone number<br />'
@@ -535,9 +535,10 @@ function phone_ua_metadata() {
  * Verifies that $phonenumber is valid
  *
  * @param string $phonenumber
+ * @param array|null $field
  * @return boolean Returns boolean FALSE if the phone number is not valid.
  */
-function valid_ua_phone_number($phonenumber) {
+function valid_ua_phone_number($phonenumber, $field = NULL) {
   // For adressing Ukraine phones used both +38 and +380 as a prefix.
   // So lets clean up any spaces, pareenthesis, minus signs etc first.
   $cleaning_pattern = '/( |\-|\(|\))*/';
@@ -562,6 +563,7 @@ function valid_ua_phone_number($phonenumber) {
  * Formatting for Unkraine Phone Numbers.
  *
  * @param string $phonenumber
+ * @param array $field
  * @return string Returns a string containting the phone number with some formatting.
  */
 function format_ua_phone_number($phonenumber, $field) {

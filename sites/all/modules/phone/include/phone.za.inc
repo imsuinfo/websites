@@ -5,7 +5,7 @@
  * CCK Field for South African phone numbers.
  */
 
-function phone_za_metadata() {
+function phone_za_metadata($field = NULL) {
   // These strings are translated using t() on output.
   return array(
     'error' => '"%value" is not a valid South African phone number!<br>South African phone numbers should ...',
@@ -16,9 +16,10 @@ function phone_za_metadata() {
  * Verifies that $phonenumber is a valid South African phone number
  *
  * @param string $phonenumber
+ * @param array|null $field
  * @return boolean Returns boolean FALSE if the phone number is not valid.
  */
-function valid_za_phone_number($phonenumber) {
+function valid_za_phone_number($phonenumber, $field = NULL) {
 
   $phonenumber = trim($phonenumber);
 
@@ -32,7 +33,8 @@ function valid_za_phone_number($phonenumber) {
 /**
  * Convert a valid South African phone number into standard ... format
  *
- * @param $phonenumber must be a valid  ... digit number (with optional international prefix)
+ * @param string $phonenumber must be a valid  ... digit number (with optional international prefix)
+ * @param array $field
  *
  */
 function format_za_phone_number($phonenumber, $field) {

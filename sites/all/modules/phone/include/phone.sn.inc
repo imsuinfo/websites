@@ -8,7 +8,7 @@
 define('PHONE_SN_REGEX', '/((\+221|00221)?)((7[7608][0-9]{7}$)|(3[03][98][0-9]{6}$))/');
 
 
-function phone_sn_metadata() {
+function phone_sn_metadata($field = NULL) {
   // These strings are translated using t() on output.
   return array(
     'error' => '"%value" is not a valid Senegalese phone number',
@@ -19,9 +19,10 @@ function phone_sn_metadata() {
  * Verification for Senegalese Phone Numbers.
  *
  * @param string $phonenumber
+ * @param array|null $field
  * @return boolean Returns boolean FALSE if the phone number is not valid.
  */
-function valid_sn_phone_number($phonenumber) {
+function valid_sn_phone_number($phonenumber, $field = NULL) {
 
   $phonenumber  = str_replace(array(' ', '-', '(', ')') , '', $phonenumber);
   return (bool) preg_match(PHONE_SN_REGEX, $phonenumber);
@@ -31,6 +32,7 @@ function valid_sn_phone_number($phonenumber) {
  * Formatting for Senegalese Phone Numbers.
  *
  * @param string $phonenumber
+ * @param array|bool $field
  * @return string Returns the phone number as string.
  */
 function format_sn_phone_number($phonenumber, $field = FALSE) {

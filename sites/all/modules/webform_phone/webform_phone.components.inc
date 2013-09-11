@@ -22,6 +22,7 @@ function _webform_defaults_phone() {
       'phone_country_code'         => 0,
       'phone_default_country_code' => 1,
       'phone_int_max_length'       => 15,
+      'ca_phone_digits_minimum'    => 10,
       'ca_phone_separator'         => '-',
       'ca_phone_parentheses'       => 1,
     ),
@@ -96,6 +97,12 @@ function _webform_edit_phone($component) {
     ),
   );
   // US/Canada Options
+  $form['extra']['ca_phone_digits_minimum'] = array(
+    '#type' => 'select',
+    '#title' => t('Minimum Number of Digits'),
+    '#options' => array(4 => '4', 7 => '7', 10 => '10', 11 => '11'),
+    '#default_value' => $component['extra']['ca_phone_digits_minimum'],
+  );
   $form['extra']['ca_phone_separator'] = array(
     '#type'          => 'textfield',
     '#title'         => t('Separator'),
@@ -169,9 +176,10 @@ function webform_validate_phone($element, $form_state) {
   $value = $element['#value'];
   if ( isset( $value ) && $value != '' ) {
     $ccode = $element['#webform_component']['extra']['country'];
+    $field = $element['#webform_component']['extra'];
     //run through 'phone' module's validation
-    if ( !valid_phone_number($ccode, $value) ) {
-      $country = phone_country_info($ccode);
+    if ( !valid_phone_number($ccode, $value, $field) ) {
+      $country = phone_country_info($ccode, $field);
       form_error($element, t($country['error'], array( '%value' => $value )));
     }
   }
@@ -399,6 +407,7 @@ function _form_builder_webform_form_builder_types_phone() {
       'phone_country_code',
       'phone_default_country_code',
       'phone_int_max_length',
+      'ca_phone_digits_minimum',
       'ca_phone_separator',
       'ca_phone_parentheses',
     ),
@@ -412,6 +421,7 @@ function _form_builder_webform_form_builder_types_phone() {
   $fields['phone']['default']['#phone_country_code'] = $defaults['extra']['phone_country_code'];
   $fields['phone']['default']['#phone_default_country_code'] = $defaults['extra']['phone_default_country_code'];
   $fields['phone']['default']['#phone_int_max_length'] = $defaults['extra']['phone_int_max_length'];
+  $fields['phone']['default']['#ca_phone_digits_minimum'] = $defaults['extra']['ca_phone_digits_minimum'];
   $fields['phone']['default']['#ca_phone_separator'] = $defaults['extra']['ca_phone_separator'];
   $fields['phone']['default']['#ca_phone_parentheses'] = $defaults['extra']['ca_phone_parentheses'];
   return $fields;
@@ -462,6 +472,16 @@ function _form_builder_webform_form_builder_map_phone() {
         'storage_parents' => array(
           'extra',
           'phone_int_max_length'
+        ),
+      ),
+      'ca_phone_digits_minimum'         => array(
+        'form_parents'    => array(
+          'extra',
+          'ca_phone_digits_minimum'
+        ),
+        'storage_parents' => array(
+          'extra',
+          'ca_phone_digits_minimum'
         ),
       ),
       'ca_phone_separator'         => array(

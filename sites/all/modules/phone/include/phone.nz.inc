@@ -6,7 +6,7 @@
  * CCK Field for New Zealand phone numbers.
  */
 
-function phone_nz_metadata() {
+function phone_nz_metadata($field = NULL) {
   // These strings are translated using t() on output.
   return array(
     'error' => '"%value" is not a valid New Zealand phone number!<br>New Zealand phone numbers should contain only numbers, spaces, brackets and "-". They should look like 04 123 4567 or can optionally omit the leading 0 and have a prefix of "+64".',
@@ -18,9 +18,10 @@ function phone_nz_metadata() {
  * As supplied by http://www.itu.int/itudoc/itu-t/number/n/nzl/76195_ww9.doc, April 2009
  *
  * @param string $phonenumber
+ * @param array|null $field
  * @return boolean returns boolean FALSE if the phone number is not valid.
  */
-function valid_nz_phone_number($phonenumber) {
+function valid_nz_phone_number($phonenumber, $field = NULL) {
 
   //$phonenumber = trim($phonenumber);
 
@@ -122,6 +123,7 @@ function valid_nz_phone_number($phonenumber) {
  * Formatting for New Zealand Phone Numbers.
  *
  * @param string $phonenumber
+ * @param array $field
  * @return string Returns a string containing the phone number with some formatting.
  */
 function format_nz_phone_number($phonenumber, $field) {

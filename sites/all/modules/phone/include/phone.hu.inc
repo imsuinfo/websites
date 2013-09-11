@@ -7,7 +7,7 @@
 
 define('PHONE_HU_REGEX', "/^(\+36|06|)[\s.-]?([0-9]{1,2})[\s.-]?([0-9]{2,3})[\s.-]?([0-9]{2,4})$/");
 
-function phone_hu_metadata() {
+function phone_hu_metadata($field = NULL) {
   // These strings are translated using t() on output.
   return array(
     'error' => '"%value" is not a valid Hungarian phone number!<br>Hungarian phone numbers should contain only numbers and spaces be like 70 999 9999 with an optional prefix of "+36" or "06".',
@@ -18,9 +18,10 @@ function phone_hu_metadata() {
  * Verifies that $phonenumber is a valid nine-digit Hungarian phone number
  *
  * @param string $phonenumber
+ * @param array|null $field
  * @return boolean Returns boolean FALSE if the phone number is not valid.
  */
-function valid_hu_phone_number($phonenumber) {
+function valid_hu_phone_number($phonenumber, $field = NULL) {
 
   $phonenumber = trim($phonenumber);
 
@@ -31,7 +32,8 @@ function valid_hu_phone_number($phonenumber) {
 /**
  * Convert a valid Hungarian phone number into standard (+36) ..... format
  *
- * @param $phonenumber must be a valid nine-digit number (with optional international prefix)
+ * @param string $phonenumber must be a valid nine-digit number (with optional international prefix)
+ * @param array|bool $field
  *
  */
 function format_hu_phone_number($phonenumber, $field = FALSE) {

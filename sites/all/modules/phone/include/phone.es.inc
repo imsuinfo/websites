@@ -5,7 +5,7 @@
  * CCK Field for Spanish phone numbers.
  */
 
-function phone_es_metadata() {
+function phone_es_metadata($field = NULL) {
    // These strings are translated using t() on output.
    return array(
      'error' => '"%value" is not a valid Spanish phone number<br>Spanish phone numbers should only contains numbers and spaces and be like 999 999 999',
@@ -17,9 +17,10 @@ function phone_es_metadata() {
  * Verifies that $phonenumber is a valid nine-digit Spanish phone number
  *
  * @param string $phonenumber
+ * @param array|null $field
  * @return boolean Returns boolean FALSE if the phone number is not valid.
  */
-function valid_es_phone_number($phonenumber) {
+function valid_es_phone_number($phonenumber, $field = NULL) {
 
   $phonenumber = trim($phonenumber);
 
@@ -44,7 +45,8 @@ function valid_es_phone_number($phonenumber) {
 /**
  * Convert a valid Spanish phone number into standard (+34) 916 555 777 format
  *
- * @param $phonenumber must be a valid nine-digit number (with optional international prefix)
+ * @param striing $phonenumber must be a valid nine-digit number (with optional international prefix)
+ * @param array|bool $field
  *
  */
 function format_es_phone_number($phonenumber, $field = FALSE) {

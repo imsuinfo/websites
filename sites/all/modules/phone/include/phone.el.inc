@@ -5,7 +5,7 @@
  * CCK Field for Greek phone numbers.
  */
 
-function phone_el_metadata() {
+function phone_el_metadata($field = NULL) {
   // These strings are translated using t() on output.
   return array(
     'error' => '"%value" is not a valid Greek phone number<br>Greek phone numbers should only ...',
@@ -16,9 +16,10 @@ function phone_el_metadata() {
  * Verifies that $phonenumber is valid 
  *
  * @param string $phonenumber
+ * @param array|null $field
  * @return boolean Returns boolean FALSE if the phone number is not valid.
  */
-function valid_el_phone_number($phonenumber) {
+function valid_el_phone_number($phonenumber, $field = NULL) {
   // define regular expression
   $regex = "/^(\+30)?[ ]?([0-9]{3,4}(\/|-| )?[0-9]{6,7})$/i";
 
@@ -30,6 +31,7 @@ function valid_el_phone_number($phonenumber) {
  * Formatting for Greek Phone Numbers.
  *
  * @param string $phonenumber
+ * @param array $field
  * @return string Returns a string containting the phone number with some formatting.
  */
 function format_el_phone_number($phonenumber, $field) {

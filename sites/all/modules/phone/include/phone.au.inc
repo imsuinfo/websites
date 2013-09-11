@@ -5,7 +5,7 @@
  * CCK Field for Australian phone numbers.
  */
 
- function phone_au_metadata() {
+ function phone_au_metadata($field = NULL) {
    return array(
      'error' => '"%value" is not a valid Australian phone number<br>Australian phone numbers should contain only numbers with an optional prefix of "+61"',
    );
@@ -17,9 +17,10 @@
  *    (Released 2005/10/03, retrieved 2008/04/14)
  *
  * @param string $phonenumber
+ * @param array|null $field
  * @return boolean Returns boolean FALSE if the phone number is not valid.
  */
-function valid_au_phone_number($phonenumber) {
+function valid_au_phone_number($phonenumber, $field = NULL) {
 
   //$phonenumber = trim($phonenumber);
 
@@ -213,6 +214,7 @@ function valid_au_phone_number($phonenumber) {
  * Formatting for Australian Phone Numbers. Based upon ITU-T E.123 (but let's not get too crazy)
  *
  * @param string $phonenumber
+ * @param array|bool $field
  * @return string Returns a string containing the phone number with some formatting.
  */
 function format_au_phone_number($phonenumber, $field = FALSE) {

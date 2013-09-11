@@ -5,7 +5,7 @@
  * CCK Field for Russian phone numbers.
  */
 
-function phone_ru_metadata() {
+function phone_ru_metadata($field = NULL) {
   // These strings are translated using t() on output.
   return array(
     'error' => '"%value" is not a valid Russian phone number<br>Russian Phone numbers should .... ',
@@ -16,10 +16,11 @@ function phone_ru_metadata() {
  * Verifies that $phonenumber is a valid ten-digit Russian phone number
  *
  * @param string $phonenumber
+ * @param array|null $field
  * @return boolean Returns boolean FALSE if the phone number is not valid.
  */
 
-function valid_ru_phone_number($phonenumber) {
+function valid_ru_phone_number($phonenumber, $field = NULL) {
 
   //$phonenumber = trim($phonenumber);
 
@@ -44,7 +45,8 @@ function valid_ru_phone_number($phonenumber) {
 /**
  * Convert a valid Russian phone number into standard +7 (495) 567-53-09 or +7 (444xx) 67-53-09 or mobile 8 910 414-56-90 format
  *
- * @param $phonenumber must be a valid ten-digit number (with optional extension)
+ * @param string $phonenumber must be a valid ten-digit number (with optional extension)
+ * @param array|bool $field
  *
  */
 function format_ru_phone_number($phonenumber, $field = FALSE) {

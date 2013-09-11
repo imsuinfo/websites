@@ -7,7 +7,7 @@
 
 define('PHONE_CH_REGEX', "%(\+41|0|0041)([2-9]\d{8})$%");
 
-function phone_ch_metadata() {
+function phone_ch_metadata($field = NULL) {
   // These strings are translated using t() on output.
   return array(
     'error' => '"%value" is not a valid Swiss phone number<br>Swiss phone numbers should only contain numbers and spaces and be like 099 999 99 99',
@@ -20,9 +20,10 @@ function phone_ch_metadata() {
  *    (Released 2002)
  *
  * @param string $phonenumber
+ * @param array|null $field
  * @return boolean Returns boolean FALSE if the phone number is not valid.
  */
-function valid_ch_phone_number($phonenumber) {
+function valid_ch_phone_number($phonenumber, $field = NULL) {
   $phonenumber = str_replace(array(' ','-','.','/','(',')'), '', $phonenumber);
   $match =array();
   $result = (bool) preg_match(PHONE_CH_REGEX, $phonenumber, $match);
@@ -33,6 +34,7 @@ function valid_ch_phone_number($phonenumber) {
  * Formatting for Switzerland Phone Numbers.
  *
  * @param string $phonenumber
+ * @param array|bool $field
  * @return string Returns a string containting the phone number with some formatting.
  */
 function format_ch_phone_number($phonenumber, $field = FALSE) {

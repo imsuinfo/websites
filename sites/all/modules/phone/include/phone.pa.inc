@@ -24,7 +24,7 @@
  */
 define('PHONE_PA_REGEX', '/((00|\+)?[0-9]{3}[\s])?([0-9]{3,4})[\s|-]?([0-9]{4})/');
 
-function phone_pa_metadata() {
+function phone_pa_metadata($field = NULL) {
    // These strings are translated using t() on output.
    return array(
      'error' => '"%value" is not a valid Panamanian phone number!<br>Panamanian phone numbers should contain only numbers, spaces and dashes be like 9999-999, 9999 999 or 9999999 with an optional prefix of "+507" or "00507".',
@@ -35,9 +35,10 @@ function phone_pa_metadata() {
  * Verifies that $phonenumber is a valid nine-digit Panamanian phone number
  *
  * @param string $phonenumber
+ * @param array|null $field
  * @return boolean Returns boolean FALSE if the phone number is not valid.
  */
-function valid_pa_phone_number($phonenumber) {
+function valid_pa_phone_number($phonenumber, $field = NULL) {
 
   //$phonenumber = trim($phonenumber);
 
@@ -49,7 +50,8 @@ function valid_pa_phone_number($phonenumber) {
 /**
  * Convert a valid Panamenian phone number into standard (+507) 260-4324 format
  *
- * @param $phonenumber must be a valid nine-digit number (with optional international prefix)
+ * @param string $phonenumber must be a valid nine-digit number (with optional international prefix)
+ * @param array|bool $field
  *
  */
 function format_pa_phone_number($phonenumber, $field = FALSE) {

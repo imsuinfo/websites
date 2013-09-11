@@ -66,6 +66,7 @@ function phone_field_info() {
         'phone_int_max_length' => 15,
         'ca_phone_separator' => '-',
         'ca_phone_parentheses' => 1,
+        'ca_phone_digits_minimum' => 10,
       ),
       'default_formatter' => 'phone',
       'default_widget' => 'phone_textfield',
@@ -131,6 +132,12 @@ function phone_field_instance_settings_form($field, $instance) {
   }
 
   if ($field['settings']['country'] == 'ca') {
+    $form['ca_phone_digits_minimum'] = array(
+      '#type' => 'select',
+      '#title' => t('Minimum Number of Digits'),
+      '#options' => array(4 => '4', 7 => '7', 10 => '10', 11 => '11'),
+      '#default_value' => $settings['ca_phone_digits_minimum'],
+    );
     $form['ca_phone_separator'] = array(
       '#type' => 'textfield',
       '#title' => t('Separator'),
@@ -154,8 +161,8 @@ function phone_field_validate($entity_type, $entity, $field, $instance, $langcod
     if (isset($item['value']) && $item['value'] != '') {
       $ccode = $field['settings']['country'];
       $value = $item['value'];
-      if (!valid_phone_number($ccode, $value)) {
-        $country = phone_country_info($ccode);
+      if (!valid_phone_number($ccode, $value, $instance['settings'])) {
+        $country = phone_country_info($ccode, $instance['settings']);
         $errors[$field['field_name']][$langcode][$delta][] = array(
           'error' => 'phone_invalid_number',
           'message' => t($country['error'], array('%value' => $value)),
@@ -306,10 +313,11 @@ function phone_simpletest() {
  * Country supported or not by the module ?
  *
  * @param string $countrycode
+ * @param array|null $field
  * @return boolean Returns a boolean containting the answer to the question.
  */
-function phone_supported_countrycode($countrycode) {
-  return (phone_country_info($countrycode) !== NULL ? TRUE : FALSE);
+function phone_supported_countrycode($countrycode, $field = NULL) {
+  return (phone_country_info($countrycode, $field) !== NULL ? TRUE : FALSE);
 }
 
 
@@ -317,11 +325,10 @@ function phone_supported_countrycode($countrycode) {
  * Get a country meta info
  *
  * @param string $countrycode
+ * @param array $field
  * @return array Returns a array containing country metadata
  */
-function phone_country_info($countrycode = NULL) {
-  static $i;
-
+function phone_country_info($countrycode = NULL, $field = NULL) {
   $countrycode = trim($countrycode);
 
   if (phone_countries($countrycode) !== FALSE) {
@@ -329,7 +336,7 @@ function phone_country_info($countrycode = NULL) {
     module_load_include('inc', 'phone', 'include/phone.'. $countrycode);
 
     if (function_exists($phone_info_function)) {
-      return $phone_info_function();
+      return $phone_info_function($field);
     }
   }
   //Country not taken into account yet
@@ -341,19 +348,19 @@ function phone_country_info($countrycode = NULL) {
  *
  * @param string $countrycode
  * @param string $phonenumber
+ * @param array|null $field
  * @return boolean Returns boolean FALSE if the phone number is not valid.
  */
-function valid_phone_number($countrycode, $phonenumber) {
-
+function valid_phone_number($countrycode, $phonenumber, $field = NULL) {
   $countrycode = trim($countrycode);
   $phonenumber = trim($phonenumber);
 
-  if (phone_supported_countrycode($countrycode)) {
+  if (phone_supported_countrycode($countrycode, $field)) {
     $valid_phone_function = 'valid_'. $countrycode . '_phone_number';
     module_load_include('inc', 'phone', 'include/phone.'. $countrycode);
 
     if (function_exists($valid_phone_function)) {
-       return $valid_phone_function($phonenumber);
+      return $valid_phone_function($phonenumber, $field);
     }
   }
   //Country not taken into account yet
