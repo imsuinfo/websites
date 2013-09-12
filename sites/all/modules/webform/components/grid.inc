@@ -28,6 +28,7 @@ function _webform_defaults_grid() {
       'custom_option_keys' => 0,
       'custom_question_keys' => 0,
       'description' => '',
+      'summary' => '',
       'private' => FALSE,
     ),
   );
@@ -124,6 +125,18 @@ function _webform_edit_grid($component) {
     );
   }
 
+  $form['extra']['summary'] = array(
+    '#type' => 'textarea',
+    '#title' => t('Summary'),
+    '#default_value' => $component['extra']['summary'],
+    '#description' => t('A description on how to read or navigate the grid. This is an accessibility requirement.') . theme('webform_token_help'),
+    '#cols' => 60,
+    '#rows' => 5,
+    '#weight' => -1,
+    '#required' => TRUE,
+    '#wysiwyg' => FALSE,
+  );
+
   $form['display']['optrand'] = array(
     '#type' => 'checkbox',
     '#title' => t('Randomize Options'),
@@ -164,6 +177,7 @@ function _webform_render_grid($component, $value = NULL, $filter = TRUE) {
     '#title_display' => $component['extra']['title_display'] ? $component['extra']['title_display'] : 'before',
     '#required' => $component['required'],
     '#weight' => $component['weight'],
+    '#summary' => $component['extra']['summary'],
     '#description' => $filter ? webform_filter_descriptions($component['extra']['description'], $node) : $component['extra']['description'],
     '#grid_questions' => _webform_select_options_from_text($component['extra']['questions'], TRUE),
     '#grid_options' => _webform_select_options_from_text($component['extra']['options'], TRUE),
@@ -272,6 +286,7 @@ function theme_webform_display_grid($variables) {
 
   $component = $element['#webform_component'];
   $format = $element['#format'];
+  $summary = isset($element['#summary']) ? $element['#summary'] : '';
 
   if ($format == 'html') {
     $rows = array();
@@ -294,7 +309,8 @@ function theme_webform_display_grid($variables) {
     }
 
     $option_count = count($header) - 1;
-    $output = theme('table', array('header' => $header, 'rows' => $rows, 'attributes' => array('class' => array('webform-grid', 'webform-grid-' . $option_count)), 'caption' => $element['#title']));
+    $output = theme('table', array('header' => $header, 'rows' => $rows, 'attributes' => array('class' => array('webform-grid', 'webform-grid-' . $option_count), 'summary' => $summary), 'caption' => $element['#title']));
+    $output = '<fieldset style="padding: 0px; margin: 0px; border: 0px none;"><legend class="element-invisible">' . $element['#title'] . '</legend>' . $output . '</fieldset>';
   }
   else {
     $items = array();
@@ -314,6 +330,7 @@ function _webform_analysis_grid($component, $sids = array()) {
   // Generate the list of options and questions.
   $options = _webform_select_options_from_text($component['extra']['options'], TRUE);
   $questions = _webform_select_options_from_text($component['extra']['questions'], TRUE);
+  $summary = isset($element['#summary']) ? $element['#summary'] : '';
 
   // Generate a lookup table of results.
   $query = db_select('webform_submitted_data', 'wsd')
@@ -352,7 +369,8 @@ function _webform_analysis_grid($component, $sids = array()) {
     }
     $rows[] = $row;
   }
-  $output = theme('table', array('header' => $header, 'rows' => $rows, 'attributes' => array('class' => array('webform-grid')), 'caption' => $component['name']));
+  $output = theme('table', array('header' => $header, 'rows' => $rows, 'attributes' => array('class' => array('webform-grid'), 'summary' => $summary), 'caption' => $component['name']));
+  $output = '<fieldset style="padding: 0px; margin: 0px; border: 0px none;"><legend class="element-invisible">' . $element['#title'] . '</legend>' . $output . '</fieldset>';
 
 
   return array(array(array('data' => $output, 'colspan' => 2)));
@@ -428,6 +446,7 @@ function _webform_edit_grid_unique_validate($element) {
 
 function theme_webform_grid($variables) {
   $element = $variables['element'];
+  $summary = isset($element['#summary']) ? $element['#summary'] : '';
 
   $rows = array();
   $header = array(array('data' => '', 'class' => array('webform-grid-question')));
@@ -453,5 +472,7 @@ function theme_webform_grid($variables) {
   }
 
   $option_count = count($header) - 1;
-  return theme('table', array('header' => $header, 'rows' => $rows, 'attributes' => array('class' => array('webform-grid', 'webform-grid-' . $option_count)), 'caption' => $element['#title']));
+  $output = theme('table', array('header' => $header, 'rows' => $rows, 'attributes' => array('class' => array('webform-grid', 'webform-grid-' . $option_count), 'summary' => $summary), 'caption' => $element['#title']));
+  $output = '<fieldset style="padding: 0px; margin: 0px; border: 0px none;"><legend class="element-invisible">' . $element['#title'] . '</legend>' . $output . '</fieldset>';
+  return $output;
 }

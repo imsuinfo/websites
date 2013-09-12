@@ -541,6 +541,7 @@
 
 
 /*** Webform ***/
+.mcneese form.webform-client-form > .form-wrapper-inner .webform-component-webform_grid > fieldset > .webform-grid > caption,
 .mcneese form.webform-client-form > .form-wrapper-inner .webform-component-webform_grid > .webform-grid > caption {
   display: block;
   visibility: hidden;
