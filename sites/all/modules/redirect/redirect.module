@@ -561,11 +561,11 @@ function redirect_load_by_source($source, $language = LANGUAGE_NONE, array $quer
   $rid_query = db_select('redirect');
   $rid_query->addField('redirect', 'rid');
   if ($source != variable_get('site_frontpage', 'node')) {
-    $rid_query->condition('source', db_like($source), 'LIKE');
+    $rid_query->condition('source', $source);
   }
   else {
     $source_condition = db_or();
-    $source_condition->condition('source', db_like($source), 'LIKE');
+    $source_condition->condition('source', $source);
     $source_condition->condition('source', '');
     $rid_query->condition($source_condition);
   }
