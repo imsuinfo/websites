@@ -2353,7 +2353,7 @@ function workbench_menu_edit_access($access_type = NULL, $access_id = NULL) {
  *   This prevents infinite recursion.
  */
 function workbench_menu_clear_cache_by_access_id($access_id, &$processed) {
-  if (!is_numeric($id)) {
+  if (!is_numeric($access_id)) {
     if (class_exists('cf_error')) {
       cf_error::invalid_integer('access_id');
     }
