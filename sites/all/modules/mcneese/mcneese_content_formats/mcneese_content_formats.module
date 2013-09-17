@@ -36,6 +36,7 @@ function mcneese_content_formats_mcneese_content_node_type_form_alter(&$form, &$
 
   $deny_abused_codes_default = variable_get('mcneese_content_formats_deny_abused_codes_' . $form['#node_type']->type, FALSE);
   $allowed_tags_default = variable_get('mcneese_content_formats_allowed_tags_' . $form['#node_type']->type, 'a abbr address area article aside audio base base bdi bdo blockquote br button canvas caption cite code col colgroup command datalist dd del details dfn dialog div dl dt em embed fieldset figcaption figure form h1 h2 h3 h4 h5 h6 header hr iframe img input ins kbd keygen label legend li link map mark menu meter nav noscript object ol optgroup option output p param pre progress q rp rt ruby s samp section select small source span strong sub summary sup table tbody td textarea tfoot th thead time title tr track u ul var video wbr');
+  $fix_links_default = variable_get('mcneese_content_formats_fix_links_' . $form['#node_type']->type, FALSE);
 
   $form['mcneese_content']['deny_abused_codes'] = array(
     '#type' => 'checkbox',
@@ -51,6 +52,13 @@ function mcneese_content_formats_mcneese_content_node_type_form_alter(&$form, &$
     '#default_value' => $allowed_tags_default,
     '#description' => t("This prevents saving content with tags that are not in this list. Set this to nothing to disable this functionality."),
   );
+
+  $form['mcneese_content']['fix_links'] = array(
+    '#type' => 'checkbox',
+    '#title' => t("Fix Links"),
+    '#default_value' => $fix_links_default,
+    '#description' => t("This enables the correction of the mis-use of url links. This also updates older and no longer valid links to use the newer method. This currently only fixes a and img links."),
+  );
 }
 
 /**
@@ -61,6 +69,7 @@ function mcneese_content_formats_mcneese_content_node_type_form_submit_alter($fo
 
   cf_settings_register('mcneese_content_formats_deny_abused_codes_' . $form['#node_type']->type, 'drupal_variables', 'mcneese_content_formats', TRUE);
   cf_settings_register('mcneese_content_formats_allowed_tags_' . $form['#node_type']->type, 'drupal_variables', 'mcneese_content_formats', TRUE);
+  cf_settings_register('mcneese_content_formats_fix_links_' . $form['#node_type']->type, 'drupal_variables', 'mcneese_content_formats', TRUE);
 
   if (isset($form_state['values']['mcneese_content']['deny_abused_codes']) && $form_state['values']['mcneese_content']['deny_abused_codes']) {
     variable_set('mcneese_content_formats_deny_abused_codes_' . $form['#node_type']->type, TRUE);
@@ -74,6 +83,13 @@ function mcneese_content_formats_mcneese_content_node_type_form_submit_alter($fo
   }
   else {
     variable_set('mcneese_content_formats_allowed_tags_' . $form['#node_type']->type, '');
+  }
+
+  if (isset($form_state['values']['mcneese_content']['fix_links']) && $form_state['values']['mcneese_content']['fix_links']) {
+    variable_set('fix_links_' . $form['#node_type']->type, TRUE);
+  }
+  else {
+    variable_set('mcneese_content_formats_fix_links_' . $form['#node_type']->type, FALSE);
   }
 }
 
@@ -97,10 +113,7 @@ function mcneese_content_formats_node_validate($node) {
             $markup = check_markup($index_value['summary'], $index_value['format']);
 
             $dom = new DOMDocument();
-
-            $xml_errors = libxml_use_internal_errors(true);
-            $dom->loadHTML('<!DOCTYPE html>' . $markup);
-            libxml_use_internal_errors($xml_errors);
+            @$dom->loadHTML('<!DOCTYPE html><head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"></head><body>' . $markup . '</body></html>');
 
             if ($dom->hasChildNodes()) {
               $tags = array();
@@ -125,10 +138,7 @@ function mcneese_content_formats_node_validate($node) {
            // process things after the filter is generated.
             $markup = check_markup($index_value['value'], $index_value['format']);
             $dom = new DOMDocument();
-
-            $xml_errors = libxml_use_internal_errors(true);
-            $dom->loadHTML('<!DOCTYPE html>' . $markup);
-            libxml_use_internal_errors($xml_errors);
+            @$dom->loadHTML('<!DOCTYPE html><head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"></head><body>' . $markup . '</body></html>');
 
             if ($dom->hasChildNodes()) {
               $tags = array();
@@ -158,55 +168,214 @@ function mcneese_content_formats_node_validate($node) {
  * Implements hook_node_presave().
  */
 function mcneese_content_formats_node_presave($node) {
-  $deny_abused_codes = variable_get('mcneese_content_formats_deny_abused_codes_' . $node->type, FALSE);
+  $deny_abused_codes_value = variable_get('mcneese_content_formats_deny_abused_codes_' . $node->type, FALSE);
 
-  if ($deny_abused_codes && !user_access('bypass deny abused codes')) {
-    $abused_codes = array();
+  $deny_abused_codes = $deny_abused_codes_value && !user_access('bypass deny abused codes');
+  $fix_links = variable_get('mcneese_content_formats_fix_links_' . $node->type, FALSE);
 
-    $abused_codes['&#34;'] = '"';
-    $abused_codes['&#38;'] = '&amp;';
-    $abused_codes['&#39;'] = '\'';
-    $abused_codes['&#60;'] = '&lt;';
-    $abused_codes['&#62;'] = '&gt;';
-    $abused_codes['&quot;'] = '"';
-    $abused_codes['&ndash;'] = '-';
-    $abused_codes['&mdash;'] = '-';
-    $abused_codes['&lsquo;'] = '\'';
-    $abused_codes['&rsquo;'] = '\'';
-    $abused_codes['&ldquo;'] = '"';
-    $abused_codes['&rdquo;'] = '"';
+  $abused_codes = array();
+  $abused_codes['&#34;'] = '"';
+  $abused_codes['&#38;'] = '&amp;';
+  $abused_codes['&#39;'] = '\'';
+  $abused_codes['&#60;'] = '&lt;';
+  $abused_codes['&#62;'] = '&gt;';
+  $abused_codes['&quot;'] = '"';
+  $abused_codes['&ndash;'] = '-';
+  $abused_codes['&mdash;'] = '-';
+  $abused_codes['&lsquo;'] = '\'';
+  $abused_codes['&rsquo;'] = '\'';
+  $abused_codes['&ldquo;'] = '"';
+  $abused_codes['&rdquo;'] = '"';
 
-    $node_variables = array_keys(get_object_vars($node));
+  $node_variables = array_keys(get_object_vars($node));
 
-    // at this time 'deny abused codes' is only applied to the body field (and its summary).
-    // this does not pay attention to text formats.
-    // if such flexibility is needed, then it will be added on a per-text-field basis.
-    if (property_exists($node, 'body') && is_array($node->body)) {
-      foreach ($node->body as $language => &$language_value) {
-        foreach ($language_value as $index => &$index_value) {
-          if (!empty($index_value['summary'])) {
-            foreach ($abused_codes as $code => $replacement) {
-              $replaced = preg_replace('|' . $code . '|i', $replacement, $index_value['summary']);
+  // at this time 'deny abused codes' is only applied to the body field (and its summary).
+  // this does not pay attention to text formats.
+  // if such flexibility is needed, then it will be added on a per-text-field basis.
+  if (property_exists($node, 'body') && is_array($node->body)) {
+    foreach ($node->body as $language => &$language_value) {
+      foreach ($language_value as $index => &$index_value) {
+        if (!empty($index_value['summary'])) {
+          if ($deny_abused_codes) mcneese_content_formats_deny_abused_codes($abused_codes, $index_value['summary']);
+          if ($fix_links) mcneese_content_formats_fix_links($index_value['summary']);
+        }
 
-              if ($replaced !== FALSE) {
-                $index_value['summary'] = $replaced;
-              }
-            }
-          }
-
-          if (!empty($index_value['value'])) {
-            foreach ($abused_codes as $code => $replacement) {
-              $replaced = preg_replace('|' . $code . '|i', $replacement, $index_value['value']);
-
-              if ($replaced !== FALSE) {
-                $index_value['value'] = $replaced;
-              }
-            }
-          }
+        if (!empty($index_value['value'])) {
+          if ($deny_abused_codes) mcneese_content_formats_deny_abused_codes($abused_codes, $index_value['value']);
+          if ($fix_links) mcneese_content_formats_fix_links($index_value['value']);
         }
       }
     }
   }
+}
+
+/**
+ * Strip out used code from index.
+ *
+ * @param array $abused_code
+ *   An array of codes and their replacements.
+ * @param string $value
+ *   The text to alter.
+ */
+function mcneese_content_formats_deny_abused_codes($abused_codes, &$value) {
+  foreach ($abused_codes as $code => $replacement) {
+    $replaced = preg_replace('|' . $code . '|i', $replacement, $value);
+
+    if ($replaced !== FALSE) {
+      $value = $replaced;
+    }
+  }
+}
+
+/**
+ * Make changes to url links.
+ *
+ * @param string $value
+ *   The text to alter.
+ */
+function mcneese_content_formats_fix_links(&$value) {
+  $dom = new DOMDocument();
+  $dom->preserveWhiteSpace = TRUE;
+  $dom->formatOutput = TRUE;
+  @$dom->loadHTML('<!DOCTYPE html><head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"></head><body>' . $value . '</body></html>');
+  $altered = FALSE;
+
+  if ($dom->hasChildNodes()) {
+    $a_links = array();
+    $img_links = array();
+    $bodys = $dom->getElementsByTagName('body');
+
+    if ($bodys->length > 0) {
+      $body = $bodys->item(0);
+      $a_links = $body->getElementsByTagName('a');
+      $img_links = $body->getElementsByTagName('img');
+    }
+
+    foreach ($a_links as $a_link) {
+      if ($a_link->hasAttribute('href')) {
+        $processed = mcneese_content_formats_get_correct_links($a_link->getAttribute('href'));
+
+        if ($processed !== FALSE) {
+          $a_link->setAttribute('href', $processed);
+          $altered = TRUE;
+        }
+      }
+    }
+
+    foreach ($img_links as $img_link) {
+      if ($img_link->hasAttribute('src')) {
+        $processed = mcneese_content_formats_get_correct_links($img_link->getAttribute('src'));
+
+        if ($processed !== FALSE) {
+          $img_link->setAttribute('src', $processed);
+          $altered = TRUE;
+        }
+      }
+    }
+  }
+
+  if ($altered) {
+    $value = $dom->saveHTML($body);
+
+    // Remove the <body> and </body> parts
+    $value = preg_replace('@(^<body>|</body>$)@i', '', $value);
+  }
+}
+
+/**
+ * Interprets link and tries to replace it with proper link if applicable.
+ *
+ * @param string $url
+ *   The url link to process.
+ *
+ * @return string|bool
+ *   The updated url link or FALSE otherwise.
+ */
+function mcneese_content_formats_get_correct_links($url) {
+  global $base_path;
+  global $base_root;
+  global $base_url;
+
+  $default_redirect = variable_get('redirect_default_status_code', 301);
+  $base = parse_url($base_url);
+  $parsed = parse_url($url);
+  $altered = FALSE;
+
+  // only process known schemes
+  if (!empty($parsed['scheme']) && !in_array($parsed['scheme'], array('http', 'https'))) {
+    return FALSE;
+  }
+
+  // if either host or scheme is defined, then both must be defined.
+  if (!empty($parsed['scheme']) && empty($parsed['host']) || empty($parsed['scheme']) && !empty($parsed['host'])) {
+    return FALSE;
+  }
+
+  // if path is empty, then there is nothing to do.
+  if (empty($parsed['host']) && empty($parsed['path'])) {
+    return FALSE;
+  }
+
+  // fix local paths that use absolute links.
+  if (!empty($parsed['host']) && $base['host'] == $parsed['host']) {
+    if (empty($parsed['path'])) {
+      unset($parsed['scheme']);
+      unset($parsed['host']);
+      $parsed['path'] = $base_path;
+      $altered = TRUE;
+    }
+    elseif (preg_match('@^' . $base_path . '@i', $parsed['path'])) {
+      unset($parsed['scheme']);
+      unset($parsed['host']);
+      $altered = TRUE;
+    }
+  }
+
+  if (empty($parsed['scheme'])) {
+    if (preg_match('@^' . $base_path . '@i', $parsed['path'])) {
+      $path = preg_replace('@^' . $base_path . '@i', '', $parsed['path']);
+
+      // check to see if a url redirection exists for the given path.
+      if (function_exists('redirect_url')) {
+        $redirect = redirect_load_by_source($path);
+
+        if (is_object($redirect)) {
+          // only operate on 'found' and 'permanent' redirects.
+          if ((empty($redirect->status_code) && ($default_redirect == 301 || $default_redirect == 302)) || $redirect->status_code == 301 || $redirect->status_code == 302) {
+            $path = $redirect->redirect;
+            $altered = TRUE;
+          }
+        }
+      }
+
+      // check to see what drupal returns for the given path.
+      $source = drupal_lookup_path('source', $path);
+
+      if (!empty($source)) {
+        $path = $source;
+        $altered = TRUE;
+      }
+
+      $parsed['path'] = $base_path . $path;
+    }
+  }
+
+  // recombine url
+  if ($altered) {
+    $new_url = $parsed['path'];
+
+    if (isset($parsed['query'])) {
+      $new_url .= $parsed['query'];
+    }
+
+    if (isset($parsed['fragment'])) {
+      $new_url .= $parsed['fragment'];
+    }
+
+    return $new_url;
+  }
+
+  return FALSE;
 }
 
 /**
