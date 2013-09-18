@@ -45,7 +45,7 @@ function ctools_content_autocomplete_entity($type, $string = '') {
       $query->condition('b.' . $entity['entity keys']['id'], $preg_matches[1]);
     }
     elseif ($entity['entity keys']['label']) {
-      $query->condition('b.' . $entity['entity keys']['label'], '%' . db_like($string) . '%', 'LIKE');
+      $query->condition('b.' . $entity['entity keys']['label'], '%' . db_like($string) . '%', 'ILIKE');
     }
 
     $matches = array();

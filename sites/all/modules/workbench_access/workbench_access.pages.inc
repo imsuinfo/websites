@@ -43,7 +43,7 @@ function workbench_access_autocomplete($access_type, $access_id, $string, $test_
 
     $query = db_select('users', 'u');
     $query->addField('u', 'uid');
-    $query->condition('u.name', db_like($string) . '%', 'LIKE');
+    $query->condition('u.name', db_like($string) . '%', 'ILIKE');
     $query->condition('u.uid', $sub_query, 'NOT IN');
     $query->range(0, 20);
     $query->addTag('user_autocomplete');

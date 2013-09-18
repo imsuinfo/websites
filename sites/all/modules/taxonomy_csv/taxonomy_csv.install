@@ -27,7 +27,7 @@ function taxonomy_csv_uninstall() {
   // Simple DB query to get the names of the variables of the module.
   $results = db_select('variable', 'v')
     ->fields('v', array('name'))
-    ->condition('name', 'taxonomy_csv_%', 'LIKE')
+    ->condition('name', 'taxonomy_csv_%', 'ILIKE')
     ->execute();
   foreach ($results as $result) {
     variable_del($result->name);

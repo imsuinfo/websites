@@ -10,7 +10,7 @@
  */
 function media_colorbox_uninstall() {
   //Remove all colorbox_file varialbes
-  db_delete('variable')->condition('name', 'media_colorbox_%', 'LIKE')->execute();
+  db_delete('variable')->condition('name', 'media_colorbox_%', 'ILIKE')->execute();
 }
 
 /**
@@ -20,6 +20,6 @@ function media_colorbox_uninstall() {
 function media_colorbox_update_7101() {
   db_update('file_display')
     ->expression('settings', "'N;'")
-    ->condition('name', '%default__file_field_media_colorbox', 'LIKE')
+    ->condition('name', '%default__file_field_media_colorbox', 'ILIKE')
     ->execute();
 }

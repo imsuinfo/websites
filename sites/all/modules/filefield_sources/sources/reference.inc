@@ -238,7 +238,7 @@ function filefield_source_reference_get_files($filename, $instance = NULL) {
     $query->innerJoin('file_managed', 'f', 'f.fid = cf.' . $table_info['fid']);
     $query->fields('f');
     $query->condition('f.status', 1);
-    $query->condition('f.filename', $like, 'LIKE');
+    $query->condition('f.filename', $like, 'ILIKE');
     $query->orderBy('f.timestamp', 'DESC');
     $query->groupBy('f.fid');
     $query->range(0, 30);

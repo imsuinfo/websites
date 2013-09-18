@@ -1847,13 +1847,13 @@ function _file_entity_query_file_entity_access_alter($query, $type) {
       if (!empty($wrappers['public'])) {
         if (user_access('view files', $account)) {
           foreach (array_keys($wrappers['public']) as $wrapper) {
-            $subquery_conditions->condition('fm_access.uri', $wrapper . '%', 'LIKE');
+            $subquery_conditions->condition('fm_access.uri', $wrapper . '%', 'ILIKE');
           }
         }
         elseif (user_access('view own files', $account)) {
           foreach (array_keys($wrappers['public']) as $wrapper) {
             $subquery_conditions->condition(db_and()
-              ->condition('fm_access.uri', $wrapper . '%', 'LIKE')
+              ->condition('fm_access.uri', $wrapper . '%', 'ILIKE')
               ->condition('fm_access.uid', $account->uid)
             );
           }
@@ -1862,13 +1862,13 @@ function _file_entity_query_file_entity_access_alter($query, $type) {
       if (!empty($wrappers['private'])) {
         if (user_access('view private files', $account)) {
           foreach (array_keys($wrappers['private']) as $wrapper) {
-            $subquery_conditions->condition('fm_access.uri', $wrapper . '%', 'LIKE');
+            $subquery_conditions->condition('fm_access.uri', $wrapper . '%', 'ILIKE');
           }
         }
         elseif (user_access('view own private files', $account)) {
           foreach (array_keys($wrappers['private']) as $wrapper) {
             $subquery_conditions->condition(db_and()
-              ->condition('fm_access.uri', $wrapper . '%', 'LIKE')
+              ->condition('fm_access.uri', $wrapper . '%', 'ILIKE')
               ->condition('fm_access.uid', $account->uid)
             );
           }

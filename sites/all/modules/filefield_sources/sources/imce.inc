@@ -230,8 +230,8 @@ function filefield_source_imce_custom_scan_full($dirname, &$imce) {
 
   $result = db_select('file_managed', 'f')
     ->fields('f', array('uri'))
-    ->condition('f.uri', $sql_uri_name . '%', 'LIKE')
-    ->condition('f.uri', $sql_uri_name . '_%/%', 'NOT LIKE')
+    ->condition('f.uri', $sql_uri_name . '%', 'ILIKE')
+    ->condition('f.uri', $sql_uri_name . '_%/%', 'NOT ILIKE')
     ->execute();
 
   $db_files = array();
@@ -279,8 +279,8 @@ function filefield_source_imce_custom_scan_restricted($dirname, &$imce) {
     $query->innerJoin('file_managed', 'f', 'f.fid = cf.' . $table_info['fid']);
     $result = $query->fields('f')
       ->condition('f.status', 1)
-      ->condition('f.uri', $sql_uri . '%', 'LIKE')
-      ->condition('f.uri', $sql_uri . '%/%', 'NOT LIKE')
+      ->condition('f.uri', $sql_uri . '%', 'ILIKE')
+      ->condition('f.uri', $sql_uri . '%/%', 'NOT ILIKE')
       ->execute();
     foreach ($result as $file) {
       // Get real name

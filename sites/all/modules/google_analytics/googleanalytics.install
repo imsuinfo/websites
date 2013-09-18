@@ -142,7 +142,7 @@ function googleanalytics_update_6002() {
 
   // Delete outdated tracking settings.
   db_delete('variable')
-    ->condition('name', db_like('googleanalytics_track_') . '%', 'LIKE')
+    ->condition('name', db_like('googleanalytics_track_') . '%', 'ILIKE')
     ->execute();
 
   return implode(', ', $messages);

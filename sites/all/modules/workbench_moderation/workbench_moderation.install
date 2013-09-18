@@ -398,7 +398,7 @@ function workbench_moderation_update_7004() {
   // Grab all of the workbench_moderation permissions
   $perms = db_select('role_permission', 'rp')
     ->fields('rp', array('permission'))
-    ->condition('permission', '%moderate content from %', 'LIKE')
+    ->condition('permission', '%moderate content from %', 'ILIKE')
     ->execute()
     ->fetchCol();
 

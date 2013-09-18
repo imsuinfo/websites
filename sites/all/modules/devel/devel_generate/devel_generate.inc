@@ -334,7 +334,7 @@ function devel_generate_menu_data($num_menus, $existing_menus, $num_links, $titl
       ->fields('m', array('mlid'))
       ->condition('m.menu_name', 'devel', '<>')
       // Look for the serialized version of 'devel' => TRUE.
-      ->condition('m.options', '%' . db_like('s:5:"devel";b:1') . '%', 'LIKE')
+      ->condition('m.options', '%' . db_like('s:5:"devel";b:1') . '%', 'ILIKE')
       ->execute();
     foreach ($result as $link) {
       menu_link_delete($link->mlid);

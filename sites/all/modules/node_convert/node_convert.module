@@ -635,7 +635,7 @@ function node_convert_template_delete_confirm_submit($form, &$form_state) {
     if ($form_state['values']['delete_action'] == 1) {
       db_delete('actions')
       ->condition('callback', 'node_convert_convert_action')
-      ->condition('parameters', '%template";s:%:"' . $form_state['values']['template_id'] . '%', 'LIKE')
+      ->condition('parameters', '%template";s:%:"' . $form_state['values']['template_id'] . '%', 'ILIKE')
       ->execute();
     }
     else {
@@ -645,7 +645,7 @@ function node_convert_template_delete_confirm_submit($form, &$form_state) {
             'parameters' => $none,
           ))
       ->condition('callback', 'node_convert_convert_action')
-      ->condition('parameters', '%template";s:%:"' . $form_state['values']['template_id'] . '%', 'LIKE')
+      ->condition('parameters', '%template";s:%:"' . $form_state['values']['template_id'] . '%', 'ILIKE')
       ->execute();
     }
   }

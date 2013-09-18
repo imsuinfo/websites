@@ -490,7 +490,7 @@ function views_update_6012() {
   // There is only one simple query to run.
   $update = db_update('blocks')
     ->condition('module', 'views')
-    ->condition('delta', db_like('-exp-') . '%', 'LIKE')
+    ->condition('delta', db_like('-exp-') . '%', 'ILIKE')
     ->fields(array('cache' => DRUPAL_NO_CACHE));
 }
 
@@ -589,7 +589,7 @@ function views_update_7001() {
 
   if ($depth == 3) {
     db_delete('menu_links')
-      ->condition('link_path', 'admin/structure/views/%', 'LIKE')
+      ->condition('link_path', 'admin/structure/views/%', 'ILIKE')
       ->execute();
     cache_clear_all(NULL, 'cache_menu');
     menu_rebuild();

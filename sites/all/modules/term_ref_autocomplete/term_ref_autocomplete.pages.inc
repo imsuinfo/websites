@@ -64,7 +64,7 @@ function term_ref_autocomplete_callback($field_name, $raw_tags_typed = '') {
     $tags_return = $query
       ->fields('t', array('tid', 'name'))
       ->condition('t.vid', $vids)
-      ->condition('t.name', '%' . db_like($tag_last) . '%', 'LIKE')
+      ->condition('t.name', '%' . db_like($tag_last) . '%', 'ILIKE')
       ->range(0, 10)
       ->execute()
       ->fetchAllKeyed();

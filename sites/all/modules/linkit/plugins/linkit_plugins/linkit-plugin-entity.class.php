@@ -208,7 +208,7 @@ class LinkitPluginEntity extends LinkitPlugin {
 
     // Add the search condition to the query object.
     $this->query->propertyCondition($this->entity_field_label,
-            '%' . db_like($this->search_string) . '%', 'LIKE')
+            '%' . db_like($this->search_string) . '%', 'ILIKE')
         ->addTag('linkit_entity_autocomplete')
         ->addTag('linkit_' . $this->plugin['entity_type'] . '_autocomplete');
 

@@ -946,7 +946,7 @@ function webform_update_7319(&$sandbox) {
     $sandbox['progress'] = 0;
     $sandbox['last_fid_processed'] = -1;
     $sandbox['max'] = db_select('file_managed')
-      ->condition('uri', '%' . db_like('://webform/') . '%', 'LIKE')
+      ->condition('uri', '%' . db_like('://webform/') . '%', 'ILIKE')
       ->countQuery()
       ->execute()
       ->fetchField();
@@ -956,7 +956,7 @@ function webform_update_7319(&$sandbox) {
   $limit = variable_get('webform_update_batch_size', 100);
   $files = db_select('file_managed', 'f')
     ->fields('f')
-    ->condition('uri', '%' . db_like('://webform/') . '%', 'LIKE')
+    ->condition('uri', '%' . db_like('://webform/') . '%', 'ILIKE')
     ->condition('fid', $sandbox['last_fid_processed'], '>')
     ->orderBy('fid', 'ASC')
     ->range(0, $limit)

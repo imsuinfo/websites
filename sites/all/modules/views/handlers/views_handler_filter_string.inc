@@ -229,7 +229,7 @@ class views_handler_filter_string extends views_handler_filter {
   }
 
   function operator() {
-    return $this->operator == '=' ? 'LIKE' : 'NOT LIKE';
+    return $this->operator == '=' ? 'ILIKE' : 'NOT ILIKE';
   }
 
   /**
@@ -254,7 +254,7 @@ class views_handler_filter_string extends views_handler_filter {
   }
 
   function op_contains($field) {
-    $this->query->add_where($this->options['group'], $field, '%' . db_like($this->value) . '%', 'LIKE');
+    $this->query->add_where($this->options['group'], $field, '%' . db_like($this->value) . '%', 'ILIKE');
   }
 
   function op_word($field) {
@@ -277,7 +277,7 @@ class views_handler_filter_string extends views_handler_filter {
       $words = $phrase ? array($words) : preg_split('/ /', $words, -1, PREG_SPLIT_NO_EMPTY);
       foreach ($words as $word) {
         $placeholder = $this->placeholder();
-        $where->condition($field, '%' . db_like(trim($word, " ,!?")) . '%', 'LIKE');
+        $where->condition($field, '%' . db_like(trim($word, " ,!?")) . '%', 'ILIKE');
       }
     }
 
@@ -291,23 +291,23 @@ class views_handler_filter_string extends views_handler_filter {
   }
 
   function op_starts($field) {
-    $this->query->add_where($this->options['group'], $field, db_like($this->value) . '%', 'LIKE');
+    $this->query->add_where($this->options['group'], $field, db_like($this->value) . '%', 'ILIKE');
   }
 
   function op_not_starts($field) {
-    $this->query->add_where($this->options['group'], $field, db_like($this->value) . '%', 'NOT LIKE');
+    $this->query->add_where($this->options['group'], $field, db_like($this->value) . '%', 'NOT ILIKE');
   }
 
   function op_ends($field) {
-    $this->query->add_where($this->options['group'], $field, '%' . db_like($this->value), 'LIKE');
+    $this->query->add_where($this->options['group'], $field, '%' . db_like($this->value), 'ILIKE');
   }
 
   function op_not_ends($field) {
-    $this->query->add_where($this->options['group'], $field, '%' . db_like($this->value), 'NOT LIKE');
+    $this->query->add_where($this->options['group'], $field, '%' . db_like($this->value), 'NOT ILIKE');
   }
 
   function op_not($field) {
-    $this->query->add_where($this->options['group'], $field, '%' . db_like($this->value) . '%', 'NOT LIKE');
+    $this->query->add_where($this->options['group'], $field, '%' . db_like($this->value) . '%', 'NOT ILIKE');
   }
 
   function op_shorter($field) {

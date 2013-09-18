@@ -300,7 +300,7 @@ function views_ajax_autocomplete_user($string = '') {
 
     $result = db_select('users', 'u')
       ->fields('u', array('uid', 'name'))
-      ->condition('u.name', db_like($last_string) . '%', 'LIKE')
+      ->condition('u.name', db_like($last_string) . '%', 'ILIKE')
       ->range(0, 10)
       ->execute()
       ->fetchAllKeyed();
@@ -349,7 +349,7 @@ function views_ajax_autocomplete_taxonomy($vid, $tags_typed = '') {
     $tags_return = $query
       ->fields('t', array('tid', 'name'))
       ->condition('t.vid', $vid)
-      ->condition('t.name', '%' . db_like($tag_last) . '%', 'LIKE')
+      ->condition('t.name', '%' . db_like($tag_last) . '%', 'ILIKE')
       ->range(0, 10)
       ->execute()
       ->fetchAllKeyed();

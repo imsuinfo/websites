@@ -643,7 +643,7 @@ function ultimate_cron_service_process_status() {
   $processes = array();
   $query = db_select('background_process', 'b')
     ->fields('b')
-    ->condition('handle', $handle_prefix . '%', 'LIKE');
+    ->condition('handle', $handle_prefix . '%', 'ILIKE');
   foreach ($query->execute()->fetchAllAssoc('handle', PDO::FETCH_OBJ) as $process) {
     $process = BackgroundProcess::load($process);
     $name = preg_replace('/^' . $handle_prefix . '/', '', $process->handle);

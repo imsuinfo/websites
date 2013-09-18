@@ -71,7 +71,7 @@ function media_query_media_browser_alter($query) {
       $local_condition = db_or();
       foreach (array_keys($local_wrappers) as $scheme) {
         foreach ($extensions as $extension) {
-          $local_condition->condition($alias . '.uri', db_like($scheme . '://') . '%' . db_like('.' . $extension), 'LIKE');
+          $local_condition->condition($alias . '.uri', db_like($scheme . '://') . '%' . db_like('.' . $extension), 'ILIKE');
         }
       }
       $or_condition->condition($local_condition);
@@ -93,7 +93,7 @@ function media_query_media_browser_alter($query) {
       $remote_condition = db_and();
       $wrapper_condition = db_or();
       foreach (array_keys($remote_wrappers) as $scheme) {
-        $wrapper_condition->condition($alias . '.uri', db_like($scheme . '://') . '%', 'LIKE');
+        $wrapper_condition->condition($alias . '.uri', db_like($scheme . '://') . '%', 'ILIKE');
       }
       $remote_condition->condition($wrapper_condition);
       $remote_condition->condition($alias . '.type', $types, 'IN');
@@ -106,7 +106,7 @@ function media_query_media_browser_alter($query) {
     }
     if (!empty($extensions)) {
       foreach ($extensions as $extension) {
-        $or_condition->condition($alias . '.uri', db_like('.' . $extension), 'LIKE');
+        $or_condition->condition($alias . '.uri', db_like('.' . $extension), 'ILIKE');
       }
     }
   }
@@ -116,21 +116,21 @@ function media_query_media_browser_alter($query) {
   }
 
   if ($url_include_patterns) {
-    $query->condition($alias . '.uri', '%' . db_like($url_include_patterns) . '%', 'LIKE');
+    $query->condition($alias . '.uri', '%' . db_like($url_include_patterns) . '%', 'ILIKE');
     // Insert stream related restrictions here.
   }
   if ($url_exclude_patterns) {
-    $query->condition($alias . '.uri', '%' . db_like($url_exclude_patterns) . '%', 'NOT LIKE');
+    $query->condition($alias . '.uri', '%' . db_like($url_exclude_patterns) . '%', 'NOT ILIKE');
   }
 
   if (!user_access('administer files')) {
-    $query->condition($alias . '.uri', db_like('private://') . '%', 'NOT LIKE');
+    $query->condition($alias . '.uri', db_like('private://') . '%', 'NOT ILIKE');
   }
 
   // @todo This is possibly redundant since it's already filtered in the view.
   $query->condition($alias . '.status', FILE_STATUS_PERMANENT);
 
   foreach (array_keys(file_entity_get_hidden_stream_wrappers()) as $name) {
-    $query->condition($alias . '.uri', db_like($name . '://') . '%', 'NOT LIKE');
+    $query->condition($alias . '.uri', db_like($name . '://') . '%', 'NOT ILIKE');
   }
 }

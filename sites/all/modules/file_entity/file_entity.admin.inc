@@ -44,7 +44,7 @@ function file_entity_build_filter_query(SelectQueryInterface $query) {
     list($key, $value) = $filter;
     switch ($key) {
       case 'uri':
-        $query->condition('fm.' . $key, $value . '%', 'LIKE');
+        $query->condition('fm.' . $key, $value . '%', 'ILIKE');
       break;
       case 'type':
         $query->condition('fm.' . $key, $value);

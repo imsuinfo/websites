@@ -307,7 +307,7 @@ function calendar_clear_link_bundle($bundle = NULL) {
   if (empty($bundle)) {
     $result = db_select('variable', 'v')
       ->fields('v', 'name')
-      ->condition('name', 'calendar_date_link_%', 'LIKE')
+      ->condition('name', 'calendar_date_link_%', 'ILIKE')
       ->execute()->fetchAll(PDO::FETCH_ASSOC);
   }
   else {
@@ -330,7 +330,7 @@ function calendar_clear_link_bundle($bundle = NULL) {
 function calendar_clear_link_path($path = NULL) {
   $result = db_select('variable', 'v')
     ->fields('v', array('name', 'value'))
-    ->condition('name', 'calendar_date_link_%', 'LIKE')
+    ->condition('name', 'calendar_date_link_%', 'ILIKE')
     ->execute()->fetchAll(PDO::FETCH_ASSOC);
   // Iterate over all the values and delete them.
   foreach ($result as $row) {

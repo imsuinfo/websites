@@ -420,7 +420,7 @@ function media_update_7016() {
   }
   // Delete old media bundle settings.
   db_delete('variable')
-    ->condition('name', db_like('field_bundle_settings_media__') . '%', 'LIKE')
+    ->condition('name', db_like('field_bundle_settings_media__') . '%', 'ILIKE')
     ->execute();
 
   // Copy field formatter settings of old self-referencing file field to file

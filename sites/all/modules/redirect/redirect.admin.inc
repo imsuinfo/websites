@@ -214,7 +214,7 @@ function redirect_build_filter_query(QueryAlterableInterface $query, array $fiel
     $conditions = db_or();
     $wildcard = '%' . trim(preg_replace('!\*+!', '%', db_like($keys)), '%') . '%';
     foreach ($fields as $field) {
-      $conditions->condition($field, $wildcard, 'LIKE');
+      $conditions->condition($field, $wildcard, 'ILIKE');
     }
     $query->condition($conditions);
   }

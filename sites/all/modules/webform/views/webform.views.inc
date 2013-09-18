@@ -418,7 +418,7 @@ function webform_views_autocomplete($string = '') {
     }
     // Otherwise match on title and optionally indirect NIDs.
     else {
-      $or->condition('n.title', '%' . db_like($string) . '%', 'LIKE');
+      $or->condition('n.title', '%' . db_like($string) . '%', 'ILIKE');
       if (is_numeric($string)) {
         $or->condition('n.nid', (int) $string);
       }
