@@ -245,7 +245,7 @@ class RulesEntityController extends EntityAPIControllerExportable {
           $query->join('rules_trigger', 'tr', "base.id = tr.id");
           $condition['field'] = 'tr.event';
           // Use like operator to support % wildcards also.
-          $condition['operator'] = 'ILIKE';
+          $condition['operator'] = 'LIKE';
         }
       }
     }

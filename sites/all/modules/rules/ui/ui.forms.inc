@@ -933,7 +933,7 @@ function rules_autocomplete_tags($tags_typed = '') {
     $tags_return = $query
       ->distinct()
       ->fields('rt', array('tag'))
-      ->condition('rt.tag', '%' . db_like($tag_last) . '%', 'ILIKE')
+      ->condition('rt.tag', '%' . db_like($tag_last) . '%', 'LIKE')
       ->groupBy('rt.tag')
       ->range(0, 10)
       ->execute()
