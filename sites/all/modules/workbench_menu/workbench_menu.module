@@ -380,7 +380,7 @@ function workbench_menu_block_view($delta = '') {
     if (empty($menus_cached[$path_string['alias']])) {
       $menus_cached[$path_string['alias']] = (array) workbench_menu_build_menus($path_string['alias'], $menus_processed, $breadcrumbs_cached);
 
-      if (!empty($menus_cached[$path_string['alias']]['structure'])) $save_cache = TRUE;
+      if ($menus_cached[$path_string['alias']]['total'] > 0) $save_cache = TRUE;
     }
 
     if (!empty($menus_cached[$path_string['original']]['structure'])) {
@@ -429,6 +429,17 @@ function workbench_menu_block_view($delta = '') {
   $show_parents = TRUE;
   $assign_breadcrumbs = TRUE;
   $path_tree2 = $path_tree;
+
+  // when the menu is empty, but the path is the menu path, then assign the breadcrumb
+  if (empty($path_tree) && $menus_cached[$path_string['alias']]['total'] > 0) {
+    foreach ($menus_cached[$path_string['alias']]['breadcrumbs'] as $breadcrumb_path => &$breadcrumb) {
+      if ($path_string['normal'] == $breadcrumb_path || $path_string['alias'] == $breadcrumb_path) {
+        $bc = array_merge(array('<a href="' . base_path() . '">' . t("Home") . '</a>'), $breadcrumb);
+
+        drupal_set_breadcrumb($bc);
+      }
+    }
+  }
 
   while (!empty($path_tree) && $show_parents) {
     $current_path = array();
@@ -510,6 +521,8 @@ function workbench_menu_block_view($delta = '') {
  *   An array with the following structure:
  *   - structure: A nested array containing the weights and item ids.
  *   - settings: A flat array containing the properties of each item.
+ *   - total: Number of menus found along the path.
+ *   - breadcrumbs: A flat array of menu paths and their breadcrumbs.
  *
  * @see drupal_set_breadcrumb()
  */
@@ -523,6 +536,8 @@ function workbench_menu_build_menus($path_string, &$menus_processed, &$breadcrum
   $built_menus = array();
   $built_menus['structure'] = array();
   $built_menus['menus'] = array();
+  $built_menus['total'] = $menu_total;
+  $built_menus['breadcrumbs'] = array();
 
   foreach ($menus as $menu_id => &$menu) {
     if ($skip_hidden && $menu->hidden) {
@@ -568,6 +583,7 @@ function workbench_menu_build_menus($path_string, &$menus_processed, &$breadcrum
     unset($path_to_use);
 
     if (empty($menu->items['nested'])) {
+      $built_menus['breadcrumbs'][$menu_path_normal] = $breadcrumbs[$menu_path_normal];
       $menu_total--;
       continue;
     }
@@ -596,6 +612,7 @@ function workbench_menu_build_menus($path_string, &$menus_processed, &$breadcrum
       }
 
       $built_menus['structure'][$menu->weight][$menu->id] = $built_menu;
+      $built_menus['breadcrumbs'][$menu_path_normal] = $breadcrumbs[$menu_path_normal];
     }
   }
 
