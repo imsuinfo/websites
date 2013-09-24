@@ -30,6 +30,7 @@ function _webform_defaults_grid() {
       'description' => '',
       'summary' => '',
       'private' => FALSE,
+      'analysis' => TRUE,
     ),
   );
 }
@@ -369,11 +370,13 @@ function _webform_analysis_grid($component, $sids = array()) {
     }
     $rows[] = $row;
   }
-  $output = theme('table', array('header' => $header, 'rows' => $rows, 'attributes' => array('class' => array('webform-grid'), 'summary' => $summary), 'caption' => $component['name']));
-  $output = '<fieldset style="padding: 0px; margin: 0px; border: 0px none;"><legend class="element-invisible">' . $element['#title'] . '</legend>' . $output . '</fieldset>';
 
-
-  return array(array(array('data' => $output, 'colspan' => 2)));
+  return array(
+    'table_header' => $header,
+    'table_rows' => $rows,
+    'table_caption' => $component['name'],
+    'table_summary' => t("A grid field."),
+  );
 }
 
 /**
@@ -472,6 +475,7 @@ function theme_webform_grid($variables) {
   }
 
   $option_count = count($header) - 1;
+
   $output = theme('table', array('header' => $header, 'rows' => $rows, 'attributes' => array('class' => array('webform-grid', 'webform-grid-' . $option_count), 'summary' => $summary), 'caption' => $element['#title']));
   $output = '<fieldset style="padding: 0px; margin: 0px; border: 0px none;"><legend class="element-invisible">' . $element['#title'] . '</legend>' . $output . '</fieldset>';
   return $output;
