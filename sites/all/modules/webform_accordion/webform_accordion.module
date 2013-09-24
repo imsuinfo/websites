@@ -6,6 +6,10 @@
 
 /**
  * Implements hook_webform_component_info().
+ *
+ * Defines the Accordion Group and Accordion Tab components.
+ *
+ * @see hook_webform_component_info().
  */
 function webform_accordion_webform_component_info() {
   $components = array();
@@ -20,6 +24,10 @@ function webform_accordion_webform_component_info() {
       'conditional' => FALSE,
       'group' => TRUE,
       'title_inline' => FALSE,
+      'email' => FALSE,
+      'email_address' => FALSE,
+      'email_name' => FALSE,
+      'spam_analysis' => FALSE,
     ),
     'file' => 'components/accordion_container.inc',
   );
@@ -34,6 +42,10 @@ function webform_accordion_webform_component_info() {
       'conditional' => FALSE,
       'group' => TRUE,
       'title_inline' => FALSE,
+      'email' => FALSE,
+      'email_address' => FALSE,
+      'email_name' => FALSE,
+      'spam_analysis' => FALSE,
     ),
     'file' => 'components/accordion_tab.inc',
   );

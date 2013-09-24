@@ -136,6 +136,7 @@ function _webform_display_accordion_grp($component, $value, $format = 'html') {
     $element = array(
       '#title' => $component['name'],
       '#weight' => $component['weight'],
+      '#component' => $component,
       '#theme_wrappers' => array('webform_element_text'),
       '#translatable' => array('title'),
     );
@@ -145,6 +146,7 @@ function _webform_display_accordion_grp($component, $value, $format = 'html') {
   }
 
   $element['#format'] = $format;
+  $element['#value'] = isset($value[0]) ? $value[0] : '';
 
   return $element;
 }

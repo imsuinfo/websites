@@ -6,7 +6,7 @@ fields together inside of a jQuery UI Accordion control
 
 Requirements
 ------------
-Webform 3.x
+Webform 4.x
 
 
 Installation

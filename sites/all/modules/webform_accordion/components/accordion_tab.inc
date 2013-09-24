@@ -43,7 +43,7 @@ function _webform_edit_accordion_tab($component) {
 function _webform_render_accordion_tab($component, $value = NULL, $filter = TRUE) {
   $component['weight'] += 10;
 
-  $element = array(
+  $form_item = array(
     '#type' => $component['type'],
     '#title' => $filter ? _webform_filter_xss($component['name']) : $component['name'],
     '#title_display' => $component['extra']['title_display'] ? $component['extra']['title_display'] : NULL,
@@ -56,7 +56,7 @@ function _webform_render_accordion_tab($component, $value = NULL, $filter = TRUE
     '#theme_wrappers' => array('webform_accordion_tab'),
   );
 
-  return $element;
+  return $form_item;
 }
 
 /**
@@ -76,6 +76,7 @@ function _webform_display_accordion_tab($component, $value, $format = 'html') {
     $element = array(
       '#title' => $component['name'],
       '#weight' => $component['weight'],
+      '#component' => $component,
       '#post_render' => array('webform_element_wrapper'),
       '#theme_wrappers' => array('webform_element_text'),
       '#translatable' => array('title'),
@@ -86,6 +87,7 @@ function _webform_display_accordion_tab($component, $value, $format = 'html') {
   }
 
   $element['#format'] = $format;
+  $element['#value'] = isset($value[0]) ? $value[0] : '';
 
   return $element;
 }
