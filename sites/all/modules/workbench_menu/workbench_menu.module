@@ -403,20 +403,20 @@ function workbench_menu_block_view($delta = '') {
       $path_string['normal'] = drupal_get_normal_path($path_string['original']);
       $path_string['alias'] = drupal_get_path_alias($path_string['original']);
 
-       if (empty($menus_cached[$path_string['alias']])) {
-         $menus_cached[$path_string['alias']] = (array) workbench_menu_build_menus($path_string['alias'], $menus_processed, $breadcrumbs_cached);
+      if (empty($menus_cached[$path_string['alias']])) {
+        $menus_cached[$path_string['alias']] = (array) workbench_menu_build_menus($path_string['alias'], $menus_processed, $breadcrumbs_cached);
 
-         if (!empty($menus_cached[$path_string['alias']]['structure'])) $save_cache = TRUE;
-       }
+        if (!empty($menus_cached[$path_string['alias']]['structure'])) $save_cache = TRUE;
+      }
 
-       if (!empty($menus_cached[$path_string['original']]['structure'])) {
-         $path_tree[] = $path_string['original'];
-         $menu_depth++;
-       }
+      if (!empty($menus_cached[$path_string['original']]['structure'])) {
+        $path_tree[] = $path_string['original'];
+        $menu_depth++;
+      }
 
-       $path_string['original'] .= '/';
-     }
-   }
+      $path_string['original'] .= '/';
+    }
+  }
 
   if ($save_cache) {
     cache_set($menu_cache_id, $menus_cached, 'cache_menu');
@@ -1479,6 +1479,18 @@ function template_preprocess_workbench_menu_item(&$vars) {
         case $settings['active_path']['normal']:
         case $settings['active_path']['alias']:
           $matched = TRUE;
+      }
+
+      if (!$matched) {
+        if (preg_match('@^' . $settings['active_path']['original'] . '/@', $variables['path_current'][$key])) {
+          $matched = TRUE;
+        }
+        elseif (preg_match('@^' . $settings['active_path']['normal'] . '/@', $variables['path_current'][$key])) {
+          $matched = TRUE;
+        }
+        elseif (preg_match('@^' . $settings['active_path']['alias'] . '/@', $variables['path_current'][$key])) {
+          $matched = TRUE;
+        }
       }
 
       if ($matched) {
