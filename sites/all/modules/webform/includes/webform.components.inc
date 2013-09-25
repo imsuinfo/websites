@@ -399,7 +399,9 @@ function webform_component_edit_form($form, $form_state, $node, $component, $clo
       '#weight' => -12,
       '#maxlength' => 255,
     );
+  }
 
+  if (webform_component_feature($component['type'], 'title_display')) {
     $form['use_name_html'] = array(
       '#type' => 'fieldset',
       '#title' => t('Use a question label with HTML'),

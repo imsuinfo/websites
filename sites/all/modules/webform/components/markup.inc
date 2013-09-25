@@ -70,7 +70,7 @@ function _webform_render_markup($component, $value = NULL, $filter = TRUE) {
 
   $element = array(
     '#type' => 'markup',
-    '#title' => $filter ? NULL : $component['name'],
+    '#title' => NULL,
     '#weight' => $component['weight'],
     '#markup' => $filter ? check_markup(webform_replace_tokens($component['value'], $node, NULL, NULL, TRUE), $component['extra']['format'], '', TRUE) : $component['value'],
     '#format' => $component['extra']['format'],

@@ -974,6 +974,7 @@ function webform_webform_component_info() {
       'label' => t('Markup'),
       'description' => t('Displays text as HTML in the form; does not render a field.'),
       'features' => array(
+        'title_display' => FALSE,
         'analysis' => FALSE,
         'csv' => FALSE,
         'default_value' => FALSE,
@@ -2621,16 +2622,20 @@ function _webform_client_form_add_component($node, $component, $component_value,
     $data = isset($input_values[$cid]) ? $input_values[$cid] : NULL;
 
     // replace label with HTML label (if is set)
-    if(!empty($component['name_html'])) {
-      $component['name'] = $component['name_html'];
-      $filter = FALSE;
+    if (webform_component_feature($component['type'], 'title_display')) {
+      if(!empty($component['name_html'])) {
+        $component['name'] = $component['name_html'];
+        $filter = FALSE;
+      }
     }
 
     if ($element = webform_component_invoke($component['type'], 'render', $component, $data, $filter)) {
-      // Set title as HTML
-      $element['#title_html'] = FALSE;
-      if(!empty($component['name_html'])) {
-        $element['#title_html'] = TRUE;
+      if (webform_component_feature($component['type'], 'title_display')) {
+        // Set title as HTML
+        $element['#title_html'] = FALSE;
+        if(!empty($component['name_html'])) {
+          $element['#title_html'] = TRUE;
+        }
       }
 
       // Ensure the component is added as a property.
