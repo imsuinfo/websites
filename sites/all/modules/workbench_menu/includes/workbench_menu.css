@@ -95,8 +95,16 @@
 .menu_item.clickable.expanded > .menu_item-children,
 .menu_item.clickable.collapsed.active > .menu_item-children,
 .menu_item.clickable.collapsed.active-trail > .menu_item-children,
-.menu_item.clickable.collapsed.noscript:hover > .menu_item-children,
-.menu_item.clickable.collapsed.noscript:focus > .menu_item-children,
-.menu_item.clickable.collapsed.noscript:active > .menu_item-children {
+.menu_item.clickable.collapsed.workbench_menu-noscript-clickable:hover > .menu_item-children,
+.menu_item.clickable.collapsed.workbench_menu-noscript-clickable:focus > .menu_item-children,
+.menu_item.clickable.collapsed.workbench_menu-noscript-clickable:active > .menu_item-children {
   display: block;
+}
+
+.menu_item.menu_item-type-item_top.clickable.collapsed.active > .menu_item-children,
+.menu_item.menu_item-type-item_top.clickable.collapsed.active-trail > .menu_item-children,
+.menu_item.menu_item-type-item_top.clickable.collapsed.workbench_menu-noscript-clickable:hover > .menu_item-children,
+.menu_item.menu_item-type-item_top.clickable.collapsed.workbench_menu-noscript-clickable:focus > .menu_item-children,
+.menu_item-menu_item-type-item_top.clickable.collapsed.workbench_menu-noscript-clickable:active > .menu_item-children {
+  display: none;
 }

@@ -776,6 +776,15 @@ function workbench_menu_admin_settings_form_validate($form, &$form_state) {
   if (!is_numeric($form_state['values']['weight'])) {
     form_set_error('weight', t("The menu weight can only be a number."));
   }
+  if (!empty($form_state['values']['items'])) {
+    foreach ($form_state['values']['items'] as $key => &$item) {
+      if ($item['object']['item']->item_type[0]->machine_name == 'item_top') {
+        if ($item['parent'] > 0) {
+          form_set_error('', t("The menu item %name (%id) is of type %type and cannot be nested under any other item. It must not have a parent.", array('%name' => $item['object']['item']->human_name, '%id' => $item['object']['item']->id, '%type' => $item['object']['item']->item_type[0]->human_name)));
+        }
+      }
+    }
+  }
 }
 
 /**
@@ -1004,6 +1013,11 @@ function theme_workbench_menu_admin_settings_form($element) {
           $row['class'][] = 'tabledrag-leaf';
         }
       }
+
+      // @todo: remove this before final release
+      if ($value->machine_name == 'item_top' && $item['item']->parent_id > 0) {
+        drupal_set_message(t("Warning: Top item types are no longer allowed to be nested. Please fix the menu item with id of %item_id.", array('%item_id' => $id)), 'warning');
+      }
     }
 
     $row['data'][] = $name;
@@ -1168,6 +1182,11 @@ function workbench_menu_admin_item_settings_form_settings($item, $menu) {
     'writer' => t("Writer"),
   );
 
+  $available['top_as_types'] = array(
+    'menu_path' => t("Menu Path"),
+    'label' => t("Label"),
+  );
+
   $form = array();
 
   $form['settings'] = array(
@@ -1254,12 +1273,21 @@ function workbench_menu_admin_item_settings_form_settings($item, $menu) {
     '#autocomplete_path' => 'workbench_menu/autocomplete_nid',
   );
 
+  $form['settings']['top_as'] = array(
+    '#type' => 'select',
+    '#title' => t("Top As"),
+    '#options' => $available['top_as_types'],
+    '#default_value' => $defaults['properties']['top_as'],
+    '#description' => t("Specify the way in which a top gets presented, either as a link to the path, as a label, breadcrumb only, or hidden."),
+    '#dependency' => array('edit-settings-item-type' => array('item_top')),
+  );
+
   $form['settings']['disabled'] = array(
     '#type' => 'checkbox',
     '#title' => t("Disabled"),
     '#default_value' => $defaults['properties']['disabled'],
     '#description' => t("Specify that this label represents a disabled or otherwise not available link."),
-    '#dependency' => array('edit-settings-item-type' => array('item_label')),
+    '#dependency' => array('edit-settings-item-type' => array('item_label'), 'edit-settings-top-as' => array('label')),
   );
 
   $form['settings']['clickable'] = array(
@@ -1267,7 +1295,7 @@ function workbench_menu_admin_item_settings_form_settings($item, $menu) {
     '#title' => t("Clickable"),
     '#default_value' => $defaults['properties']['clickable'],
     '#description' => t("Specify that this label acts like a link and when clicked on may even expand to show hidden child items."),
-    '#dependency' => array('edit-settings-item-type' => array('item_label')),
+    '#dependency' => array('edit-settings-item-type' => array('item_label'), 'edit-settings-top-as' => array('label')),
   );
 
   $form['settings']['file'] = array(
@@ -1976,7 +2004,13 @@ function workbench_menu_admin_item_settings_edit_form_validate($form, &$form_sta
 
     case 'item_label':
       if ($form_state['values']['settings']['disabled'] && $form_state['values']['settings']['clickable']) {
-        form_set_error('settings][menu', t("The menu item %type cannot be both disabled and clickable, choose one or the other.", array('%type' => $item_type_name)));
+        form_set_error('settings][menu', t("A menu item of type %type cannot be both disabled and clickable, choose one or the other.", array('%name' => '', '%type' => $item_type_name)));
+      }
+      break;
+
+    case 'item_top':
+      if ($form_state['values']['settings']['parent_id'] > 0) {
+        form_set_error('settings][menu', t("A menu item of type %type cannot be nested under any other item. It must not have a parent.", array('%name' => '', '%type' => $item_type_name)));
       }
       break;
   }
@@ -2023,7 +2057,7 @@ function workbench_menu_admin_item_settings_edit_form_submit($form, &$form_state
   $settings['expand'] = $form_state['values']['settings']['expand'];
   $settings['properties'] = array();
 
-  foreach (array('url', 'node_id', 'disabled', 'clickable', 'file', 'file_type', 'menu', 'menu_item', 'never_suppress') as $property) {
+  foreach (array('url', 'node_id', 'top_as', 'disabled', 'clickable', 'file', 'file_type', 'menu', 'menu_item', 'never_suppress') as $property) {
     if (isset($form_state['values']['settings'][$property])) {
       $settings['properties'][$property] = &$form_state['values']['settings'][$property];
     }

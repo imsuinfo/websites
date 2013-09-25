@@ -700,6 +700,13 @@ function workbench_menu_build_menu_item($menu, $item, &$variables) {
   $active_path['original'] = preg_replace('/%20/', ' ', $item['item']->active_path);
 
 
+  // initialize menu_path top as variable.
+  $top_as = 'menu_path';
+  if (isset($item['item']->properties['top_as'])) {
+    $top_as = $item['item']->properties['top_as'];
+  }
+
+
   $alter_settings = array();
   $alter_settings['menu'] = clone($menu);
   $alter_settings['item'] = $item;
@@ -918,7 +925,7 @@ function workbench_menu_build_menu_item($menu, $item, &$variables) {
   }
 
   // menu item labels are parts of a menu that do not link to anything.
-  if ($item_settings['type'] == 'item_label') {
+  if ($item_settings['type'] == 'item_label' || ($item_settings['type'] == 'item_top' && $top_as == 'label')) {
     if (isset($item['item']->properties['disabled']) && $item['item']->properties['disabled']) {
       $item_settings['attributes']['class'][] = 'disabled';
       $item_settings['clickable'] = FALSE;
@@ -943,6 +950,13 @@ function workbench_menu_build_menu_item($menu, $item, &$variables) {
     if ($item_settings['type'] == 'item_top') {
       $item['item']->active_path = '<top>';
       $item['item']->properties['url'] = '<top>';
+
+      $item_settings['attributes']['class'][] = 'top_as-' . check_plain($top_as);
+
+      // @todo: remove this before final release
+      if ($item['item']->parent_id > 0) {
+        watchdog('workbench_menu', "Warning: Top item types are no longer allowed to be nested. Please restructure the menu with an id of %menu_id.", array('%menu_id' => $menu->id), WATCHDOG_WARNING);
+      }
     }
     else if ($item_settings['type'] == 'item_link') {
       $matched = preg_match('@^/node/(\d+)(/.*|$|\?.*|#.*)@', $item['item']->properties['url'], $matches);
@@ -1012,11 +1026,13 @@ function workbench_menu_build_menu_item($menu, $item, &$variables) {
         $active_path['normal'] = drupal_get_normal_path($active_path['original']);
         $active_path['alias'] = drupal_get_path_alias($active_path['original']);
 
-        if ($variables['use_normal_path']) {
-          $link_path = '/' . $active_path['normal'];
-        }
-        else {
-          $link_path = '/' . $active_path['alias'];
+        if ($top_as == 'menu_path') {
+          if ($variables['use_normal_path']) {
+            $link_path = '/' . $active_path['normal'];
+          }
+          else {
+            $link_path = '/' . $active_path['alias'];
+          }
         }
       }
       else {
@@ -1187,7 +1203,7 @@ function workbench_menu_build_menu_item($menu, $item, &$variables) {
 
 
   // process active paths.
-  if ($item['item']->item_type[0]->machine_name == 'item_top') {
+  if ($item_settings['type'] == 'item_top') {
     $active_path = $variables['menu_path'];
   }
   else {
@@ -2954,6 +2970,7 @@ function workbench_menu_get_menu_item_defaults($item = NULL) {
   $defaults['properties'] = array();
   $defaults['properties']['url'] = '';
   $defaults['properties']['node_id'] = '';
+  $defaults['properties']['top_as'] = 'menu_path';
   $defaults['properties']['disabled'] = FALSE;
   $defaults['properties']['clickable'] = FALSE;
   $defaults['properties']['file'] = '';

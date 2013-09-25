@@ -8,7 +8,16 @@
           $(this).removeAttr('href');
 
           $(this).click(function() {
-            if (!$(item).hasClass('active') && !$(item).hasClass('active-trail')) {
+            if ($(item).hasClass('menu_item-type-item_top')) {
+              if ($(item).hasClass('expanded')) {
+                $(item).removeClass('expanded');
+                $(item).addClass('collapsed');
+              } else {
+                $(item).removeClass('collapsed');
+                $(item).addClass('expanded');
+              }
+            }
+            else if (!$(item).hasClass('active') && !$(item).hasClass('active-trail')) {
               if ($(item).hasClass('expanded')) {
                 $(item).removeClass('expanded');
                 $(item).addClass('collapsed');
