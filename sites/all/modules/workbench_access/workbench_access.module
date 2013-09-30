@@ -90,7 +90,7 @@ function workbench_access_menu() {
     'file' => 'workbench_access.admin.inc',
   );
   $items['admin/workbench/sections'] = array(
-    'title' => 'My sections',
+    'title' => 'My Groups',
     'page callback' => 'workbench_access_sections',
     'access arguments' => array('access workbench'),
     'type' => MENU_LOCAL_TASK,
