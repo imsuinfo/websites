@@ -26,7 +26,8 @@ Drupal.behaviors.MediaBrowser = {
     // Instantiate the tabs.
     $('#media-browser-tabset').tabs({
       // Ensure that the modal resizes to the content on each tab switch.
-      show: Drupal.media.browser.resizeIframe
+      show: Drupal.media.browser.resizeIframe, // jquery ui < 1.8
+      activate: Drupal.media.browser.resizeIframe // jquery ui >= 1.8
     });
 
     $('.ui-tabs-nav li').mouseup(function() {

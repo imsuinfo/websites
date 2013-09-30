@@ -273,7 +273,7 @@ function media_token_to_markup($match, $wysiwyg = FALSE) {
 
     // Ensure a valid view mode is being requested.
     if (!isset($tag_info['view_mode'])) {
-      $tag_info['view_mode'] = media_variable_get('wysiwyg_default_view_mode');
+      $tag_info['view_mode'] = variable_get('media__wysiwyg_default_view_mode', 'full');
     }
     elseif ($tag_info['view_mode'] != 'default') {
       $file_entity_info = entity_get_info('file');
@@ -313,12 +313,12 @@ function media_token_to_markup($match, $wysiwyg = FALSE) {
     $fields = media_filter_field_parser($tag_info);
 
     $attributes = is_array($tag_info['attributes']) ? $tag_info['attributes'] : array();
-    $attribute_whitelist = media_variable_get('wysiwyg_allowed_attributes');
+    $attribute_whitelist = variable_get('media__wysiwyg_allowed_attributes', array('height', 'width', 'hspace', 'vspace', 'border', 'align', 'style', 'class', 'id', 'usemap', 'data-picture-group', 'data-picture-align'));
     $settings['attributes'] = array_intersect_key($attributes, array_flip($attribute_whitelist));
     $settings['fields'] = $fields;
 
     if (!empty($tag_info['attributes']) && is_array($tag_info['attributes'])) {
-      $attribute_whitelist = media_variable_get('wysiwyg_allowed_attributes');
+      $attribute_whitelist = variable_get('media__wysiwyg_allowed_attributes', array('height', 'width', 'hspace', 'vspace', 'border', 'align', 'style', 'class', 'id', 'usemap', 'data-picture-group', 'data-picture-align'));
       $settings['attributes'] = array_intersect_key($tag_info['attributes'], array_flip($attribute_whitelist));
       $settings['fields'] = $fields;
 
@@ -583,7 +583,7 @@ function media_format_form($form, $form_state, $file) {
   }
 
   // Allow for overrides to the display format.
-  $default_view_mode = is_array($query_fields) && isset($query_fields['format']) ? $query_fields['format'] : media_variable_get('wysiwyg_default_view_mode');
+  $default_view_mode = is_array($query_fields) && isset($query_fields['format']) ? $query_fields['format'] : variable_get('media__wysiwyg_default_view_mode', 'full');
   if (!isset($formats[$default_view_mode])) {
     $default_view_mode = key($formats);
   }
