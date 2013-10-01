@@ -1586,7 +1586,7 @@ function template_preprocess_workbench_menu_item(&$vars) {
     }
 
     // only path trails that follow the active url alias will be appended to the breadcrumb.
-    $bc_processed = array();
+    $bc_processed = $bc_paths;
     foreach ($variables['path_trail'] as $key => &$pt) {
       $item = menu_get_item($pt['normal']);
       if (isset($item['title']) && isset($item['href'])) {
