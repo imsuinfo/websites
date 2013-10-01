@@ -212,13 +212,6 @@ function workbench_moderation_node_history_view($node) {
     elseif ($revision->vid == $node->workbench_moderation['current']->vid) {
       $node_current = workbench_moderation_node_current_load($node);
       $row['data']['moderation'] = '<div class="moderation-state"><strong>' . t('This is the current revision. The current state is %state.', array('%state' => workbench_moderation_state_label($node->workbench_moderation['current']->state))) . '</strong></div>';
-
-      if (workbench_moderation_node_type_moderated($node_current->type)) {
-        if (_node_revision_access($node_current, 'update')) {
-          $moderate_form = drupal_get_form('workbench_moderation_moderate_form', $node_current);
-          $row['data']['revision'] .= '<div class="moderation-actions"><div class="moderation-action-set-state">' . t('Set moderation state:') . '</div>' . t(' !moderation-actions-form', array('!moderation-actions-form' => drupal_render($moderate_form))) . '</div>';
-        }
-      }
     }
 
     $row['data']['revision'] .= '<div class="revision-actions">' . implode(' | ', array_filter($revision_operations)) . '</div>';
