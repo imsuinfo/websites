@@ -405,7 +405,7 @@ function workbench_menu_load_menu_rules_action($taxonomy_term) {
 }
 
 /**
- * Action: Load a single workbench menu item using the menu items ID. 
+ * Action: Load a single workbench menu item using the menu items ID.
  *
  * @param int $item_id
  *   The numeric item id representing the menu item.

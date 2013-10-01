@@ -284,11 +284,17 @@ function workbench_menu_enable() {
   }
 
   workbench_access_reset_tree();
-  $wa = workbench_access_get_active_tree();
+  $wa = (array) workbench_access_get_active_tree();
+
+  // if there is no active tree, then there is nothing to do.
+  if (empty($wa)) {
+    return;
+  }
+
 
   try {
     foreach ($wa['active'] as $access_id => &$value) {
-      if (!is_numeric($access_id)) continue;
+      if (!cf_is_integer($access_id)) continue;
 
       $query = db_select('workbench_menus', 'wm');
       $query->fields('wm');
@@ -537,13 +543,4 @@ function workbench_menu_update_7105() {
 
     throw $e;
   }
-}
-
-/**
- * Force the cache to be reset.
- *
- * This fixes a problem during updating from 7.x-alpha4 or earlier.
- */
-function workbench_menu_update_7106() {
-  drupal_flush_all_caches();
 }

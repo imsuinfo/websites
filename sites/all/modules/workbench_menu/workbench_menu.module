@@ -186,7 +186,7 @@ function workbench_menu_workbench_access_save($section) {
     return;
   }
 
-  if (!is_numeric($section['access_id'])) {
+  if (!cf_is_integer($section['access_id'])) {
     return;
   }
 
@@ -195,6 +195,7 @@ function workbench_menu_workbench_access_save($section) {
   $fields['path'] = '';
 
   // mysql does not assign defaults on text fields, so fix that.
+  // @see: https://drupal.org/node/2063539
   if (db_driver() == 'mysql') {
     $fields['breadcrumb_name'] = '';
   }
@@ -212,7 +213,7 @@ function workbench_menu_workbench_access_delete($section) {
     return;
   }
 
-  if (!is_numeric($section['access_id'])) {
+  if (!cf_is_integer($section['access_id'])) {
     return;
   }
 
@@ -1810,7 +1811,7 @@ function workbench_menu_get_menus_at_paths($paths) {
  *   An array of menu objects for the given node.
  */
 function workbench_menu_get_menus_at_node($node_or_nid) {
-  if (!is_object($node_or_nid) && !is_numeric($node_or_nid)) {
+  if (!is_object($node_or_nid) && !cf_is_integer($node_or_nid)) {
     if (class_exists('cf_error')) {
       cf_error::invalid_variable('node_or_nid', "Must be either a node object or a number.");
     }
@@ -1818,7 +1819,7 @@ function workbench_menu_get_menus_at_node($node_or_nid) {
     return array();
   }
 
-  if (is_numeric($node_or_nid)) {
+  if (cf_is_integer($node_or_nid)) {
     $node = node_load($node_or_nid);
   }
   else {
@@ -1886,7 +1887,7 @@ function workbench_menu_get_menus($conditions = array(), $keyed = NULL) {
   $and->condition('wa.access_type', 'taxonomy');
 
   if (isset($conditions['id'])) {
-    if (is_numeric($conditions['id'])) {
+    if (cf_is_integer($conditions['id'])) {
       $and->condition('id', $conditions['id']);
     }
     elseif (is_array($conditions['id']) && !empty($conditions['id'])) {
@@ -1895,7 +1896,7 @@ function workbench_menu_get_menus($conditions = array(), $keyed = NULL) {
   }
 
   if (isset($conditions['access_id'])) {
-    if (is_numeric($conditions['access_id'])) {
+    if (cf_is_integer($conditions['access_id'])) {
       $and->condition('wm.access_id', $conditions['access_id']);
     }
     elseif (is_array($conditions['access_id']) && !empty($conditions['access_id'])) {
@@ -2188,7 +2189,7 @@ function workbench_menu_get_menu_items($conditions = array(), $keyed = NULL) {
   $and = db_and();
 
   if (isset($conditions['id'])) {
-    if (is_numeric($conditions['id'])) {
+    if (cf_is_integer($conditions['id'])) {
       $and->condition('wmi.id', $conditions['id']);
     }
     elseif (is_array($conditions['id']) && !empty($conditions['id'])) {
@@ -2197,7 +2198,7 @@ function workbench_menu_get_menu_items($conditions = array(), $keyed = NULL) {
   }
 
   if (isset($conditions['menu_id'])) {
-    if (is_numeric($conditions['menu_id'])) {
+    if (cf_is_integer($conditions['menu_id'])) {
       $and->condition('wmi.menu_id', $conditions['menu_id']);
     }
     elseif (is_array($conditions['menu_id']) && !empty($conditions['menu_id'])) {
@@ -2206,7 +2207,7 @@ function workbench_menu_get_menu_items($conditions = array(), $keyed = NULL) {
   }
 
   if (isset($conditions['parent_id'])) {
-    if (is_numeric($conditions['parent_id'])) {
+    if (cf_is_integer($conditions['parent_id'])) {
       $and->condition('wmi.parent_id', $conditions['parent_id']);
     }
     elseif (is_array($conditions['parent_id']) && !empty($conditions['parent_id'])) {
@@ -2215,7 +2216,7 @@ function workbench_menu_get_menu_items($conditions = array(), $keyed = NULL) {
   }
 
   if (isset($conditions['weight'])) {
-    if (is_numeric($conditions['weight'])) {
+    if (cf_is_integer($conditions['weight'])) {
       $and->condition('wmi.weight', $conditions['weight']);
     }
     elseif (is_array($conditions['weight']) && !empty($conditions['weight'])) {
@@ -2233,16 +2234,13 @@ function workbench_menu_get_menu_items($conditions = array(), $keyed = NULL) {
   }
 
   if (isset($conditions['active_path'])) {
-    if (is_numeric($conditions['active_path'])) {
-      $and->condition('wmi.active_path', $conditions['active_path']);
-    }
-    elseif (is_string($conditions['item_type'])) {
+    if (is_string($conditions['active_path'])) {
       $and->condition('wmi.active_path', $conditions['active_path']);
     }
   }
 
   if (isset($conditions['item_type'])) {
-    if (is_numeric($conditions['item_type'])) {
+    if (cf_is_integer($conditions['item_type'])) {
       $and->condition('wmkoit.id', $conditions['item_type']);
     }
     elseif (is_string($conditions['item_type'])) {
@@ -2253,7 +2251,7 @@ function workbench_menu_get_menu_items($conditions = array(), $keyed = NULL) {
       $item_type_names = array();
 
       foreach ($conditions['item_type'] as $key => $item_type) {
-        if (is_numeric($item_type)) {
+        if (cf_is_integer($item_type)) {
           $item_type_ids[] = $item_type;
         }
         elseif (is_string($item_type)) {
@@ -2503,7 +2501,7 @@ function workbench_menu_edit_access($access_type = NULL, $access_id = NULL) {
  *   This prevents infinite recursion.
  */
 function workbench_menu_clear_cache_by_access_id($access_id, &$processed) {
-  if (!is_numeric($access_id)) {
+  if (!cf_is_integer($access_id)) {
     if (class_exists('cf_error')) {
       cf_error::invalid_integer('access_id');
     }
@@ -2564,7 +2562,7 @@ function workbench_menu_clear_cache_by_access_id($access_id, &$processed) {
  *   This prevents infinite recursion.
  */
 function workbench_menu_clear_cache_by_menu_id($id, &$processed) {
-  if (!is_numeric($id)) {
+  if (!cf_is_integer($id)) {
     if (class_exists('cf_error')) {
       cf_error::invalid_integer('id');
     }
@@ -2910,7 +2908,7 @@ function workbench_menu_autocomplete_menu_item_id($string) {
  *   Returns TRUE/FALSE if the item exists and NULL on error.
  */
 function workbench_menu_menu_exists($menu_id = NULL, $is_access_id = FALSE) {
-  if (!is_numeric($menu_id)) {
+  if (!cf_is_integer($menu_id)) {
     if (class_exists('cf_error')) {
       cf_error::not_numeric('menu_id');
     }
@@ -2959,7 +2957,7 @@ function workbench_menu_menu_exists($menu_id = NULL, $is_access_id = FALSE) {
  *   Returns TRUE/FALSE if the item exists and NULL on error.
  */
 function workbench_menu_menu_item_exists($item_id, $menu_id = NULL, $is_access_id = FALSE) {
-  if (!is_numeric($item_id)) {
+  if (!cf_is_integer($item_id)) {
     if (class_exists('cf_error')) {
       cf_error::not_numeric('item_id');
     }
@@ -2972,7 +2970,7 @@ function workbench_menu_menu_item_exists($item_id, $menu_id = NULL, $is_access_i
   $query->condition('wmi.id', $item_id);
 
   if (!is_null($menu_id)) {
-    if (!is_numeric($menu_id)) {
+    if (!cf_is_integer($menu_id)) {
       if (class_exists('cf_error')) {
         cf_error::not_numeric('menu_id');
       }
@@ -3102,7 +3100,7 @@ function workbench_menu_get_menu_item_defaults($item = NULL) {
     }
 
     if (property_exists($item, 'parent_id')) {
-      if (is_numeric($item->parent_id)) {
+      if (cf_is_integer($item->parent_id)) {
         $defaults['parent_id'] = $item->parent_id;
       }
       elseif (is_null($item->parent_id)) {
@@ -3110,7 +3108,7 @@ function workbench_menu_get_menu_item_defaults($item = NULL) {
       }
     }
 
-    if (property_exists($item, 'weight') && is_numeric($item->weight)) {
+    if (property_exists($item, 'weight') && cf_is_integer($item->weight)) {
       $defaults['weight'] = $item->weight;
     }
 
@@ -3190,7 +3188,7 @@ function workbench_menu_update_menu_item($menu, $settings, $item_id = NULL) {
     return FALSE;
   }
 
-  if (!is_null($item_id) && !is_numeric($item_id)) {
+  if (!is_null($item_id) && !cf_is_integer($item_id)) {
     if (class_exists('cf_error')) {
       cf_error::invalid_numeric('item_id');
     }
@@ -3284,7 +3282,7 @@ function workbench_menu_update_menu_item($menu, $settings, $item_id = NULL) {
  *   TRUE on success, FALSE otherwise.
  */
 function workbench_menu_delete_menu_item($item_id) {
-  if (!is_numeric($item_id)) {
+  if (!cf_is_integer($item_id)) {
     if (class_exists('cf_error')) {
       cf_error::invalid_numeric('item_id');
     }

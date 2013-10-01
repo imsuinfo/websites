@@ -42,7 +42,7 @@ function workbench_menu_edit_settings($access_type = NULL, $access_id = NULL) {
   $sorted = array();
 
   foreach ($active['tree'] as $access_id => &$section) {
-    if (!is_numeric($access_id)) continue;
+    if (!cf_is_integer($access_id)) continue;
 
     $sorted[$access_id] = &$section['name'];
   }
@@ -117,7 +117,7 @@ function workbench_menu_edit_settings_form($form, &$form_state, $access_type, $a
     drupal_exit();
   }
 
-  if (!is_numeric($access_id)) {
+  if (!cf_is_integer($access_id)) {
     if (class_exists('cf_error')) {
       cf_error::not_numeric('access_id');
     }
@@ -407,7 +407,7 @@ function workbench_menu_edit_item_settings($access_type, $access_id, $operation 
     drupal_exit();
   }
 
-  if (!is_numeric($access_id)) {
+  if (!cf_is_integer($access_id)) {
     if (class_exists('cf_error')) {
       cf_error::not_numeric('access_id');
     }
@@ -479,7 +479,7 @@ function workbench_menu_admin_settings($access_type = NULL, $access_id = NULL) {
 
     $row = array();
 
-    if (is_numeric($access_id) && !empty($active['access_scheme']['access_type'])) {
+    if (cf_is_integer($access_id) && !empty($active['access_scheme']['access_type'])) {
       $row[] = str_repeat('- ', $section['depth'] ) . ' ' . l($section['name'], 'admin/config/workbench/access/menus/' . $active['access_scheme']['access_type'] . '/' . $access_id);
     }
     else {
@@ -539,7 +539,7 @@ function workbench_menu_admin_settings_form($form, &$form_state, $access_type, $
     drupal_exit();
   }
 
-  if (!is_numeric($access_id)) {
+  if (!cf_is_integer($access_id)) {
     if (class_exists('cf_error')) {
       cf_error::not_numeric('access_id');
     }
@@ -773,7 +773,7 @@ function workbench_menu_admin_settings_form_validate($form, &$form_state) {
     }
   }
 
-  if (!is_numeric($form_state['values']['weight'])) {
+  if (!cf_is_integer($form_state['values']['weight'])) {
     form_set_error('weight', t("The menu weight can only be a number."));
   }
   if (!empty($form_state['values']['items'])) {
@@ -811,7 +811,7 @@ function workbench_menu_admin_settings_form_submit($form, &$form_state) {
 
   if (!empty($form_state['values']['items'])) {
     foreach ($form_state['values']['items'] as $id => &$item) {
-      if (!is_numeric($id)) continue;
+      if (!cf_is_integer($id)) continue;
       if (!isset($item['parent'])) continue;
 
       $form_item = & $form['items'][$id]['object']['#value']['item'];
@@ -974,7 +974,7 @@ function theme_workbench_menu_admin_settings_form($element) {
   $path_prefix = &$form['path_prefix']['#value'];
 
   foreach ($form['items'] as $id => &$nested_item) {
-    if (!is_numeric($id)) continue;
+    if (!cf_is_integer($id)) continue;
     $item = &$nested_item['object']['#value'];
     $disabled = is_null($item['item']->parent_id);
 
@@ -1097,7 +1097,7 @@ function workbench_menu_admin_item_settings($access_type, $access_id, $operation
     drupal_exit();
   }
 
-  if (!is_numeric($access_id)) {
+  if (!cf_is_integer($access_id)) {
     if (class_exists('cf_error')) {
       cf_error::not_numeric('access_id');
     }
@@ -1497,7 +1497,7 @@ function workbench_menu_admin_item_settings_edit_form($form, &$form_state, $acce
     drupal_exit();
   }
 
-  if (!is_numeric($access_id)) {
+  if (!cf_is_integer($access_id)) {
     if (class_exists('cf_error')) {
       cf_error::not_numeric('access_id');
     }
@@ -1506,7 +1506,7 @@ function workbench_menu_admin_item_settings_edit_form($form, &$form_state, $acce
     drupal_exit();
   }
 
-  if (!is_numeric($item_id)) {
+  if (!cf_is_integer($item_id)) {
     if (class_exists('cf_error')) {
       cf_error::not_numeric('item_id');
     }
@@ -1687,7 +1687,7 @@ function workbench_menu_admin_item_settings_edit_form_validate($form, &$form_sta
     }
   }
 
-  if (!is_numeric($form_state['values']['settings']['weight'])) {
+  if (!cf_is_integer($form_state['values']['settings']['weight'])) {
     form_set_error('settings][weight', t("The items weight can only be a number."));
   }
 
@@ -2098,7 +2098,7 @@ function workbench_menu_admin_item_settings_delete_form($form, &$form_state, $ac
     drupal_exit();
   }
 
-  if (!is_numeric($access_id)) {
+  if (!cf_is_integer($access_id)) {
     if (class_exists('cf_error')) {
       cf_error::not_numeric('access_id');
     }
@@ -2107,7 +2107,7 @@ function workbench_menu_admin_item_settings_delete_form($form, &$form_state, $ac
     drupal_exit();
   }
 
-  if (!is_numeric($item_id)) {
+  if (!cf_is_integer($item_id)) {
     if (class_exists('cf_error')) {
       cf_error::not_numeric('item_id');
     }
