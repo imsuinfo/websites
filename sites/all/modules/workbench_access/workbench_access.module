@@ -1956,11 +1956,25 @@ function workbench_access_workbench_block() {
   // Add editing information to this page (if it's a node).
   if ($node = menu_get_object()) {
     if (user_access('view workbench access information')) {
+      $info_block_messages = array();
+
       if (!variable_get('workbench_access_node_type_' . $node->type, 1)) {
-        return array(t('@message_label: <em>@type pages are not under access control</em>', array('@message_label' => variable_get('workbench_access_label', 'Section'), '@type' => node_type_get_name($node->type))));
+        $info_block_messages[] = array(
+          'type' => 'message',
+          'label' => variable_get('workbench_access_label', 'Section'),
+          'message' => t('@type pages are not under access control', array('@type' => node_type_get_name($node->type))),
+          'class' => 'set_moderation_state',
+          'side' => 0,
+        );
       }
       elseif (empty($node->workbench_access)) {
-        return array(t('@message_label: <em>Unassigned</em>', array('@message_label' => variable_get('workbench_access_label', 'Section'))));
+        $info_block_messages[] = array(
+          'type' => 'message',
+          'label' => variable_get('workbench_access_label', 'Section'),
+          'message' => t('Unassigned'),
+          'class' => 'set_moderation_state',
+          'side' => 0,
+        );
       }
       else {
         $names = array();
@@ -1969,8 +1983,16 @@ function workbench_access_workbench_block() {
           $section = workbench_access_load($access_type, $access_id);
           $names[] = $section['name'];
         }
-        return array(t('Workbench Access: %section', array('%section' => implode(', ', $names))));
-       }
+        $info_block_messages[] = array(
+          'type' => 'message',
+          'label' => variable_get('workbench_access_label', 'Section'),
+          'message' => t('%section', array('%section' => implode(', ', $names))),
+          'class' => 'set_moderation_state',
+          'side' => 0,
+        );
+      }
+
+      return $info_block_messages;
     }
   }
 }

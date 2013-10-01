@@ -3,9 +3,10 @@
  */
 
 div.workbench-info-block {
+  position: relative;
   background: none repeat scroll 0 0 #FFFBD9;
   list-style: none outside;
-  padding: 0.25em 0.5em 0.25em 0.5em;
+  padding: 3px 6px;
   margin: 0;
   border-color: #FFEBC5;
   border-style: solid none;

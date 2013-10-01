@@ -102,10 +102,43 @@ function workbench_block_view($delta = '') {
   if (empty($items)) {
     return;
   }
+
+  $side_0 = '';
+  $side_1 = '';
+  foreach ($items as &$item) {
+    $type = empty($item['type']) ? 'markup' : $item['type'];
+    $side = empty($item['side']) ? 0 : $item['side'];
+    $class = empty($item['class']) ? '' : $item['class'];
+    $item_markup = '';
+
+    if ($type == 'markup') {
+      if (isset($item['markup'])) {
+        $item_markup = $item['markup'];
+      }
+      else {
+        $item_markup = $item;
+      }
+    }
+    elseif ($type == 'message') {
+      $message = t('<span class="label">!label</span>: <em class="message">!message</em>', array('!label' => $item['label'], '!message' => $item['message']));
+      $item_markup = theme('container', array('element' => array('#children' => $message, '#attributes' => array('class' => 'side_item ' . $class))));
+    }
+
+    if ($side == 0) {
+      $side_0 .= $item_markup;
+    }
+    elseif($side == 1) {
+      $side_1 .= $item_markup;
+    }
+  }
+
+  $items_side_0 = theme('container', array('element' => array('#children' => $side_0, '#attributes' => array('class' => 'workbench_info_block-side side-0'))));
+  $items_side_1 = theme('container', array('element' => array('#children' => $side_1, '#attributes' => array('class' => 'workbench_info_block-side side-1'))));
+
   $block = array(
     'subject' => '',
     'content' => array(
-      '#markup' => theme('container', array('element' => array('#children' => implode('<br />', $items), '#attributes' => array('class' => 'workbench-info-block')))),
+      '#markup' => theme('container', array('element' => array('#children' => $items_side_0 . $items_side_1, '#attributes' => array('class' => 'workbench-info-block')))),
       '#attached' => array(
         'css' => array(drupal_get_path('module', 'workbench') . '/css/workbench.block.css'),
       ),
