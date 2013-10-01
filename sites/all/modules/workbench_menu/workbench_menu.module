@@ -730,7 +730,7 @@ function workbench_menu_build_menu_item($menu, $item, &$variables) {
   $item_settings['outside_link'] = FALSE;
   $item_settings['top_link'] = FALSE;
   $item_settings['active_path'] = array('original' => '', 'normal' => '', 'alias' => '');
-  $item_settings['breadcrumbs'] = array('build' => array(), 'path' => array());
+  $item_settings['breadcrumbs'] = array('built' => array(), 'path' => array());
   $item_settings['suppress_active'] = FALSE;
 
   $process_children = TRUE;
