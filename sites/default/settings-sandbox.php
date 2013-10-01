@@ -648,6 +648,12 @@ $conf['batch_background'] = array();
 
 
 /**
+ * Workbench access settings
+ */
+$conf['workbench_access_label'] = "Group";
+
+
+/**
  * Workbench menu default settings
  */
 $conf['workbench_menu_item_use_normal_path'] = TRUE;

@@ -648,6 +648,12 @@ $conf['batch_background'] = array();
 
 
 /**
+ * Workbench access settings
+ */
+$conf['workbench_access_label'] = "Group";
+
+
+/**
  * Webform default settings
  */
 $conf['webform_export_encoding'] = 'UTF-8';
