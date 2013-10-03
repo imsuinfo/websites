@@ -1812,11 +1812,11 @@ function workbench_moderation_workbench_block() {
   $owner_name = check_plain($owner->name);
   $owner_mail = check_plain($owner->mail);
 
-  if (property_exists($owner, 'field_user_first_name') && !empty($owner->field_user_first_name['und'][0]['safe_value'])) {
-    $owner_name = $owner->field_user_first_name['und'][0]['safe_value'];
+  if (property_exists($owner, 'field_user_first_name') && !empty($owner->field_user_first_name['und'][0]['value'])) {
+    $owner_name = $owner->field_user_first_name['und'][0]['value'];
 
-    if (property_exists($owner, 'field_user_last_name') && !empty($owner->field_user_last_name['und'][0]['safe_value'])) {
-      $owner_name .= ' ' . $owner->field_user_last_name['und'][0]['safe_value'];
+    if (property_exists($owner, 'field_user_last_name') && !empty($owner->field_user_last_name['und'][0]['value'])) {
+      $owner_name .= ' ' . $owner->field_user_last_name['und'][0]['value'];
     }
 
     $owner_message = $owner_name . ' (<a href="mailto:' . $owner_mail . '" title="E-Mail: ' . $owner_name . ' &lt;' . $owner_mail . '&gt;">' . $owner_account . '</a>)';
