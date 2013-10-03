@@ -1298,6 +1298,14 @@ function workbench_menu_admin_item_settings_form_settings($item, $menu) {
     '#dependency' => array('edit-settings-item-type' => array('item_label'), 'edit-settings-top-as' => array('label')),
   );
 
+  $form['settings']['no_breadcrumb'] = array(
+    '#type' => 'checkbox',
+    '#title' => t("No Breadcrumb"),
+    '#default_value' => $defaults['properties']['no_breadcrumb'],
+    '#description' => t("Specify that this label should not appear in the breadcrumb/path structure."),
+    '#dependency' => array('edit-settings-item-type' => array('item_label')),
+  );
+
   $form['settings']['file'] = array(
     '#type' => 'textfield',
     '#title' => t("File"),
@@ -2057,7 +2065,7 @@ function workbench_menu_admin_item_settings_edit_form_submit($form, &$form_state
   $settings['expand'] = $form_state['values']['settings']['expand'];
   $settings['properties'] = array();
 
-  foreach (array('url', 'node_id', 'top_as', 'disabled', 'clickable', 'file', 'file_type', 'menu', 'menu_item', 'never_suppress') as $property) {
+  foreach (array('url', 'node_id', 'top_as', 'disabled', 'clickable', 'no_breadcrumb', 'file', 'file_type', 'menu', 'menu_item', 'never_suppress') as $property) {
     if (isset($form_state['values']['settings'][$property])) {
       $settings['properties'][$property] = &$form_state['values']['settings'][$property];
     }

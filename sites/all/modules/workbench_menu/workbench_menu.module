@@ -734,6 +734,7 @@ function workbench_menu_build_menu_item($menu, $item, &$variables) {
   $item_settings['suppress_active'] = FALSE;
 
   $process_children = TRUE;
+  $no_breadcrumb = FALSE;
 
   foreach ($item['item']->item_type as &$type) {
     $item_settings['type'] = $type->machine_name;
@@ -989,6 +990,10 @@ function workbench_menu_build_menu_item($menu, $item, &$variables) {
       $item_settings['attributes']['class'][] = 'noscript';
       $item_settings['attributes']['href'] = array('');
       $item_settings['clickable'] = TRUE;
+    }
+
+    if (isset($item['item']->properties['no_breadcrumb']) && $item['item']->properties['no_breadcrumb']) {
+      $no_breadcrumb = TRUE;
     }
   }
 
@@ -1302,11 +1307,13 @@ function workbench_menu_build_menu_item($menu, $item, &$variables) {
         $path_to_use = $active_path['alias'];
       }
 
-      $bc_path = check_plain($path_to_use);
-      $variables['breadcrumbs']['built'][] = '<a href="' . base_path() . $bc_path . '" class="workbench_menu-breadcrumb">' . $item_settings['label'] . '</a>';
-      $variables['breadcrumbs']['path'][] = $bc_path;
-      unset($path_to_use);
-      unset($bc_path);
+      if (!$no_breadcrumb) {
+        $bc_path = check_plain($path_to_use);
+        $variables['breadcrumbs']['built'][] = '<a href="' . base_path() . $bc_path . '" class="workbench_menu-breadcrumb">' . $item_settings['label'] . '</a>';
+        $variables['breadcrumbs']['path'][] = $bc_path;
+        unset($path_to_use);
+        unset($bc_path);
+      }
     }
 
     if ($variables['breadcrumbs_all'] !== FALSE) {
@@ -3088,6 +3095,7 @@ function workbench_menu_get_menu_item_defaults($item = NULL) {
   $defaults['properties']['top_as'] = 'menu_path';
   $defaults['properties']['disabled'] = FALSE;
   $defaults['properties']['clickable'] = FALSE;
+  $defaults['properties']['no_breadcrumb'] = FALSE;
   $defaults['properties']['file'] = '';
   $defaults['properties']['file_type'] = 'file';
   $defaults['properties']['menu'] = NULL;
