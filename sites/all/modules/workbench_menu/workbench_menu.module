@@ -1014,7 +1014,7 @@ function workbench_menu_build_menu_item($menu, $item, &$variables) {
 
       // @todo: remove this before final release
       if ($item['item']->parent_id > 0) {
-        watchdog('workbench_menu', "Warning: Top item types are no longer allowed to be nested. Please restructure the menu with an id of %menu_id.", array('%menu_id' => $menu->id), WATCHDOG_WARNING);
+        watchdog('Workbench Menu', "Warning: Top item types are no longer allowed to be nested. Please restructure the menu with an id of %menu_id.", array('%menu_id' => $menu->id), WATCHDOG_WARNING);
       }
     }
     else if ($item_settings['type'] == 'item_link') {
