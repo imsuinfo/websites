@@ -1267,7 +1267,10 @@ function workbench_menu_build_menu_item($menu, $item, &$variables) {
   }
   else {
     if (empty($item_settings['active_path']['original']) && !empty($item['item']->active_path)) {
-      if (preg_match('@^/@', $item['item']->active_path) == 0) {
+      if ($item['item']->active_path == '<top>') {
+        $active_path = $variables['menu_path'];
+      }
+      elseif (preg_match('@^/@', $item['item']->active_path) == 0) {
         $active_path['original'] = $variables['parent_path']['original'] . '/' . $item['item']->active_path;
       }
       else {
