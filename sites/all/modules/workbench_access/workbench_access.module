@@ -62,7 +62,7 @@ function workbench_access_menu() {
     'file' => 'workbench_access.admin.inc',
   );
   $items['admin/config/workbench/access/sections'] = array(
-    'title' => 'Sections',
+    'title' => 'Groups',
     'description' => 'Define content sections for the Workbench Access module.',
     'page callback' => 'drupal_get_form',
     'page arguments' => array('workbench_access_section_form'),
@@ -98,7 +98,7 @@ function workbench_access_menu() {
     'file' => 'workbench_access.admin.inc',
   );
   $items['user/%user/sections'] = array(
-    'title' => 'Sections',
+    'title' => 'Groups',
     'description' => 'Assign users to sections for the Workbench Access module.',
     'page callback' => 'drupal_get_form',
     'page arguments' => array('workbench_access_user_form', 1),
