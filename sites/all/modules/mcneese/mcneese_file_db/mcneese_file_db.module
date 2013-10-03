@@ -25,6 +25,7 @@ define('MCNEESE_FILE_DB_PATH_BY_HASH_SUM', 's');
 define('MCNEESE_FILE_DB_PATH_BY_HASH_SUM_EXTENSION', 'sha256sum');
 define('MCNEESE_FILE_DB_PATH_BY_HASH_ALGORITHM', 'sha256');
 define('MCNEESE_FILE_DB_PATH_BY_ID', 'i');
+define('MCNEESE_FILE_DB_PATH_BY_FID', 'f');
 
 
 /**
@@ -396,6 +397,62 @@ function mcneese_file_db_load_file($by = '', $arg1 = '', $arg2 = '', $arg3 = '')
     }
   }
 
+  if ($by == MCNEESE_FILE_DB_PATH_BY_FID) {
+    // $arg1 = drupal file id
+    // $arg2 = custom filename
+    if (is_numeric($arg1)) {
+      $query = db_select('file_managed', 'fm');
+      $query->fields('fm');
+      $query->condition('fm.fid', $arg1);
+
+      $found = (array) $query->execute()->fetchAssoc();
+      if (!empty($found['uri'])) {
+        $outer_parts = explode('://', $found['uri'], 2);
+
+        // @todo: add support f the restricted stream wrapper.
+        if ($outer_parts[0] == mcneese_file_db_unrestricted_stream_wrapper::SCHEME) {
+          $filepath = $found['uri'];
+          $inner_parts = explode('/', $outer_parts[1]);
+
+          if (isset($inner_parts[0]) && $inner_parts[0] == MCNEESE_FILE_DB_PATH_BY_HASH) {
+            $inner_by = $inner_parts[0];
+            $inner_arg1 = isset($inner_parts[1]) ? $inner_parts[1] : NULL;
+            $inner_arg2 = isset($inner_parts[2]) ? $inner_parts[2] : NULL;
+            $inner_arg3 = isset($inner_parts[3]) ? $inner_parts[3] : NULL;
+
+            $status = mcneese_file_db_load_file($inner_by, $inner_arg1, $inner_arg2, $inner_arg3);
+
+            // this point is only reached if the file was not found.
+            drupal_bootstrap(DRUPAL_BOOTSTRAP_FULL);
+
+            if ($status) {
+              drupal_access_denied();
+            }
+            else {
+              drupal_not_found();
+            }
+
+            drupal_exit();
+          }
+        }
+        else {
+          drupal_bootstrap(DRUPAL_BOOTSTRAP_FULL);
+
+          $url = file_create_url($found['uri']);
+
+          if (!empty($url)) {
+            header('Location: ' . $url, TRUE, 302);
+            drupal_exit($url);
+          }
+
+          drupal_not_found();
+          drupal_exit();
+        }
+      }
+    }
+  }
+
+
   if ($by == MCNEESE_FILE_DB_PATH_BY_ID) {
     // $arg1 = id
     // $arg2 = custom filename
@@ -624,6 +681,8 @@ function mcneese_file_db_return_file($arguments) {
   else {
     drupal_not_found();
   }
+
+  drupal_exit();
 }
 
 /**

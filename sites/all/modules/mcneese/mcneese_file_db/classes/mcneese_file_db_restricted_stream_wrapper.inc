@@ -73,7 +73,7 @@ class mcneese_file_db_restricted_stream_wrapper extends mcneese_file_db_stream_w
       $stat = fstat($this->stream_fhandle);
       fclose($this->stream_fhandle);
 
-      $file_meta = $this->load_file_meta_by_fid($this->stream_fid, FALSE);
+      $file_meta = $this->load_file_meta_by_id($this->stream_fid, FALSE);
 
       // if the checksum does not exist, then the file has not yet been saved.
       if (empty($file_meta->checksum)) {
@@ -239,8 +239,8 @@ class mcneese_file_db_restricted_stream_wrapper extends mcneese_file_db_stream_w
     }
 
     if (empty($this->file_meta)) {
-      if (!empty($this->tmp_fid)) {
-        $this->load_file_meta_by_fid($this->tmp_fid);
+      if (!empty($this->tmp_id)) {
+        $this->load_file_meta_by_id($this->tmp_id);
       }
       elseif (!empty($this->tmp_checksum)) {
         $this->load_file_meta($this->tmp_checksum);
@@ -382,10 +382,10 @@ class mcneese_file_db_restricted_stream_wrapper extends mcneese_file_db_stream_w
   public function stream_stat() {
     if (empty($this->file_meta)) {
       if (!empty($this->stream_fid)) {
-        $this->load_file_meta_by_fid($this->stream_fid);
+        $this->load_file_meta_by_id($this->stream_fid);
       }
-      else if (!empty($this->tmp_fid)) {
-        $this->load_file_meta_by_fid($this->tmp_fid);
+      else if (!empty($this->tmp_id)) {
+        $this->load_file_meta_by_id($this->tmp_id);
       }
       else if (!empty($this->tmp_checksum)) {
         $this->load_file_meta($this->tmp_checksum);
@@ -668,6 +668,13 @@ class mcneese_file_db_restricted_stream_wrapper extends mcneese_file_db_stream_w
    */
   public function get_path_by_id() {
     return MCNEESE_FILE_DB_PATH_BY_ID;
+  }
+
+  /**
+   * Implements get_path_by_fid().
+   */
+  public function get_path_by_fid() {
+    return MCNEESE_FILE_DB_PATH_BY_FID;
   }
 
   /**
