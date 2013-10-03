@@ -808,7 +808,7 @@ function workbench_moderation_form_node_form_alter(&$form, $form_state) {
     $current = array($moderation_state => t('Current: @state', array('@state' => workbench_moderation_state_label($moderation_state))));
     $states = array_merge($current, $states);
     $form['revision_information']['workbench_moderation_state_new'] = array(
-      '#title' => t('Moderation state'),
+      '#title' => t('Workflow State'),
       '#type' => 'select',
       '#options' => $states,
       '#default_value' => $moderation_state,
@@ -841,7 +841,7 @@ function workbench_moderation_form_node_form_alter(&$form, $form_state) {
 
   // Move the revision log into the publishing options to make things pretty.
   $form['options']['log'] = $form['revision_information']['log'];
-  $form['options']['log']['#title'] = t('Moderation notes');
+  $form['options']['log']['#title'] = t('Workflow Notes');
   $form['options']['workbench_moderation_state_new'] = $form['revision_information']['workbench_moderation_state_new'];
 
   // Unset the old placement of the Revision log.
@@ -1659,7 +1659,7 @@ function workbench_moderation_moderate_form($form, &$form_state, $node, $destina
     $form['#attached']['css'][] = drupal_get_path('module', 'workbench_moderation') . '/css/workbench_moderation.css';
     $form['state'] = array(
       '#type' => 'select',
-      '#title' => t('Moderation state'),
+      '#title' => t('Workflow State'),
       '#title_display' => 'invisible',
       '#options' => $next_states,
       '#default_value' => _workbench_moderation_default_next_state($my_revision->state, $next_states),
@@ -1834,7 +1834,7 @@ function workbench_moderation_workbench_block() {
 
   $info_block_messages[] = array(
     'type' => 'message',
-    'label' => t('Revision State'),
+    'label' => t('Workflow State'),
     'message' => $revision_state,
     'class' => 'revision_state',
     'side' => 0,
