@@ -1596,7 +1596,7 @@ function template_preprocess_workbench_menu_item(&$vars) {
     $bc_processed = $bc_paths;
     foreach ($variables['path_trail'] as $key => &$pt) {
       $item = menu_get_item($pt['normal']);
-      if (isset($item['title']) && isset($item['href'])) {
+      if (!empty($item['title']) && !empty($item['href'])) {
         if (!in_array($item['href'], $bc_processed)) {
           $bc[] = '<a href="' . base_path() . $item['href'] . '">' . $item['title'] . '</a>';
           $bc_processed[] = $item['href'];
@@ -1606,7 +1606,7 @@ function template_preprocess_workbench_menu_item(&$vars) {
 
     foreach ($variables['path_trail_last_alias'] as $key => &$pt) {
       $item = menu_get_item($pt['normal']);
-      if (isset($item['title']) && isset($item['href'])) {
+      if (!empty($item['title']) && !empty($item['href'])) {
         if (!in_array($item['href'], $bc_processed)) {
           $bc[] = '<a href="' . base_path() . $item['href'] . '">' . $item['title'] . '</a>';
           $bc_processed[] = $item['href'];
