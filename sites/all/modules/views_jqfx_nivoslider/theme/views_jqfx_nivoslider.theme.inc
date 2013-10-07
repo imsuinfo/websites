@@ -87,6 +87,8 @@ function _views_jqfx_nivoslider_add_js($options, $id) {
     $settings['controlNavThumbs'] = TRUE;
     $settings['controlNavThumbsSearch'] = $options['navigation']['control_nav_thumbs_search'];
     $settings['controlNavThumbsReplace'] = $options['navigation']['control_nav_thumbs_replace'];
+    // A few lines of custom css to style our thumbs
+    drupal_add_css($drupal_path . '/theme/thumbnails.css');
   }
 
   // These are all raw javascript function options that will break the Nivo Slider if they are passed empty. Make sure they are set first.
