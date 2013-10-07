@@ -35,6 +35,8 @@ abstract class mcneese_file_db_stream_wrapper implements DrupalStreamWrapperInte
 
   protected $image_style = null;
   protected $image_style_uri = null;
+  protected $image_style_by = null;
+  protected $image_style_id = null;
 
   protected $read_only = FALSE;
 
@@ -689,6 +691,8 @@ abstract class mcneese_file_db_stream_wrapper implements DrupalStreamWrapperInte
     $this->tmp_filename = null;
     $this->image_style = null;
     $this->image_style_uri = null;
+    $this->image_style_by = null;
+    $this->image_style_id = null;
 
     $outer_parts = explode('://', $uri, 2);
 
@@ -714,6 +718,8 @@ abstract class mcneese_file_db_stream_wrapper implements DrupalStreamWrapperInte
 
         $this->image_style = $parts[1];
         $this->image_style_uri = null;
+        $this->image_style_by = null;
+        $this->image_style_id = null;
 
         if ($parts[2] != $this->get_scheme()) {
           return FALSE;
@@ -728,6 +734,9 @@ abstract class mcneese_file_db_stream_wrapper implements DrupalStreamWrapperInte
         else {
           return FALSE;
         }
+
+        $this->image_style_by = $parts[0];
+        $this->image_style_id = $parts[1];
       }
 
       // allow being passed a path beginning with external path such as: /MCNEESE_FILE_DB_FILE_PATH .
@@ -845,7 +854,7 @@ abstract class mcneese_file_db_stream_wrapper implements DrupalStreamWrapperInte
    * @return array|bool
    *   And array with the following keys:
    *   - uri: The full uri, containing the filename.
-   *   - sri: The shirt uri, without the filename.
+   *   - sri: The short uri, without the filename.
    *   FALSE is returned on error.
    */
   protected function build_uri($method = NULL) {
@@ -896,8 +905,15 @@ abstract class mcneese_file_db_stream_wrapper implements DrupalStreamWrapperInte
           $this->image_style_uri .= $this->image_style . '/';
           $this->image_style_uri .= $this->get_scheme() . '/';
           $this->image_style_uri .= $this->get_external() . '/';
-          $this->image_style_uri .= $this->get_path_by_hash() . '/';
-          $this->image_style_uri .= $checksum;
+
+          if (empty($this->image_style_by) || $this->image_style_by == $this->get_path_by_hash()) {
+            $this->image_style_uri .= $this->get_path_by_hash() . '/';
+            $this->image_style_uri .= $checksum;
+          }
+          else {
+            $this->image_style_uri .= $this->image_style_by . '/';
+            $this->image_style_uri .= $this->image_style_id;
+          }
         }
 
         if (empty($this->tmp_filename)) {
