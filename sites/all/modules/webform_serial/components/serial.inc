@@ -189,7 +189,7 @@ function webform_serial_webform_submission_presave($node, &$submission) {
         $current = (int)$component['extra']['initial'] - $increment;
       }
 
-      $submission->data[$cid]['value'] = array(0 => $current + $increment);
+      $submission->data[$cid][0] = ($current + $increment);
     }
   }
 }
