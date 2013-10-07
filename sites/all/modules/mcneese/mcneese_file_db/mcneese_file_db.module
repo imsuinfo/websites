@@ -272,7 +272,9 @@ function mcneese_file_db_load_available_files($conditions = array()) {
     return $results->fetchAll();
   }
   catch (Exception $e) {
-    cf_error::on_query_execution($e);
+    if (class_exists('cf_error')) {
+      cf_error::on_query_execution($e);
+    }
 
     throw $e;
   }
@@ -400,54 +402,54 @@ function mcneese_file_db_load_file($by = '', $arg1 = '', $arg2 = '', $arg3 = '')
   if ($by == MCNEESE_FILE_DB_PATH_BY_FID) {
     // $arg1 = drupal file id
     // $arg2 = custom filename
-    if (is_numeric($arg1)) {
-      $query = db_select('file_managed', 'fm');
-      $query->fields('fm');
-      $query->condition('fm.fid', $arg1);
+    if (!is_numeric($arg1)) return FALSE;
 
-      $found = (array) $query->execute()->fetchAssoc();
-      if (!empty($found['uri'])) {
-        $outer_parts = explode('://', $found['uri'], 2);
+    $query = db_select('file_managed', 'fm');
+    $query->fields('fm');
+    $query->condition('fm.fid', $arg1);
 
-        // @todo: add support f the restricted stream wrapper.
-        if ($outer_parts[0] == mcneese_file_db_unrestricted_stream_wrapper::SCHEME) {
-          $filepath = $found['uri'];
-          $inner_parts = explode('/', $outer_parts[1]);
+    $found = (array) $query->execute()->fetchAssoc();
+    if (!empty($found['uri'])) {
+      $outer_parts = explode('://', $found['uri'], 2);
 
-          if (isset($inner_parts[0]) && $inner_parts[0] == MCNEESE_FILE_DB_PATH_BY_HASH) {
-            $inner_by = $inner_parts[0];
-            $inner_arg1 = isset($inner_parts[1]) ? $inner_parts[1] : NULL;
-            $inner_arg2 = isset($inner_parts[2]) ? $inner_parts[2] : NULL;
-            $inner_arg3 = isset($inner_parts[3]) ? $inner_parts[3] : NULL;
+      // @todo: add support f the restricted stream wrapper.
+      if ($outer_parts[0] == mcneese_file_db_unrestricted_stream_wrapper::SCHEME) {
+        $filepath = $found['uri'];
+        $inner_parts = explode('/', $outer_parts[1]);
 
-            $status = mcneese_file_db_load_file($inner_by, $inner_arg1, $inner_arg2, $inner_arg3);
+        if (isset($inner_parts[0]) && $inner_parts[0] == MCNEESE_FILE_DB_PATH_BY_HASH) {
+          $inner_by = $inner_parts[0];
+          $inner_arg1 = isset($inner_parts[1]) ? $inner_parts[1] : NULL;
+          $inner_arg2 = isset($inner_parts[2]) ? $inner_parts[2] : NULL;
+          $inner_arg3 = isset($inner_parts[3]) ? $inner_parts[3] : NULL;
 
-            // this point is only reached if the file was not found.
-            drupal_bootstrap(DRUPAL_BOOTSTRAP_FULL);
+          $status = mcneese_file_db_load_file($inner_by, $inner_arg1, $inner_arg2, $inner_arg3);
 
-            if ($status) {
-              drupal_access_denied();
-            }
-            else {
-              drupal_not_found();
-            }
-
-            drupal_exit();
-          }
-        }
-        else {
+          // this point is only reached if the file was not found.
           drupal_bootstrap(DRUPAL_BOOTSTRAP_FULL);
 
-          $url = file_create_url($found['uri']);
-
-          if (!empty($url)) {
-            header('Location: ' . $url, TRUE, 302);
-            drupal_exit($url);
+          if ($status) {
+            drupal_access_denied();
+          }
+          else {
+            drupal_not_found();
           }
 
-          drupal_not_found();
           drupal_exit();
         }
+      }
+      else {
+        drupal_bootstrap(DRUPAL_BOOTSTRAP_FULL);
+
+        $url = file_create_url($found['uri']);
+
+        if (!empty($url)) {
+          header('Location: ' . $url, TRUE, 302);
+          drupal_exit($url);
+        }
+
+        drupal_not_found();
+        drupal_exit();
       }
     }
   }
@@ -468,11 +470,13 @@ function mcneese_file_db_load_file($by = '', $arg1 = '', $arg2 = '', $arg3 = '')
       $filepath = mcneese_file_db_unrestricted_stream_wrapper::SCHEME . '://';
 
       if ($arg1 == $if_none_match) {
+        if (!is_numeric($if_none_match)) return FALSE;
         $filepath .= MCNEESE_FILE_DB_PATH_BY_ID . '/' . $if_none_match;
         $files = (array) mcneese_file_db_load_available_files(array('id' => $if_none_match, 'range' => array('from' => 0, 'count' => 1)));
         $not_modified = TRUE;
       }
       else {
+        if (!is_numeric($arg1)) return FALSE;
         $filepath .= MCNEESE_FILE_DB_PATH_BY_ID . '/' . $arg1;
         $files = (array) mcneese_file_db_load_available_files(array('id' => $arg1, 'range' => array('from' => 0, 'count' => 1)));
       }
@@ -523,7 +527,7 @@ function mcneese_file_db_load_file($by = '', $arg1 = '', $arg2 = '', $arg3 = '')
       }
 
 
-      $short_location = '/' . MCNEESE_FILE_DB_FILE_PATH . '/' . $by;
+      $short_location = '/' . MCNEESE_FILE_DB_FILE_PATH . '/' . MCNEESE_FILE_DB_PATH_BY_HASH;
       $short_location .= '/' . substr($file_meta->checksum, 0, MCNEESE_FILE_DB_SHORT_SUM_SIZE);
 
       $content_location = $short_location . '/';
@@ -595,7 +599,7 @@ function mcneese_file_db_load_file($by = '', $arg1 = '', $arg2 = '', $arg3 = '')
         ob_end_flush();
       }
 
-      $short_location = '/' . MCNEESE_FILE_DB_FILE_PATH . '/' . $by;
+      $short_location = '/' . MCNEESE_FILE_DB_FILE_PATH . '/' . MCNEESE_FILE_DB_PATH_BY_HASH_SUM;
       $short_location .= '/' . substr($file_meta->checksum, 0, MCNEESE_FILE_DB_SHORT_SUM_SIZE);
 
       $content_location = $short_location . '/';
