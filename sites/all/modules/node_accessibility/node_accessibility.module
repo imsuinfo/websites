@@ -129,7 +129,7 @@ function node_accessibility_admin_paths() {
  */
 function node_accessibility_node_delete($node) {
   if (!is_object($node)) {
-    if (module_exists('cf_error')) {
+    if (class_exists('cf_error')) {
       cf_error::invalid_object('node');
     }
 
@@ -144,7 +144,7 @@ function node_accessibility_node_delete($node) {
  */
 function node_accessibility_node_revision_delete($node) {
   if (!is_object($node)) {
-    if (module_exists('cf_error')) {
+    if (class_exists('cf_error')) {
       cf_error::invalid_object('node');
     }
 
@@ -153,7 +153,6 @@ function node_accessibility_node_revision_delete($node) {
 
   node_accessibility_delete_node_problems($node->nid, $node->vid);
 }
-
 
 /**
  * Implements hook_theme().
@@ -182,6 +181,10 @@ function template_preprocess_node_accessibility_information(&$variables) {
   drupal_add_css(drupal_get_path('module', 'node_accessibility') . '/includes/node_accessibility_information.css');
 
   if (!isset($variables['node']) || !is_object($variables['node'])) {
+    if (class_exists('cf_error')) {
+      cf_error::invalid_object('node');
+    }
+
     return;
   }
 
@@ -298,7 +301,7 @@ function node_accessibility_form_node_type_form_alter(&$form, &$form_state, $for
       'optional' => t("Enabled (optional)"),
       'required' => t("Enabled (required)"),
     ),
-    '#description' => t("Choose if accessibility validation should be enabled for this field and if the field is required to pass accessibility validation."),
+    '#description' => t("Choose if accessibility validation should be enabled for this node type and if the node type is required to pass accessibility validation."),
   );
 
   $form['node_accessibility_validation']['method'] = array(
@@ -494,7 +497,6 @@ function node_accessibility_operation_validate($nids) {
     drupal_set_message(t("Unable to perform the validation, something went wrong."), 'error');
   }
 }
-
 
 /**
  * Performs validation on the given nodes and stores the results.
