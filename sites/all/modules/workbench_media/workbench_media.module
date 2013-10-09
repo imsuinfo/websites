@@ -86,24 +86,44 @@ function workbench_media_views_default_views() {
  * This is done to convert the "type" field to a thumbnail for image files.
  */
 function workbench_media_preprocess_views_view_table(&$vars) {
+  if ($vars['view']->name != 'workbench_files') return;
 
-  // Custom handling for the workbench files view
-  if ($vars['view']->name == 'workbench_files') {
-    foreach ($vars['rows'] as $id => $row) {
-      $uri = & $vars['result'][$id]->file_managed_uri;
-      // Is this file an image?
-      if (strstr(file_get_mimetype($uri), 'image')) {
-        // Is this file on the local file system?
-        if (file_exists($uri)) {
-          $row['filemime'] = theme('image_style', array(
-            'path' => $uri,
-            'style_name' => 'thumbnail',
-          ));
-        }
+  global $base_url;
+  global $base_path;
+
+  $wrappers = array();
+
+  foreach ($vars['rows'] as $id => &$row) {
+    $uri = & $vars['result'][$id]->file_managed_uri;
+    $file_path = $base_path . 'file/' . $vars['result'][$id]->fid;
+
+    if (preg_match('@^image/@i', $row['filemime'])) {
+      $row['filemime'] = theme('image_style', array(
+        'path' => $uri,
+        'style_name' => 'thumbnail',
+      ));
+    }
+    else {
+      $fake_file = (object) array('filemime' => $row['filemime']);
+      $row['filemime'] = theme('file_icon', array('file' => $fake_file));
+    }
+
+    $scheme = file_uri_scheme($uri);
+    $wrapper_class = file_stream_wrapper_get_class($scheme);
+
+    if (class_exists($wrapper_class)) {
+      if (!isset($wrappers[$wrapper_class])) {
+        $wrappers[$wrapper_class] = new $wrapper_class();
       }
 
-      // Assign the databack
-      $vars['rows'][$id] = $row;
+      $wrappers[$wrapper_class]->setUri($uri);
+
+      $external_url = $wrappers[$wrapper_class]->getExternalUrl();
+
+      $row['uri'] = '<a href="' . $base_url . $external_url . '">' . $external_url . '</a>';
     }
+
+    $row['filename'] = '<a href="' . $file_path . '">' . $row['name'] . '</a>';
+    $row['fid'] = '<a href="' . $file_path . '/edit' . '">' . $row['fid'] . '</a>';
   }
 }
