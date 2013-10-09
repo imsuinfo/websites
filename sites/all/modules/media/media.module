@@ -1106,10 +1106,14 @@ function media_file_displays_alter(&$displays, $file, $view_mode) {
  */
 function media_file_default_displays_alter(&$file_displays) {
   // Image previews should be displayed using the media image style.
-  $file_displays['image__preview__file_field_image']->settings['image_style'] = 'media_thumbnail';
+  if (isset($file_displays['image__preview__file_field_image'])) {
+    $file_displays['image__preview__file_field_image']->settings['image_style'] = 'media_thumbnail';
+  }
 
   // Video previews should be displayed using a large filetype icon.
-  $file_displays['video__preview__file_field_file_default']->status = FALSE;
+  if (isset($file_displays['video__preview__file_field_file_default'])) {
+    $file_displays['video__preview__file_field_file_default']->status = FALSE;
+  }
 
   $file_display = new stdClass();
   $file_display->api_version = 1;
@@ -1120,7 +1124,9 @@ function media_file_default_displays_alter(&$file_displays) {
   $file_displays['video__preview__file_field_media_large_icon'] = $file_display;
 
   // Audio previews should be displayed using a large filetype icon.
-  $file_displays['audio__preview__file_field_file_default']->status = FALSE;
+  if (isset($file_displays['audio__preview__file_field_file_default'])) {
+    $file_displays['audio__preview__file_field_file_default']->status = FALSE;
+  }
 
   $file_display = new stdClass();
   $file_display->api_version = 1;
@@ -1131,7 +1137,9 @@ function media_file_default_displays_alter(&$file_displays) {
   $file_displays['audio__preview__file_field_media_large_icon'] = $file_display;
 
   // Document previews should be displayed using a large filetype icon.
-  $file_displays['document__preview__file_field_file_default']->status = FALSE;
+  if (isset($file_displays['document__preview__file_field_file_default'])) {
+    $file_displays['document__preview__file_field_file_default']->status = FALSE;
+  }
 
   $file_display = new stdClass();
   $file_display->api_version = 1;
