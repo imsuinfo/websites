@@ -120,7 +120,17 @@ function workbench_media_preprocess_views_view_table(&$vars) {
 
       $external_url = $wrappers[$wrapper_class]->getExternalUrl();
 
-      $row['uri'] = '<a href="' . $base_url . $external_url . '">' . $external_url . '</a>';
+      if ($scheme == 'dbu') {
+        $fp = $base_path . 'f/f/' . $vars['result'][$id]->fid;
+        $row['uri'] = '<strong>Unique Path:</strong><br>';
+        $row['uri'] .= '<a href="' . $base_url . $external_url . '">' . $external_url . '</a>';
+        $row['uri'] .= '<br><br><strong>File Path</strong>:<br>';
+        $row['uri'] .= '<a href="' . $base_url . $fp . '">' . $fp . '</a>';
+      }
+      else {
+        $row['uri'] = '<strong>File Path:</strong><br>';
+        $row['uri'] .= '<a href="' . $base_url . $external_url . '">' . $external_url . '</a>';
+      }
     }
 
     $row['filename'] = '<a href="' . $file_path . '">' . $row['filename'] . '</a>';
