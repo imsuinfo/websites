@@ -70,11 +70,11 @@
     },
 
     getWrapperStart: function(i) {
-      return '<!--MEDIA-WRAPPER-START-' + i + '-->';
+      return '';
     },
 
     getWrapperEnd: function(i) {
-      return '<!--MEDIA-WRAPPER-END-' + i + '-->';
+      return '';
     },
 
     /**

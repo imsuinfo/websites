@@ -208,6 +208,34 @@ function media_field_attach_delete_revision($entity_type, $entity) {
  */
 function media_filter($text) {
   $text = preg_replace_callback(MEDIA_TOKEN_REGEX, 'media_token_to_markup', $text);
+
+  $dom = filter_dom_load($text);
+  if ($dom->hasChildNodes()) {
+    $tags = array();
+    $bodys = $dom->getElementsByTagName('body');
+
+    if ($bodys->length > 0) {
+      $body = $bodys->item(0);
+      $tags = $body->getElementsByTagName('img');
+
+      foreach ($tags as $tag) {
+        if ($tag->hasAttribute('data-file_info')) {
+          $att = $tag->removeAttribute('data-file_info');
+        }
+      }
+
+      $tags = $body->getElementsByTagName('span');
+
+      foreach ($tags as $tag) {
+        if ($tag->hasAttribute('data-file_info')) {
+          $tag->removeAttribute('data-file_info');
+        }
+      }
+
+      return $dom->saveHTML($body);
+    }
+  }
+
   return $text;
 }
 
