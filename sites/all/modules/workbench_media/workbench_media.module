@@ -123,7 +123,7 @@ function workbench_media_preprocess_views_view_table(&$vars) {
       $row['uri'] = '<a href="' . $base_url . $external_url . '">' . $external_url . '</a>';
     }
 
-    $row['filename'] = '<a href="' . $file_path . '">' . $row['name'] . '</a>';
+    $row['filename'] = '<a href="' . $file_path . '">' . $row['filename'] . '</a>';
     $row['fid'] = '<a href="' . $file_path . '/edit' . '">' . $row['fid'] . '</a>';
   }
 }
