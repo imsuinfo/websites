@@ -606,9 +606,7 @@ function file_entity_list_types_page() {
  * Form callback; presents file display settings for a given view mode.
  */
 function file_entity_file_display_form($form, &$form_state, $file_type, $view_mode) {
-  $file_type = $file_type->type;
-
-  $form['#file_type'] = $file_type;
+  $form['#file_type'] = $file_type->type;
   $form['#view_mode'] = $view_mode;
   $form['#tree'] = TRUE;
   $form['#attached']['js'][] = drupal_get_path('module', 'file_entity') . '/file_entity.admin.js';
@@ -617,11 +615,17 @@ function file_entity_file_display_form($form, &$form_state, $file_type, $view_mo
   // filters for existing text formats.
   $formatters = file_info_formatter_types();
   foreach ($formatters as $name => $formatter) {
-    if (!empty($formatter['hidden']) || isset($formatter['file types']) && !in_array($file_type, $formatter['file types'])) {
+    if (!empty($formatter['hidden'])) {
+      unset($formatters[$name]);
+    }
+    if (isset($formatter['mime types'])) {
+      if (file_entity_match_mimetypes($formatter['mime types'], $file_type->mimetypes)) {
+        continue;
+      }
       unset($formatters[$name]);
     }
   }
-  $current_displays = file_displays_load($file_type, $view_mode, TRUE);
+  $current_displays = file_displays_load($file_type->type, $view_mode, TRUE);
   foreach ($current_displays as $name => $display) {
     $current_displays[$name] = (array) $display;
   }
@@ -681,7 +685,7 @@ function file_entity_file_display_form($form, &$form_state, $file_type, $view_mo
       $defaults = !empty($formatter['default settings']) ? $formatter['default settings'] : array();
       $settings = !empty($current_displays[$name]['settings']) ? $current_displays[$name]['settings'] : array();
       $settings += $defaults;
-      $settings_form = $function($form, $form_state, $settings, $name, $file_type, $view_mode);
+      $settings_form = $function($form, $form_state, $settings, $name, $file_type->type, $view_mode);
       if (!empty($settings_form)) {
         $form['displays']['settings'][$name] = array(
           '#type' => 'fieldset',
@@ -696,7 +700,10 @@ function file_entity_file_display_form($form, &$form_state, $file_type, $view_mo
   }
 
   $form['actions'] = array('#type' => 'actions');
-  $form['actions']['submit'] = array('#type' => 'submit', '#value' => t('Save configuration'));
+  $form['actions']['submit'] = array(
+    '#type' => 'submit',
+    '#value' => t('Save configuration'),
+  );
 
   return $form;
 }
@@ -1010,11 +1017,19 @@ function file_entity_type_delete_confirm_submit($form, &$form_state) {
  * Form callback for file_entity settings.
  */
 function file_entity_settings_form($form, &$form_state) {
+  $form['file_entity_max_filesize'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Maximum upload size'),
+    '#default_value' => variable_get('file_entity_max_filesize', ''),
+    '#description' => t('Enter a value like "512" (bytes), "80 KB" (kilobytes) or "50 MB" (megabytes) in order to restrict the allowed file size. If left empty the file sizes will be limited only by PHP\'s maximum post and file upload sizes (current max limit <strong>%limit</strong>).', array('%limit' => format_size(file_upload_max_size()))),
+    '#size' => 10,
+    '#element_validate' => array('_file_generic_settings_max_filesize'),
+  );
+
   $form['file_entity_default_allowed_extensions'] = array(
     '#type' => 'textfield',
     '#title' => t('Default allowed file extensions'),
     '#default_value' => variable_get('file_entity_default_allowed_extensions', 'jpg jpeg gif png txt doc docx xls xlsx pdf ppt pptx pps ppsx odt ods odp mp3 mov mp4 m4a m4v mpeg avi ogg oga ogv weba webp webm'),
-    '#weight' => -10,
     '#description' => t('Separate extensions with a space or comma and do not include the leading dot.'),
   );
 
@@ -1023,14 +1038,12 @@ function file_entity_settings_form($form, &$form_state) {
     '#title' => t('Alt attribute'),
     '#description' => t('The text to use as value for the <em>img</em> tag <em>alt</em> attribute.'),
     '#default_value' => variable_get('file_entity_alt', '[file:field_file_image_alt_text]'),
-    '#weight' => -9,
   );
   $form['file_entity_title'] = array(
     '#type' => 'textfield',
     '#title' => t('Title attribute'),
     '#description' => t('The text to use as value for the <em>img</em> tag <em>title</em> attribute.'),
     '#default_value' => variable_get('file_entity_title', '[file:field_file_image_title_text]'),
-    '#weight' => -8,
   );
 
   // Provide default token values.
@@ -1039,7 +1052,6 @@ function file_entity_settings_form($form, &$form_state) {
       '#theme' => 'token_tree',
       '#token_types' => array('file'),
       '#dialog' => TRUE,
-      '#weight' => -7,
     );
     $form['file_entity_alt']['#description'] .= t('This field supports tokens.');
     $form['file_entity_title']['#description'] .= t('This field supports tokens.');
@@ -1047,7 +1059,6 @@ function file_entity_settings_form($form, &$form_state) {
   $form['file_upload_wizard'] = array(
     '#type' => 'fieldset',
     '#title' => t('File upload wizard'),
-    '#weight' => -6,
     '#collapsible' => TRUE,
     '#collapsed' => FALSE,
     '#description' => t('Configure the steps available when uploading a new file.'),
