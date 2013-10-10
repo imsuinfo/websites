@@ -124,7 +124,7 @@ function workbench_media_preprocess_views_view_table(&$vars) {
         $fp = $base_path . 'f/f/' . $vars['result'][$id]->fid;
         $row['uri'] = '<strong>Unique Path:</strong><br>';
         $row['uri'] .= '<a href="' . $base_url . $external_url . '">' . $external_url . '</a>';
-        $row['uri'] .= '<br><br><strong>File Path</strong>:<br>';
+        $row['uri'] .= '<br><br><strong>ID Path</strong>:<br>';
         $row['uri'] .= '<a href="' . $base_url . $fp . '">' . $fp . '</a>';
       }
       else {
