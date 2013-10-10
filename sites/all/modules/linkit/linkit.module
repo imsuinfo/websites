@@ -522,7 +522,7 @@ function linkit_dashboard_form($form, &$form_state) {
   $form['linkit_path'] = array(
     '#type' => 'textfield',
     '#title' => t('Target path'),
-    '#description' => t('Examples: <strong>node/123</strong>, <strong>http://www.example.com/path#anchor</strong>'),
+    '#description' => t('Examples: <strong>/node/123</strong>, <strong>http://www.example.com/path#anchor</strong>'),
     '#required' => TRUE,
     '#maxlength' => NULL,
     '#size' => 60,
