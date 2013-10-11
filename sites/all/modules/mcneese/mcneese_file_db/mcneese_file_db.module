@@ -95,7 +95,10 @@ function mcneese_file_db_prepare_connection() {
   }
   catch (exception $ex) {
     // do not allow exceptions to stop the functioning of the website.
-    cf_error::on_exception($ex);
+    if (class_exists('cf_error')) {
+      cf_error::on_exception($ex);
+    }
+
     return FALSE;
   }
 
