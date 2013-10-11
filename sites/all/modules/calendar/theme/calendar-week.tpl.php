@@ -38,7 +38,7 @@ foreach ($day_names as $key => $value) {
 }
 ?>
 <div class="calendar-calendar"><div class="week-view">
-<table class="full">
+<table class="full" summary="This is a calendar.">
   <caption class="hidden">
     <?php print theme('date_nav_title', $params) ?>
   </caption>

@@ -35,7 +35,7 @@ $params = array(
 ?>
 <div class="calendar-calendar"><div class="day-view">
 <div id="multi-day-container">
-  <table class="full">
+  <table class="full" summary="This is a calendar.">
     <caption class="hidden">
       <?php print theme('date_nav_title', $params) ?>
     </caption>
@@ -73,7 +73,7 @@ $params = array(
     }
   </script>
   <?php endif; ?>
-  <table class="full">
+  <table class="full" summary="This is a calendar.">
     <caption class="hidden">
       <?php print theme('date_nav_title', $params) ?>
     </caption>

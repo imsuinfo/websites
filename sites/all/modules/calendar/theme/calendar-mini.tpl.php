@@ -23,7 +23,7 @@ $params = array(
 );
 ?>
 <div class="calendar-calendar"><div class="month-view">
-<table class="mini">
+<table class="mini" summary="This is a calendar.">
   <caption class="date-nav-wrapper clear-block <?php if (!$show_title){ print("hidden"); } ?>">
     <div class="date-nav">
       <div class="date-heading">

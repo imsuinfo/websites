@@ -37,7 +37,7 @@ $params = array(
 
 <div class="calendar-calendar"><div class="week-view">
   <div id="header-container">
-  <table class="full">
+  <table class="full" summary="This is a calendar.">
   <caption class="hidden">
     <?php print theme('date_nav_title', $params) ?>
   </caption>
@@ -56,7 +56,7 @@ $params = array(
   </table>
   </div>
   <div id="multi-day-container">
-  <table class="full">
+  <table class="full" summary="This is a calendar.">
   <tbody>
   <tr class="holder"><td class="calendar-time-holder"></td><td class="calendar-day-holder"></td><td class="calendar-day-holder"></td><td class="calendar-day-holder"></td><td class="calendar-day-holder"></td><td class="calendar-day-holder"></td><td class="calendar-day-holder"></td><td class="calendar-day-holder"></td></tr>
     <?php for ($i = 0; $i < $multiday_rows; $i++): ?>
@@ -174,7 +174,7 @@ $params = array(
       }
     </script>
     <?php endif; ?>
-    <table class="full">
+    <table class="full" summary="This is a calendar.">
       <caption class="hidden">
         <?php print theme('date_nav_title', $params) ?>
       </caption>
