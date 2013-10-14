@@ -348,7 +348,7 @@ class date_views_argument_handler_simple extends views_handler_argument_date {
     }
     else {
       if (!isset($this->arguments)) {
-        $handler = views_break_phrase($this->argument);
+        $handler = $this->break_phrase($this->argument);
         $this->operator = $handler->operator;
         $this->arguments = $handler->value;
         $this->argument = $handler->value[0];
@@ -415,4 +415,53 @@ class date_views_argument_handler_simple extends views_handler_argument_date {
     return FALSE;
   }
 
+  /**
+   * Break x,y,z and x+y+z into an array. Numeric only.
+   *
+   * @param $str
+   *   The string to parse.
+   * @param $handler
+   *   The handler object to use as a base. If not specified one will
+   *   be created.
+   *
+   * @return $handler
+   *   The new handler object.
+   */
+  function break_phrase($str, &$handler = NULL) {
+    if (!$handler) {
+      $handler = new stdClass();
+    }
+
+    // Set up defaults:
+
+    if (!isset($handler->value)) {
+      $handler->value = array();
+    }
+
+    if (!isset($handler->operator)) {
+      $handler->operator = 'or';
+    }
+
+    if (empty($str)) {
+      return $handler;
+    }
+
+    if (preg_match('/^([\d-]+[+ ])+[\d-]+$/', $str)) {
+      // The '+' character in a query string may be parsed as ' '.
+      $handler->operator = 'or';
+      $handler->value = preg_split('/[+ ]/', $str);
+    }
+    elseif (preg_match('/^([\d-]+,)*[\d-]+$/', $str)) {
+      $handler->operator = 'and';
+      $handler->value = explode(',', $str);
+    }
+
+    // Keep an 'error' value if invalid strings were given.
+    if (!empty($str) && (empty($handler->value) || !is_array($handler->value))) {
+      $handler->value = array(-1);
+      return $handler;
+    }
+
+    return $handler;
+  }
 }
