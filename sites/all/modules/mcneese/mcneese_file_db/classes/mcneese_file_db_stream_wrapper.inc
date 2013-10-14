@@ -946,13 +946,17 @@ abstract class mcneese_file_db_stream_wrapper implements DrupalStreamWrapperInte
    * Creates the image style for images.
    *
    * @param string $image_source_uri
-   *   Database file path to image file.
+   *   (optional) Source uri of the image.
    *
    * @return bool
    *   TRUE on success, FALSE otherwise.
    */
-  protected function create_image_style($image_source_uri) {
-    if (empty($this->image_style) || empty($this->image_style_uri) || empty($image_source_uri)) {
+  public function create_image_style($image_source_uri = NULL) {
+    if (empty($this->uri) && !empty($image_source_uri)) {
+      $this->setUri($image_source_uri);
+    }
+
+    if (empty($this->image_style) || empty($this->image_style_uri) || empty($this->uri)) {
       return FALSE;
     }
 
@@ -968,7 +972,7 @@ abstract class mcneese_file_db_stream_wrapper implements DrupalStreamWrapperInte
       return FALSE;
     }
 
-    if (!$image = image_load($image_source_uri)) {
+    if (!$image = image_load($this->uri)) {
       return FALSE;
     }
 

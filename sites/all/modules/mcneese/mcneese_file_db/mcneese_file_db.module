@@ -716,6 +716,10 @@ function mcneese_file_db_generate_image_style($arguments) {
 
   $file_uri = $wrapper->getTarget($image_source_uri);
 
+  if (!file_exists($file_uri)) {
+    $wrapper->create_image_style($image_source_uri);
+  }
+
   mcneese_file_db_print_image_style($file_uri);
 }
 
