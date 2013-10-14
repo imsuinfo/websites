@@ -130,6 +130,17 @@
         delete(info.attributes);
       }
 
+
+      // manually added custom fields for alt and title text. If these fields are not explicitly created, then nothing will happen.
+      if (info.fields["field_file_image_alt_text[und][0][value]"]) {
+        element.attr('alt', info.fields["field_file_image_alt_text[und][0][value]"]);
+      }
+
+      if (info.fields["field_file_image_title_text[und][0][value]"]) {
+        element.attr('title', info.fields["field_file_image_title_text[und][0][value]"]);
+      }
+
+
       // Important to url-encode the file information as it is being stored in an
       // html data attribute.
       info.type = info.type || "media";
