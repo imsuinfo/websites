@@ -207,8 +207,6 @@ function media_field_attach_delete_revision($entity_type, $entity) {
  * @TODO check for security probably pass text through filter_xss
  */
 function media_filter($text) {
-  $text = preg_replace_callback(MEDIA_TOKEN_REGEX, 'media_token_to_markup', $text);
-
   $dom = filter_dom_load($text);
   if ($dom->hasChildNodes()) {
     $tags = array();
@@ -368,6 +366,22 @@ function media_token_to_markup($match, $wysiwyg = FALSE) {
           }
         }
       }
+    }
+
+    // make sure the file_info attributes is defined
+    $settings['attributes']['data-file_info'] = rawurlencode($tag);
+
+    if (!isset($settings['attributes']['class'])) {
+      $settings['attributes']['class'] = array();
+    }
+
+    if (!in_array('media-element', $settings['attributes']['class'])) {
+      $settings['attributes']['class'][] = 'media-element';
+    }
+
+    $view_mode = 'file-' . preg_replace('/_/i', '-', $tag_info['view_mode']);
+    if (!in_array($view_mode, $settings['attributes']['class'])) {
+      $settings['attributes']['class'][] = $view_mode;
     }
   }
   catch (Exception $e) {
