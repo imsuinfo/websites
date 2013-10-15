@@ -252,10 +252,11 @@ function workbench_moderation_node_history_view($node) {
   }
 
   // Set the table header.
-  $header = array(t('Revision'), t('Title'), t('Actions'), t('Moderation Log'));
+  $header = array(t('Revision'), t('Title'), t('Actions'), t('Workflow Log'));
 
   // Return properly styled output.
   return array(
+    '#caption' => t("Workflow Table"),
     '#attached' => array(
       'css' => array(
         drupal_get_path('module', 'workbench_moderation') . '/css/workbench_moderation.css',
@@ -264,6 +265,7 @@ function workbench_moderation_node_history_view($node) {
     '#theme' => 'table',
     '#header' => $header,
     '#rows' => $rows,
+    '#attributes' => array('id' => 'workflow_table', 'class' => array('workflow_table'), 'summary' => 'This table provides a history of the workflow changes and conditionally grants actions to perform on specific revisions.'),
   );
 }
 

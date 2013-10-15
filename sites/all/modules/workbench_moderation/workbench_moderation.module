@@ -16,7 +16,7 @@ function workbench_moderation_menu() {
 
   // Display a node's moderation history
   $items["node/%node/moderation"] = array(
-    'title' => 'Moderate',
+    'title' => 'Workflow',
     'description' => 'Show the content moderation history.',
     'type' => MENU_LOCAL_TASK,
     'page callback' => 'workbench_moderation_node_history_view',
@@ -1887,7 +1887,7 @@ function workbench_moderation_workbench_block() {
       if ($moderate_form = drupal_render($moderate_form)) {
         $info_block_messages[] = array(
           'type' => 'message',
-          'label' => t('Set moderation state'),
+          'label' => t('Set Workflow State'),
           'message' => $moderate_form,
           'class' => 'set_moderation_state',
           'side' => 1,
@@ -1992,7 +1992,7 @@ function workbench_moderation_action_info() {
   $info = array();
   $info['workbench_moderation_set_state_action'] = array(
     'type' => 'node',
-    'label' => t('Set moderation state'),
+    'label' => t('Set Workflow State'),
     'configurable' => TRUE,
     'behavior' => array('changes_property'),
     'triggers' => array('node_presave', 'node_insert', 'node_update', 'workbench_moderation_transition'),
