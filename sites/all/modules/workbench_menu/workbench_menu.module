@@ -394,7 +394,7 @@ function workbench_menu_block_view($delta = '') {
       }
     }
 
-    if (isset($menus_cached[$path_string['alias']])) {
+    if (isset($menus_cached[$path_string['alias']]) && isset($menus_cached[$path_string['alias']]['total'])) {
       if ($menus_cached[$path_string['alias']]['total'] > 0) {
         $menus_in_path[] = $menus_cached[$path_string['alias']];
         $path_trail = array();
