@@ -37,6 +37,7 @@ function mcneese_content_formats_mcneese_content_node_type_form_alter(&$form, &$
   $deny_abused_codes_default = variable_get('mcneese_content_formats_deny_abused_codes_' . $form['#node_type']->type, FALSE);
   $allowed_tags_default = variable_get('mcneese_content_formats_allowed_tags_' . $form['#node_type']->type, 'a abbr address area article aside audio base base bdi bdo blockquote br button canvas caption cite code col colgroup command datalist dd del details dfn dialog div dl dt em embed fieldset figcaption figure form h1 h2 h3 h4 h5 h6 header hr iframe img input ins kbd keygen label legend li link map mark menu meter nav noscript object ol optgroup option output p param pre progress q rp rt ruby s samp section select small source span strong sub summary sup table tbody td textarea tfoot th thead time title tr track u ul var video wbr');
   $fix_links_default = variable_get('mcneese_content_formats_fix_links_' . $form['#node_type']->type, FALSE);
+  $fix_markup_default = variable_get('mcneese_content_formats_fix_markup_' . $form['#node_type']->type, FALSE);
 
   $form['mcneese_content']['deny_abused_codes'] = array(
     '#type' => 'checkbox',
@@ -59,6 +60,13 @@ function mcneese_content_formats_mcneese_content_node_type_form_alter(&$form, &$
     '#default_value' => $fix_links_default,
     '#description' => t("This enables the correction of the mis-use of url links. This also updates older and no longer valid links to use the newer method. This currently only fixes a and img links."),
   );
+
+  $form['mcneese_content']['fix_markup'] = array(
+    '#type' => 'checkbox',
+    '#title' => t("Fix Markup (declobber)"),
+    '#default_value' => $fix_markup_default,
+    '#description' => t("This enables the correction of the mis-use or non-proper HTML. In general, this partially cleans up some of the mess that comes from a copy and pasted word document (or similar)."),
+  );
 }
 
 /**
@@ -70,6 +78,7 @@ function mcneese_content_formats_mcneese_content_node_type_form_submit_alter($fo
   cf_settings_register('mcneese_content_formats_deny_abused_codes_' . $form['#node_type']->type, 'drupal_variables', 'mcneese_content_formats', TRUE);
   cf_settings_register('mcneese_content_formats_allowed_tags_' . $form['#node_type']->type, 'drupal_variables', 'mcneese_content_formats', TRUE);
   cf_settings_register('mcneese_content_formats_fix_links_' . $form['#node_type']->type, 'drupal_variables', 'mcneese_content_formats', TRUE);
+  cf_settings_register('mcneese_content_formats_fix_markup_' . $form['#node_type']->type, 'drupal_variables', 'mcneese_content_formats', TRUE);
 
   if (isset($form_state['values']['mcneese_content']['deny_abused_codes']) && $form_state['values']['mcneese_content']['deny_abused_codes']) {
     variable_set('mcneese_content_formats_deny_abused_codes_' . $form['#node_type']->type, TRUE);
@@ -90,6 +99,13 @@ function mcneese_content_formats_mcneese_content_node_type_form_submit_alter($fo
   }
   else {
     variable_set('mcneese_content_formats_fix_links_' . $form['#node_type']->type, FALSE);
+  }
+
+  if (isset($form_state['values']['mcneese_content']['fix_markup']) && $form_state['values']['mcneese_content']['fix_markup']) {
+    variable_set('fix_markup_' . $form['#node_type']->type, TRUE);
+  }
+  else {
+    variable_set('mcneese_content_formats_fix_markup_' . $form['#node_type']->type, FALSE);
   }
 }
 
@@ -172,6 +188,7 @@ function mcneese_content_formats_node_presave($node) {
 
   $deny_abused_codes = $deny_abused_codes_value && !user_access('bypass deny abused codes');
   $fix_links = variable_get('mcneese_content_formats_fix_links_' . $node->type, FALSE);
+  $fix_markup = variable_get('mcneese_content_formats_fix_markup_' . $node->type, FALSE);
 
   $abused_codes = array();
   $abused_codes['&#34;'] = '"';
@@ -198,11 +215,13 @@ function mcneese_content_formats_node_presave($node) {
         if (!empty($index_value['summary'])) {
           if ($deny_abused_codes) mcneese_content_formats_deny_abused_codes($abused_codes, $index_value['summary']);
           if ($fix_links) mcneese_content_formats_fix_links($index_value['summary']);
+          if ($fix_markup) mcneese_content_formats_fix_markup($index_value['summary']);
         }
 
         if (!empty($index_value['value'])) {
           if ($deny_abused_codes) mcneese_content_formats_deny_abused_codes($abused_codes, $index_value['value']);
           if ($fix_links) mcneese_content_formats_fix_links($index_value['value']);
+          if ($fix_markup) mcneese_content_formats_fix_markup($index_value['value']);
         }
       }
     }
@@ -280,6 +299,178 @@ function mcneese_content_formats_fix_links(&$value) {
     // Remove the <body> and </body> parts
     $value = preg_replace('@(^<body>|</body>$)@i', '', $value);
   }
+}
+
+/**
+ * Make changes to markup.
+ *
+ * @param string $value
+ *   The text to alter.
+ */
+function mcneese_content_formats_fix_markup(&$value) {
+  $dom = new DOMDocument();
+  $dom->preserveWhiteSpace = TRUE;
+  $dom->formatOutput = TRUE;
+  @$dom->loadHTML('<!DOCTYPE html><head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"></head><body>' . $value . '</body></html>');
+  $altered = FALSE;
+
+  if (!$dom->hasChildNodes()) {
+    return;
+  }
+
+  $a_links = array();
+  $img_links = array();
+  $bodys = $dom->getElementsByTagName('body');
+
+  if ($bodys->length == 0) {
+    return;
+  }
+
+  $body = $bodys->item(0);
+  $b_tags = $body->getElementsByTagName('b');
+  $i_tags = $body->getElementsByTagName('i');
+
+  // replace b tags with strong
+  foreach ($b_tags as $tag) {
+    $parent = $tag->parentNode;
+    $new_tag = $dom->createElement('strong');
+
+    if ($tag->hasAttributes()) {
+      foreach ($tag->attributes as $attribute) {
+        $new_tag->setAttribute($attribute->name, $attribute->value);
+      }
+    }
+
+    if ($tag->hasChildNodes()) {
+      foreach ($tag->childNodes as $child) {
+        $new_tag->appendChild($child);
+        #$new_tag->appendChild($child->cloneNode(true));
+      }
+    }
+
+    $parent->replaceChild($new_tag, $tag);
+    $altered = TRUE;
+  }
+
+  // replace i tags with em
+  foreach ($i_tags as $tag) {
+    $parent = $tag->parentNode;
+    $new_tag = $dom->createElement('em');
+
+    if ($tag->hasAttributes()) {
+      foreach ($tag->attributes as $attribute) {
+        $new_tag->setAttribute($attribute->name, $attribute->value);
+      }
+    }
+
+    if ($tag->hasChildNodes()) {
+      foreach ($tag->childNodes as $child) {
+        $new_tag->appendChild($child->cloneNode(TRUE));
+      }
+    }
+
+    $parent->replaceChild($new_tag, $tag);
+    $altered = TRUE;
+  }
+
+  // remove all font tags, but preserve their content.
+  $font_tags = $body->getElementsByTagName('font');
+  while ($font_tags->length > 0) {
+    foreach ($font_tags as $tag) {
+      mcneese_content_formats_remove_tag($tag);
+      $altered = TRUE;
+    }
+
+    $font_tags = $body->getElementsByTagName('font');
+  }
+
+  // remove span tags with lang=".." attribute, but preserve their content.
+  $span_tags = $body->getElementsByTagName('span');
+  foreach ($span_tags as $tag) {
+    if ($tag->hasAttribute('lang')) {
+      mcneese_content_formats_remove_tag($tag);
+      $altered = TRUE;
+    }
+  }
+
+  // remove common invalid attributes
+  $all_tags = $body->getElementsByTagName('*');
+  foreach ($all_tags as $tag) {
+    // problems with paragraphs.
+    if ($tag->tagName == 'p') {
+      if ($tag->hasAttribute('style')) {
+        $tag->removeAttribute('style');
+        $altered = TRUE;
+      }
+    }
+
+    // replace name with id (deprecate name tag).
+    if ($tag->hasAttribute('name')) {
+      $name_value = $tag->getAttribute('name');
+      $tag->removeAttribute('name');
+      $tag->setAttribute('id', $name_value);
+      $altered = TRUE;
+    }
+
+    // strip out remaining lang tags.
+    if ($tag->hasAttribute('lang')) {
+      $tag->removeAttribute('lang');
+      $altered = TRUE;
+    }
+
+    // replace empty tags that are generally created to implement a line break
+    if ($tag->tagName == 'p' || $tag->tagName == 'div' || $tag->tagName == 'h1' || $tag->tagName == 'h2' || $tag->tagName == 'h3' || $tag->tagName == 'h4' || $tag->tagName == 'h5' || $tag->tagName == 'h6') {
+      if (!$tag->hasChildNodes()) {
+        $parent = $tag->parentNode;
+        $new_tag = $dom->createElement('br');
+        $parent->replaceChild($new_tag, $tag);
+        $altered = TRUE;
+      }
+    }
+
+    // remove spans that have no attributes.
+    if ($tag->tagName == 'span') {
+      if (!$tag->hasAttributes()) {
+        mcneese_content_formats_remove_tag($tag);
+        $altered = TRUE;
+      }
+    }
+  }
+
+
+  if ($altered) {
+    $value = $dom->saveHTML($body);
+
+    // Remove the <body> and </body> parts
+    $value = preg_replace('@(^<body>|</body>$)@i', '', $value);
+  }
+}
+
+/**
+ * Removes the tag and attaches its children to its parent.
+ *
+ * @param DOMNode $tag
+ *   Tag to operate on.
+ */
+function mcneese_content_formats_remove_tag(DOMNode $tag) {
+  if ($tag->hasChildNodes()) {
+    $parent = $tag->parentNode;
+    $children = array();
+
+    foreach ($tag->childNodes as $child) {
+      $children[] = $child;
+    }
+
+    foreach ($children as $child) {
+      $removed_child = $tag->removeChild($child);
+
+      if (is_object($removed_child)) {
+        $parent->insertBefore($removed_child, $tag);
+      }
+    }
+  }
+
+  $parent->removeChild($tag);
 }
 
 /**
