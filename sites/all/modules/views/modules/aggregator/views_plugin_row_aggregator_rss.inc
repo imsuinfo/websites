@@ -50,7 +50,7 @@ class views_plugin_row_aggregator_rss extends views_plugin_row {
       ),
       array(
         'key' => 'dc:creator',
-        'value' => $item->author,
+        'value' => 'undisclosed',
       ),
       array(
         'key' => 'guid',
