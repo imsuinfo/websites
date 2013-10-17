@@ -329,6 +329,7 @@ function mcneese_content_formats_fix_markup(&$value) {
   $body = $bodys->item(0);
   $b_tags = $body->getElementsByTagName('b');
   $i_tags = $body->getElementsByTagName('i');
+  $strike_tags = $body->getElementsByTagName('strike');
 
   // replace b tags with strong
   foreach ($b_tags as $tag) {
@@ -373,15 +374,38 @@ function mcneese_content_formats_fix_markup(&$value) {
     $altered = TRUE;
   }
 
-  // remove all font tags, but preserve their content.
-  $font_tags = $body->getElementsByTagName('font');
-  while ($font_tags->length > 0) {
-    foreach ($font_tags as $tag) {
-      mcneese_content_formats_remove_tag($tag);
-      $altered = TRUE;
+  // replace strike tags with del
+  foreach ($strike_tags as $tag) {
+    $parent = $tag->parentNode;
+    $new_tag = $dom->createElement('del');
+
+    if ($tag->hasAttributes()) {
+      foreach ($tag->attributes as $attribute) {
+        $new_tag->setAttribute($attribute->name, $attribute->value);
+      }
     }
 
-    $font_tags = $body->getElementsByTagName('font');
+    if ($tag->hasChildNodes()) {
+      foreach ($tag->childNodes as $child) {
+        $new_tag->appendChild($child->cloneNode(TRUE));
+      }
+    }
+
+    $parent->replaceChild($new_tag, $tag);
+    $altered = TRUE;
+  }
+
+  // remove all unsupported tags, but preserve their content.
+  foreach (array('font', 'basefont', 'big', 'center', 'dir', 'frame', 'noframes', 'tt') as $tag_name) {
+    $unsupported_tags = $body->getElementsByTagName($tag_name);
+    while ($unsupported_tags->length > 0) {
+      foreach ($unsupported_tags as $tag) {
+        mcneese_content_formats_remove_tag($tag);
+        $altered = TRUE;
+      }
+
+      $unsupported_tags = $body->getElementsByTagName($tag_name);
+    }
   }
 
   // remove span tags with lang=".." attribute, but preserve their content.
@@ -412,11 +436,39 @@ function mcneese_content_formats_fix_markup(&$value) {
       $altered = TRUE;
     }
 
-    // strip out remaining lang tags.
-    if ($tag->hasAttribute('lang')) {
-      $tag->removeAttribute('lang');
-      $altered = TRUE;
+    // strip out unsupported attributes.
+    $unsupported = array();
+    $unsupported[] = 'lang';
+    $unsupported[] = 'align';
+    $unsupported[] = 'valign';
+    $unsupported[] = 'abbr';
+    $unsupported[] = 'axis';
+    $unsupported[] = 'bgcolor';
+    $unsupported[] = 'char';
+    $unsupported[] = 'charoff';
+    $unsupported[] = 'nowrap';
+    $unsupported[] = 'charset';
+    foreach ($unsupported as $attr_name) {
+      if ($tag->hasAttribute($attr_name)) {
+        $tag->removeAttribute($attr_name);
+        $altered = TRUE;
+      }
     }
+
+    // strip out attributes no longer supported in html 5 for specific tags.
+    if ($tag->tagName == 'td') {
+      $unsupported = array();
+      $unsupported[] = 'height';
+      $unsupported[] = 'scope';
+      $unsupported[] = 'width';
+      foreach ($unsupported as $attr_name) {
+        if ($tag->hasAttribute($attr_name)) {
+          $tag->removeAttribute($attr_name);
+          $altered = TRUE;
+        }
+      }
+    }
+
 
     // replace empty tags that are generally created to implement a line break
     if ($tag->tagName == 'p' || $tag->tagName == 'div' || $tag->tagName == 'h1' || $tag->tagName == 'h2' || $tag->tagName == 'h3' || $tag->tagName == 'h4' || $tag->tagName == 'h5' || $tag->tagName == 'h6') {
