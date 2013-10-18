@@ -65,8 +65,8 @@ function mcneese_functions_embed_registrar_schedule_content($semesters, $dates, 
     $item['note'] = '';
     $item['date'] = '';
 
-    if (isset($result->field_field_event_note['und'][0]['safe_value'])) {
-      $item['note'] = $result->field_field_event_note['und'][0]['safe_value'];
+    if (isset($result->field_field_event_note[0]['raw']['safe_value'])) {
+      $item['note'] = $result->field_field_event_note[0]['raw']['safe_value'];
     }
 
     $ds1 = $result->field_field_event_datetime[0]['raw']['value'];
