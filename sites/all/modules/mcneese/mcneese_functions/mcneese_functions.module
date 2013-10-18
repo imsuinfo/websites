@@ -1,0 +1,227 @@
+<?php
+
+/**
+ * @file
+ * McNeese State University Functions module.
+ */
+
+/**
+ * @defgroup mcneese_functions McNeese Functions
+ * @{
+ * Provides content functionality and changes to drupal 7.
+ */
+
+/**
+ * Generates and prints the registrar Spring/Summer/Fall schedule.
+ *
+ * This depends on:
+ * - view: semester_calendars
+ * - display: semester_calendar_block_list
+ *
+ * @param string $semesters
+ *   The semester taxonomy ids.
+ * @param string $dates
+ *   The date ranges to to load.
+ */
+function mcneese_functions_embed_registrar_schedule_content($semesters, $dates, $min_date, $max_date) {
+  $view_name = 'semester_calendars';
+  $display_name = 'semester_calendar_block_list';
+
+  $view = views_get_view($view_name);
+
+  if (!is_object($view)) {
+    return;
+  }
+
+  // load required includes (for RRULE processing).
+  module_load_include('inc', 'date_api', 'date_api_ical');
+  module_load_include('inc', 'date_repeat', 'date_repeat_calc');
+
+  // force default timezone
+  $original_timezone = date_default_timezone_get();
+  date_default_timezone_set('UTC');
+
+  // tids:
+  $registrar_tid = 250;
+  $holiday_tid = 292;
+  $event_groups = $registrar_tid . '+' . $holiday_tid;
+  $registrar = array();
+  $holiday = array();
+
+
+  $view->set_display($display_name);
+  $view->set_arguments(array($semesters, $dates, $event_groups));
+  $view->is_cacheable = FALSE;
+
+  /*
+  Array (
+    [0] => nid
+    [1] => field_data_field_event_datetime_delta
+    [2] => field_data_field_event_datetime_language
+    [3] => field_data_field_event_datetime_bundle 
+    [4] => field_data_field_event_datetime_field_event_datetime_value 
+    [5] => field_data_field_event_datetime_field_event_datetime_value2 
+    [6] => field_data_field_event_datetime_field_event_datetime_rrule 
+    [7] => node_title
+    [8] => taxonomy_term_data_field_data_field_event_group_tid 
+    [9] => taxonomy_term_data_field_data_field_event_group_name 
+    [10] => taxonomy_term_data_field_data_field_event_group_vid 
+    [11] => taxonomy_term_data_field_data_field_event_group__taxonomy_vo 
+    [12] => field_data_field_event_datetime_node_entity_type 
+    [13] => field_data_field_event_group_node_entity_type 
+    [14] => field_data_field_event_note_node_entity_type 
+    [15] => field_data_field_url_path_taxonomy_term_entity_type 
+    [16] => _field_data 
+    [17] => field_field_event_datetime 
+    [18] => field_field_event_group 
+    [19] => field_field_event_note 
+    [20] => field_field_event_datetime_1 
+    [21] => field_field_url_path
+  ) 
+  */
+  // 642 2013-10+2013-11+2013-12+2014-01+2014-02+2014-03+2014-04+2014-05
+
+  $view->execute();
+
+  $min_datestamp = strtotime($min_date);
+  $max_datestamp = strtotime($max_date);
+
+  foreach ($view->result as $result) {
+    $item = array();
+    $item['nid'] = $result->nid;
+    $item['title'] = $result->node_title;
+    $item['note'] = '';
+    $item['date'] = '';
+
+    if (isset($result->field_field_event_note['und'][0]['safe_value'])) {
+      $item['note'] = $result->field_field_event_note['und'][0]['safe_value'];
+    }
+
+    $ds1 = $result->field_field_event_datetime[0]['raw']['value'];
+    $ds2 = $result->field_field_event_datetime[0]['raw']['value2'];
+    $dsr = $result->field_field_event_datetime[0]['raw']['rrule'];
+
+    $d1 = strtotime($ds1);
+    $d2 = strtotime($ds2);
+
+    $d = $d1;
+    $first = NULL;
+    $last = NULL;
+    while ($d <= $d2) {
+      // generate dates
+      $date = '';
+
+      // save day (timezone adjustments are necessary due to how they stored the data.)
+      date_default_timezone_set('America/Chicago');
+      $ds = date('Y-m-d', $d);
+      $all_day = strtotime($ds . ' 00:00:00');
+
+      if ($d >= $min_datestamp && $d <= $max_datestamp) {
+        if (is_null($first)) {
+          $first = $d;
+        }
+
+        $last = $d;
+
+        if ($all_day == $d) {
+          $item['date'] = date('F j', $d);
+        }
+        else {
+          $item['date'] = date('F j - g:ia', $d);
+        }
+
+
+        // store the item.
+        if ($result->taxonomy_term_data_field_data_field_event_group_tid == $holiday_tid) {
+          if (!isset($holiday[$d])) {
+            $holiday[$d] = array();
+          }
+
+          unset($registrar[$d][$result->nid]);
+          $holiday[$d][$result->nid] = $item;
+        }
+        elseif (!isset($holiday[$d][$result->nid])) {
+          if (!isset($registrar[$d])) {
+            $registrar[$d] = array();
+          }
+
+          $registrar[$d][$result->nid] = $item;
+        }
+      }
+
+      date_default_timezone_set('UTC');
+      $d = strtotime('+1 day', $d);
+    }
+  }
+
+
+  // Registrar Events
+  $rows = array();
+  ksort($registrar);
+  foreach ($registrar as $datestamp => $date_items) {
+    foreach ($date_items as $nid => $item) {
+      $row = array();
+      $row[0] = '<a href="/node/' . $nid . '">' . $item['title'] . ' ' . $item['note'] . '</a>';
+      $row[1] = $item['date'];
+
+      $rows[] = $row;
+    }
+  }
+
+  $attributes = array();
+  $attributes['class'] = array();
+  $attributes['class'][] = 'registrar-semester_schedule';
+  $attributes['class'][] = 'registrar-semester_schedule-registrar';
+  $attributes['summary'] = "Listing of events for the specified semester.";
+
+  $table = array();
+  $table['caption'] = "Registrar";
+  $table['header'] = array('Event', 'Date');
+  $table['rows'] = $rows;
+  $table['attributes'] = $attributes;
+
+  if (!empty($rows)) {
+    print(theme('table', $table));
+    print("<br>");
+  }
+
+
+  // Holiday Events
+  $rows = array();
+  ksort($holiday);
+  foreach ($holiday as $datestamp => $date_items) {
+    foreach ($date_items as $nid => $item) {
+      $row = array();
+      $row[0] = '<a href="/node/' . $nid . '">' . $item['title'] . ' ' . $item['note'] . '</a>';
+      $row[1] = $item['date'];
+
+      $rows[] = $row;
+    }
+  }
+
+  $attributes = array();
+  $attributes['class'] = array();
+  $attributes['class'][] = 'registrar-semester_schedule';
+  $attributes['class'][] = 'registrar-semester_schedule-holiday';
+  $attributes['summary'] = "Listing of events for the specified semester.";
+
+  $table = array();
+  $table['caption'] = "Holiday";
+  $table['header'] = array('Event', 'Date');
+  $table['rows'] = $rows;
+  $table['attributes'] = $attributes;
+
+  if (!empty($rows)) {
+    print(theme('table', $table));
+    print("<br>");
+  }
+
+  $view->destroy();
+
+  // restore original timezone
+  date_default_timezone_set($original_timezone);
+}
+
+/**
+ * @} End of '@defgroup mcneese_functions McNeese Functions'.
+ */
