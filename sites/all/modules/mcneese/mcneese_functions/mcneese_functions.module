@@ -22,6 +22,10 @@
  *   The semester taxonomy ids.
  * @param string $dates
  *   The date ranges to to load.
+ * @param string $min_date
+ *   The min date on a per monthly basis.
+ * @param string $max_date
+ *   The max date on a per monthly basis.
  */
 function mcneese_functions_embed_registrar_schedule_content($semesters, $dates, $min_date, $max_date) {
   $view_name = 'semester_calendars';
@@ -55,8 +59,12 @@ function mcneese_functions_embed_registrar_schedule_content($semesters, $dates, 
 
   $view->execute();
 
-  $min_datestamp = strtotime($min_date);
-  $max_datestamp = strtotime($max_date);
+  $min_date_first = strtotime('first day of this month ' . $min_date);
+  $max_date_last = strtotime('last day of this month ' . $max_date);
+
+  $min_datestamp = strtotime('-1 day', $min_date_first);
+  $max_datestamp = strtotime('+1 day', $max_date_last);
+
 
   foreach ($view->result as $result) {
     $item = array();
@@ -88,7 +96,7 @@ function mcneese_functions_embed_registrar_schedule_content($semesters, $dates, 
       $ds = date('Y-m-d', $d);
       $all_day = strtotime($ds . ' 00:00:00');
 
-      if ($d >= $min_datestamp && $d <= $max_datestamp) {
+      if ($d > $min_datestamp && $d < $max_datestamp) {
         if (is_null($first)) {
           $first = $d;
         }
