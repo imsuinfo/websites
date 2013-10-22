@@ -33,8 +33,6 @@ function node_accessibility_quail_api_permission_alter(&$permissions) {
     'title' => t("Perform node accessibility validation"),
     'description' => t("Grants permissions to use the perform a manual validation of any given node."),
   );
-
-  // @todo: add node-specific validation permissions or at the very least node_type-specific
 }
 
 /**
@@ -270,15 +268,14 @@ function node_accessibility_form_node_type_form_alter(&$form, &$form_state, $for
   $default_format = 'full_html';
 
   if (!empty($form['#node_type']->type)) {
-    $node_type_settings_objects = node_accessibility_load_node_type_settings(array($form['#node_type']), NULL);
+    $node_type = $form['#node_type']->type;
+    $node_type_settings = node_accessibility_load_node_type_settings();
 
-    if (!empty($node_type_settings_objects)) {
-      $node_type_settings_object = $node_type_settings_objects['0'];
-
-      $default_enabled = ($node_type_settings_object->required ? 'required' : 'optional');
-      $default_standards = unserialize($node_type_settings_object->standards);
-      $default_method = (!empty($node_type_settings_object->method) ? $node_type_settings_object->method : $default_method);
-      $default_format = (!empty($node_type_settings_object->format) ? $node_type_settings_object->format : $default_format);
+    if (isset($node_type_settings[$node_type])) {
+      $default_enabled = isset($node_type_settings[$node_type]['required']) && $node_type_settings[$node_type]['required'] ? 'required' : 'optional';
+      $default_standards = isset($node_type_settings[$node_type]['standards']) ? $node_type_settings[$node_type]['standards'] : $default_standards;
+      $default_method = isset($node_type_settings[$node_type]['method']) ? $node_type_settings[$node_type]['method'] : $default_method;
+      $default_format = isset($node_type_settings[$node_type]['format']) ? $node_type_settings[$node_type]['format'] : $default_format;
     }
   }
 
@@ -356,12 +353,7 @@ function node_accessibility_node_type_form_submit($form, &$form_state) {
     }
   }
 
-  $node_type_settings_objects = node_accessibility_load_node_type_settings(array($form_state['values']['type']), NULL);
-  $node_type_settings_object = FALSE;
-
-  if (!empty($node_type_settings_objects)) {
-    $node_type_settings_object = $node_type_settings_objects['0'];
-  }
+  $node_type_settings = node_accessibility_load_node_type_settings();
 
   $columns = array('enabled', 'required', 'standards', 'method', 'format');
   $record = array();
@@ -388,13 +380,8 @@ function node_accessibility_node_type_form_submit($form, &$form_state) {
     $record['standards'] = array();
   }
 
-  if (is_object($node_type_settings_object)) {
-    $primary_keys = array('type');
-    $results = drupal_write_record('node_accessibility_types', $record, $primary_keys);
-  }
-  else {
-    $results = drupal_write_record('node_accessibility_types', $record);
-  }
+  $node_type_settings[$form_state['values']['type']] = $record;
+  variable_set('node_accessibility_node_type_settings', $node_type_settings);
 }
 
 /**
@@ -422,43 +409,21 @@ function node_accessibility_node_operations() {
  */
 function node_accessibility_operation_validate($nids) {
   $nodes = node_load_multiple($nids);
-  $node_type_settings_objects = node_accessibility_load_node_type_settings($nodes, NULL);
-  $node_type_settings_types = array();
+  $node_type_settings = node_accessibility_load_node_type_settings();
 
-  foreach ($node_type_settings_objects as $node_type_settings_object) {
-    if (is_object($node_type_settings_object)) {
-      $node_type_settings_types[$node_type_settings_object->type] = $node_type_settings_object;
-    }
-  }
-
-  unset($node_type_settings_objects);
   $result = TRUE;
 
   foreach ($nodes as $key => $node) {
     if (!is_object($node)) continue;
-    if (!array_key_exists($node->type, $node_type_settings_types)) continue;
+    if (!array_key_exists($node->type, $node_type_settings)) continue;
+    if ($node_type_settings[$node->type] === FALSE) continue;
 
     $methods = quail_api_get_validation_methods(NULL);
     $database = FALSE;
-    $node_settings = $node_type_settings_types[$node->type];
+    $node_settings = $node_type_settings[$node->type];
 
-    if (!empty($node_settings->method) && is_array($methods) && array_key_exists('database', $methods[$node_settings->method])) {
-      $database = $methods[$node_settings->method]['database'];
-    }
-
-    // @fixme perhaps this is a caching issue, but the node->accessibility settings is not always accurate
-    // manually create the accessibility array because it must already be enabled for the code to get this far
-    if (!property_exists($node, 'accessibility') || !is_array($node->accessibility)) {
-      $node->accessibility = array();
-
-      foreach ($node_settings as $key => $value) {
-        if ($key == 'standards') {
-          $node->accessibility[$key] = unserialize($value);
-        }
-        else {
-          $node->accessibility[$key] = $value;
-        }
-      }
+    if (!empty($node_settings['method']) && is_array($methods) && array_key_exists('database', $methods[$node_settings['method']])) {
+      $database = $methods[$node_settings['method']]['database'];
     }
 
     $results = node_accessibility_perform_validation(array($node), array(), NULL, NULL);
@@ -539,6 +504,9 @@ function node_accessibility_perform_validation($nodes_or_nids, $vids = array(), 
     return array();
   }
 
+  $node_type_settings = node_accessibility_load_node_type_settings();
+  
+
   $results = array();
   $standards = quail_api_get_standards(NULL, 'snippet');
 
@@ -556,6 +524,11 @@ function node_accessibility_perform_validation($nodes_or_nids, $vids = array(), 
 
         continue;
       }
+    }
+
+    $node_settings = FALSE;
+    if (isset($node_type_settings[$node->type])) {
+      $node_settings = $node_type_settings[$node->type];
     }
 
     if (array_key_exists($node->nid, $vids) && !empty($vids[$node->nid])) {
@@ -585,35 +558,13 @@ function node_accessibility_perform_validation($nodes_or_nids, $vids = array(), 
         }
       }
 
-      // manually load accessibility settings if not currently loaded.
-      if (!property_exists($revision, 'accessibility')) {
-        $revision->accessibility = FALSE;
-        $type_settings = node_accessibility_load_node_type_settings(array($revision->nid => $revision), NULL);
-
-        if (!empty($type_settings)) {
-          $revision->accessibility = array();
-
-          reset($type_settings);
-          $type_setting = current($type_settings);
-
-          foreach ($type_setting as $key => $value) {
-            if ($key == 'standards') {
-              $revision->accessibility[$key] = unserialize($value);
-            }
-            else {
-              $revision->accessibility[$key] = $value;
-            }
-          }
-        }
-      }
-
-      if (is_array($revision->accessibility)) {
+      if (is_array($node_settings)) {
         $node_view = node_view($revision, 'full', $language);
         $rendered_node = drupal_render($node_view);
         unset($node_view);
 
-        if (!empty($revision->accessibility['standards'])) {
-          foreach ($revision->accessibility['standards'] as $standard_name) {
+        if (!empty($node_settings['standards'])) {
+          foreach ($node_settings['standards'] as $standard_name) {
             $results[$revision->nid][$rid] = array_merge($results[$revision->nid][$rid], quail_api_validate_markup($rendered_node, $standards[$standard_name], $display_level));
 
             if (module_exists('rules')) {
@@ -629,125 +580,19 @@ function node_accessibility_perform_validation($nodes_or_nids, $vids = array(), 
 }
 
 /**
- * Implements hook_node_load().
- */
-function node_accessibility_node_load($nodes, $types) {
-  $all_nodes = array();
-
-  foreach ($nodes as &$node) {
-    $all_nodes[$node->nid] = $node;
-    $all_nodes[$node->nid]->accessibility = FALSE;
-  }
-
-  $results = node_accessibility_load_node_type_settings($all_nodes, NULL);
-
-  foreach ($results as $result) {
-    $all_nodes[$node->nid]->accessibility = array();
-
-    foreach ($result as $key => $value) {
-      if ($key == 'standards') {
-        $all_nodes[$node->nid]->accessibility[$key] = unserialize($value);
-      }
-      else {
-        $all_nodes[$node->nid]->accessibility[$key] = $value;
-      }
-    }
-  }
-
-  return $all_nodes;
-}
-
-/**
  * Loads the node type settings table data for the given node type.
  *
- * @todo add caching support to the results of this check.
- *
- * @param array $node_types
- *   (optional) An array of node type strings or node objects.
- * @param string|null $keyed
- *   (optional) A string matching one of the following: 'type'
- *   When this is NULL, the default behavior is to return the array exactly as
- *   it was returned by the database call.
- *   When this is a valid string, the key names of the returned array will use
- *   the specified key name.
- *
  * @return array
- *   A prepared statement object, already executed.
+ *   An array of values returned by variable_get().
  */
-function node_accessibility_load_node_type_settings($node_types = array(), $keyed = NULL) {
-  if (!is_array($node_types)) {
-    if (class_exists('cf_error')) {
-      cf_error::invalid_array('node_types');
-    }
+function node_accessibility_load_node_type_settings() {
+  static $node_accessibility_node_type_settings;
 
-    return array();
+  if (!isset($node_accessibility_node_type_settings)) {
+    $node_accessibility_node_type_settings = variable_get('node_accessibility_node_type_settings', array());
   }
 
-  $query = db_select('node_accessibility_types', 'nat');
-
-  $query->fields('nat');
-  $query->orderBy('nat.type', 'ASC');
-
-  $total_types = count($node_types);
-
-  if ($total_types > 1) {
-    $or = db_or();
-
-    foreach ($node_types as $node_type) {
-      if (is_object($node_type)) {
-        $or->condition('type', $node_type->type, '=');
-      }
-      else {
-        $or->condition('type', $node_type, '=');
-      }
-    }
-
-    $query->condition($or);
-  }
-  else if ($total_types == 1) {
-    $node_type = array_pop($node_types);
-
-    if (is_object($node_type)) {
-      $query->condition('type', $node_type->type, '=');
-    }
-    else {
-      $query->condition('type', $node_type, '=');
-    }
-  }
-
-  if ($keyed === 'type') {
-    $results = array();
-
-    try {
-      $records = $query->execute();
-    }
-    catch (Exception $e) {
-      if (class_exists('cf_error')) {
-        cf_error::on_query_execution($e);
-      }
-
-      return array();
-    }
-
-    foreach ($records as $record) {
-      if (!is_object($record)) continue;
-
-      $results[$record->$keyed] = $record;
-    }
-
-    return $results;
-  }
-
-  try {
-    return $query->execute()->fetchAll();
-  }
-  catch (Exception $e) {
-    if (class_exists('cf_error')) {
-      cf_error::on_query_execution($e);
-    }
-  }
-
-  return array();
+  return $node_accessibility_node_type_settings;
 }
 
 /**
@@ -893,18 +738,17 @@ function node_accessibility_delete_node_problems($nid, $vid = NULL) {
 /**
  * Returns TRUE if accessibility validation functionality is enabled.
  *
- * @todo add caching support to the results of this check.
- *
  * @param string $node_type
  *   A node type string.
  *
- * @return int|false
- *   The return states of either FALSE, SAVED_NEW, or SAVED_UPDATED.
+ * @return bool
+ *   The return TRUE when accessibility is enabled for the given node type.
+ *   Otherwise, FALSE is returned.
  */
 function node_accessibility_is_enabled($node_type) {
-  $node_type_settings_objects = node_accessibility_load_node_type_settings(array($node_type), NULL);
+  $node_type_settings = node_accessibility_load_node_type_settings();
 
-  if (!empty($node_type_settings_objects) && is_object($node_type_settings_objects['0'])) {
+  if (isset($node_type_settings[$node_type]) && $node_type_settings[$node_type] !== FALSE) {
     return TRUE;
   }
 
@@ -913,8 +757,6 @@ function node_accessibility_is_enabled($node_type) {
 
 /**
  * Returns TRUE if accessibility validation functionality is required.
- *
- * @todo add caching support to the results of this check.
  *
  * @param string $node_type
  *   A node type string
@@ -925,14 +767,13 @@ function node_accessibility_is_enabled($node_type) {
  *   NULL is returned if accessibility validation functionality is not enabled.
  */
 function node_accessibility_is_required($node_type) {
-  $node_type_settings_objects = node_accessibility_load_node_type_settings(array($node_type), NULL);
+  $node_type_settings = node_accessibility_load_node_type_settings();
 
-  if (empty($node_type_settings_objects) || !is_object($node_type_settings_objects['0'])) {
+  if (!isset($node_type_settings[$node_type]) || $node_type_settings[$node_type] === FALSE) {
     return NULL;
   }
 
-  // @fixme: Is this the propery way? I did this off the top of my mind and I could be doing something wrong here.
-  if ($node_type_settings_objects['0']->required == TRUE) {
+  if (isset($node_type_settings[$node_type]['required']) && $node_type_settings[$node_type]['required'] === TRUE) {
     return TRUE;
   }
 
