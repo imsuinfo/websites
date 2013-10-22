@@ -124,6 +124,12 @@ function mcneese_content_formats_node_validate($node) {
 
       foreach ($node->body as $language => &$language_value) {
         foreach ($language_value as $index => &$index_value) {
+          // do not process this filter for php_code format because this will alter the php_code closing tag.
+          // @todo: find a way to still do this without breaking the php code.
+          if (isset($index_value['format']) && $index_value['format'] == 'php_code') {
+            continue;
+          }
+
           if (!empty($index_value['summary'])) {
            // process things after the filter is generated.
             $markup = check_markup($index_value['summary'], $index_value['format']);
@@ -212,6 +218,12 @@ function mcneese_content_formats_node_presave($node) {
   if (property_exists($node, 'body') && is_array($node->body)) {
     foreach ($node->body as $language => &$language_value) {
       foreach ($language_value as $index => &$index_value) {
+        // do not process this filter for php_code format because this will alter the php_code closing tag.
+        // @todo: find a way to still do this without breaking the php code.
+        if (isset($index_value['format']) && $index_value['format'] == 'php_code') {
+          continue;
+        }
+
         if (!empty($index_value['summary'])) {
           if ($deny_abused_codes) mcneese_content_formats_deny_abused_codes($abused_codes, $index_value['summary']);
           if ($fix_links) mcneese_content_formats_fix_links($index_value['summary']);
