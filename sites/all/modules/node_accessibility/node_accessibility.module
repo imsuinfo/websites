@@ -1217,10 +1217,13 @@ function node_accessibility_validate_action($node) {
   $results = node_accessibility_perform_validation(array($node));
   $reports = array();
 
+  $node_type_settings = node_accessibility_load_node_type_settings();
+  $node_settings = $node_type_settings[$node->type];
+
   if (isset($results[$node->nid][$node->vid]['report'])) {
     $reports = $results[$node->nid][$node->vid]['report'];
     $methods = quail_api_get_validation_methods(NULL);
-    $database = isset($methods[$node->accessibility['method']]['database']) ? $methods[$node->accessibility['method']]['database'] : FALSE;
+    $database = isset($methods[$node_settings['method']]['database']) ? $methods[$node_settings['method']]['database'] : FALSE;
     unset($results);
 
     if ($database && !empty($reports)) {
