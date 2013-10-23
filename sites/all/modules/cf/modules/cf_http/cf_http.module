@@ -303,36 +303,54 @@ function cf_http_parse_response($http_response) {
  *   The array keys:
  *   - split: A boolean with TRUE representing that the document string was
  *   successfully split, FALSE otherwise.
- *   - headers: The http header from the httpd response.
- *   - document: The complete html document from the http response.
+ *   - head: The HTML head code (if cf_dom is enabled, then this is empty).
+ *   - body: The HTML body code (if cf_dom is enabled, then this is empty).
+ *   - dom: If cf_dom is enabled, then this is the cf_dom object.
  *
  * @see: cf_http_get_webpage()
  */
 function cf_http_split_response($document) {
-  $results = array('split' => FALSE, 'head' => '', 'body' => '');
+  $results = array('split' => FALSE, 'head' => '', 'body' => '', 'dom' => NULL);
 
   if (cf_is_empty_or_non_string('document', $document, WATCHDOG_ERROR)) {
     return $results;
   }
 
-  $matches = array();
-  $result = preg_match('/<head[^>]*>(.*)<\/head>/sim', $document, $matches);
+  // cf_dom is a new class that uses PHP DOM to more efficiently process markup.
+  if (class_exists('cf_dom')) {
+    $dom = new cf_dom(NULL, TRUE, TRUE, $document);
 
-  if ($result > 0 && isset($matches[1])) {
-    $results['head'] = $matches[1];
+    if (!$dom->is_loaded()) {
+      return $results;
+    }
+
+    $dom->set_doctype(variable_get('cf_dom_doctype', cf_dom::DOCTYPE));
+    $results['dom'] = $dom;
+
+    // @todo: optionally populate head and body tags for compatibility.
+    $results['head'] = $dom->get_markup(TRUE, FALSE);
+    $results['body'] = $dom->get_markup(TRUE);
   }
   else {
-    return $results;
-  }
+    $matches = array();
+    $result = preg_match('/<head[^>]*>(.*)<\/head>/sim', $document, $matches);
 
-  $matches = array();
-  $result = preg_match('/<body[^>]*>(.*)<\/body>/sim', $document, $matches);
+    if ($result > 0 && isset($matches[1])) {
+      $results['head'] = $matches[1];
+    }
+    else {
+      return $results;
+    }
 
-  if ($result > 0 && isset($matches[1])) {
-    $results['body'] = $matches[1];
-  }
-  else {
-    return $results;
+    $matches = array();
+    $result = preg_match('/<body[^>]*>(.*)<\/body>/sim', $document, $matches);
+
+    if ($result > 0 && isset($matches[1])) {
+      $results['body'] = $matches[1];
+    }
+    else {
+      return $results;
+    }
   }
 
   $results['split'] = TRUE;
@@ -344,8 +362,9 @@ function cf_http_split_response($document) {
  *
  * These urls are turned into absolute urls.
  *
- * @param string $text
+ * @param string|cf_dom $text_or_dom
  *   The html document text whose urls are to be altered.
+ *   If cf_dom is enabled, then this can instead be the cf_dom object.
  * @param string $server
  *   The hostname or ip address of the server to use when generating absolute urls.
  *   This must not contain the 'http://' prefixes nor the suffixes such as '/' or ':80'.
@@ -369,70 +388,193 @@ function cf_http_split_response($document) {
  *   - adjusted: A boolean with TRUE representing that the text's urls were
  *   successfully adjuested, FALSE otherwise.
  *   - text: The complete html text with all links adjusted to absolute paths.
+ *     This is an empty string if $text_or_dom is a cf_dom object.
  *
  * @see: cf_http_get_webpage()
  */
-function cf_http_adjust_urls($text, $server, $relative_path, $scheme = 'http', $suffix = '/', $port = 80) {
-  $results = array('adjusted' => FALSE, 'text' => $text);
+function cf_http_adjust_urls($text_or_dom, $server, $relative_path, $scheme = 'http', $suffix = '/', $port = 80) {
+  $results = array('adjusted' => FALSE, 'text' => $text_or_dom);
   $matches = array();
 
+  if (class_exists('cf_dom') && ($text_or_dom instanceOf cf_dom) && $text_or_dom->is_loaded()) {
+    $results['text'] = '';
+
+    $head = $text_or_dom->get_head();
+    $tags = array();
+
+    if (!is_null($head)) {
+      $tags = $head->getElementsByTagName('*');
+    }
+
+    foreach ($tags as $tag) {
+      $attributes = array('src' => NULL, 'href' => NULL);
+
+      if ($tag->hasAttribute('href')) {
+        $attributes['href'] = $tag->getAttribute('href');
+      }
+
+      if ($tag->hasAttribute('src')) {
+        $attributes['src'] = $tag->getAttribute('src');
+      }
+
+      foreach ($attributes as $attribute_name => $attribute) {
+        if (is_null($attribute)) continue;
+
+        $generated_url = cf_adjust_url($attribute, $server, $relative_path, $scheme, $suffix, $port);
+
+        if (is_string($generated_url)) {
+          $tag->setAttribute($attribute_name, $generated_url);
+        }
+      }
+    }
+
+    $body = $text_or_dom->get_body();
+    $tags = array();
+
+    if (!is_null($body)) {
+      $tags = $body->getElementsByTagName('*');
+    }
+
+    foreach ($tags as $tag) {
+      $attributes = array('src' => NULL, 'href' => NULL);
+
+      if ($tag->hasAttribute('href')) {
+        $attributes['href'] = $tag->getAttribute('href');
+      }
+
+      if ($tag->hasAttribute('src')) {
+        $attributes['src'] = $tag->getAttribute('src');
+      }
+
+      foreach ($attributes as $attribute_name => $attribute) {
+        if (is_null($attribute)) continue;
+
+        $generated_url = cf_adjust_url($attribute, $server, $relative_path, $scheme, $suffix, $port);
+
+        if (is_string($generated_url)) {
+          $tag->setAttribute($attribute_name, $generated_url);
+        }
+      }
+    }
+
+    $results['adjusted'] = TRUE;
+    return $results;
+  }
+  else {
+    if (!is_string($text_or_dom)) {
+      if (class_exists('cf_error')) {
+        cf_error::invalid_string('text_or_dom');
+      }
+
+      return $results;
+    }
+  }
+
   foreach (array('src', 'href') as $attr_key => $attribute) {
-    $result = preg_match_all('/(<[^>]*' . $attribute . '\s*=\s*)(["|\'])([^>]*)>/i', $text, $matches);
+    $result = preg_match_all('/(<[^>]*' . $attribute . '\s*=\s*)(["|\'])([^>]*)>/i', $text_or_dom, $matches);
 
     if ($result > 0) {
       foreach ($matches[0] as $key => &$value) {
         $parts = explode($matches[2][$key], $matches[3][$key], 2);
-        $parsed_url = parse_url($parts[0]);
 
-        if (!isset($parsed_url['host'])) {
-          $parsed_url['scheme'] = $scheme;
-          $parsed_url['host'] = $server;
+        $generated_url = cf_adjust_url($parts[0], $server, $relative_path, $scheme, $suffix, $port);
 
-          if (!($scheme == 'http' && $port == 80) && !($scheme == 'https' && $port == 443)) {
-            $parsed_url['port'] = $port;
-          }
+        $safe_expression = preg_replace('/\`/i', '\`', $matches[1][$key] . $matches[2][$key] . $parts[0] . $matches[2][$key]);
+        $safe_expression = preg_replace('/\?/i', '\?', $safe_expression);
+        $safe_expression = preg_replace('/\./i', '\.', $safe_expression);
+        $safe_expression = preg_replace('/\~/i', '\~', $safe_expression);
+        $safe_text = preg_replace('`' . $safe_expression . '`si', $matches[1][$key] . $matches[2][$key] . $generated_url . $matches[2][$key], $results['text']);
 
-          $generated_url = $parsed_url['scheme'] . '://';
-          $generated_url .= $parsed_url['host'];
-
-          if (!empty($parsed_url['port'])) {
-            $generated_url .= ':' . $parsed_url['port'];
-          }
-
-          if (!empty($parsed_url['path'])) {
-            if (preg_match('/^\//i', $parsed_url['path']) == 0) {
-              $generated_url .= $relative_path . '/';
-            }
-
-            $generated_url .= $parsed_url['path'];
-          }
-          else {
-            $generated_url .= $relative_path . '/';
-          }
-
-          if (!empty($parsed_url['query'])) {
-            $generated_url .= '?' . $parsed_url['query'];
-          }
-
-          if (!empty($parsed_url['fragment'])) {
-            $generated_url .= '#' . $parsed_url['fragment'];
-          }
-
-          $safe_expression = preg_replace('/\`/i', '\`', $matches[1][$key] . $matches[2][$key] . $parts[0] . $matches[2][$key]);
-          $safe_expression = preg_replace('/\?/i', '\?', $safe_expression);
-          $safe_expression = preg_replace('/\./i', '\.', $safe_expression);
-          $safe_expression = preg_replace('/\~/i', '\~', $safe_expression);
-          $safe_text = preg_replace('`' . $safe_expression . '`si', $matches[1][$key] . $matches[2][$key] . $generated_url . $matches[2][$key], $results['text']);
-
-          if (is_string($safe_text)) {
-            $results['text'] = $safe_text;
-          }
+        if (is_string($safe_text)) {
+          $results['text'] = $safe_text;
         }
       }
     }
+
+    $results['adjusted'] = TRUE;
   }
 
   return $results;
+}
+
+/**
+ * Fix relative url pulled from the remote server.
+ *
+ * This url is turned into an absolute url.
+ *
+ * @param string $url
+ *   The URL to change.
+ * @param string $server
+ *   The hostname or ip address of the server to use when generating absolute urls.
+ *   This must not contain the 'http://' prefixes nor the suffixes such as '/' or ':80'.
+ * @param string $relative_path
+ *   all relative paths will have this prepended to the absolute url.
+ * @param string $scheme
+ *   (optional) The 'http' at the front of most urls.
+ *   A common alternative is 'https'.
+ * @param string $suffix
+ *   (optional) The suffix to prepend to the url.
+ *   Most cases this should be '/', but if the links are being cached on a
+ *   different server and a different sub-path, then this must be used.
+ * @param int $port
+ *   (optional) The port number of the web-server.
+ *   In almost all cases this should be 80.
+ *   If $schema is set to 'https', then normally this should instead be 443.
+ *
+ * @return string|bool
+ *   The new string if it was successfully altered and FALSE otherwise.
+ *
+ * @see: cf_adjust_urls()
+ */
+function cf_adjust_url($url, $server, $relative_path, $scheme = 'http', $suffix = '/', $port = 80) {
+  if (!is_string($url)) {
+    if (class_exists('cf_error')) {
+      cf_error::invalid_string('url');
+    }
+
+    return FALSE;
+  }
+
+  $parsed_url = parse_url($url);
+
+  if (!isset($parsed_url['host'])) {
+    $parsed_url['scheme'] = $scheme;
+    $parsed_url['host'] = $server;
+
+    if (!($scheme == 'http' && $port == 80) && !($scheme == 'https' && $port == 443)) {
+      $parsed_url['port'] = $port;
+    }
+
+    $generated_url = $parsed_url['scheme'] . '://';
+    $generated_url .= $parsed_url['host'];
+
+    if (!empty($parsed_url['port'])) {
+      $generated_url .= ':' . $parsed_url['port'];
+    }
+
+    if (!empty($parsed_url['path'])) {
+      if (preg_match('/^\//i', $parsed_url['path']) == 0) {
+        $generated_url .= $relative_path . '/';
+      }
+
+      $generated_url .= $parsed_url['path'];
+    }
+    else {
+      $generated_url .= $relative_path . '/';
+    }
+
+    if (!empty($parsed_url['query'])) {
+      $generated_url .= '?' . $parsed_url['query'];
+    }
+
+    if (!empty($parsed_url['fragment'])) {
+      $generated_url .= '#' . $parsed_url['fragment'];
+    }
+
+    return $generated_url;
+  }
+
+  return FALSE;
 }
 
 /**
@@ -479,9 +621,10 @@ function cf_http_get_webpage($server, $path, $port = 80, $headers = "Accept-Enco
 /**
  * Reads and processes a website page at the given path.
  *
- * @param $text
+ * @param $text_or_dom
  *   Hostname or ip address of the server.
  *   Should not contain http:// or similary prefixes.
+ *   If cf_dom is enabled, then this can instead be the cf_dom object.
  * @param $depth
  *   The amount of shrinkage to perform. Any number from 1 to 6.
  * @param $preserve
@@ -495,21 +638,95 @@ function cf_http_get_webpage($server, $path, $port = 80, $headers = "Accept-Enco
  *   - reduced: A boolean with TRUE representing that the text was successful
  *   reduced and FALSE otherwise.
  *   - text: The http text with all html headers reduced by $depth.
+ *     This is an empty string if $text_or_dom is a cf_dom object.
  *
  * @see: cf_http_get_webpage()
  */
-function cf_http_reduce_html_headers($text, $depth = 1, $preserve = TRUE) {
+function cf_http_reduce_html_headers($text_or_dom, $depth = 1, $preserve = TRUE) {
   $results = array('reduced' => FALSE, 'text' => '');
 
-  if (!is_string($text)) {
-    if (class_exists('cf_error')) {
-      cf_error::invalid_string('text');
+  if ($depth < 0 || $depth > 6) return $results;
+
+  if (class_exists('cf_dom') && ($text_or_dom instanceOf cf_dom)) {
+    if ($text_or_dom->is_loaded()) {
+      $body = $text_or_dom->get_body();
+
+      // HTML5 with hgroup allows for multiple simultaneous headers, do not change header if a parent is an hgroup.
+      $has_hgroup_parent = array();
+      $has_hgroup_parent[1] = array();
+      $has_hgroup_parent[2] = array();
+      $has_hgroup_parent[3] = array();
+      $has_hgroup_parent[4] = array();
+      $has_hgroup_parent[5] = array();
+      $has_hgroup_parent[6] = array();
+      $hgroups = $body->getElementsByTagName('hgroup');
+      foreach ($hgroups as $hgroup) {
+        foreach (array(6, 5, 4, 3, 2, 1) as $number) {
+          $header = $hgroup->getElementsByTagName('h' . $number);
+
+          foreach ($header as $h) {
+            $has_hgroup_parent[$number][] = $h;
+          }
+        }
+      }
+
+      foreach (array(6, 5, 4, 3, 2, 1) as $number) {
+        $reduced = $number + $depth;
+        $tag_name = 'h' . $number;
+
+        if ($reduced >= 6) {
+          $tag_next = 'div';
+        }
+        else {
+          $tag_next = 'h' . $reduced;
+        }
+
+        $elements = $body->getElementsByTagName($tag_name);
+
+        foreach ($elements as $element) {
+          $found_hgroup_element = FALSE;
+          foreach ($has_hgroup_parent[$number] as $e) {
+            if ($element === $e) {
+              $found_hgroup_element = TRUE;
+              break;
+            }
+          }
+
+          if ($found_hgroup_element) continue;
+
+          if ($element->hasAttribute('class')) {
+            $class = explode(' ', $element->getAttribute('class'));
+          }
+          else {
+            $class = array();
+          }
+
+          if ($reduced < 6 || $preserve) {
+            $class_name = 'cf_http-was_' . $tag_name;
+            if (!in_array($class_name, $class)) {
+              $class[] = $class_name;
+              $element->setAttribute('class', implode(' ', $class));
+            }
+          }
+
+          $text_or_dom->change_element($element, $tag_next);
+        }
+      }
+
+      $results['reduced'] = TRUE;
     }
 
     return $results;
   }
+  else {
+    if (!is_string($text_or_dom)) {
+      if (class_exists('cf_error')) {
+        cf_error::invalid_string('text_or_dom');
+      }
 
-  if ($depth < 0 || $depth > 6) return $results;
+      return $results;
+    }
+  }
 
   $results['text'] = $text;
 
