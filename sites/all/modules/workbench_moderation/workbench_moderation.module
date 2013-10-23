@@ -1850,7 +1850,7 @@ function workbench_moderation_workbench_block() {
 
   $info_block_messages[] = array(
     'type' => 'message',
-    'label' => t('Page Owner'),
+    'label' => t('Node Contact'),
     'message' => $owner_message,
     'class' => 'page_owner',
     'side' => 0,
