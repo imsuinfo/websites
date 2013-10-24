@@ -953,7 +953,6 @@ function search_by_page_menu() {
  * Implements hook_menu_alter().
  */
 function search_by_page_menu_alter(&$items) {
-drupal_set_message("DEBUG: " . print_r($items['search'], TRUE));
   // remove the core systems search page path.
   unset($items['search']);
 }
