@@ -203,5 +203,207 @@ function mcneese_functions_embed_registrar_schedule_content($semesters, $dates, 
 }
 
 /**
+ * Loads and prints the Network Services traffic data.
+ *
+ * @param string $url_path
+ *   Relative path on the server to the page to process.
+ * @param string $cache_id
+ *   (optional) a name to associate with the cache.
+ *   Assign as NULL to turn off caching.
+ * @param string $cache_expire
+ *   (optional) How long till the cache will expire using DateTime format.
+ *   This defaults to '+10 minutes'.
+ */
+function mcneese_functions_embed_network_services_traffic($url_path, $cache_id = NULL, $cache_expire = '+10 minutes') {
+  $markup = '';
+  $save_to_cache = FALSE;
+
+  if (!is_null($cache_id)) {
+    $markup = &drupal_static($cache_id, '');
+    $save_to_cache = TRUE;
+
+    if ($cache = cache_get($cache_id, 'cache_page')){
+      $markup = $cache->data;
+      $save_to_cache = FALSE;
+    }
+  }
+
+  $server_name = 'ns.mcneese.edu';
+  $error_detected = FALSE;
+
+  if (empty($markup)) {
+    $webpage = cf_http_get_webpage($server_name, $url_path . '/index.html');
+
+    if ($webpage['read'] === TRUE && $webpage['http_error']['error_code'] == 0){
+      $document = cf_http_split_response($webpage['document']);
+      $body = $document['dom']->get_body();
+      cf_http_adjust_urls($document['dom'], $server_name, $url_path);
+
+      // strip out H1 tags.
+      $document['dom']->remove_elements('h1', TRUE, FALSE);
+
+      // reduce all other header tags.
+      cf_http_reduce_html_headers($document['dom']);
+
+      // it is known that Dave Rand <dlr@bungi.com> email link does not use a mailto, so fix it.
+      $a_tags = $body->getElementsByTagName('a');
+      foreach ($a_tags as $a_tag) {
+        if ($a_tag->hasAttribute('href') && $a_tag->getAttribute('href') == 'http://' . $server_name . $url_path . '/dlr@bungi.com') {
+          $a_tag->setAttribute('href', 'mailto:dlr@bungi.com');
+        }
+      }
+
+      // walkthrough all tables and make the accessible.
+      $tables = $body->getElementsByTagName('table');
+
+      foreach ($tables as $table) {
+        $caption = $document['dom']->get_dom()->createElement('caption');
+        $thead = null;
+        $tbodys = $table->getElementsByTagName('tbody');
+
+        if ($tbodys->length == 0) {
+          $tbody = $document['dom']->get_dom()->createElement('tbody');
+        }
+        else {
+          $tbody = $table->removeChild($tbodys->item(0));
+        }
+
+        $total = $table->childNodes->length;
+        $count = 0;
+        for (; $count < $total; $count++) {
+          $child = $table->removeChild($table->childNodes->item(0));
+          if ($child->nodeName == 'tr') {
+            $tbody->appendChild($child);
+          }
+        }
+
+        $parent = $table->parentNode;
+        $parent_parent = $parent->parentNode;
+
+        if ($parent->hasAttribute('id')) {
+          $id = $parent->getAttribute('id');
+
+          if ($id == 'sysdetails') {
+            $caption_text = $document['dom']->get_dom()->createTextNode("System Details");
+            $caption->appendChild($caption_text);
+
+            for ($i = 0; $i < $tbody->childNodes->length; $i++) {
+              $item = $tbody->childNodes->item($i);
+              if ($item->tagName == 'tr' && $item->childNodes->length > 0) {
+                $child = $item->childNodes->item(0);
+
+                if (is_object($child)) {
+                  $child->setAttribute('scope', 'row');
+                  $document['dom']->change_element($child, 'th');
+                }
+              }
+            }
+
+            $table->setAttribute('summary', "A listing of system information.");
+          }
+          elseif ($id == 'legend') {
+            $caption_text = $document['dom']->get_dom()->createTextNode("Legend");
+            $caption->appendChild($caption_text);
+
+            $table->setAttribute('summary', "Legend for the graphs on this page.");
+
+            $table->appendChild($document['dom']->get_dom()->createElement('br'));
+            $table->appendChild($document['dom']->get_dom()->createElement('hr'));
+            $table->appendChild($document['dom']->get_dom()->createElement('br'));
+          }
+        }
+        else {
+          $thead = $document['dom']->get_dom()->createElement('thead');
+          $thead_tr = $document['dom']->get_dom()->createElement('tr');
+          $thead->appendChild($thead_tr);
+
+          $parent_parent->insertBefore($document['dom']->get_dom()->createElement('br'), $parent);
+          $parent_parent->insertBefore($document['dom']->get_dom()->createElement('hr'), $parent);
+          $parent_parent->insertBefore($document['dom']->get_dom()->createElement('br'), $parent);
+          $caption_found = FALSE;
+
+          $headers = $parent->getElementsByTagName('h2');
+          if ($headers->length > 0) {
+            $header = $headers->item(0)->cloneNode(TRUE);
+          }
+          else {
+            $headers = $parent->getElementsByTagName('h3');
+            if ($headers->length > 0) {
+              $header = $headers->item(0)->cloneNode(TRUE);
+            }
+          }
+
+          foreach ($header->childNodes as $child) {
+            if ($child instanceOf DOMText) {
+              $caption->appendChild($child);
+              $caption->setAttribute('class', 'element-invisible');
+              $caption_found = TRUE;
+              break;
+            }
+          }
+
+          if (!$caption_found) {
+            $caption_text = $document['dom']->get_dom()->createTextNode("Graph");
+            $caption->appendChild($caption_text);
+            $caption->setAttribute('class', 'element-invisible');
+          }
+
+          for ($i = 0; $i < $tbody->childNodes->length; $i++) {
+            $item = $tbody->childNodes->item($i);
+            if ($item->tagName == 'tr' && $item->childNodes->length > 0) {
+              if ($i == 0) {
+                while ($item->childNodes->length > 0) {
+                  $parent = $item->childNodes->item(0)->parentNode;
+                  $child = $parent->removeChild($item->childNodes->item(0));
+
+                  if ($child instanceOf DOMElement) {
+                    $thead_tr->appendChild($child);
+                    $document['dom']->change_element($child, 'th');
+                  }
+                }
+
+                $parent = $item->parentNode;
+                $parent->removeChild($item);
+              }
+              else {
+                $child = $item->childNodes->item(0);
+
+                if (is_object($child)) {
+                  $child->setAttribute('scope', 'row');
+                  $document['dom']->change_element($child, 'th');
+                }
+              }
+            }
+          }
+
+          $table->setAttribute('summary', "This table represents the summary data presented in the preceding graph.");
+        }
+
+        $table->appendChild($caption);
+        if (!is_null($thead)) $table->appendChild($thead);
+        $table->appendChild($tbody);
+      }
+
+      $markup = $document['dom']->get_markup();
+    }
+    else {
+      $markup = "An error occurred while loading the page." . '<br>';
+      $error_detected = TRUE;
+
+      if (isset($webpage['http_error']['error_code']) && $webpage['http_error']['error_code'] != 0){
+        $markup .= "Error Code = " . check_plain($webpage['http_error']['error_code']) . '<br>';
+      }
+    }
+
+    if ($save_to_cache && !$error_detected){
+      $reset_cache_interval = new DateTime($cache_expire);
+      cache_set($cache_id, $markup, 'cache_page', $reset_cache_interval->getTimestamp());
+    }
+  }
+
+  print($markup);
+}
+
+/**
  * @} End of '@defgroup mcneese_functions McNeese Functions'.
  */
