@@ -89,15 +89,15 @@ class cf_dom {
     @$this->dom->loadHTML($this->doctype . $this->content);
 
     $this->head = NULL;
-    $element = $this->dom->getElementsByTagName('head');
-    if ($element->length > 0) {
-      $this->head = $element->item(0);
+    $elements = $this->dom->getElementsByTagName('head');
+    if ($elements->length > 0) {
+      $this->head = $elements->item(0);
     }
 
     $this->body = NULL;
-    $element = $this->dom->getElementsByTagName('body');
-    if ($element->length > 0) {
-      $this->body = $element->item(0);
+    $elements = $this->dom->getElementsByTagName('body');
+    if ($elements->length > 0) {
+      $this->body = $elements->item(0);
     }
   }
 
@@ -138,7 +138,7 @@ class cf_dom {
     $head = $this->head;
     $this->head = NULL;
 
-    if (($head instanceOf DOMElement)) {
+    if (($head instanceOf DOMNode)) {
       $this->p_remove_elements('head', $head);
       $this->dom->importNode($head, TRUE);
     }
@@ -152,7 +152,7 @@ class cf_dom {
     $body = $this->body;
     $this->body = NULL;
 
-    if (($body instanceOf DOMElement)) {
+    if (($body instanceOf DOMNode)) {
       $this->p_remove_elements('body', $body);
       $this->dom->importNode($body, TRUE);
     }
@@ -163,6 +163,16 @@ class cf_dom {
     }
 
     return TRUE;
+  }
+
+  /**
+   * Gets the DOMDOcument object.
+   *
+   * @return DOMDocument|null
+   *   The assigned dom document.
+   */
+  public function get_dom() {
+    return $this->dom;
   }
 
   /**
@@ -198,7 +208,7 @@ class cf_dom {
   /**
    * Gets the loaded head element.
    *
-   * @return DOMElement|null
+   * @return DOMNode|null
    *   The DomElement for the head element or NULL.
    */
   public function get_head() {
@@ -208,7 +218,7 @@ class cf_dom {
   /**
    * Gets the loaded body element.
    *
-   * @return DOMElement|null
+   * @return DOMNode|null
    *   The DomElement for the body element or NULL.
    */
   public function get_body() {
@@ -233,7 +243,7 @@ class cf_dom {
    */
   public function get_markup($include_tag = FALSE, $on_body = TRUE) {
     if ($on_body) {
-      if (!($this->body instanceof DOMElement)) {
+      if (!($this->body instanceof DOMNode)) {
         if (class_exists('cf_error')) {
           cf_error::invalid_object('this->body');
         }
@@ -244,7 +254,7 @@ class cf_dom {
       return $this->p_get_markup($include_tag, $this->body);
     }
 
-    if (!($this->head instanceof DOMElement)) {
+    if (!($this->head instanceof DOMNode)) {
       if (class_exists('cf_error')) {
         cf_error::invalid_object('this->head');
       }
@@ -258,13 +268,13 @@ class cf_dom {
   /**
    * Changes the element from one type to another.
    *
-   * @param DOMElement $element
+   * @param DOMNode $element
    *   The element whose type will be changed.
    * @param string $type
    *   The new element type to use.
    *
-   * @return bool
-   *   TRUE on success, FALSE otherwise.
+   * @return DOMNode |bool
+   *   The changed element on success, FALSE otherwise.
    */
   public function change_element($element, $type) {
     if (!($this->dom instanceof DOMDocument)) {
@@ -275,7 +285,7 @@ class cf_dom {
       return FALSE;
     }
 
-    if (!($element instanceof DOMElement)) {
+    if (!($element instanceof DOMNode)) {
       if (class_exists('cf_error')) {
         cf_error::invalid_object('element');
       }
@@ -315,7 +325,7 @@ class cf_dom {
     }
 
     if ($on_body) {
-      if (!($this->body instanceof DOMElement)) {
+      if (!($this->body instanceof DOMNode)) {
         if (class_exists('cf_error')) {
           cf_error::invalid_object('this->body');
         }
@@ -326,7 +336,7 @@ class cf_dom {
       return $this->p_change_elements($old_type, $new_type, $this->head);
     }
 
-    if (!($this->head instanceof DOMElement)) {
+    if (!($this->head instanceof DOMNode)) {
       if (class_exists('cf_error')) {
         cf_error::invalid_object('this->head');
       }
@@ -343,14 +353,18 @@ class cf_dom {
    * This preserves child elements.
    * To remove entirely, use removeElement() directly.
    *
-   * @param DOMElement $element
+   * @param DOMNode $element
    *   The object to convert to markup text.
+   * @param bool $preserve_children
+   *   (optional) If TRUE, children are preserved.
+   *   If FALSE, children are lost.
+   *   Defaults to TRUE.
    *
    * @return bool
-   *   TRUE on success, FALSE otherwise.
+   *   The removed element on success, FALSE otherwise.
    */
-  public function remove_element($element) {
-    if (!($element instanceof DOMElement)) {
+  public function remove_element($element, $preserve_children = TRUE) {
+    if (!($element instanceof DOMNode)) {
       if (class_exists('cf_error')) {
         cf_error::invalid_object('element');
       }
@@ -358,7 +372,15 @@ class cf_dom {
       return FALSE;
     }
 
-    return $this->p_remove_element($element);
+    if (!is_bool($preserve_children)) {
+      if (class_exists('cf_error')) {
+        cf_error::invalid_bool('preserve_children');
+      }
+
+      return FALSE;
+    }
+
+    return $this->p_remove_element($element, $preserve_children);
   }
 
   /**
@@ -373,11 +395,15 @@ class cf_dom {
    *   If TRUE, operate on body element.
    *   If FALSE, operate on head element.
    *   This defaults to TRUE.
+   * @param bool $preserve_children
+   *   (optional) If TRUE, children are preserved.
+   *   If FALSE, children are lost.
+   *   Defaults to TRUE.
    *
    * @return bool
    *   TRUE on success, FALSE otherwise.
    */
-  public function remove_elements($type, $on_body = TRUE) {
+  public function remove_elements($type, $on_body = TRUE, $preserve_children = TRUE) {
     if (!is_bool($on_body)) {
       if (class_exists('cf_error')) {
         cf_error::invalid_bool('on_body');
@@ -390,8 +416,16 @@ class cf_dom {
       return FALSE;
     }
 
+    if (!is_bool($preserve_children)) {
+      if (class_exists('cf_error')) {
+        cf_error::invalid_bool('preserve_children');
+      }
+
+      return FALSE;
+    }
+
     if ($on_body) {
-      if (!($this->body instanceof DOMElement)) {
+      if (!($this->body instanceof DOMNode)) {
         if (class_exists('cf_error')) {
           cf_error::invalid_object('this->body');
         }
@@ -399,10 +433,10 @@ class cf_dom {
         return FALSE;
       }
 
-      return $this->p_remove_elements($type, $this->body);
+      return $this->p_remove_elements($type, $this->body, $preserve_children);
     }
 
-    if (!($this->head instanceof DOMElement)) {
+    if (!($this->head instanceof DOMNode)) {
       if (class_exists('cf_error')) {
         cf_error::invalid_object('this->head');
       }
@@ -410,7 +444,7 @@ class cf_dom {
       return FALSE;
     }
 
-    return $this->p_remove_elements($type, $this->head);
+    return $this->p_remove_elements($type, $this->head, $preserve_children);
   }
 
   /**
@@ -420,7 +454,7 @@ class cf_dom {
    *   (optional) When TRUE, the head tag itself will be included in the
    *   output. When FALSE, only the contents of the tag will be included
    *   in the output. Defaults to FALSE.
-   * @param DOMElement $parent
+   * @param DOMNode $parent
    *   The object to operate on.
    *
    * @return string|bool
@@ -445,19 +479,19 @@ class cf_dom {
   /**
    * Changes the element from one type to another.
    *
-   * @param DOMElement $element
+   * @param DOMNode $element
    *   The element whose type will be changed.
    * @param string $type
    *   The new element type to use.
    *
    * @return bool
-   *   TRUE on success, FALSE otherwise.
+   *   The changed element on success, FALSE otherwise.
    */
   private function p_change_element($element, $type) {
     $parent = $element->parentNode;
     $new = $this->dom->createElement($type);
 
-    if (!($new instanceof DOMElement)) {
+    if (!($new instanceof DOMNode)) {
       return FALSE;
     }
 
@@ -473,7 +507,30 @@ class cf_dom {
       }
     }
 
-    return $parent->replaceChild($new, $element) !== FALSE;
+    if ($parent instanceOf DOMNode) {
+      $child = $parent->replaceChild($new, $element);
+    }
+    else {
+      $this->dom->appendChild($element);
+      $child = $this->dom->replaceChild($new, $element);
+
+      if ($child instanceof DOMNode) {
+        $parent = $child->parentNode;
+
+        if ($parent instanceOf DOMNode) {
+          $this->dom->removeChild($child);
+        }
+      }
+      else {
+        $this->dom->removeChild($element);
+      }
+    }
+
+    if ($child instanceOf DOMNode) {
+      return $child;
+    }
+
+    return FALSE;
   }
 
   /**
@@ -481,7 +538,7 @@ class cf_dom {
    *
    * @param string $type
    *   The new element type to operate on.
-   * @param DOMElement $parent
+   * @param DOMNode $parent
    *   The object to operate on.
    *
    * @return bool
@@ -506,20 +563,24 @@ class cf_dom {
    * This preserves child elements.
    * To remove entirely, use removeElement() directly.
    *
-   * @param DOMElement $element
+   * @param DOMNode $element
    *   The object to convert to markup text.
+   * @param bool $preserve_children
+   *   (optional) If TRUE, children are preserved.
+   *   If FALSE, children are lost.
+   *   Defaults to TRUE.
    *
    * @return bool
-   *   TRUE on success, FALSE otherwise.
+   *   The removed element on success, FALSE otherwise.
    */
-  private function p_remove_element($element) {
+  private function p_remove_element($element, $preserve_children = TRUE) {
     $parent = $element->parentNode;
 
-    if (!($parent instanceof DOMElement)) {
+    if (!($parent instanceof DOMNode)) {
       return FALSE;
     }
 
-    if ($element->hasChildNodes()) {
+    if ($preserve_children && $element->hasChildNodes()) {
       $children = array();
 
       foreach ($element->childNodes as $child) {
@@ -536,7 +597,12 @@ class cf_dom {
     }
 
     $child = $parent->removeChild($element);
-    return $child instanceof DOMElement;
+
+    if ($child instanceof DOMNode) {
+      return $child;
+    }
+
+    return FALSE;
   }
 
   /**
@@ -547,18 +613,22 @@ class cf_dom {
    *
    * @param string $type
    *   The new element type to operate on.
-   * @param DOMElement $parent
+   * @param DOMNode $parent
    *   The object to operate on.
+   * @param bool $preserve_children
+   *   (optional) If TRUE, children are preserved.
+   *   If FALSE, children are lost.
+   *   Defaults to TRUE.
    *
    * @return bool
    *   TRUE on success, FALSE otherwise.
    */
-  private function p_remove_elements($type, $parent) {
+  private function p_remove_elements($type, $parent, $preserve_children = TRUE) {
     $result = TRUE;
 
     $elements = $parent->getElementsByTagName($type);
     foreach ($elements as $element) {
-      $result = $this->p_remove_element($element);
+      $result = $this->p_remove_element($element, $preserve_children);
 
       if (!$result) break;
     }
