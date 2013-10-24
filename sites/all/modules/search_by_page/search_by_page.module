@@ -950,6 +950,15 @@ function search_by_page_menu() {
 }
 
 /**
+ * Implements hook_menu_alter().
+ */
+function search_by_page_menu_alter(&$items) {
+drupal_set_message("DEBUG: " . print_r($items['search'], TRUE));
+  // remove the core systems search page path.
+  unset($items['search']);
+}
+
+/**
  * Implements hook_permission().
  */
 function search_by_page_permission() {
@@ -1081,19 +1090,33 @@ function search_by_page_i18n_string_info() {
 /**
  * Returns a ready-to-render search form and/or results page.
  *
+ * This functions similar to search_view().
+ *
  * @param $envstring
  *   The environment ID, with 'env' prepended, to avoid argument substitution
  *   in hook_menu().
+ *
+ * @see search_view()
  */
 function _search_by_page_view($envstring) {
   $environment = intval(drupal_substr($envstring, 3));
 
   // This pretty much follows search_view()
 
-  $path = explode('/', $_GET['q'], 2);
+  $search_path = search_by_page_setting_get('page_path', $environment, 'search_pages');
+  $search_path_parts = explode('/', $search_path);
+  $search_path_count = count($search_path_parts);
+
+  $path_parts = explode('/', $_GET['q']);
+
+  for ($i = 0; $i < $search_path_count; $i++) {
+    unset($path_parts[$i]);
+  }
+
+  // Get search results and display them.
   $keys = '';
-  if (count($path) > 1) {
-    $keys = trim($path[1]);
+  if (count($path_parts) > 0) {
+    $keys = trim(reset($path_parts));
   }
 
   $build = array();
@@ -1101,13 +1124,9 @@ function _search_by_page_view($envstring) {
   // Display a search form
   $build['search_form'] = drupal_get_form('search_by_page_form', $environment, $keys, FALSE);
 
-  // Get search results and display them.
-
-  $path = search_by_page_setting_get('page_path', $environment, 'search_pages');
-
   if ($keys) {
     watchdog('search_by_page', '%keys', array('%keys' => $keys),
-      WATCHDOG_NOTICE, l(t('results'), $path . '/' . $keys));
+      WATCHDOG_NOTICE, l(t('results'), $search_path . '/' . $keys));
 
     $keys = search_expression_insert($keys, 'environment', $environment);
     $results = search_data($keys, 'search_by_page');
