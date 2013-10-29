@@ -358,6 +358,12 @@ function mcneese_file_db_load_file($by = '', $arg1 = '', $arg2 = '', $arg3 = '')
 
   // @todo: perform access control
 
+  // if headers were already sent, then this function should simply exit because it requires sending headers itself.
+  if (headers_sent()) {
+    watchdog('File DB', "Headers were already sent when calling mcneese_file_db_load_file('%by', '%arg1', '%arg2', '%arg3').", array('%by' => $by, '%arg1' => $arg1, '%arg2' => $arg2, '%arg3' => $arg3), WATCHDOG_ERROR);
+    return FALSE;
+  }
+
   // load the file based on the arguments
   if ($by == MCNEESE_FILE_DB_PATH_BY_HASH || $by == MCNEESE_FILE_DB_PATH_BY_HASH_SUM) {
     // $arg1 = checksum
@@ -524,11 +530,12 @@ function mcneese_file_db_load_file($by = '', $arg1 = '', $arg2 = '', $arg3 = '')
     }
 
     if ($by == MCNEESE_FILE_DB_PATH_BY_HASH || $by == MCNEESE_FILE_DB_PATH_BY_ID) {
-      if (ob_get_level()) {
-        ob_end_clean();
-        ob_end_flush();
+      // make sure to perform output buffer (if possible) to reduce chances of "headers already sent" issues.
+      $ob_level = ob_get_level();
+      for ($i = 0; $i < $ob_level; $i++) {
+        ob_clean();
       }
-
+      ob_start();
 
       $short_location = '/' . MCNEESE_FILE_DB_FILE_PATH . '/' . MCNEESE_FILE_DB_PATH_BY_HASH;
       $short_location .= '/' . substr($file_meta->checksum, 0, MCNEESE_FILE_DB_SHORT_SUM_SIZE);
@@ -544,6 +551,10 @@ function mcneese_file_db_load_file($by = '', $arg1 = '', $arg2 = '', $arg3 = '')
           header('HTTP/1.1 416 Requested Range Not Satisfiable', TRUE, 416);
           header('Content-Length: ' . $filesize);
           header("Content-Range: bytes " . $filesize);
+
+          // flush buffer after headers have been processed (to hopefully avoid "headers already sent" issues).
+          ob_end_flush();
+
           exit();
         }
 
@@ -566,6 +577,9 @@ function mcneese_file_db_load_file($by = '', $arg1 = '', $arg2 = '', $arg3 = '')
       header('Last-Modified: ' . date('r', strtotime($file_meta->timestamp)));
       header('Expires: ' . date('r', strtotime('+14 days', REQUEST_TIME)));
       header('Date: ' . date('r', REQUEST_TIME));
+
+      // flush buffer after headers have been processed (to hopefully avoid "headers already sent" issues).
+      ob_end_flush();
 
       // ETag cache optimization and other http header responses.
       if ($not_modified) {
@@ -597,10 +611,12 @@ function mcneese_file_db_load_file($by = '', $arg1 = '', $arg2 = '', $arg3 = '')
       exit();
     }
     else if ($by == MCNEESE_FILE_DB_PATH_BY_HASH_SUM) {
-      if (ob_get_level()) {
-        ob_end_clean();
-        ob_end_flush();
+      // make sure to perform output buffer (if possible) to reduce chances of "headers already sent" issues.
+      $ob_level = ob_get_level();
+      for ($i = 0; $i < $ob_level; $i++) {
+        ob_clean();
       }
+      ob_start();
 
       $short_location = '/' . MCNEESE_FILE_DB_FILE_PATH . '/' . MCNEESE_FILE_DB_PATH_BY_HASH_SUM;
       $short_location .= '/' . substr($file_meta->checksum, 0, MCNEESE_FILE_DB_SHORT_SUM_SIZE);
@@ -621,6 +637,9 @@ function mcneese_file_db_load_file($by = '', $arg1 = '', $arg2 = '', $arg3 = '')
       header('Last-Modified: ' . date('r', strtotime($file_meta->timestamp)));
       header('Expires: ' . date('r', strtotime('+14 days', REQUEST_TIME)));
       header('Date: ' . date('r', REQUEST_TIME));
+
+      // flush buffer after headers have been processed (to hopefully avoid "headers already sent" issues).
+      ob_end_flush();
 
       print($data);
     }
