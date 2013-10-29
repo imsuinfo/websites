@@ -405,5 +405,96 @@ function mcneese_functions_embed_network_services_traffic($url_path, $cache_id =
 }
 
 /**
+ * Loads and prints the NTAS widget from dhs.gov
+ *
+ * @param string $cache_id
+ *   (optional) a name to associate with the cache.
+ *   Assign as NULL to turn off caching.
+ * @param string $cache_expire
+ *   (optional) How long till the cache will expire using DateTime format.
+ *   This defaults to '+1 minutes'.
+ */
+function mcneese_functions_embed_ntas_widget($cache_id = NULL, $cache_expire = '+1 minutes') {
+  $markup = '';
+  $save_to_cache = FALSE;
+
+  if (!is_null($cache_id)) {
+    $markup = &drupal_static($cache_id, '');
+    $save_to_cache = TRUE;
+
+    if ($cache = cache_get($cache_id, 'cache_page')){
+      $markup = $cache->data;
+      $save_to_cache = FALSE;
+    }
+  }
+
+  $server_name = 'www.dhs.gov';
+  $url_path = '/ntas';
+  $port = 80;
+  $error_detected = FALSE;
+
+  global $is_https;
+
+  if (empty($markup)) {
+    $headers = "Accept-Encoding: deflate\r\n";
+    $headers .= "Accept-Language: en-US,en;q=0.8\r\n";
+    $headers .= "User-Agent: Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/27.0.1453.110 Safari/537.36\r\n";
+    $webpage = cf_http_get_webpage($server_name, $url_path, $port, $headers);
+
+    if ($webpage['read'] === TRUE && $webpage['http_error']['error_code'] == 0){
+      $document = cf_http_split_response($webpage['document']);
+      $body = $document['dom']->get_body();
+      cf_http_adjust_urls($document['dom'], $server_name, $url_path);
+
+      // strip out H1 tags.
+      $document['dom']->remove_elements('h1', TRUE, FALSE);
+
+      // strip out title, link, and meta tags
+      $document['dom']->remove_elements('title', TRUE, FALSE);
+      $document['dom']->remove_elements('link', TRUE, FALSE);
+      $document['dom']->remove_elements('meta', TRUE, FALSE);
+
+      // reduce all other header tags.
+      cf_http_reduce_html_headers($document['dom']);
+
+      if ($is_https) {
+        $a_tags = $body->getElementsByTagName('a');
+        foreach ($a_tags as $a_tag) {
+          if ($a_tag->hasAttribute('href')) {
+            $a_href = preg_replace('@http://@i', 'https://', $a_tag->getAttribute('href'));
+            $a_tag->setAttribute('href', $a_href);
+          }
+        }
+
+        $img_tags = $body->getElementsByTagName('img');
+        foreach ($img_tags as $img_tag) {
+          if ($img_tag->hasAttribute('src')) {
+            $img_src = preg_replace('@http://@i', 'https://', $img_tag->getAttribute('src'));
+            $img_tag->setAttribute('src', $img_src);
+          }
+        }
+      }
+
+      $markup = $document['dom']->get_markup();
+    }
+    else {
+      $markup = "An error occurred while loading the NTAS widget. <a href='https://www.dhs.gov/ntas/'>Try visiting the widget directly</a>." . '<br>';
+      $error_detected = TRUE;
+
+      if (isset($webpage['http_error']['error_code']) && $webpage['http_error']['error_code'] != 0){
+        $markup .= "Error Code = " . check_plain($webpage['http_error']['error_code']) . '<br>';
+      }
+    }
+
+    if ($save_to_cache && !$error_detected){
+      $reset_cache_interval = new DateTime($cache_expire);
+      cache_set($cache_id, $markup, 'cache_page', $reset_cache_interval->getTimestamp());
+    }
+  }
+
+  print($markup);
+}
+
+/**
  * @} End of '@defgroup mcneese_functions McNeese Functions'.
  */
