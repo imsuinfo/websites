@@ -1197,6 +1197,13 @@ function _drupal_set_preferred_header_name($name = NULL) {
  */
 function drupal_send_headers($default_headers = array(), $only_default = FALSE) {
   $headers_sent = &drupal_static(__FUNCTION__, FALSE);
+
+  if (headers_sent()) {
+    $headers_sent = TRUE;
+    watchdog('system', "Headers have already been sent.", array(), WATCHDOG_ERROR);
+    return;
+  }
+
   $headers = drupal_get_http_header();
   if ($only_default && $headers_sent) {
     $headers = array();
