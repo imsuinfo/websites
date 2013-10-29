@@ -586,8 +586,8 @@ function mcneese_file_db_load_file($by = '', $arg1 = '', $arg2 = '', $arg3 = '')
         exit();
       }
 
-      // TODO: if the filesize is known, turn off the timeout and user a counter below?
-      #@set_time_limit(0);
+      // Set a massive timelimit of 3 days as a failsafe to prevent scripts from executing indefinitely.
+      @set_time_limit(259200);
 
       $in = fopen($filepath, 'rb');
 
