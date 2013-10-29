@@ -440,8 +440,8 @@ function mcneese_content_formats_fix_markup(&$value) {
       }
     }
 
-    // replace name with id (deprecate name tag, except on image maps).
-    if ($tag->hasAttribute('name') && $tag->tagName != "map") {
+    // replace name with id (deprecate name tag, except on image maps and params).
+    if ($tag->hasAttribute('name') && $tag->tagName != "map" && $tag->tagName != "param") {
       $name_value = $tag->getAttribute('name');
       $tag->removeAttribute('name');
       $tag->setAttribute('id', $name_value);
