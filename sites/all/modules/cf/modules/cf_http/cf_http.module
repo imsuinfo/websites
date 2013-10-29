@@ -728,7 +728,7 @@ function cf_http_reduce_html_headers($text_or_dom, $depth = 1, $preserve = TRUE)
     }
   }
 
-  $results['text'] = $text;
+  $results['text'] = $text_or_dom;
 
   foreach (array(6, 5, 4, 3, 2, 1) as $number) {
     $reduced = $number + $depth;
