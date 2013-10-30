@@ -1480,7 +1480,8 @@ class cf_error {
         $variables_array['%cf_error-backtrace'] = self::p_generate_backtrace($short_backtrace);
       }
       else {
-        $variables_array['%cf_error-backtrace'] = self::p_generate_backtrace($error->get_backtrace());
+        $full_backtrace = $error->get_backtrace();
+        $variables_array['%cf_error-backtrace'] = self::p_generate_backtrace($full_backtrace);
       }
 
       $message .= " \nBacktrace: %cf_error-backtrace";
