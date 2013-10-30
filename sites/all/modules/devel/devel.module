@@ -1049,6 +1049,9 @@ function devel_shutdown_real() {
     // Try not to break non html pages.
     if (function_exists('drupal_get_http_header')) {
       $header = drupal_get_http_header('content-type');
+      if (is_array($header)) {
+        $header = isset($header['value']) ? $header['value'] : FALSE;
+      }
       if ($header) {
         $formats = array('xml', 'javascript', 'json', 'plain', 'image', 'application', 'csv', 'x-comma-separated-values');
         foreach ($formats as $format) {
