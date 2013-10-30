@@ -106,7 +106,7 @@ function mcneese_content_form_webform_client_form_alter(&$form, &$form_state) {
   if ($is_https) {
     // make sure webform links go to https pages
     $form['#https'] = TRUE;
-    $form['#submit'][] = 'webform_ssl_webform_client_form_submit';
+    $form['#submit'][] = 'mcneese_content_webform_client_form_submit';
   }
   else {
     // if webforms are not already in https connections, then force them to be.
