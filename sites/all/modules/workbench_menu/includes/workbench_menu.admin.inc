@@ -89,7 +89,7 @@ function workbench_menu_edit_settings($access_type = NULL, $access_id = NULL) {
   $header = array(t("Menu Name"), t("Menu Path"), t("Menu ID"), t("Access ID"));
   $attributes = array();
   $attributes['summary'] = t("A listing of menus containing links for making changes to each individual menu.");
-  $output .= theme('table', array('header' => $header, 'rows' => $rows, 'caption' => t("Workbench Menu Settings"), 'attributes' => $attributes, 'empty' => t("There are no menus available for you to edit.")));
+  $output .= theme('table', array('header' => $header, 'rows' => $rows, 'caption' => t("Workbench Menus"), 'attributes' => $attributes, 'empty' => t("There are no menus available for you to edit.")));
   $build['content']['#markup'] = $output;
   return $build;
 }
@@ -513,7 +513,7 @@ function workbench_menu_admin_settings($access_type = NULL, $access_id = NULL) {
   $header = array(t("Menu Name"), t("Menu Path"), t("Menu ID"), t("Access ID"));
   $attributes = array();
   $attributes['summary'] = t("A listing of menus containing links for making changes to each individual menu.");
-  $output .= theme('table', array('header' => $header, 'rows' => $rows, 'caption' => t("Workbench Menu Settings"), 'attributes' => $attributes, 'empty' => t("There are no menus available for you to edit.")));
+  $output .= theme('table', array('header' => $header, 'rows' => $rows, 'caption' => t("Workbench Menus"), 'attributes' => $attributes, 'empty' => t("There are no menus available for you to edit.")));
   $build['content']['#markup'] = $output;
   return $build;
 }
