@@ -528,6 +528,17 @@ function workbench_access_editors($access_type = NULL, $access_type_id = NULL, $
     if (user_access('administer workbench access')) {
       $output .= ' ' . t('You may <a href="!url">enable or disable sections</a>.', array('!url' => url('admin/config/workbench/access/sections'))) . '</p>';
     }
+
+    $roles = workbench_access_get_roles('access workbench access by role');
+    if (empty($roles)) {
+      if (user_access('administer permissions')) {
+        return t('To continue, at least one role must be have the <a href="!url">Allow all members of this role to be assigned to Workbench Access sections</a> permission', array('!url' => url('admin/people/permissions', array('fragment' => 'module-workbench_access'))));
+      }
+      else {
+        return t('There are no roles who have permission to edit sections. Please contact a site administrator.');
+      }
+    }
+
     $rows = array();
     foreach ($active['tree'] as $access_id => $section) {
       if (!isset($active['active'][$access_id])) {
@@ -540,15 +551,6 @@ function workbench_access_editors($access_type = NULL, $access_type_id = NULL, $
       $row = array(
         str_repeat('-', $section['depth'] ) . ' ' . l($section['name'], 'admin/config/workbench/access/' . "{$type}s/" . $active['access_scheme']['access_type'] . '/' . $access_id),
       );
-      $roles = workbench_access_get_roles('access workbench access by role');
-      if (empty($roles)) {
-        if (user_access('administer permissions')) {
-          return t('To continue, at least one role must be have the <a href="!url">Allow all members of this role to be assigned to Workbench Access sections</a> permission', array('!url' => url('admin/people/permissions', array('fragment' => 'module-workbench_access'))));
-        }
-        else {
-          return t('There are no roles who have permission to edit sections. Please contact a site administrator.');
-        }
-      }
       if ($type == 'editor') {
         if (!isset($roles[DRUPAL_AUTHENTICATED_RID])) {
           $count = db_query("SELECT COUNT(DISTINCT wau.uid) FROM {workbench_access_user} wau
