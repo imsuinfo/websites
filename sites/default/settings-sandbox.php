@@ -654,15 +654,21 @@ $conf['workbench_access_label'] = "Group";
 
 
 /**
+ * Webform default settings
+ */
+$conf['webform_export_encoding'] = 'UTF-8';
+
+
+/**
  * Workbench menu default settings
  */
 $conf['workbench_menu_item_use_normal_path'] = TRUE;
 
 
 /**
- * Webform default settings
+ * McNeese Content Management Setings
  */
-$conf['webform_export_encoding'] = 'UTF-8';
+$conf['mcneese_management_group_leader_unassigned'] = 197; # 197 = nobody
 
 
 /**
@@ -675,6 +681,6 @@ $conf['phplot_api_default_scheme'] = 'public';
 
 
 // enable all errors
-error_reporting(E_ALL);
-ini_set('display_errors', TRUE);
-ini_set('display_startup_errors', TRUE);
+#error_reporting(E_ALL);
+#ini_set('display_errors', TRUE);
+#ini_set('display_startup_errors', TRUE);

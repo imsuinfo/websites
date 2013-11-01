@@ -666,6 +666,12 @@ $conf['workbench_menu_item_use_normal_path'] = TRUE;
 
 
 /**
+ * McNeese Content Management Setings
+ */
+$conf['mcneese_management_group_leader_unassigned'] = 197; # 197 = nobody
+
+
+/**
  * Additional file_db variables.
  */
 $conf['file_db_server_id'] = 1;

@@ -221,7 +221,7 @@ $databases = array (
       'username' => 'www_user',
       'password' => $dbp['www_user'],
       'host' => '192.251.101.224',
-      'port' => '5092',
+      'port' => '5192',
       'driver' => 'pgsql',
       'prefix' => '',
       'transactions' => TRUE,
@@ -663,6 +663,12 @@ $conf['webform_export_encoding'] = 'UTF-8';
  * Workbench menu default settings
  */
 $conf['workbench_menu_item_use_normal_path'] = TRUE;
+
+
+/**
+ * McNeese Content Management Setings
+ */
+$conf['mcneese_management_group_leader_unassigned'] = 197; # 197 = nobody
 
 
 /**
