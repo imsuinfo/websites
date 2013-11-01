@@ -255,6 +255,7 @@ function mcneese_management_group_leader_operation_form_submit($form, &$form_sta
     return;
   }
 
+
   // save the group leader.
   $leaders = variable_get('mcneese_management_group_leaders', array());
   $leaders[$form['access_id']['#value']] = $user_id;
@@ -265,6 +266,15 @@ function mcneese_management_group_leader_operation_form_submit($form, &$form_sta
 
   if ($changed === FALSE) {
     watchdog('alert', "Failed to assign group leader %user to all associated nodes.", array('%user' => $user));
+  }
+
+
+  // redirect after submitting.
+  if (empty($form_state['values']['redirect_to'])) {
+    $form_state['redirect'] = 'admin/content/management/group_leader';
+  }
+  else {
+    $form_state['redirect'] = $form_state['values']['redirect_to'];
   }
 }
 
