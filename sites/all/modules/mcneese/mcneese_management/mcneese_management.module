@@ -23,6 +23,11 @@ function mcneese_management_permission() {
     'description' => t("Grants permissions to manage emergency content."),
   );
 
+  $permissions['mcneese management group leader'] = array(
+    'title' => t("Manage Group Leaders"),
+    'description' => t("Grants permissions to manage group leaders."),
+  );
+
   return $permissions;
 }
 
@@ -33,7 +38,7 @@ function mcneese_management_menu() {
   $items = array();
 
   $items['admin/content/management/emergency'] = array(
-    'title' => "Emergency Settings",
+    'title' => "Emergency",
     'description' => "View emergency status and manage emergency settings.",
     'page callback' => 'drupal_get_form',
     'page arguments' => array('mcneese_management_emergency_settings_page'),
@@ -53,7 +58,60 @@ function mcneese_management_menu() {
     'type' => MENU_CALLBACK,
   );
 
+  $items['admin/content/management/group_leader'] = array(
+    'title' => "Group Leader",
+    'description' => "View and manage group leader settings.",
+    'page callback' => 'mcneese_management_group_leader_settings_page',
+    'file' => 'mcneese_management_group_leader_page.inc',
+    'file path' => drupal_get_path('module', 'mcneese_management') . '/pages',
+    'access callback' => 'user_access',
+    'access arguments' => array('mcneese management group leader'),
+    'tab_parent' => 'admin/content/management',
+    'type' => MENU_LOCAL_TASK,
+  );
+
+  $items['admin/content/management/group_leader/assign/%'] = array(
+    'title' => "Group Leader",
+    'description' => "Assign a group leader for some group.",
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('mcneese_management_group_leader_operation_form', 5),
+    'file' => 'mcneese_management_group_leader_page.inc',
+    'file path' => drupal_get_path('module', 'mcneese_management') . '/pages',
+    'access callback' => 'user_access',
+    'access arguments' => array('mcneese management group leader'),
+  );
+
+  $items['admin/content/management/group_leader/ajax/autocomplete/group_leader'] = array(
+    'title' => '',
+    'page callback' => 'mcneese_management_autocomplete_group_leader',
+    'access callback' => 'user_access',
+    'access arguments' => array('mcneese management group leader'),
+    'type' => MENU_CALLBACK,
+  );
+
   return $items;
+}
+
+/**
+ * Implements hook_node_presave().
+ */
+function mcneese_management_node_presave($node) {
+  // assign the node uid as the group leader whenever field_group is available.
+  if (property_exists($node, 'field_group')) {
+    $access_id = $node->field_group['und'][0]['tid'];
+
+    if (!empty($access_id)) {
+      $leaders = variable_get('mcneese_management_group_leaders', array());
+
+      if (isset($leaders[$access_id])) {
+        $node->uid = $leaders[$access_id];
+      }
+      else {
+        $fallback_uid = variable_get('mcneese_management_group_leader_unassigned', 1);
+        $node->uid = $fallback_uid;
+      }
+    }
+  }
 }
 
 /**
@@ -162,6 +220,164 @@ function mcneese_management_set_emergency_mode($emergency_mode) {
  */
 function mcneese_management_set_emergency_node($node_id) {
   variable_set('emergency_node', $node_id);
+}
+
+/**
+ * Checks to see if the group leader dependencies are met.
+ *
+ * @return string|null
+ *   When all dependencies are met, NULL is returned.
+ *   A non-null string is returned when the dependencies have not been met.
+ *   This string is the message explaining the reason for dependency failure.
+ */
+function mcneese_management_check_group_leader_dependencies() {
+  if (!function_exists('workbench_access_get_access_tree') || !function_exists('workbench_menu_get_menus')) {
+    return t("Group Leader settings are for sites that use the Workbench Access and the Workbench Menu modules. Enable Workbench Access module (taxonomy) and Workbench Menu module to utilize this functionality");
+  }
+
+  $access = workbench_access_get_access_tree();
+  $active = workbench_access_get_active_tree();
+  if (!$active) {
+    return workbench_access_configuration_needed_message();
+  }
+
+  if ($active['access_scheme']['access_type'] != 'taxonomy') {
+    return t("Group Leader settings require the Workbench Access to be using a taxonomy based access scheme.");
+  }
+
+  return NULL;
+}
+
+/**
+ * Provide ajax autocomplete for users.
+ */
+function mcneese_management_autocomplete_group_leader($username = '') {
+  $matches = array();
+
+  if (!is_string($username)) {
+    if (class_exists('cf_error')) {
+      cf_error::invalid_string('username');
+    }
+
+    drupal_json_output($matches);
+    return;
+  }
+
+  $query = db_select('users', 'u');
+  $query->fields('u', array('uid', 'name'));
+  $query->condition('u.name', db_like($username) . '%', 'ILIKE');
+  $query->range(0, 10);
+  $query->orderby('u.name');
+
+  $results = (array) $query->execute()->fetchAll();
+  foreach ($results as $result) {
+    $value = $result->name . ' [uid:' . $result->uid. ']';
+    $matches[$value] = check_plain($value);
+  }
+
+  $matched = count($matches);
+
+  if ($matched < 9) {
+    $query = db_select('users', 'u');
+    $query->fields('u', array('uid', 'name'));
+    $query->condition('u.name', '%' . db_like($username) . '%', 'ILIKE');
+    $query->range(0, 10 - $matched);
+    $query->orderby('u.name');
+
+    $results = (array) $query->execute()->fetchAll();
+    foreach ($results as $result) {
+      $value = $result->name . ' [uid:' . $result->uid. ']';
+      $matches[$value] = check_plain($value);
+    }
+  }
+
+  drupal_json_output($matches);
+}
+
+/**
+ * Assigns all content that belongs to a given goup to a specific user.
+ *
+ * @param int $access_id
+ *   The numeric (taxonomy) access id of the group to update.
+ * @param int $user_id
+ *   The user id of the user to assign content to.
+ *
+ * @param bool
+ *   Returns TRUE on success assignment of the user and FALSE otherwise.
+ */
+function mcneese_management_assign_group_leader($access_id, $user_id) {
+  $dependency = mcneese_management_check_group_leader_dependencies(); 
+  if (!is_null($dependency)) {
+    return FALSE;
+  }
+
+  if (!cf_is_integer($access_id)) {
+    if (class_exists('cf_error')) {
+      cf_error::invalid_numeric('access_id');
+    }
+
+    return FALSE;
+  }
+
+  if (!cf_is_integer($user_id)) {
+    if (class_exists('cf_error')) {
+      cf_error::invalid_numeric('user_id');
+    }
+
+    return FALSE;
+  }
+
+  // check to see if the user exists.
+  $query = db_select('users', 'u');
+  $query->fields('u');
+  $query->condition('u.uid', $user_id);
+  $query->countQuery();
+
+  $result = $query->execute()->fetchField();
+  if ($result === FALSE) {
+    return FALSE;
+  }
+
+
+  // load all nodes that are assigned to a particular group.
+  $query = db_select('workbench_access_node', 'wan');
+  $query->fields('wan', array('nid'));
+  $query->condition('access_id', $access_id);
+
+  $executed = $query->execute();
+
+  $nids = array();
+  foreach ($executed as $result) {
+    $nids[] = $result->nid;
+  }
+
+  // nothing to update.
+  if (empty($nids)) {
+    return TRUE;
+  }
+
+  // apply changes
+  $transaction = db_transaction();
+
+  try {
+    // now perform the operation.
+    $query = db_update('node');
+    $query->condition('nid', $nids, 'IN');
+    $query->fields(array('uid' => $user_id));
+    $query->execute();
+
+    // enforce transaction execution
+    unset($transaction);
+  }
+  catch (Exception $e) {
+    $transaction->rollback();
+
+    if (class_exists('cf_error')) {
+      cf_error::on_query_execution($e);
+    }
+  }
+
+  return TRUE;
 }
 
 
