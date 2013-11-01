@@ -129,6 +129,12 @@ function mcneese_management_group_leader_operation_form($form, &$form_state, $ac
   }
 
   $term = taxonomy_term_load($access_id);
+
+  if (!is_object($term)) {
+    drupal_not_found();
+    drupal_exit();
+  }
+
   $group_name = $term->name . ' [tid:' . $term->tid . ']';
 
   $destination = isset($_GET['destination']) ? $_GET['destination'] : 'admin/content/management/group_leader';
