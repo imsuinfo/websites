@@ -228,6 +228,19 @@ function mcneese_management_group_leader_operation_form_validate($form, &$form_s
       $user_id = $matches[1];
     }
   }
+  else {
+    // if a username was specified but no id, then try getting the uid.
+    $query = db_select('users', 'u');
+    $query->fields('u', array('uid'));
+    $query->condition('u.name', $user);
+
+    $result = $query->execute()->fetchField();
+
+    if ($result !== FALSE) {
+      $user_id = $result;
+      $form_state['values']['settings']['group_leader'] .= ' [uid:' . $user_id . ']';
+    }
+  }
 
   if (is_null($user_id)) {
     form_set_error('settings][group_leader', t("The user %user does not exist.", array('%user' => $user)));
