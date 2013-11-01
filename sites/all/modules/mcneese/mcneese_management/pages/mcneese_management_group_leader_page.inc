@@ -93,7 +93,7 @@ function mcneese_management_group_leader_settings_page() {
     $rows[] = $row;
   }
 
-  $header = array(t("Group Name"), t("Group Path"), t("Access ID"), t("Menu ID"), t("Group Leader"));
+  $header = array(t("Group Name"), t("Group Path"), t("Menu ID"), t("Access ID"), t("Group Leader"));
   $attributes = array();
   $attributes['id'] = 'mcneese_management_group_leaders';
   $attributes['summary'] = t("A listing of menus containing links for making changes to each individual menu.");
