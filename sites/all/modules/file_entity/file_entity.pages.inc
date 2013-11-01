@@ -9,17 +9,6 @@
  * Menu callback; view a single file entity.
  */
 function file_entity_view_page($file) {
-  // @todo Implement granular editorial access: http://drupal.org/node/696970.
-  //   In the meantime, protect information about private files from being
-  //   discovered by unprivileged users. File IDs are autoincrement, so one can
-  //   attempt discovery by trying to access different media/ID paths. See also
-  //   media_browser_list(). This logic potentially belongs within
-  //   media_access(), but that would require extending that function's
-  //   signature to accept a $file paramter, and this is temporary code anyway.
-  if (!user_access('administer files') && (file_uri_scheme($file->uri) === 'private')) {
-    return MENU_ACCESS_DENIED;
-  }
-
   drupal_set_title($file->filename);
 
   $uri = entity_uri('file', $file);
@@ -80,12 +69,16 @@ function file_entity_add_upload($form, &$form_state, array $options = array()) {
   switch ($step) {
     case 1:
       return file_entity_add_upload_step_upload($form, $form_state, $options);
+
     case 2:
       return file_entity_add_upload_step_filetype($form, $form_state, $options);
+
     case 3:
       return file_entity_add_upload_step_scheme($form, $form_state, $options);
+
     case 4:
       return file_entity_add_upload_step_fields($form, $form_state, $options);
+
   }
 }
 
@@ -219,7 +212,8 @@ function file_entity_usage_page($file) {
   foreach (file_usage_list($file) as $module => $usage) {
     $info = system_get_info('module', $module);
 
-    // There are cases, where actual entitiy doesen't exist. We have to handle this.
+    // There are cases, where actual entitiy doesen't exist.
+    // We have to handle this.
     foreach ($usage as $entity_type => $entity_ids) {
       $entity_info = entity_get_info($entity_type);
       $entities = empty($entity_info) ? NULL : entity_load($entity_type, array_keys($entity_ids));
@@ -236,11 +230,11 @@ function file_entity_usage_page($file) {
 
         // Some entities do not have URL.
         if (empty($entity_uri)) {
-          $rows[] = array($entity_type, check_plain($label), $count);
+          $rows[] = array(check_plain($label), $entity_type, $module, $count);
         }
         else {
           $uri = $entity_uri['path'];
-          $rows[] = array($entity_type, l($label, $uri), $count);
+          $rows[] = array(l($label, $uri), $entity_type, $module, $count);
         }
 
         $occured_entities[$entity_type][$entity_id] = count($rows) - 1;
@@ -248,13 +242,16 @@ function file_entity_usage_page($file) {
     }
   }
   $header[] = array(
-    'data' => t('Type'),
+    'data' => t('Entity'),
   );
   $header[] = array(
-    'data' => t('Title'),
+    'data' => t('Entity type'),
   );
   $header[] = array(
-    'data' => t('Count'),
+    'data' => t('Registering module'),
+  );
+  $header[] = array(
+    'data' => t('Use count'),
   );
   $build['usage_table'] = array(
     '#theme' => 'table',
@@ -305,20 +302,22 @@ function file_entity_add_upload_submit($form, &$form_state) {
 
   $steps_to_check = array(2, 3);
   if ($trigger == 'edit-previous') {
-    //if the previous button was hit, the step checking order should be reversed 3, 2
+    // If the previous button was hit,
+    // the step checking order should be reversed 3, 2.
     $steps_to_check = array_reverse($steps_to_check);
   }
 
   foreach ($steps_to_check as $step) {
-    //Check if we can skip step 2 and 3
+    // Check if we can skip step 2 and 3.
     if (($form['#step'] == $step - 1 && $trigger == 'edit-next') || ($form['#step'] == $step + 1 && $trigger == 'edit-previous')) {
       $file = file_load($form_state['storage']['upload']);
       if ($step == 2) {
-        //check if we can skip step 2
+        // Check if we can skip step 2.
         $candidates = file_entity_get_filetype_candidates($file);
         if (count($candidates) == 1) {
           $candidates_keys = array_keys($candidates);
-          // There is only one possible filetype for this file. Skip the second page.
+          // There is only one possible filetype for this file.
+          // Skip the second page.
           $form['#step'] += ($trigger == 'edit-previous') ? -1 : 1;
           $form_state['storage']['type'] = reset($candidates_keys);
         }
@@ -329,10 +328,11 @@ function file_entity_add_upload_submit($form, &$form_state) {
         }
       }
       else {
-        //check if we can skip step 3
+        // Check if we can skip step 3.
         $schemes = file_get_stream_wrappers(STREAM_WRAPPERS_WRITE_VISIBLE);
         if ($select_scheme && count($schemes) == 1) {
-          // There is only one possible stream wrapper for this file. Skip the third page.
+          // There is only one possible stream wrapper for this file.
+          // Skip the third page.
           $form['#step'] += ($trigger == 'edit-previous') ? -1 : 1;
           $form_state['storage']['scheme'] = key($schemes);
         }
@@ -429,7 +429,7 @@ function file_entity_add_upload_submit($form, &$form_state) {
  * @param array $data
  *   (optional) An array of token objects to pass to token_replace().
  *
- * @return
+ * @return string
  *   A file directory URI with tokens replaced.
  *
  * @see token_replace()
@@ -448,6 +448,9 @@ function file_entity_upload_destination_uri(array $params, array $data = array()
   return $params['uri_scheme'] . '://' . $destination;
 }
 
+/**
+ * Form for uploading multiple files.
+ */
 function file_entity_add_upload_multiple($form, &$form_state, $params = array()) {
   $form = file_entity_add_upload($form, $form_state, $params);
   unset($form['upload']['#title']);
@@ -475,12 +478,16 @@ function file_entity_add_upload_multiple($form, &$form_state, $params = array())
   return $form;
 }
 
+/**
+ * Submit handler for the multiple upload form.
+ */
 function file_entity_add_upload_multiple_submit($form, &$form_state) {
   $upload_location = !empty($form['upload']['#upload_location']) ?
     $form['upload']['#upload_location'] . '/' :
     file_entity_default_scheme() . '://';
 
-  // We can't use file_save_upload() because of http://www.jacobsingh.name/content/tight-coupling-no-not
+  // We can't use file_save_upload() because of
+  // http://www.jacobsingh.name/content/tight-coupling-no-not.
   foreach ($form_state['values']['upload'] as $uploaded_file) {
     if ($uploaded_file['status'] == 'done') {
       $source = $uploaded_file['tmppath'];
@@ -488,7 +495,6 @@ function file_entity_add_upload_multiple_submit($form, &$form_state) {
       // Rename it to its original name, and put it in its final home.
       // Note - not using file_move here because if we call file_get_mime
       // (in file_uri_to_object) while it has a .tmp extension, it horks.
-
       $destination = file_unmanaged_move($source, $destination, FILE_EXISTS_RENAME);
 
       $file = file_uri_to_object($destination);
@@ -587,7 +593,7 @@ function file_entity_edit($form, &$form_state, $file) {
     '#weight' => 99,
   );
 
-  // File destination information for administrators
+  // File destination information for administrators.
   $form['destination'] = array(
     '#type' => 'fieldset',
     '#access' => user_access('administer files') && file_entity_file_is_writeable($file),
@@ -627,7 +633,7 @@ function file_entity_edit($form, &$form_state, $file) {
     );
   }
 
-  // File user information for administrators
+  // File user information for administrators.
   $form['user'] = array(
     '#type' => 'fieldset',
     '#access' => user_access('administer files'),
@@ -803,7 +809,8 @@ function file_entity_edit_submit($form, &$form_state) {
       $file->uid = $user->uid;
     }
     else {
-      $file->uid = 0; // anonymous user
+      // Anonymous user.
+      $file->uid = 0;
     }
   }
   elseif ($file->uid) {
