@@ -23,7 +23,8 @@ function mcneese_management_group_leader_settings_page() {
 
   $fallback_uid = variable_get('mcneese_management_group_leader_unassigned', 1);
 
-  $output .= t("Each group has exactly 1 group leader. These group leaders are referred to as the point of contact for making changes for that group and are considered responsible for that content. These users are expected to be e-mailed directly for issues associated with content within their group.");
+  $output .= l("View FOSWiki Table Export", 'admin/content/management/group_leader/wiki_export') . '<br><br>';
+  $output .= t("Each group has exactly 1 group leader. These group leaders are referred to as the point of contact for making changes for that group and are considered responsible for that content. These users are expected to be e-mailed directly for issues associated with content within their group.") . '<br><br>';
 
   $leaders = variable_get('mcneese_management_group_leaders', array());
 
@@ -289,6 +290,89 @@ function mcneese_management_group_leader_operation_form_submit($form, &$form_sta
   else {
     $form_state['redirect'] = $form_state['values']['redirect_to'];
   }
+}
+
+/**
+ * Generates a FOSWiki formatted version of the group leader list.
+ *
+ * @return string
+ *   Generated wiki text wrapped inside of a div and pre tag.
+ */
+function mcneese_management_group_leader_wiki_export() {
+  $pre = '<noautolink>' . "\n";
+  $pre .= '| *Access ID* | *Menu ID* | *Group Name* | *Group Path* | *Group Leader(s)* |' . "\n";
+
+  $leaders = variable_get('mcneese_management_group_leaders', array());
+  $fallback_uid = variable_get('mcneese_management_group_leader_unassigned', 1);
+
+  $users = array();
+  $users[$fallback_uid] = user_load($fallback_uid);
+
+  $query = db_select('workbench_access_user', 'wau');
+  $query->fields('wau', array('access_id', 'uid'));
+  $query->distinct();
+  $query->condition('access_scheme', 'taxonomy');
+  $query->orderBy('access_id', 'ASC');
+
+  $groups = (array) $query->execute()->fetchAllAssoc('access_id');
+  $users = array();
+  $users[$fallback_uid] = user_load($fallback_uid);
+
+  $access = workbench_access_get_access_tree();
+  $active = workbench_access_get_active_tree();
+
+  foreach ($active['tree'] as $access_id => &$section) {
+    if (!cf_is_integer($access_id)) continue;
+
+    $sorted[$access_id] = &$section['name'];
+  }
+
+  asort($sorted);
+
+  $menus = (array) workbench_menu_get_menus(array('access_id' => array_keys($sorted), 'fast' => NULL), 'access_id');
+
+  foreach ($sorted as $access_id => $section_name) {
+    if (!isset($active['active'][$access_id])) {
+      continue;
+    }
+
+    $section = & $active['tree'][$access_id];
+
+    $line = '| =' . $access_id . '= | =' . $menus[$access_id]->id . '= | =' . $section_name . '= | ';
+
+    $menu_path = '';
+    if (isset($menus[$access_id]) && property_exists($menus[$access_id], 'path')) {
+      $default_path = $menus[$access_id]->path;
+
+      // be user-friendly and show normal spaces instead of %20.
+      $menu_path = preg_replace('/%20/', ' ', $default_path);
+    }
+
+    if (empty($menu_path)) {
+      $line .=  '| ';
+    }
+    else {
+      $line .= '=' . $menu_path . '= | ';
+    }
+
+    $target_uid = $fallback_uid;
+    if (array_key_exists($access_id, $leaders)) {
+      $target_uid = $leaders[$access_id];
+    }
+
+    if (!array_key_exists($target_uid, $users)) {
+      $users[$target_uid] = user_load($target_uid);
+    }
+
+    $line .= $users[$target_uid]->name . ' |';
+
+    $pre .= $line . "\n";
+  }
+
+  $pre .= '</noautolink>' . "\n";
+
+  $output = '<div><pre>' . check_plain($pre) . '</pre></div>';
+  return $output;
 }
 
 /**
