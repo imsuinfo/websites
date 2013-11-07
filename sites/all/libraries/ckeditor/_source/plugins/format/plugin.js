@@ -195,3 +195,16 @@ CKEDITOR.config.format_h5 = { element : 'h5' };
  * config.format_h6 = { element : 'h6', attributes : { 'class' : 'contentTitle6' } };
  */
 CKEDITOR.config.format_h6 = { element : 'h6' };
+
+/**
+ * Additional styles
+ */
+CKEDITOR.config.format_article = { element : 'article' };
+CKEDITOR.config.format_section = { element : 'section' };
+CKEDITOR.config.format_aside = { element : 'aside' };
+CKEDITOR.config.format_hgroup = { element : 'hgroup' };
+CKEDITOR.config.format_header = { element : 'header' };
+CKEDITOR.config.format_nav = { element : 'nav' };
+CKEDITOR.config.format_footer = { element : 'footer' };
+CKEDITOR.config.format_figure = { element : 'figure' };
+CKEDITOR.config.format_figcaption = { element : 'figcaption' };

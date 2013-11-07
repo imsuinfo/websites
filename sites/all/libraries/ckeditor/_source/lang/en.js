@@ -587,7 +587,16 @@ CKEDITOR.lang['en'] =
 		tag_h4		: 'Heading 4',
 		tag_h5		: 'Heading 5',
 		tag_h6		: 'Heading 6',
-		tag_div		: 'Normal (DIV)'
+		tag_div		: 'Normal (DIV)',
+		tag_article	: 'Article',
+		tag_section	: 'Section',
+		tag_aside	: 'Aside',
+		tag_hgroup	: 'Header Group',
+		tag_header	: 'Header',
+		tag_nav		: 'Navigation',
+		tag_footer	: 'Footer',
+		tag_figure	: 'Figure',
+		tag_figcaption	: 'Figure Caption'
 	},
 
 	div :
