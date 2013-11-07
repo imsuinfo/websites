@@ -21,7 +21,7 @@ function mcneese_ckeditor_wysiwyg_editor_settings_alter(&$settings, $context) {
     // toolbar
     $full_toolbar = array();
     $full_toolbar[] = array('Source', 'Maximize',  'ShowBlocks');
-    $full_toolbar[] = array('Templates', 'Preview');
+    $full_toolbar[] = array('Templates', 'Preview', 'drupal_accessibility');
     $full_toolbar[] = '/';
     $full_toolbar[] = array('Cut', 'Copy', 'Paste', 'PasteText', 'PasteFromWord');
     $full_toolbar[] = array('Undo', 'Redo', 'Find', 'Replace', '-', 'SelectAll', 'RemoveFormat');
@@ -113,7 +113,7 @@ function mcneese_ckeditor_wysiwyg_editor_settings_alter(&$settings, $context) {
     $settings['enterMode'] = 2;
 
     // http://docs.cksource.com/ckeditor_api/symbols/CKEDITOR.config.html#.shiftEnterMode
-    $settings['shiftEnterMode'] = 1;
+    $settings['shiftEnterMode'] = 2;
 
     // http://docs.cksource.com/ckeditor_api/symbols/CKEDITOR.config.html#.fillEmptyBlocks
     $settings['fillEmptyBlocks'] = FALSE;
@@ -154,7 +154,7 @@ function mcneese_ckeditor_wysiwyg_editor_settings_alter(&$settings, $context) {
     //$settings['format_h6'] = '';
 
     // http://docs.cksource.com/ckeditor_api/symbols/CKEDITOR.config.html#.format_p
-    //$settings['format_p'] = '';
+    //$settings['format_p'] = array('element' => 'p');
 
     // http://docs.cksource.com/ckeditor_api/symbols/CKEDITOR.config.html#.format_pre
     //$settings['format_pre'] = '';
@@ -201,9 +201,6 @@ function mcneese_ckeditor_wysiwyg_editor_settings_alter(&$settings, $context) {
     // http://docs.cksource.com/ckeditor_api/symbols/CKEDITOR.config.html#.format_pre
     //$settings['format_pre'] = '';
 
-    // http://docs.cksource.com/ckeditor_api/symbols/CKEDITOR.config.html#.format_tags
-    //$settings['format_tags'] = '';
-
     // http://docs.cksource.com/ckeditor_api/symbols/CKEDITOR.config.html#.bodyId
     //$settings['bodyId'] = '';
 
@@ -222,6 +219,15 @@ function mcneese_ckeditor_wysiwyg_editor_settings_alter(&$settings, $context) {
 
     // http://docs.cksource.com/ckeditor_api/symbols/CKEDITOR.config.html#.baseHref
     //$settings['baseHref'] = $base_url . $base_path;
+
+    // http://docs.cksource.com/ckeditor_api/symbols/CKEDITOR.config.html#.autoParagraph
+    $settings['autoParagraph'] = FALSE;
+
+    // http://docs.cksource.com/ckeditor_api/symbols/CKEDITOR.config.html#.colorButton_enableMore
+    $settings['colorButton_enableMore'] = FALSE;
+
+    // http://docs.cksource.com/ckeditor_api/symbols/CKEDITOR.config.html#.docType
+    $settings['docType'] = '<!DOCTYPE html>';
 
 
     // http://docs.cksource.com/CKEditor_3.x/Developers_Guide/Templates
