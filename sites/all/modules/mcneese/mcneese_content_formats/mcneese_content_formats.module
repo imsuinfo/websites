@@ -192,9 +192,10 @@ function mcneese_content_formats_node_validate($node) {
 function mcneese_content_formats_node_presave($node) {
   $deny_abused_codes_value = variable_get('mcneese_content_formats_deny_abused_codes_' . $node->type, FALSE);
 
-  $deny_abused_codes = $deny_abused_codes_value && !user_access('bypass deny abused codes');
-  $fix_links = variable_get('mcneese_content_formats_fix_links_' . $node->type, FALSE);
-  $fix_markup = variable_get('mcneese_content_formats_fix_markup_' . $node->type, FALSE);
+  $operations = array();
+  $operations['deny_abused_codes'] = $deny_abused_codes_value && !user_access('bypass deny abused codes');
+  $operations['fix_links'] = variable_get('mcneese_content_formats_fix_links_' . $node->type, FALSE);
+  $operations['fix_markup'] = variable_get('mcneese_content_formats_fix_markup_' . $node->type, FALSE);
 
   $abused_codes = array();
   $abused_codes['&#34;'] = '"';
@@ -225,15 +226,13 @@ function mcneese_content_formats_node_presave($node) {
         }
 
         if (!empty($index_value['summary'])) {
-          if ($deny_abused_codes) mcneese_content_formats_deny_abused_codes($abused_codes, $index_value['summary']);
-          if ($fix_links) mcneese_content_formats_fix_links($index_value['summary']);
-          if ($fix_markup) mcneese_content_formats_fix_markup($index_value['summary']);
+          if ($operations['deny_abused_codes']) mcneese_content_formats_deny_abused_codes($abused_codes, $index_value['summary']);
+          mcneese_content_formats_alter_dom($index_value['summary'], $operations);
         }
 
         if (!empty($index_value['value'])) {
-          if ($deny_abused_codes) mcneese_content_formats_deny_abused_codes($abused_codes, $index_value['value']);
-          if ($fix_links) mcneese_content_formats_fix_links($index_value['value']);
-          if ($fix_markup) mcneese_content_formats_fix_markup($index_value['value']);
+          if ($operations['deny_abused_codes']) mcneese_content_formats_deny_abused_codes($abused_codes, $index_value['value']);
+          mcneese_content_formats_alter_dom($index_value['value'], $operations);
         }
       }
     }
@@ -259,282 +258,217 @@ function mcneese_content_formats_deny_abused_codes($abused_codes, &$value) {
 }
 
 /**
- * Make changes to url links.
+ * Make changes to markup using cf_dom.
  *
- * @param string $value
+ * @param string $text
  *   The text to alter.
+ * @param array $operations
+ *   A collection of operations designating what to do and not to do.
  */
-function mcneese_content_formats_fix_links(&$value) {
-  $dom = new DOMDocument();
-  $dom->preserveWhiteSpace = TRUE;
-  $dom->formatOutput = TRUE;
-  @$dom->loadHTML('<!DOCTYPE html><head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"></head><body>' . $value . '</body></html>');
+function mcneese_content_formats_alter_dom(&$text, $operations) {
+  if (empty($text)) return '';
+
+  $dom = new cf_dom(NULL, TRUE, TRUE, $text);
+
+  $prefix = 'mt_';
+  $body = $dom->get_body();
+  if (is_null($body)) {
+    return $text;
+  }
+
   $altered = FALSE;
-
-  if ($dom->hasChildNodes()) {
-    $a_links = array();
-    $img_links = array();
-    $bodys = $dom->getElementsByTagName('body');
-
-    if ($bodys->length > 0) {
-      $body = $bodys->item(0);
-      $a_links = $body->getElementsByTagName('a');
-      $img_links = $body->getElementsByTagName('img');
-    }
-
-    foreach ($a_links as $a_link) {
-      if ($a_link->hasAttribute('href')) {
-        $processed = mcneese_content_formats_get_correct_links($a_link->getAttribute('href'));
-
-        if ($processed !== FALSE) {
-          $a_link->setAttribute('href', $processed);
-          $altered = TRUE;
-        }
-      }
-    }
-
-    foreach ($img_links as $img_link) {
-      if ($img_link->hasAttribute('src')) {
-        $processed = mcneese_content_formats_get_correct_links($img_link->getAttribute('src'));
-
-        if ($processed !== FALSE) {
-          $img_link->setAttribute('src', $processed);
-          $altered = TRUE;
-        }
-      }
-    }
-  }
-
-  if ($altered) {
-    $value = $dom->saveHTML($body);
-
-    // Remove the <body> and </body> parts
-    $value = preg_replace('@(^<body>|</body>$)@i', '', $value);
-  }
-}
-
-/**
- * Make changes to markup.
- *
- * @param string $value
- *   The text to alter.
- */
-function mcneese_content_formats_fix_markup(&$value) {
-  $dom = new DOMDocument();
-  $dom->preserveWhiteSpace = TRUE;
-  $dom->formatOutput = TRUE;
-  @$dom->loadHTML('<!DOCTYPE html><head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"></head><body>' . $value . '</body></html>');
-  $altered = FALSE;
-
-  if (!$dom->hasChildNodes()) {
-    return;
-  }
-
-  $a_links = array();
-  $img_links = array();
-  $bodys = $dom->getElementsByTagName('body');
-
-  if ($bodys->length == 0) {
-    return;
-  }
-
-  $body = $bodys->item(0);
+  $a_tags = $body->getElementsByTagName('a');
+  $img_tags = $body->getElementsByTagName('img');
   $b_tags = $body->getElementsByTagName('b');
   $i_tags = $body->getElementsByTagName('i');
   $strike_tags = $body->getElementsByTagName('strike');
-
-  // replace b tags with strong
-  foreach ($b_tags as $tag) {
-    $parent = $tag->parentNode;
-    $new_tag = $dom->createElement('strong');
-
-    if ($tag->hasAttributes()) {
-      foreach ($tag->attributes as $attribute) {
-        $new_tag->setAttribute($attribute->name, $attribute->value);
-      }
-    }
-
-    if ($tag->hasChildNodes()) {
-      foreach ($tag->childNodes as $child) {
-        $new_tag->appendChild($child);
-        #$new_tag->appendChild($child->cloneNode(true));
-      }
-    }
-
-    $parent->replaceChild($new_tag, $tag);
-    $altered = TRUE;
-  }
-
-  // replace i tags with em
-  foreach ($i_tags as $tag) {
-    $parent = $tag->parentNode;
-    $new_tag = $dom->createElement('em');
-
-    if ($tag->hasAttributes()) {
-      foreach ($tag->attributes as $attribute) {
-        $new_tag->setAttribute($attribute->name, $attribute->value);
-      }
-    }
-
-    if ($tag->hasChildNodes()) {
-      foreach ($tag->childNodes as $child) {
-        $new_tag->appendChild($child->cloneNode(TRUE));
-      }
-    }
-
-    $parent->replaceChild($new_tag, $tag);
-    $altered = TRUE;
-  }
-
-  // replace strike tags with del
-  foreach ($strike_tags as $tag) {
-    $parent = $tag->parentNode;
-    $new_tag = $dom->createElement('del');
-
-    if ($tag->hasAttributes()) {
-      foreach ($tag->attributes as $attribute) {
-        $new_tag->setAttribute($attribute->name, $attribute->value);
-      }
-    }
-
-    if ($tag->hasChildNodes()) {
-      foreach ($tag->childNodes as $child) {
-        $new_tag->appendChild($child->cloneNode(TRUE));
-      }
-    }
-
-    $parent->replaceChild($new_tag, $tag);
-    $altered = TRUE;
-  }
-
-  // remove all unsupported tags, but preserve their content.
-  foreach (array('font', 'basefont', 'big', 'center', 'dir', 'frame', 'noframes', 'tt') as $tag_name) {
-    $unsupported_tags = $body->getElementsByTagName($tag_name);
-    while ($unsupported_tags->length > 0) {
-      foreach ($unsupported_tags as $tag) {
-        mcneese_content_formats_remove_tag($tag);
-        $altered = TRUE;
-      }
-
-      $unsupported_tags = $body->getElementsByTagName($tag_name);
-    }
-  }
-
-  // remove span tags with lang=".." attribute, but preserve their content.
   $span_tags = $body->getElementsByTagName('span');
-  foreach ($span_tags as $tag) {
-    if ($tag->hasAttribute('lang')) {
-      mcneese_content_formats_remove_tag($tag);
-      $altered = TRUE;
+  $all_tags = $body->getElementsByTagName('*');
+
+
+  if ($operations['fix_links']) {
+    foreach ($a_tags as $tag) {
+      if ($tag->hasAttribute('href')) {
+        $processed = mcneese_content_formats_get_correct_links($tag->getAttribute('href'));
+
+        if ($processed !== FALSE) {
+          $tag->setAttribute('href', $processed);
+          $altered = TRUE;
+        }
+      }
+    }
+
+    foreach ($img_tags as $tag) {
+      if ($tag->hasAttribute('src')) {
+        $processed = mcneese_content_formats_get_correct_links($tag->getAttribute('src'));
+
+        if ($processed !== FALSE) {
+          $tag->setAttribute('src', $processed);
+          $altered = TRUE;
+        }
+      }
     }
   }
 
-  // remove common invalid attributes
-  $all_tags = $body->getElementsByTagName('*');
-  foreach ($all_tags as $tag) {
-    // problems with paragraphs.
-    if ($tag->tagName == 'p') {
-      if ($tag->hasAttribute('style')) {
-        $tag->removeAttribute('style');
-        $altered = TRUE;
-      }
-    }
+  if ($operations['fix_markup']) {
+    // replace b tags with strong
+    foreach ($b_tags as $tag) {
+      $parent = $tag->parentNode;
+      $new_tag = $dom->createElement('strong');
 
-    // replace name with id (deprecate name tag, except on image maps and params).
-    if ($tag->hasAttribute('name') && $tag->tagName != "map" && $tag->tagName != "param") {
-      $name_value = $tag->getAttribute('name');
-      $tag->removeAttribute('name');
-      $tag->setAttribute('id', $name_value);
+      if ($tag->hasAttributes()) {
+        foreach ($tag->attributes as $attribute) {
+          $new_tag->setAttribute($attribute->name, $attribute->value);
+        }
+      }
+
+      if ($tag->hasChildNodes()) {
+        foreach ($tag->childNodes as $child) {
+          $new_tag->appendChild($child);
+          #$new_tag->appendChild($child->cloneNode(true));
+        }
+      }
+
+      $parent->replaceChild($new_tag, $tag);
       $altered = TRUE;
     }
 
-    // strip out unsupported attributes.
-    $unsupported = array();
-    $unsupported[] = 'lang';
-    $unsupported[] = 'align';
-    $unsupported[] = 'valign';
-    $unsupported[] = 'abbr';
-    $unsupported[] = 'axis';
-    $unsupported[] = 'bgcolor';
-    $unsupported[] = 'char';
-    $unsupported[] = 'charoff';
-    $unsupported[] = 'nowrap';
-    $unsupported[] = 'charset';
-    foreach ($unsupported as $attr_name) {
-      if ($tag->hasAttribute($attr_name)) {
-        $tag->removeAttribute($attr_name);
+    // replace i tags with em
+    foreach ($i_tags as $tag) {
+      $parent = $tag->parentNode;
+      $new_tag = $dom->createElement('em');
+
+      if ($tag->hasAttributes()) {
+        foreach ($tag->attributes as $attribute) {
+          $new_tag->setAttribute($attribute->name, $attribute->value);
+        }
+      }
+
+      if ($tag->hasChildNodes()) {
+        foreach ($tag->childNodes as $child) {
+          $new_tag->appendChild($child->cloneNode(TRUE));
+        }
+      }
+
+      $parent->replaceChild($new_tag, $tag);
+      $altered = TRUE;
+    }
+
+    // replace strike tags with del
+    foreach ($strike_tags as $tag) {
+      $parent = $tag->parentNode;
+      $new_tag = $dom->createElement('del');
+
+      if ($tag->hasAttributes()) {
+        foreach ($tag->attributes as $attribute) {
+          $new_tag->setAttribute($attribute->name, $attribute->value);
+        }
+      }
+
+      if ($tag->hasChildNodes()) {
+        foreach ($tag->childNodes as $child) {
+          $new_tag->appendChild($child->cloneNode(TRUE));
+        }
+      }
+
+      $parent->replaceChild($new_tag, $tag);
+      $altered = TRUE;
+    }
+
+    // remove all unsupported tags, but preserve their content.
+    foreach (array('font', 'basefont', 'big', 'center', 'dir', 'frame', 'noframes', 'tt') as $tag_name) {
+      $unsupported_tags = $body->getElementsByTagName($tag_name);
+      while ($unsupported_tags->length > 0) {
+        foreach ($unsupported_tags as $tag) {
+          $dom->remove_element($tag);
+          $altered = TRUE;
+        }
+
+        $unsupported_tags = $body->getElementsByTagName($tag_name);
+      }
+    }
+
+    // remove span tags with lang=".." attribute, but preserve their content.
+    foreach ($span_tags as $tag) {
+      if ($tag->hasAttribute('lang')) {
+        $dom->remove_element($tag);
         $altered = TRUE;
       }
     }
 
-    // strip out attributes no longer supported in html 5 for specific tags.
-    if ($tag->tagName == 'td') {
+    // remove common invalid attributes
+    foreach ($all_tags as $tag) {
+      // problems with paragraphs.
+      if ($tag->tagName == 'p') {
+        if ($tag->hasAttribute('style')) {
+          $tag->removeAttribute('style');
+          $altered = TRUE;
+        }
+      }
+
+      // replace name with id (deprecate name tag, except on image maps and params).
+      if ($tag->hasAttribute('name') && $tag->tagName != "map" && $tag->tagName != "param") {
+        $name_value = $tag->getAttribute('name');
+        $tag->removeAttribute('name');
+        $tag->setAttribute('id', $name_value);
+        $altered = TRUE;
+      }
+
+      // strip out unsupported attributes.
       $unsupported = array();
-      $unsupported[] = 'height';
-      $unsupported[] = 'scope';
-      $unsupported[] = 'width';
+      $unsupported[] = 'lang';
+      $unsupported[] = 'align';
+      $unsupported[] = 'valign';
+      $unsupported[] = 'abbr';
+      $unsupported[] = 'axis';
+      $unsupported[] = 'bgcolor';
+      $unsupported[] = 'char';
+      $unsupported[] = 'charoff';
+      $unsupported[] = 'nowrap';
+      $unsupported[] = 'charset';
       foreach ($unsupported as $attr_name) {
         if ($tag->hasAttribute($attr_name)) {
           $tag->removeAttribute($attr_name);
           $altered = TRUE;
         }
       }
-    }
 
-
-    // replace empty tags that are generally created to implement a line break
-    if ($tag->tagName == 'p' || $tag->tagName == 'div' || $tag->tagName == 'h1' || $tag->tagName == 'h2' || $tag->tagName == 'h3' || $tag->tagName == 'h4' || $tag->tagName == 'h5' || $tag->tagName == 'h6') {
-      if (!$tag->hasChildNodes()) {
-        $parent = $tag->parentNode;
-        $new_tag = $dom->createElement('br');
-        $parent->replaceChild($new_tag, $tag);
-        $altered = TRUE;
+      // strip out attributes no longer supported in html 5 for specific tags.
+      if ($tag->tagName == 'td') {
+        $unsupported = array();
+        $unsupported[] = 'height';
+        $unsupported[] = 'scope';
+        $unsupported[] = 'width';
+        foreach ($unsupported as $attr_name) {
+          if ($tag->hasAttribute($attr_name)) {
+            $tag->removeAttribute($attr_name);
+            $altered = TRUE;
+          }
+        }
       }
-    }
 
-    // remove spans that have no attributes.
-    if ($tag->tagName == 'span') {
-      if (!$tag->hasAttributes()) {
-        mcneese_content_formats_remove_tag($tag);
-        $altered = TRUE;
+
+      // replace empty tags that are generally created to implement a line break
+      if ($tag->tagName == 'p' || $tag->tagName == 'div' || $tag->tagName == 'h1' || $tag->tagName == 'h2' || $tag->tagName == 'h3' || $tag->tagName == 'h4' || $tag->tagName == 'h5' || $tag->tagName == 'h6') {
+        if (!$tag->hasChildNodes()) {
+          $dom->change_element($tag, 'br');
+          $altered = TRUE;
+        }
+      }
+
+      // remove spans that have no attributes.
+      if ($tag->tagName == 'span') {
+        if (!$tag->hasAttributes()) {
+          $dom->remove_element($tag);
+          $altered = TRUE;
+        }
       }
     }
   }
-
 
   if ($altered) {
-    $value = $dom->saveHTML($body);
-
-    // Remove the <body> and </body> parts
-    $value = preg_replace('@(^<body>|</body>$)@i', '', $value);
+    $text = $dom->get_markup();
   }
-}
-
-/**
- * Removes the tag and attaches its children to its parent.
- *
- * @param DOMNode $tag
- *   Tag to operate on.
- */
-function mcneese_content_formats_remove_tag(DOMNode $tag) {
-  if ($tag->hasChildNodes()) {
-    $parent = $tag->parentNode;
-    $children = array();
-
-    foreach ($tag->childNodes as $child) {
-      $children[] = $child;
-    }
-
-    foreach ($children as $child) {
-      $removed_child = $tag->removeChild($child);
-
-      if (is_object($removed_child)) {
-        $parent->insertBefore($removed_child, $tag);
-      }
-    }
-  }
-
-  $parent->removeChild($tag);
 }
 
 /**
