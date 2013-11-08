@@ -7,6 +7,7 @@ package = McNeese
 dependencies[] = cf (7.x-2.x)
 dependencies[] = cf_error (7.x-2.x)
 dependencies[] = cf_settings (7.x-2.x)
+dependencies[] = cf_dom
 
 files[] = mcneese_filters.module
 files[] = mcneese_filters.install

@@ -17,15 +17,15 @@
 function mcneese_filters_filter_info() {
   $data = array();
 
-  $data['mcneese_filters_allowed_tags'] = array();
-  $data['mcneese_filters_allowed_tags']['title'] = t("McNeese Filters - Allowed Tags");
-  $data['mcneese_filters_allowed_tags']['description'] = t("Provides standard McNeese functionality that only allows specific HTML markup to be used.");
-  $data['mcneese_filters_allowed_tags']['process callback'] = 'mcneese_filters_allowed_tags_process';
-  $data['mcneese_filters_allowed_tags']['settings callback'] = 'mcneese_filters_allowed_tags_settings';
-  $data['mcneese_filters_allowed_tags']['default settings'] = array(
-    'mcneese_filters_allowed_tags' => 'a abbr address area article aside audio base base bdi bdo blockquote br button canvas caption cite code col colgroup command datalist dd del details dfn dialog div dl dt em embed fieldset figcaption figure form h1 h2 h3 h4 h5 h6 header hr iframe img input ins kbd keygen label legend li link map mark menu meter nav noscript object ol optgroup option output p param pre progress q rp rt ruby s samp section select small source span strong sub summary sup table tbody td textarea tfoot th thead time title tr track u ul var video wbr',
+  $data['mcneese_filters_denied_tags'] = array();
+  $data['mcneese_filters_denied_tags']['title'] = t("McNeese Filters - Denied Tags");
+  $data['mcneese_filters_denied_tags']['description'] = t("Provides standard McNeese functionality that only prevent specific HTML markup from being used.");
+  $data['mcneese_filters_denied_tags']['process callback'] = 'mcneese_filters_denied_tags_process';
+  $data['mcneese_filters_denied_tags']['settings callback'] = 'mcneese_filters_denied_tags_settings';
+  $data['mcneese_filters_denied_tags']['default settings'] = array(
+    'mcneese_filters_denied_tags' => 'script noscript',
   );
-  $data['mcneese_filters_allowed_tags']['weight'] = -20;
+  $data['mcneese_filters_denied_tags']['weight'] = -20;
 
   $data['mcneese_filters_replace_redirect'] = array();
   $data['mcneese_filters_replace_redirect']['title'] = t("McNeese Filters - Replace Redirects");
@@ -40,14 +40,14 @@ function mcneese_filters_filter_info() {
 /**
  * Settings callback, used by mcneese_filters_filter_info().
  */
-function mcneese_filters_allowed_tags_settings($form, &$form_state, $filter, $format, $defaults) {
+function mcneese_filters_denied_tags_settings($form, &$form_state, $filter, $format, $defaults) {
   $settings = array();
 
-  $settings['mcneese_filters_allowed_tags'] = array(
+  $settings['mcneese_filters_denied_tags'] = array(
     '#type' => 'textfield',
-    '#title' => t("Allowed HTML Tags"),
+    '#title' => t("Denied HTML Tags"),
     '#maxlength' => 4096,
-    '#default_value' => isset($defaults['mcneese_filters_allowed_tags']) ? $defaults['mcneese_filters_allowed_tags'] : '',
+    '#default_value' => isset($defaults['mcneese_filters_denied_tags']) ? $defaults['mcneese_filters_denied_tags'] : '',
     '#description' => t("A list of HTML tag names that can be used."),
   );
 
@@ -68,39 +68,27 @@ function mcneese_filters_allowed_tags_settings($form, &$form_state, $filter, $fo
  * @param boolean $cache
  *    Whether or not to check the cache.
  */
-function mcneese_filters_allowed_tags_process($text, $filter, $format, $langcode, $cache) {
-  if (empty($text)) return '';
+function mcneese_filters_denied_tags_process($text, $filter, $format, $langcode, $cache) {
+  if (empty($text)) return $text;
 
-  $dom = filter_dom_load($text);
-  $allowed_tags = $filter->settings['mcneese_filters_allowed_tags'];
-  $allowed = explode(' ', $allowed_tags);
-
-  if ($dom->hasChildNodes()) {
-    global $user;
-
-    $tags = array();
-    $bodys = $dom->getElementsByTagName('body');
-
-    if ($bodys->length > 0) {
-      $body = $bodys->item(0);
-      $tags = $body->getElementsByTagName('*');
-    }
-
-    foreach ($tags as $tag) {
-      if (!in_array($tag->tagName, $allowed)) {
-        watchdog('mcneese_filters', 'The tag :tag is not allowed and has been removed.', array(':tag' => $tag->tagName), WATCHDOG_WARNING);
-
-        try {
-          $tag->parentNode->removeChild($tag);
-        } catch (Exception $ex) {
-          // @todo: write to the logger.
-        }
-      }
-    }
-
-    return $dom->saveHTML($body);
+  $dom = new cf_dom(NULL, TRUE, TRUE, $text);
+  $body = $dom->get_body();
+  if (is_null($body)) {
+    return $text;
   }
 
+  $denied_tags_string = $filter->settings['mcneese_filters_denied_tags'];
+  $denied_tags = explode(' ', $denied_tags_string);
+
+  $all_tags = $body->getElementsByTagName('*');
+  foreach ($all_tags as $tag) {
+    if (in_array($tag->tagName, $denied_tags)) {
+      watchdog('mcneese_filters', 'The tag :tag is not allowed and has been removed.', array(':tag' => $tag->tagName), WATCHDOG_WARNING);
+      $dom->remove_element($tag);
+    }
+  }
+
+  $text = $dom->get_markup();
   return $text;
 }
 
@@ -119,75 +107,68 @@ function mcneese_filters_allowed_tags_process($text, $filter, $format, $langcode
  *    Whether or not to check the cache.
  */
 function mcneese_filters_replace_redirects_process($text, $filter, $format, $langcode, $cache) {
-  if (empty($text)) return '';
+  if (empty($text)) return $text;
 
   // if the redirect module is not installed and enabled, then nothing can be done.
   if (!function_exists('redirect_load_by_source')) {
     return $text;
   }
 
-  global $base_path;
-  $redirect_paths = &drupal_static('mcneese_filters_replace_redirects_paths', array());
-  $dom = filter_dom_load($text);
-
-  if ($dom->hasChildNodes()) {
-    global $user;
-
-    $a_tags = array();
-    $img_tags = array();
-    $bodys = $dom->getElementsByTagName('body');
-
-    if ($bodys->length > 0) {
-      $body = $bodys->item(0);
-      $a_tags = $body->getElementsByTagName('a');
-      $img_tags = $body->getElementsByTagName('img');
-    }
-
-    foreach ($a_tags as $tag) {
-      if (!$tag->hasAttribute('href')) continue;
-
-      $url = $tag->getAttribute('href');
-      $adjusted_url = preg_replace('@^' . $base_path . '@i', '', $url);
-      $adjusted_url = rawurldecode($adjusted_url);
-
-      if (isset($redirect_paths[$adjusted_url])) {
-        $redirect = $redirect_paths[$adjusted_url];
-      }
-      else {
-        $redirect = db_query('SELECT redirect FROM {redirect} WHERE source = :source', array(':source' => $adjusted_url))->fetchField();
-        $redirect_paths[$adjusted_url] = $redirect;
-      }
-
-      if (empty($redirect)) continue;
-
-      $redirect = $base_path . $redirect;
-      $tag->setAttribute('href', $redirect);
-    }
-
-    foreach ($img_tags as $tag) {
-      if (!$tag->hasAttribute('src')) continue;
-
-      $url = $tag->getAttribute('src');
-      $adjusted_url = preg_replace('@^' . $base_path . '@i', '', $url);
-      $adjusted_url = rawurldecode($adjusted_url);
-
-      if (isset($redirect_paths[$adjusted_url])) {
-        $redirect = $redirect_paths[$adjusted_url];
-      }
-      else {
-        $redirect = db_query('SELECT redirect FROM {redirect} WHERE source = :source', array(':source' => $adjusted_url))->fetchField();
-        $redirect_paths[$adjusted_url] = $redirect;
-      }
-
-      if (empty($redirect)) continue;
-
-      $redirect = $base_path . $redirect;
-      $tag->setAttribute('src', $redirect);
-    }
-
-    return $dom->saveHTML($body);
+  $dom = new cf_dom(NULL, TRUE, TRUE, $text);
+  $body = $dom->get_body();
+  if (is_null($body)) {
+    return $text;
   }
 
+  global $base_path, $user;
+  $redirect_paths = &drupal_static('mcneese_filters_replace_redirects_paths', array());
+
+  $a_tags = $body->getElementsByTagName('a');
+  $img_tags = $body->getElementsByTagName('img');
+
+  foreach ($a_tags as $tag) {
+    if (!$tag->hasAttribute('href')) continue;
+
+    $url = $tag->getAttribute('href');
+    $adjusted_url = preg_replace('@^' . $base_path . '@i', '', $url);
+    $adjusted_url = rawurldecode($adjusted_url);
+
+    if (isset($redirect_paths[$adjusted_url])) {
+      $redirect = $redirect_paths[$adjusted_url];
+    }
+    else {
+      $redirect = db_query('SELECT redirect FROM {redirect} WHERE source = :source', array(':source' => $adjusted_url))->fetchField();
+      $redirect_paths[$adjusted_url] = $redirect;
+    }
+
+    if (empty($redirect)) continue;
+
+    $redirect = $base_path . $redirect;
+    $tag->setAttribute('href', $redirect);
+  }
+
+  foreach ($img_tags as $tag) {
+    if (!$tag->hasAttribute('src')) continue;
+
+    $url = $tag->getAttribute('src');
+    $adjusted_url = preg_replace('@^' . $base_path . '@i', '', $url);
+    $adjusted_url = rawurldecode($adjusted_url);
+
+    if (isset($redirect_paths[$adjusted_url])) {
+      $redirect = $redirect_paths[$adjusted_url];
+    }
+    else {
+      $redirect = db_query('SELECT redirect FROM {redirect} WHERE source = :source', array(':source' => $adjusted_url))->fetchField();
+      $redirect_paths[$adjusted_url] = $redirect;
+    }
+
+    if (empty($redirect)) continue;
+
+    $redirect = $base_path . $redirect;
+    $tag->setAttribute('src', $redirect);
+  }
+
+  $text = $dom->get_markup();
   return $text;
 }
 

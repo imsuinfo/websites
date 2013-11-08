@@ -22,8 +22,8 @@ function mcneese_content_formats_mcneese_content_permission_alter(&$permissions)
     'description' => t("Grants permissions to bypass the removal of abused codes for text formats in which the deny abused codes filter is enabled."),
   );
 
-  $permissions['bypass allowed tags'] = array(
-    'title' => t("Bypass Allowed Tags"),
+  $permissions['bypass denied tags'] = array(
+    'title' => t("Bypass Denied Tags"),
     'description' => t("Grants permissions to bypass the restriction of saving content with unauthorized tags."),
   );
 }
@@ -35,7 +35,7 @@ function mcneese_content_formats_mcneese_content_node_type_form_alter(&$form, &$
   if (empty($form_id)) return;
 
   $deny_abused_codes_default = variable_get('mcneese_content_formats_deny_abused_codes_' . $form['#node_type']->type, FALSE);
-  $allowed_tags_default = variable_get('mcneese_content_formats_allowed_tags_' . $form['#node_type']->type, 'a abbr address area article aside audio base base bdi bdo blockquote br button canvas caption cite code col colgroup command datalist dd del details dfn dialog div dl dt em embed fieldset figcaption figure form h1 h2 h3 h4 h5 h6 header hr iframe img input ins kbd keygen label legend li link map mark menu meter nav noscript object ol optgroup option output p param pre progress q rp rt ruby s samp section select small source span strong sub summary sup table tbody td textarea tfoot th thead time title tr track u ul var video wbr');
+  $denied_tags_default = variable_get('mcneese_content_formats_denied_tags_' . $form['#node_type']->type, 'script noscript');
   $fix_links_default = variable_get('mcneese_content_formats_fix_links_' . $form['#node_type']->type, FALSE);
   $fix_markup_default = variable_get('mcneese_content_formats_fix_markup_' . $form['#node_type']->type, FALSE);
 
@@ -46,12 +46,12 @@ function mcneese_content_formats_mcneese_content_node_type_form_alter(&$form, &$
     '#description' => t("This enables the denial of certain html codes that have been identified as commonly abused or mis-used by end-user."),
   );
 
-  $form['mcneese_content']['allowed_tags'] = array(
+  $form['mcneese_content']['denied_tags'] = array(
     '#type' => 'textfield',
-    '#title' => t("Allowed Tags"),
+    '#title' => t("Denied Tags"),
     '#maxlength' => 4096,
-    '#default_value' => $allowed_tags_default,
-    '#description' => t("This prevents saving content with tags that are not in this list. Set this to nothing to disable this functionality."),
+    '#default_value' => $denied_tags_default,
+    '#description' => t("This prevents saving content with tags that are in this list. Set this to nothing to allow all tags."),
   );
 
   $form['mcneese_content']['fix_links'] = array(
@@ -76,7 +76,7 @@ function mcneese_content_formats_mcneese_content_node_type_form_submit_alter($fo
   if (!isset($form['#node_type']) && !is_object($form['#node_type'])) return;
 
   cf_settings_register('mcneese_content_formats_deny_abused_codes_' . $form['#node_type']->type, 'drupal_variables', 'mcneese_content_formats', TRUE);
-  cf_settings_register('mcneese_content_formats_allowed_tags_' . $form['#node_type']->type, 'drupal_variables', 'mcneese_content_formats', TRUE);
+  cf_settings_register('mcneese_content_formats_denied_tags_' . $form['#node_type']->type, 'drupal_variables', 'mcneese_content_formats', TRUE);
   cf_settings_register('mcneese_content_formats_fix_links_' . $form['#node_type']->type, 'drupal_variables', 'mcneese_content_formats', TRUE);
   cf_settings_register('mcneese_content_formats_fix_markup_' . $form['#node_type']->type, 'drupal_variables', 'mcneese_content_formats', TRUE);
 
@@ -87,11 +87,11 @@ function mcneese_content_formats_mcneese_content_node_type_form_submit_alter($fo
     variable_set('mcneese_content_formats_deny_abused_codes_' . $form['#node_type']->type, FALSE);
   }
 
-  if (isset($form_state['values']['mcneese_content']['allowed_tags'])) {
-    variable_set('mcneese_content_formats_allowed_tags_' . $form['#node_type']->type, $form_state['values']['mcneese_content']['allowed_tags']);
+  if (isset($form_state['values']['mcneese_content']['denied_tags'])) {
+    variable_set('mcneese_content_formats_denied_tags_' . $form['#node_type']->type, $form_state['values']['mcneese_content']['denied_tags']);
   }
   else {
-    variable_set('mcneese_content_formats_allowed_tags_' . $form['#node_type']->type, '');
+    variable_set('mcneese_content_formats_denied_tags_' . $form['#node_type']->type, '');
   }
 
   if (isset($form_state['values']['mcneese_content']['fix_links']) && $form_state['values']['mcneese_content']['fix_links']) {
@@ -110,92 +110,22 @@ function mcneese_content_formats_mcneese_content_node_type_form_submit_alter($fo
 }
 
 /**
- * Implements hook_node_validate().
- */
-function mcneese_content_formats_node_validate($node) {
-  $allowed_tags = variable_get('mcneese_content_formats_allowed_tags_' . $node->type, '');
-
-  if (!empty($allowed_tags) && !user_access('bypass allowed tags')) {
-    // at this time, this only focuses on the body tag for simplicity.
-    // use the filter module text format to completely remove all instances of unallowed tags.
-    // this is provided to make users aware of the problem.
-    if (property_exists($node, 'body') && is_array($node->body)) {
-      $allowed = explode(' ', $allowed_tags);
-
-      foreach ($node->body as $language => &$language_value) {
-        foreach ($language_value as $index => &$index_value) {
-          // do not process this filter for php_code format because this will alter the php_code closing tag.
-          // @todo: find a way to still do this without breaking the php code.
-          if (isset($index_value['format']) && $index_value['format'] == 'php_code') {
-            continue;
-          }
-
-          if (!empty($index_value['summary'])) {
-           // process things after the filter is generated.
-            $markup = check_markup($index_value['summary'], $index_value['format']);
-
-            $dom = new DOMDocument();
-            @$dom->loadHTML('<!DOCTYPE html><head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"></head><body>' . $markup . '</body></html>');
-
-            if ($dom->hasChildNodes()) {
-              $tags = array();
-              $bodys = $dom->getElementsByTagName('body');
-              if ($bodys->length > 0) {
-                $body = $bodys->item(0);
-                $tags = $body->getElementsByTagName('*');
-              }
-
-              foreach ($tags as $tag) {
-                if (!in_array($tag->tagName, $allowed)) {
-                  form_set_error('body', t('The HTML tag :tag is not allowed.', array(':tag' => $tag->tagName)));
-                  watchdog('mcneese_content_formats', 'The HTML tag :tag is not allowed.', array(':tag' => $tag->tagName), WATCHDOG_ERROR);
-                }
-              }
-            }
-
-            unset($dom);
-          }
-
-          if (!empty($index_value['value'])) {
-           // process things after the filter is generated.
-            $markup = check_markup($index_value['value'], $index_value['format']);
-            $dom = new DOMDocument();
-            @$dom->loadHTML('<!DOCTYPE html><head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"></head><body>' . $markup . '</body></html>');
-
-            if ($dom->hasChildNodes()) {
-              $tags = array();
-              $bodys = $dom->getElementsByTagName('body');
-              if ($bodys->length > 0) {
-                $body = $bodys->item(0);
-                $tags = $body->getElementsByTagName('*');
-              }
-
-              foreach ($tags as $tag) {
-                if (!in_array($tag->tagName, $allowed)) {
-                  form_set_error('body', t('The HTML tag :tag is not allowed.', array(':tag' => $tag->tagName)));
-                  watchdog('mcneese_content_formats', 'The HTML tag :tag is not allowed.', array(':tag' => $tag->tagName), WATCHDOG_ERROR);
-                }
-              }
-            }
-
-            unset($dom);
-          }
-        }
-      }
-    }
-  }
-}
-
-/**
  * Implements hook_node_presave().
  */
 function mcneese_content_formats_node_presave($node) {
   $deny_abused_codes_value = variable_get('mcneese_content_formats_deny_abused_codes_' . $node->type, FALSE);
 
+  $denied_tags_string = variable_get('mcneese_content_formats_denied_tags_' . $node->type, 'script noscript');
+  $denied_tags = explode(' ', $denied_tags_string);
+  if (user_access('bypass denied tags')) {
+    $denied_tags = array();
+  }
+
   $operations = array();
   $operations['deny_abused_codes'] = $deny_abused_codes_value && !user_access('bypass deny abused codes');
   $operations['fix_links'] = variable_get('mcneese_content_formats_fix_links_' . $node->type, FALSE);
   $operations['fix_markup'] = variable_get('mcneese_content_formats_fix_markup_' . $node->type, FALSE);
+  $operations['denied_tags'] = $denied_tags;
 
   $abused_codes = array();
   $abused_codes['&#34;'] = '"';
@@ -210,6 +140,7 @@ function mcneese_content_formats_node_presave($node) {
   $abused_codes['&rsquo;'] = '\'';
   $abused_codes['&ldquo;'] = '"';
   $abused_codes['&rdquo;'] = '"';
+
 
   $node_variables = array_keys(get_object_vars($node));
 
@@ -276,135 +207,141 @@ function mcneese_content_formats_alter_dom(&$text, $operations) {
     return $text;
   }
 
+  $unsupported_tags = array();
+  $unsupported_tags[] = 'font';
+  $unsupported_tags[] = 'basefont';
+  $unsupported_tags[] = 'big';
+  $unsupported_tags[] = 'center';
+  $unsupported_tags[] = 'dir';
+  $unsupported_tags[] = 'frame';
+  $unsupported_tags[] = 'noframes';
+  $unsupported_tags[] = 'tt';
+
+  $unsupported_attributes = array();
+  $unsupported_attributes[] = 'lang';
+  $unsupported_attributes[] = 'align';
+  $unsupported_attributes[] = 'valign';
+  $unsupported_attributes[] = 'abbr';
+  $unsupported_attributes[] = 'axis';
+  $unsupported_attributes[] = 'bgcolor';
+  $unsupported_attributes[] = 'char';
+  $unsupported_attributes[] = 'charoff';
+  $unsupported_attributes[] = 'nowrap';
+  $unsupported_attributes[] = 'charset';
+
+  $unsupported_td_attr = array();
+  $unsupported_td_attr[] = 'height';
+  $unsupported_td_attr[] = 'scope';
+  $unsupported_td_attr[] = 'width';
+
   $altered = FALSE;
-  $a_tags = $body->getElementsByTagName('a');
-  $img_tags = $body->getElementsByTagName('img');
-  $b_tags = $body->getElementsByTagName('b');
-  $i_tags = $body->getElementsByTagName('i');
-  $strike_tags = $body->getElementsByTagName('strike');
-  $span_tags = $body->getElementsByTagName('span');
   $all_tags = $body->getElementsByTagName('*');
 
-
-  if ($operations['fix_links']) {
-    foreach ($a_tags as $tag) {
-      if ($tag->hasAttribute('href')) {
-        $processed = mcneese_content_formats_get_correct_links($tag->getAttribute('href'));
-
-        if ($processed !== FALSE) {
-          $tag->setAttribute('href', $processed);
-          $altered = TRUE;
-        }
-      }
-    }
-
-    foreach ($img_tags as $tag) {
-      if ($tag->hasAttribute('src')) {
-        $processed = mcneese_content_formats_get_correct_links($tag->getAttribute('src'));
-
-        if ($processed !== FALSE) {
-          $tag->setAttribute('src', $processed);
-          $altered = TRUE;
-        }
-      }
-    }
-  }
-
-  if ($operations['fix_markup']) {
-    // replace b tags with strong
-    foreach ($b_tags as $tag) {
-      $parent = $tag->parentNode;
-      $new_tag = $dom->createElement('strong');
-
-      if ($tag->hasAttributes()) {
-        foreach ($tag->attributes as $attribute) {
-          $new_tag->setAttribute($attribute->name, $attribute->value);
-        }
-      }
-
-      if ($tag->hasChildNodes()) {
-        foreach ($tag->childNodes as $child) {
-          $new_tag->appendChild($child);
-          #$new_tag->appendChild($child->cloneNode(true));
-        }
-      }
-
-      $parent->replaceChild($new_tag, $tag);
+  foreach ($all_tags as $tag) {
+drupal_set_message("DEBUG: tag = " . $tag->tagName . ", operations = " . print_r($operations, TRUE));
+    if (in_array($tag->tagName, $operations['denied_tags'])) {
+      $dom->remove_element($tag);
       $altered = TRUE;
+      continue;
     }
 
-    // replace i tags with em
-    foreach ($i_tags as $tag) {
-      $parent = $tag->parentNode;
-      $new_tag = $dom->createElement('em');
+    if ($operations['fix_links']) {
+      if ($tag->tagName == 'a') {
+        if ($tag->hasAttribute('href')) {
+          $processed = mcneese_content_formats_get_correct_links($tag->getAttribute('href'));
 
-      if ($tag->hasAttributes()) {
-        foreach ($tag->attributes as $attribute) {
-          $new_tag->setAttribute($attribute->name, $attribute->value);
+          if ($processed !== FALSE) {
+            $tag->setAttribute('href', $processed);
+            $altered = TRUE;
+          }
         }
       }
+      elseif ($tag->tagName == 'img') {
+        if ($tag->hasAttribute('src')) {
+          $processed = mcneese_content_formats_get_correct_links($tag->getAttribute('src'));
 
-      if ($tag->hasChildNodes()) {
-        foreach ($tag->childNodes as $child) {
-          $new_tag->appendChild($child->cloneNode(TRUE));
+          if ($processed !== FALSE) {
+            $tag->setAttribute('src', $processed);
+            $altered = TRUE;
+          }
         }
-      }
-
-      $parent->replaceChild($new_tag, $tag);
-      $altered = TRUE;
-    }
-
-    // replace strike tags with del
-    foreach ($strike_tags as $tag) {
-      $parent = $tag->parentNode;
-      $new_tag = $dom->createElement('del');
-
-      if ($tag->hasAttributes()) {
-        foreach ($tag->attributes as $attribute) {
-          $new_tag->setAttribute($attribute->name, $attribute->value);
-        }
-      }
-
-      if ($tag->hasChildNodes()) {
-        foreach ($tag->childNodes as $child) {
-          $new_tag->appendChild($child->cloneNode(TRUE));
-        }
-      }
-
-      $parent->replaceChild($new_tag, $tag);
-      $altered = TRUE;
-    }
-
-    // remove all unsupported tags, but preserve their content.
-    foreach (array('font', 'basefont', 'big', 'center', 'dir', 'frame', 'noframes', 'tt') as $tag_name) {
-      $unsupported_tags = $body->getElementsByTagName($tag_name);
-      while ($unsupported_tags->length > 0) {
-        foreach ($unsupported_tags as $tag) {
-          $dom->remove_element($tag);
-          $altered = TRUE;
-        }
-
-        $unsupported_tags = $body->getElementsByTagName($tag_name);
       }
     }
 
-    // remove span tags with lang=".." attribute, but preserve their content.
-    foreach ($span_tags as $tag) {
-      if ($tag->hasAttribute('lang')) {
-        $dom->remove_element($tag);
+    if ($operations['fix_markup']) {
+      // replace b tags with strong
+      if ($tag->tagName == 'b') {
+        $dom->change_element($tag, 'strong');
         $altered = TRUE;
       }
-    }
+      // replace i tags with em
+      elseif ($tag->tagName == 'i') {
+        $dom->change_element($tag, 'em');
+        $altered = TRUE;
+      }
+      // replace strike tags with del
+      elseif ($tag->tagName == 'strike') {
+        $dom->change_element($tag, 'del');
+        $altered = TRUE;
+      }
+      // remove all unsupported tags, but preserve their content.
+      elseif (in_array($tag->tagName, $unsupported_tags)) {
+        $dom->remove_element($tag);
+        $altered = TRUE;
+        continue;
+      }
+      // remove span tags with lang=".." attribute, but preserve their content.
+      elseif ($tag->tagName == 'span') {
+        if ($tag->hasAttribute('lang')) {
+          $dom->remove_element($tag);
+          $altered = TRUE;
+          continue;
+        }
 
-    // remove common invalid attributes
-    foreach ($all_tags as $tag) {
+        // remove spans that have no attributes.
+        if (!$tag->hasAttributes()) {
+          $dom->remove_element($tag);
+          $altered = TRUE;
+          continue;
+        }
+      }
       // problems with paragraphs.
-      if ($tag->tagName == 'p') {
+      elseif ($tag->tagName == 'p') {
         if ($tag->hasAttribute('style')) {
           $tag->removeAttribute('style');
           $altered = TRUE;
         }
+
+        // replace empty tags that are generally created to implement a line break
+        if (!$tag->hasChildNodes()) {
+          $dom->change_element($tag, 'br');
+          $altered = TRUE;
+        }
       }
+      // strip out attributes no longer supported in html 5 for specific tags.
+      elseif ($tag->tagName == 'td') {
+        foreach ($unsupported_td_attr as $attr_name) {
+          if ($tag->hasAttribute($attr_name)) {
+            $tag->removeAttribute($attr_name);
+            $altered = TRUE;
+          }
+        }
+      }
+      elseif ($tag->tagName == 'div') {
+        // replace empty tags that are generally created to implement a line break
+        if (!$tag->hasChildNodes()) {
+          $dom->change_element($tag, 'br');
+          $altered = TRUE;
+        }
+      }
+      elseif ($tag->tagName == 'h1' || $tag->tagName == 'h2' || $tag->tagName == 'h3' || $tag->tagName == 'h4' || $tag->tagName == 'h5' || $tag->tagName == 'h6') {
+        // replace empty tags that are generally created to implement a line break
+        if (!$tag->hasChildNodes()) {
+          $dom->change_element($tag, 'br');
+          $altered = TRUE;
+        }
+      }
+
 
       // replace name with id (deprecate name tag, except on image maps and params).
       if ($tag->hasAttribute('name') && $tag->tagName != "map" && $tag->tagName != "param") {
@@ -414,52 +351,11 @@ function mcneese_content_formats_alter_dom(&$text, $operations) {
         $altered = TRUE;
       }
 
+
       // strip out unsupported attributes.
-      $unsupported = array();
-      $unsupported[] = 'lang';
-      $unsupported[] = 'align';
-      $unsupported[] = 'valign';
-      $unsupported[] = 'abbr';
-      $unsupported[] = 'axis';
-      $unsupported[] = 'bgcolor';
-      $unsupported[] = 'char';
-      $unsupported[] = 'charoff';
-      $unsupported[] = 'nowrap';
-      $unsupported[] = 'charset';
-      foreach ($unsupported as $attr_name) {
+      foreach ($unsupported_attributes as $attr_name) {
         if ($tag->hasAttribute($attr_name)) {
           $tag->removeAttribute($attr_name);
-          $altered = TRUE;
-        }
-      }
-
-      // strip out attributes no longer supported in html 5 for specific tags.
-      if ($tag->tagName == 'td') {
-        $unsupported = array();
-        $unsupported[] = 'height';
-        $unsupported[] = 'scope';
-        $unsupported[] = 'width';
-        foreach ($unsupported as $attr_name) {
-          if ($tag->hasAttribute($attr_name)) {
-            $tag->removeAttribute($attr_name);
-            $altered = TRUE;
-          }
-        }
-      }
-
-
-      // replace empty tags that are generally created to implement a line break
-      if ($tag->tagName == 'p' || $tag->tagName == 'div' || $tag->tagName == 'h1' || $tag->tagName == 'h2' || $tag->tagName == 'h3' || $tag->tagName == 'h4' || $tag->tagName == 'h5' || $tag->tagName == 'h6') {
-        if (!$tag->hasChildNodes()) {
-          $dom->change_element($tag, 'br');
-          $altered = TRUE;
-        }
-      }
-
-      // remove spans that have no attributes.
-      if ($tag->tagName == 'span') {
-        if (!$tag->hasAttributes()) {
-          $dom->remove_element($tag);
           $altered = TRUE;
         }
       }
