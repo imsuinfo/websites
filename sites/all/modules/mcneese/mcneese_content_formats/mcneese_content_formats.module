@@ -238,7 +238,6 @@ function mcneese_content_formats_alter_dom(&$text, $operations) {
   $all_tags = $body->getElementsByTagName('*');
 
   foreach ($all_tags as $tag) {
-drupal_set_message("DEBUG: tag = " . $tag->tagName . ", operations = " . print_r($operations, TRUE));
     if (in_array($tag->tagName, $operations['denied_tags'])) {
       $dom->remove_element($tag);
       $altered = TRUE;
