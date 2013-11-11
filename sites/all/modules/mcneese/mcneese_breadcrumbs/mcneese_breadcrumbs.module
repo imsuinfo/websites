@@ -6,7 +6,7 @@
  */
 
 /**
- * @defgroup mcneese_breadcrumbs McNeese Content
+ * @defgroup mcneese_breadcrumbs McNeese Breadcrumbs
  * @{
  * Provides content functionality and changes to drupal 7.
  */
@@ -30,5 +30,5 @@ function mcneese_breadcrumbs_menu_breadcrumb_alter(&$active_trail, $item) {
 }
 
 /**
- * @} End of '@defgroup mcneese_breadcrumbs McNeese Content'.
+ * @} End of '@defgroup mcneese_breadcrumbs McNeese Breadcrumbs'.
  */
