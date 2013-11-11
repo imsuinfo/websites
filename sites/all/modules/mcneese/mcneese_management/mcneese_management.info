@@ -11,3 +11,4 @@ dependencies[] = cf_settings (7.x-2.x)
 files[] = mcneese_management.module
 files[] = mcneese_management.rules.inc
 files[] = pages/mcneese_management_emergency_page.inc
+files[] = pages/mcneese_management_group_leader_page.inc
