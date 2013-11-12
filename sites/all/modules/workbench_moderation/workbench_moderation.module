@@ -1143,7 +1143,7 @@ function workbench_moderation_node_current_load($node) {
   if (isset($node->workbench_moderation['current']->vid)) {
     // Ensure that we will return the current revision
     if ($node->vid != $node->workbench_moderation['current']->vid) {
-      $node = node_load($node->nid, $node->workbench_moderation['current']->vid);
+      return node_load($node->nid, $node->workbench_moderation['current']->vid);
     }
   }
   return $node;
