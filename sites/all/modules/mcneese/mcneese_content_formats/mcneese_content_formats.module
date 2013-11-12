@@ -234,6 +234,19 @@ function mcneese_content_formats_alter_dom(&$text, $operations) {
   $unsupported_td_attr[] = 'scope';
   $unsupported_td_attr[] = 'width';
 
+  $supported_name_fields = array();
+  $supported_name_fields[] = 'map';
+  $supported_name_fields[] = 'meta';
+  $supported_name_fields[] = 'param';
+  $supported_name_fields[] = 'input';
+  $supported_name_fields[] = 'textarea';
+  $supported_name_fields[] = 'button';
+  $supported_name_fields[] = 'select';
+  $supported_name_fields[] = 'option';
+  $supported_name_fields[] = 'optgroup';
+  $supported_name_fields[] = 'fieldset';
+  $supported_name_fields[] = 'label';
+
   $altered = FALSE;
   $all_tags = $body->getElementsByTagName('*');
 
@@ -342,8 +355,8 @@ function mcneese_content_formats_alter_dom(&$text, $operations) {
       }
 
 
-      // replace name with id (deprecate name tag, except on image maps and params).
-      if ($tag->hasAttribute('name') && $tag->tagName != "map" && $tag->tagName != "param") {
+      // replace name with id for all unsupported tags.
+      if ($tag->hasAttribute('name') && !in_array($tag->tagName, $supported_name_fields)) {
         $name_value = $tag->getAttribute('name');
         $tag->removeAttribute('name');
         $tag->setAttribute('id', $name_value);
