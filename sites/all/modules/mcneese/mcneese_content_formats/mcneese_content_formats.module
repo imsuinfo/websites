@@ -238,6 +238,7 @@ function mcneese_content_formats_alter_dom(&$text, $operations) {
   $supported_name_fields[] = 'map';
   $supported_name_fields[] = 'meta';
   $supported_name_fields[] = 'param';
+  $supported_name_fields[] = 'form';
   $supported_name_fields[] = 'input';
   $supported_name_fields[] = 'textarea';
   $supported_name_fields[] = 'button';
