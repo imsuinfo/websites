@@ -301,6 +301,12 @@ function mcneese_www_render_page() {
   if ($cf['is']['node'] && !($cf['is']['maintenance'] && !$cf['is_data']['maintenance']['access'])) {
     $node = &$cf['is_data']['node']['object'];
 
+    // font-size override
+    if (property_exists($node, 'field_base_font_size') && is_array($node->field_base_font_size) && isset($node->field_base_font_size['und'][0]['value']) && $node->field_base_font_size['und'][0]['value']) {
+      $font_size = (int) $node->field_base_font_size['und'][0]['value'];
+      $line_height = $font_size + 4;
+    }
+
     // group image
     if (property_exists($node, 'field_group_image_show') && is_array($node->field_group_image_show) && isset($node->field_group_image_show['und'][0]['value']) && $node->field_group_image_show['und'][0]['value']) {
       // assign default 'simple background image' from the dbu.
