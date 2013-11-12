@@ -303,9 +303,17 @@ function mcneese_www_render_page() {
 
 
     // font-size override
-    if (property_exists($node, 'field_base_font_size') && is_array($node->field_base_font_size) && isset($node->field_base_font_size['und'][0]['value']) && $node->field_base_font_size['und'][0]['value']) {
+    if (property_exists($node, 'field_base_font_size') && is_array($node->field_base_font_size) && !empty($node->field_base_font_size['und'][0]['value'])) {
       $font_size = (int) $node->field_base_font_size['und'][0]['value'];
       $line_height = $font_size + 4;
+
+      $custom_css = '.mcneese.is-node .mcneese-content-main,' . "\n";
+      $custom_css = '.mcneese.is-node #mcneese-content-main {' . "\n";
+      $custom_css .= '  font-size: ' . $font_size . "px;\n";
+      $custom_css .= '  line-height: ' . $line_height . "px;\n";
+      $custom_css .= '}' . "\n";
+
+      drupal_add_css($custom_css, array('type' => 'inline', 'group' => CSS_THEME, 'weight' => 100, 'preprocess' => FALSE, 'media' => 'all'));
     }
 
 
