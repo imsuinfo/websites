@@ -135,6 +135,7 @@ function weblinks_schema() {
     'last_click' => array(
       'description' => 'Date/time of the last click',
       'type' => 'datetime',
+      'pgsql_type' => 'timestamp',
       'mysql_type' => 'DATETIME',
       ),
     'last_status' => array(
@@ -153,6 +154,7 @@ function weblinks_schema() {
     'last_checked' => array(
       'description' => 'Date/time of the last validity check',
       'type' => 'datetime',
+      'pgsql_type' => 'timestamp',
       'mysql_type' => 'DATETIME',
       ),
     'urlhash' => array(
