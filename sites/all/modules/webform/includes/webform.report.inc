@@ -1520,7 +1520,12 @@ function webform_download_sids($nid, $range_options, $uid = NULL) {
       break;
     case 'latest':
       // Last x Submissions.
-      $start_sid = webform_download_latest_start_sid($nid, $range_options['latest'], $range_options['completion_type']);
+      if (isset($range_options['completion_type'])) {
+        $start_sid = webform_download_latest_start_sid($nid, $range_options['latest'], $range_options['completion_type']);
+      }
+      else {
+        $start_sid = webform_download_latest_start_sid($nid, $range_options['latest']);
+      }
       $query->condition('sid', $start_sid, '>=');
       break;
     case 'range':
