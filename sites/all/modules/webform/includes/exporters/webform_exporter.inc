@@ -38,6 +38,7 @@ class webform_exporter {
     drupal_add_http_header('Content-Type', 'application/force-download');
     drupal_add_http_header('Pragma', 'public');
     drupal_add_http_header('Cache-Control', 'max-age=0');
+    drupal_send_headers();
   }
 
   /**

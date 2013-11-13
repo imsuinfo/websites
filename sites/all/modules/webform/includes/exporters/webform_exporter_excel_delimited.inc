@@ -41,5 +41,6 @@ class webform_exporter_excel_delimited extends webform_exporter_delimited {
     drupal_add_http_header('Content-Disposition', "attachment; filename=$filename.xls");
     drupal_add_http_header('Pragma', 'public');
     drupal_add_http_header('Cache-Control', 'max-age=0');
+    drupal_send_headers();
   }
 }

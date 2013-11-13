@@ -70,5 +70,6 @@ class webform_exporter_delimited extends webform_exporter {
 
     drupal_add_http_header('Content-Type', $content_type);
     drupal_add_http_header('Content-Disposition', "attachment; filename=$filename.$extension");
+    drupal_send_headers();
   }
 }

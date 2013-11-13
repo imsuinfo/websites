@@ -169,6 +169,7 @@ class webform_exporter_excel_xlsx extends webform_exporter {
     drupal_add_http_header('Content-Disposition', "attachment; filename=$filename.xlsx");
     drupal_add_http_header('Pragma', 'public');
     drupal_add_http_header('Cache-Control', 'max-age=0');
+    drupal_send_headers();
   }
 
   /**
