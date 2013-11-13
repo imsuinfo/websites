@@ -37,3 +37,34 @@ function webform_limit_submissions_schema() {
 
   return $schema;
 }
+
+/**
+ * Upgrade database structure from 7.x-1.x to 7.x-2.x
+ */
+function webform_limit_submissions_update_7200() {
+  $query = db_select('webform_limit_submissions', 'wls');
+  $query->fields('wls');
+
+  $results = (array) $query->execute()->fetchAll();
+
+  $transaction = db_transaction();
+
+  try {
+    foreach ($results as $result) {
+      $value = unserialize($result->value);
+      $close_date = strtotime($value['month'] . '/' . $value['day'] . '/' . $value['year']);
+
+      $query = db_update('webform_limit_submissions');
+      $query->condition('nid', $result->nid);
+      $query->fields(array('value' => $close_date));
+      $query->execute();
+    }
+
+    // force execution of transaction
+    unset($transaction);
+  }
+  catch (Exception $e) {
+    $transaction->rollback();
+    throw $e;
+  }
+}

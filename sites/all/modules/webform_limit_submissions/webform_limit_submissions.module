@@ -11,29 +11,28 @@
  */
 function webform_limit_submissions_form_alter(&$form, &$form_state, $form_id) {
   if ($form_id == 'webform_configure_form') {
-    // Cut-off date (use Webform date component generator).
-    module_load_include('inc', 'webform', 'components/date');
-    $component = _webform_defaults_date();
-    $component['name'] = 'Close the form submissions on the following date';
-    $component['weight'] = 1;
-    $component['mandatory'] = FALSE;
-    $component['value'] = _webform_limit_submissions_close_on_date_value(arg(1), 'close_on_date');
-    $component['extra']['year_start'] = date('Y');
-    $component['extra']['year_end'] = date('Y') +5;
-    $component['extra']['year_textfield'] = FALSE;
-    $component['extra']['datepicker'] = FALSE;
-    
-    // User or site default timezone (snipped from date_api: date_default_timezone_name,
-    if (variable_get('configurable_timezones', 1) && !empty($user->timezone_name)) {
-      $component['extra']['timezone'] = $user->timezone_name;
+
+    $timezone = variable_get('date_default_timezone', 'UTC');
+
+    $close_date = _webform_limit_submissions_close_on_date_value($form['#node']->nid);
+
+    if ($close_date === FALSE) {
+      $default = NULL;
     }
     else {
-      $default = variable_get('date_default_timezone_name', '');
-      $component['extra']['timezone'] = empty($default) ? 'UTC' : $default;
+      $default = format_date($close_date, 'custom', 'Y-m-d H:i:s', $timezone, NULL);
     }
-    // Let Webform date component build the element.
-    $form['submission']['close_date'] = _webform_render_date($component, $component['value'], FALSE);
     
+    $form['submission']['close_date'] = array(
+      '#type' => 'date_popup',
+      '#title' => 'Close form on the following date',
+      '#default_value' => $default,
+      '#date_format' => 'm/d/Y H:i',
+      '#date_label_position' => 'within',
+      '#date_timezone' => $timezone,
+      '#date_year_range' => '0:+8',      
+    );
+
     // Add extra submit function for the date part
     $form['#submit'][] = 'webform_limit_submissions_form_submit';
   }
@@ -43,9 +42,12 @@ function webform_limit_submissions_form_alter(&$form, &$form_state, $form_id) {
  * Submit function for the close on date option
  */
 function webform_limit_submissions_form_submit($form, &$form_state) {
-  $nid = $form['nid']['#value'];
-  if (!empty($form['submission']['close_date']['#value']['day']) && !empty($form['submission']['close_date']['#value']['month']) && !empty($form['submission']['close_date']['#value']['year'])) {
-    $submission_limit = $form['submission']['close_date']['#value'];
+  $nid = $form_state['values']['nid'];
+
+  if (!empty($form_state['values']['close_date'])) {
+
+    $submission_limit = strtotime($form_state['values']['close_date']);
+
     // Delete old record for this node
     db_delete('webform_limit_submissions')
       ->condition('nid', (int) $nid)
@@ -55,13 +57,19 @@ function webform_limit_submissions_form_submit($form, &$form_state) {
       ->fields(array(
         'nid' => (int) $nid,
         'sid' => 0,
-        'value' => serialize($submission_limit),
+        'value' => $submission_limit,
       ))
       ->execute();
     
     if ($form['submission']['status']['#value'] == 0) {
       drupal_set_message(t('The close date has been set, but the form is still closed.'), 'warning');
     }
+  }
+  else {
+    // Delete old record for this node
+    db_delete('webform_limit_submissions')
+      ->condition('nid', (int) $nid)
+      ->execute();
   }
 }
 
@@ -72,8 +80,8 @@ function webform_limit_submissions_node_load($nodes, $types) {
   $types = webform_variable_get('webform_node_types');
   foreach ($nodes as $node) {
     if (in_array($node->type, $types)) {
-    // Set form status.
-    _webform_limit_submissions_limits_exceeded($node->nid);
+      // Set form status.
+      _webform_limit_submissions_limits_exceeded($node->nid);
     }  
   }
 }
@@ -99,13 +107,11 @@ function webform_limit_submissions_node_delete($node) {
  *
  */
 function _webform_limit_submissions_limits_exceeded($nid) {
-  // Flag cutoff date.
   $max_date = _webform_limit_submissions_close_on_date_value($nid, 'close_on_date');
-  $cutoff = FALSE;
-  if (isset($max_date['year']) && trim($max_date['year']) != '') {
-    $lim_time = mktime(0, 0, 0, $max_date['month'], $max_date['day'], $max_date['year']);
-    // time() is UTC by default and $max_date is stored as UTC.
-    if ($lim_time <= time()) {
+
+  if (!empty($max_date)) {
+
+    if ($max_date <= time()) {
       db_update('webform')
         ->fields(array(
           'status' => 0,
@@ -135,8 +141,8 @@ function _webform_limit_submissions_close_on_date_value($nid, $field = 'close_on
       if ($result === FALSE) {
         $value = FALSE;
       }
-      else{
-        $value = unserialize($result);
+      else {
+        $value = $result;
       }
     break;
   }
