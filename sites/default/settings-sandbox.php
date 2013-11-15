@@ -575,7 +575,8 @@ $conf['maintenance_theme'] = 'mcneese_www';
 /**
  * see: http://drupal.org/drupal-7.20-release-notes
  */
-$conf['image_allow_insecure_derivatives'] = TRUE;
+#$conf['image_allow_insecure_derivatives'] = TRUE;
+$conf['image_allow_insecure_derivatives'] = FALSE;
 
 /**
  * External access proxy settings:
