@@ -84,6 +84,7 @@ function killfile_feed_page() {
 
   drupal_add_http_header('Content-Type', 'application/rdf+xml; charset=utf-8');
   drupal_add_http_header('Content-Length', strlen($output));
+  drupal_send_headers();
 
   print($output);
 }

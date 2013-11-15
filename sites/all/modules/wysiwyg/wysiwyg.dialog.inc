@@ -119,6 +119,7 @@ function wysiwyg_deliver_dialog_page($page_callback_result) {
   // Send appropriate HTTP-Header for browsers and search engines.
   global $language;
   drupal_add_http_header('Content-Language', $language->language);
+  drupal_send_headers();
 
   if (isset($page_callback_result)) {
     // Print anything besides a menu constant, assuming it's not NULL or

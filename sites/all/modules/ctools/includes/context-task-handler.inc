@@ -145,6 +145,7 @@ function ctools_context_handler_render_handler($task, $subtask, $handler, $conte
         return MENU_NOT_FOUND;
       case 410:
         drupal_add_http_header('Status', '410 Gone');
+        drupal_send_headers();
         drupal_exit();
         break;
       case 301:

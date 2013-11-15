@@ -325,6 +325,8 @@ class date_ical_plugin_style_ical_feed extends views_plugin_style {
         $filename = array_pop($path_array);
         drupal_add_http_header('Content-Disposition', "attachment; filename=\"$filename\"");
       }
+
+      drupal_send_headers();
     }
     
     // Allow other modules to alter the rendered calendar, just before it gets sent out.

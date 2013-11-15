@@ -916,6 +916,7 @@ function template_preprocess_views_view_rss(&$vars) {
   // of the feed are being displayed inside a normal HTML page.
   if (empty($vars['view']->live_preview)) {
     drupal_add_http_header('Content-Type', 'application/rss+xml; charset=utf-8');
+    drupal_send_headers();
   }
 }
 

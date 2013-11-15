@@ -487,6 +487,7 @@ function _background_process_cleanup_menu($cid) {
  */
 function background_process_service_start($handle, $return = FALSE) {
   drupal_add_http_header('Content-Type', 'text/plain');
+  drupal_send_headers();
 
   // Let's clean up the mess the menu-router system leaves behind.
   $cid = 'menu_item:' . hash('sha256', $_GET['q']);
