@@ -284,7 +284,7 @@ $databases = array (
   ),
 );
 
-$databases['default'] = $databases['www'];
+$databases['default'] = $databases['wwwdev2'];
 unset($dbp);
 
 /**
@@ -397,7 +397,7 @@ ini_set('session.cookie_lifetime', 432000);
  * between your various domains. Make sure to always start the $cookie_domain
  * with a leading dot, as per RFC 2109.
  */
-$cookie_domain = '.www.mcneese.edu';
+$cookie_domain = '.wwwdev.mcneese.edu';
 
 /**
  * Variable overrides:
@@ -689,13 +689,13 @@ $conf['mcneese_management_group_leader_unassigned'] = 197; # 197 = nobody
 /**
  * Additional file_db variables.
  */
-$conf['file_db_server_id'] = 1;
+$conf['file_db_server_id'] = 6;
 $conf['file_entity_default_scheme'] = 'dbu';
 $conf['image_style_default_scheme'] = 'public';
 $conf['phplot_api_default_scheme'] = 'public';
 
 
 // enable all errors
-#error_reporting(E_ALL);
-#ini_set('display_errors', TRUE);
-#ini_set('display_startup_errors', TRUE);
+error_reporting(E_ALL | E_STRICT);
+ini_set('display_errors', TRUE);
+ini_set('display_startup_errors', TRUE);
