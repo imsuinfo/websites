@@ -13,8 +13,8 @@
 
 class cf_dom {
   const PREFIX = 'cf';
-  const CONTENT = '<head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"></head><body></body>';
-  const DOCTYPE = '<!DOCTYPE html>';
+  const CONTENT_PREFIX = '<head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"></head><body>';
+  const CONTENT_POSTFIX = '</body>';
 
   private $doctype = NULL;
   private $preserve_whitespace = TRUE;
@@ -22,16 +22,18 @@ class cf_dom {
   private $dom = NULL;
   private $head = NULL;
   private $body = NULL;
-  private $content = cf_dom::CONTENT;
+  private $content = NULL;
 
 
   /**
    * Constructor for the cf_dom class.
    *
-   * @param string $doctype
+   * @param string|null|bool $doctype
    *   (optional) When a document type is passed, a new dom object gets
    *   created. When set to NULL, will use the drupal variable called
    *   'cf_dom_doctype' is used.
+   *   When TRUE, specify that the headers will also be auto added along with
+   *   the doctype.
    * @param bool $preserve_whitespace
    *   (optional) The default whitespace preservation dom setting.
    * @param bool $format_output
@@ -69,10 +71,17 @@ class cf_dom {
       else {
         $this->doctype = $doctype;
       }
+
+      $this->content = cf_dom::CONTENT_PREFIX . cf_dom::CONTENT_POSTFIX;
     }
     else {
       if (is_string($content)) {
-        $this->content = $content;
+        if (is_bool($doctype) && $doctype) {
+          $this->content = cf_dom::CONTENT_PREFIX . $content . cf_dom::CONTENT_POSTFIX;
+        }
+        else {
+          $this->content = $content;
+        }
       }
       else {
         if (class_exists('cf_error')) {
@@ -80,6 +89,14 @@ class cf_dom {
         }
 
         return;
+      }
+
+      if (!is_null($doctype) && !is_bool($doctype)) {
+        if (cf_is_empty_or_non_string('doctype', $doctype)) {
+          return;
+        }
+
+        $this->doctype = $doctype;
       }
     }
 
