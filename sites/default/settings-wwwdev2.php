@@ -689,7 +689,7 @@ $conf['mcneese_management_group_leader_unassigned'] = 197; # 197 = nobody
 /**
  * Additional file_db variables.
  */
-$conf['file_db_server_id'] = 6;
+$conf['file_db_server_id'] = 7;
 $conf['file_entity_default_scheme'] = 'dbu';
 $conf['image_style_default_scheme'] = 'public';
 $conf['phplot_api_default_scheme'] = 'public';
