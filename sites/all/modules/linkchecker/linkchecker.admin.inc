@@ -169,6 +169,7 @@ function linkchecker_admin_settings_form($form_state) {
       'Mozilla/5.0 (Windows NT 6.1; WOW64; rv:17.0) Gecko/20100101 Firefox/17.0' => 'Windows 7 (x64), Mozilla Firefox 17.0',
       'Mozilla/5.0 (compatible; MSIE 10.0; Windows NT 6.2; WOW64; Trident/6.0)' => 'Windows 8 (x64), Internet Explorer 10.0',
       'Mozilla/5.0 (Windows NT 6.2; WOW64; rv:17.0) Gecko/20100101 Firefox/17.0' => 'Windows 8 (x64), Mozilla Firefox 17.0',
+      'Mozilla/5.0 (X11; U; Linux x86_64) AppleWebKit/535.1 (KHTML, like Gecko) Chrome/14.0.835.94 Safari/535.1' => 'Linux Chrome 14',
     ),
   );
   $form['check']['linkchecker_check_links_interval'] = array(
