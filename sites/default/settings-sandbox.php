@@ -340,7 +340,12 @@ unset($dhs);
  * It is not allowed to have a trailing slash; Drupal will add it
  * for you.
  */
-# $base_url = 'http://www.example.com';  // NO trailing slash!
+if ($_SERVER['SERVER_PORT'] == 443) {
+  $base_url = 'https://sandbox.mcneese.edu';  // NO trailing slash!
+}
+else {
+  $base_url = 'http://sandbox.mcneese.edu';  // NO trailing slash!
+}
 
 /**
  * PHP settings:
