@@ -181,16 +181,6 @@ function _linkchecker_link_access($link) {
 /**
  * Returns IDs of nodes that contain a link which the current user may be allowed to view.
  *
- * Important note: For performance reasons, this function is not always
- * guaranteed to return the exact list of node IDs that the current user is
- * allowed to view. It will, however, always return an empty array if the user
- * does not have access to view *any* such nodes, thereby meeting the security
- * goals of _linkchecker_link_access() and other places that call it.
- *
- * In the case where a user has access to some of the nodes that contain the
- * link, this function may return some node IDs that the user does not have
- * access to. Therefore, use caution with its results.
- *
  * @param object $link
  *   An object representing the link to check.
  * @param object $node_author_account
@@ -203,14 +193,6 @@ function _linkchecker_link_access($link) {
  *   user may be allowed to view.
  */
 function _linkchecker_link_node_ids($link, $node_author_account = NULL) {
-  static $fields_with_node_links = array();
-
-  // Exit if all node types are disabled or if the user cannot access content,
-  // there is no need to check further.
-  $linkchecker_scan_nodetypes = array_filter(variable_get('linkchecker_scan_nodetypes', array()));
-  if (empty($linkchecker_scan_nodetypes) || !user_access('access content')) {
-    return array();
-  }
 
   // Get a list of nodes containing the link, using addTag('node_access') to
   // allow node access modules to exclude nodes that the current user does not
@@ -225,14 +207,14 @@ function _linkchecker_link_node_ids($link, $node_author_account = NULL) {
       ->condition('n.uid', $node_author_account->uid)
       ->condition('r.uid', $node_author_account->uid)
     );
-    $query->fields('n', array('nid'));
+    $query->fields('n');
   }
   else {
     $query = db_select('node', 'n');
     $query->addTag('node_access');
     $query->innerJoin('linkchecker_node', 'ln', 'ln.nid = n.nid');
     $query->condition('ln.lid', $link->lid);
-    $query->fields('n', array('nid'));
+    $query->fields('n');
   }
   $nodes = $query->execute();
 
@@ -240,55 +222,12 @@ function _linkchecker_link_node_ids($link, $node_author_account = NULL) {
   // However, for performance reasons, as soon as we find one node where that
   // is the case, stop checking and return the remainder of the list.
   $nids = array();
-  $access_allowed = FALSE;
   foreach ($nodes as $node) {
-    if ($access_allowed) {
-      $nids[] = $node->nid;
-      continue;
-    }
-    $node = node_load($node->nid);
+    if (isset($nids[$node->nid])) continue;
 
-    // We must check whether the link is currently part of the node; if not, we
-    // do not want to return it (and it is not safe to, since we cannot know if
-    // it contained access restrictions for the current user at the point which
-    // it was originally extracted by the Link checker module).
-    if (!isset($fields_with_node_links[$node->nid])) {
-      $fields_with_node_links[$node->nid] = _linkchecker_extract_node_links($node, TRUE);
+    if (node_access('view', $node)) {
+      $nids[$node->nid] = $node->nid;
     }
-    if (empty($fields_with_node_links[$node->nid][$link->url])) {
-      continue;
-    }
-    // If the link appears in fields and a field access module is being used,
-    // we must check that the current user has access to view at least one field
-    // that contains the link; if they don't, we should not return the node.
-    $fields = $fields_with_node_links[$node->nid][$link->url];
-    if (module_implements('field_access')) {
-      $fields_with_access = array();
-
-      $bundle_instances = field_info_instances('node', $node->type);
-      foreach ($bundle_instances as $field_name => $field_instance) {
-        $field = field_info_field($field_name);
-
-        // Field types supported by linkchecker.
-        $fields_supported = array(
-          'text_with_summary',
-          'text_long',
-          'text',
-          'link_field',
-        );
-
-        // Only check link and text fields, since those are the only types we
-        // extract links from.
-        if (in_array($field['type'], $fields_supported) && field_access('view', $field, 'node', $node)) {
-          $fields_with_access[] = $field['field_name'];
-        }
-      }
-      if (!array_intersect($fields, $fields_with_access)) {
-        continue;
-      }
-    }
-    $nids[] = $node->nid;
-    $access_allowed = TRUE;
   }
 
   return $nids;
