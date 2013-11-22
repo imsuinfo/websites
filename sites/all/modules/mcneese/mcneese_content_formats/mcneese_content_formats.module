@@ -199,7 +199,9 @@ function mcneese_content_formats_deny_abused_codes($abused_codes, &$value) {
 function mcneese_content_formats_alter_dom(&$text, $operations) {
   if (empty($text)) return '';
 
-  $dom = new cf_dom(NULL, TRUE, TRUE, $text);
+  $prefix = '<html><head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"></head><body>';
+  $suffix = '</body></html>';
+  $dom = new cf_dom(cf_dom::DOCTYPE, TRUE, TRUE, $prefix . $text . $suffix);
 
   $prefix = 'mt_';
   $body = $dom->get_body();
