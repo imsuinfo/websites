@@ -397,7 +397,7 @@ ini_set('session.cookie_lifetime', 432000);
  * between your various domains. Make sure to always start the $cookie_domain
  * with a leading dot, as per RFC 2109.
  */
-$cookie_domain = '.wwwdev.mcneese.edu';
+$cookie_domain = '.wwwdev2.mcneese.edu';
 
 /**
  * Variable overrides:
