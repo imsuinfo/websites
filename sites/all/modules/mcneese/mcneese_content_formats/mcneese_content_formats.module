@@ -292,6 +292,17 @@ function mcneese_content_formats_alter_dom(&$text, $operations) {
         $dom->change_element($tag, 'em');
         $altered = TRUE;
       }
+      // using embedded/inline images is not supported, in this case completely strip out the tag.
+      elseif ($tag->tagName == 'img') {
+        if ($tag->hasAttribute('src')) {
+          $image_source = $tag->getAttribute('src');
+
+          if (preg_match('/^data:/i', $image_source) > 0) {
+            $dom->remove_element($tag);
+            $altered = TRUE;
+          }
+        }
+      }
       // replace strike tags with del
       elseif ($tag->tagName == 'strike') {
         $dom->change_element($tag, 'del');
