@@ -464,25 +464,27 @@ function node_accessibility_statistics_form_node_accessibility_accessibility_tab
           break;
       }
 
-      foreach ($form['variables']['results']['#value'] as $display_level => &$value) {
-         if ($type_name == 'problem_distribution') {
-           if ($display_levels[$display_level]['machine_name'] == 'quail_test_suggestion') {
-             continue;
+      if (is_array($form['variables']['results']['#value'])) {
+        foreach ($form['variables']['results']['#value'] as $display_level => &$value) {
+           if ($type_name == 'problem_distribution') {
+             if ($display_levels[$display_level]['machine_name'] == 'quail_test_suggestion') {
+               continue;
+             }
            }
-         }
 
-        $data_row = array($display_levels[$display_level]['human_name'], $value['total']);
-        $data[] = $data_row;
-        $total += $value['total'];
-        $plot->set_data('legend', implode(': ', $data_row));
+          $data_row = array($display_levels[$display_level]['human_name'], $value['total']);
+          $data[] = $data_row;
+          $total += $value['total'];
+          $plot->set_data('legend', implode(': ', $data_row));
 
-        $theme_setting = array();
-        $theme_setting['machine_name'] = $display_levels[$display_level]['machine_name'];
-        $theme_setting['human_name'] = $display_levels[$display_level]['human_name'];
-        $theme_setting['show_human_name'] = TRUE;
-        $theme_setting['link'] = '#edit-' . drupal_clean_css_identifier($display_levels[$display_level]['machine_name']);
-        $theme_setting['value'] = $data_row[1];
-        $theme_settings['plot_rows'][] = $theme_setting;
+          $theme_setting = array();
+          $theme_setting['machine_name'] = $display_levels[$display_level]['machine_name'];
+          $theme_setting['human_name'] = $display_levels[$display_level]['human_name'];
+          $theme_setting['show_human_name'] = TRUE;
+          $theme_setting['link'] = '#edit-' . drupal_clean_css_identifier($display_levels[$display_level]['machine_name']);
+          $theme_setting['value'] = $data_row[1];
+          $theme_settings['plot_rows'][] = $theme_setting;
+        }
       }
 
       if ($total > 0) {
