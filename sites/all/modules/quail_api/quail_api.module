@@ -719,6 +719,13 @@ function quail_api_validate_markup($html, $standard, $display_level = NULL) {
     return $results;
   }
 
+  // quail-lib fails when the markup is empty.
+  // empty markup is valid, so bypass the validator and return success.
+  if (empty($html)) {
+    $results['report'] = array();
+    return $results;
+  }
+
   if (!is_array($display_level)) {
     $display_level = quail_api_get_default_display_level();
   }
