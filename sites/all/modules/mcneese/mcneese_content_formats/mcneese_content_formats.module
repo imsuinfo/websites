@@ -446,6 +446,11 @@ function mcneese_content_formats_get_correct_links($url) {
       $parsed['path'] = 'mailto:' . $parsed['path'];
       $altered = TRUE;
     }
+    else if (preg_match('@^www\.@i', $parsed['path']) > 0 || preg_match('@\.(biz|com|info|net|org|edu|gov|mil|us)$@i', $parsed['path']) > 0) {
+      // fix external paths that are missing the scheme, but only for the most common extensions for practicality reasons.
+      $parsed['path'] = 'http://' . $parsed['path'];
+      $altered = TRUE;
+    }
     else if (preg_match('@^' . $base_path . '@i', $parsed['path'])) {
       $path = rawurldecode(preg_replace('@^' . $base_path . '@i', '', $parsed['path']));
 
