@@ -441,7 +441,12 @@ function mcneese_content_formats_get_correct_links($url) {
   }
 
   if (empty($parsed['scheme'])) {
-    if (preg_match('@^' . $base_path . '@i', $parsed['path'])) {
+    if (preg_match('/@.*\./i', $parsed['path']) > 0 && preg_match('/^mailto:/i', $parsed['path']) == 0) {
+      // fix invalid mailto addresses.
+      $parsed['path'] = 'mailto:' . $parsed['path'];
+      $altered = TRUE;
+    }
+    else if (preg_match('@^' . $base_path . '@i', $parsed['path'])) {
       $path = rawurldecode(preg_replace('@^' . $base_path . '@i', '', $parsed['path']));
 
       // check to see if a url redirection exists for the given path.
