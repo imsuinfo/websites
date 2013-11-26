@@ -34,6 +34,27 @@ function mcneese_content_permission() {
 }
 
 /**
+ * Implements hook_menu().
+ */
+function mcneese_content_menu() {
+  $items = array();
+
+  $items['sitemap'] = array(
+    'type' => MENU_LOCAL_TASK,
+    'title' => '',
+    'description' => "View the XML site map.",
+    'page callback' => 'mcneese_content_sitemap_page',
+    'file' => 'mcneese_content_sitemap.inc',
+    'file path' => drupal_get_path('module', 'mcneese_content') . '/pages',
+    'access callback' => 'user_access',
+    'access arguments' => array('access content'),
+    'type' => MENU_CALLBACK,
+  );
+
+  return $items;
+}
+
+/**
  * Implements hook_form_FORM_ID_alter() for the node type form.
  */
 function mcneese_content_form_node_type_form_alter(&$form, &$form_state, $form_id) {
