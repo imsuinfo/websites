@@ -245,11 +245,17 @@ function mcneese_functions_embed_network_services_traffic($url_path, $cache_id =
       // reduce all other header tags.
       cf_http_reduce_html_headers($document['dom']);
 
-      // it is known that Dave Rand <dlr@bungi.com> email link does not use a mailto, so fix it.
+      // it is known that Dave Rand <dlr@bungi.com> and Tobias Oetiker <tobi@oetiker.ch> email link do not use a mailto, so fix them.
       $a_tags = $body->getElementsByTagName('a');
       foreach ($a_tags as $a_tag) {
-        if ($a_tag->hasAttribute('href') && $a_tag->getAttribute('href') == 'http://' . $server_name . $url_path . '/dlr@bungi.com') {
-          $a_tag->setAttribute('href', 'mailto:dlr@bungi.com');
+        if ($a_tag->hasAttribute('href')) {
+          $href_value = $a_tag->getAttribute('href');
+          if ($href_value == 'http://' . $server_name . $url_path . '/dlr@bungi.com') {
+            $a_tag->setAttribute('href', 'mailto:dlr@bungi.com');
+          }
+          elseif ($href_value == 'http://' . $server_name . $url_path . '/tobi+mrtglink@oetiker.ch') {
+            $a_tag->setAttribute('href', 'mailto:tobi+mrtglink@petiker.ch');
+          }
         }
       }
 
