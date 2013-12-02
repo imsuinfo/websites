@@ -351,13 +351,6 @@ function mcneese_content_formats_alter_dom(&$text, $operations) {
           }
         }
       }
-      elseif ($tag->tagName == 'div') {
-        // replace empty tags that are generally created to implement a line break
-        if (!$tag->hasChildNodes()) {
-          $dom->change_element($tag, 'br');
-          $altered = TRUE;
-        }
-      }
       elseif ($tag->tagName == 'h1' || $tag->tagName == 'h2' || $tag->tagName == 'h3' || $tag->tagName == 'h4' || $tag->tagName == 'h5' || $tag->tagName == 'h6') {
         // replace empty tags that are generally created to implement a line break
         if (!$tag->hasChildNodes()) {
