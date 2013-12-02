@@ -28,6 +28,11 @@ function mcneese_management_permission() {
     'description' => t("Grants permissions to manage group leaders."),
   );
 
+  $permissions['mcneese management reassign user'] = array(
+    'title' => t("Re-assign Users Content"),
+    'description' => t("Grants permissions to re-assign content assigned to one user to another user."),
+  );
+
   return $permissions;
 }
 
@@ -93,9 +98,28 @@ function mcneese_management_menu() {
 
   $items['admin/content/management/group_leader/ajax/autocomplete/group_leader'] = array(
     'title' => '',
-    'page callback' => 'mcneese_management_autocomplete_group_leader',
+    'page callback' => 'mcneese_management_autocomplete_user',
     'access callback' => 'user_access',
     'access arguments' => array('mcneese management group leader'),
+    'type' => MENU_CALLBACK,
+  );
+
+  $items['admin/content/management/reassign_user'] = array(
+    'title' => "Re-Assign User",
+    'description' => "Assign content associated with a particular user to another user.",
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('mcneese_management_reassign_user_form', 5),
+    'file' => 'mcneese_management_reassign_user_page.inc',
+    'file path' => drupal_get_path('module', 'mcneese_management') . '/pages',
+    'access callback' => 'user_access',
+    'access arguments' => array('mcneese management reassign user'),
+  );
+
+  $items['admin/content/management/reassign_user/ajax/autocomplete/reassign_user'] = array(
+    'title' => '',
+    'page callback' => 'mcneese_management_autocomplete_user',
+    'access callback' => 'user_access',
+    'access arguments' => array('mcneese management reassign user'),
     'type' => MENU_CALLBACK,
   );
 
@@ -206,7 +230,7 @@ function mcneese_management_set_emergency_mode($emergency_mode) {
   }
 
   $maintenance_mode = variable_get('maintenance_mode', FALSE);
- 
+
   if ($mode == TRUE || $maintenance_mode != FALSE) {
     variable_set('maintenance_mode', $mode);
   }
@@ -261,7 +285,7 @@ function mcneese_management_check_group_leader_dependencies() {
 /**
  * Provide ajax autocomplete for users.
  */
-function mcneese_management_autocomplete_group_leader($username = '') {
+function mcneese_management_autocomplete_user($username = '') {
   $matches = array();
 
   if (!is_string($username)) {
@@ -316,7 +340,7 @@ function mcneese_management_autocomplete_group_leader($username = '') {
  *   Returns TRUE on success assignment of the user and FALSE otherwise.
  */
 function mcneese_management_assign_group_leader($access_id, $user_id) {
-  $dependency = mcneese_management_check_group_leader_dependencies(); 
+  $dependency = mcneese_management_check_group_leader_dependencies();
   if (!is_null($dependency)) {
     return FALSE;
   }
@@ -324,6 +348,47 @@ function mcneese_management_assign_group_leader($access_id, $user_id) {
   if (!cf_is_integer($access_id)) {
     if (class_exists('cf_error')) {
       cf_error::invalid_numeric('access_id');
+    }
+
+    return FALSE;
+  }
+
+
+  // load all nodes that are assigned to a particular group.
+  $query = db_select('workbench_access_node', 'wan');
+  $query->fields('wan', array('nid'));
+  $query->condition('access_id', $access_id);
+
+  $executed = $query->execute();
+
+  $nids = array();
+  foreach ($executed as $result) {
+    $nids[] = $result->nid;
+  }
+
+  // nothing to update.
+  if (empty($nids)) {
+    return TRUE;
+  }
+
+  return mcneese_management_assign_node_user($nids, $user_id);
+}
+
+/**
+ * Assigns all specified nodes to the given user id.
+ *
+ * @param array $nids
+ *   An array of node ids to have the new user id associated with.
+ * @param int $user_id
+ *   The user id of the user to assign content to.
+ *
+ * @param bool
+ *   Returns TRUE on successfull assignment of the user and FALSE otherwise.
+ */
+function mcneese_management_assign_node_user($nids, $user_id) {
+  if (!is_array($nids) || empty($nids)) {
+    if (class_exists('cf_error')) {
+      cf_error::invalid_array('nids');
     }
 
     return FALSE;
@@ -349,23 +414,6 @@ function mcneese_management_assign_group_leader($access_id, $user_id) {
   }
 
 
-  // load all nodes that are assigned to a particular group.
-  $query = db_select('workbench_access_node', 'wan');
-  $query->fields('wan', array('nid'));
-  $query->condition('access_id', $access_id);
-
-  $executed = $query->execute();
-
-  $nids = array();
-  foreach ($executed as $result) {
-    $nids[] = $result->nid;
-  }
-
-  // nothing to update.
-  if (empty($nids)) {
-    return TRUE;
-  }
-
   // apply changes
   $transaction = db_transaction();
 
@@ -387,7 +435,62 @@ function mcneese_management_assign_group_leader($access_id, $user_id) {
     }
   }
 
+  watchdog('mcneese', 'Reassigned the following nodes to the user @uid: @nids', array('@uid' => $user_id, '@nids' => print_r($nids, TRUE)), WATCHDOG_NOTICE);
+
   return TRUE;
+}
+
+/**
+ * Loads all node ids assigned to a given user.
+ *
+ * @param int $user_id
+ *   The user id of the user to assign content to.
+ *
+ * @param array
+ *   Returns an array of node ids on success and FALSE otherwise.
+ */
+function mcneese_management_load_assigned_nids($user_id) {
+  if (!cf_is_integer($user_id)) {
+    if (class_exists('cf_error')) {
+      cf_error::invalid_numeric('user_id');
+    }
+
+    return FALSE;
+  }
+
+  // check to see if the user exists.
+  $query = db_select('users', 'u');
+  $query->fields('u');
+  $query->condition('u.uid', $user_id);
+  $query->countQuery();
+
+  $result = $query->execute()->fetchField();
+  if ($result === FALSE) {
+    return FALSE;
+  }
+
+
+  // apply changes
+  $nids = array();
+
+  try {
+    // now perform the operation.
+    $query = db_select('node', 'n');
+    $query->fields('n', array('nid'));
+    $query->condition('uid', $user_id);
+    $executed = $query->execute();
+
+    foreach ($executed as $result) {
+     $nids[] = $result->nid;
+    }
+  }
+  catch (Exception $e) {
+    if (class_exists('cf_error')) {
+      cf_error::on_query_execution($e);
+    }
+  }
+
+  return $nids;
 }
 
 
