@@ -55,6 +55,25 @@ function mcneese_content_menu() {
 }
 
 /**
+ * Implements hook_node_view().
+ */
+function mcneese_content_node_view($node, $view_mode, $langcode){
+  $current_path = current_path();
+  $request_path = request_path();
+  $shortlink = 'node/' . check_plain($node->nid);
+
+  // only alter http headers if the current path is the node being viewed.
+  if ($shortlink != $current_path) return;
+
+  global $base_path;
+
+  $link = '<' . $base_path . $shortlink . '>; rel="shortlink"';
+  $link .= ', <' . $base_path . $request_path . '>; rel="canonical";';
+
+  drupal_add_http_header('Link', $link);
+}
+
+/**
  * Implements hook_form_FORM_ID_alter() for the node type form.
  */
 function mcneese_content_form_node_type_form_alter(&$form, &$form_state, $form_id) {
@@ -164,6 +183,7 @@ function mcneese_content_webform_client_form_submit($form, &$form_state) {
   // session and actually displayed to the user when they are supposed to be.
   $form_state['redirect'][1]['https'] = TRUE;
 }
+
 
 
 /**
