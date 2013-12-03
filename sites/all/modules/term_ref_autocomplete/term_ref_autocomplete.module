@@ -234,7 +234,6 @@ function term_ref_autocomplete_taxonomy_autocomplete_validate($element, &$form_s
   if (empty($tids)) {
     if (!empty($value_ref['names'])) {
       form_set_error($element['#field_name'], t('No valid terms have been specified!'));
-      drupal_set_message("value ref = " . print_r($value_ref, TRUE));
     }
   }
   else {
