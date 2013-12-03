@@ -126,12 +126,30 @@ function mcneese_content_secure_pages() {
   foreach ($secure_path_regex as $regex) {
     $matched = preg_match('@' . $regex . '@i', $normal);
 
-    if ($matched) {
-      $fixed_base_url = preg_replace('@^http://@i', 'https://', $base_url);
-      $new_uri = $fixed_base_url . $base_path . $normal;
-      if (!headers_sent()) header('Location: ' . $new_uri, TRUE, 301);
-      drupal_exit($new_uri);
+    if ($matched) break;
+  }
+
+  if (!$matched) {
+    $matches = array();
+    $matched = preg_match('@^node/(\d+)$@i', $normal, $matches);
+
+    if ($matched && is_numeric($matches[1])) {
+      $type = db_query('SELECT type from {node} where nid = :nid', array(':nid' => $matches[1]))->fetchField();
+
+      if ($type == 'webform') {
+        $matched = TRUE;
+      }
+      else {
+        $matched = FALSE;
+      }
     }
+  }
+
+  if ($matched) {
+    $fixed_base_url = preg_replace('@^http://@i', 'https://', $base_url);
+    $new_uri = $fixed_base_url . $base_path . $normal;
+    if (!headers_sent()) header('Location: ' . $new_uri, TRUE, 301);
+    drupal_exit($new_uri);
   }
 }
 
@@ -147,16 +165,6 @@ function mcneese_content_form_webform_client_form_alter(&$form, &$form_state) {
     // make sure webform links go to https pages
     $form['#https'] = TRUE;
     $form['#submit'][] = 'mcneese_content_webform_client_form_submit';
-  }
-  else {
-    // if webforms are not already in https connections, then force them to be.
-    $path = isset($_GET['q']) ? $_GET['q'] : '';
-    $normal = drupal_get_normal_path($path);
-
-    $fixed_base_url = preg_replace('@^http://@i', 'https://', $base_url);
-    $new_uri = $fixed_base_url . $base_path . $normal;
-    if (!headers_sent()) header('Location: ' . $new_uri, TRUE, 301);
-    drupal_exit($new_uri);
   }
 }
 
