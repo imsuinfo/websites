@@ -126,6 +126,9 @@ function node_accessibility_drush_callback_validate() {
   $revisions = TRUE;
   $chunk_size = drush_get_option('chunk');
 
+  $node_type_settings = node_accessibility_load_node_type_settings();
+  $methods = quail_api_get_validation_methods(NULL);
+
   if (is_null(drush_get_option('delete'))) {
     $delete = FALSE;
   }
@@ -210,6 +213,12 @@ function node_accessibility_drush_callback_validate() {
       $counter++;
     }
 
+    $vid_query = db_select('node', 'n');
+    $vid_query->fields('n', array('nid', 'vid', 'type'));
+    $vid_query->condition('n.nid', $current_nids, 'IN');
+    $vid_executed = $vid_query->execute();
+    $nodes = $vid_executed->fetchAllAssoc('nid');
+
     if ($delete) {
       foreach ($current_nids as $nid) {
         if ($revisions) {
@@ -217,8 +226,7 @@ function node_accessibility_drush_callback_validate() {
           $vid_string = "all";
         }
         else {
-          $node = node_load($nid);
-          $vid = $node->vid;
+          $vid = $nodes[$node->nid]->vid;
           $vid_string = $vid;
         }
 
@@ -253,44 +261,40 @@ function node_accessibility_drush_callback_validate() {
           }
         }
       }
+      else {
+        foreach ($nodes as $nid => $node) {
+          $vids[$nid] = array($node->vid);
+        }
+      }
 
       $results = node_accessibility_perform_validation($current_nids, $vids, NULL, NULL);
 
-      if ($results === FALSE) {
+      if ($result === FALSE) {
         drush_set_error('DRUSH_NOT_COMPLETED', "Failed to perform accessibility validation.");
       }
       else {
-        $methods = quail_api_get_validation_methods(NULL);
-
         foreach ($current_nids as $nid) {
-          $node = node_load($nid);
-          $database = isset($methods[$node->accessibility['method']]['database']) ? $methods[$node->accessibility['method']]['database'] : FALSE;
+          $vid = $nodes[$nid]->vid;
+          $type = $nodes[$nid]->type;
+          $reports = $results[$nid][$vid]['report'];
+          $node_settings = $node_type_settings[$type];
+          $database = isset($methods[$node_settings['method']]['database']) ? $methods[$node_settings['method']]['database'] : FALSE;
 
-          if (empty($vids[$nid])) {
-            $vids[$nid] = array($node->vid);
-          }
+          if ($database && !empty($reports) && isset($results[$nid][$vid]['report'])) {
+            $no_failures = TRUE;
 
-          foreach ($vids[$nid] as $vid) {
-            if (isset($results[$nid][$vid]['report'])) {
-              $reports = &$results[$nid][$vid]['report'];
-
-              if ($database && !empty($reports)) {
-                $no_failures = TRUE;
-
-                foreach ($reports as $severity => $severity_results) {
-                  if (isset($severity_results['total']) && $severity_results['total'] > 0) {
-                    $no_failures = FALSE;
-                    break;
-                  }
-                }
-
-                if ($no_failures) {
-                  node_accessibility_delete_node_problems($nid, $vid);
-                }
-                else {
-                  node_accessibility_save_node_problems($nid, $vid, $reports);
-                }
+            foreach ($reports as $severity => $severity_results) {
+              if (isset($severity_results['total']) && $severity_results['total'] > 0) {
+                $no_failures = FALSE;
+                break;
               }
+            }
+
+            if ($no_failures) {
+              node_accessibility_delete_node_problems($nid, $vid);
+            }
+            else {
+              node_accessibility_save_node_problems($nid, $vid, $reports);
             }
           }
         }
