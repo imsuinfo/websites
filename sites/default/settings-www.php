@@ -704,3 +704,6 @@ $conf['phplot_api_default_scheme'] = 'public';
 #error_reporting(E_ALL);
 #ini_set('display_errors', TRUE);
 #ini_set('display_startup_errors', TRUE);
+
+// manually turn on maintenance mode
+#$conf['maintenance_mode'] = TRUE;
