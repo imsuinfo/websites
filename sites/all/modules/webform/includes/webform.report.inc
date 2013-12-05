@@ -1142,6 +1142,12 @@ function webform_results_batch_rows($node, $format = 'delimited', $options = arr
   // Write these submissions to the file.
   $exporter = webform_export_create_handler($format, $options);
   $handle = @fopen($options['file_name'], 'a'); // The @ suppresses errors.
+
+  // ensure that row_count is initialized
+  if (!isset($context['results']['row_count'])) {
+    $context['results']['row_count'] = 0;
+  }
+
   foreach ($rows as $row) {
     $exporter->add_row($handle, $row, $context['results']['row_count']);
     $context['results']['row_count']++;
