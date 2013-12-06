@@ -2,7 +2,7 @@
 
 /**
  * @file
- * Defines statistics page functions.
+ * Defines emergency settings page functions.
  */
 
 /**

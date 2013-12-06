@@ -2,7 +2,7 @@
 
 /**
  * @file
- * Defines statistics page functions.
+ * Defines group leader page functions.
  */
 
 /**
