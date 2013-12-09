@@ -11,6 +11,83 @@
  */
 
 /**
+ * Implementation of hook_schema().
+ */
+function mcneese_management_schema() {
+  $schema = array();
+
+  $t = get_t();
+
+  $schema['mcneese_management_redirects'] = array(
+    'description' => $t("A collection of special case redirects."),
+    'fields' => array(
+      'id' => array(
+        'description' => $t("The primary key used to represent a menu."),
+        'type' => 'serial',
+        'size' => 'big',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+      ),
+      'source' => array(
+        'description' => $t("The url path to redirect from."),
+        'type' => 'varchar',
+        'length' => 255,
+        'not null' => TRUE,
+        'default' => '',
+      ),
+      'destination' => array(
+        'description' => $t("The url path to redirect to."),
+        'type' => 'varchar',
+        'length' => 255,
+        'not null' => TRUE,
+        'default' => '',
+      ),
+      'status' => array(
+        'description' => $t("Determines the status, whether disabled, enabled, in maintenance, or in alert modes."),
+        'type' => 'int',
+        'size' => 'small',
+        'not null' => TRUE,
+        'default' => TRUE,
+      ),
+      'logged_in' => array(
+        'description' => $t("Determines the whether or logged in users should be redirected."),
+        'type' => 'int',
+        'size' => 'small',
+        'not null' => TRUE,
+        'default' => TRUE,
+      ),
+      'maintenance_message' => array(
+        'description' => $t("A message to display at the url for when the redirect is in maintenance mode."),
+        'type' => 'text',
+        'size' => 'big',
+        'not null' => TRUE,
+        'default' => '',
+      ),
+      'alert_message' => array(
+        'description' => $t("A message to display at the url for when the redirect is in alert mode."),
+        'type' => 'text',
+        'size' => 'big',
+        'not null' => TRUE,
+        'default' => '',
+      ),
+      'failsafe_message' => array(
+        'description' => $t("A message to display when an HTTP redirect cannot be performed."),
+        'type' => 'text',
+        'size' => 'big',
+        'not null' => TRUE,
+        'default' => '',
+      ),
+    ),
+    'primary key' => array('id'),
+    'unique keys' => array(
+      'source' => array('source'),
+    ),
+  );
+
+  return $schema;
+}
+
+/**
  * Implementation of hook_install().
  */
 function mcneese_management_install() {
@@ -27,6 +104,14 @@ function mcneese_management_uninstall() {
   foreach ($registered as &$r) {
     cf_settings_unregister($r->variable_name, $r->variable_type, $r->module);
   }
+}
+
+/**
+ * Install the mcneese_management_redirects database table.
+ */
+function mcneese_management_update_7100() {
+  $schema = drupal_get_schema('mcneese_management_redirects', TRUE);
+  db_create_table('mcneese_management_redirects', $schema);
 }
 
 /**

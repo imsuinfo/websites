@@ -13,6 +13,16 @@
 
 
 /**
+ * Implements hook_init().
+ */
+function mcneese_management_init() {
+
+  if (!empty($_GET['q'])) {
+    mcneese_management_perform_redirect($_GET['q']);
+  }
+}
+
+/**
  * Implements hook_permission().
  */
 function mcneese_management_permission() {
@@ -31,6 +41,11 @@ function mcneese_management_permission() {
   $permissions['mcneese management reassign user'] = array(
     'title' => t("Re-assign Users Content"),
     'description' => t("Grants permissions to re-assign content assigned to one user to another user."),
+  );
+
+  $permissions['mcneese management redirects'] = array(
+    'title' => t("Manage Redirects"),
+    'description' => t("Grants permissions to manage special redirects."),
   );
 
   return $permissions;
@@ -121,6 +136,51 @@ function mcneese_management_menu() {
     'access callback' => 'user_access',
     'access arguments' => array('mcneese management reassign user'),
     'type' => MENU_CALLBACK,
+  );
+
+  $items['admin/content/management/redirects'] = array(
+    'title' => "Redirects",
+    'description' => "View and manage special redirects for remote sites. This is not the standard redirect functionality and does not replace it.",
+    'page callback' => 'mcneese_management_redirects_settings_page',
+    'file' => 'mcneese_management_redirects_page.inc',
+    'file path' => drupal_get_path('module', 'mcneese_management') . '/pages',
+    'access callback' => 'user_access',
+    'access arguments' => array('mcneese management redirects'),
+    'tab_parent' => 'admin/content/management',
+    'type' => MENU_LOCAL_TASK,
+  );
+
+  $items['admin/content/management/redirects/add'] = array(
+    'title' => '',
+    'description' => "Add a redirect.",
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('mcneese_management_redirects_update_form', NULL),
+    'file' => 'mcneese_management_redirects_page.inc',
+    'file path' => drupal_get_path('module', 'mcneese_management') . '/pages',
+    'access callback' => 'user_access',
+    'access arguments' => array('mcneese management redirects'),
+  );
+
+  $items['admin/content/management/redirects/update/%'] = array(
+    'title' => '',
+    'description' => "Change settings for a specific redirect.",
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('mcneese_management_redirects_update_form', 5),
+    'file' => 'mcneese_management_redirects_page.inc',
+    'file path' => drupal_get_path('module', 'mcneese_management') . '/pages',
+    'access callback' => 'user_access',
+    'access arguments' => array('mcneese management redirects'),
+  );
+
+  $items['admin/content/management/redirects/delete/%'] = array(
+    'title' => '',
+    'description' => "Delete a specific redirect.",
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('mcneese_management_redirects_delete_form', 5),
+    'file' => 'mcneese_management_redirects_page.inc',
+    'file path' => drupal_get_path('module', 'mcneese_management') . '/pages',
+    'access callback' => 'user_access',
+    'access arguments' => array('mcneese management redirects'),
   );
 
   return $items;
@@ -491,6 +551,71 @@ function mcneese_management_load_assigned_nids($user_id) {
   }
 
   return $nids;
+}
+
+/**
+ * Try to perform a redirect for the specified path.
+ *
+ * @param string $local_path
+ *   The local url path to redirect from.
+ */
+function mcneese_management_perform_redirect($local_path) {
+  $redirect = NULL;
+
+  try {
+    // now perform the operation.
+    $query = db_select('mcneese_management_redirects', 'mmr');
+    $query->fields('mmr');
+    $query->condition('status', 0, '>');
+    $query->condition('source', db_like($local_path), 'ILIKE');
+
+    $executed = $query->execute();
+    $redirect = $executed->fetchAssoc();
+  }
+  catch (Exception $e) {
+    $transaction->rollback();
+
+    if (class_exists('cf_error')) {
+      cf_error::on_query_execution($e);
+    }
+  }
+
+  if (empty($redirect)) return;
+
+  global $user;
+
+  if ($user->uid > 0) {
+    if ($redirect['logged_in'] == 0) {
+      return;
+    }
+    elseif ($redirect['logged_in'] == 1) {
+      drupal_set_title("Redirection Disabled for Logged in User.");
+      drupal_deliver_page($redirect['failsafe_message']);
+      drupal_exit();
+    }
+  }
+
+  if ($redirect['status'] == 3) {
+    drupal_set_title("Unable to Redirect");
+    drupal_deliver_page($redirect['alert_message']);
+    drupal_exit();
+  }
+  elseif ($redirect['status'] == 2) {
+    drupal_set_title("Destination Under Maintenance");
+    drupal_deliver_page($redirect['maintenance_message']);
+    drupal_exit();
+    drupal_exit();
+  }
+
+  if (headers_sent()) {
+    drupal_set_title("Redirection Failed");
+    drupal_deliver_page($redirect['failsafe_message']);
+    drupal_exit();
+  }
+
+  // perform redirect using 302 (found).
+  header('Location: ' . $redirect['destination'], TRUE, 302);
+  drupal_exit($redirect['destination']);
 }
 
 
