@@ -70,7 +70,7 @@ function mcneese_management_redirects_settings_page() {
     $rows[] = $row;
   }
 
-  $header = array(t("ID"), t("Source"), t("Destination"), t("Enabled"), t("Logged In"), t("Operations"));
+  $header = array(t("ID"), t("Source"), t("Destination"), t("Status"), t("Logged In"), t("Operations"));
   $attributes = array();
   $attributes['id'] = 'mcneese_management_redirects';
   $attributes['summary'] = t("A listing of redirects with the basic settings displaying the status of different settings and also a selection of operations to perform on a given redirect.");
