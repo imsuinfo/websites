@@ -67,7 +67,6 @@ function mcneese_management_menu() {
     'access callback' => 'user_access',
     'access arguments' => array('mcneese management emergency'),
     'tab_parent' => 'admin/content/management',
-    'type' => MENU_LOCAL_TASK,
   );
 
   $items['admin/content/management/emergency/autocomplete_nid'] = array(
@@ -87,7 +86,6 @@ function mcneese_management_menu() {
     'access callback' => 'user_access',
     'access arguments' => array('mcneese management group leader'),
     'tab_parent' => 'admin/content/management',
-    'type' => MENU_LOCAL_TASK,
   );
 
   $items['admin/content/management/group_leader/assign/%'] = array(
@@ -116,7 +114,6 @@ function mcneese_management_menu() {
     'page callback' => 'mcneese_management_autocomplete_user',
     'access callback' => 'user_access',
     'access arguments' => array('mcneese management group leader'),
-    'type' => MENU_CALLBACK,
   );
 
   $items['admin/content/management/reassign_user'] = array(
@@ -147,7 +144,6 @@ function mcneese_management_menu() {
     'access callback' => 'user_access',
     'access arguments' => array('mcneese management redirects'),
     'tab_parent' => 'admin/content/management',
-    'type' => MENU_LOCAL_TASK,
   );
 
   $items['admin/content/management/redirects/add'] = array(
