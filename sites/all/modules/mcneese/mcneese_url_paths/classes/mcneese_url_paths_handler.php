@@ -360,6 +360,12 @@ class mcneese_url_paths_node_handler {
 
     if (is_string($sanitized)) {
       if ($alternate) {
+        $sanitized = preg_replace('/_/i', '-', $sanitized);
+      }
+    }
+
+    if (is_string($sanitized)) {
+      if ($alternate) {
         $sanitized = preg_replace('/_-/i', '-', $sanitized);
 
         if (is_string($sanitized)) {
