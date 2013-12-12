@@ -14,29 +14,31 @@
  */
 
 abstract class mcneese_file_db_stream_wrapper implements DrupalStreamWrapperInterface {
-  protected $file_meta = null;
+  protected $file_meta = NULL;
   protected $user = 0;
-  protected $uri = null;
-  protected $sri = null;
+  protected $uri = NULL;
+  protected $sri = NULL;
 
-  protected $tmp_filename = null;
-  protected $tmp_checksum = null;
-  protected $tmp_id = null;
+  protected $tmp_filename = NULL;
+  protected $tmp_checksum = NULL;
+  protected $tmp_id = NULL;
+  protected $tmp_fid = NULL;
+  protected $tmp_by = NULL;
 
-  protected $stream = null;
+  protected $stream = NULL;
   protected $stream_blocks = 0;
   protected $stream_position = 0;
   protected $stream_last_read = 0;
   protected $stream_last_write = 0;
-  protected $stream_write_buffer = null;
-  protected $stream_fhandle = null;
-  protected $stream_fname = null;
+  protected $stream_write_buffer = NULL;
+  protected $stream_fhandle = NULL;
+  protected $stream_fname = NULL;
   protected $stream_fid = 0;
 
-  protected $image_style = null;
-  protected $image_style_uri = null;
-  protected $image_style_by = null;
-  protected $image_style_id = null;
+  protected $image_style = NULL;
+  protected $image_style_uri = NULL;
+  protected $image_style_by = NULL;
+  protected $image_style_id = NULL;
 
   protected $read_only = FALSE;
 
@@ -92,7 +94,8 @@ abstract class mcneese_file_db_stream_wrapper implements DrupalStreamWrapperInte
    */
   public function getLocalPath($uri = NULL) {
     if (!is_null($uri)) {
-      $parsed = $this->parse_uri($uri);
+      $this->setUri($uri);
+      $parsed = $this->parse_uri();
 
       if ($parsed === FALSE) {
         return FALSE;
@@ -127,7 +130,8 @@ abstract class mcneese_file_db_stream_wrapper implements DrupalStreamWrapperInte
    */
   public function getTarget($uri = NULL) {
     if (!is_null($uri)) {
-      $parsed = $this->parse_uri($uri);
+      $this->setUri($uri);
+      $parsed = $this->parse_uri();
 
       if ($parsed === FALSE) return FALSE;
     }
@@ -338,12 +342,13 @@ abstract class mcneese_file_db_stream_wrapper implements DrupalStreamWrapperInte
    */
   public function dirname($uri = NULL) {
     if (!is_null($uri)) {
-      $parsed = $this->parse_uri($uri);
+      $this->setUri($uri);
+      $parsed = $this->parse_uri();
 
       if ($parsed === FALSE) return '';
     }
 
-    $built = $this->build_uri(NULL);
+    $built = $this->build_uri();
 
     if ($built == FALSE) {
       return FALSE;
@@ -471,7 +476,7 @@ abstract class mcneese_file_db_stream_wrapper implements DrupalStreamWrapperInte
 
     if ($assign) {
       unset($this->file_meta);
-      $this->file_meta = null;
+      $this->file_meta = NULL;
 
       if ($file_meta !== FALSE) {
         $this->file_meta = $file_meta;
@@ -512,7 +517,7 @@ abstract class mcneese_file_db_stream_wrapper implements DrupalStreamWrapperInte
 
     if ($assign) {
       unset($this->file_meta);
-      $this->file_meta = null;
+      $this->file_meta = NULL;
 
       if ($file_meta !== FALSE) {
         $this->file_meta = $file_meta;
@@ -575,7 +580,7 @@ abstract class mcneese_file_db_stream_wrapper implements DrupalStreamWrapperInte
 
     if ($assign) {
       unset($this->file_meta);
-      $this->file_meta = null;
+      $this->file_meta = NULL;
 
       if ($file_meta !== FALSE) {
         $this->file_meta = $file_meta;
@@ -678,23 +683,15 @@ abstract class mcneese_file_db_stream_wrapper implements DrupalStreamWrapperInte
   /***
    * Process a given uri, loading & storing its information.
    *
-   * @param string $uri
-   *   The uri string to process.
-   *
    * @return bool
    *   TRUE on success, FALSE otherwise.
    */
-  protected function parse_uri($uri) {
-    $this->file_meta = null;
-    $this->tmp_checksum = null;
-    $this->tmp_id = null;
-    $this->tmp_filename = null;
-    $this->image_style = null;
-    $this->image_style_uri = null;
-    $this->image_style_by = null;
-    $this->image_style_id = null;
+  protected function parse_uri() {
+    if (is_null($this->uri)) {
+      return FALSE;
+    }
 
-    $outer_parts = explode('://', $uri, 2);
+    $outer_parts = explode('://', $this->uri, 2);
 
     if ($outer_parts[0] != $this->get_scheme()) {
       return FALSE;
@@ -717,9 +714,9 @@ abstract class mcneese_file_db_stream_wrapper implements DrupalStreamWrapperInte
         }
 
         $this->image_style = $parts[1];
-        $this->image_style_uri = null;
-        $this->image_style_by = null;
-        $this->image_style_id = null;
+        $this->image_style_uri = NULL;
+        $this->image_style_by = NULL;
+        $this->image_style_id = NULL;
 
         if ($parts[2] != $this->get_scheme()) {
           return FALSE;
@@ -735,8 +732,12 @@ abstract class mcneese_file_db_stream_wrapper implements DrupalStreamWrapperInte
           return FALSE;
         }
 
+        $this->tmp_by = $parts[0];
         $this->image_style_by = $parts[0];
         $this->image_style_id = $parts[1];
+      }
+      else {
+        $this->tmp_by = $parts[0];
       }
 
       // allow being passed a path beginning with external path such as: /MCNEESE_FILE_DB_FILE_PATH .
@@ -751,10 +752,7 @@ abstract class mcneese_file_db_stream_wrapper implements DrupalStreamWrapperInte
       }
 
       if ($parts[0] == $this->get_path_by_hash() && !empty($parts[1])) {
-        $this->file_meta = $this->load_file_meta($parts[1]);
-
-        if ($this->file_meta === FALSE) {
-          $this->file_meta = null;
+        if (is_null($this->file_meta)) {
           $this->tmp_checksum = $parts[1];
 
           if (!empty($parts[2])) {
@@ -783,10 +781,7 @@ abstract class mcneese_file_db_stream_wrapper implements DrupalStreamWrapperInte
       }
 
       if ($parts[0] == $this->get_path_by_id() && !empty($parts[1])) {
-        $this->file_meta = $this->load_file_meta_by_id($parts[1]);
-
-        if ($this->file_meta === FALSE) {
-          $this->file_meta = null;
+        if (is_null($this->file_meta)) {
           $this->tmp_id = $parts[1];
 
           if (!empty($parts[2])) {
@@ -815,16 +810,15 @@ abstract class mcneese_file_db_stream_wrapper implements DrupalStreamWrapperInte
       }
 
       if ($parts[0] == $this->get_path_by_fid() && !empty($parts[1])) {
-        $this->file_meta = $this->load_file_meta_by_fid($parts[1]);
-
-        if ($this->file_meta === FALSE) {
-          $this->file_meta = null;
+        if (is_null($this->file_meta)) {
+          $this->tmp_fid = $parts[1];
 
           return FALSE;
         }
 
         $this->tmp_checksum = $this->file_meta->checksum;
         $this->tmp_id = $this->file_meta->id;
+        $this->tmp_fid = $parts[1];
 
         // look for the custom filename that overrides the one saved in the database if provided.
         if (empty($parts[2])) {
@@ -849,7 +843,7 @@ abstract class mcneese_file_db_stream_wrapper implements DrupalStreamWrapperInte
    * Uses the file data to build the appropriate uri.
    *
    * @param string $method
-   *   Designates the method followed when building the uri.
+   *   (optional) Designates the method followed when building the uri.
    *
    * @return array|bool
    *   And array with the following keys:
@@ -862,84 +856,129 @@ abstract class mcneese_file_db_stream_wrapper implements DrupalStreamWrapperInte
     $built['uri'] = '';
     $built['sri'] = '';
 
-    // Give $method a default argument that is determed by a function call.
-    if (is_null($method)) {
+    if (empty($this->file_meta) && empty($this->uri)) {
+      return FALSE;
+    }
+
+    // determine method from uri
+    if (!empty($this->tmp_by)) {
+      $method = $this->tmp_by;
+    }
+    elseif (is_null($method)) {
+      // Give $method a default argument that is determed by a function call.
       $method = $this->get_path_by_hash();
     }
 
-    if (empty($this->file_meta)) {
-      if (!empty($this->stream_fid)) {
-        $this->load_file_meta_by_id($this->stream_fid);
-      }
-      else if (!empty($this->tmp_id)) {
-        $this->load_file_meta_by_id($this->tmp_id);
-      }
-      else if (!empty($this->tmp_checksum)) {
-        $this->load_file_meta($this->tmp_checksum);
-      }
-    }
-
-    if (!empty($this->file_meta) || (!empty($this->uri) && !empty($this->tmp_checksum))) {
-      if ($method == $this->get_path_by_hash()) {
-
-        if (empty($this->file_meta)) {
-          $checksum = substr($this->tmp_checksum, 0, MCNEESE_FILE_DB_SHORT_SUM_SIZE);
-        }
-        else {
-          $checksum = substr($this->file_meta->checksum, 0, MCNEESE_FILE_DB_SHORT_SUM_SIZE);
-        }
-
-        $built['sri'] = $this->get_scheme() . '://';
-        $built['sri'] .= $this->get_path_by_hash() . '/';
-        $built['sri'] .= $checksum;
-        $filename = '';
-
-        if (empty($built['sri'])) return FALSE;
-
-        if (!empty($this->image_style)) {
-          $image_source_uri = $this->get_scheme() . '://';
-          $image_source_uri .= $this->get_path_by_hash() . '/';
-          $image_source_uri .= $checksum;
-
-          $this->image_style_uri = $this->get_core() . '://styles/';
-          $this->image_style_uri .= $this->image_style . '/';
-          $this->image_style_uri .= $this->get_scheme() . '/';
-          $this->image_style_uri .= $this->get_external() . '/';
-
-          if (empty($this->image_style_by) || $this->image_style_by == $this->get_path_by_hash()) {
-            $this->image_style_uri .= $this->get_path_by_hash() . '/';
-            $this->image_style_uri .= $checksum;
+    if ($method == $this->get_path_by_hash()) {
+      if (is_null($this->file_meta)) {
+        if (empty($this->tmp_checksum)) {
+          if (!empty($this->tmp_id)) {
+            $this->load_file_meta_by_id($this->tmp_id);
+          }
+          elseif (!empty($this->tmp_fid)) {
+            $this->load_file_meta_by_fid($this->tmp_fid);
           }
           else {
-            $this->image_style_uri .= $this->image_style_by . '/';
-            $this->image_style_uri .= $this->image_style_id;
+            return FALSE;
           }
-        }
 
-        if (empty($this->tmp_filename)) {
-          if (!empty($this->file_meta->filename)) {
-            $filename .= '/' . $this->file_meta->filename;
+          if (is_null($this->file_meta)) return FALSE;
 
-            if (!empty($this->file_meta->extension)) {
-              $filename .= '.' . $this->file_meta->extension;
-            }
-          }
+          $method_value = substr($this->file_meta->checksum, 0, MCNEESE_FILE_DB_SHORT_SUM_SIZE);
         }
         else {
-          $filename .= '/' . $this->tmp_filename;
+          $method_value = substr($this->tmp_checksum, 0, MCNEESE_FILE_DB_SHORT_SUM_SIZE);
         }
+      }
+      else {
+        $method_value = substr($this->file_meta->checksum, 0, MCNEESE_FILE_DB_SHORT_SUM_SIZE);
+      }
+    }
+    elseif ($method == $this->get_path_by_id()) {
+      if (is_null($this->file_meta)) {
+        if (empty($this->tmp_id)) {
+          if (!empty($this->tmp_checksum)) {
+            $this->load_file_meta_by_checksum($this->tmp_checksum);
+          }
+          elseif (!empty($this->tmp_fid)) {
+            $this->load_file_meta_by_fid($this->tmp_fid);
+          }
+          else {
+            return FALSE;
+          }
 
-        $built['uri'] = $built['sri'] . $filename;
+          if (is_null($this->file_meta)) return FALSE;
 
-        if (!empty($this->image_style_uri)) {
-          $this->image_style_uri .= $filename;
+          $method_value = $this->file_meta->id;
         }
+        else {
+          $method_value = $this->tmp_id;
+        }
+      }
+      else {
+        $method_value = $this->file_meta->id;
+      }
+    }
+    elseif ($method == $this->get_path_by_fid()) {
+      if (empty($this->tmp_fid)) {
+        // the drupal file id is not stored in the file_meta, so if it is not already available, it cannot be used.
+        return FALSE;
+      }
+      else {
+        $method_value = $this->tmp_fid;
+      }
+    }
+    else {
+      return FALSE;
+    }
 
-        return $built;
+    $built['sri'] = $this->get_scheme() . '://';
+    $built['sri'] .= $method . '/';
+    $built['sri'] .= $method_value;
+    $filename = '';
+
+    if (empty($built['sri'])) return FALSE;
+
+    if (!empty($this->image_style)) {
+      $image_source_uri = $this->get_scheme() . '://';
+      $image_source_uri .= $method . '/';
+      $image_source_uri .= $method_value;
+
+      $this->image_style_uri = $this->get_core() . '://styles/';
+      $this->image_style_uri .= $this->image_style . '/';
+      $this->image_style_uri .= $this->get_scheme() . '/';
+      $this->image_style_uri .= $this->get_external() . '/';
+
+      if (empty($this->image_style_by) || $this->image_style_by == $method) {
+        $this->image_style_uri .= $method . '/';
+        $this->image_style_uri .= $method_value;
+      }
+      else {
+        $this->image_style_uri .= $this->image_style_by . '/';
+        $this->image_style_uri .= $this->image_style_id;
       }
     }
 
-    return FALSE;
+    if (empty($this->tmp_filename)) {
+      if (!is_null($this->file_meta) && !empty($this->file_meta->filename)) {
+        $filename .= '/' . $this->file_meta->filename;
+
+        if (!empty($this->file_meta->extension)) {
+          $filename .= '.' . $this->file_meta->extension;
+        }
+      }
+    }
+    else {
+      $filename .= '/' . $this->tmp_filename;
+    }
+
+    $built['uri'] = $built['sri'] . $filename;
+
+    if (!empty($this->image_style_uri)) {
+      $this->image_style_uri .= $filename;
+    }
+
+    return $built;
   }
 
   /***

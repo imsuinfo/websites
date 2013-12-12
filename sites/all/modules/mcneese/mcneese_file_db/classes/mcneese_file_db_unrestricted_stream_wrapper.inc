@@ -37,13 +37,26 @@ class mcneese_file_db_unrestricted_stream_wrapper extends mcneese_file_db_stream
    * Implements setUri().
    */
   public function setUri($uri) {
+    $this->file_meta = NULL;
+    $this->tmp_filename = NULL;
+    $this->tmp_checksum = NULL;
+    $this->tmp_id = NULL;
+    $this->tmp_fid = NULL;
+    $this->tmp_by = NULL;
+    $this->image_style = NULL;
+    $this->image_style_uri = NULL;
+    $this->image_style_by = NULL;
+    $this->image_style_id = NULL;
+
     if (empty($uri)) {
       return FALSE;
     }
 
-    $parsed = $this->parse_uri($uri);
+    $this->uri = $uri;
+    $parsed = $this->parse_uri();
 
     if ($parsed === FALSE) {
+      $this->uri = NULL;
       return FALSE;
     }
 
@@ -199,8 +212,8 @@ class mcneese_file_db_unrestricted_stream_wrapper extends mcneese_file_db_stream
       unset($this->stream_fhandle);
       unlink($this->stream_fname);
 
-      $this->stream_fhandle = null;
-      $this->stream_fname = null;
+      $this->stream_fhandle = NULL;
+      $this->stream_fname = NULL;
 
       $built = $this->build_uri();
 
@@ -214,7 +227,7 @@ class mcneese_file_db_unrestricted_stream_wrapper extends mcneese_file_db_stream
 
     unset($this->stream);
 
-    $this->stream = null;
+    $this->stream = NULL;
     $this->stream_blocks = 0;
     $this->stream_position = 0;
     $this->stream_last_read = 0;
@@ -244,6 +257,9 @@ class mcneese_file_db_unrestricted_stream_wrapper extends mcneese_file_db_stream
       }
       elseif (!empty($this->tmp_checksum)) {
         $this->load_file_meta($this->tmp_checksum);
+      }
+      elseif (!empty($this->tmp_fid)) {
+        $this->load_file_meta_by_fid($this->tmp_fid);
       }
     }
 
@@ -390,6 +406,9 @@ class mcneese_file_db_unrestricted_stream_wrapper extends mcneese_file_db_stream
       else if (!empty($this->tmp_checksum)) {
         $this->load_file_meta($this->tmp_checksum);
       }
+      elseif (!empty($this->tmp_fid)) {
+        $this->load_file_meta_by_fid($this->tmp_fid);
+      }
 
       if (is_null($this->file_meta)) {
         return FALSE;
@@ -493,7 +512,7 @@ class mcneese_file_db_unrestricted_stream_wrapper extends mcneese_file_db_stream
       else {
         $this->stream_position++;
         $this->stream_last_write = 0;
-        $this->stream_write_buffer = null;
+        $this->stream_write_buffer = NULL;
       }
 
       return $block_length;
