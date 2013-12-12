@@ -11,6 +11,9 @@
  * Provides content functionality and changes to drupal 7.
  */
 
+define('MCNEESE_CONTENT_SITEMAP_NODE_MAX', 5000);
+define('MCNEESE_CONTENT_SITEMAP_MEDIA_MAX', 5000);
+
 /**
  * Implements hook_init().
  */
@@ -44,6 +47,18 @@ function mcneese_content_menu() {
     'title' => '',
     'description' => "View the XML site map.",
     'page callback' => 'mcneese_content_sitemap_page',
+    'file' => 'mcneese_content_sitemap.inc',
+    'file path' => drupal_get_path('module', 'mcneese_content') . '/pages',
+    'access callback' => 'user_access',
+    'access arguments' => array('access content'),
+    'type' => MENU_CALLBACK,
+  );
+  $items['sitemap/%/%'] = array(
+    'type' => MENU_LOCAL_TASK,
+    'title' => '',
+    'description' => "View the XML site map.",
+    'page callback' => 'mcneese_content_sitemap_page',
+    'page arguments' => array(1, 2),
     'file' => 'mcneese_content_sitemap.inc',
     'file path' => drupal_get_path('module', 'mcneese_content') . '/pages',
     'access callback' => 'user_access',
