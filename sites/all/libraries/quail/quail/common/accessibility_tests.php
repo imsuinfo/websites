@@ -5652,52 +5652,59 @@ class tableUsesCaption extends quailTableTest {
 */
 class tableWithBothHeadersUseScope extends quailTest {
 
-	/**
-	*	@var int $default_severity The default severity code for this test.
-	*/
-	var $default_severity = QUAIL_TEST_MODERATE;
+  /**
+   *	@var int $default_severity The default severity code for this test.
+   */
+  var $default_severity = QUAIL_TEST_MODERATE;
 
-	/**
-	*	The main check function. This is called by the parent class to actually check content
-	*/
-	function check() {
-		foreach($this->getAllElements('table') as $table) {
-			$fail = false;
-			foreach($table->childNodes as $child) {
-				if($this->propertyIsEqual($child, 'tagName', 'tr')) {
-					if($this->propertyIsEqual($child->firstChild, 'tagName', 'td')) {
-						if(!$child->firstChild->hasAttribute('scope'))
-							$fail = true;
-					}
-					else {
-						foreach($child->childNodes as $td) {
-							if (!property_exists($td, 'tagName')) continue;
-							if($td->tagName == 'th' && !$td->hasAttribute('scope'))
-								$fail = true;
-						}
-					}
-				}
-				else if($this->propertyIsEqual($child, 'tagName', 'tbody')) {
-					foreach($child->childNodes as $tbody_child) {
-						if($this->propertyIsEqual($tbody_child, 'tagName', 'tr')) {
-							if($this->propertyIsEqual($tbody_child->firstChild, 'tagName', 'td')) {
-								if(!$tbody_child->firstChild->hasAttribute('scope'))
-									$fail = true;
-							}
-								foreach($tbody_child->childNodes as $td) {
-									if(property_exists($td, 'tagName')){
-										if($td->tagName == 'th' && !$td->hasAttribute('scope'))
-											$fail = true;
-								}
-							}
-						}
-					}
-				}
-			}
-			if($fail)
-				$this->addReport($table);
-		}
-	}
+  /**
+   *	The main check function. This is called by the parent class to actually check content
+   */
+  function check() {
+    foreach($this->getAllElements('table') as $table) {
+      $found_row = FALSE;
+      $found_col = FALSE;
+      $scope_row = FALSE;
+      $scope_col = FALSE;
+
+      foreach($table->childNodes as $child) {
+        if($this->propertyIsEqual($child, 'tagName', 'thead')) {
+          foreach($child->childNodes as $thead_child) {
+            if($this->propertyIsEqual($thead_child, 'tagName', 'tr')) {
+              foreach($thead_child->childNodes as $tr_child) {
+                if($this->propertyIsEqual($tr_child, 'tagName', 'th')) {
+                  $found_col = TRUE;
+                  if($tr_child->hasAttribute('scope')) {
+                    $scope_col = TRUE;
+                  }
+                }
+              }
+            }
+          }
+        }
+        elseif($this->propertyIsEqual($child, 'tagName', 'tbody')) {
+          foreach($child->childNodes as $tbody_child) {
+            if($this->propertyIsEqual($tbody_child, 'tagName', 'tr')) {
+              foreach($tbody_child->childNodes as $tr_child) {
+                if($this->propertyIsEqual($tr_child, 'tagName', 'th')) {
+                  $found_row = TRUE;
+                  if($tr_child->hasAttribute('scope')) {
+                    $scope_row = TRUE;
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+
+      if ($found_row && $found_col) {
+        if (!($scope_row && $scope_col)) {
+          $this->addReport($table);
+        }
+      }
+    }
+  }
 }
 
 /**
