@@ -5825,7 +5825,7 @@ class textareaLabelPositionedClose extends quailTagTest {
 	/**
 	*	@var int $default_severity The default severity code for this test.
 	*/
-	var $default_severity = QUAIL_TEST_MODERATE;
+	var $default_severity = QUAIL_TEST_SUGGESTION;
 
 	/**
 	*	@var string $tag The tag this test will fire on
