@@ -357,7 +357,91 @@ function mcneese_content_formats_alter_dom(&$text, $operations) {
           $dom->change_element($tag, 'br');
           $altered = TRUE;
         }
-      }
+     }
+     elseif ($tag->tagName == 'table') {
+       // table may not be empty
+       if ($tag->hasChildNodes()) {
+         // empty rows may not be used in tables, so strip them out entirely.
+         $remove_tags_set = array();
+         $remove_tags_set[0] = array();
+         $remove_tags_set[1] = array();
+         $remove_tags_set[2] = array();
+
+         foreach ($tag->childNodes as $child_tag_0) {
+           if ($child_tag_0 instanceOf DOMText) continue;
+
+           if ($child_tag_0->tagName == 'caption') {
+             continue;
+           }
+
+           if ($child_tag_0->tagName != 'thead' && $child_tag_0->tagName != 'tbody') {
+             $remove_tags_set[0][] = $child_tag_0;
+             continue;
+           }
+
+           if ($child_tag_0->hasChildNodes()) {
+             foreach ($child_tag_0->childNodes as $child_tag_1) {
+               if ($child_tag_1 instanceOf DOMText) continue;
+
+               if ($child_tag_1->tagName == 'tr' && $child_tag_1->hasChildNodes()) {
+
+                 // if all of the row cells are empty of tags or text, then remove the entire row.
+                 $found_content = FALSE;
+                 foreach ($child_tag_1->childNodes as $child_tag_2) {
+                   if ($child_tag_2 instanceOf DOMText) continue;
+
+                   if ($child_tag_2->tagName == 'td' || $child_tag_2->tagName == 'th') {
+                     if ($child_tag_2->hasChildNodes()) {
+                       $found_content = TRUE;
+                       continue;
+                     }
+                   }
+                 }
+
+                 if (!$found_content) {
+                   $remove_tags_set[2][] = $child_tag_1;
+                 }
+               }
+               else {
+                 $remove_tags_set[1][] = $child_tag_1;
+               }
+             }
+           }
+           else {
+             // remove all other invalid/unallowed tags
+             $remove_tags_set[0][] = $child_tag_0;
+           }
+         }
+
+         // all tags must be removed after processing and not during to avoid navigation problems with DOM.
+         while (!empty($remove_tags_set)) {
+           $remove_tags = array_pop($remove_tags_set);
+
+           if (!empty($remove_tags)) {
+             foreach ($remove_tags as $remove_tag) {
+               $parent = $remove_tag->parentNode;
+               $dom->remove_element($remove_tag, FALSE);
+
+               if (is_object($parent) && !$parent->hasChildNodes()) {
+                $dom->remove_element($parent);
+               }
+             }
+
+             $altered = TRUE;
+           }
+         }
+
+         if (!$tag->hasChildNodes()) {
+           $dom->remove_element($tag);
+           continue;
+         }
+       }
+       else {
+         $dom->remove_element($tag);
+         $altered = TRUE;
+         continue;
+       }
+     }
 
 
       // replace name with id for all unsupported tags.
