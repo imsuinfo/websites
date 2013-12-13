@@ -1059,7 +1059,7 @@ class checkboxLabelIsNearby extends quailTest {
 	/**
 	*	@var int $default_severity The default severity code for this test.
 	*/
-	var $default_severity = QUAIL_TEST_MODERATE;
+	var $default_severity = QUAIL_TEST_SUGGESTION;
 
 	/**
 	*	The main check function. This is called by the parent class to actually check content
@@ -2076,7 +2076,7 @@ class fileLabelIsNearby extends quailTest {
 	/**
 	*	@var int $default_severity The default severity code for this test.
 	*/
-	var $default_severity = QUAIL_TEST_MODERATE;
+	var $default_severity = QUAIL_TEST_SUGGESTION;
 
 	/**
 	*	The main check function. This is called by the parent class to actually check content
@@ -4603,7 +4603,7 @@ class passwordLabelIsNearby extends quailTest {
 	/**
 	*	@var int $default_severity The default severity code for this test.
 	*/
-	var $default_severity = QUAIL_TEST_MODERATE;
+	var $default_severity = QUAIL_TEST_SUGGESTION;
 
 	/**
 	*	The main check function. This is called by the parent class to actually check content
@@ -4676,6 +4676,11 @@ class radioHasLabel extends inputHasLabel {
 *	@link http://quail-lib.org/test-info/radioLabelIsNearby
 */
 class radioLabelIsNearby extends quailTest {
+
+	/**
+	*	@var int $default_severity The default severity code for this test.
+	*/
+	var $default_severity = QUAIL_TEST_SUGGESTION;
 
 	/**
 	*	The main check function. This is called by the parent class to actually check content
