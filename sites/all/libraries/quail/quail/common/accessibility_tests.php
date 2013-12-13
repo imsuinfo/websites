@@ -2202,7 +2202,7 @@ class formWithRequiredLabel extends quailTest {
 	/**
 	*	@var int $default_severity The default severity code for this test.
 	*/
-	var $default_severity = QUAIL_TEST_MODERATE;
+	var $default_severity = QUAIL_TEST_SUGGESTION;
 	
 	/**
 	*	@var array $suspect_styles A list of CSS styles which might mean this is label text
