@@ -220,9 +220,9 @@ function _webform_components_form_rows($node, $cid, $component, $level, &$form, 
   $component['value'] = check_plain($component['value']);
 
   // Remove individual titles from the required and weight fields.
-  unset($form['components'][$cid]['required']['#title']);
-  unset($form['components'][$cid]['pid']['#title']);
-  unset($form['components'][$cid]['weight']['#title']);
+  $form['components'][$cid]['required']['#title_display'] = 'invisible';
+  $form['components'][$cid]['pid']['#title_display'] = 'invisible';
+  $form['components'][$cid]['weight']['#title_display'] = 'invisible';
 
   // Add special classes for weight and parent fields.
   $form['components'][$cid]['cid']['#attributes']['class'] = array('webform-cid');
