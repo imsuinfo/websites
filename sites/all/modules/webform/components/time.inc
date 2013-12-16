@@ -220,7 +220,7 @@ function webform_expand_time($element) {
     $element['ampm'] = array(
       '#type' => 'radios',
       '#title' => t('AM or PM'),
-      '#title_display' => 'invisible',
+      '#title_display' => 'none',
       '#default_value' => $default_values['ampm'],
       '#options' => $ampms,
       '#theme_wrappers' => array('form_element'),
