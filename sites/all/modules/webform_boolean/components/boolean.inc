@@ -39,7 +39,7 @@ function _webform_render_boolean($component, $value = NULL) {
     '#weight' => $component['weight'],
     '#field_prefix' => empty($component['extra']['field_prefix']) ? NULL : _webform_filter_xss($component['extra']['field_prefix']),
     '#field_suffix' => empty($component['extra']['field_suffix']) ? NULL : _webform_filter_xss($component['extra']['field_suffix']),
-    '#theme_wrappers' => array('checkboxes', 'webform_element'),
+    '#theme_wrappers' => array('checkbox', 'webform_element'),
     '#translatable' => array('title', 'description'),
   );
   if (isset($value)) {
