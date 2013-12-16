@@ -219,8 +219,11 @@ function webform_expand_time($element) {
   if (strcmp($element['#hourformat'], '12-hour') == 0) {
     $element['ampm'] = array(
       '#type' => 'radios',
+      '#title' => t('AM or PM'),
+      '#title_display' => 'invisible',
       '#default_value' => $default_values['ampm'],
       '#options' => $ampms,
+      '#theme_wrappers' => array('form_element'),
     );
   }
 
