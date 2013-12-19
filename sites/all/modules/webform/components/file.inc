@@ -21,7 +21,7 @@ function _webform_defaults_file() {
         'addextensions' => '',
         'size' => '2 MB',
       ),
-      'scheme' => 'public',
+      'scheme' => 'private',
       'directory' => '',
       'progress_indicator' => 'throbber',
       'title_display' => 0,
