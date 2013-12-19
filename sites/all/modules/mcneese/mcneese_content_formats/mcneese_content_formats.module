@@ -321,10 +321,15 @@ function mcneese_content_formats_alter_dom(&$text, $operations) {
   $altered = FALSE;
   $all_tags = $body->getElementsByTagName('*');
 
+  $remove_tags = array();
+  $remove_tags_all = array(); // remove tag and all child tags.
+  $remove_tags_parent = array(); // remove tags and if the parent has no children, then remove the children.
+
+  $change_tags = array();
+
   foreach ($all_tags as $tag) {
     if (in_array($tag->tagName, $operations['denied_tags'])) {
-      $dom->remove_element($tag);
-      $altered = TRUE;
+      $remove_tags[] = $tag;
       continue;
     }
 
@@ -354,13 +359,11 @@ function mcneese_content_formats_alter_dom(&$text, $operations) {
     if ($operations['fix_markup']) {
       // replace b tags with strong
       if ($tag->tagName == 'b') {
-        $dom->change_element($tag, 'strong');
-        $altered = TRUE;
+        $change_tags = array('tag' => $tag, 'type' => 'strong');
       }
       // replace i tags with em
       elseif ($tag->tagName == 'i') {
-        $dom->change_element($tag, 'em');
-        $altered = TRUE;
+        $change_tags = array('tag' => $tag, 'type' => 'em');
       }
       // using embedded/inline images is not supported, in this case completely strip out the tag.
       elseif ($tag->tagName == 'img') {
@@ -368,34 +371,29 @@ function mcneese_content_formats_alter_dom(&$text, $operations) {
           $image_source = $tag->getAttribute('src');
 
           if (preg_match('/^data:/i', $image_source) > 0) {
-            $dom->remove_element($tag);
-            $altered = TRUE;
+            $remove_tags[] = $tag;
           }
         }
       }
       // replace strike tags with del
       elseif ($tag->tagName == 'strike') {
-        $dom->change_element($tag, 'del');
-        $altered = TRUE;
+        $change_tags = array('tag' => $tag, 'type' => 'del');
       }
       // remove all unsupported tags, but preserve their content.
       elseif (in_array($tag->tagName, $unsupported_tags)) {
-        $dom->remove_element($tag);
-        $altered = TRUE;
+        $remove_tags[] = $tag;
         continue;
       }
       // remove span tags with lang=".." attribute, but preserve their content.
       elseif ($tag->tagName == 'span') {
         if ($tag->hasAttribute('lang')) {
-          $dom->remove_element($tag);
-          $altered = TRUE;
+          $remove_tags[] = $tag;
           continue;
         }
 
         // remove spans that have no attributes.
         if (!$tag->hasAttributes()) {
-          $dom->remove_element($tag);
-          $altered = TRUE;
+          $remove_tags[] = $tag;
           continue;
         }
       }
@@ -408,8 +406,7 @@ function mcneese_content_formats_alter_dom(&$text, $operations) {
 
         // replace empty tags that are generally created to implement a line break
         if (!$tag->hasChildNodes()) {
-          $dom->change_element($tag, 'br');
-          $altered = TRUE;
+          $change_tags = array('tag' => $tag, 'type' => 'br');
         }
       }
       // strip out attributes no longer supported in html 5 for specific tags.
@@ -424,19 +421,13 @@ function mcneese_content_formats_alter_dom(&$text, $operations) {
       elseif ($tag->tagName == 'h1' || $tag->tagName == 'h2' || $tag->tagName == 'h3' || $tag->tagName == 'h4' || $tag->tagName == 'h5' || $tag->tagName == 'h6') {
         // replace empty tags that are generally created to implement a line break
         if (!$tag->hasChildNodes()) {
-          $dom->change_element($tag, 'br');
+          $change_tags = array('tag' => $tag, 'type' => 'br');
           $altered = TRUE;
         }
      }
      elseif ($tag->tagName == 'table') {
        // table may not be empty
        if ($tag->hasChildNodes()) {
-         // empty rows may not be used in tables, so strip them out entirely.
-         $remove_tags_set = array();
-         $remove_tags_set[0] = array();
-         $remove_tags_set[1] = array();
-         $remove_tags_set[2] = array();
-
          // apply appropriate limitations on tags
          $limited_tags = array();
          $limited_tags['caption'] = NULL;
@@ -457,7 +448,7 @@ function mcneese_content_formats_alter_dom(&$text, $operations) {
                $limited_tags['caption'] = $child_tag_0;
              }
              else {
-               $remove_tags_set[0][] = $child_tag_0;
+               $remove_tags_children[] = $child_tag_0;
              }
 
              continue;
@@ -467,7 +458,7 @@ function mcneese_content_formats_alter_dom(&$text, $operations) {
                $limited_tags['thead'] = $child_tag_0;
              }
              else {
-               $remove_tags_set[0][] = $child_tag_0;
+               $remove_tags_children[] = $child_tag_0;
                continue;
              }
            }
@@ -476,13 +467,13 @@ function mcneese_content_formats_alter_dom(&$text, $operations) {
                $limited_tags['tbody'] = $child_tag_0;
              }
              else {
-               $remove_tags_set[0][] = $child_tag_0;
+               $remove_tags_children[] = $child_tag_0;
                continue;
              }
            }
            else {
              // do not allow unsupported tags within the table.
-             $remove_tags_set[0][] = $child_tag_0;
+             $remove_tags_children[] = $child_tag_0;
              continue;
            }
 
@@ -530,20 +521,20 @@ function mcneese_content_formats_alter_dom(&$text, $operations) {
 
                    if ($found_content) {
                      if (!$first_has_children) {
-                       $remove_tags_set[1][] = $limited_tags['tbody_first_tr'];
+                       $remove_tags_children[] = $limited_tags['tbody_first_tr'];
                        $limited_tags['tbody_first_tr'] = $child_tag_1;
                        $first_has_children = TRUE;
                      }
                    }
                    else {
                      if ($limited_tags['tbody_first_tr'] !== $child_tag_1) {
-                       $remove_tags_set[1][] = $child_tag_1;
+                       $remove_tags_children[] = $child_tag_1;
                      }
                    }
                  }
                  else {
                    if ($limited_tags['tbody_first_tr'] !== $child_tag_1) {
-                     $remove_tags_set[1][] = $child_tag_1;
+                     $remove_tags_children[] = $child_tag_1;
                    }
                  }
                }
@@ -565,8 +556,6 @@ function mcneese_content_formats_alter_dom(&$text, $operations) {
            $removed_tag = $dom->remove_element($fix_tag, FALSE);
            if ($removed_tag) {
              if ($removed_tag->hasChildNodes()) {
-               $change_elements = array();
-
                foreach ($removed_tag->childNodes as $child_tag) {
                  if ($child_tag instanceOf DOMText) continue;
 
@@ -574,11 +563,7 @@ function mcneese_content_formats_alter_dom(&$text, $operations) {
                    $child_tag->removeAttribute('scope');
                  }
 
-                 $change_elements[] = $child_tag;
-               }
-
-               foreach ($change_elements as $child_tag) {
-                 $dom->change_element($child_tag, 'td');
+                 $change_tags = array('tag' => $child_tag, 'type' => 'td');
                }
              }
 
@@ -594,33 +579,13 @@ function mcneese_content_formats_alter_dom(&$text, $operations) {
            $altered = TRUE;
          }
 
-         // all tags must be removed after processing and not during to avoid navigation problems with DOM.
-         while (!empty($remove_tags_set)) {
-           $remove_tags = array_pop($remove_tags_set);
-
-           if (!empty($remove_tags)) {
-             foreach ($remove_tags as $remove_tag) {
-               $parent = $remove_tag->parentNode;
-               $dom->remove_element($remove_tag, FALSE);
-
-               if (is_object($parent) && !$parent->hasChildNodes()) {
-                $dom->remove_element($parent);
-               }
-             }
-
-             $altered = TRUE;
-           }
-         }
-
          if (!$tag->hasChildNodes()) {
-           $dom->remove_element($tag);
-           $altered = TRUE;
+           $remove_tags[] = $tag;
            continue;
          }
        }
        else {
-         $dom->remove_element($tag);
-         $altered = TRUE;
+         $remove_tags[] = $tag;
          continue;
        }
      }
@@ -643,6 +608,37 @@ function mcneese_content_formats_alter_dom(&$text, $operations) {
         }
       }
     }
+  }
+
+  // tags should only be removed after processing to avoid DOM bugs.
+  while (!empty($remove_tags)) {
+    $remove_tag = array_pop($remove_tags);
+    $dom->remove_element($remove_tag);
+    $altered = TRUE;
+  }
+
+  while (!empty($remove_tags_children)) {
+    $remove_tag = array_pop($remove_tags_children);
+    $dom->remove_element($remove_tag, FALSE);
+    $altered = TRUE;
+  }
+
+  while (!empty($remove_tags_parent)) {
+    $remove_tag = array_pop($remove_tags_parent);
+
+    $parent = $remove_tag->parentNode;
+    $dom->remove_element($remove_tag, FALSE);
+
+    if (is_object($parent) && !$parent->hasChildNodes()) {
+      $dom->remove_element($remove_tag, FALSE);
+    }
+
+    $altered = TRUE;
+  }
+
+  foreach ($change_tags as $change_tag) {
+    $dom->change_element($change_tag['tag'], $change_tag['type']);
+    $altered = TRUE;
   }
 
   if ($altered) {
