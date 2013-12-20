@@ -837,7 +837,16 @@ function mcneese_file_db_file_validate($file) {
 
   $existing_file = '<a href="' . file_create_url($found[0]->uri) . '" class="file_db-file_exists">' . check_plain($found[0]->filename) . '</a>';
 
-  $errors[] = t("The file already exists: !filename.", array('!filename' => $existing_file));
+  $error_message = "The file already exists: !filename.";
+  $error_variables = array('!filename' => $existing_file);
+
+  if (function_exists('workbench_menu') && function_exists('media_menu')) {
+    global $base_path;
+    $error_message .= ' Try visiting the !media_browser.';
+    $error_variables['!media_browser'] = '<a href="' . $base_path . 'admin/workbench/media?uri=' . check_plain($shortsum) . '" class="file_db-file_exists">Media Browser</a>';
+  }
+
+  $errors[] = t($error_message, $error_variables);
   return $errors;
 }
 

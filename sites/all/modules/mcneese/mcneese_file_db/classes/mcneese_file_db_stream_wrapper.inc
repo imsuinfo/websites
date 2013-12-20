@@ -41,6 +41,7 @@ abstract class mcneese_file_db_stream_wrapper implements DrupalStreamWrapperInte
   protected $image_style_id = NULL;
 
   protected $read_only = FALSE;
+  protected $slow_build = TRUE;
 
 
   /**
@@ -869,6 +870,18 @@ abstract class mcneese_file_db_stream_wrapper implements DrupalStreamWrapperInte
       $method = $this->get_path_by_hash();
     }
 
+    if (empty($this->file_meta) && $this->slow_build) {
+      if (!empty($this->stream_fid)) {
+        $this->load_file_meta_by_id($this->stream_fid);
+      }
+      else if (!empty($this->tmp_id)) {
+        $this->load_file_meta_by_id($this->tmp_id);
+      }
+      else if (!empty($this->tmp_checksum)) {
+        $this->load_file_meta($this->tmp_checksum);
+      }
+    }
+
     if ($method == $this->get_path_by_hash()) {
       if (is_null($this->file_meta)) {
         if (empty($this->tmp_checksum)) {
@@ -1032,6 +1045,34 @@ abstract class mcneese_file_db_stream_wrapper implements DrupalStreamWrapperInte
     }
 
     return TRUE;
+  }
+
+  /**
+   * Loads the fast build settings.
+   *
+   * @return bool
+   *   TRUE/FALSE for current fast_build setting.
+   */
+  public function get_fast_build() {
+    return !$this->slow_build;
+  }
+
+  /**
+   * Sets the fast build settings.
+   *
+   * This allows for fast processing of URLs.
+   * This should be done before any other operation to properly function.
+   *
+   * @param bool $fast_build
+   *   Set to TRUE to prevent database from being loaded.
+   */
+  public function set_fast_build($fast_build) {
+    if (!is_bool($fast_build)) {
+      cf_error::invalid_bool('fast_build');
+      return;
+    }
+
+    $this->slow_build = !$fast_build;
   }
 }
 

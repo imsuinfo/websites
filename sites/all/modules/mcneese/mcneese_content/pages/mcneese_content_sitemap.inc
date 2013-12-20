@@ -287,7 +287,11 @@ function mcneese_content_sitemap_group_media($offset) {
         if (!isset($wrappers[$scheme])) {
           $wrappers[$scheme] = file_stream_wrapper_get_instance_by_uri($row->uri);
         }
-        if (isset($wrappers[$scheme])) {
+        if (is_object($wrappers[$scheme])) {
+          if ($wrappers[$scheme] instanceOf mcneese_file_db_stream_wrapper) {
+            $wrappers[$scheme]->set_fast_build(TRUE);
+          }
+
           $wrappers[$scheme]->setUri($row->uri);
           $path = $url . $wrappers[$scheme]->getExternalUrl();
         }

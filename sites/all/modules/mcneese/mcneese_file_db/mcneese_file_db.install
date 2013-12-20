@@ -43,9 +43,9 @@ function mcneese_file_db_install() {
   ALTER TABLE mcneese_file_db_file_data ALTER COLUMN data SET storage external;
 
   CREATE TABLE mcneese_file_db_associations (
-    id serial PRIMARY KEY,
     file_id bigint REFERENCES mcneese_file_db_files (id) ON DELETE CASCADE,
-    server_id smallint REFERENCES mcneese_file_db_servers (id) ON DELETE CASCADE
+    server_id smallint REFERENCES mcneese_file_db_servers (id) ON DELETE CASCADE,
+    PRIMARY KEY (file_id, server_id)
   );
 
   CREATE TABLE mcneese_file_db_users (
@@ -56,20 +56,12 @@ function mcneese_file_db_install() {
     PRIMARY KEY (file_id, server_id, user_id)
   );
 
-  CREATE TABLE mcneese_file_db_groups (
-    file_id bigint REFERENCES mcneese_file_db_files (id) ON DELETE CASCADE,
-    server_id smallint REFERENCES mcneese_file_db_servers (id) ON DELETE CASCADE,
-    group_id integer NOT NULL,
-    PRIMARY KEY (file_id, server_id, group_id)
-  );
-
   // setup permissions for each appropriate additional user (and for each table and sequence)
   GRANT ALL PRIVILEGES ON DATABASE web_files TO web_files_user ;
   GRANT ALL PRIVILEGES ON mcneese_file_db_servers TO web_files_user ;
   GRANT ALL PRIVILEGES ON mcneese_file_db_associations TO web_files_user ;
   GRANT ALL PRIVILEGES ON mcneese_file_db_file_data TO web_files_user ;
   GRANT ALL PRIVILEGES ON mcneese_file_db_files TO web_files_user ;
-  GRANT ALL PRIVILEGES ON mcneese_file_db_groups TO web_files_user ;
   GRANT ALL PRIVILEGES ON mcneese_file_db_servers TO web_files_user ;
   GRANT ALL PRIVILEGES ON mcneese_file_db_users TO web_files_user ;
   GRANT ALL PRIVILEGES ON mcneese_file_db_files_id_seq TO web_files_user ;
