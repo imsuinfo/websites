@@ -23,10 +23,12 @@ function _drupal_root_db_prepare_() {
   require_once DRUPAL_ROOT . '/includes/database/database.inc';
   require_once DRUPAL_ROOT . '/includes/stream_wrappers.inc';
 
-  require_once DRUPAL_ROOT . '/sites/all/modules/mcneese/mcneese_file_db/mcneese_file_db.module';
-  require_once DRUPAL_ROOT . '/sites/all/modules/mcneese/mcneese_file_db/classes/mcneese_file_db_stream_wrapper.inc';
-  require_once DRUPAL_ROOT . '/sites/all/modules/mcneese/mcneese_file_db/classes/mcneese_file_db_unrestricted_stream_wrapper.inc';
-  //require_once DRUPAL_ROOT . '/sites/all/modules/mcneese/mcneese_file_db/classes/mcneese_file_db_restricted_stream_wrapper.inc';
+  if (file_exists(DRUPAL_ROOT . '/sites/all/modules/mcneese/mcneese_file_db/mcneese_file_db.module')) {
+    require_once DRUPAL_ROOT . '/sites/all/modules/mcneese/mcneese_file_db/mcneese_file_db.module';
+    require_once DRUPAL_ROOT . '/sites/all/modules/mcneese/mcneese_file_db/classes/mcneese_file_db_stream_wrapper.inc';
+    require_once DRUPAL_ROOT . '/sites/all/modules/mcneese/mcneese_file_db/classes/mcneese_file_db_unrestricted_stream_wrapper.inc';
+    require_once DRUPAL_ROOT . '/sites/all/modules/mcneese/mcneese_file_db/classes/mcneese_file_db_restricted_stream_wrapper.inc';
+  }
 }
 
 function _drupal_root_get_uri() {
@@ -62,11 +64,21 @@ if (isset($arguments[0]) && $arguments[0] == 'f') {
     throw $e;
   }
 }
-else if (count($arguments) > 5 && $arguments[0] == 'files' && $arguments[1] == 'styles') {
+elseif (count($arguments) > 5 && $arguments[0] == 'files' && $arguments[1] == 'styles') {
   drupal_bootstrap(DRUPAL_BOOTSTRAP_FULL);
+  $dbu_or_dbr = FALSE;
 
   if (function_exists('mcneese_file_db_generate_image_style')) {
-    if ($arguments[3] == mcneese_file_db_unrestricted_stream_wrapper::SCHEME && ($arguments[4] == MCNEESE_FILE_DB_FILE_PATH || $arguments[5] == MCNEESE_FILE_DB_PATH_BY_HASH || $arguments[5] == MCNEESE_FILE_DB_PATH_BY_ID) || $arguments[5] == MCNEESE_FILE_DB_PATH_BY_FID) {
+    if (class_exists('mcneese_file_db_unrestricted_stream_wrapper') && $arguments[3] == mcneese_file_db_unrestricted_stream_wrapper::SCHEME) {
+      $dbu_or_dbr = TRUE;
+    }
+    elseif (class_exists('mcneese_file_db_restricted_stream_wrapper') && $arguments[3] == mcneese_file_db_restricted_stream_wrapper::SCHEME) {
+      $dbu_or_dbr = TRUE;
+    }
+  }
+
+  if ($dbu_or_dbr) {
+    if ($arguments[4] == MCNEESE_FILE_DB_FILE_PATH && ($arguments[5] == MCNEESE_FILE_DB_PATH_BY_HASH || $arguments[5] == MCNEESE_FILE_DB_PATH_BY_ID || $arguments[5] == MCNEESE_FILE_DB_PATH_BY_FID)) {
       mcneese_file_db_generate_image_style($arguments);
     }
     elseif ($arguments[3] == 'public') {
@@ -110,7 +122,7 @@ else if (count($arguments) > 5 && $arguments[0] == 'files' && $arguments[1] == '
   unset($arguments);
   menu_execute_active_handler();
 }
-else if ((isset($arguments[0]) && $arguments[0] == 'files' || isset($arguments[3]) && $arguments[3] == 'files')) {
+elseif (isset($arguments[0]) && $arguments[0] == 'files' || isset($arguments[3]) && $arguments[3] == 'files') {
   drupal_bootstrap(DRUPAL_BOOTSTRAP_DATABASE);
   $duri = rawurldecode($uri);
 

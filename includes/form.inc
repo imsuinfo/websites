@@ -1154,10 +1154,6 @@ function drupal_validate_form($form_id, &$form, &$form_state) {
       return;
     }
   }
-  // Ensure the correct protocol when #https is set.
-  if (!empty($form['#https']) && !$GLOBALS['is_https']) {
-    form_set_error(NULL, t('This form requires HTTPS.  Contact the site administrator if the problem persists.'));
-  }
 
   _form_validate($form, $form_state, $form_id);
   $validated_forms[$form_id] = TRUE;
@@ -2881,12 +2877,7 @@ function theme_radios($variables) {
   if (isset($element['#attributes']['title'])) {
     $attributes['title'] = $element['#attributes']['title'];
   }
-
-  if (empty($element['#children'])) {
-    return '';
-  }
-
-  return '<div' . drupal_attributes($attributes) . '>' . $element['#children'] . '</div>';
+  return '<div' . drupal_attributes($attributes) . '>' . (!empty($element['#children']) ? $element['#children'] : '') . '</div>';
 }
 
 /**
@@ -3159,11 +3150,7 @@ function theme_checkboxes($variables) {
   if (isset($element['#attributes']['title'])) {
     $attributes['title'] = $element['#attributes']['title'];
   }
-
-  if (empty($element['#children'])) {
-    return '';
-  }
-  return '<div' . drupal_attributes($attributes) . '>' . $element['#children'] . '</div>';
+  return '<div' . drupal_attributes($attributes) . '>' . (!empty($element['#children']) ? $element['#children'] : '') . '</div>';
 }
 
 /**

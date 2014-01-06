@@ -164,7 +164,6 @@ function update_helpful_links() {
 function update_results_page() {
   drupal_set_title('Drupal database update');
   $links = update_helpful_links();
-  $output = '';
 
   update_task_list();
   // Report end result.
@@ -178,8 +177,9 @@ function update_results_page() {
   if (isset($_SESSION['update_success']) && $_SESSION['update_success']) {
     $output = '<p>Updates were attempted. If you see no failures below, you may proceed happily back to your <a href="' . base_path() . '">site</a>. Otherwise, you may need to update your database manually.' . $log_message . '</p>';
   }
-  else if (!empty($_SESSION['updates_remaining'])) {
-    list($module, $version) = array_pop(reset($_SESSION['updates_remaining']));
+  elseif (!empty($_SESSION['updates_remaining'])) {
+    $updates_remaining = reset($_SESSION['updates_remaining']);
+    list($module, $version) = array_pop($updates_remaining);
     $output = '<p class="error">The update process was aborted prematurely while running <strong>update #' . $version . ' in ' . $module . '.module</strong>.' . $log_message;
     if (module_exists('dblog')) {
       $output .= ' You may need to check the <code>watchdog</code> database table manually.';
