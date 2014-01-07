@@ -9,6 +9,7 @@ version = "7.x-1.0"
 
 dependencies[] = cf (7.x-2.x)
 dependencies[] = cf_settings (7.x-2.x)
+dependencies[] = file_entity
 
 files[] = classes/mcneese_file_db_stream_wrapper.inc
 files[] = classes/mcneese_file_db_unrestricted_stream_wrapper.inc

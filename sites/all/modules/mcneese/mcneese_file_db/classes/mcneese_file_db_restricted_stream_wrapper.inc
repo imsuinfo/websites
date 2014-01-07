@@ -24,6 +24,7 @@
 class mcneese_file_db_restricted_stream_wrapper extends mcneese_file_db_stream_wrapper {
   const SCHEME = 'dbr';
   const CORE = 'private';
+  const ASSOCIATION= 'mcneese_file_db_unrestricted';
 
 
   /**
@@ -179,7 +180,7 @@ class mcneese_file_db_restricted_stream_wrapper extends mcneese_file_db_stream_w
               $associated_id = $this->stream_fid;
             }
 
-            $query = $file_db->insert('mcneese_file_db_associations', $options);
+            $query = $file_db->insert($this->get_association(), $options);
             $fields = array('file_id' => $associated_id, 'server_id' => $conf[MCNEESE_FILE_DB_CONF_SERVER_ID]);
             $query->fields($fields);
 
@@ -248,7 +249,10 @@ class mcneese_file_db_restricted_stream_wrapper extends mcneese_file_db_stream_w
     }
 
     if (empty($this->uri)) {
+      $slow_build = $this->slow_build;
+      $this->slow_build = TRUE;
       $this->setUri($uri);
+      $this->slow_build = $slow_build;
     }
 
     if (empty($this->file_meta)) {
@@ -278,9 +282,9 @@ class mcneese_file_db_restricted_stream_wrapper extends mcneese_file_db_stream_w
         $file_db = mcneese_file_db_prepare_connection();
         $options = mcneese_file_db_prepare_options();
 
-            if ($file_db === FALSE) {
-              return FALSE;
-            }
+        if ($file_db === FALSE) {
+          return FALSE;
+        }
 
         $built = array();
         $built['query'] = '';
@@ -289,7 +293,7 @@ class mcneese_file_db_restricted_stream_wrapper extends mcneese_file_db_stream_w
         $built['arguments'][':file_id'] = $this->file_meta->id;
 
         $built['query'] = 'SELECT mfdfd.file_id, mfdfd.block FROM {mcneese_file_db_file_data} mfdfd';
-        $built['query'] .= ' INNER JOIN {mcneese_file_db_associations} mfda ON (mfdfd.file_id = mfda.file_id AND mfda.server_id = :server_id)';
+        $built['query'] .= ' INNER JOIN {' . check_plain($this->get_association()) . '} mfda ON (mfdfd.file_id = mfda.file_id)';
         $built['query'] .= ' WHERE mfda.server_id = :server_id';
         $built['query'] .= ' AND mfda.file_id = :file_id';
 
@@ -353,11 +357,13 @@ class mcneese_file_db_restricted_stream_wrapper extends mcneese_file_db_stream_w
     }
 
     $query = 'SELECT mfdfd.data, mfdfd.block FROM {mcneese_file_db_file_data} mfdfd';
-    $query .= ' INNER JOIN {mcneese_file_db_associations} mfda ON (mfdfd.file_id = mfda.file_id AND mfda.server_id = :server_id)';
-    $query .= ' WHERE mfdfd.file_id = :file_id';
+    $query .= ' INNER JOIN {' . check_plain($this->get_association()) . '} mfda ON (mfdfd.file_id = mfda.file_id)';
+    $query .= ' WHERE mfda.server_id = :server_id';
+    $query .= ' AND mfda.file_id = :file_id';
     $query .= ' AND mfdfd.block >= :stream_position';
     $query .= ' AND mfdfd.block < :max_blocks';
     $query .= ' ORDER BY mfdfd.block';
+
     $arguments = array(':server_id' => $conf[MCNEESE_FILE_DB_CONF_SERVER_ID]);
     $arguments[':file_id'] = $this->stream_fid;
     $arguments[':stream_position'] = $this->stream_position;
@@ -550,7 +556,7 @@ class mcneese_file_db_restricted_stream_wrapper extends mcneese_file_db_stream_w
       }
 
       try {
-        $query = $file_db->delete('mcneese_file_db_associations', $options);
+        $query = $file_db->delete(check_plain($this->get_association()), $options);
         $query->condition('server_id', mcneese_file_db_get_server_id());
         $query->condition('file_id', $this->file_meta->id);
         $query->execute();
@@ -701,6 +707,13 @@ class mcneese_file_db_restricted_stream_wrapper extends mcneese_file_db_stream_w
    */
   public function get_core() {
     return self::CORE;
+  }
+
+  /**
+   * Implements get_association().
+   */
+  public function get_association() {
+    return self::ASSOCIATION;
   }
 }
 

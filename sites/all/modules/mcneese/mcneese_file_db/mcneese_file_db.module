@@ -36,7 +36,7 @@ function mcneese_file_db_stream_wrappers() {
   $path = drupal_get_path('module', 'mcneese_file_db');
 
   require_once DRUPAL_ROOT . '/' . $path . '/classes/mcneese_file_db_unrestricted_stream_wrapper.inc';
-  //require_once DRUPAL_ROOT . '/' . $path . '/classes/mcneese_file_db_restricted_stream_wrapper.inc';
+  require_once DRUPAL_ROOT . '/' . $path . '/classes/mcneese_file_db_restricted_stream_wrapper.inc';
 
   $wrappers[mcneese_file_db_unrestricted_stream_wrapper::SCHEME] = array (
     'name' => t("Unrestricted File Database"),
@@ -46,7 +46,7 @@ function mcneese_file_db_stream_wrappers() {
     'dynamic' => TRUE,
     'remote' => TRUE,
   );
-/*
+
   $wrappers[mcneese_file_db_restricted_stream_wrapper::SCHEME] = array (
     'name' => t("Restricted File Database"),
     'class' => 'mcneese_file_db_restricted_stream_wrapper',
@@ -55,31 +55,35 @@ function mcneese_file_db_stream_wrappers() {
     'dynamic' => TRUE,
     'remote' => TRUE,
   );
-*/
+
   return $wrappers;
 }
 
 /**
  * Access callback for files.
  *
- * @param string $by
- *   (optional) Short string that defines what the arg1->arg3 are.
- * @param string $arg1
- *   (optional) A conditional argument.
- * @param string $arg2
- *   (optional) A conditional argument.
- * @param string $arg3
- *   (optional) A conditional argument.
+ * @param string $uri
+ *   The uri string as found in the core {file_managed} table.
+ *   If the uri is not present, FALSE is always returned.
+ * @param object $user
+ *   (optional) user to perform access check against.
+ * @param string $op
+ *   (optional) file operation to perform. This must be one of the operations
+ *   supported by file_entity_access().
  */
-function mcneese_file_db_load_file_access($by = '', $arg1 = '', $arg2 = '', $arg3 = '') {
-  if (empty($by)) {
+function mcneese_file_db_uri_access($uri, $user = NULL, $op = 'download') {
+  if (empty($uri) || !is_string($uri)) {
     return FALSE;
   }
 
-  // @todo: implement this for private files?
-  // for now, just return TRUE.
+  // @todo: this check was added for the upgrade process, but should eventually be removed.
+  if (!function_exists('file_entity_access')) {
+    return FALSE;
+  }
 
-  return TRUE;
+  $file = file_uri_to_object($uri);
+
+  return file_entity_access($op, $file, $user);
 }
 
 /**
@@ -152,6 +156,9 @@ function mcneese_file_db_get_server_id() {
  *    - timestamp: An array of:
  *      - operation: one of '>', '>=', '<', '<=', '<>', '=='.
  *      - stamp: timestamp to compare against.
+ *    - association: The name of the association table to use.
+ *      The default behavior is to load files that have unrestricted
+ *      associations.
  *
  * @return array|bool
  *   An array of loaded files.
@@ -172,8 +179,15 @@ function mcneese_file_db_load_available_files($conditions = array()) {
       return FALSE;
     }
 
+    if (empty($conditions['association'])) {
+      $association = 'mcneese_file_db_unrestricted';
+    }
+    else {
+      $association = check_plain($conditions['association']);
+    }
+
     $query = 'SELECT mfdf.* FROM {mcneese_file_db_files} mfdf';
-    $query .= ' INNER JOIN {mcneese_file_db_associations} mfda ON (mfdf.id = mfda.file_id AND mfda.server_id = :server_id)';
+    $query .= ' INNER JOIN {' . $association . '} mfda ON (mfdf.id = mfda.file_id AND mfda.server_id = :server_id)';
 
     $arguments = array(':server_id' => $conf[MCNEESE_FILE_DB_CONF_SERVER_ID]);
 
@@ -343,11 +357,14 @@ function mcneese_file_db_build_query_by_checksum($checksum, $associated = TRUE) 
  *   (optional) A conditional argument.
  * @param string $arg3
  *   (optional) A conditional argument.
+ * @param null|string $association
+ *   (optional) When not NULL, this represents the specific association to
+ *   use for loading. When NULL, both associations are used.
  *
  * @return bool
  *   TRUE on access denied, FALSE on file not found.
  */
-function mcneese_file_db_load_file($by = '', $arg1 = '', $arg2 = '', $arg3 = '') {
+function mcneese_file_db_load_file($by = '', $arg1 = '', $arg2 = '', $arg3 = '', $association = NULL) {
   $filepath = '';
   $file_meta = FALSE;
   $not_modified = FALSE;
@@ -355,13 +372,32 @@ function mcneese_file_db_load_file($by = '', $arg1 = '', $arg2 = '', $arg3 = '')
   $request_range_begin = 0;
   $request_range_end = 0;
   $request_range_length = 0;
-
-  // @todo: perform access control
+  $restricted = FALSE;
 
   // if headers were already sent, then this function should simply exit because it requires sending headers itself.
   if (headers_sent()) {
-    watchdog('File DB', "Headers were already sent when calling mcneese_file_db_load_file('%by', '%arg1', '%arg2', '%arg3').", array('%by' => $by, '%arg1' => $arg1, '%arg2' => $arg2, '%arg3' => $arg3), WATCHDOG_ERROR);
+    watchdog('File DB', "Headers were already sent when calling mcneese_file_db_load_file('%by', '%arg1', '%arg2', '%arg3', '%association').", array('%by' => $by, '%arg1' => $arg1, '%arg2' => $arg2, '%arg3' => $arg3, '%association' => $association), WATCHDOG_ERROR);
     return FALSE;
+  }
+
+  // load based on any association or a specific association.
+  $associations = array();
+  $associations[0] = array(
+    'association' => mcneese_file_db_unrestricted_stream_wrapper::ASSOCIATION,
+    'scheme' => mcneese_file_db_unrestricted_stream_wrapper::SCHEME,
+    'restricted' => FALSE,
+  );
+  $associations[1] = array(
+    'association' => mcneese_file_db_restricted_stream_wrapper::ASSOCIATION,
+    'scheme' => mcneese_file_db_restricted_stream_wrapper::SCHEME,
+    'restricted' => TRUE,
+  );
+
+  if (mcneese_file_db_unrestricted_stream_wrapper::ASSOCIATION == $association) {
+    unset($associations[1]);
+  }
+  elseif (mcneese_file_db_restricted_stream_wrapper::ASSOCIATION == $association) {
+    unset($associations[0]);
   }
 
   // load the file based on the arguments
@@ -389,21 +425,25 @@ function mcneese_file_db_load_file($by = '', $arg1 = '', $arg2 = '', $arg3 = '')
     }
 
     if (!empty($arg1)) {
-      $filepath = mcneese_file_db_unrestricted_stream_wrapper::SCHEME . '://';
+      foreach ($associations as $a) {
+        $filepath = $a['scheme'] . '://';
 
-      if (!strncmp($arg1, $if_none_match, MCNEESE_FILE_DB_SHORT_SUM_SIZE)) {
-        $filepath .= MCNEESE_FILE_DB_PATH_BY_HASH . '/' . $if_none_match;
-        $files = (array) mcneese_file_db_load_available_files(array('checksum' => $if_none_match, 'range' => array('from' => 0, 'count' => 1)));
-        $not_modified = TRUE;
-      }
-      else {
-        $filepath .= MCNEESE_FILE_DB_PATH_BY_HASH . '/' . $arg1;
-        $files = (array) mcneese_file_db_load_available_files(array('checksum' => $arg1, 'range' => array('from' => 0, 'count' => 1)));
-      }
+        if (!strncmp($arg1, $if_none_match, MCNEESE_FILE_DB_SHORT_SUM_SIZE)) {
+          $filepath .= MCNEESE_FILE_DB_PATH_BY_HASH . '/' . $if_none_match;
+          $files = (array) mcneese_file_db_load_available_files(array('checksum' => $if_none_match, 'association' => $a['association']));
+          $not_modified = TRUE;
+        }
+        else {
+          $filepath .= MCNEESE_FILE_DB_PATH_BY_HASH . '/' . $arg1;
+          $files = (array) mcneese_file_db_load_available_files(array('checksum' => $arg1, 'association' => $a['association']));
+        }
 
-      if (!empty($files)) {
-        $file_meta = array_pop($files);
-        unset($files);
+        if (!empty($files)) {
+          $restricted = $a['restricted'];
+          $file_meta = array_pop($files);
+          unset($files);
+          break;
+        }
       }
     }
   }
@@ -421,33 +461,39 @@ function mcneese_file_db_load_file($by = '', $arg1 = '', $arg2 = '', $arg3 = '')
     if (!empty($found['uri'])) {
       $outer_parts = explode('://', $found['uri'], 2);
 
-      // @todo: add support f the restricted stream wrapper.
-      if ($outer_parts[0] == mcneese_file_db_unrestricted_stream_wrapper::SCHEME) {
-        $filepath = $found['uri'];
-        $inner_parts = explode('/', $outer_parts[1]);
+      $matched = FALSE;
+      foreach ($associations as $a) {
+        if ($outer_parts[0] == $a['scheme']) {
+          $filepath = $found['uri'];
+          $inner_parts = explode('/', $outer_parts[1]);
 
-        if (isset($inner_parts[0]) && $inner_parts[0] == MCNEESE_FILE_DB_PATH_BY_HASH) {
-          $inner_by = $inner_parts[0];
-          $inner_arg1 = isset($inner_parts[1]) ? $inner_parts[1] : NULL;
-          $inner_arg2 = isset($inner_parts[2]) ? $inner_parts[2] : NULL;
-          $inner_arg3 = isset($inner_parts[3]) ? $inner_parts[3] : NULL;
+          if (isset($inner_parts[0]) && $inner_parts[0] == MCNEESE_FILE_DB_PATH_BY_HASH) {
+            $inner_by = $inner_parts[0];
+            $inner_arg1 = isset($inner_parts[1]) ? $inner_parts[1] : NULL;
+            $inner_arg2 = isset($inner_parts[2]) ? $inner_parts[2] : NULL;
+            $inner_arg3 = isset($inner_parts[3]) ? $inner_parts[3] : NULL;
 
-          $status = mcneese_file_db_load_file($inner_by, $inner_arg1, $inner_arg2, $inner_arg3);
+            $status = mcneese_file_db_load_file($inner_by, $inner_arg1, $inner_arg2, $inner_arg3, $a['association']);
 
-          // this point is only reached if the file was not found.
-          drupal_bootstrap(DRUPAL_BOOTSTRAP_FULL);
+            // this point is only reached if the file was not found.
+            drupal_bootstrap(DRUPAL_BOOTSTRAP_FULL);
 
-          if ($status) {
-            drupal_access_denied();
+            if ($status) {
+              drupal_access_denied();
+            }
+            else {
+              drupal_not_found();
+            }
+
+            drupal_exit();
           }
-          else {
-            drupal_not_found();
-          }
 
-          drupal_exit();
+          $matched = TRUE;
+          break;
         }
       }
-      else {
+
+      if (!$matched) {
         drupal_bootstrap(DRUPAL_BOOTSTRAP_FULL);
 
         $url = file_create_url($found['uri']);
@@ -461,6 +507,8 @@ function mcneese_file_db_load_file($by = '', $arg1 = '', $arg2 = '', $arg3 = '')
         drupal_exit();
       }
     }
+
+    unset($matched);
   }
 
 
@@ -476,28 +524,41 @@ function mcneese_file_db_load_file($by = '', $arg1 = '', $arg2 = '', $arg3 = '')
     }
 
     if (!empty($arg1)) {
-      $filepath = mcneese_file_db_unrestricted_stream_wrapper::SCHEME . '://';
+      foreach ($associations as $a) {
+        $filepath = $a['scheme'] . '://';
 
-      if ($arg1 == $if_none_match) {
-        if (!is_numeric($if_none_match)) return FALSE;
-        $filepath .= MCNEESE_FILE_DB_PATH_BY_ID . '/' . $if_none_match;
-        $files = (array) mcneese_file_db_load_available_files(array('id' => $if_none_match, 'range' => array('from' => 0, 'count' => 1)));
-        $not_modified = TRUE;
-      }
-      else {
-        if (!is_numeric($arg1)) return FALSE;
-        $filepath .= MCNEESE_FILE_DB_PATH_BY_ID . '/' . $arg1;
-        $files = (array) mcneese_file_db_load_available_files(array('id' => $arg1, 'range' => array('from' => 0, 'count' => 1)));
-      }
+        if ($arg1 == $if_none_match) {
+          if (!is_numeric($if_none_match)) return FALSE;
+          $filepath .= MCNEESE_FILE_DB_PATH_BY_ID . '/' . $if_none_match;
+          $files = (array) mcneese_file_db_load_available_files(array('id' => $if_none_match, 'association' => $a['association']));
+          $not_modified = TRUE;
+        }
+        else {
+          if (!is_numeric($arg1)) return FALSE;
+          $filepath .= MCNEESE_FILE_DB_PATH_BY_ID . '/' . $arg1;
+          $files = (array) mcneese_file_db_load_available_files(array('id' => $arg1, 'association' => $a['association']));
+        }
 
-      if (!empty($files)) {
-        $file_meta = array_pop($files);
-        unset($files);
+        if (!empty($files)) {
+          $restricted = $a['restricted'];
+          $file_meta = array_pop($files);
+          unset($files);
+          break;
+        }
       }
     }
   }
 
   if (!empty($file_meta) && !empty($filepath)) {
+    if ($restricted) {
+      if (!mcneese_file_db_uri_access($filepath)) {
+        drupal_bootstrap(DRUPAL_BOOTSTRAP_FULL);
+
+        drupal_access_denied();
+        drupal_exit();
+      }
+    }
+
     // prevent devel_shutdown from being called.
     $GLOBALS['devel_shutdown'] = FALSE;
 
@@ -800,11 +861,16 @@ function mcneese_file_db_file_validate($file) {
     return $errors;
   }
 
+  $association = mcneese_file_db_unrestricted_stream_wrapper::ASSOCIATION;
   $outer_parts = explode('://', $file->destination, 2);
 
   if ($outer_parts[0] != mcneese_file_db_unrestricted_stream_wrapper::SCHEME) {
-    // @todo: add check for restricted scheme as well
-    return $errors;
+    if ($outer_parts[0] == mcneese_file_db_restricted_stream_wrapper::SCHEME) {
+      $association = mcneese_file_db_restricted_stream_wrapper::ASSOCIATION;
+    }
+    else {
+      return $errors;
+    }
   }
 
   $checksum = hash_file(MCNEESE_FILE_DB_PATH_BY_HASH_ALGORITHM, $file->uri);
@@ -819,7 +885,7 @@ function mcneese_file_db_file_validate($file) {
     $file->destination .= '/' . $file->filename;
   }
 
-  $loaded = (array) mcneese_file_db_load_available_files(array('checksum' => $checksum, 'range' => array('from' => 0, 'count' => 1)));
+  $loaded = (array) mcneese_file_db_load_available_files(array('checksum' => $checksum, 'association' => $association));
 
   if (empty($loaded)) return $errors;
 

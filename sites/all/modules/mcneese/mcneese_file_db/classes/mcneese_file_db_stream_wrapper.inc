@@ -447,6 +447,14 @@ abstract class mcneese_file_db_stream_wrapper implements DrupalStreamWrapperInte
   abstract public function get_core();
 
   /**
+   * Wrapper function to load the association table name.
+   *
+   * @return string
+   *   The name of a table such as: mcneese_file_db_unrestricted.
+   */
+  abstract public function get_association();
+
+  /**
    * Loads the file meta if a valid checksum is supplied.
    *
    * @param string $checksum
@@ -469,7 +477,7 @@ abstract class mcneese_file_db_stream_wrapper implements DrupalStreamWrapperInte
       return $this->file_meta;
     }
 
-    $files = (array) mcneese_file_db_load_available_files(array('checksum' => $checksum, 'range' => array('from' => 0, 'count' => 1)));
+    $files = (array) mcneese_file_db_load_available_files(array('checksum' => $checksum, 'association' => $this->get_association()));
 
     if (!empty($files)) {
       $file_meta = array_pop($files);
@@ -510,7 +518,7 @@ abstract class mcneese_file_db_stream_wrapper implements DrupalStreamWrapperInte
       return $this->file_meta;
     }
 
-    $files = (array) mcneese_file_db_load_available_files(array('id' => $id, 'range' => array('from' => 0, 'count' => 1)));
+    $files = (array) mcneese_file_db_load_available_files(array('id' => $id, 'association' => $this->get_association()));
 
     if (!empty($files)) {
       $file_meta = array_pop($files);
@@ -562,7 +570,7 @@ abstract class mcneese_file_db_stream_wrapper implements DrupalStreamWrapperInte
 
           if (isset($inner_parts[0]) && isset($inner_parts[1])) {
             if ($inner_parts[0] == $this->get_path_by_hash()) {
-              $files = (array) mcneese_file_db_load_available_files(array('checksum' => $inner_parts[1], 'range' => array('from' => 0, 'count' => 1)));
+              $files = (array) mcneese_file_db_load_available_files(array('checksum' => $inner_parts[1], 'association' => $this->get_association()));
 
               if (!empty($files)) {
                 $file_meta = array_pop($files);
