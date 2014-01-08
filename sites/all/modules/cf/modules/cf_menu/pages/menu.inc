@@ -42,6 +42,35 @@ function cf_menu_management_page() {
     return t("There are no links available on this page.");
   }
 
+  // hide all blocks the user is not allowed to access.
+  foreach ($blocks as $key => $block) {
+    $access = FALSE;
+    $map = array();
+
+    // Determine access callback, which will decide whether or not the current
+    // user has access to this path.
+    $callback = empty($block['access_callback']) ? 0 : trim($block['access_callback']);
+    // Check for a TRUE or FALSE value.
+    if (is_numeric($callback)) {
+      $access = (bool) $callback;
+    }
+    else {
+      $arguments = menu_unserialize($block['access_arguments'], $map);
+      // As call_user_func_array is quite slow and user_access is a very common
+      // callback, it is worth making a special case for it.
+      if ($callback == 'user_access') {
+        $access = (count($arguments) == 1) ? user_access($arguments[0]) : user_access($arguments[0], $arguments[1]);
+      }
+      elseif (function_exists($callback)) {
+        $access = call_user_func_array($callback, $arguments);
+      }
+    }
+
+    if (!$access) {
+      unset($blocks[$key]);
+    }
+  }
+
   ksort($blocks);
   return theme('admin_page', array('blocks' => $blocks));
 }
