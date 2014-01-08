@@ -263,7 +263,7 @@ function cf_settings_unregister($variable_name, $variable_type, $module_name) {
 
   $query = db_delete('cf_settings_register');
   $query->condition('variable_name', $variable_name);
-  $query->condition('module_name', $module_name, 'IN');
+  $query->condition('module_name', $module_name);
   $query->condition('variable_type', $subquery, 'IN');
   $query->execute();
 
