@@ -31,9 +31,11 @@ function mcneese_content_sitemap_page($group = NULL, $offset = 0) {
   elseif ($group == 'node') {
     return mcneese_content_sitemap_group_node($offset);
   }
+/*
   elseif ($group == 'media') {
     return mcneese_content_sitemap_group_media($offset);
   }
+*/
 
   drupal_not_found();
   drupal_exit();
@@ -81,6 +83,7 @@ function mcneese_content_sitemap_main() {
     throw $e;
   }
 
+  /*
   // get a total media (file) count.
   try {
     $query = db_select('file_managed', 'fm');
@@ -112,6 +115,7 @@ function mcneese_content_sitemap_main() {
 
     throw $e;
   }
+  */
 
 
   // make sure the browser realizes that this is not a web page and is instead an xml page.
