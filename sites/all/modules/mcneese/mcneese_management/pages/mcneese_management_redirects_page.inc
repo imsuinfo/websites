@@ -190,7 +190,7 @@ function mcneese_management_redirects_update_form($form, &$form_state, $id) {
   );
 
   $form['settings']['maintenance_message'] = array(
-    '#type' => 'textarea',
+    '#type' => 'text_format',
     '#title' => t("Maintenance Message"),
     '#description' => t("This message is displayed instead of a page for some given path when status is 'Display Maintenance Messsage'. HTML is allowed and encouraged."),
     '#default_value' => $default_maintenance_message,
@@ -200,7 +200,7 @@ function mcneese_management_redirects_update_form($form, &$form_state, $id) {
   );
 
   $form['settings']['alert_message'] = array(
-    '#type' => 'textarea',
+    '#type' => 'text_format',
     '#title' => t("Alert Message"),
     '#description' => t("This message is displayed instead of a page for some given path when status is 'Display Alert Messsage'. HTML is allowed and encouraged."),
     '#default_value' => $default_alert_message,
@@ -210,7 +210,7 @@ function mcneese_management_redirects_update_form($form, &$form_state, $id) {
   );
 
   $form['settings']['failsafe_message'] = array(
-    '#type' => 'textarea',
+    '#type' => 'text_format',
     '#title' => t("Failsafe Message"),
     '#description' => t("This message is displayed when the page is unable to perform an HTTP redirect or when logged in users are supposed to get this message. HTML is allowed and encouraged."),
     '#default_value' => $default_failsafe_message,
