@@ -80,7 +80,7 @@ function term_ref_autocomplete_callback($field_name, $raw_tags_typed = '') {
         if (strpos($n, ',') !== FALSE || strpos($n, '"') !== FALSE) {
           $n = '"' . str_replace('"', '""', $n) . '"';
         }
-        $term_tmp[$ancestor->tid]['display'] = $prefix . $n . '[tid:' . $ancestor->tid . ']';
+        $term_tmp[$ancestor->tid]['display'] = $prefix . $n . ' [tid:' . $ancestor->tid . ']';
         $term_tmp[$ancestor->tid]['position'] = count($tags_typed);
         $term_tmp[$ancestor->tid]['name'] = $ancestor->name;
         if (!isset($term_tmp[$ancestor->tid]['children'])) {
