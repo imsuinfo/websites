@@ -359,11 +359,11 @@ function mcneese_content_formats_alter_dom(&$text, $operations) {
     if ($operations['fix_markup']) {
       // replace b tags with strong
       if ($tag->tagName == 'b') {
-        $change_tags = array('tag' => $tag, 'type' => 'strong');
+        $change_tags[] = array('tag' => $tag, 'type' => 'strong');
       }
       // replace i tags with em
       elseif ($tag->tagName == 'i') {
-        $change_tags = array('tag' => $tag, 'type' => 'em');
+        $change_tags[] = array('tag' => $tag, 'type' => 'em');
       }
       // using embedded/inline images is not supported, in this case completely strip out the tag.
       elseif ($tag->tagName == 'img') {
@@ -377,7 +377,7 @@ function mcneese_content_formats_alter_dom(&$text, $operations) {
       }
       // replace strike tags with del
       elseif ($tag->tagName == 'strike') {
-        $change_tags = array('tag' => $tag, 'type' => 'del');
+        $change_tags[] = array('tag' => $tag, 'type' => 'del');
       }
       // remove all unsupported tags, but preserve their content.
       elseif (in_array($tag->tagName, $unsupported_tags)) {
@@ -406,7 +406,7 @@ function mcneese_content_formats_alter_dom(&$text, $operations) {
 
         // replace empty tags that are generally created to implement a line break
         if (!$tag->hasChildNodes()) {
-          $change_tags = array('tag' => $tag, 'type' => 'br');
+          $change_tags[] = array('tag' => $tag, 'type' => 'br');
         }
       }
       // strip out attributes no longer supported in html 5 for specific tags.
@@ -421,7 +421,7 @@ function mcneese_content_formats_alter_dom(&$text, $operations) {
       elseif ($tag->tagName == 'h1' || $tag->tagName == 'h2' || $tag->tagName == 'h3' || $tag->tagName == 'h4' || $tag->tagName == 'h5' || $tag->tagName == 'h6') {
         // replace empty tags that are generally created to implement a line break
         if (!$tag->hasChildNodes()) {
-          $change_tags = array('tag' => $tag, 'type' => 'br');
+          $change_tags[] = array('tag' => $tag, 'type' => 'br');
           $altered = TRUE;
         }
      }
@@ -563,7 +563,7 @@ function mcneese_content_formats_alter_dom(&$text, $operations) {
                    $child_tag->removeAttribute('scope');
                  }
 
-                 $change_tags = array('tag' => $child_tag, 'type' => 'td');
+                 $change_tags[] = array('tag' => $child_tag, 'type' => 'td');
                }
              }
 
