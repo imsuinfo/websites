@@ -1869,30 +1869,28 @@ function workbench_moderation_workbench_block() {
     }
   }
 
-  if ($context == '' || $context == 'draft' || $context == 'moderation' || $context == 'edit') {
-    // Add an unpublish link.
-    $next_states = workbench_moderation_states_next(workbench_moderation_state_published(), $user, $node);
-    if ($revision_published && !empty($next_states) && $link = workbench_moderation_access_link(t('Unpublish this revision'), "node/{$node->nid}/moderation/{$node->vid}/unpublish")) {
+  // Add an unpublish link.
+  $next_states = workbench_moderation_states_next(workbench_moderation_state_published(), $user, $node);
+  if ($revision_published && !empty($next_states) && $link = workbench_moderation_access_link(t('Unpublish this revision'), "node/{$node->nid}/moderation/{$node->vid}/unpublish")) {
+    $info_block_messages[] = array(
+      'type' => 'message',
+      'label' => t('Actions'),
+      'message' => $link,
+      'class' => 'moderate_action',
+      'side' => 1,
+    );
+  }
+
+  // Add a moderation form.
+  if ($revision_current && !$revision_published && _workbench_moderation_access('update', $node) && $moderate_form = drupal_get_form('workbench_moderation_moderate_form', $node, "node/{$node->nid}/current-revision")) {
+    if ($moderate_form = drupal_render($moderate_form)) {
       $info_block_messages[] = array(
         'type' => 'message',
-        'label' => t('Actions'),
-        'message' => $link,
-        'class' => 'moderate_action',
+        'label' => t('Set Workflow State'),
+        'message' => $moderate_form,
+        'class' => 'set_moderation_state',
         'side' => 1,
       );
-    }
-
-    // Add a moderation form.
-    if ($revision_current && !$revision_published && _workbench_moderation_access('update', $node) && $moderate_form = drupal_get_form('workbench_moderation_moderate_form', $node, "node/{$node->nid}/current-revision")) {
-      if ($moderate_form = drupal_render($moderate_form)) {
-        $info_block_messages[] = array(
-          'type' => 'message',
-          'label' => t('Set Workflow State'),
-          'message' => $moderate_form,
-          'class' => 'set_moderation_state',
-          'side' => 1,
-        );
-      }
     }
   }
 
