@@ -23,7 +23,7 @@
 function mcneese_management_rules_file_info() {
   $items = array();
   $items[] = 'mcneese_management.rules';
-  
+
   return $items;
 }
 

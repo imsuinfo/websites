@@ -10,9 +10,13 @@ version = "7.x-1.1"
 dependencies[] = cf (7.x-2.x)
 dependencies[] = cf_error (7.x-2.x)
 dependencies[] = cf_settings (7.x-2.x)
+dependencies[] = cf_dom
+dependencies[] = cf_db_options (7.x-2.x)
 
 files[] = mcneese_management.module
 files[] = mcneese_management.rules.inc
 files[] = pages/mcneese_management_emergency_page.inc
 files[] = pages/mcneese_management_group_leader_page.inc
-files[] = pages/mcneese_management_reassign_user_page.inc
+files[] = pages/mcneese_management_templates_page.inc
+files[] = pages/mcneese_management_templates_use_page.inc
+files[] = pages/mcneese_management_templates_manage_page.inc

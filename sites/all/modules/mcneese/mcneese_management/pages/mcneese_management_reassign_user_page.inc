@@ -89,7 +89,7 @@ function mcneese_management_reassign_user_form_validate($form, &$form_state) {
   }
 
   $user_id = NULL;
-  $user = $form_state['values']['settings']['from_user']; 
+  $user = $form_state['values']['settings']['from_user'];
   $matches = array();
   $matched = preg_match('/ \[uid:(\d+)]\s*$/i', $user, $matches);
 
@@ -127,7 +127,7 @@ function mcneese_management_reassign_user_form_validate($form, &$form_state) {
   $user_id_from = $user_id;
 
   $user_id = NULL;
-  $user = $form_state['values']['settings']['to_user']; 
+  $user = $form_state['values']['settings']['to_user'];
   $matches = array();
   $matched = preg_match('/ \[uid:(\d+)]\s*$/i', $user, $matches);
 
@@ -176,7 +176,7 @@ function mcneese_management_reassign_user_form_validate($form, &$form_state) {
  *   The form state array as defined by drupals form api
  */
 function mcneese_management_reassign_user_form_submit($form, &$form_state) {
-  $from_user = $form_state['values']['settings']['from_user']; 
+  $from_user = $form_state['values']['settings']['from_user'];
   $from_user_id = NULL;
   $matches = array();
   $matched = preg_match('/ \[uid:(\d+)]\s*$/i', $from_user, $matches);
@@ -188,7 +188,7 @@ function mcneese_management_reassign_user_form_submit($form, &$form_state) {
     return;
   }
 
-  $to_user = $form_state['values']['settings']['to_user']; 
+  $to_user = $form_state['values']['settings']['to_user'];
   $to_user_id = NULL;
   $matches = array();
   $matched = preg_match('/ \[uid:(\d+)]\s*$/i', $to_user, $matches);

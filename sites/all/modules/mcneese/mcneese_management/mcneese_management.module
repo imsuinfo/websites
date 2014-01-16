@@ -48,6 +48,21 @@ function mcneese_management_permission() {
     'description' => t("Grants permissions to manage special redirects."),
   );
 
+  $permissions['mcneese management templates'] = array(
+    'title' => t("Manage Templates"),
+    'description' => t("Grants permissions to access the manage templates content."),
+  );
+
+  $permissions['mcneese management templates manage'] = array(
+    'title' => t("Manage Templates - Management"),
+    'description' => t("Grants permissions to create, edit, or delete templates."),
+  );
+
+  $permissions['mcneese management templates use'] = array(
+    'title' => t("Manage Templates - Use"),
+    'description' => t("Grants permissions to use templates for creating content."),
+  );
+
   return $permissions;
 }
 
@@ -179,7 +194,190 @@ function mcneese_management_menu() {
     'access arguments' => array('mcneese management redirects'),
   );
 
+  $items['admin/content/management/template'] = array(
+    'title' => "Templates",
+    'description' => "Templates provide quick and simple ways to create content.",
+    'page callback' => 'mcneese_management_templates_page',
+    'file' => 'mcneese_management_templates_page.inc',
+    'file path' => drupal_get_path('module', 'mcneese_management') . '/pages',
+    'access callback' => 'user_access',
+    'access arguments' => array('mcneese management templates'),
+    'tab_parent' => 'admin/content/management',
+  );
+
+  $items['admin/content/management/template/use'] = array(
+    'title' => "Available Templates",
+    'description' => "Template usage overview page.",
+    'page callback' => 'mcneese_management_templates_use_page',
+    'file' => 'mcneese_management_templates_use_page.inc',
+    'file path' => drupal_get_path('module', 'mcneese_management') . '/pages',
+    'access callback' => 'user_access',
+    'access arguments' => array('mcneese management templates use'),
+    'tab_parent' => 'admin/content/management',
+  );
+
+  $items['admin/content/management/template/use/list/%'] = array(
+    'title' => "List Nodes",
+    'description' => "List all nodes using a given template",
+    'page callback' => 'mcneese_management_templates_use_list_page',
+    'page arguments' => array(6),
+    'file' => 'mcneese_management_templates_use_page.inc',
+    'file path' => drupal_get_path('module', 'mcneese_management') . '/pages',
+    'access callback' => 'user_access',
+    'access arguments' => array('mcneese management templates use'),
+  );
+
+  $items['admin/content/management/template/use/add/%'] = array(
+    'title' => "Use Template",
+    'description' => "Create a new template usage.",
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('mcneese_management_templates_use_add_form', 6),
+    'file' => 'mcneese_management_templates_use_page.inc',
+    'file path' => drupal_get_path('module', 'mcneese_management') . '/pages',
+    'access callback' => 'user_access',
+    'access arguments' => array('mcneese management templates use'),
+  );
+
+  $items['node/add/%/template/%'] = array(
+    'title' => "Use Template",
+    'description' => "Create a new template usage.",
+    'file' => 'mcneese_management_templates_use_page.inc',
+    'file path' => drupal_get_path('module', 'mcneese_management') . '/pages',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('mcneese_management_templates_use_add_form', 4, 2),
+    'access callback' => 'mcneese_management_template_use_node_access',
+    'access arguments' => array('create', 2, 4),
+  );
+
+  $items['node/%node/template'] = array(
+    'title' => "Template",
+    'description' => "Edit an existing used template.",
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('mcneese_management_templates_use_edit_form', 1),
+    'file' => 'mcneese_management_templates_use_page.inc',
+    'file path' => drupal_get_path('module', 'mcneese_management') . '/pages',
+    'access callback' => 'mcneese_management_template_use_node_access',
+    'access arguments' => array('update', 1),
+    'weight' => 7,
+    'type' => MENU_LOCAL_TASK,
+    'context' => MENU_CONTEXT_PAGE | MENU_CONTEXT_INLINE,
+  );
+
+  $items['admin/content/management/template/manage'] = array(
+    'title' => "Manage Templates",
+    'description' => "Management page for created, editing, and deleting templates.",
+    'page callback' => 'mcneese_management_templates_manage_page',
+    'file' => 'mcneese_management_templates_manage_page.inc',
+    'file path' => drupal_get_path('module', 'mcneese_management') . '/pages',
+    'access callback' => 'user_access',
+    'access arguments' => array('mcneese management templates manage'),
+    'tab_parent' => 'admin/content/management',
+  );
+
+  $items['admin/content/management/template/manage/add'] = array(
+    'title' => "Create Template",
+    'description' => "Create a new template.",
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('mcneese_management_templates_manage_edit_form'),
+    'file' => 'mcneese_management_templates_manage_page.inc',
+    'file path' => drupal_get_path('module', 'mcneese_management') . '/pages',
+    'access callback' => 'user_access',
+    'access arguments' => array('mcneese management templates manage'),
+  );
+
+  $items['admin/content/management/template/manage/edit/%'] = array(
+    'title' => "Edit Template",
+    'description' => "Edit an existing template.",
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('mcneese_management_templates_manage_edit_form', 6),
+    'file' => 'mcneese_management_templates_manage_page.inc',
+    'file path' => drupal_get_path('module', 'mcneese_management') . '/pages',
+    'access callback' => 'user_access',
+    'access arguments' => array('mcneese management templates manage'),
+  );
+
+  $items['admin/content/management/template/manage/delete/%'] = array(
+    'title' => "Delete Template",
+    'description' => "Delete an existing template.",
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('mcneese_management_templates_manage_delete_form', 6),
+    'file' => 'mcneese_management_templates_manage_page.inc',
+    'file path' => drupal_get_path('module', 'mcneese_management') . '/pages',
+    'access callback' => 'user_access',
+    'access arguments' => array('mcneese management templates manage'),
+  );
+
+  $items['admin/content/management/template/manage/user/%'] = array(
+    'title' => "Manage Template Users",
+    'description' => "Management user access for a given template.",
+    'page callback' => 'mcneese_management_templates_manage_user_page',
+    'page arguments' => array(6),
+    'file' => 'mcneese_management_templates_manage_page.inc',
+    'file path' => drupal_get_path('module', 'mcneese_management') . '/pages',
+    'access callback' => 'user_access',
+    'access arguments' => array('mcneese management templates manage'),
+    'tab_parent' => 'admin/content/management',
+  );
+
+  $items['admin/content/management/template/manage/user/add/%'] = array(
+    'title' => "Grant User Access to Template",
+    'description' => "Allows a specified user to use a given template.",
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('mcneese_management_templates_manage_user_add_form', 7),
+    'file' => 'mcneese_management_templates_manage_page.inc',
+    'file path' => drupal_get_path('module', 'mcneese_management') . '/pages',
+    'access callback' => 'user_access',
+    'access arguments' => array('mcneese management templates manage'),
+  );
+
+  $items['admin/content/management/template/manage/user/delete/%/%'] = array(
+    'title' => "Delete Granted User Access to Template",
+    'description' => "Remove a users granted access to a given template..",
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('mcneese_management_templates_manage_user_delete_form', 7, 8),
+    'file' => 'mcneese_management_templates_manage_page.inc',
+    'file path' => drupal_get_path('module', 'mcneese_management') . '/pages',
+    'access callback' => 'user_access',
+    'access arguments' => array('mcneese management templates manage'),
+  );
+
   return $items;
+}
+
+/**
+ * Implements hook_node_load().
+ */
+function mcneese_management_node_load($nodes, $types) {
+  if (!is_array($nodes)){
+    if (class_exists('cf_error')) {
+      cf_error::invalid_array('nodes', $nodes);
+    }
+    return;
+  }
+
+  $all_nodes = array();
+  foreach($nodes as $key => $node){
+    $all_nodes[$node->nid] = &$nodes[$key];
+  }
+
+  try {
+    $query = db_select('mcneese_management_template_node', 'mmtn');
+    $query->fields('mmtn');
+    $query->condition('node_id', array_keys($all_nodes),  'IN');
+
+    $executed = $query->execute();
+
+    foreach ($executed as $association) {
+      $all_nodes[$association->node_id]->mcneese_management_template = $association->template_id;
+    }
+  }
+  catch (Exception $e) {
+    if (class_exists('cf_error')) {
+      cf_error::on_query_execution($e);
+    }
+
+    throw $e;
+  }
 }
 
 /**
@@ -188,7 +386,10 @@ function mcneese_management_menu() {
 function mcneese_management_node_presave($node) {
   // assign the node uid as the group leader whenever field_group is available.
   if (property_exists($node, 'field_group')) {
-    $access_id = $node->field_group['und'][0]['tid'];
+    $access_id = '';
+    if (isset($node->field_group['und'][0]['tid'])) {
+      $access_id = $node->field_group['und'][0]['tid'];
+    }
 
     if (!empty($access_id)) {
       $leaders = variable_get('mcneese_management_group_leaders', array());
@@ -201,6 +402,118 @@ function mcneese_management_node_presave($node) {
         $node->uid = $fallback_uid;
       }
     }
+  }
+}
+
+/**
+ * Implements hook_node_insert().
+ */
+function mcneese_management_node_insert($node) {
+  // When saving the node, if the mcneese_template property exists, then save the node id in the template database.
+  if (property_exists($node, 'mcneese_management_template')) {
+    if (cf_is_integer($node->mcneese_management_template)) {
+      $fields = array();
+      $fields['template_id'] = $node->mcneese_management_template;
+      $fields['node_id'] = $node->nid;
+      $update = FALSE;
+
+      try {
+        $query = db_select('mcneese_management_template_node', 'mmtm');
+        $query->fields('mmtm');
+        $query->condition('node_id', $node->nid);
+        $query->countQuery();
+
+        $result = $query->execute()->fetchField();
+
+        if ($result > 0) {
+          $update = TRUE;
+        }
+      }
+      catch (Exception $e) {
+        if (class_exists('cf_error')) {
+          cf_error::on_query_execution($e);
+        }
+
+        throw $e;
+      }
+
+      $transaction = db_transaction();
+
+      try {
+        if ($update) {
+          $query = db_update('mcneese_management_template_node');
+          $query->condition('node_id', $node->nid);
+          $query->fields($fields);
+          $query->execute();
+        }
+        else {
+          $query = db_insert('mcneese_management_template_node');
+          $query->fields($fields);
+          $query->execute();
+        }
+      }
+      catch (Exception $e) {
+        $transaction->rollback();
+        cf_error::on_query_execution($e);
+
+        throw $e;
+      }
+    }
+    else {
+      if (class_exists('cf_error')) {
+        cf_error::invalid_numeric('node->mcneese_management_template');
+      }
+    }
+  }
+}
+
+/**
+ * Implements hook_node_delete().
+ */
+function mcneese_management_node_delete($node) {
+  if (!is_object($node)){
+    if (class_exists('cf_error')) {
+      cf_error::invalid_object('node');
+    }
+    return;
+  }
+
+  try {
+    $query = db_delete('mcneese_management_template_node');
+    $query->condition('node_id', $node->nid);
+    $query->execute();
+  }
+  catch (Exception $e) {
+    if (class_exists('cf_error')) {
+      cf_error::on_query_execution($e);
+    }
+
+    throw $e;
+  }
+}
+
+/**
+ * Implements hook_user_delete().
+ */
+function mcneese_management_user_delete($user) {
+  if (!is_object($user)){
+    if (class_exists('cf_error')) {
+      cf_error::invalid_object('user');
+    }
+    return;
+  }
+
+  try {
+    $query = db_delete('mcneese_management_template_user');
+    $query->condition('user_id', $user->uid);
+    $query->execute();
+  }
+  catch (Exception $e) {
+    if (class_exists('cf_error')) {
+      cf_error::on_query_execution($e);
+    }
+
+    throw $e;
   }
 }
 
@@ -578,7 +891,7 @@ function mcneese_management_perform_redirect($local_path) {
 
   if (empty($redirect)) return;
 
-  global $user;
+  $user = cf_current_user();
 
   if ($user->uid > 0) {
     if ($redirect['logged_in'] == 0) {
@@ -614,6 +927,808 @@ function mcneese_management_perform_redirect($local_path) {
   drupal_exit($redirect['destination']);
 }
 
+/**
+ * Loads the requested template.
+ *
+ * @param int $template_id
+ *   The numeric id representing the template.
+ *
+ * @return object|bool
+ *   The requested template object.
+ *   FALSE is returned on failure.
+ */
+function mcneese_management_template_load_template($template_id) {
+  if (!cf_is_integer($template_id)) {
+    if (class_exists('cf_error')) {
+      cf_error::invalid_numeric('template_id');
+    }
+
+    return FALSE;
+  }
+
+  try {
+    $query = db_select('mcneese_management_template', 'mmt');
+    $query->fields('mmt');
+    $query->condition('id', $template_id);
+
+    $result = $query->execute()->fetchObject();
+  }
+  catch (Exception $e) {
+    if (class_exists('cf_error')) {
+      cf_error::on_query_execution($e);
+    }
+  }
+
+  if (!is_object($result)) {
+    return FALSE;
+  }
+
+  $result->data = unserialize($result->data);
+
+  return $result;
+}
+
+/**
+ * Returns user access for using a templates for a given content type.
+ *
+ * @param string $op
+ *   Select the operation to check, such as 'create', 'update', 'delete'.
+ * @param string $node
+ *   This is either the content type or a node object.
+ * @param null|int $template_id
+ *   The numeric id of the template to validate against.
+ *   This is required for 'create' operations but is not needed for 'update'
+ *   or 'delete' operations.
+ * @param string $user_id
+ *   (optional) user id of the user to perform access check against.
+ *   When unspecified, this will use the current user.
+ *
+ * @see node_access()
+ */
+function mcneese_management_template_use_node_access($op, $node, $template_id = NULL, $user_id = NULL) {
+  if (!is_null($user_id) && !cf_is_integer($user_id)) {
+    if (class_exists('cf_error')) {
+      cf_error::invalid_numeric('user_id');
+    }
+
+    return FALSE;
+  }
+
+  if (is_null($user_id)) {
+    $user = cf_current_user();
+  }
+  else {
+    $user = user_load($user_id);
+  }
+
+  if (!is_object($user)) {
+    return FALSE;
+  }
+
+  if (!user_access('mcneese management templates use')) {
+    return FALSE;
+  }
+
+  if ($op == 'create') {
+    if (!mcneese_management_template_user_access($user->uid, $template_id)) {
+      return FALSE;
+    }
+  }
+  else {
+    if (!is_object($node)) return FALSE;
+    if (!property_exists($node, 'mcneese_management_template')) return FALSE;
+
+    try {
+      $query = db_select('mcneese_management_template_user', 'mmtu');
+      $query->fields('mmtu', array('template_id'));
+      $query->condition('template_id', $node->mcneese_management_template);
+      $query->condition('user_id', $user->uid);
+      $query->countQuery();
+
+      $result = $query->execute()->fetchField();
+
+      if ($result == 0) return FALSE;
+    }
+    catch (Exception $e) {
+      if (class_exists('cf_error')) {
+        cf_error::on_query_execution($e);
+      }
+      return FALSE;
+    }
+  }
+
+  return node_access($op, $node, $user);
+}
+
+/**
+ * Gets the access status of the user for a specific template.
+ *
+ * @param int $user_id
+ *   The numeric id of the user to validate with.
+ * @param int $template_id
+ *   The numeric id of the template to validate against.
+ */
+function mcneese_management_template_user_access($user_id, $template_id) {
+  if (!cf_is_integer($user_id)) {
+    if (class_exists('cf_error')) {
+      cf_error::invalid_numeric('user_id');
+    }
+
+    return FALSE;
+  }
+
+  if (!cf_is_integer($template_id)) {
+    if (class_exists('cf_error')) {
+      cf_error::invalid_numeric('template_id');
+    }
+
+    return FALSE;
+  }
+
+  $user = user_load($user_id);
+
+  if (!is_object($user)) {
+    return FALSE;
+  }
+
+  try {
+    $query = db_select('mcneese_management_template_user', 'mmtu');
+    $query->fields('mmtu', array('user_id'));
+    $query->condition('template_id', $template_id);
+    $query->condition('user_id', $user_id);
+    $query->countQuery();
+
+    $result = $query->execute()->fetchField();
+
+    if ($result > 0) {
+      return TRUE;
+    }
+  }
+  catch (Exception $e) {
+    if (class_exists('cf_error')) {
+      cf_error::on_query_execution($e);
+    }
+  }
+
+  return FALSE;
+}
+
+/**
+ * Builds the form based specified by a given form.
+ *
+ * @param array $form
+ *   The form settings.
+ *
+ * @return array|bool
+ *   An array populated in accordance to the drupal form api.
+ *   FALSE is returned on failure.
+ */
+function mcneese_management_template_build_form(&$form) {
+  if (!is_array($form)) {
+    if (class_exists('cf_error')) {
+      cf_error::invalid_array('form');
+    }
+
+    return;
+  }
+
+  $form['settings']['template'] = array();
+  $form['settings']['template']['#tree'] = TRUE;
+  $form['settings']['template']['fields'] = array('#tree' => TRUE);
+  $form['settings']['template']['targets'] = array('#tree' => TRUE);
+
+  $form['dom'] = array(
+    '#type' => 'value',
+    '#value' => new cf_dom(TRUE, TRUE, TRUE, $form['template']['#value']->data['template']),
+  );
+
+  $form['body'] = array(
+    '#type' => 'value',
+    '#value' => $form['dom']['#value']->get_body(),
+  );
+
+  $form['defaults'] = array(
+    '#type' => 'value',
+    '#value' => array(),
+  );
+
+  if (is_null($form['body']['#value'])) {
+    return array();
+  }
+
+  $weight = 0;
+  $ti_tags = $form['body']['#value']->getElementsByTagName('ti');
+  if ($ti_tags->length > 0) {
+    $undefaulted_ti_tags = array();
+    $ti_tag = $ti_tags->item(0);
+
+    if ($ti_tag->hasChildNodes()) {
+      foreach ($ti_tag->childNodes as $ti_tag) {
+        if (!property_exists($ti_tag, 'tagName') || empty($ti_tag->tagName)) {
+          continue;
+        }
+
+        if (!preg_match('/^ti_/i', $ti_tag->tagName)) {
+          continue;
+        }
+
+        if (!$ti_tag->hasAttribute('type')) {
+          continue;
+        }
+
+        $undefaulted_ti_tags[$ti_tag->tagName] = $ti_tag;
+        $ti_tag->setAttribute('weight', $weight);
+        $weight++;
+      }
+    }
+
+    $tit_tags = $form['body']['#value']->getElementsByTagName('tit');
+    if (!empty($undefaulted_ti_tags) && $tit_tags->length > 0) {
+      foreach($tit_tags as $tit_tag) {
+        if (!property_exists($tit_tag, 'tagName') || empty($tit_tag->tagName)) continue;
+        if (!$tit_tag->hasAttribute('field')) continue;
+
+        $field_name = $tit_tag->getAttribute('field');
+        if (empty($field_name)) continue;
+
+        $field_type = 'normal';
+        if ($tit_tag->hasAttribute('type')) {
+          $field_type = $tit_tag->getAttribute('type');
+        }
+
+        $field_format = '';
+        if ($tit_tag->hasAttribute('format')) {
+          $field_format = $tit_tag->getAttribute('format');
+        }
+
+        $wrap_with_span = FALSE;
+        if ($field_type == 'textarea') {
+          $wrap_with_span = TRUE;
+        }
+
+        $targets = array_reverse(explode('][', $field_name));
+        $target_name = array_pop($targets);
+
+        if (property_exists($form['node']['#value'], $target_name)) {
+          $current = &$form['node']['#value']->$target_name;
+          $current_name = $target_name;
+      
+          while (!empty($targets)) {
+            $current_name = array_pop($targets);
+            $current = &$current[$current_name];
+          }
+
+          foreach ($undefaulted_ti_tags as $uti_name => $uti_tag) {
+            $found_tags = $tit_tag->getElementsByTagName($uti_name);
+
+            if ($found_tags->length > 0) {
+              if ($wrap_with_span) {
+                $new_dom = new cf_dom(TRUE, TRUE, TRUE, $current);
+                $new_body = $new_dom->get_body();
+                $current_tags = $new_body->getElementsByTagName('span');
+
+                if ($current_tags->length > 0) {
+                  $matched = FALSE;
+                  foreach ($current_tags as $current_tag) {
+                    if (!$current_tag->hasAttribute('class')) continue;
+                    $current_tag_class = $current_tag->getAttribute('class');
+
+                    if (preg_match('/\b' . $uti_name . '\b/i', $current_tag_class) > 0) {
+                      $matched = TRUE;
+
+                      if ($current_tag->hasChildNodes()) {
+                        $default_value = '';
+                        foreach ($current_tag->childNodes as $current_tag_child) {
+                          $default_value .= $new_dom->get_dom()->saveHTML($current_tag_child);
+                        }
+                        $uti_tag->setAttribute('default_value', $default_value);
+                      }
+                      else {
+                        $uti_tag->setAttribute('default_value', '');
+                      }
+
+                      break;
+                    }
+                  }
+
+                  if ($matched) {
+                    $form['settings']['template']['fields'][$uti_name] = mcneese_management_template_build_tag($form, $form['dom']['#value'], $uti_tag);
+                  }
+                }
+              }
+              else {
+                $uti_tag->setAttribute('default_value', $current);
+                $form['settings']['template']['fields'][$uti_name] = mcneese_management_template_build_tag($form, $form['dom']['#value'], $uti_tag);
+              }
+            }
+          }
+        }
+
+        foreach ($undefaulted_ti_tags as $uti_name => $uti_tag) {
+          if (!isset($form['settings']['template']['fields'][$uti_name])) {
+            $form['settings']['template']['fields'][$uti_name] = mcneese_management_template_build_tag($form, $form['dom']['#value'], $uti_tag);
+          }
+        }
+      }
+    }
+  }
+}
+
+/**
+ * Translate tag dom entries into drupal form input fields.
+ *
+ * @param array $form
+ *   The form information.
+ * @param cf_dom $dom
+ *   The dom object containing the passed tag.
+ * @param DOMElement $tag
+ *   The HTML DOM tag to convert into a drupal form field.
+ *
+ * @return array
+ *   The generated form field or an empty array on error.
+ */
+function mcneese_management_template_build_tag($form, $dom, $tag) {
+  if (!is_array($form)) {
+    if (class_exists('cf_error')) {
+      cf_error::invalid_array('form');
+    }
+
+    return array();
+  }
+
+  if (!($dom instanceOf cf_dom)) {
+    return array();
+  }
+
+  if (!($tag instanceOf DOMNode)) {
+    return array();
+  }
+
+  // first deal with reserved attributes.
+  $field = array();
+  if ($tag->hasAttribute('type')) {
+    $field['#type'] = $tag->getAttribute('type');
+  }
+
+  // 'type' attribute is required.
+  if (empty($field['#type'])) {
+    return array();
+  }
+
+
+  // process supported types.
+  $supported_types = array();
+  $supported_types[] = 'select';
+  $supported_types[] = 'textarea';
+  $supported_types[] = 'textfield';
+  $supported_types[] = 'text_format';
+
+  # special case / reserved types
+  $supported_types[] = 'field_group';
+
+  if (!in_array($field['#type'], $supported_types)) {
+    return array();
+  }
+
+
+  // process supported attributes.
+  $supported_attributes = array();
+  $supported_attributes[] = 'cols';
+  $supported_attributes[] = 'default_value';
+  $supported_attributes[] = 'empty_value';
+  $supported_attributes[] = 'empty_option';
+  $supported_attributes[] = 'maxlength';
+  $supported_attributes[] = 'options'; // has to be serialized!
+  $supported_attributes[] = 'prefix';
+  $supported_attributes[] = 'required';
+  $supported_attributes[] = 'resizable';
+  $supported_attributes[] = 'rows';
+  $supported_attributes[] = 'size';
+  $supported_attributes[] = 'suffix';
+  $supported_attributes[] = 'title';
+  $supported_attributes[] = 'title_display';
+  $supported_attributes[] = 'weight';
+  $supported_attributes[] = 'wysiwyg';
+
+  $boolean_attributes = array();
+  $boolean_attributes[] = 'required';
+  $boolean_attributes[] = 'resizable';
+  $boolean_attributes[] = 'wysiwyg';
+
+  foreach ($supported_attributes as $attribute) {
+    if (!$tag->hasAttribute($attribute)) continue;
+
+    // handle attributes that must be serialized.
+    if ($attribute == 'options') {
+      $field['#' . $attribute] = unserialize($tag->getAttribute($attribute));
+    }
+    elseif (in_array($attribute, $boolean_attributes)) {
+      $field['#' . $attribute] = (bool) $tag->getAttribute($attribute);
+    }
+    else {
+      $field['#' . $attribute] = $tag->getAttribute($attribute);
+    }
+  }
+
+  $field['#description'] = $tag->nodeValue;
+
+  // provide this as a way to ensure the original type is not lost for special field types.
+  $field['#ti_field_type'] = $field['#type'];
+
+
+  // process special cases / reserved
+  if ($field['#type'] == 'field_group') {
+    $field['#field_name'] = $tag->tagName;
+    $field['#entity_type'] = 'taxonomy_term_reference';
+    $field['#maxlength'] = 1024;
+    $field['#language'] = 'und';
+    $field['#element_validate'] = array();
+
+    if ($tag->hasAttribute('default_value')) {
+      $default_value = $tag->getAttribute('default_value');
+      $term = taxonomy_term_load($default_value);
+      $field['#default_value'] = $term->name . ' [tid: ' . $term->tid . ']';
+    }
+
+    if (empty($field['#description'])) {
+      $field['#description'] = "Select the proper editorial group for this content. Multiple groups may be selected.";
+      $field['#description'] .= " See " . '<a href="' . url('admin/workbench/sections') . '">' . "My Sections" . '</a>' . " for a list of possible values.";
+    }
+
+    $default_group = NULL;
+    if (!isset($field['#default_value']) && isset($form['user']['#value'])) {
+      if (property_exists($form['user']['#value'], 'field_user_default_group') && !empty($form['user']['#value']->field_user_default_group)) {
+        $term = taxonomy_term_load($form['user']['#value']->field_user_default_group);
+        $field['#default_value'] = $term->name . ' [tid: ' . $term->tid . ']';
+      }
+      elseif (property_exists($form['user']['#value'], 'workbench_access')) {
+        if (count($form['user']['#value']->workbench_access) == 1) {
+          $keys = array_keys($form['user']['#value']->workbench_access);
+          $term = taxonomy_term_load(reset($keys));
+          $field['#default_value'] = $term->name . ' [tid: ' . $term->tid . ']';
+        }
+      }
+    }
+
+    if (function_exists('term_ref_autocomplete_field_widget_form')) {
+      $field['#type'] = 'term_ref_autocomplete_field';
+      $field['#autocomplete_path'] = 'term_ref_autocomplete/autocomplete/field_group';
+      $field['#element_validate'][] = 'term_ref_autocomplete_taxonomy_autocomplete_validate';
+    }
+    else {
+      $field['#type'] = 'textfield';
+      $field['#autocomplete_path'] = 'workbench_access/taxonomy_autocomplete/field_group/' . $form['node']['#value']->type;
+      $field['#element_validate'][] = 'taxonomy_autocomplete_validate';
+      $field['#element_validate'][] = 'workbench_access_autocomplete_validate';
+    }
+  }
+
+  return $field;
+}
+
+/**
+ * Populates and Validates the form state.
+ *
+ * This is explicitly designed to be called inside of a
+ * hook_form_validate9) function.
+ *
+ * @param array $form
+ *   The form settings.
+ * @param array $form_state
+ *   The form state.
+ *
+ * @return array|bool
+ *   An array populated in accordance to the drupal form api.
+ *   FALSE is returned on failure.
+ */
+function mcneese_management_template_process_form_state($form, &$form_state) {
+  if (!is_array($form)) {
+    if (class_exists('cf_error')) {
+      cf_error::invalid_array('form');
+    }
+
+    return;
+  }
+
+  if (!is_array($form_state)) {
+    if (class_exists('cf_error')) {
+      cf_error::invalid_array('form_state');
+    }
+
+    return;
+  }
+
+  if (!isset($form['node']['#value']) || !is_object($form['node']['#value'])) {
+    return;
+  }
+
+  if (!isset($form['body']['#value']) || !is_object($form['body']['#value'])) {
+    return;
+  }
+
+
+  $form['settings']['template']['built'] = array();
+  $template_fields = &$form['settings']['template']['fields'];
+  $template_values = &$form_state['values']['settings']['template']['fields'];
+  $form_state['node'] = $form['node']['#value'];
+
+  $tit_tags = $form['body']['#value']->getElementsByTagName('tit');
+
+  if ($tit_tags->length > 0) {
+    foreach($tit_tags as $tit_tag) {
+      if (!property_exists($tit_tag, 'tagName') || empty($tit_tag->tagName)) continue;
+      if (!$tit_tag->hasAttribute('field')) continue;
+
+      $field_name = $tit_tag->getAttribute('field');
+      if (empty($field_name)) continue;
+
+      $field_type = 'normal';
+      if ($tit_tag->hasAttribute('type')) {
+        $field_type = $tit_tag->getAttribute('type');
+      }
+
+      $field_format = '';
+      if ($tit_tag->hasAttribute('format')) {
+        $field_format = $tit_tag->getAttribute('format');
+      }
+
+      $wrap_with_span = FALSE;
+      if ($field_type == 'textarea') {
+        $wrap_with_span = TRUE;
+      }
+
+      $targets = array_reverse(explode('][', $field_name));
+      $target_name = array_pop($targets);
+
+
+      // replace all template input fields with their respective content.
+      foreach ($template_fields as $ti_name => &$ti_field) {
+        $first_char = substr($ti_name, 0, 1);
+        if ($first_char == '#') continue;
+
+        $value = '';
+
+        // handle special case tags.
+        if (isset($ti_field['#ti_field_type']) && $ti_field['#ti_field_type'] == 'field_group') {
+          if (cf_is_integer($template_values[$ti_name])) {
+            $value = $template_values[$ti_name];
+          }
+          else {
+            $matched = array();
+            $matches = preg_match('/\[tid:\s*(\d+)\]/i', $template_values[$ti_name], $matched);
+
+            if ($matches) {
+              $value = $matched[1];
+            }
+          }
+        }
+        elseif (is_array($template_values[$ti_name]) && isset($template_values[$ti_name]['value'])) {
+          $value = $template_values[$ti_name]['value'];
+        }
+        elseif (is_string($template_values[$ti_name])) {
+          $value = $template_values[$ti_name];
+        }
+        else {
+          form_set_error('', "Unsupported array value. Report this error to the webmaster: " . check_plain(print_r($template_values[$ti_name], TRUE)));
+        }
+
+        $tif_tags = $tit_tag->getElementsByTagName('tif');
+        foreach ($tif_tags as $tif_tag) {
+          if (mcneese_management_template_process_template_if($form, $form_state, $tif_tag, $template_fields, $template_values)) {
+            $form['dom']['#value']->remove_element($tif_tag);
+          }
+          else {
+            $parent = $tif_tag->parentNode;
+            $parent->removeChild($tif_tag);
+          }
+        }
+
+        $ti_tags = $tit_tag->getElementsByTagName($ti_name);
+        foreach ($ti_tags as $ti_tag) {
+          $parent = $ti_tag->parentNode;
+
+          if (isset($ti_field['#wysiwyg']) && $ti_field['#wysiwyg'] || isset($ti_field['#markup']) && $ti_field['#markup']) {
+            if ($wrap_with_span) {
+              $new_dom = new cf_dom(TRUE, TRUE, TRUE, '<span class="' . $ti_name . '">' . $value . '</span>');
+            }
+            else {
+              $new_dom = new cf_dom(TRUE, TRUE, TRUE, $value);
+            }
+
+            $new_tag = $form['dom']['#value']->get_dom()->importNode($new_dom->get_body(), TRUE);
+            $parent->insertBefore($new_tag, $ti_tag);
+          }
+          else {
+            if ($wrap_with_span) {
+              $span = $form['dom']['#value']->get_dom()->createElement('span', $value); 
+              $span->setAttribute('class', $ti_name);
+              $parent->insertBefore($span, $ti_tag);
+            }
+            else {
+              $text = new DOMText();
+              $text->appendData($value);
+              $parent->insertBefore($text, $ti_tag);
+            }
+          }
+
+          $parent->removeChild($ti_tag);
+        }
+      }
+
+
+      // load the markup value
+      $generated = '';
+      if ($tit_tag->hasChildNodes()) {
+        foreach ($tit_tag->childNodes as $child_tag) {
+          $generated .= $form['dom']['#value']->get_dom()->saveHTML($child_tag);
+        }
+      }
+
+
+      // prepare the field value
+      $form_state['node']->$target_name = NULL;
+      $current = &$form_state['node']->$target_name;
+
+      if (empty($targets)) {
+        $current = $generated;
+      }
+
+      while (!empty($targets)) {
+        $current_name = array_pop($targets);
+
+        if (empty($targets)) {
+          $current[$current_name] = $generated;
+
+          if ($field_type == 'textfield') {
+            $current = array();
+            $current['format'] = $field_format;
+            $current['safe_value'] = NULL;
+          }
+          elseif ($field_type == 'textarea') {
+            $current['summary'] = NULL;
+            $current['format'] = $field_format;
+
+            // requuire format and enforce a default if not specified.
+            if (empty($current['format'])) {
+              $current['format'] = 'full_html';
+            }
+          }
+          elseif ($field_type == 'date') {
+            $current['timezone'] = NULL;
+            $current['timezone_db'] = NULL;
+            $current['date_type'] = NULL;
+            // @todo: date fields are not yet fully implemented.
+          }
+        }
+        else {
+          $current[$current_name] = NULL;
+          $current = &$current[$current_name];
+        }
+      }
+    }
+  }
+}
+
+/**
+ * Populates and Validates the form state.
+ *
+ * This is explicitly designed to be called inside of a
+ * hook_form_validate9) function.
+ *
+ * @param array $form
+ *   The form settings.
+ * @param array $form_state
+ *   The form state.
+ * @param DOMElement $tif_Tag
+ *   The element that is assumed to be a tif.
+ * @param array $template_fields
+ *   A collection of all of the template fields available.
+ * @param array $template_values
+ *   A collection of all of the template values for each available field.
+ *
+ * @return bool
+ *   FALSE on failure or TRUE/FALSE depending on the results of the tif
+ *   condition test.
+ */
+function mcneese_management_template_process_template_if($form, &$form_state, $tif_tag, $template_fields, $template_values) {
+  if (!is_array($form)) {
+    if (class_exists('cf_error')) {
+      cf_error::invalid_array('form');
+    }
+
+    return FALSE;
+  }
+
+  if (!is_array($form_state)) {
+    if (class_exists('cf_error')) {
+      cf_error::invalid_array('form_state');
+    }
+
+    return FALSE;
+  }
+
+  if (!is_object($tif_tag)) {
+    if (class_exists('cf_error')) {
+      cf_error::invalid_object('tif_tag');
+    }
+
+    return FALSE;
+  }
+
+  if (!is_array($template_fields)) {
+    if (class_exists('cf_error')) {
+      cf_error::invalid_array('template_fields');
+    }
+
+    return FALSE;
+  }
+
+  if (!is_array($template_values)) {
+    if (class_exists('cf_error')) {
+      cf_error::invalid_array('template_values');
+    }
+
+    return FALSE;
+  }
+
+  if ($tif_tag->hasAttribute('target')) {
+    $target = $tif_tag->getAttribute('target');
+  }
+  else {
+    return FALSE;
+  }
+
+  if ($tif_tag->hasAttribute('type')) {
+    $type = $tif_tag->getAttribute('type');
+  }
+  else {
+    return FALSE;
+  }
+
+  $value = NULL;
+  if ($tif_tag->hasAttribute('value')) {
+    $value = $tif_tag->getAttribute('value');
+  }
+
+  if ($type == 'not_empty') {
+    return !empty($template_values[$target]);
+  }
+  elseif ($type == 'empty') {
+    return empty($template_values[$target]);
+  }
+  elseif ($type == '>') {
+    if (!is_numeric($template_values[$target])) return FALSE;
+    if (!is_numeric($value)) return FALSE;
+    return $value > $template_values[$target];
+  }
+  elseif ($type == '<') {
+    if (!is_numeric($template_values[$target])) return FALSE;
+    if (!is_numeric($value)) return FALSE;
+    return $value < $template_values[$target];
+  }
+  elseif ($type == '>=') {
+    if (!is_numeric($template_values[$target])) return FALSE;
+    if (!is_numeric($value)) return FALSE;
+    return $value >= $template_values[$target];
+  }
+  elseif ($type == '<=') {
+    if (!is_numeric($template_values[$target])) return FALSE;
+    if (!is_numeric($value)) return FALSE;
+    return $value <= $template_values[$target];
+  }
+  elseif ($type == '==') {
+    if (!is_numeric($template_values[$target])) return FALSE;
+    if (!is_numeric($value)) return FALSE;
+    return $value == $template_values[$target];
+  }
+  elseif ($type == '!=') {
+    if (!is_numeric($template_values[$target])) return FALSE;
+    if (!is_numeric($value)) return FALSE;
+    return $value != $template_values[$target];
+  }
+
+  return FALSE;
+}
 
 /**
  * @} End of '@defgroup mcneese_management Content Management'.

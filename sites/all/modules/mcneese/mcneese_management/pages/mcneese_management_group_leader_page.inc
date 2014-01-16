@@ -212,7 +212,7 @@ function mcneese_management_group_leader_operation_form_validate($form, &$form_s
   }
 
   $user_id = NULL;
-  $user = $form_state['values']['settings']['group_leader']; 
+  $user = $form_state['values']['settings']['group_leader'];
   $matches = array();
   $matched = preg_match('/ \[uid:(\d+)]\s*$/i', $user, $matches);
 
@@ -257,7 +257,7 @@ function mcneese_management_group_leader_operation_form_validate($form, &$form_s
  *   The form state array as defined by drupals form api
  */
 function mcneese_management_group_leader_operation_form_submit($form, &$form_state) {
-  $user = $form_state['values']['settings']['group_leader']; 
+  $user = $form_state['values']['settings']['group_leader'];
   $user_id = NULL;
   $matches = array();
   $matched = preg_match('/ \[uid:(\d+)]\s*$/i', $user, $matches);
