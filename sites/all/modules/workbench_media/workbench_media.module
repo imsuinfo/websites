@@ -126,16 +126,16 @@ function workbench_media_preprocess_views_view_table(&$vars) {
         $row['uri'] .= '<a href="' . $base_url . $external_url . '">' . $external_url . '</a>';
         $row['uri'] .= '<br><br><strong>ID Path</strong>:<br>';
         $row['uri'] .= '<a href="' . $base_url . $fp . '">' . $fp . '</a>';
-        $file_path = $base_url . $fp;
+        $view_path = $base_url . $fp;
       }
       else {
         $row['uri'] = '<strong>File Path:</strong><br>';
         $row['uri'] .= '<a href="' . $base_url . $external_url . '">' . $external_url . '</a>';
-        $file_path = $base_url . $external_url;
+        $view_path = $base_url . $external_url;
       }
     }
 
-    $row['filename'] = '<a href="' . $file_path . '">' . $row['filename'] . '</a>';
+    $row['filename'] = '<a href="' . $view_path . '">' . $row['filename'] . '</a>';
     $row['fid'] = '<a href="' . $file_path . '/edit' . '">' . $row['fid'] . '</a>';
   }
 }
