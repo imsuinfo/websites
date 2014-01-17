@@ -510,8 +510,8 @@ $conf['maintenance_theme'] = 'mcneese_www';
  * configured to cache and compress these files itself you may want to uncomment
  * one or both of the below lines, which will prevent gzip files being stored.
  */
-# $conf['css_gzip_compression'] = FALSE;
-# $conf['js_gzip_compression'] = FALSE;
+$conf['css_gzip_compression'] = FALSE;
+$conf['js_gzip_compression'] = FALSE;
 
 /**
  * String overrides:
