@@ -135,7 +135,7 @@ function mcneese_management_templates_use_list_page($template_id) {
 
       $links = '';
       $links .= '<a href="' . url('node/' . $node->nid) . '">' . t("View") . '</a> ';
-      $links .= '<a href="' . url('node/' . $node->nid . '/edit', $options) . '">' . t("Edit") . '</a> ';
+      $links .= '<a href="' . url('node/' . $node->nid . '/template', $options) . '">' . t("Edit") . '</a> ';
       $links .= '<a href="' . url('node/' . $node->nid . '/delete', $options) . '">' . t("Delete") . '</a> ';
       $row[] = $links;
 
