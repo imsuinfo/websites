@@ -1,0 +1,93 @@
+diff --git a/workbench_media.module b/workbench_media.module
+index 61a2ce0..903b30b 100644
+--- a/workbench_media.module
++++ b/workbench_media.module
+@@ -13,15 +13,24 @@
+ function workbench_media_menu() {
+   $items = array();
+ 
+-  $items['admin/workbench/media/add'] = array(
+-    'title' => 'Add Media',
++  $items['admin/workbench/file/add'] = array(
++    'title' => 'Add file',
+     'page callback' => 'drupal_get_form',
+-    'page arguments' => array('file_entity_add_upload'),
+-    'access arguments' => array('use workbench_media add form'),
++    'page arguments' => array('file_entity_add_upload', array()),
++    'access callback' => 'workbench_media_access_callback',
++    'access arguments' => array('file_entity_access', 'create'),
+     'file' => 'file_entity.pages.inc',
+     'file path' => drupal_get_path('module', 'file_entity'),
+     'type' => MENU_VISIBLE_IN_BREADCRUMB,
+   );
++  if (module_exists('plupload') && module_exists('multiform')) {
++    $items['admin/workbench/file/add']['page arguments'] = array('file_entity_add_upload_multiple');
++  }
++  $items['admin/workbench/file/add/upload'] = array(
++    'title' => 'Upload',
++    'type' => MENU_DEFAULT_LOCAL_TASK,
++    'weight' => -10,
++  );
+ 
+   return $items;
+ }
+@@ -38,29 +47,46 @@ function workbench_media_permission() {
+ }
+ 
+ /**
++ * Access callback for the workbench_media menu items.
++ *
++ * Adds an additional check for Workbench Media permissions on top of existing
++ * menu item access restrictions.
++ */
++function workbench_media_access_callback() {
++  $args = func_get_args();
++  $function = array_shift($args);
++  $access = call_user_func_array($function, $args);
++  return $access && user_access('use workbench_media add form');
++}
++
++/**
+  * Implements hook_workbench_create_alter().
+  *
+  * Add a media creation section to the workbench "Create Content" tab.
+  */
+ function workbench_media_workbench_create_alter(&$output) {
+   if (user_access('use workbench_media add form')) {
+-   // Mimic node_add_page() theming.
+-    $items = array(
+-      array(
+-        'title' => t('Upload Media'),
+-        'href' => 'admin/workbench/media/add',
++    $items = array();
++
++    if (file_entity_access('create')) {
++      $items[] = array(
++        'title' => t('Upload files'),
++        'href' => 'admin/workbench/file/add',
+         'localized_options' => array(
+           'query' => drupal_get_destination(),
+         ),
+         'description' => t('Add photos, videos, audio, or other files to the site.'),
+-      )
+-    );
+-    $output['field_workbench_create_media'] = array(
+-      '#title' => t('Create media'),
+-      '#markup' => theme('node_add_list', array('content' => $items)),
+-      '#theme' => 'workbench_element',
+-      '#weight' => -1,
+-    );
++      );
++    }
++    // Mimic node_add_page() theming.
++    if (!empty($items)) {
++      $output['field_workbench_create_media'] = array(
++        '#title' => t('Create media'),
++        '#markup' => theme('node_add_list', array('content' => $items)),
++        '#theme' => 'workbench_element',
++        '#weight' => -1,
++      );
++    }
+   }
+ }
+ 

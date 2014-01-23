@@ -44,20 +44,16 @@ function workbench_media_permission() {
  */
 function workbench_media_workbench_create_alter(&$output) {
   if (user_access('use workbench_media add form')) {
-   // Mimic node_add_page() theming.
-    $items = array(
-      array(
-        'title' => t('Upload Media'),
-        'href' => 'admin/workbench/media/add',
-        'localized_options' => array(
-          'query' => drupal_get_destination(),
-        ),
-        'description' => t('Add photos, videos, audio, or other files to the site.'),
-      )
-    );
+    $url = l("Upload Media", 'admin/workbench/media/add', array('query' => drupal_get_destination()));
+
+    $markup = '<dl class="node-type-list">';
+    $markup .= '<dt>' . $url . '</dt>';
+    $markup .= '<dd>' . t('Add photos, videos, audio, or other files to the site.') . '</dd>';
+    $markup .= '</dl>';
+
     $output['field_workbench_create_media'] = array(
-      '#title' => t('Create media'),
-      '#markup' => theme('node_add_list', array('content' => $items)),
+      '#title' => t('Create Media'),
+      '#markup' => $markup,
       '#theme' => 'workbench_element',
       '#weight' => -1,
     );
