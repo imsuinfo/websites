@@ -941,6 +941,7 @@ function webform_webform_component_info() {
         'group' => TRUE,
         'title_inline' => FALSE,
         'wrapper_classes' => FALSE,
+        'legend_classes' => TRUE,
       ),
       'file' => 'components/fieldset.inc',
     ),
@@ -3343,7 +3344,7 @@ function theme_webform_element($variables) {
   $wrapper_attributes['class'] = array_merge($wrapper_classes, $wrapper_attributes['class']);
 
   if ($wrap_with_fieldset) {
-    $output = '<fieldset' . drupal_attributes($wrapper_attributes) . '>' . "\n" . '<legend class="element-invisible">' . $legend . '</legend>'. "\n";
+    $output = '<fieldset' . drupal_attributes($wrapper_attributes) . '>' . "\n" . '<legend class="element-invisible"><span class="fieldset-legend">' . $legend . '</span></legend>'. "\n";
   }
   else {
     $output = '<div ' . drupal_attributes($wrapper_attributes) . '>' . "\n";
@@ -4158,6 +4159,10 @@ function _webform_component_classes(&$element, $component) {
   if (isset($component['extra']['wrapper_classes']) && drupal_strlen($component['extra']['wrapper_classes'])) {
     $element['#wrapper_attributes']['class'] = isset($element['#wrapper_attributes']['class']) ? $element['#wrapper_attributes']['class'] : array();
     $element['#wrapper_attributes']['class'] = array_merge($element['#wrapper_attributes']['class'], explode(' ' , $component['extra']['wrapper_classes']));
+  }
+  if (isset($component['extra']['legend_classes']) && drupal_strlen($component['extra']['legend_classes'])) {
+    $element['#legend_attributes']['class'] = isset($element['#legend_attributes']['class']) ? $element['#legend_attributes']['class'] : array();
+    $element['#legend_attributes']['class'] = array_merge($element['#legend_attributes']['class'], explode(' ' , $component['extra']['legend_classes']));
   }
 }
 
