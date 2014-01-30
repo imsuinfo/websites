@@ -204,6 +204,11 @@ function mcneese_management_templates_use_add_form($form, &$form_state, $templat
     unset($name);
   }
 
+  if (count($types) == 1) {
+    $types = array_keys($types);
+    $type = array_pop($types);
+  }
+
   if (!is_null($type)) {
     if (!node_access('create', $type)) {
       drupal_access_denied();

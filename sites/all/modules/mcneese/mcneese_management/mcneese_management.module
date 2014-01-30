@@ -1302,6 +1302,7 @@ function mcneese_management_template_build_tag($form, $dom, $tag) {
   $supported_types[] = 'textarea';
   $supported_types[] = 'textfield';
   $supported_types[] = 'text_format';
+  $supported_types[] = 'checkbox';
 
   # special case / reserved types
   $supported_types[] = 'field_group';
@@ -1508,8 +1509,11 @@ function mcneese_management_template_process_form_state($form, &$form_state) {
         elseif (is_string($template_values[$ti_name])) {
           $value = $template_values[$ti_name];
         }
+        elseif (is_integer($template_values[$ti_name])) {
+          $value = $template_values[$ti_name];
+        }
         else {
-          form_set_error('', "Unsupported array value. Report this error to the webmaster: " . check_plain(print_r($template_values[$ti_name], TRUE)));
+          form_set_error('', "Unsupported value for " . check_plain($ti_name) . ". Report this error to the webmaster: " . check_plain(print_r($template_values[$ti_name], TRUE)));
         }
 
         $tif_tags = $tit_tag->getElementsByTagName('tif');
