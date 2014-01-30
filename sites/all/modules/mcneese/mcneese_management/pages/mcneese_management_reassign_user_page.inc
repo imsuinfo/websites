@@ -36,6 +36,7 @@ function mcneese_management_reassign_user_form($form, &$form_state) {
     '#title' => t("From User"),
     '#description' => t("Select a user whose content will be assign to another user."),
     '#autocomplete_path' => 'admin/content/management/reassign_user/ajax/autocomplete/reassign_user',
+    '#required' => TRUE,
   );
 
   $form['settings']['to_user'] = array(
@@ -43,6 +44,7 @@ function mcneese_management_reassign_user_form($form, &$form_state) {
     '#title' => t("To User"),
     '#description' => t("Select a user who will be assigned content from another user."),
     '#autocomplete_path' => 'admin/content/management/reassign_user/ajax/autocomplete/reassign_user',
+    '#required' => TRUE,
   );
 
   $cancel_destination = isset($_GET['destination']) ? $_GET['destination'] : 'admin/content/management';
@@ -78,91 +80,17 @@ function mcneese_management_reassign_user_form($form, &$form_state) {
  *   The form state array as defined by drupals form api
  */
 function mcneese_management_reassign_user_form_validate($form, &$form_state) {
-  if (empty($form_state['values']['settings']['from_user'])) {
-    form_set_error('settings][from_user', "No valid user has been defined for the from user field.");
-    return;
+  $user_id_from = mcneese_management_validate_user($form_state['values']['settings']['from_user']);
+  if ($user_id_from === FALSE) {
+    form_set_error('settings][from_user', t("The user '%user' does not exist."), array('%user' => $form_state['values']['settings']['from_user']));
   }
 
-  if (empty($form_state['values']['settings']['to_user'])) {
-    form_set_error('settings][to_user', "No valid user has been defined for the to user field.");
-    return;
+  $user_id_to = mcneese_management_validate_user($form_state['values']['settings']['to_user']);
+  if ($user_id_to === FALSE) {
+    form_set_error('settings][to_user', t("The user '%user' does not exist."), array('%user' => $form_state['values']['settings']['to_user']));
   }
 
-  $user_id = NULL;
-  $user = $form_state['values']['settings']['from_user'];
-  $matches = array();
-  $matched = preg_match('/ \[uid:(\d+)]\s*$/i', $user, $matches);
-
-  if ($matched) {
-    // check to see if the user exists.
-    $query = db_select('users', 'u');
-    $query->fields('u');
-    $query->condition('u.uid', $matches[1]);
-    $query->countQuery();
-
-    $result = $query->execute()->fetchField();
-
-    if ($result !== FALSE) {
-      $user_id = $matches[1];
-    }
-  }
-  else {
-    // if a username was specified but no id, then try getting the uid.
-    $query = db_select('users', 'u');
-    $query->fields('u', array('uid'));
-    $query->condition('u.name', $user);
-
-    $result = $query->execute()->fetchField();
-
-    if ($result !== FALSE) {
-      $user_id = $result;
-      $form_state['values']['settings']['from_user'] .= ' [uid:' . $user_id . ']';
-    }
-  }
-
-  if (is_null($user_id)) {
-    form_set_error('settings][from_user', t("The user %user does not exist.", array('%user' => $user)));
-  }
-
-  $user_id_from = $user_id;
-
-  $user_id = NULL;
-  $user = $form_state['values']['settings']['to_user'];
-  $matches = array();
-  $matched = preg_match('/ \[uid:(\d+)]\s*$/i', $user, $matches);
-
-  if ($matched) {
-    // check to see if the user exists.
-    $query = db_select('users', 'u');
-    $query->fields('u');
-    $query->condition('u.uid', $matches[1]);
-    $query->countQuery();
-
-    $result = $query->execute()->fetchField();
-
-    if ($result !== FALSE) {
-      $user_id = $matches[1];
-    }
-  }
-  else {
-    // if a username was specified but no id, then try getting the uid.
-    $query = db_select('users', 'u');
-    $query->fields('u', array('uid'));
-    $query->condition('u.name', $user);
-
-    $result = $query->execute()->fetchField();
-
-    if ($result !== FALSE) {
-      $user_id = $result;
-      $form_state['values']['settings']['to_user'] .= ' [uid:' . $user_id . ']';
-    }
-  }
-
-  if (is_null($user_id)) {
-    form_set_error('settings][to_user', t("The user %user does not exist.", array('%user' => $user)));
-  }
-
-  if ($user_id_from == $user_id) {
+  if ($user_id_from == $user_id_to) {
     form_set_error('settings][to_user', t("The same user may not be used in both the from and to fields."));
   }
 }
@@ -178,26 +106,38 @@ function mcneese_management_reassign_user_form_validate($form, &$form_state) {
 function mcneese_management_reassign_user_form_submit($form, &$form_state) {
   $from_user = $form_state['values']['settings']['from_user'];
   $from_user_id = NULL;
-  $matches = array();
-  $matched = preg_match('/ \[uid:(\d+)]\s*$/i', $from_user, $matches);
 
-  if ($matched) {
-    $from_user_id = $matches[1];
+  if (cf_is_integer($from_user)) {
+    $from_user_id = $from_user;
   }
   else {
-    return;
+    $matches = array();
+    $matched = preg_match('/ \[uid:(\d+)]\s*$/i', $from_user, $matches);
+
+    if ($matched) {
+      $from_user_id = $matches[1];
+    }
+    else {
+     return;
+    }
   }
 
   $to_user = $form_state['values']['settings']['to_user'];
   $to_user_id = NULL;
-  $matches = array();
-  $matched = preg_match('/ \[uid:(\d+)]\s*$/i', $to_user, $matches);
 
-  if ($matched) {
-    $to_user_id = $matches[1];
+  if (cf_is_integer($to_user)) {
+    $to_user_id = $to_user;
   }
   else {
-    return;
+    $matches = array();
+    $matched = preg_match('/ \[uid:(\d+)]\s*$/i', $to_user, $matches);
+
+    if ($matched) {
+      $to_user_id = $matches[1];
+    }
+    else {
+      return;
+    }
   }
 
   // load all nids to re-assign.

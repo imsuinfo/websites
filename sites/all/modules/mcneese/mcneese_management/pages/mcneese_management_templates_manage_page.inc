@@ -516,7 +516,7 @@ function mcneese_management_templates_manage_user_page($template_id) {
     }
 
     $links = '';
-    $links .= '<a href="' . url($template_url . '/manage/delete/' . check_plain($template_id) . '/' . $user_id) . '">' . t("Delete") . '</a> ';
+    $links .= '<a href="' . url($template_url . '/manage/user/delete/' . check_plain($template_id) . '/' . $user_id) . '">' . t("Delete") . '</a> ';
     $row[] = $links;
 
     $rows[] = $row;
@@ -565,12 +565,12 @@ function mcneese_management_templates_manage_user_add_form($form, &$form_state, 
     '#tree' => TRUE,
   );
 
-  $form['settings']['user_id'] = array(
+  $form['settings']['user'] = array(
     '#type' => 'textfield',
-    '#title' => t("User ID"),
-    '#size' => 64,
+    '#title' => t("User"),
+    '#description' => t("Select a user to grant access to use this theme."),
     '#default_value' => '',
-    '#description' => t("A numeric ID of the user to add. At this time auto-search and username support is not available but will eventually be."), // @todo: implement search.
+    '#autocomplete_path' => 'admin/content/management/template/ajax/autocomplete/user',
     '#required' => TRUE,
   );
 
@@ -608,22 +608,11 @@ function mcneese_management_templates_manage_user_add_form($form, &$form_state, 
  *   The form state array as defined by drupals form api.
  */
 function mcneese_management_templates_manage_user_add_form_validate($form, &$form_state) {
-  $valid_user = FALSE;
   $valid_template = FALSE;
 
-  $user = NULL;
-  if (empty($form_state['values']['settings']['user_id'])) {
-    form_set_error('settings][user_id', t("An invalid user id has been specified."));
-  }
-  else {
-    $user = user_load($form_state['values']['settings']['user_id']);
-  }
-
-  if (!is_object($user)) {
-    form_set_error('settings][user_id', t("Unable to find user with the specified id."));
-  }
-  else {
-    $valid_user = TRUE;
+  $user_id = mcneese_management_validate_user($form_state['values']['settings']['user']);
+  if ($user_id === FALSE) {
+    form_set_error('settings][user', t("The user '%user' does not exist."), array('%user' => $form_state['values']['settings']['user']));
   }
 
   if (!isset($form['template_id']['#value']) || !cf_is_integer($form['template_id']['#value'])) {
@@ -633,18 +622,18 @@ function mcneese_management_templates_manage_user_add_form_validate($form, &$for
     $valid_template = TRUE;
   }
 
-  if ($valid_user && $valid_template) {
+  if ($user_id !== FALSE && $valid_template) {
     try {
       $query = db_select('mcneese_management_template_user', 'mmtu');
       $query->fields('mmtu', array('user_id'));
       $query->condition('template_id', $form['template_id']['#value']);
-      $query->condition('user_id', $form_state['values']['settings']['user_id']);
+      $query->condition('user_id', $user_id);
       $query->countQuery();
 
       $result = $query->execute()->fetchField();
 
       if ($result > 0) {
-        form_set_error('machine_name', t("The specified user '%user_id' is already added and therefore cannot be added again.", array('%user_id' => $form['user_id']['#value'])));
+        form_set_error('machine_name', t("The specified user '%user' is already added and therefore cannot be added again.", array('%user' => $form_state['values']['settings']['user'])));
       }
     }
     catch (Exception $e) {
@@ -664,9 +653,27 @@ function mcneese_management_templates_manage_user_add_form_validate($form, &$for
  *   The form state array as defined by drupals form api.
  */
 function mcneese_management_templates_manage_user_add_form_submit($form, &$form_state) {
+  $user = $form_state['values']['settings']['user'];
+  $user_id = NULL;
+
+  if (cf_is_integer($user)) {
+    $user_id = $user;
+  }
+  else {
+    $matches = array();
+    $matched = preg_match('/ \[uid:(\d+)]\s*$/i', $user, $matches);
+
+    if ($matched) {
+      $user_id = $matches[1];
+    }
+    else {
+      return;
+    }
+  }
+
   $user = array();
   $user['template_id'] = $form['template_id']['#value'];
-  $user['user_id'] = $form_state['values']['settings']['user_id'];
+  $user['user_id'] = $user_id;
 
   $transaction = db_transaction();
 
@@ -771,7 +778,7 @@ function mcneese_management_templates_manage_user_delete_form_validate($form, &$
   }
 
   if (!isset($form['user_id']['#value']) || !cf_is_integer($form['user_id']['#value'])) {
-    form_set_error('user_id', t("An invalid template id has been specified."));
+    form_set_error('user_id', t("An invalid user id has been specified."));
   }
 }
 

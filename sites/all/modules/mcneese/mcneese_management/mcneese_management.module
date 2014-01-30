@@ -341,6 +341,13 @@ function mcneese_management_menu() {
     'access arguments' => array('mcneese management templates manage'),
   );
 
+  $items['admin/content/management/template/ajax/autocomplete/user'] = array(
+    'title' => '',
+    'page callback' => 'mcneese_management_autocomplete_user',
+    'access callback' => 'user_access',
+    'access arguments' => array('mcneese management templates manage'),
+  );
+
   return $items;
 }
 
@@ -1732,6 +1739,69 @@ function mcneese_management_template_process_template_if($form, &$form_state, $t
   }
 
   return FALSE;
+}
+
+/**
+ * Validates a username/uid stored in a form_state field.
+ *
+ * This is intended to be used directly from a hook_*_validate() function.
+ *
+ * @param string $form_state_field
+ *   The user name or user id.
+ *   This is usually the form state field.
+ *
+ * @return bool|int
+ *   Returns the user id on success, FALSE otherwise.
+ */
+function mcneese_management_validate_user(&$form_state_field) {
+  if (empty($form_state_field)) {
+    return FALSE;
+  }
+
+  $user_id = NULL;
+  $matches = array();
+
+  if (cf_is_integer($form_state_field)) {
+    $matches[1] = $form_state_field;
+    $matched = TRUE;
+  }
+  else {
+    $matched = preg_match('/ \[uid:(\d+)]\s*$/i', $form_state_field, $matches);
+  }
+
+  if ($matched) {
+    // check to see if the user exists.
+    $query = db_select('users', 'u');
+    $query->fields('u');
+    $query->condition('u.uid', $matches[1]);
+    $query->countQuery();
+
+    $result = $query->execute()->fetchField();
+
+    if ($result === FALSE) {
+      return FALSE;
+    }
+
+    $user_id = $matches[1];
+  }
+  else {
+
+    // if a username was specified but no id, then try getting the uid.
+    $query = db_select('users', 'u');
+    $query->fields('u', array('uid'));
+    $query->condition('u.name', $form_state_field);
+
+    $result = $query->execute()->fetchField();
+
+    if ($result === FALSE) {
+      return FALSE;
+    }
+
+    $user_id = $result;
+    $form_state_field .= ' [uid:' . $user_id . ']';
+  }
+
+  return $user_id;
 }
 
 /**

@@ -169,6 +169,7 @@ function mcneese_management_group_leader_operation_form($form, &$form_state, $ac
     '#description' => t("Select a user to assign as the group leader."),
     '#default_value' => $default_leader,
     '#autocomplete_path' => 'admin/content/management/group_leader/ajax/autocomplete/group_leader',
+    '#required' => TRUE,
   );
 
   $form['access_id'] = array(
@@ -206,45 +207,9 @@ function mcneese_management_group_leader_operation_form($form, &$form_state, $ac
  *   The form state array as defined by drupals form api
  */
 function mcneese_management_group_leader_operation_form_validate($form, &$form_state) {
-  if (empty($form_state['values']['settings']['group_leader'])) {
-    form_set_error('settings][group_leader', "No valid user has been defined for the group leader.");
-    return;
-  }
-
-  $user_id = NULL;
-  $user = $form_state['values']['settings']['group_leader'];
-  $matches = array();
-  $matched = preg_match('/ \[uid:(\d+)]\s*$/i', $user, $matches);
-
-  if ($matched) {
-    // check to see if the user exists.
-    $query = db_select('users', 'u');
-    $query->fields('u');
-    $query->condition('u.uid', $matches[1]);
-    $query->countQuery();
-
-    $result = $query->execute()->fetchField();
-
-    if ($result !== FALSE) {
-      $user_id = $matches[1];
-    }
-  }
-  else {
-    // if a username was specified but no id, then try getting the uid.
-    $query = db_select('users', 'u');
-    $query->fields('u', array('uid'));
-    $query->condition('u.name', $user);
-
-    $result = $query->execute()->fetchField();
-
-    if ($result !== FALSE) {
-      $user_id = $result;
-      $form_state['values']['settings']['group_leader'] .= ' [uid:' . $user_id . ']';
-    }
-  }
-
-  if (is_null($user_id)) {
-    form_set_error('settings][group_leader', t("The user %user does not exist.", array('%user' => $user)));
+  $user_id = mcneese_management_validate_user($form_state['values']['settings']['group_leader']);
+  if ($user_id === FALSE) {
+    form_set_error('settings][group_leader', t("The user '%user' does not exist.", array('%user' => $form_state['values']['settings']['group_leader'])));
   }
 }
 
@@ -259,14 +224,20 @@ function mcneese_management_group_leader_operation_form_validate($form, &$form_s
 function mcneese_management_group_leader_operation_form_submit($form, &$form_state) {
   $user = $form_state['values']['settings']['group_leader'];
   $user_id = NULL;
-  $matches = array();
-  $matched = preg_match('/ \[uid:(\d+)]\s*$/i', $user, $matches);
 
-  if ($matched) {
-    $user_id = $matches[1];
+  if (cf_is_integer($user)) {
+    $user_id = $user;
   }
   else {
-    return;
+    $matches = array();
+    $matched = preg_match('/ \[uid:(\d+)]\s*$/i', $user, $matches);
+
+    if ($matched) {
+      $user_id = $matches[1];
+    }
+    else {
+      return;
+    }
   }
 
 
