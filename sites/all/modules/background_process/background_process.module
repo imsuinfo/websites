@@ -843,7 +843,8 @@ function background_process_unlock($handle, $msg = NULL, $start = NULL) {
     // Unlock the process
     if (background_process_remove_process($process->handle, $process->start)) {
       global $user;
-      module_invoke_all('background_process_shutdown', $process, $msg ? $msg : t('Manually unlocked by !name', array('!name' => $user->name)));
+      $username = $user->uid ? $user->name : t('anonymous');
+      module_invoke_all('background_process_shutdown', $process, $msg ? $msg : t('Manually unlocked by !name', array('!name' => $username)));
       return TRUE;
     }
   }

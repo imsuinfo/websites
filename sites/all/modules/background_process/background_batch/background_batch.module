@@ -48,14 +48,6 @@ function background_batch_menu() {
     'file' => 'background_batch.pages.inc',
     'weight' => 3,
   );
-  $items['batch_background'] = array(
-    'page callback' => 'background_batch_page',
-    'access callback' => TRUE,
-    'theme callback' => '_system_batch_theme',
-    'type' => MENU_CALLBACK,
-    'file' => 'background_batch.pages.inc',
-    'module' => 'background_batch',
-  );
   return $items;
 }
 
@@ -63,7 +55,6 @@ function background_batch_menu() {
  * Implements hook_menu_alter().
  */
 function background_batch_menu_alter(&$items) {
-  $items['batch_foreground'] = $items['batch'];
   $items['batch'] = array(
     'page callback' => 'background_batch_page',
     'access callback' => TRUE,
