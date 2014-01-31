@@ -178,7 +178,7 @@ function _webform_edit_phone($component) {
 function _webform_render_phone($component, $value = NULL, $filter = TRUE) {
   //TODO: change these to use non-private functions (no _) if/when webform 3.x is entirely deprecated
   $form_item = array(
-    '#type'             => module_exists('elements') ? 'telfield' : 'textfield',
+    '#type'             => function_exists('elements_element_info') ? 'telfield' : 'textfield',
     //    '#default_value'    => $filter ? webform_replace_tokens($component['value'], NULL, NULL, NULL, TRUE) : $component['value'],
     '#default_value'    => $filter ? _webform_filter_values($component['value']) : $component['value'],
     '#attributes'       => $component['extra']['attributes'],
@@ -283,7 +283,7 @@ function theme_webform_display_phonefield($variables) {
   $plain_value = check_plain($element['#value']);
   if ( $element['#format'] == 'html' ) {
     //Use smarter detection if available for formatting the output
-    $is_mobile_device = module_exists('mobile_tools') ? mobile_tools_is_mobile_device() : strpos($_SERVER['HTTP_USER_AGENT'], 'iPhone') !== FALSE || strpos($_SERVER['HTTP_USER_AGENT'], 'Android') !== FALSE;
+    $is_mobile_device = function_exists('mobile_tools_is_mobile_device') ? mobile_tools_is_mobile_device() : strpos($_SERVER['HTTP_USER_AGENT'], 'iPhone') !== FALSE || strpos($_SERVER['HTTP_USER_AGENT'], 'Android') !== FALSE;
     $markup['#markup'] = ( $is_mobile_device ) ? '<a href="tel:' . $plain_value . '">' . $plain_value . '</a>' : $plain_value;
   }
   else {
