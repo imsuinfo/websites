@@ -636,7 +636,6 @@ function mcneese_file_db_load_file($by = '', $arg1 = '', $arg2 = '', $arg3 = '',
       header('ETag: "' . MCNEESE_FILE_DB_PATH_BY_HASH_ALGORITHM . '://' . $file_meta->checksum . '"');
       header('Accept-Ranges: bytes');
       header('Last-Modified: ' . date('r', strtotime($file_meta->timestamp)));
-      header('Expires: ' . date('r', strtotime('+14 days', REQUEST_TIME)));
       header('Date: ' . date('r', REQUEST_TIME));
 
       // flush buffer after headers have been processed (to hopefully avoid "headers already sent" issues).
@@ -696,7 +695,6 @@ function mcneese_file_db_load_file($by = '', $arg1 = '', $arg2 = '', $arg3 = '',
       header('Content-Description: File Transfer');
       header('Content-Location: ' . $content_location);
       header('Last-Modified: ' . date('r', strtotime($file_meta->timestamp)));
-      header('Expires: ' . date('r', strtotime('+14 days', REQUEST_TIME)));
       header('Date: ' . date('r', REQUEST_TIME));
 
       // flush buffer after headers have been processed (to hopefully avoid "headers already sent" issues).
