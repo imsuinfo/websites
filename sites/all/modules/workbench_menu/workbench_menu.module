@@ -59,6 +59,11 @@ function workbench_menu_permission() {
     'description' => t("Grants permissions to alter all workbench menus and perform administrative tasks."),
   );
 
+  $permissions['use advanced workbench menu item types'] = array(
+    'title' => t("Use Advanced Item Types"),
+    'description' => t("Grants permissions to assign or unassign advanced item types used on a given menu."),
+  );
+
   return $permissions;
 }
 

@@ -1191,13 +1191,9 @@ function workbench_menu_admin_item_settings_form_settings($item, $menu) {
     'label' => t("Label"),
   );
 
-  $form = array();
+  $form = array('#tree' => TRUE);
 
-  $form['settings'] = array(
-    '#tree' => TRUE,
-  );
-
-  $form['settings']['human_name'] = array(
+  $form['human_name'] = array(
     '#type' => 'textfield',
     '#title' => t("Name"),
     '#required' => TRUE,
@@ -1207,7 +1203,7 @@ function workbench_menu_admin_item_settings_form_settings($item, $menu) {
     '#default_value' => $defaults['human_name'],
   );
 
-  $form['settings']['parent_id'] = array(
+  $form['parent_id'] = array(
     '#type' => 'select',
     '#title' => t("Parent Item"),
     '#options' => $available['parents'],
@@ -1215,7 +1211,7 @@ function workbench_menu_admin_item_settings_form_settings($item, $menu) {
     '#description' => t("Allows this item to be nested under another item defined here."),
   );
 
-  $form['settings']['weight'] = array(
+  $form['weight'] = array(
     '#type' => 'textfield',
     '#title' => t("Weight"),
     '#required' => TRUE,
@@ -1230,7 +1226,7 @@ function workbench_menu_admin_item_settings_form_settings($item, $menu) {
   $active_path_types = $available['item_types'];
   unset($active_path_types['item_top']);
 
-  $form['settings']['active_path'] = array(
+  $form['active_path'] = array(
     '#type' => 'textfield',
     '#title' => t("Active Path"),
     '#description' =>
@@ -1245,7 +1241,7 @@ function workbench_menu_admin_item_settings_form_settings($item, $menu) {
     '#dependency' => array('edit-settings-item-type' => array_keys($active_path_types)),
   );
 
-  $form['settings']['item_type'] = array(
+  $form['item_type'] = array(
     '#type' => 'select',
     '#title' => t("Item Type"),
     '#options' => $available['item_types'],
@@ -1253,7 +1249,7 @@ function workbench_menu_admin_item_settings_form_settings($item, $menu) {
     '#description' => t("Each menu item works in a different way based on its item type."),
   );
 
-  $form['settings']['url'] = array(
+  $form['url'] = array(
     '#type' => 'textfield',
     '#title' => t("URL"),
     '#default_value' => $defaults['properties']['url'],
@@ -1264,7 +1260,7 @@ function workbench_menu_admin_item_settings_form_settings($item, $menu) {
     '#size' => 64,
   );
 
-  $form['settings']['node_id'] = array(
+  $form['node_id'] = array(
     '#type' => 'textfield',
     '#title' => t("Node ID"),
     '#default_value' => $defaults['properties']['node_id'],
@@ -1277,7 +1273,7 @@ function workbench_menu_admin_item_settings_form_settings($item, $menu) {
     '#autocomplete_path' => 'workbench_menu/autocomplete_nid',
   );
 
-  $form['settings']['top_as'] = array(
+  $form['top_as'] = array(
     '#type' => 'select',
     '#title' => t("Top As"),
     '#options' => $available['top_as_types'],
@@ -1286,7 +1282,7 @@ function workbench_menu_admin_item_settings_form_settings($item, $menu) {
     '#dependency' => array('edit-settings-item-type' => array('item_top')),
   );
 
-  $form['settings']['disabled'] = array(
+  $form['disabled'] = array(
     '#type' => 'checkbox',
     '#title' => t("Disabled"),
     '#default_value' => $defaults['properties']['disabled'],
@@ -1294,7 +1290,7 @@ function workbench_menu_admin_item_settings_form_settings($item, $menu) {
     '#dependency' => array('edit-settings-item-type' => array('item_label'), 'edit-settings-top-as' => array('label')),
   );
 
-  $form['settings']['clickable'] = array(
+  $form['clickable'] = array(
     '#type' => 'checkbox',
     '#title' => t("Clickable"),
     '#default_value' => $defaults['properties']['clickable'],
@@ -1302,7 +1298,7 @@ function workbench_menu_admin_item_settings_form_settings($item, $menu) {
     '#dependency' => array('edit-settings-item-type' => array('item_label'), 'edit-settings-top-as' => array('label')),
   );
 
-  $form['settings']['no_breadcrumb'] = array(
+  $form['no_breadcrumb'] = array(
     '#type' => 'checkbox',
     '#title' => t("No Breadcrumb"),
     '#default_value' => $defaults['properties']['no_breadcrumb'],
@@ -1310,7 +1306,7 @@ function workbench_menu_admin_item_settings_form_settings($item, $menu) {
     '#dependency' => array('edit-settings-item-type' => array('item_label')),
   );
 
-  $form['settings']['file'] = array(
+  $form['file'] = array(
     '#type' => 'textfield',
     '#title' => t("File"),
     '#default_value' => $defaults['properties']['file'],
@@ -1322,7 +1318,7 @@ function workbench_menu_admin_item_settings_form_settings($item, $menu) {
 
   if (module_exists('imce')) {
     $imce_javascript = 'window.open(\'/imce?app=workbench_menu_item_file|url@edit-settings-file\', \'\', \'width=760,height=560,resizable=1\');';
-    $form['settings']['file']['#description'] =  t(
+    $form['file']['#description'] =  t(
       "!select a file id or file to use as the menu item.",
       array(
         '!select' => '<a class="filefield-sources-imce-browse" href="#" onclick="' . $imce_javascript . '" title="' . t("Select a file using the IMCE wysiwyg") . '">' . t("Select") . '</a>',
@@ -1330,10 +1326,10 @@ function workbench_menu_admin_item_settings_form_settings($item, $menu) {
     );
   }
   else {
-    $form['settings']['file']['#autocomplete_path'] = 'workbench_menu/autocomplete_fid';
+    $form['file']['#autocomplete_path'] = 'workbench_menu/autocomplete_fid';
   }
 
-  $form['settings']['menu'] = array(
+  $form['menu'] = array(
     '#type' => 'textfield',
     '#title' => t("Menu"),
     '#default_value' => $defaults['properties']['menu'],
@@ -1345,7 +1341,7 @@ function workbench_menu_admin_item_settings_form_settings($item, $menu) {
     '#autocomplete_path' => 'workbench_menu/autocomplete_menu_id',
   );
 
-  $form['settings']['menu_item'] = array(
+  $form['menu_item'] = array(
     '#type' => 'textfield',
     '#title' => t("Menu Item"),
     '#default_value' => $defaults['properties']['menu_item'],
@@ -1357,7 +1353,7 @@ function workbench_menu_admin_item_settings_form_settings($item, $menu) {
     '#autocomplete_path' => 'workbench_menu/autocomplete_menu_item_id',
   );
 
-  $form['settings']['file_type'] = array(
+  $form['file_type'] = array(
     '#type' => 'select',
     '#title' => t("File Type"),
     '#options' => $available['file_types'],
@@ -1366,7 +1362,7 @@ function workbench_menu_admin_item_settings_form_settings($item, $menu) {
     '#dependency' => array('edit-settings-item-type' => array('item_file')),
   );
 
-  $form['settings']['never_suppress'] = array(
+  $form['never_suppress'] = array(
     '#type' => 'checkbox',
     '#title' => t("Never Suppress"),
     '#default_value' => $defaults['properties']['never_suppress'],
@@ -1374,7 +1370,7 @@ function workbench_menu_admin_item_settings_form_settings($item, $menu) {
     '#dependency' => array('edit-settings-item-type' => array('item_node', 'item_file', 'item_link')),
   );
 
-  $form['settings']['expand'] = array(
+  $form['expand'] = array(
     '#type' => 'select',
     '#title' => t("When to Expand"),
     '#options' => $available['expand'],
@@ -1383,7 +1379,7 @@ function workbench_menu_admin_item_settings_form_settings($item, $menu) {
   );
 
   if (!(user_access('change workbench menu item active path') || user_access('administer workbench menu'))) {
-    $form['settings']['active_path']['#type'] = 'value';
+    $form['active_path']['#type'] = 'value';
   }
 
   return $form;
@@ -1627,7 +1623,7 @@ function workbench_menu_admin_item_settings_edit_form_validate($form, &$form_sta
   }
 
   $item_type = &$form_state['values']['settings']['item_type'];
-  $item_type_name = &$form['settings']['settings']['item_type']['#options'][$item_type];
+  $item_type_name = &$form['settings']['item_type']['#options'][$item_type];
 
   if (isset($form_state['values']['settings']['parent_id'])) {
     $field = & $form_state['values']['settings']['parent_id'];
@@ -1675,7 +1671,7 @@ function workbench_menu_admin_item_settings_edit_form_validate($form, &$form_sta
           }
           else {
             if ($type == 'item_menu' || $type == 'item_menu_item') {
-              form_set_error('settings][parent_id', t("The items of the type %type cannot be used as item parents.", array('%type' => $form['settings']['settings']['item_type']['#options'][$type])));
+              form_set_error('settings][parent_id', t("The items of the type %type cannot be used as item parents.", array('%type' => $form['settings']['item_type']['#options'][$type])));
             }
           }
         }
@@ -1702,6 +1698,16 @@ function workbench_menu_admin_item_settings_edit_form_validate($form, &$form_sta
   if (!cf_is_integer($form_state['values']['settings']['weight'])) {
     form_set_error('settings][weight', t("The items weight can only be a number."));
   }
+
+  $original_item_type = &$form['settings']['item_type']['#default_value'];
+  if ($original_item_type != $item_type) {
+    if ($item_type == 'item_menu' || $item_type == 'item_menu_item' || $original_item_type == 'item_menu' || $original_item_type == 'item_menu_item') {
+      if (!user_access('use advanced workbench menu item types')) {
+        form_set_error('settings][item_type', "You are not authorized to use or change advanced item types");
+      }
+    }
+  }
+  unset($original_item_type);
 
   switch ($item_type) {
     case 'item_node':
@@ -1917,6 +1923,20 @@ function workbench_menu_admin_item_settings_edit_form_validate($form, &$form_sta
         }
       }
 
+      $matches = array();
+      $matched = preg_match('@\[id: (\d+)\]\s*$@', $form['settings']['menu']['#default_value'], $matches);
+
+      $original_menu_id = NULL;
+      if ($matched > 0) {
+        $original_menu_id = $matches[1];
+      }
+
+      if ($original_menu_id != $menu_id) {
+        if (!user_access('use advanced workbench menu item types')) {
+          form_set_error('settings][item_type', "You are not authorized to use or change advanced item types");
+        }
+      }
+
       if ($menu_id == $form['menu_id']['#value']) {
         form_set_error('settings][item_type', t("A %type cannot point to its own menu.", array('%type' => $item_type_name)));
       }
@@ -1962,6 +1982,20 @@ function workbench_menu_admin_item_settings_edit_form_validate($form, &$form_sta
 
       if ($matched > 0) {
         $menu_item_id = $matches[1];
+      }
+
+      $matches = array();
+      $matched = preg_match('@\[id: (\d+)\]\s*$@', $form['settings']['menu_item']['#default_value'], $matches);
+
+      $original_menu_item_id = NULL;
+      if ($matched > 0) {
+        $original_menu_item_id = $matches[1];
+      }
+
+      if ($original_menu_item_id != $menu_item_id) {
+        if (!user_access('use advanced workbench menu item types')) {
+          form_set_error('settings][item_type', "You are not authorized to use or change advanced item types");
+        }
       }
 
       if ($menu_id == $form['menu_id']['#value']) {
