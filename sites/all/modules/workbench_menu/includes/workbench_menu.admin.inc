@@ -1362,12 +1362,27 @@ function workbench_menu_admin_item_settings_form_settings($item, $menu) {
     '#dependency' => array('edit-settings-item-type' => array('item_file')),
   );
 
-  $form['never_suppress'] = array(
-    '#type' => 'checkbox',
-    '#title' => t("Never Suppress"),
-    '#default_value' => $defaults['properties']['never_suppress'],
-    '#description' => t("Never suppress active links. In certain conditions, such as using 'url fragments', the menu item will not be suppressed from being reported as 'active'. Url fragments are links that include the '#'."),
-    '#dependency' => array('edit-settings-item-type' => array('item_node', 'item_file', 'item_link')),
+  $suppression_default = 'normal';
+  if (isset($defaults['properties']['never_suppress']) && $defaults['properties']['never_suppress']) {
+    $suppression_default = 'never_suppress';
+  }
+  elseif (isset($defaults['properties']['always_suppress']) && $defaults['properties']['always_suppress']) {
+    $suppression_default = 'always_suppress';
+  }
+
+  $suppression_options = array(
+    'always_suppress' => t("Always Suppress"),
+    'normal' => t("Normal Behavior"),
+    'never_suppress' => t("Never Suppress"),
+  );
+
+  $form['active_link_behavior'] = array(
+    '#type' => 'select',
+    '#title' => t("Active Link Behavior"),
+    '#default_value' => $suppression_default,
+    '#options' => $suppression_options,
+    '#description' => t("Choose whether or not suppress active links. In certain conditions, such as using 'url fragments', the menu item will not be suppressed from being reported as 'active'. Url fragments are links that include the '#'."),
+    '#dependency' => array('edit-settings-item-type' => array('item_node', 'item_file', 'item_link', 'item_top')),
   );
 
   $form['expand'] = array(
@@ -2111,9 +2126,23 @@ function workbench_menu_admin_item_settings_edit_form_submit($form, &$form_state
   $settings['expand'] = $form_state['values']['settings']['expand'];
   $settings['properties'] = array();
 
-  foreach (array('url', 'node_id', 'top_as', 'disabled', 'clickable', 'no_breadcrumb', 'file', 'file_type', 'menu', 'menu_item', 'never_suppress') as $property) {
+  foreach (array('url', 'node_id', 'top_as', 'disabled', 'clickable', 'no_breadcrumb', 'file', 'file_type', 'menu', 'menu_item') as $property) {
     if (isset($form_state['values']['settings'][$property])) {
       $settings['properties'][$property] = &$form_state['values']['settings'][$property];
+    }
+  }
+
+  if (isset($form_state['values']['settings']['active_link_behavior'])) {
+    $settings['properties']['never_suppress'] = FALSE;
+    $settings['properties']['always_suppress'] = FALSE;
+
+    if ($form_state['values']['settings']['active_link_behavior'] == 'never_suppress') {
+      $settings['properties']['never_suppress'] = TRUE;
+      $settings['properties']['always_suppress'] = FALSE;
+    }
+    elseif ($form_state['values']['settings']['active_link_behavior'] == 'always_suppress') {
+      $settings['properties']['never_suppress'] = FALSE;
+      $settings['properties']['always_suppress'] = TRUE;
     }
   }
 

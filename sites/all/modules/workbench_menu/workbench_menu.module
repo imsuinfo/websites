@@ -1047,6 +1047,10 @@ function workbench_menu_build_menu_item($menu, $item, &$variables) {
     $matches = array();
     $matched = FALSE;
 
+    if (isset($item['item']->properties['always_suppress']) && $item['item']->properties['always_suppress']) {
+      $item_settings['suppress_active'] = TRUE;
+    }
+
     // top item types force active path and link path to be set to '<top>'.
     if ($item_settings['type'] == 'item_top') {
       $item['item']->active_path = '<top>';
@@ -1098,7 +1102,7 @@ function workbench_menu_build_menu_item($menu, $item, &$variables) {
           $link_path .= '#' . $parsed_url['fragment'];
 
           // suppress active links that have fragments.
-          if (!(isset($item['item']->properties['never_suppress']) && $item['item']->properties['never_suppress'])) {
+          if ((isset($item['item']->properties['always_suppress']) && $item['item']->properties['always_suppress'])|| !(isset($item['item']->properties['never_suppress']) && $item['item']->properties['never_suppress'])) {
             $item_settings['suppress_active'] = TRUE;
           }
         }
@@ -1178,6 +1182,11 @@ function workbench_menu_build_menu_item($menu, $item, &$variables) {
     $process = TRUE;
     $to_node = FALSE;
 
+
+    if (isset($item['item']->properties['always_suppress']) && $item['item']->properties['always_suppress']) {
+      $item_settings['suppress_active'] = TRUE;
+    }
+
     $matches = array();
     $matched = preg_match('@\[fid: (\d+)\]\s*$@i', $item['item']->properties['file'], $matches);
 
@@ -1234,7 +1243,7 @@ function workbench_menu_build_menu_item($menu, $item, &$variables) {
           $link_path .= '#' . $parsed_url['fragment'];
 
           // suppress active links that have fragments.
-          if (!(isset($item['item']->properties['never_suppress']) && $item['item']->properties['never_suppress'])) {
+          if ((isset($item['item']->properties['always_suppress']) && $item['item']->properties['always_suppress']) || !(isset($item['item']->properties['never_suppress']) && $item['item']->properties['never_suppress'])) {
             $item_settings['suppress_active'] = TRUE;
           }
         }
@@ -3149,6 +3158,7 @@ function workbench_menu_get_menu_item_defaults($item = NULL) {
   $defaults['properties']['menu'] = NULL;
   $defaults['properties']['menu_item'] = NULL;
   $defaults['properties']['never_suppress'] = FALSE;
+  $defaults['properties']['always_suppress'] = FALSE;
 
   if (is_object($item)) {
     if (property_exists($item, 'human_name') && is_string($item->human_name)) {
@@ -3209,6 +3219,10 @@ function workbench_menu_get_menu_item_defaults($item = NULL) {
 
     if (isset($defaults['properties']['never_suppress']) && is_bool($defaults['properties']['never_suppress'])) {
       $defaults['properties']['never_suppress'] = $defaults['properties']['never_suppress'];
+    }
+
+    if (isset($defaults['properties']['always_suppress']) && is_bool($defaults['properties']['always_suppress'])) {
+      $defaults['properties']['always_suppress'] = $defaults['properties']['always_suppress'];
     }
   }
 
