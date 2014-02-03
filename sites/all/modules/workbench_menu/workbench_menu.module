@@ -1057,11 +1057,6 @@ function workbench_menu_build_menu_item($menu, $item, &$variables) {
       $item['item']->properties['url'] = '<top>';
 
       $item_settings['attributes']['class'][] = 'top_as-' . check_plain($top_as);
-
-      // @todo: remove this before final release
-      if ($item['item']->parent_id > 0) {
-        watchdog('Workbench Menu', "Warning: Top item types are no longer allowed to be nested. Please restructure the menu with an id of %menu_id.", array('%menu_id' => $menu->id), WATCHDOG_WARNING);
-      }
     }
     else if ($item_settings['type'] == 'item_link') {
       $matched = preg_match('@^/node/(\d+)(/.*|$|\?.*|#.*)@', $item['item']->properties['url'], $matches);

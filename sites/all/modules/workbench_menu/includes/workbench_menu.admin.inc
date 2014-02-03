@@ -1017,11 +1017,6 @@ function theme_workbench_menu_admin_settings_form($element) {
           $row['class'][] = 'tabledrag-leaf';
         }
       }
-
-      // @todo: remove this before final release
-      if ($value->machine_name == 'item_top' && $item['item']->parent_id > 0) {
-        drupal_set_message(t("Warning: Top item types are no longer allowed to be nested. Please fix the menu item with id of %item_id.", array('%item_id' => $id)), 'warning');
-      }
     }
 
     $row['data'][] = $name;
