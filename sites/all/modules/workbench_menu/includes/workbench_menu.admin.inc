@@ -1917,6 +1917,10 @@ function workbench_menu_admin_item_settings_edit_form_validate($form, &$form_sta
         }
       }
 
+      if ($menu_id == $form['menu_id']['#value']) {
+        form_set_error('settings][item_type', t("A %type cannot point to its own menu.", array('%type' => $item_type_name)));
+      }
+
       if (cf_is_integer($menu_id)) {
         $query = db_select('workbench_menus', 'wm');
         $query->fields('wm', array('id', 'access_id', 'breadcrumb_name'));
@@ -1958,6 +1962,10 @@ function workbench_menu_admin_item_settings_edit_form_validate($form, &$form_sta
 
       if ($matched > 0) {
         $menu_item_id = $matches[1];
+      }
+
+      if ($menu_id == $form['menu_id']['#value']) {
+        form_set_error('settings][item_type', t("An %type cannot point to a menu item from its own menu.", array('%type' => $item_type_name)));
       }
 
       // if the current item has children, do not allow it to be changed into an item type that is not allowed to have children.

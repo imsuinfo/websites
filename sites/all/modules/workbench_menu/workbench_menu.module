@@ -410,7 +410,7 @@ function workbench_menu_process_path($url_path, $alter_breadcrumb = FALSE) {
     if (empty($menus_cached[$path_string['alias']])) {
       $menus_cached[$path_string['alias']] = (array) workbench_menu_build_menus($path_string['alias'], $menus_processed, $breadcrumbs_cached);
 
-      if ($menus_cached[$path_string['alias']]['total'] > 0) {
+      if (isset($menus_cached[$path_string['alias']]['total']) && $menus_cached[$path_string['alias']]['total'] > 0) {
         $save_cache = TRUE;
       }
     }
@@ -797,6 +797,11 @@ function workbench_menu_build_menu_item($menu, $item, &$variables) {
     $field = & $item['item']->properties['menu'];
     $item_menus = array();
 
+    // do not allow menu item types that point to its own menu.
+    if ($item['item']->properties['menu'] == $menu->id) {
+      return array('structure' => array(), 'settings' => array());
+    }
+
     if (cf_is_integer($field)) {
       $item_menus = (array) workbench_menu_get_menus(array('id' => $field), 'id');
     }
@@ -878,6 +883,7 @@ function workbench_menu_build_menu_item($menu, $item, &$variables) {
       return array('structure' => array(), 'settings' => array());
     }
 
+
     reset($item_menus);
     $item_menu = current($item_menus);
     $item_menu_item = NULL;
@@ -899,6 +905,11 @@ function workbench_menu_build_menu_item($menu, $item, &$variables) {
 
     // Unable to determine the item menu item id.
     if (is_null($item_menu_item_id)) {
+      return array('structure' => array(), 'settings' => array());
+    }
+
+    // do not allow menu item types that point to its own menu.
+    if ($item_menu->id == $menu->id) {
       return array('structure' => array(), 'settings' => array());
     }
 
