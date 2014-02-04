@@ -1179,16 +1179,13 @@ function workbench_moderation_node_live_load($node) {
  *   Boolean TRUE if the revision is live. FALSE if not.
  */
 function workbench_moderation_node_is_live($node) {
-  if (!property_exists($node, 'workbench_moderation')) {
-    return (bool) $node->status;
-  }
-  elseif (isset($node->workbench_moderation['published']->vid)) {
+  if (isset($node->workbench_moderation['published']->vid)) {
     if ($node->vid == $node->workbench_moderation['published']->vid) {
       return TRUE;
     }
     return FALSE;
   }
-  elseif (isset($node->workbench_moderation['current']->vid)) {
+  else if (isset($node->workbench_moderation['current']->vid)) {
     if ($node->vid == $node->workbench_moderation['current']->vid) {
       return TRUE;
     }
