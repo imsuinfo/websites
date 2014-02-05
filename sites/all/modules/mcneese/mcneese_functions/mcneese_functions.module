@@ -550,7 +550,7 @@ function mcneese_functions_embed_job_opportunity_listing($opportunity) {
     print('<ul>' . "\n");
     foreach ($all as $job) {
       print('<li>' . "\n");
-      print(l($job->title, 'node/' .  $job->node_id));
+      print('<a href="' . base_path() . 'node/' . $job->node_id . '">' . $job->title . '</a>');
       print(' - ');
 
       $data = unserialize($job->data);
