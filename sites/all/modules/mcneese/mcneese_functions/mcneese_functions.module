@@ -501,6 +501,74 @@ function mcneese_functions_embed_ntas_widget($cache_id = NULL, $cache_expire = '
   print($markup);
 }
 
+
+/**
+ * Generates and prints job opportunity listings.
+ *
+ * This depends on:
+ * - mcneese_management_template_load_node_data
+ *
+ * @param array $opportunity
+ *   An array of all opportunity taxonomy ids to process.
+ */
+function mcneese_functions_embed_job_opportunity_listing($opportunity) {
+  if (!function_exists('mcneese_management_template_load_node_data')) {
+    return FALSE;
+  }
+
+  if (!cf_is_integer($opportunity)){
+    if (class_exists('cf_error')) {
+      cf_error::invalid_array('opportunity');
+    }
+    return FALSE;
+  }
+
+  $all = array();
+  try {
+    $query = db_select('mcneese_management_template_node', 'mmtn');
+    $query->innerJoin('node', 'n', 'mmtn.node_id = n.nid');
+    $query->innerJoin('field_data_field_group', 'fdfg', 'mmtn.node_id = fdfg.entity_id');
+    $query->fields('mmtn');
+    $query->fields('n', array('title'));
+    $query->condition('field_group_tid', $opportunity);
+
+    $executed = $query->execute();
+    $all = $executed->fetchAll();
+  }
+  catch (Exception $e) {
+    if (class_exists('cf_error')) {
+      cf_error::on_query_execution($e);
+    }
+
+    throw $e;
+  }
+
+  if (empty($all)) {
+    return FALSE;
+  }
+  else {
+    print('<ul>' . "\n");
+    foreach ($all as $job) {
+      print('<li>' . "\n");
+      print(l($job->title, 'node/' .  $job->node_id));
+      print(' - ');
+
+      $data = unserialize($job->data);
+      if ($data['ti_positions'] > 1) {
+        print("1 position");
+      }
+      else {
+        print($data['ti_positions'] . " positions");
+      }
+
+      print('</li>' . "\n");
+    }
+    print('</ul>' . "\n");
+  }
+
+  return TRUE;
+}
+
 /**
  * @} End of '@defgroup mcneese_functions McNeese Functions'.
  */

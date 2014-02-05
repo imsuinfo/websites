@@ -370,27 +370,13 @@ function mcneese_management_node_load($nodes, $types) {
 
   if (empty($all_nodes)) return;
 
-  try {
-    $query = db_select('mcneese_management_template_node', 'mmtn');
-    $query->fields('mmtn');
-    $query->condition('node_id', array_keys($all_nodes),  'IN');
+  $all = mcneese_management_template_load_node_data(array_keys($all_nodes));
 
-    $executed = $query->execute();
-    $all = $executed->fetchAll();
-
-    foreach ($all as $association) {
-      $all_nodes[$association->node_id]->mcneese_management_template = array(
-        'id' => $association->template_id,
-        'data' => unserialize($association->data),
-      );
-    }
-  }
-  catch (Exception $e) {
-    if (class_exists('cf_error')) {
-      cf_error::on_query_execution($e);
-    }
-
-    throw $e;
+  foreach ($all as $association) {
+    $all_nodes[$association->node_id]->mcneese_management_template = array(
+      'id' => $association->template_id,
+      'data' => unserialize($association->data),
+    );
   }
 }
 
@@ -1910,6 +1896,46 @@ function mcneese_management_validate_user(&$form_state_field) {
   }
 
   return $user_id;
+}
+
+/**
+ * Loads Template information for the specified node ids.
+ *
+ * @param array $nids
+ *   An array of node ids.
+ *   If $taxonomy_id is specified, then this may be left empty to load all
+ *   available nodes for that taxonomy_id.
+ *
+ * @return array
+ *   An array of template data.
+ */
+function mcneese_management_template_load_node_data($nids) {
+  if (!is_array($nids)){
+    if (class_exists('cf_error')) {
+      cf_error::invalid_array('nids');
+    }
+    return array();
+  }
+
+  if (empty($nids)) return array();
+
+  try {
+    $query = db_select('mcneese_management_template_node', 'mmtn');
+    $query->fields('mmtn');
+    $query->condition('node_id', $nids, 'IN');
+
+    $executed = $query->execute();
+    return $executed->fetchAll();
+  }
+  catch (Exception $e) {
+    if (class_exists('cf_error')) {
+      cf_error::on_query_execution($e);
+    }
+
+    throw $e;
+  }
+
+  return array();
 }
 
 /**
