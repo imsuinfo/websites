@@ -207,6 +207,7 @@ function mcneese_management_templates_manage_edit_form($form, &$form_state, $tem
   $help_markup .= '<li><strong>normal</strong>: This is the default when no type is specified. This applies no special structure to the form values.</li>';
   $help_markup .= '<li><strong>textfield</strong>: This is almost identicaly to "normal" except that the data structure has additional information. Some form fields require this instead "normal". This requires additional attributes: "format".</li>';
   $help_markup .= '<li><strong>textarea</strong>: This is required for textarea form fields to be properly populated. This requires additional attributes: "format".</li>';
+  $help_markup .= '<li><strong>array</strong>: This is a special type that creates an array and stores the value on the node, it uses arraay keys called tiv, such as: <em>' . check_plain('<tiv key="0">value</tiv>') . '</em>.</li>';
   $help_markup .= '</ul>';
   $help_markup .= '<br>';
   $help_markup .= "If conditions are also supported using Template If, " . '<strong>' . check_plain("<tif></tif>") . '</strong>, such as:<br>';

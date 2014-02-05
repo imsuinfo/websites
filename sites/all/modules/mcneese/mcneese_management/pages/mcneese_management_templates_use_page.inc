@@ -254,7 +254,6 @@ function mcneese_management_templates_use_add_form($form, &$form_state, $templat
       '#value' => $user,
     );
 
-    // note, maybe this node object should be created on submit instead.
     $form['node'] = array(
       '#type' => 'value',
       '#value' => (object) array(
@@ -262,7 +261,10 @@ function mcneese_management_templates_use_add_form($form, &$form_state, $templat
         'name' => isset($user->name) ? $user->name : '',
         'type' => $type,
         'language' => LANGUAGE_NONE,
-        'mcneese_management_template' => $template->id,
+        'mcneese_management_template' => array(
+          'id' => $template->id,
+          'data' => array(),
+        ),
       ),
     );
 
@@ -312,6 +314,7 @@ function mcneese_management_templates_use_add_form_validate($form, &$form_state)
   if (empty($form['content_type']['#value'])) {
     if (empty($form_state['values']['settings']['content_type'])) {
       form_set_error('settings][content_type', t("No valid content type was specified."));
+      return;
     }
   }
   else {
@@ -335,19 +338,12 @@ function mcneese_management_templates_use_add_form_submit($form, &$form_state) {
   }
 
   $node = $form_state['node'];
-
-
-  // from: node_form_submit_build_node()
-  entity_form_submit_build_entity('node', $node, $form, $form_state);
-
-  node_submit($node);
-  foreach (module_implements('node_submit') as $module) {
-    $function = $module . '_node_submit';
-    $function($node, $form, $form_state);
+  $node->mcneese_management_template['data'] = array();
+  if (isset($form_state['unused'])) {
+    $node->mcneese_management_template['data'] = $form_state['unused'];
   }
 
   node_save($node);
-
 
   // redirect after submitting.
   if (empty($form_state['values']['redirect_to'])) {
@@ -372,7 +368,7 @@ function mcneese_management_templates_use_edit_form($form, &$form_state, $node) 
     drupal_exit();
   }
 
-  $template = mcneese_management_template_load_template($node->mcneese_management_template);
+  $template = mcneese_management_template_load_template($node->mcneese_management_template['id']);
   if (!is_object($template)) {
     drupal_not_found();
     drupal_exit();
@@ -410,7 +406,7 @@ function mcneese_management_templates_use_edit_form($form, &$form_state, $node) 
     '#value' => $node,
   );
 
-  form_load_include($form_state, 'inc', 'node', 'node.pages');
+  node_object_prepare($form['node']['#value']);
 
   mcneese_management_template_build_form($form);
 
@@ -445,6 +441,7 @@ function mcneese_management_templates_use_edit_form($form, &$form_state, $node) 
 function mcneese_management_templates_use_edit_form_validate($form, &$form_state) {
   // populate the node fields during validate so that on error, an error can be presented without submitting.
   mcneese_management_template_process_form_state($form, $form_state);
+  $node = $form_state['node'];
 }
 
 /**
@@ -457,19 +454,12 @@ function mcneese_management_templates_use_edit_form_validate($form, &$form_state
  */
 function mcneese_management_templates_use_edit_form_submit($form, &$form_state) {
   $node = $form_state['node'];
-
-
-  // from: node_form_submit_build_node()
-  entity_form_submit_build_entity('node', $node, $form, $form_state);
-
-  node_submit($node);
-  foreach (module_implements('node_submit') as $module) {
-    $function = $module . '_node_submit';
-    $function($node, $form, $form_state);
+  $node->mcneese_management_template['data'] = array();
+  if (isset($form_state['unused'])) {
+    $node->mcneese_management_template['data'] = $form_state['unused'];
   }
 
   node_save($node);
-
 
   // redirect after submitting.
   if (!empty($form_state['values']['redirect_to'])) {
