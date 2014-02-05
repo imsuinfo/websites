@@ -779,7 +779,8 @@ function workbench_access_node_presave($node) {
           if (isset($value[$node->workbench_access_column])) {
             // Handle disabled menu links.
             if (!isset($value['enabled']) || !empty($value['enabled'])) {
-              $node->workbench_access[] = $value[$node->workbench_access_column];
+              $value = (int) $value[$node->workbench_access_column];
+              $node->workbench_access[$value] = $value;
             }
           }
         }
