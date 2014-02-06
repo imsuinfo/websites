@@ -328,6 +328,17 @@ function mcneese_content_formats_alter_dom(&$text, $operations) {
 
   $change_tags = array();
 
+
+  // remove top-level comments
+  if ($body->hasChildNodes()) {
+    foreach ($body->childNodes as $child) {
+      if ($child instanceOf DOMComment) {
+        $remove_tags_all[] = $child;
+      }
+    }
+  }
+
+
   foreach ($all_tags as $tag) {
     if (in_array($tag->tagName, $operations['denied_tags'])) {
       $remove_tags_all[] = $tag;
@@ -606,6 +617,15 @@ function mcneese_content_formats_alter_dom(&$text, $operations) {
         if ($tag->hasAttribute($attr_name)) {
           $tag->removeAttribute($attr_name);
           $altered = TRUE;
+        }
+      }
+    }
+
+    // remove all comments from this tag
+    if ($tag->hasChildNodes()) {
+      foreach ($tag->childNodes as $child) {
+        if ($child instanceOf DOMComment) {
+          $remove_tags_all[] = $child;
         }
       }
     }
