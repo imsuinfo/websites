@@ -10,4 +10,5 @@ dependencies[] = cf_settings (7.x-2.x)
 dependencies[] = webform
 
 files[] = mcneese_webform.module
-files[] = includes/banner_id.inc
+files[] = components/banner_id.inc
+files[] = components/print_break.inc

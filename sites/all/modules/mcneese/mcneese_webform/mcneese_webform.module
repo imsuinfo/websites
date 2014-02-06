@@ -16,22 +16,44 @@
  * Implements hook_webform_component_info().
  */
 function mcneese_webform_webform_component_info() {
-  return array(
-    'banner_id' => array(
-      'label' => t("Banner ID"),
-      'description' => t("The 9-digit McNeese Banner ID."),
-      'features' => array(
-        'csv' => TRUE,
-        'email' => TRUE,
-        'required' => TRUE,
-        'title_display' => TRUE,
-        'title_inline' => TRUE,
-        'conditional' => TRUE,
-        'default_value' => TRUE,
-      ),
-      'file' => 'includes/banner_id.inc',
+  $components = array();
+
+  $components['banner_id'] = array(
+    'label' => t("Banner ID"),
+    'description' => t("The 9-digit McNeese Banner ID."),
+    'features' => array(
+      'csv' => TRUE,
+      'email' => TRUE,
+      'required' => TRUE,
+      'title_display' => TRUE,
+      'title_inline' => TRUE,
+      'conditional' => TRUE,
+      'default_value' => TRUE,
     ),
+    'file' => 'components/banner_id.inc',
   );
+
+  $components['print_break'] = array(
+    'label' => t("Print Break"),
+    'description' => t("Add an explicit page-break for when printing."),
+    'features' => array(
+      'title_display' => FALSE,
+      'analysis' => FALSE,
+      'csv' => FALSE,
+      'default_value' => FALSE,
+      'description' => FALSE,
+      'email' => FALSE,
+      'required' => FALSE,
+      'conditional' => FALSE,
+      'title_display' => FALSE,
+      'private' => FALSE,
+      'wrapper_classes' => FALSE,
+      'css_classes' => FALSE,
+    ),
+    'file' => 'components/print_break.inc',
+  );
+
+  return $components;
 }
 
 /**
