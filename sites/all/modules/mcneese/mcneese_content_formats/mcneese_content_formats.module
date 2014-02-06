@@ -117,9 +117,10 @@ function mcneese_content_formats_node_presave($node) {
 
   $denied_tags_string = variable_get('mcneese_content_formats_denied_tags_' . $node->type, 'script noscript');
   $denied_tags = explode(' ', $denied_tags_string);
-  if (user_access('bypass denied tags')) {
-    $denied_tags = array();
-  }
+
+  #if (user_access('bypass denied tags')) {
+  #  $denied_tags = array();
+  #}
 
   $operations = array();
   $operations['deny_abused_codes'] = $deny_abused_codes_value && !user_access('bypass deny abused codes');
