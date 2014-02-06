@@ -330,7 +330,7 @@ function mcneese_content_formats_alter_dom(&$text, $operations) {
 
   foreach ($all_tags as $tag) {
     if (in_array($tag->tagName, $operations['denied_tags'])) {
-      $remove_tags[] = $tag;
+      $remove_tags_all[] = $tag;
       continue;
     }
 
@@ -615,6 +615,13 @@ function mcneese_content_formats_alter_dom(&$text, $operations) {
   while (!empty($remove_tags)) {
     $remove_tag = array_pop($remove_tags);
     $dom->remove_element($remove_tag);
+    $altered = TRUE;
+  }
+
+  while (!empty($remove_tags_all)) {
+    $remove_tag = array_pop($remove_tags_all);
+    $parent_tag = $remove_tag->parentNode;
+    $parent_tag->removeChild($remove_tag);
     $altered = TRUE;
   }
 
