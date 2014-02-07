@@ -554,11 +554,16 @@ function mcneese_functions_embed_job_opportunity_listing($opportunity) {
       print(' - ');
 
       $data = unserialize($job->data);
-      if ($data['ti_positions'] > 1) {
-        print("1 position");
+      if (isset($data['ti_positions'])) {
+        if ($data['ti_positions'] > 1) {
+          print("1 position");
+        }
+        else {
+          print($data['ti_positions'] . " positions");
+        }
       }
       else {
-        print($data['ti_positions'] . " positions");
+        print("no positions available");
       }
 
       print('</li>' . "\n");
