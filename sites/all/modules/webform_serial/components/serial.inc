@@ -16,22 +16,23 @@ function _webform_defaults_serial() {
     'value' => '',
     'mandatory' => 0,
     'extra' => array(
-      'initial' => '',
+      'initial' => 1,
       'increment' => 1,
-      'private' => TRUE,
+      'private' => FALSE,
     ),
   );
 }
 
+/**
+ * Implements _webform_edit_component().
+ */
 function _webform_edit_serial($component) {
-  drupal_set_message(t('Please do not disable the <em>Private</em> checkbox.'), 'warning');
-
   $form = array();
   $form['extra']['initial'] = array(
     '#type' => 'textfield',
-    '#title' => t('Initial value'),
-    '#default_value' => $component['extra']['initial'],
-    '#description' => t('The initial value of the field. Leave blank to start counting at 1.'),
+    '#title' => t('Initial/next value'),
+    '#default_value' => empty($component['extra']['initial']) ? 1 : $component['extra']['initial'],
+    '#description' => t('The value of the next serial number. This is usually 1 when you start and will go up with each form submission.'),
     '#size' => 8,
     '#maxlength' => 1024,
     '#weight' => 0,
@@ -52,19 +53,17 @@ function _webform_edit_serial($component) {
 
 /**
  * Validation of serial edit form items.
+ *
+ * Ensure the initial and increment values are positive integers.
  */
 function _webform_edit_serial_validate($element, &$form_state) {
-  $values = $form_state['values']['extra'];
   switch ($element['#name']) {
     case 'extra[initial]':
-      if (!empty($values['initial']) && !is_numeric($values['initial'])) {
-        form_error($element, t('Initial value needs to be empty or a number.'));
-      }
-      break;
-
     case 'extra[increment]':
-      if (empty($values['increment']) || !is_numeric($values['increment'])) {
-        form_error($element, t('Increment value needs to be a number and may not be zero.'));
+      $original_value = $form_state['values']['extra'][substr($element['#name'], 6, -1)];
+      $value = (int) $original_value;
+      if ($value < 1 || $value != $original_value) {
+        form_error($element, t('The %title needs to be an integer greater than zero.', array('%title' => $element['#title'])));
       }
       break;
   }
@@ -73,22 +72,18 @@ function _webform_edit_serial_validate($element, &$form_state) {
 /**
  * Implements _webform_render_component().
  */
-function _webform_render_serial($component, $value, $format = 'text') {
+function _webform_render_serial($component, $value = NULL, $filter = TRUE) {
   return array(
-    '#title' => $component['name'],
+    '#title' => $filter ? webform_filter_xss($component['name']) : $component['name'],
     '#weight' => $component['weight'],
-    '#format' => 'text',
-    '#markup' => $value[0],
-    '#webform_component' => $component,
-    '#field_suffix' => NULL,
-    '#field_prefix' => NULL,
+    '#translatable' => array('title'),
   );
 }
 
 /**
  * Implements _webform_display_component().
  */
-function _webform_display_serial($component, $value, $format = 'text') {
+function _webform_display_serial($component, $value, $format = 'html') {
   return array(
     '#title' => $component['name'],
     '#weight' => $component['weight'],
@@ -105,30 +100,28 @@ function _webform_display_serial($component, $value, $format = 'text') {
 /**
  * Implements _webform_analysis_component().
  */
-function _webform_analysis_serial($component, $sids = array()) {
-  $query = db_select('webform_submitted_data', 'wsd', array('fetch' => PDO::FETCH_ASSOC));
-  $query->addExpression('MIN(data)', 'minimum');
-  $query->condition('nid', $component['nid']);
-  $query->condition('cid', $component['cid']);
-
+function _webform_analysis_serial($component, $sids = array(), $single = FALSE) {
+  $query = db_select('webform_submitted_data', 'wsd', array('fetch' => PDO::FETCH_ASSOC))
+    ->condition('nid', $component['nid'])
+    ->condition('cid', $component['cid'])
+    // Empty would get CAST() to zero.
+    ->condition('data', '', '!=');
   if (count($sids)) {
     $query->condition('sid', $sids, 'IN');
   }
-  $minimum = $query->execute()->fetchField();
+  $query->addExpression('MIN(CAST(data AS SIGNED))', 'minimum');
+  $query->addExpression('MAX(CAST(data AS SIGNED))', 'maximum');
+  $query->addExpression('COUNT(*)', 'count');
+  $results = $query->execute()->fetch();
 
-  $query = db_select('webform_submitted_data', 'wsd', array('fetch' => PDO::FETCH_ASSOC));
-  $query->addExpression('MAX(data)', 'maximum');
-  $query->condition('nid', $component['nid']);
-  $query->condition('cid', $component['cid']);
+  $rows = array();
+  $rows[] = array(t('Lowest serial number'), $results['minimum']);
+  $rows[] = array(t('Highest serial number'), $results['maximum']);
+  $rows[] = array(t('Number of submissions with a serial number'), $results['count']);
 
-  if (count($sids)) {
-    $query->condition('sid', $sids, 'IN');
-  }
-  $maximum = $query->execute()->fetchField();
-
-  $rows[0] = array(t('Lowest serial'), $minimum);
-  $rows[1] = array(t('Highest serial'), $maximum);
-  return $rows;
+  return array(
+    'table_rows' => $rows,
+  );
 }
 
 /**
@@ -165,31 +158,65 @@ function theme_webform_display_serial($variables) {
 }
 
 /**
- * Implements hook_webform_submission_presave()
+ * Implements hook_webform_submission_presave().
  */
 function webform_serial_webform_submission_presave($node, &$submission) {
   foreach ($node->webform['components'] as $cid => $component) {
+    // If component is a serial number with no value, generate a value.
     if ($component['type'] == 'serial' && empty($submission->data[$cid])) {
-      // If no value, generate one.
-      $query = db_select('webform_submitted_data', 'd');
-      $query->addExpression('MAX(data)', 'current');
-      $query->condition('nid', $node->nid, '=');
-      $query->condition('cid', $cid, '=');
-
-      // Cast this to int, because the first query will return NULL.
-      $current = (int)$query->execute()->fetchField();
-
       // Calculate the increment (default to 1).
-      $increment = empty($component['extra']['increment']) ? 1 : (int)$component['extra']['increment'];
+      $increment = empty($component['extra']['increment']) ? 1 : (int) $component['extra']['increment'];
 
-      // If there is no current (first entry) then check if we have an
-      // initial value we should be using.
-      if (empty($current)) {
-        // Subtract $increment because we're incrementing again below.
-        $current = (int)$component['extra']['initial'] - $increment;
+      // Get largest serial number in the database to ensure the new one is larger.
+      $query = db_select('webform_submitted_data')
+        ->condition('nid', $node->nid)
+        ->condition('cid', $cid);
+      // CAST() is needed because value is stored as text but must be sorted as a number.
+      $query->addExpression('MAX(CAST(data AS signed))');
+      $current_max = (int) $query->execute()->fetchField();
+
+      // Use a transaction with SELECT ... FOR UPDATE to lock the row between
+      // the SELECT and the UPDATE, ensuring that multiple Webform submissions
+      // at the same time do not have duplicate numbers.
+      $txn = db_transaction();
+
+      // Get the next serial number as configured in the component.
+      $component_extra = db_select('webform_component', 'wc')
+        ->forUpdate()
+        ->fields('wc', array('extra'))
+        ->condition('nid', $node->nid)
+        ->condition('cid', $cid)
+        ->execute()
+        ->fetchField();
+      $component_extra = unserialize($component_extra);
+      $next_value = empty($component['extra']['initial']) ? 1 : $component['extra']['initial'];
+
+      // If the next value is smaller than the largest value currently in the
+      // database, increment the largest value and use that as the next value.
+      if ($next_value <= $current_max) {
+        $next_value = $current_max + $increment;
       }
 
-      $submission->data[$cid][0] = ($current + $increment);
+      // Increment the next value and save it in the database.
+      $component_extra['initial'] = $next_value + $increment;
+      db_update('webform_component')
+        ->fields(array('extra' => serialize($component_extra)))
+        ->condition('nid', $node->nid)
+        ->condition('cid', $cid)
+        ->execute();
+
+      // Set the serial number in the submission data in a way that is
+      // compatible with Webform 3 and Webform 4. If version is not present,
+      // such as when working from git, assume Webform 4.
+      $value = array($next_value);
+      $version = system_get_info('module', 'webform');
+      $version = explode('-', $version['version']);
+      if (isset($version[1]) && ((int) $version[1] < 4)) {
+        $submission->data[$cid]['value'] = $value;
+      }
+      else {
+        $submission->data[$cid] = $value;
+      }
     }
   }
 }
