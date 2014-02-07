@@ -1792,46 +1792,54 @@ function mcneese_management_template_process_template_if($form, &$form_state, $t
     return FALSE;
   }
 
-  $value = NULL;
+  $right_value = NULL;
+  if (is_array($template_values[$target]) && isset($template_values[$target]['value'])) {
+    $right_value = $template_values[$target]['value'];
+  }
+  else {
+    $right_value = $template_values[$target];
+  }
+
+  $left_value = NULL;
   if ($tif_tag->hasAttribute('value')) {
-    $value = $tif_tag->getAttribute('value');
+    $left_value = $tif_tag->getAttribute('value');
   }
 
   if ($type == 'not_empty') {
-    return !empty($template_values[$target]);
+    return !empty($right_value);
   }
   elseif ($type == 'empty') {
-    return empty($template_values[$target]);
+    return empty($right_value);
   }
   elseif ($type == '>') {
-    if (!is_numeric($template_values[$target])) return FALSE;
-    if (!is_numeric($value)) return FALSE;
-    return $value > $template_values[$target];
+    if (!is_numeric($right_value)) return FALSE;
+    if (!is_numeric($left_value)) return FALSE;
+    return $left_value > $right_value;
   }
   elseif ($type == '<') {
-    if (!is_numeric($template_values[$target])) return FALSE;
-    if (!is_numeric($value)) return FALSE;
-    return $value < $template_values[$target];
+    if (!is_numeric($left_value[$target])) return FALSE;
+    if (!is_numeric($left_value)) return FALSE;
+    return $left_value < $left_value[$target];
   }
   elseif ($type == '>=') {
-    if (!is_numeric($template_values[$target])) return FALSE;
-    if (!is_numeric($value)) return FALSE;
-    return $value >= $template_values[$target];
+    if (!is_numeric($left_value[$target])) return FALSE;
+    if (!is_numeric($left_value)) return FALSE;
+    return $left_value >= $left_value[$target];
   }
   elseif ($type == '<=') {
-    if (!is_numeric($template_values[$target])) return FALSE;
-    if (!is_numeric($value)) return FALSE;
-    return $value <= $template_values[$target];
+    if (!is_numeric($left_value[$target])) return FALSE;
+    if (!is_numeric($left_value)) return FALSE;
+    return $left_value <= $left_value[$target];
   }
   elseif ($type == '==') {
-    if (!is_numeric($template_values[$target])) return FALSE;
-    if (!is_numeric($value)) return FALSE;
-    return $value == $template_values[$target];
+    if (!is_numeric($left_value[$target])) return FALSE;
+    if (!is_numeric($left_value)) return FALSE;
+    return $left_value == $left_value[$target];
   }
   elseif ($type == '!=') {
-    if (!is_numeric($template_values[$target])) return FALSE;
-    if (!is_numeric($value)) return FALSE;
-    return $value != $template_values[$target];
+    if (!is_numeric($left_value[$target])) return FALSE;
+    if (!is_numeric($left_value)) return FALSE;
+    return $left_value != $left_value[$target];
   }
 
   return FALSE;
