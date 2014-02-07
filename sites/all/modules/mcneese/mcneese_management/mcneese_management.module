@@ -1231,8 +1231,14 @@ function mcneese_management_template_build_form(&$form) {
           // internally stored values always override any values stored directly onto node fields
           $assign_default = TRUE;
           if (isset($node_template_data[$ati_tag->tagName])) {
-            $ati_tag->setAttribute('default_value', $node_template_data[$ati_tag->tagName]);
-            $assign_default = FALSE;
+            if (is_array($node_template_data[$ati_tag->tagName]) && isset($node_template_data[$ati_tag->tagName]['value'])) {
+              $ati_tag->setAttribute('default_value', $node_template_data[$ati_tag->tagName]['value']);
+              $assign_default = FALSE;
+            }
+            else {
+              $ati_tag->setAttribute('default_value', $node_template_data[$ati_tag->tagName]);
+              $assign_default = FALSE;
+            }
           }
 
           if ($found_tags->length > 0) {
