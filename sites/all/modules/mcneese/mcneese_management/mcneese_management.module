@@ -1367,11 +1367,13 @@ function mcneese_management_template_build_tag($form, $dom, $tag) {
   $supported_attributes[] = 'title_display';
   $supported_attributes[] = 'weight';
   $supported_attributes[] = 'wysiwyg';
+  $supported_attributes[] = 'preserve';
 
   $boolean_attributes = array();
   $boolean_attributes[] = 'required';
   $boolean_attributes[] = 'resizable';
   $boolean_attributes[] = 'wysiwyg';
+  $boolean_attributes[] = 'preserve';
 
   foreach ($supported_attributes as $attribute) {
     if (!$tag->hasAttribute($attribute)) continue;
@@ -1534,7 +1536,7 @@ function mcneese_management_template_process_form_state($form, &$form_state) {
         $value = '';
 
         $tags_in_use = $tit_tag->getElementsByTagName($ti_name);
-        if ($tags_in_use->length > 0) {
+        if ($tags_in_use->length > 0 && !(isset($template_fields[$ti_name]['#preserve']) && $template_fields[$ti_name]['#preserve']) ) {
           unset($form_state['unused'][$ti_name]);
         }
         unset($tags_in_use);
