@@ -873,17 +873,6 @@ function media_element_process(&$element, &$form_state, $form) {
   // Set some default element properties.
   $element['#file'] = $file;
 
-  $element['title'] = array(
-    '#type' => 'item',
-    '#title' => $element['#title'],
-    '#description' => $element['#description'],
-    '#required' => $element['#required'],
-    '#weight' => -100,
-  );
-  if (isset($element['#title_display'])) {
-    $element['title']['#title_display'] = $element['#title_display'];
-  }
-
   // @todo This should load from the JS in case of a failed form submission.
   $element['preview'] = array(
     '#prefix' => '<div class="preview launcher">',
