@@ -417,7 +417,17 @@ function mcneese_content_formats_alter_dom(&$text, $operations) {
         }
 
         // replace empty tags that are generally created to implement a line break
-        if (!$tag->hasChildNodes()) {
+        if ($tag->hasChildNodes()) {
+          // change all p tags that contain only spaces into line break.
+          $tag_markup = $dom->get_dom()->saveHTML($tag);
+          $tag_text = drupal_html_to_text($tag_markup, array());
+          if (preg_match('@\s*&(nbsp|nbsp;)\s*$@i', $tag_text)) {
+            $change_tags[] = array('tag' => $tag, 'type' => 'br');
+          }
+          unset($tag_markup);
+          unset($tag_text);
+        }
+        else {
           $change_tags[] = array('tag' => $tag, 'type' => 'br');
         }
       }
