@@ -133,9 +133,9 @@ function mcneese_management_redirects_update_form($form, &$form_state, $id) {
     $default_destination = $redirect['destination'];
     $default_status = $redirect['status'];
     $default_logged_in = $redirect['logged_in'];
-    $default_maintenance_message = $redirect['maintenance_message'];
-    $default_alert_message = $redirect['alert_message'];
-    $default_failsafe_message = $redirect['failsafe_message'];
+    $default_maintenance_message = unserialize($redirect['maintenance_message']);
+    $default_alert_message = unserialize($redirect['alert_message']);
+    $default_failsafe_message = unserialize($redirect['failsafe_message']);
 
     $submit_label = t("Update");
 
@@ -193,7 +193,8 @@ function mcneese_management_redirects_update_form($form, &$form_state, $id) {
     '#type' => 'text_format',
     '#title' => t("Maintenance Message"),
     '#description' => t("This message is displayed instead of a page for some given path when status is 'Display Maintenance Messsage'. HTML is allowed and encouraged."),
-    '#default_value' => $default_maintenance_message,
+    '#default_value' => $default_maintenance_message['value'],
+    '#format' => $default_maintenance_message['format'],
     '#rows' => 15,
     '#resizable' => TRUE,
     '#wysiwyg' => TRUE,
@@ -203,7 +204,8 @@ function mcneese_management_redirects_update_form($form, &$form_state, $id) {
     '#type' => 'text_format',
     '#title' => t("Alert Message"),
     '#description' => t("This message is displayed instead of a page for some given path when status is 'Display Alert Messsage'. HTML is allowed and encouraged."),
-    '#default_value' => $default_alert_message,
+    '#default_value' => $default_alert_message['value'],
+    '#format' => $default_alert_message['format'],
     '#rows' => 15,
     '#resizable' => TRUE,
     '#wysiwyg' => TRUE,
@@ -213,7 +215,8 @@ function mcneese_management_redirects_update_form($form, &$form_state, $id) {
     '#type' => 'text_format',
     '#title' => t("Failsafe Message"),
     '#description' => t("This message is displayed when the page is unable to perform an HTTP redirect or when logged in users are supposed to get this message. HTML is allowed and encouraged."),
-    '#default_value' => $default_failsafe_message,
+    '#default_value' => $default_failsafe_message['value'],
+    '#format' => $default_failsafe_message['format'],
     '#rows' => 15,
     '#resizable' => TRUE,
     '#wysiwyg' => TRUE,
@@ -306,13 +309,21 @@ function mcneese_management_redirects_update_form_submit($form, &$form_state) {
   }
 
   $fields = array();
+  $fields['source'] = $form_state['values']['settings']['source'];
+  $fields['destination'] = $form_state['values']['settings']['destination'];
+  $fields['status'] = $form_state['values']['settings']['status'];
+  $fields['logged_in'] = $form_state['values']['settings']['logged_in'];
+  $fields['maintenance_message'] = serialize($form_state['values']['settings']['maintenance_message']);
+  $fields['alert_message'] = serialize($form_state['values']['settings']['alert_message']);
+  $fields['failsafe_message'] = serialize($form_state['values']['settings']['failsafe_message']);
+
   $transaction = db_transaction();
 
   if (empty($id)) {
     try {
       // now perform the operation.
       $query = db_insert('mcneese_management_redirects');
-      $query->fields($form_state['values']['settings']);
+      $query->fields($fields);
       $query->execute();
 
       // enforce transaction execution
@@ -331,7 +342,7 @@ function mcneese_management_redirects_update_form_submit($form, &$form_state) {
       // now perform the operation.
       $query = db_update('mcneese_management_redirects');
       $query->condition('id', $id);
-      $query->fields($form_state['values']['settings']);
+      $query->fields($fields);
       $query->execute();
 
       // enforce transaction execution

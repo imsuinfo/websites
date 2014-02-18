@@ -902,6 +902,10 @@ function mcneese_management_perform_redirect($local_path) {
 
   if (empty($redirect)) return;
 
+  $alert = unserialize($redirect['alert_message']);
+  $maintenance = unserialize($redirect['maintenance_message']);
+  $failsafe = unserialize($redirect['failsafe_message']);
+
   $user = cf_current_user();
 
   if ($user->uid > 0) {
@@ -910,26 +914,26 @@ function mcneese_management_perform_redirect($local_path) {
     }
     elseif ($redirect['logged_in'] == 1) {
       drupal_set_title("Redirection Disabled for Logged in User.");
-      drupal_deliver_page($redirect['failsafe_message']);
+      drupal_deliver_page(check_markup($failsafe['value'], $failsafe['format']));
       drupal_exit();
     }
   }
 
   if ($redirect['status'] == 3) {
     drupal_set_title("Unable to Redirect");
-    drupal_deliver_page($redirect['alert_message']);
+    drupal_deliver_page(check_markup($alert['value'], $alert['format']));
     drupal_exit();
   }
   elseif ($redirect['status'] == 2) {
     drupal_set_title("Destination Under Maintenance");
-    drupal_deliver_page($redirect['maintenance_message']);
+    drupal_deliver_page(check_markup($maintenance['value'], $maintenance['format']));
     drupal_exit();
     drupal_exit();
   }
 
   if (headers_sent()) {
     drupal_set_title("Redirection Failed");
-    drupal_deliver_page($redirect['failsafe_message']);
+    drupal_deliver_page(check_markup($failsafe['value'], $failsafe['format']));
     drupal_exit();
   }
 
