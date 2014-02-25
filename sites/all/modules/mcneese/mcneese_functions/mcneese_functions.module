@@ -532,6 +532,7 @@ function mcneese_functions_embed_job_opportunity_listing($opportunity) {
     $query->fields('n', array('title'));
     $query->condition('field_group_tid', $opportunity);
     $query->condition('n.status', 1);
+    $query->orderBy('n.title', 'ASC');
 
     $executed = $query->execute();
     $all = $executed->fetchAll();
