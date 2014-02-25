@@ -80,8 +80,9 @@ function mcneese_management_templates_manage_edit_form($form, &$form_state, $tem
 
   $default_human_name = '';
   $default_machine_name = '';
-  $default_data = array('template' => '', 'content_types' => array());
-  $default_template = '';
+  $default_data = array('inputs' => '', 'targets' => '', 'content_types' => array());
+  $default_inputs = '';
+  $default_targets = '';
   $default_content_types = '';
 
   // load existing settings
@@ -109,8 +110,9 @@ function mcneese_management_templates_manage_edit_form($form, &$form_state, $tem
       $default_human_name = $result->human_name;
       $default_machine_name = $result->machine_name;
       $default_data = unserialize($result->data);
-      $default_template = $default_data['template'];
       $default_content_types = $default_data['content_types'];
+      $default_inputs = $default_data['inputs'];
+      $default_targets = $default_data['targets'];
     }
   }
 
@@ -153,72 +155,157 @@ function mcneese_management_templates_manage_edit_form($form, &$form_state, $tem
     '#options' => $content_types,
   );
 
-  $form['settings']['template'] = array(
+  $form['settings']['inputs'] = array(
     '#type' => 'textarea',
-    '#title' => t("Template Data"),
-    '#default_value' => $default_template,
-    '#description' => t("A machine-friendly name that uniquely identifies this template. (Lower case character and underscores only)"),
+    '#title' => t("Template Inputs"),
+    '#default_value' => $default_inputs,
+    '#description' => t("Template input markup that defines the form inputs for a template."),
     '#required' => TRUE,
   );
 
-  $help_markup = '<div>';
-  $help_markup .= "The template works by using Template Input fields or " . '<strong>' . check_plain('<ti></ti>') . '</strong>.<br>';
-  $help_markup .= "For example, a Template Input field called field_title would be: " . '<br>';
-  $help_markup .= '<ul>';
-  $help_markup .=  '  <li><strong>' . check_plain('<ti_field_title title="Field Name" type="textfield" maxlength="64" required="true">');
-  $help_markup .=  "The field is described here with optional text and markup." . check_plain('</ti_field_title>') . '</strong>.</li>';
-  $help_markup .= '</ul>';
-  $help_markup .= '<br>';
-  $help_markup .= "All custom elements must be defined in the reserved element called " . '<strong>' . check_plain("<ti></ti>") . '</strong>, such as:<br>';
-  $help_markup .= '<ul><li><strong>';
-  $help_markup .= check_plain('<ti>') . '<br>';
-  $help_markup .= '&nbsp;&nbsp;' . check_plain('<ti_field_title title="Title" type="textfield"></ti_field_title>') . '<br>';
-  $help_markup .= '&nbsp;&nbsp;' . check_plain('<ti_field_body title="Body" type="textarea"></to_field_body>') . '<br>';
-  $help_markup .= check_plain('</ti>') . '<br>';
-  $help_markup .= '</strong></li></ul>';
-  $help_markup .= '<br>';
-  $help_markup .= "The following custom attributes are also supported:" . '<br>';
-  $help_markup .= '<ul>';
-  $help_markup .= '<li><strong>wysiwyg</strong>: When set to "1", provides the user with a WYSIWYG such as ckeditor (may only work with textarea fields).</li>';
-  $help_markup .= '<li><strong>markup</strong>: When set to "1", adds the values of this field as HTML markup instead of plain text. This is done automatically when the wysiwyg attribute is set to "1".</li>';
-  $help_markup .= '</ul>';
-  $help_markup .= '<br>';
-  $help_markup .= "The form fields are populated using Template Input Targets,  " . '<strong>' . check_plain("<tit></tit>") . '</strong>, such as:<br>';
-  $help_markup .= '<ul>';
-  $help_markup .= '<li><strong>';
-  $help_markup .= check_plain('<tit field="title">');
-  $help_markup .= check_plain('<ti_field_title></ti_field_title>');
-  $help_markup .= check_plain('</tit>') . '<br>';
-  $help_markup .= '</strong></li>';
-  $help_markup .= '<li><strong>';
-  $help_markup .= check_plain('<tit field="body][und][0][value">');
-  $help_markup .= check_plain('<ti_field_body></ti_field_body>');
-  $help_markup .= check_plain('</tit>') . '<br>';
-  $help_markup .= '</strong></li>';
-  $help_markup .= '<li><strong>';
-  $help_markup .= check_plain('<tit field="field_group][und][0][tid">');
-  $help_markup .= check_plain('<ti_field_group></ti_field_group>');
-  $help_markup .= check_plain('</tit>') . '<br>';
-  $help_markup .= '</strong></li>';
-  $help_markup .= '</ul>';
-  $help_markup .= '<br>';
-  $help_markup .= "Template Input Targets also support different types (and each type accepts additional arguments):, such as:" . '<br>';
-  $help_markup .= '<ul>';
-  $help_markup .= '<li><strong>normal</strong>: This is the default when no type is specified. This applies no special structure to the form values.</li>';
-  $help_markup .= '<li><strong>textfield</strong>: This is almost identicaly to "normal" except that the data structure has additional information. Some form fields require this instead "normal". This requires additional attributes: "format".</li>';
-  $help_markup .= '<li><strong>textarea</strong>: This is required for textarea form fields to be properly populated. This requires additional attributes: "format".</li>';
-  $help_markup .= '<li><strong>array</strong>: This is a special type that creates an array and stores the value on the node, it uses arraay keys called tiv, such as: <em>' . check_plain('<tiv key="0">value</tiv>') . '</em>.</li>';
-  $help_markup .= '</ul>';
-  $help_markup .= '<br>';
-  $help_markup .= "If conditions are also supported using Template If, " . '<strong>' . check_plain("<tif></tif>") . '</strong>, such as:<br>';
-  $help_markup .= '<ul><li><strong>';
-  $help_markup .= '&nbsp;&nbsp;' . check_plain('<tif target="ti_machine_name_1" type="not_empty"><ti_machine_name_1 title="Title" type="textfield"></ti_machine_name_1></tif>') . '<br>';
-  $help_markup .= '</strong></li></ul>';
-  $help_markup .= '<br>';
-  $form['settings']['template_help'] = array(
+  $form['settings']['targets'] = array(
+    '#type' => 'textarea',
+    '#title' => t("Template Targets"),
+    '#default_value' => $default_targets,
+    '#description' => t("Template target markup that defines how the form input data is translated into node values."),
+    '#required' => TRUE,
+  );
+
+  $help_input_markup = '';
+  $help_input_markup .= "The template works by using Template Input fields or " . '<strong>' . check_plain('<ti name="field_name"></ti>') . '</strong>, for example:<br>';
+  $help_input_markup .= '<ul>';
+  $help_input_markup .=  '  <li><strong>' . check_plain('<ti name="field_title" title="Field Title" type="textfield" maxlength="64" required="1">');
+  $help_input_markup .=  "The field is described here with optional text and markup." . check_plain('</ti>') . '</strong>.</li>';
+  $help_input_markup .= '</ul>';
+  $help_input_markup .= '<br>';
+  $help_input_markup .= "The following custom attributes are also supported:" . '<br>';
+  $help_input_markup .= '<ul>';
+  $help_input_markup .= '<li><strong>name</strong>: Overrides HTML name attribute. Required unique identity for the template input field for use by the template targets.</li>';
+  $help_input_markup .= '<li><strong>type</strong>: Overrides HTML name attribute. Designates the input field to be used on the template form.</li>';
+  $help_input_markup .= '<li><strong>wysiwyg</strong>: When set to "1", provides the user with a WYSIWYG such as ckeditor (may only work with textarea fields).</li>';
+  $help_input_markup .= '<li><strong>markup</strong>: When set to "1", adds the values of this field as HTML markup instead of plain text.</li>';
+  $help_input_markup .= '<li><strong>schemes</strong>: A comma separated list of file schemes to use for file based input types such as media (might not yet be supported).</li>';
+  $help_input_markup .= '<li><strong>file_types</strong>: A comma separated list of file types to use for file based input types such as media (might not yet be supported).</li>';
+  $help_input_markup .= '<li><strong>serialized</strong>: When set to "1", loads and processes the default_value as a serialized string.</li>';
+  $help_input_markup .= '</ul>';
+  $help_input_markup .= '<br>';
+  $help_input_markup .= "The following Template Input types are supported:" . '<br>';
+  $help_input_markup .= '<ul>';
+  $help_input_markup .= '<li><strong>checkbox</strong>: A standard drupal checkbox.</li>';
+  $help_input_markup .= '<li><strong>select</strong>: A standard drupal select list input field.</li>';
+  $help_input_markup .= '<li><strong>textarea</strong>: A standard drupal textarea, but does not auto-add support for WYSIWYG editing and handling.</li>';
+  $help_input_markup .= '<li><strong>textfield</strong>: A standard drupal textfield.</li>';
+  $help_input_markup .= '<li><strong>text_fromat</strong>: A <em>textarea</em> that adds support for WYSIWYG editing and handling.</li>';
+  $help_input_markup .= '<li><strong>field_group</strong>: The McNeese www group field select list.</li>';
+  $help_input_markup .= '<li><strong>media</strong>: A drupal file field using the media module.</li>';
+  $help_input_markup .= '</ul>';
+  $help_input_markup .= '<br>';
+  $help_input_markup .= 'Example Template Input fields:<br>';
+  $help_input_markup .= '<ul>';
+  $help_input_markup .= '<li><strong>' . check_plain('<ti name="field_title" title="Title" type="textfield"></ti>') . '</strong></li>';
+  $help_input_markup .= '<li><strong>' . check_plain('<ti name="field_body" title="Body" type="textarea"></ti>') . '</strong></li>';
+  $help_input_markup .= '<li><strong>' . check_plain('<ti name="field_markup" title="Markup" type="text_format" markup="1" format="full_html"></ti>') . '</strong></li>';
+  $help_input_markup .= '</ul>';
+  $help_input_markup .= '<br>';
+
+  $help_target_markup = '';
+  $help_target_markup .= "The form fields are populated using Template Input Targets,  " . '<strong>' . check_plain('<tit field="field_path"></tit>') . '</strong>, such as:<br>';
+  $help_target_markup .= '<ul>';
+  $help_target_markup .= '<li><strong>';
+  $help_target_markup .= check_plain('<tit field="title" cardinality="0">');
+  $help_target_markup .= check_plain('<ti name="field_title" key="0"></ti>');
+  $help_target_markup .= check_plain('</tit>') . '<br>';
+  $help_target_markup .= '</strong></li>';
+  $help_target_markup .= '<li><strong>';
+  $help_target_markup .= check_plain('<tit field="body][und" key="value" type="textarea" markup="1" format="full_html">');
+  $help_target_markup .= check_plain('<ti name="field_body"></ti>');
+  $help_target_markup .= check_plain('</tit>') . '<br>';
+  $help_target_markup .= '</strong></li>';
+  $help_target_markup .= '<li><strong>';
+  $help_target_markup .= check_plain('<tit field="field_markup][und" key="value" type="textarea" markup="1" format="full_html">');
+  $help_target_markup .= check_plain('<h1>My Markup Region</h1><div><ti name="field_body"></ti></div><h2>A Sub-Region</h2><div>Some text goes <strong>here</strong>.</div>');
+  $help_target_markup .= check_plain('</tit>') . '<br>';
+  $help_target_markup .= '</strong></li>';
+  $help_target_markup .= '<li><strong>';
+  $help_target_markup .= check_plain('<tit field="field_group][und" type="taxonomy_term">');
+  $help_target_markup .= check_plain('123');
+  $help_target_markup .= check_plain('</tit>') . '<br>';
+  $help_target_markup .= '</strong></li>';
+  $help_target_markup .= '</ul>';
+  $help_target_markup .= '<br>';
+  $help_target_markup .= "Template Input Targets also support different types (and each type accepts additional arguments):, such as:" . '<br>';
+  $help_target_markup .= '<ul>';
+  $help_target_markup .= '<li><strong>string</strong>: (default) A simple input field.</li>';
+  $help_target_markup .= '<li><strong>integer</strong>: A value that must be cast to an integer before processing.</li>';
+  $help_target_markup .= '<li><strong>textfield</strong>: A value field that populates additional properties specific to a Drupal textfield.</li>';
+  $help_target_markup .= '<li><strong>textarea</strong>: A value field that populates additional properties specific to a Drupal textarea. This supports the following attributes: <em>format</em>, <em>markup</em>.</li>';
+  $help_target_markup .= '<li><strong>taxonomy_term</strong>: A value field that is stored as an array of a taxonomy term object. This accepts only the numeric term id.</li>';
+  $help_target_markup .= '<li><strong>media</strong>: A value field that is stored as a file id and presented as a file object. This accepts only the numeric file id.</li>';
+  $help_target_markup .= '<li><strong>date</strong>: (Not yet implemented) A value field for managing date-specific fields.</li>';
+  $help_target_markup .= '</ul>';
+  $help_target_markup .= '<br>';
+  $help_target_markup .= 'The Template Input tags inside of a Template Input Target may specify their own <em>key</em> attribute. This <em>key</em> attribute is used for processing each position after the cardinality position. When not specified, cardinality is assumed to be 1.<br>';
+  $help_target_markup .= '<br>';
+  $help_target_markup .= 'The <em>cardinality</em> for a given field is used to process and generate multiple value fields. Drupal stores multiple values like this: <strong>body][language][cardinality][value</strong>.<br>';
+  $help_target_markup .= '<br>';
+
+  $help_if_markup = '';
+  $help_if_markup .= "If conditions are also supported using Template If, " . '<strong>' . check_plain("<tif></tif>") . '</strong>, such as:<br>';
+  $help_if_markup .= '<ul>';
+  $help_if_markup .= '<li><strong>' . check_plain('<tif target="field_group][und" key="0" type="not_empty"><ti name="group" key="tid">/ti></tif>') . '</strong></li>';
+  $help_if_markup .= '<li><strong>' . check_plain('<tif target="title" type="!=" value="My Title"><ti name="title" key="0"></ti></tif>') . '</strong></li>';
+  $help_if_markup .= '</ul>';
+  $help_if_markup .= '<br>';
+  $help_if_markup .= "The following Template If types are supported:" . '<br>';
+  $help_if_markup .= '<ul>';
+  $help_if_markup .= '<li><strong>empty</strong>: Check if value specified by target (and the key) is empty.</li>';
+  $help_if_markup .= '<li><strong>not_empty</strong>: Check if value specified by target (and the key) is not empty.</li>';
+  $help_if_markup .= '<li><strong>&gt;</strong>: Check if the target (and the key) is greater than the contents of the value attribute.</li>';
+  $help_if_markup .= '<li><strong>&lt;</strong>: Check if the target (and the key) is less than the contents of the value attribute.</li>';
+  $help_if_markup .= '<li><strong>&gt;=</strong>: Check if the target (and the key) is greater than or equal to the contents of the value attribute.</li>';
+  $help_if_markup .= '<li><strong>&lt;=</strong>: Check if the target (and the key) is less than or equal to the contents of the value attribute.</li>';
+  $help_if_markup .= '<li><strong>==</strong>: Check if the target (and the key) is equal to the contents of the value attribute.</li>';
+  $help_if_markup .= '<li><strong>!=</strong>: Check if the target (and the key) is not equal to the contents of the value attribute.</li>';
+  $help_if_markup .= '</ul>';
+  $help_if_markup .= '<br>';
+  $help_if_markup .= 'Template If conditions do not support cardinality and are not currently input type aware at this time. You must specify the appropriate data location using the key attribute.';
+  $help_if_markup .= 'Template If conditions currently only support processing of Template Input fields. Template If\'s do not support Template Targets or node object values.<br>';
+  $help_if_markup .= '<br>';
+
+  $form['settings']['template_input_fieldset'] = array(
+    '#type' => 'fieldset',
+    '#title' => t("Template Input Help"),
+    '#collapsible' => TRUE,
+    '#collapsed' => TRUE,
+  );
+
+  $form['settings']['template_target_fieldset'] = array(
+    '#type' => 'fieldset',
+    '#title' => t("Template Target Help"),
+    '#collapsible' => TRUE,
+    '#collapsed' => TRUE,
+  );
+
+  $form['settings']['template_if_fieldset'] = array(
+    '#type' => 'fieldset',
+    '#title' => t("Template If Help"),
+    '#collapsible' => TRUE,
+    '#collapsed' => TRUE,
+  );
+
+  $form['settings']['template_input_fieldset']['help'] = array(
     '#type' => 'markup',
-    '#title' => t("Template Help"),
-    '#markup' => $help_markup,
+    '#markup' => $help_input_markup,
+  );
+
+  $form['settings']['template_target_fieldset']['help'] = array(
+    '#type' => 'markup',
+    '#markup' => $help_target_markup,
+  );
+
+  $form['settings']['template_if_fieldset']['help'] = array(
+    '#type' => 'markup',
+    '#markup' => $help_if_markup,
   );
 
   $form['template_id'] = array(
@@ -267,8 +354,12 @@ function mcneese_management_templates_manage_edit_form_validate($form, &$form_st
     $machine_name = strtolower($form_state['values']['settings']['machine_name']);
   }
 
-  if (empty($form_state['values']['settings']['template'])) {
-    form_set_error('settings][template', t("An invalid template has been specified."));
+  if (empty($form_state['values']['settings']['inputs'])) {
+    form_set_error('settings][inputs', t("An invalid template inputs has been specified."));
+  }
+
+  if (empty($form_state['values']['settings']['targets'])) {
+    form_set_error('settings][targets', t("An invalid template targets has been specified."));
   }
 
   $check_machine_name = FALSE;
@@ -339,7 +430,8 @@ function mcneese_management_templates_manage_edit_form_submit($form, &$form_stat
   $template['machine_name'] = $form_state['values']['settings']['machine_name'];
 
   $data = array();
-  $data['template'] = $form_state['values']['settings']['template'];
+  $data['inputs'] = $form_state['values']['settings']['inputs'];
+  $data['targets'] = $form_state['values']['settings']['targets'];
   $data['content_types'] = $form_state['values']['settings']['content_types'];
   $template['data'] = serialize($data);
 

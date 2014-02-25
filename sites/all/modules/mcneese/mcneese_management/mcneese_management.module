@@ -685,7 +685,7 @@ function mcneese_management_autocomplete_user($username = '') {
 
   $results = (array) $query->execute()->fetchAll();
   foreach ($results as $result) {
-    $value = $result->name . ' [uid:' . $result->uid. ']';
+    $value = $result->name . ' [uid: ' . $result->uid. ']';
     $matches[$value] = check_plain($value);
   }
 
@@ -700,7 +700,7 @@ function mcneese_management_autocomplete_user($username = '') {
 
     $results = (array) $query->execute()->fetchAll();
     foreach ($results as $result) {
-      $value = $result->name . ' [uid:' . $result->uid. ']';
+      $value = $result->name . ' [uid: ' . $result->uid. ']';
       $matches[$value] = check_plain($value);
     }
   }
@@ -1130,218 +1130,6 @@ function mcneese_management_template_build_form(&$form) {
     return;
   }
 
-  $form['settings']['template'] = array();
-  $form['settings']['template']['#tree'] = TRUE;
-  $form['settings']['template']['fields'] = array('#tree' => TRUE);
-  $form['settings']['template']['targets'] = array('#tree' => TRUE);
-
-  $form['dom'] = array(
-    '#type' => 'value',
-    '#value' => new cf_dom(TRUE, TRUE, TRUE, $form['template']['#value']->data['template']),
-  );
-
-  $form['body'] = array(
-    '#type' => 'value',
-    '#value' => $form['dom']['#value']->get_body(),
-  );
-
-  $form['defaults'] = array(
-    '#type' => 'value',
-    '#value' => array(),
-  );
-
-  if (is_null($form['body']['#value'])) {
-    return array();
-  }
-
-  $weight = 0;
-  $ti_tags = $form['body']['#value']->getElementsByTagName('ti');
-  $available_ti_tags = array();
-
-  if ($ti_tags->length == 0) {
-    return array();
-  }
-
-  if (isset($form['node']['#value']->mcneese_management_template['data'])) {
-    $node_template_data = &$form['node']['#value']->mcneese_management_template['data'];
-  }
-  else {
-    $node_template_data = array();
-  }
-
-  $ti_tag = $ti_tags->item(0);
-  unset($ti_tags);
-
-  if ($ti_tag->hasChildNodes()) {
-    foreach ($ti_tag->childNodes as $ti_tag) {
-      if (!property_exists($ti_tag, 'tagName') || empty($ti_tag->tagName)) {
-        continue;
-      }
-
-      if (!preg_match('/^ti_/i', $ti_tag->tagName)) {
-        continue;
-      }
-
-      if (!$ti_tag->hasAttribute('type')) {
-        continue;
-      }
-
-      $available_ti_tags[$ti_tag->tagName] = $ti_tag;
-      $ti_tag->setAttribute('weight', $weight);
-      $weight++;
-    }
-  }
-  unset($ti_tag);
-
-  $tit_tags = $form['body']['#value']->getElementsByTagName('tit');
-  if (!empty($available_ti_tags) && $tit_tags->length > 0) {
-    foreach($tit_tags as $tit_tag) {
-      if (!property_exists($tit_tag, 'tagName') || empty($tit_tag->tagName)) continue;
-      if (!$tit_tag->hasAttribute('field')) continue;
-
-      $field_name = $tit_tag->getAttribute('field');
-      if (empty($field_name)) continue;
-
-      $field_type = 'normal';
-      if ($tit_tag->hasAttribute('type')) {
-        $field_type = $tit_tag->getAttribute('type');
-      }
-
-      $field_format = '';
-      if ($tit_tag->hasAttribute('format')) {
-        $field_format = $tit_tag->getAttribute('format');
-      }
-
-      $wrap_with_span = FALSE;
-      if ($field_type == 'textarea') {
-        $wrap_with_span = TRUE;
-      }
-
-      $targets = array_reverse(explode('][', $field_name));
-      $target_name = array_pop($targets);
-
-      if (property_exists($form['node']['#value'], $target_name)) {
-        $current = &$form['node']['#value']->$target_name;
-        $current_name = $target_name;
-
-        while (!empty($targets)) {
-          $current_name = array_pop($targets);
-          $current = &$current[$current_name];
-        }
-
-        foreach ($available_ti_tags as $ati_name => $ati_tag) {
-          $found_tags = $tit_tag->getElementsByTagName($ati_name);
-
-          // internally stored values always override any values stored directly onto node fields
-          $assign_default = TRUE;
-          if (isset($node_template_data[$ati_tag->tagName])) {
-            if (is_array($node_template_data[$ati_tag->tagName]) && isset($node_template_data[$ati_tag->tagName]['value'])) {
-              $ati_tag->setAttribute('default_value', $node_template_data[$ati_tag->tagName]['value']);
-              $assign_default = FALSE;
-            }
-            else {
-              $ati_tag->setAttribute('default_value', $node_template_data[$ati_tag->tagName]);
-              $assign_default = FALSE;
-            }
-          }
-
-          if ($found_tags->length > 0) {
-            if ($wrap_with_span) {
-              $new_dom = new cf_dom(TRUE, TRUE, TRUE, $current);
-              $new_body = $new_dom->get_body();
-              $current_tags = $new_body->getElementsByTagName('span');
-
-              if ($current_tags->length > 0) {
-                $matched = FALSE;
-                foreach ($current_tags as $current_tag) {
-                  if (!$current_tag->hasAttribute('class')) continue;
-                  $current_tag_class = $current_tag->getAttribute('class');
-
-                  if ($assign_default && preg_match('/\b' . $ati_name . '\b/i', $current_tag_class) > 0) {
-                    $matched = TRUE;
-
-                    if ($current_tag->hasChildNodes()) {
-                      $default_value = '';
-                      foreach ($current_tag->childNodes as $current_tag_child) {
-                        $default_value .= $new_dom->get_dom()->saveHTML($current_tag_child);
-                      }
-                      $ati_tag->setAttribute('default_value', $default_value);
-                    }
-                    else {
-                      $ati_tag->setAttribute('default_value', '');
-                    }
-
-                    break;
-                  }
-                }
-
-                if ($matched) {
-                  $form['settings']['template']['fields'][$ati_name] = mcneese_management_template_build_tag($form, $form['dom']['#value'], $ati_tag);
-                }
-              }
-            }
-            else {
-              if ($assign_default) {
-                $ati_tag->setAttribute('default_value', $current);
-              }
-              $form['settings']['template']['fields'][$ati_name] = mcneese_management_template_build_tag($form, $form['dom']['#value'], $ati_tag);
-            }
-          }
-        }
-      }
-
-      foreach ($available_ti_tags as $ati_name => $ati_tag) {
-        if (!isset($form['settings']['template']['fields'][$ati_name])) {
-          $form['settings']['template']['fields'][$ati_name] = mcneese_management_template_build_tag($form, $form['dom']['#value'], $ati_tag);
-        }
-      }
-    }
-  }
-}
-
-/**
- * Translate tag dom entries into drupal form input fields.
- *
- * This is used for generating the template form input fields.
- *
- * @param array $form
- *   The form information.
- * @param cf_dom $dom
- *   The dom object containing the passed tag.
- * @param DOMElement $tag
- *   The HTML DOM tag to convert into a drupal form field.
- *
- * @return array
- *   The generated form field or an empty array on error.
- */
-function mcneese_management_template_build_tag($form, $dom, $tag) {
-  if (!is_array($form)) {
-    if (class_exists('cf_error')) {
-      cf_error::invalid_array('form');
-    }
-
-    return array();
-  }
-
-  if (!($dom instanceOf cf_dom)) {
-    return array();
-  }
-
-  if (!($tag instanceOf DOMNode)) {
-    return array();
-  }
-
-  // first deal with reserved attributes.
-  $field = array();
-  if ($tag->hasAttribute('type')) {
-    $field['#type'] = $tag->getAttribute('type');
-  }
-
-  // 'type' attribute is required.
-  if (empty($field['#type'])) {
-    return array();
-  }
-
 
   // process supported types.
   $supported_types = array();
@@ -1353,20 +1141,19 @@ function mcneese_management_template_build_tag($form, $dom, $tag) {
 
   # special case / reserved types
   $supported_types[] = 'field_group';
-
-  if (!in_array($field['#type'], $supported_types)) {
-    return array();
-  }
-
+  $supported_types[] = 'media';
 
   // process supported attributes.
   $supported_attributes = array();
+  $supported_attributes[] = 'cardinality';
   $supported_attributes[] = 'cols';
   $supported_attributes[] = 'default_value';
   $supported_attributes[] = 'empty_value';
   $supported_attributes[] = 'empty_option';
+  $supported_attributes[] = 'id';
   $supported_attributes[] = 'maxlength';
-  $supported_attributes[] = 'options'; // has to be serialized!
+  $supported_attributes[] = 'multiple';
+  $supported_attributes[] = 'options';
   $supported_attributes[] = 'prefix';
   $supported_attributes[] = 'required';
   $supported_attributes[] = 'resizable';
@@ -1375,92 +1162,377 @@ function mcneese_management_template_build_tag($form, $dom, $tag) {
   $supported_attributes[] = 'suffix';
   $supported_attributes[] = 'title';
   $supported_attributes[] = 'title_display';
+  $supported_attributes[] = 'type';
   $supported_attributes[] = 'weight';
   $supported_attributes[] = 'wysiwyg';
-  $supported_attributes[] = 'preserve';
 
   $boolean_attributes = array();
   $boolean_attributes[] = 'required';
   $boolean_attributes[] = 'resizable';
   $boolean_attributes[] = 'wysiwyg';
-  $boolean_attributes[] = 'preserve';
 
-  foreach ($supported_attributes as $attribute) {
-    if (!$tag->hasAttribute($attribute)) continue;
 
-    // handle attributes that must be serialized.
-    if ($attribute == 'options') {
-      $field['#' . $attribute] = unserialize($tag->getAttribute($attribute));
-    }
-    elseif (in_array($attribute, $boolean_attributes)) {
-      $field['#' . $attribute] = (bool) $tag->getAttribute($attribute);
-    }
-    else {
-      $field['#' . $attribute] = $tag->getAttribute($attribute);
-    }
+  $form['settings']['template'] = array();
+  $form['settings']['template']['#tree'] = TRUE;
+  $form['settings']['template']['fields'] = array('#tree' => TRUE);
+
+  $form['inputs_dom'] = array(
+    '#type' => 'value',
+    '#value' => new cf_dom(TRUE, TRUE, TRUE, $form['template']['#value']->data['inputs']),
+  );
+
+  $form['inputs_tags'] = array(
+    '#type' => 'value',
+    '#value' => array(),
+  );
+
+  $form['targets_dom'] = array(
+    '#type' => 'value',
+    '#value' => new cf_dom(TRUE, TRUE, TRUE, $form['template']['#value']->data['targets']),
+  );
+
+  $form['targets_tags'] = array(
+    '#type' => 'value',
+    '#value' => array(),
+  );
+
+  $form['targets_ifs'] = array(
+    '#type' => 'value',
+    '#value' => array(),
+  );
+
+  $form['defaults'] = array(
+    '#type' => 'value',
+    '#value' => array(),
+  );
+
+  $inputs_body = $form['inputs_dom']['#value']->get_body();
+  $targets_body = $form['targets_dom']['#value']->get_body();
+
+  if (is_null($inputs_body) || is_null($targets_body)) {
+    return array();
   }
 
-  $field['#description'] = $tag->nodeValue;
+  if (isset($form['node']['#value']->mcneese_management_template['data'])) {
+    $node_template_data = &$form['node']['#value']->mcneese_management_template['data'];
+  }
+  else {
+    $node_template_data = array();
+  }
 
-  // provide this as a way to ensure the original type is not lost for special field types.
-  $field['#ti_field_type'] = $field['#type'];
 
+  // preprocess the inputs tags
+  $tags = $inputs_body->getElementsByTagName('ti');
+  if (is_object($tags) &&  $tags->length > 0) {
+    $weight = 0;
+    foreach ($tags as $tag) {
+      if (!$tag->hasAttribute('type')) continue;
+      if (!$tag->hasAttribute('name')) continue;
 
-  // process special cases / reserved
-  if ($field['#type'] == 'field_group') {
-    $field['#field_name'] = $tag->tagName;
-    $field['#entity_type'] = 'taxonomy_term_reference';
-    $field['#maxlength'] = 1024;
-    $field['#language'] = 'und';
-    $field['#element_validate'] = array();
+      $name = $tag->getAttribute('name');
 
-    if ($tag->hasAttribute('default_value')) {
-      $default_value = $tag->getAttribute('default_value');
-      $term = taxonomy_term_load($default_value);
-      $field['#default_value'] = $term->name . ' [tid: ' . $term->tid . ']';
+      if (empty($name)) continue;
+
+      $tag->setAttribute('weight', $weight);
+      $weight+= 100;
+
+      $form['inputs_tags']['#value'][$name] = $tag;
     }
+    unset($weight);
+  }
 
-    if (empty($field['#description'])) {
-      $field['#description'] = "Select the proper editorial group for this content. Multiple groups may be selected.";
-      $field['#description'] .= " See " . '<a href="' . url('admin/workbench/sections') . '">' . "My Sections" . '</a>' . " for a list of possible values.";
-    }
+  if (empty($form['inputs_tags']['#value'])) {
+    return;
+  }
 
-    $default_group = NULL;
-    if (!isset($field['#default_value']) && isset($form['user']['#value'])) {
-      if (property_exists($form['user']['#value'], 'field_user_default_group') && !empty($form['user']['#value']->field_user_default_group)) {
-        $term = taxonomy_term_load($form['user']['#value']->field_user_default_group);
-        $field['#default_value'] = $term->name . ' [tid: ' . $term->tid . ']';
+
+  // preprocess the inputs tags
+  $tags = $targets_body->getElementsByTagName('tit');
+  if (is_object($tags) &&  $tags->length > 0) {
+    $index = 0;
+    foreach ($tags as $tag) {
+      if (!$tag->hasAttribute('field')) continue;
+
+      $field = $tag->getAttribute('field');
+
+      if (empty($field)) continue;
+
+      if (!$tag->hasAttribute('type')) {
+        $tag->setAttribute('type', 'string');
       }
-      elseif (property_exists($form['user']['#value'], 'workbench_access')) {
-        if (count($form['user']['#value']->workbench_access) == 1) {
-          $keys = array_keys($form['user']['#value']->workbench_access);
-          $term = taxonomy_term_load(reset($keys));
+
+      $form['targets_tags']['#value'][$index] = $tag;
+      $form['targets_ifs']['#value'][$index] = array();
+
+      // record all tif tags inside this target in the targets ifs array.
+      $found_tags = $tag->getElementsByTagName('tif');
+      foreach ($found_tags as $found_tag) {
+        if (!$found_tag->hasAttribute('target')) continue;
+
+        $target = $found_tag->getAttribute('target');
+
+        if (empty($target)) continue;
+
+        $form['targets_ifs']['#value'][$index][$target] = $found_tag;
+      }
+      unset($found_tags);
+
+      $index++;
+    }
+    unset($index);
+  }
+
+  if (empty($form['targets_tags']['#value'])) {
+    return;
+  }
+
+
+  // build the inputs tags
+  foreach ($form['inputs_tags']['#value'] as $ti_name => &$ti_tag) {
+    $ti_type = $ti_tag->getAttribute('type');
+    $ti_key = $ti_tag->getAttribute('key');
+
+    $ti_format = NULL;
+    if ($ti_tag->hasAttribute('format')) {
+      $ti_format = $ti_tag->getAttribute('format');
+    }
+
+    // internally stored values always override any values defined by the template input fields.
+    if (isset($node_template_data[$ti_name])) {
+      $form['defaults']['#value'][$ti_name] = $node_template_data[$ti_name];
+    }
+
+    $field = array();
+    $fields = array('#tree' => TRUE);
+    $ti_default = FALSE;
+    $serialized = FALSE;
+    $manual_cardinality = FALSE;
+    foreach ($supported_attributes as $attribute) {
+      if (!$ti_tag->hasAttribute($attribute)) continue;
+
+      if ($attribute == 'options') {
+        $field['#options'] = unserialize(rawurldecode($ti_tag->getAttribute($attribute)));
+      }
+      elseif ($attribute == 'cardinality') {
+        $fields['#cardinality'] = (int) $ti_tag->getAttribute($attribute);
+        $manual_cardinality = TRUE;
+      }
+      elseif ($attribute == 'serialized') {
+        $fields['#serialized'] = (bool) $ti_tag->getAttribute($attribute);
+        $serialized = $fields['#serialized'];
+      }
+      elseif ($attribute == 'default_value') {
+        $ti_default = TRUE;
+      }
+      elseif (in_array($attribute, $boolean_attributes)) {
+        $field['#' . $attribute] = (bool) $ti_tag->getAttribute($attribute);
+      }
+      else {
+        $field['#' . $attribute] = $ti_tag->getAttribute($attribute);
+      }
+    }
+    unset($attribute);
+
+    if (empty($fields['#cardinality']) || $fields['#cardinality'] <= 0) {
+      $fields['#cardinality'] = 1;
+    }
+    else {
+      $fields['#multiple'] = TRUE;
+    }
+
+    if ($ti_default && !isset($form['defaults']['#value'][$ti_name])) {
+      if ($fields['#cardinality'] > 0) {
+        $form['defaults']['#value'][$ti_name] = array();
+        if ($serialized) {
+          $default_value = unserialize(rawurldecode($ti_tag->getAttribute('default_value')));
+        }
+        else {
+          $default_value = $ti_tag->getAttribute('default_value');
+          $attribute_value = $default_value;
+
+          if ($ti_type == 'text_format' || $ti_type == 'textarea') {
+            $default_value =  array();
+            $default_value['value'] = $attribute_value;
+            $default_value['format'] = $ti_format;
+          }
+          elseif ($ti_type == 'media') {
+            $default_value =  array();
+            $default_value['fid'] = (int) $attribute_value;
+          }
+          elseif ($ti_type == 'checkbox' || $ti_type == 'radio') {
+            $default_value = array($attribute_value);
+          }
+          elseif ($ti_type == 'field_group') {
+            if (cf_is_integer($attribute_value) && $attribute_value > 0) {
+              $term = taxonomy_term_load($attribute_value);
+              $default_value = $term->name . ' [tid: ' . $term->tid . ']';
+            }
+            else {
+              $default_value = $attribute_value;
+            }
+          }
+
+          unset($attribute_value);
+        }
+
+        for ($cardinality_count = 0; $cardinality_count < $fields['#cardinality']; $cardinality_count++) {
+          $form['defaults']['#value'][$ti_name][$cardinality_count] = $default_value;
+        }
+
+        unset($default_value);
+      }
+    }
+
+    if (empty($field['#type']) || !in_array($field['#type'], $supported_types)) {
+      continue;
+    }
+
+    $field['#description'] = $ti_tag->nodeValue;
+
+
+    // process special cases / reserved
+    if ($field['#type'] == 'field_group') {
+      $field['#field_name'] = $ti_name;
+      $field['#entity_type'] = 'taxonomy_term_reference';
+      $field['#maxlength'] = 1024;
+      $field['#language'] = 'und';
+      $field['#element_validate'] = array();
+
+      if (empty($field['#description'])) {
+        $field['#description'] = "Select the proper editorial group for this content. Multiple groups may be selected.";
+        $field['#description'] .= " See " . '<a href="' . url('admin/workbench/sections') . '">' . "My Sections" . '</a>' . " for a list of possible values.";
+      }
+
+      $default_group = NULL;
+      if (!isset($field['#default_value']) && isset($form['user']['#value'])) {
+        if (property_exists($form['user']['#value'], 'field_user_default_group') && !empty($form['user']['#value']->field_user_default_group)) {
+          $term = taxonomy_term_load($form['user']['#value']->field_user_default_group);
           $field['#default_value'] = $term->name . ' [tid: ' . $term->tid . ']';
         }
+        elseif (property_exists($form['user']['#value'], 'workbench_access')) {
+          if (count($form['user']['#value']->workbench_access) == 1) {
+            $keys = array_keys($form['user']['#value']->workbench_access);
+            $term = taxonomy_term_load(reset($keys));
+            $field['#default_value'] = $term->name . ' [tid: ' . $term->tid . ']';
+          }
+        }
+      }
+
+      if (function_exists('term_ref_autocomplete_field_widget_form')) {
+        $field['#type'] = 'term_ref_autocomplete_field';
+        $field['#autocomplete_path'] = 'term_ref_autocomplete/autocomplete/field_group';
+        $field['#element_validate'][] = 'term_ref_autocomplete_taxonomy_autocomplete_validate';
+      }
+      else {
+        $field['#type'] = 'textfield';
+        $field['#autocomplete_path'] = 'workbench_access/taxonomy_autocomplete/field_group/' . $form['node']['#value']->type;
+        $field['#element_validate'][] = 'taxonomy_autocomplete_validate';
+        $field['#element_validate'][] = 'workbench_access_autocomplete_validate';
+      }
+    }
+    elseif ($field['#type'] == 'media') {
+      $field['#type'] = 'media';
+
+      $file_entiy_path = drupal_get_path('module', 'file_entity');
+      include_once($file_entiy_path . '/file_entity.pages.inc');
+
+      $field['#media_options'] = array();
+      $field['#media_options']['global'] = array();
+      $field['#media_options']['global']['types'] = array();
+      $field['#media_options']['global']['schemes'] = array();
+      $field['#media_options']['global']['max_filesize'] = 0;
+      $field['#media_options']['global']['uri_scheme'] = file_entity_default_scheme();
+
+      $stream_wrappers = file_get_stream_wrappers();
+      if ($ti_tag->hasAttribute('schemes')) {
+        $schemes_string = $ti_tag->getAttribute('schemes');
+
+        $schemes = explode(',', $schemes_string);
+
+        foreach ($schemes as $scheme) {
+          if (isset($stream_wrappers[$scheme])) {
+            $field['#media_options']['global']['schemes'][] = $scheme;
+          }
+        }
+      }
+
+      if ($ti_tag->hasAttribute('file_types')) {
+        $file_types_string = $ti_tag->getAttribute('file_types');
+
+        $file_types = explode(',', $file_types_string);
+
+        foreach ($file_types as $file_type) {
+          $field['#media_options']['global']['types'][] = $file_type;
+        }
+      }
+
+      if (empty($field['#media_options']['global']['types'])) {
+        $field['#media_options']['global']['types'][] = variable_get('media__wysiwyg_allowed_types', array('audio', 'image', 'video', 'document'));
       }
     }
 
-    if (function_exists('term_ref_autocomplete_field_widget_form')) {
-      $field['#type'] = 'term_ref_autocomplete_field';
-      $field['#autocomplete_path'] = 'term_ref_autocomplete/autocomplete/field_group';
-      $field['#element_validate'][] = 'term_ref_autocomplete_taxonomy_autocomplete_validate';
+
+    if (isset($form['defaults']['#value'][$ti_name])) {
+      $ti_defaults = &$form['defaults']['#value'][$ti_name];
     }
     else {
-      $field['#type'] = 'textfield';
-      $field['#autocomplete_path'] = 'workbench_access/taxonomy_autocomplete/field_group/' . $form['node']['#value']->type;
-      $field['#element_validate'][] = 'taxonomy_autocomplete_validate';
-      $field['#element_validate'][] = 'workbench_access_autocomplete_validate';
+      $ti_defaults = array();
     }
-  }
 
-  return $field;
+    for ($cardinality_count = 0; $cardinality_count < $fields['#cardinality']; $cardinality_count++) {
+      $fields[$cardinality_count] = $field;
+      $fields[$cardinality_count]['#weight'] = $field['#weight'];
+
+      if ($ti_type == 'text_format' || $ti_type == 'textarea') {
+        if (is_array($ti_defaults[$cardinality_count])) {
+          if (isset($ti_defaults[$cardinality_count]['value'])) {
+            $fields[$cardinality_count]['#default_value'] = $ti_defaults[$cardinality_count]['value'];
+          }
+
+          if (isset($ti_defaults[$cardinality_count]['format'])) {
+            $fields[$cardinality_count]['#format'] = $ti_defaults[$cardinality_count]['format'];
+          }
+        }
+        elseif (is_string($ti_defaults[$cardinality_count])) {
+          $fields[$cardinality_count]['#default_value'] = $ti_defaults[$cardinality_count];
+        }
+      }
+      elseif ($ti_type == 'media') {
+        if (isset($ti_defaults[$cardinality_count])) {
+          $fields[$cardinality_count]['#default_value'] = $ti_defaults[$cardinality_count];
+        }
+      }
+      elseif ($ti_type == 'checkbox' || $ti_type == 'radio' || $ti_type == 'select') {
+        if (isset($ti_defaults[$cardinality_count])) {
+          $fields[$cardinality_count]['#default_value'] = $ti_defaults[$cardinality_count];
+        }
+        break;
+      }
+      elseif ($ti_type == 'field_group') {
+        if (isset($ti_defaults[$cardinality_count])) {
+          $fields[$cardinality_count]['#default_value'] = $ti_defaults[$cardinality_count];
+        }
+
+        break;
+      }
+      else {
+        if (isset($ti_defaults[$cardinality_count])) {
+          $fields[$cardinality_count]['#default_value'] = $ti_defaults[$cardinality_count];
+        }
+      }
+
+      $field['#weight']++;
+    }
+
+    $form['settings']['template']['fields'][$ti_name] = $fields;
+  }
 }
 
 /**
  * Populates and Validates the form state.
  *
  * This is explicitly designed to be called inside of a
- * hook_form_validate9) function.
+ * hook_form_validate() function.
  *
  * @param array $form
  *   The form settings.
@@ -1492,234 +1564,295 @@ function mcneese_management_template_process_form_state($form, &$form_state) {
     return;
   }
 
-  if (!isset($form['body']['#value']) || !is_object($form['body']['#value'])) {
-    return;
-  }
-
   $form['settings']['template']['built'] = array();
   $form_state['node'] = $form['node']['#value'];
-  $form_state['unused'] = array();
+  $form_state['targets'] = array();
 
-  $template_fields = array();
+  $template_fields = &$form['settings']['template']['fields'];
   $template_values = &$form_state['values']['settings']['template']['fields'];
 
   $overwritten_fields = array();
+  $available_target_types = mcneese_management_template_get_target_types();
 
-  foreach ($form['settings']['template']['fields'] as $ti_name => &$ti_field) {
-    $first_char = substr($ti_name, 0, 1);
-    if ($first_char == '#') continue;
-
-    $template_fields[$ti_name] = $ti_field;
-    $form_state['unused'][$ti_name] = $template_values[$ti_name];
+  if (!isset($form['inputs_dom']['#value']) || !is_object($form['inputs_dom']['#value'])) {
+    return;
   }
 
-  $tit_tags = $form['body']['#value']->getElementsByTagName('tit');
-  if ($tit_tags->length > 0) {
-    foreach($tit_tags as $tit_tag) {
-      if (!property_exists($tit_tag, 'tagName') || empty($tit_tag->tagName)) continue;
-      if (!$tit_tag->hasAttribute('field')) continue;
+  if (!isset($form['targets_dom']['#value']) || !is_object($form['targets_dom']['#value'])) {
+    return;
+  }
 
-      $field_name = $tit_tag->getAttribute('field');
-      if (empty($field_name)) continue;
+  $inputs_dom = $form['inputs_dom']['#value']->get_dom();
+  $targets_dom = $form['targets_dom']['#value']->get_dom();
 
-      $field_type = 'normal';
-      if ($tit_tag->hasAttribute('type')) {
-        $field_type = $tit_tag->getAttribute('type');
+  $inputs_tags = &$form['inputs_tags']['#value'];
+  $targets_tags = &$form['targets_tags']['#value'];
+
+
+  foreach($targets_tags as $target_tag_key => &$target_tag) {
+    if (!$target_tag->hasAttribute('field')) continue;
+
+    $target_field = $target_tag->getAttribute('field');
+    if (empty($target_field)) continue;
+
+    $target_field_parts = array_reverse(explode('][', $target_field));
+    $target_name = array_pop($target_field_parts);
+
+    $target_type = 'string';
+    if ($target_tag->hasAttribute('type')) {
+      $target_type = $target_tag->getAttribute('type');
+    }
+
+    $target_format = NULL;
+    if ($target_tag->hasAttribute('format')) {
+      $target_format = $target_tag->getAttribute('format');
+    }
+
+    $target_markup = NULL;
+    if ($target_tag->hasAttribute('markup')) {
+      $target_markup = (bool) $target_tag->getAttribute('markup');
+    }
+
+    $target_key = NULL;
+    if ($target_tag->hasAttribute('key')) {
+      $target_key = $target_tag->getAttribute('key');
+    }
+
+    $target_inputs = array();
+    $target_ifs = &$form['targets_ifs']['#value'][$target_tag_key];
+
+    if (!in_array($target_type, $available_target_types)) {
+      form_set_error('', t("An invalid template input target field type has been specified for target '%key', '%field'. Please contact the template editor to have this problem fixed.", array('%key' => $target_tag_key, '%field' => $target_field)));
+      continue;
+    }
+
+    // Process all template input conditions and remove if conditions that evaluate to FALSE.
+    foreach ($target_ifs as $tif_target => &$tif_tag) {
+      $status = mcneese_management_template_process_template_if($form, $form_state, $tif_target, $tif_tag);
+
+      if ($status) {
+        // Remove the if condition itself and not its contents.
+        $form['targets_dom']['#value']->remove_element($tif_tag);
       }
-
-      $field_format = '';
-      if ($tit_tag->hasAttribute('format')) {
-        $field_format = $tit_tag->getAttribute('format');
+      else {
+        // Remove the if condition and its contents.
+        $parent = $tif_tag->parentNode;
+        $parent->removeChild($tif_tag);
       }
+    }
 
-      $wrap_with_span = FALSE;
-      if ($field_type == 'textarea') {
-        $wrap_with_span = TRUE;
-      }
+    // targets have their own cardinality, separate from inputs.
+    $target_total = 1;
+    $target_cardinality = 1;
+    $target_multiple = FALSE;
+    if ($target_tag->hasAttribute('cardinality')) {
+      $target_cardinality = (int) $target_tag->getAttribute('cardinality');
 
-      $targets = array_reverse(explode('][', $field_name));
-      $target_name = array_pop($targets);
-
-
-      // replace all template input fields with their respective content.
-      foreach ($template_fields as $ti_name => &$ti_field) {
-        $value = '';
-
-        $tags_in_use = $tit_tag->getElementsByTagName($ti_name);
-        if ($tags_in_use->length > 0 && !(isset($template_fields[$ti_name]['#preserve']) && $template_fields[$ti_name]['#preserve']) ) {
-          unset($form_state['unused'][$ti_name]);
+      if ($target_cardinality < 0) {
+        if ($target_cardinality == -1) {
+          $target_multiple = TRUE;
         }
-        unset($tags_in_use);
 
-        // handle special case tags.
-        if (isset($ti_field['#ti_field_type']) && $ti_field['#ti_field_type'] == 'field_group') {
-          if (cf_is_integer($template_values[$ti_name])) {
-            $value = $template_values[$ti_name];
+        $target_cardinality = 1;
+      }
+    }
+
+    // build a list of template inputs defined in the current template target.
+    $found_tags = $target_tag->getElementsByTagName('ti');
+    foreach ($found_tags as $found_tag) {
+      if (!$found_tag->hasAttribute('name')) continue;
+
+      $name = $found_tag->getAttribute('name');
+
+      if (empty($name)) continue;
+
+      $target_inputs[$name] = $found_tag;
+
+      if ($target_multiple) {
+        // when the target tag's cardinality > 1, only a single template input is allowed.
+        // therefore only the first valid template input is processed and all others are removed.
+        if (count($target_inputs) > 0) {
+          // Remove the if condition and its contents.
+          $parent = $found_tag->parentNode;
+          $parent->removeChild($found_tag);
+        }
+      }
+    }
+    unset($found_tags);
+
+    if (empty($target_inputs)) {
+      $current_start = &$form_state['targets'][$target_tag_key];
+
+      if ($target_cardinality == 0) {
+        $current = &$current_start;
+
+        $current = '';
+        if ($target_tag->hasChildNodes()) {
+          foreach ($target_tag->childNodes as $child) {
+            $current .= $form['targets_dom']['#value']->get_dom()->saveHTML($child); 
           }
-          else {
-            $matched = array();
-            $matches = preg_match('/\[tid:\s*(\d+)\]/i', $template_values[$ti_name], $matched);
+        }
 
-            if ($matches) {
-              $value = $matched[1];
+        unset($child);
+        unset($current);
+      }
+      else {
+        for ($cardinality_count = 0; $cardinality_count < $target_cardinality; $cardinality_count++) {
+          $current = &$current_start;
+          $current[$cardinality_count] = NULL;
+          $current = &$current[$cardinality_count];
+
+          $current = '';
+          if ($target_tag->hasChildNodes()) {
+            foreach ($target_tag->childNodes as $child) {
+              $current .= $form['targets_dom']['#value']->get_dom()->saveHTML($child); 
             }
           }
+
+          unset($child);
+          unset($current);
         }
-        elseif (is_array($template_values[$ti_name]) && isset($template_values[$ti_name]['value'])) {
-          $value = $template_values[$ti_name]['value'];
-        }
-        elseif (is_string($template_values[$ti_name])) {
-          $value = $template_values[$ti_name];
-        }
-        elseif (is_integer($template_values[$ti_name])) {
-          $value = $template_values[$ti_name];
+
+        unset($cardinality_count);
+      }
+
+      unset($current_start);
+    }
+    else {
+      foreach ($target_inputs as $input_name => &$input_tag) {
+        if ($target_cardinality == 0) {
+          $status = mcneese_management_template_process_template_input_tag($form, $form_state, $target_tag, $target_tag_key, $input_tag, $input_name, $template_fields, $template_values);
         }
         else {
-          form_set_error('', "Unsupported value for " . check_plain($ti_name) . ". Report this error to the webmaster: " . check_plain(print_r($template_values[$ti_name], TRUE)));
-        }
-
-        $tif_tags = $tit_tag->getElementsByTagName('tif');
-        foreach ($tif_tags as $tif_tag) {
-          if (mcneese_management_template_process_template_if($form, $form_state, $tif_tag, $template_fields, $template_values)) {
-            $form['dom']['#value']->remove_element($tif_tag);
-          }
-          else {
-            $parent = $tif_tag->parentNode;
-            $parent->removeChild($tif_tag);
-          }
-        }
-
-        $ti_tags = $tit_tag->getElementsByTagName($ti_name);
-        foreach ($ti_tags as $ti_tag) {
-          $parent = $ti_tag->parentNode;
-
-          if (isset($ti_field['#wysiwyg']) && $ti_field['#wysiwyg'] || isset($ti_field['#markup']) && $ti_field['#markup']) {
-            if ($wrap_with_span) {
-              $new_dom = new cf_dom(TRUE, TRUE, TRUE, '<span class="' . $ti_name . '">' . $value . '</span>');
-            }
-            else {
-              $new_dom = new cf_dom(TRUE, TRUE, TRUE, $value);
-            }
-
-            $new_tag = $form['dom']['#value']->get_dom()->importNode($new_dom->get_body(), TRUE);
-            $parent->insertBefore($new_tag, $ti_tag);
-          }
-          else {
-            if ($wrap_with_span) {
-              $span = $form['dom']['#value']->get_dom()->createElement('span', $value); 
-              $span->setAttribute('class', $ti_name);
-              $parent->insertBefore($span, $ti_tag);
-            }
-            else {
-              $text = new DOMText();
-              $text->appendData($value);
-              $parent->insertBefore($text, $ti_tag);
-            }
-          }
-
-          $parent->removeChild($ti_tag);
-        }
-      }
-
-
-      // handle special case template input target tags
-      $generated = NULL;
-      if ($tit_tag->hasAttribute('type')) {
-        $tag_type = $tit_tag->getAttribute('type');
-
-        if ($tag_type == 'array') {
-          $generated = array();
-          if ($tit_tag->hasChildNodes()) {
-            foreach ($tit_tag->childNodes as $child_tag) {
-              if (!property_exists($child_tag, 'tagName') || $child_tag->tagName != 'tiv' || !$child_tag->hasAttribute('key')) {
-                continue;
-              }
-
-              $key_type = NULL;
-              if ($child_tag->hasAttribute('key_type')) {
-                $key_type = $child_tag->getAttribute('key_type');
-
-                if ($key_type != 'int') {
-                  $key_type = NULL;
-                }
-              }
-
-              if ($key_type == 'int') {
-                $key = (int) $child_tag->getAttribute('key');
-              }
-              else {
-                $key = (string) $child_tag->getAttribute('key');
-              }
-              $value = '';
-
-              if ($child_tag->hasChildNodes()) {
-                foreach ($child_tag->childNodes as $tiv_tag) {
-                  $value .= $form['dom']['#value']->get_dom()->saveHTML($tiv_tag);
-                }
-              }
-              $generated[$key] = $value;
-            }
+          for ($cardinality_count = 0; $cardinality_count < $target_cardinality; $cardinality_count++) {
+            $status = mcneese_management_template_process_template_input_tag($form, $form_state, $target_tag, $target_tag_key, $input_tag, $input_name, $template_fields, $template_values, $cardinality_count);
           }
         }
       }
+    }
 
-
-      // load the markup value
-      if (is_null($generated)) {
-        if ($tit_tag->hasChildNodes()) {
-          foreach ($tit_tag->childNodes as $child_tag) {
-            $generated .= $form['dom']['#value']->get_dom()->saveHTML($child_tag);
-          }
-        }
-      }
-
-
-      // prepare the field value
-      if (!isset($overwritten_fields[$target_name])) {
+    // prepare and assign values
+    if (!isset($overwritten_fields[$target_name])) {
+      if ($target_cardinality == 0) {
         $form_state['node']->$target_name = NULL;
-
-        // override the existing stored settings, but do not override changes from this template.
-        $overwritten_fields[$target_name] = TRUE;
       }
+      else {
+        $form_state['node']->$target_name = array();
+      }
+
       $current = &$form_state['node']->$target_name;
 
-      if (empty($targets)) {
-        $current = $generated;
+      // override the existing stored settings, but do not override changes from this template.
+      $overwritten_fields[$target_name] = TRUE;
+    }
+    else {
+      $current = &$form_state['node']->$target_name;
+    }
+
+    foreach ($target_field_parts as &$target_field_part) {
+      if (!isset($current[$target_field_part])) {
+        $current[$target_field_part] = NULL;
       }
 
-      while (!empty($targets)) {
-        $current_name = array_pop($targets);
+      $current = &$current[$target_field_part];
+    }
 
-        if (empty($targets)) {
-          $current[$current_name] = $generated;
+    if ($target_cardinality == 0) {
+      if (!is_null($target_key) && $target_key != "") {
+        $current_pre_key = &$current;
 
-          if ($field_type == 'textfield') {
-            $current = array();
-            $current['format'] = $field_format;
-            $current['safe_value'] = NULL;
+        $keys = (array) explode('][', $target_key);
+        foreach ($keys as $key) {
+          if (isset($current[$key])) {
+            $current = &$current[$key];
           }
-          elseif ($field_type == 'textarea') {
-            $current['summary'] = NULL;
-            $current['format'] = $field_format;
-
-            // requuire format and enforce a default if not specified.
-            if (empty($current['format'])) {
-              $current['format'] = 'full_html';
-            }
-          }
-          elseif ($field_type == 'date') {
-            $current['timezone'] = NULL;
-            $current['timezone_db'] = NULL;
-            $current['date_type'] = NULL;
-            // @todo: date fields are not yet fully implemented.
+          else {
+            // @todo: an error message should be presented here.
+            break;
           }
         }
+
+        unset($key);
+        unset($keys);
+      }
+
+      if ($target_type == 'textarea') {
+        if ($target_markup) {
+          $current = check_markup($form_state['targets'][$target_tag_key], $target_format); // @fixme: ??? is this correct here ???
+        }
         else {
-          if (!isset($current[$current_name])) {
-            $current[$current_name] = NULL;
+          $current = $form_state['targets'][$target_tag_key];
+        }
+
+        $current_pre_key['format'] = $target_format;
+      }
+      elseif ($target_type == 'integer') {
+        $current = (int) $form_state['targets'][$target_tag_key];
+      }
+      elseif ($target_type == 'taxonomy_term') {
+        $term = taxonomy_term_load((int) $form_state['targets'][$target_tag_key]);
+
+        if (is_object($term)) {
+          $current = (array) $term;
+        }
+
+        unset($term);
+      }
+      elseif ($target_type == 'media') {
+        $current = array('fid' => $form_state['targets'][$target_tag_key]);
+      }
+      else {
+        $current = $form_state['targets'][$target_tag_key];
+      }
+    }
+    else {
+      $current_start = &$current;
+      for ($cardinality_count = 0; $cardinality_count < $target_cardinality; $cardinality_count++) {
+        $current = &$current_start;
+        $current[$cardinality_count] = NULL;
+        $current = &$current[$cardinality_count];
+
+        $current_pre_key = &$current;
+        if (!is_null($target_key) && $target_key != "") {
+          $keys = (array) explode('][', $target_key);
+
+          foreach ($keys as $key) {
+            $current[$key] = NULL;
+            $current = &$current[$key];
           }
 
-          $current = &$current[$current_name];
+          unset($key);
+          unset($keys);
+        }
+
+        if ($target_type == 'textarea') {
+          if ($target_markup) {
+            $current = check_markup($form_state['targets'][$target_tag_key][$cardinality_count], $target_format);
+          }
+          else {
+            $current = $form_state['targets'][$target_tag_key][$cardinality_count];
+          }
+
+          $current_pre_key['format'] = $target_format;
+          $current_pre_key['summary'] = NULL;
+        }
+        elseif ($target_type == 'integer') {
+          $current = (int) $form_state['targets'][$target_tag_key][$cardinality_count];
+        }
+        elseif ($target_type == 'taxonomy_term') {
+          $term = taxonomy_term_load((int) $form_state['targets'][$target_tag_key][$cardinality_count]);
+
+          if (is_object($term)) {
+            $current = (array) $term;
+          }
+
+          unset($term);
+        }
+        elseif ($target_type == 'media') {
+          $current = (array) file_load($form_state['targets'][$target_tag_key][$cardinality_count]);
+        }
+        else {
+          $current = $form_state['targets'][$target_tag_key][$cardinality_count];
         }
       }
     }
@@ -1727,27 +1860,24 @@ function mcneese_management_template_process_form_state($form, &$form_state) {
 }
 
 /**
- * Populates and Validates the form state.
- *
- * This is explicitly designed to be called inside of a
- * hook_form_validate9) function.
+ * Handles processing of the template if condition tags.
  *
  * @param array $form
  *   The form settings.
  * @param array $form_state
  *   The form state.
- * @param DOMElement $tif_Tag
+ * @param string $tif_target
+ *   The template input field that the template input condition relates to.
+ * @param DOMElement $tif_tag
  *   The element that is assumed to be a tif.
- * @param array $template_fields
- *   A collection of all of the template fields available.
- * @param array $template_values
- *   A collection of all of the template values for each available field.
  *
  * @return bool
  *   FALSE on failure or TRUE/FALSE depending on the results of the tif
  *   condition test.
+ *
+ * @see mcneese_management_template_process_form_state()
  */
-function mcneese_management_template_process_template_if($form, &$form_state, $tif_tag, $template_fields, $template_values) {
+function mcneese_management_template_process_template_if($form, &$form_state, $tif_target, $tif_tag) {
   if (!is_array($form)) {
     if (class_exists('cf_error')) {
       cf_error::invalid_array('form');
@@ -1764,9 +1894,168 @@ function mcneese_management_template_process_template_if($form, &$form_state, $t
     return FALSE;
   }
 
+  if (!is_string($tif_target) || empty($tif_target)) {
+    if (class_exists('cf_error')) {
+      cf_error::invalid_string('tif_target');
+    }
+
+    return FALSE;
+  }
+
   if (!is_object($tif_tag)) {
     if (class_exists('cf_error')) {
       cf_error::invalid_object('tif_tag');
+    }
+
+    return FALSE;
+  }
+
+  $template_fields = &$form['settings']['template']['fields'];
+  $template_values = &$form_state['values']['settings']['template']['fields'];
+
+  if ($tif_tag->hasAttribute('type')) {
+    $type = $tif_tag->getAttribute('type');
+  }
+  else {
+    return FALSE;
+  }
+
+  $key = NULL;
+  if ($tif_tag->hasAttribute('key')) {
+    $key = $tif_tag->getAttribute('key');
+  }
+
+  $right_value = $template_values[$tif_target];
+
+  if (is_array($right_value) && !is_null($key)) {
+    $right_value = $template_values[$tif_target];
+    $right_keys = explode('][', $key);
+
+    if (!empty($right_keys)) {
+      foreach ($right_keys as $right_key) {
+        if ($right_key == "") continue;
+
+        if (array_key_exists($right_key, $right_value)) {
+          $right_value = &$right_value[$right_key];
+        }
+      }
+    }
+
+    unset($right_keys);
+  }
+
+  $left_value = NULL;
+  if ($tif_tag->hasAttribute('value')) {
+    $left_value = $tif_tag->getAttribute('value');
+  }
+
+  if ($type == 'not_empty') {
+    return !empty($right_value);
+  }
+  elseif ($type == 'empty') {
+    return empty($right_value);
+  }
+  elseif ($type == '>') {
+    if (!is_numeric($right_value)) return FALSE;
+    if (!is_numeric($left_value)) return FALSE;
+    return $left_value > $right_value;
+  }
+  elseif ($type == '<') {
+    if (!is_numeric($left_value[$tif_target])) return FALSE;
+    if (!is_numeric($left_value)) return FALSE;
+    return $left_value < $left_value[$tif_target];
+  }
+  elseif ($type == '>=') {
+    if (!is_numeric($left_value[$tif_target])) return FALSE;
+    if (!is_numeric($left_value)) return FALSE;
+    return $left_value >= $left_value[$tif_target];
+  }
+  elseif ($type == '<=') {
+    if (!is_numeric($left_value[$tif_target])) return FALSE;
+    if (!is_numeric($left_value)) return FALSE;
+    return $left_value <= $left_value[$tif_target];
+  }
+  elseif ($type == '==') {
+    if (!is_numeric($left_value[$tif_target])) return FALSE;
+    if (!is_numeric($left_value)) return FALSE;
+    return $left_value == $left_value[$tif_target];
+  }
+  elseif ($type == '!=') {
+    if (!is_numeric($left_value[$tif_target])) return FALSE;
+    if (!is_numeric($left_value)) return FALSE;
+    return $left_value != $left_value[$tif_target];
+  }
+
+  return FALSE;
+}
+
+/**
+ * Handles processing of template input tags.
+ *
+ * This is explicitly designed to be called inside of a
+ * hook_form_validate9) function.
+ *
+ * @param array $form
+ *   The form settings.
+ * @param array $form_state
+ *   The form state.
+ * @param DOMElement $target_tag
+ *   The element that is assumed to be a template input target DOMElement.
+ * @param string $target_tag_key
+ *   The unique key associated with the target tag.
+ * @param DOMElement $input_tag
+ *   The element that is assumed to be a template input DOMElement.
+ * @param string $input_name
+ *   The unique identifier/name associated with the input tag.
+ * @param array $template_fields
+ *   A collection of all of the template fields available.
+ * @param array $template_values
+ *   A collection of all of the template values for each available field.
+ * @param int $location
+ *   (optional) When specified, this represents the location in an array to
+ *   process. This is related to the fields cardinality.
+ *
+ * @return bool
+ *   FALSE on failure or problem and returns TRUE on success.
+ *
+ * @see mcneese_management_template_process_form_state()
+ */
+function mcneese_management_template_process_template_input_tag($form, &$form_state, $target_tag, $target_tag_key, $input_tag, $input_name, &$template_fields, &$template_values, $location = NULL) {
+  if (!is_array($form)) {
+    if (class_exists('cf_error')) {
+      cf_error::invalid_array('form');
+    }
+
+    return FALSE;
+  }
+
+  if (!is_array($form_state)) {
+    if (class_exists('cf_error')) {
+      cf_error::invalid_array('form_state');
+    }
+
+    return FALSE;
+  }
+
+  if (!($target_tag instanceOf DOMElement)) {
+    if (class_exists('cf_error')) {
+      cf_error::invalid_object('tit_tag');
+    }
+
+    return FALSE;
+  }
+
+  if (!($input_tag instanceOf DOMElement)) {
+    if (class_exists('cf_error')) {
+      cf_error::invalid_object('ti_tag');
+    }
+
+    return FALSE;
+  }
+
+  if (!is_string($input_name)) {
+    if (class_exists('cf_error')) {
+      cf_error::invalid_string('input_name');
     }
 
     return FALSE;
@@ -1788,71 +2077,178 @@ function mcneese_management_template_process_template_if($form, &$form_state, $t
     return FALSE;
   }
 
-  if ($tif_tag->hasAttribute('target')) {
-    $target = $tif_tag->getAttribute('target');
-  }
-  else {
+  if (!is_null($location) && !cf_is_integer($location)) {
+    if (class_exists('cf_error')) {
+      cf_error::invalid_integer('location');
+    }
+
     return FALSE;
   }
 
-  if ($tif_tag->hasAttribute('type')) {
-    $type = $tif_tag->getAttribute('type');
+  // load the input tag as it is defined in the inputs block.
+  $markup = FALSE;
+  $format = NULL;
+  $type = NULL;
+  if (isset($form['inputs_tags']['#value'][$input_name]) && is_object($form['inputs_tags']['#value'][$input_name])) {
+    $ti_tag = &$form['inputs_tags']['#value'][$input_name];
+    if ($ti_tag->hasAttribute('markup')) {
+      $markup = (bool) $ti_tag->getAttribute('markup');
+    }
+    if ($ti_tag->hasAttribute('type')) {
+      $type = $ti_tag->getAttribute('type');
+    }
+
+    if ($ti_tag->hasAttribute('format')) {
+      $format = $ti_tag->getAttribute('format');
+    }
+  }
+
+  $parent = $input_tag->parentNode;
+  $field = &$template_fields[$input_name];
+
+  if (is_null($location)) {
+    $value = &$template_values[$input_name];
+
+    if (!isset($form_state['targets'][$target_tag_key])) {
+      $form_state['targets'][$target_tag_key] = NULL;
+    }
+
+    $target = &$form_state['targets'][$target_tag_key];
   }
   else {
+    $value = &$template_values[$input_name][$location];
+
+    if (!isset($form_state['targets'][$target_tag_key])) {
+      $form_state['targets'][$target_tag_key] = array();
+      $form_state['targets'][$target_tag_key][$location] = NULL;
+    }
+
+    $target = &$form_state['targets'][$target_tag_key][$location];
+  }
+
+  if ($input_tag->hasAttribute('key')) {
+    $keys = explode('][', $input_tag->getAttribute('key'));
+
+    if (is_array($value) && !empty($keys)) {
+      foreach ($keys as $key) {
+        if ($key == "") continue;
+
+        if (array_key_exists($key, $value)) {
+          $value = &$value[$key];
+        }
+      }
+    }
+
+    unset($keys);
+  }
+
+  if ($type == 'checkbox') {
+    if (is_array($target)) {
+      $target = array_merge($target, $value);
+    }
+    else {
+      $target = $value;
+    }
+
+    $parent = $input_tag->parentNode;
+    $parent->removeChild($input_tag);
+  }
+  elseif ($type == 'select') {
+    if (is_array($target)) {
+      $target = array_merge($target, $value);
+    }
+    else {
+      $target = $value;
+    }
+
+    $parent = $input_tag->parentNode;
+    $parent->removeChild($input_tag);
+  }
+  elseif ($type == 'textfield' || $type == 'textarea' || $type == 'text_format') {
+    $field_value = $value;
+    $field_format = $format;
+    if (is_array($value)) {
+      $field_value = '';
+
+      if (isset($value['value'])) {
+        $field_value = $value['value'];
+      }
+
+      if (isset($value['format'])) {
+        $field_format = $value['format'];
+      }
+    }
+
+    if ($markup) {
+      $prefix = '<span class="ti_' . $input_name . '"';
+      if (!is_null($field_format)) {
+        $prefix .= ' format="' . $field_format . '"';
+      }
+      $prefix .= '>';
+
+      $new_dom = new cf_dom(TRUE, TRUE, TRUE, $prefix . check_markup($field_value, $field_format) . '</span>');
+
+      $new_tag = $form['targets_dom']['#value']->get_dom()->importNode($new_dom->get_body(), TRUE);
+      $parent->insertBefore($new_tag, $input_tag);
+    }
+    else {
+      $text = new DOMText();
+      $text->appendData($field_value);
+      $parent->insertBefore($text, $input_tag);
+    }
+
+    $parent = $input_tag->parentNode;
+    $parent->removeChild($input_tag);
+
+    // save the resulting markup.
+    $target = '';
+    if ($target_tag->hasChildNodes()) {
+      foreach ($target_tag->childNodes as $child) {
+       $target .= $form['targets_dom']['#value']->get_dom()->saveHTML($child); 
+      }
+
+      unset($child);
+    }
+  }
+  elseif ($type == 'field_group') {
+    if (cf_is_integer($value)) {
+      $target = (int) $value;
+    }
+    else {
+      $matches = array();
+      $matched = preg_match('/ \[tid:\s*(\d+)]\s*$/i', $value, $matches);
+
+      if ($matched) {
+        $target = (int) $matches[1];
+      }
+    }
+  }
+  elseif ($type == 'media') {
+    if (is_array($value)) {
+      if (isset($value['fid'])) {
+        $target = (int) $value['fid'];
+      }
+    }
+    elseif (cf_is_integer($value)) {
+      $target = (int) $value;
+    }
+    elseif (is_string($value)) {
+      $matches = array();
+      $matched = preg_match('/ \[fid:\s*(\d+)]\s*$/i', $value, $matches);
+
+      if ($matched) {
+        $target = (int) $matches[1];
+      }
+    }
+  }
+  else {
+    $parent = $input_tag->parentNode;
+    $parent->removeChild($input_tag);
+
     return FALSE;
   }
 
-  $right_value = NULL;
-  if (is_array($template_values[$target]) && isset($template_values[$target]['value'])) {
-    $right_value = $template_values[$target]['value'];
-  }
-  else {
-    $right_value = $template_values[$target];
-  }
-
-  $left_value = NULL;
-  if ($tif_tag->hasAttribute('value')) {
-    $left_value = $tif_tag->getAttribute('value');
-  }
-
-  if ($type == 'not_empty') {
-    return !empty($right_value);
-  }
-  elseif ($type == 'empty') {
-    return empty($right_value);
-  }
-  elseif ($type == '>') {
-    if (!is_numeric($right_value)) return FALSE;
-    if (!is_numeric($left_value)) return FALSE;
-    return $left_value > $right_value;
-  }
-  elseif ($type == '<') {
-    if (!is_numeric($left_value[$target])) return FALSE;
-    if (!is_numeric($left_value)) return FALSE;
-    return $left_value < $left_value[$target];
-  }
-  elseif ($type == '>=') {
-    if (!is_numeric($left_value[$target])) return FALSE;
-    if (!is_numeric($left_value)) return FALSE;
-    return $left_value >= $left_value[$target];
-  }
-  elseif ($type == '<=') {
-    if (!is_numeric($left_value[$target])) return FALSE;
-    if (!is_numeric($left_value)) return FALSE;
-    return $left_value <= $left_value[$target];
-  }
-  elseif ($type == '==') {
-    if (!is_numeric($left_value[$target])) return FALSE;
-    if (!is_numeric($left_value)) return FALSE;
-    return $left_value == $left_value[$target];
-  }
-  elseif ($type == '!=') {
-    if (!is_numeric($left_value[$target])) return FALSE;
-    if (!is_numeric($left_value)) return FALSE;
-    return $left_value != $left_value[$target];
-  }
-
-  return FALSE;
+  return TRUE;
 }
 
 /**
@@ -1880,7 +2276,7 @@ function mcneese_management_validate_user(&$form_state_field) {
     $matched = TRUE;
   }
   else {
-    $matched = preg_match('/ \[uid:(\d+)]\s*$/i', $form_state_field, $matches);
+    $matched = preg_match('/ \[uid:\s*(\d+)]\s*$/i', $form_state_field, $matches);
   }
 
   if ($matched) {
@@ -1912,7 +2308,7 @@ function mcneese_management_validate_user(&$form_state_field) {
     }
 
     $user_id = $result;
-    $form_state_field .= ' [uid:' . $user_id . ']';
+    $form_state_field .= ' [uid: ' . $user_id . ']';
   }
 
   return $user_id;
@@ -1956,6 +2352,25 @@ function mcneese_management_template_load_node_data($nids) {
   }
 
   return array();
+}
+
+/**
+ * Returns an array of valid template target types.
+ *
+ * @return array
+ *   An array of valid template input target types or template input key types.
+ */
+function mcneese_management_template_get_target_types() {
+  $available_types = array();
+  $available_types[] = 'string';
+  $available_types[] = 'integer';
+  $available_types[] = 'textfield';
+  $available_types[] = 'textarea';
+  $available_types[] = 'taxonomy_term';
+  $available_types[] = 'media';
+  #$available_types[] = 'date'; // @todo
+
+  return $available_types;
 }
 
 /**

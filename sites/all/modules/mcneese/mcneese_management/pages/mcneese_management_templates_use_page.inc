@@ -339,8 +339,8 @@ function mcneese_management_templates_use_add_form_submit($form, &$form_state) {
 
   $node = $form_state['node'];
   $node->mcneese_management_template['data'] = array();
-  if (isset($form_state['unused'])) {
-    $node->mcneese_management_template['data'] = $form_state['unused'];
+  if (isset($form_state['values']['settings']['template']['fields'])) {
+    $node->mcneese_management_template['data'] = $form_state['values']['settings']['template']['fields'];
   }
 
   node_save($node);
@@ -441,7 +441,6 @@ function mcneese_management_templates_use_edit_form($form, &$form_state, $node) 
 function mcneese_management_templates_use_edit_form_validate($form, &$form_state) {
   // populate the node fields during validate so that on error, an error can be presented without submitting.
   mcneese_management_template_process_form_state($form, $form_state);
-  $node = $form_state['node'];
 }
 
 /**
@@ -455,8 +454,8 @@ function mcneese_management_templates_use_edit_form_validate($form, &$form_state
 function mcneese_management_templates_use_edit_form_submit($form, &$form_state) {
   $node = $form_state['node'];
   $node->mcneese_management_template['data'] = array();
-  if (isset($form_state['unused'])) {
-    $node->mcneese_management_template['data'] = $form_state['unused'];
+  if (isset($form_state['values']['settings']['template']['fields'])) {
+    $node->mcneese_management_template['data'] = $form_state['values']['settings']['template']['fields'];
   }
 
   node_save($node);

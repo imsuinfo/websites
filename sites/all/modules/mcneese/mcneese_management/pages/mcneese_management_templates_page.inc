@@ -24,21 +24,13 @@ function mcneese_management_templates_page() {
 
   if ($use) {
     $output .= '<h3><a href="' . url($template_url . '/use') . '">' . t("Using Templates") . '</a></h3>';
-    $output .= '<div>' . t("The following template usage operations are available:") . '</div>';
-    $output .= '<ul>';
-    $output .= '  <li><a href="' . url($template_url . '/use/add') . '">' . t("Use a Template") . '</a></li>';
-    $output .= '  <li><a href="' . url($template_url . '/use') . '">' . t("Template Usage Page") . '</a></li>';
-    $output .= '</ul>';
+    $output .= '<div>' . t("You are allowed to used already created templates to assist in creating content.") . '</div>';
     $output .= '<br>';
   }
 
   if ($manage) {
     $output .= '<h3><a href="' . url($template_url . '/manage') . '">' . t("Managing Templates") . '</a></h3>';
-    $output .= '<div>' . t("The following template management operations are available:") . '</div>';
-    $output .= '<ul>';
-    $output .= '  <li><a href="' . url($template_url . '/manage/add') . '">' . t("Create a New Template") . '</a></li>';
-    $output .= '  <li><a href="' . url($template_url . '/manage') . '">' . t("Template Management Page") . '</a></li>';
-    $output .= '</ul>';
+    $output .= '<div>' . t("You are allowed to build custom templates and grant users access to the custom template.") . '</div>';
     $output .= '<br>';
   }
 
