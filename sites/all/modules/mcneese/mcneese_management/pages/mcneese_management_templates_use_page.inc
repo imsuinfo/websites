@@ -20,11 +20,39 @@ function mcneese_management_templates_use_page() {
 
   $template_url = 'admin/content/management/template';
 
+  // database sorting.
+  $order = NULL;
+  if (isset($_GET['order'])) {
+    $order = strtolower($_GET['order']);
+  }
+
+  $sort = NULL;
+  if (isset($_GET['sort'])) {
+    $sort = strtoupper($_GET['sort']);
+
+    if ($sort != 'ASC' && $sort != 'DESC') {
+      $sort = NULL;
+    }
+  }
+
   try {
     $query = db_select('mcneese_management_template_user', 'mmtu');
     $query->innerjoin('mcneese_management_template', 'mmt', 'mmt.id = mmtu.template_id');
     $query->fields('mmt', array('id', 'machine_name', 'human_name'));
     $query->condition('user_id', $user->uid);
+
+    if ($order == 'human name') {
+      $query->orderBy('mmt.human_name', $sort);
+    }
+    elseif ($order == 'machine name') {
+      $query->orderBy('mmt.machine_name', $sort);
+    }
+    elseif ($order == 'id') {
+      $query->orderBy('mmt.id', $sort);
+    }
+    else {
+      $query->orderBy('mmt.human_name', 'ASC');
+    }
 
     $executed = $query->execute();
 
@@ -49,7 +77,25 @@ function mcneese_management_templates_use_page() {
     }
   }
 
-  $header = array(t("ID"), t("Machine Name"), t("Human Name"), t("Operations"));
+  $header = array();
+  $header[] = array(
+    'data' => t("ID"),
+    'field' => 'id',
+    'align' => 'center',
+  );
+  $header[] = array(
+    'data' => t("Machine Name"),
+    'field' => 'machine_name',
+    'align' => 'center',
+    'sort' => 'asc',
+  );
+  $header[] = array(
+    'data' => t("Human Name"),
+    'field' => 'human_name',
+    'align' => 'center',
+  );
+  $header[] = t("Operations");
+
   $attributes = array();
   $attributes['id'] = 'mcneese_management_template_use';
   $attributes['summary'] = t("A listing of templates available for use.");
@@ -83,60 +129,59 @@ function mcneese_management_templates_use_list_page($template_id) {
 
   drupal_set_title("Nodes Using Template: " . $template->human_name);
 
+  // database sorting.
+  $order = NULL;
+  if (isset($_GET['order'])) {
+    $order = strtolower($_GET['order']);
+  }
+
+  $sort = NULL;
+  if (isset($_GET['sort'])) {
+    $sort = strtoupper($_GET['sort']);
+
+    if ($sort != 'ASC' && $sort != 'DESC') {
+      $sort = NULL;
+    }
+  }
+
   try {
     $query = db_select('mcneese_management_template_node', 'mmtn');
+    $query->join('node', 'n', 'mmtn.node_id = n.nid');
+    $query->join('field_data_field_group', 'fdfg', 'mmtn.node_id = fdfg.entity_id');
+    $query->join('taxonomy_term_data', 'ttd', 'fdfg.field_group_tid = ttd.tid');
     $query->fields('mmtn', array('node_id'));
+    $query->fields('n', array('title'));
+    $query->fields('fdfg', array('field_group_tid'));
+    $query->fields('ttd', array('tid', 'name'));
     $query->condition('template_id', $template->id);
-    $query->orderBy('node_id');
 
-    $executed = $query->execute();
-    $nids = (array) $executed->fetchAllKeyed(0, 0);
-
-    $nodes = array();
-    if (!empty($nids)) {
-      $nodes = node_load_multiple($nids);
+    if ($order == 'node id') {
+      $query->orderBy('mmtn.node_id', $sort);
+    }
+    elseif ($order == 'title') {
+      $query->orderBy('n.title', $sort);
+    }
+    elseif ($order == 'group') {
+      $query->orderBy('ttd.name', $sort);
+      $query->orderBy('ttd.tid', $sort);
+    }
+    else {
+      $query->orderBy('n.title', 'ASC');
     }
 
-    foreach ($nodes as $node) {
+    $executed = $query->execute();
+
+    $rows = array();
+    foreach ($executed as $result) {
       $row = array();
-      $row[] = check_plain($node->nid);
-      $row[] = check_plain($node->title);
-
-      $groups = "";
-      if (is_string($node->field_group)) {
-        $term = taxonomy_term_load($field_group['tid']);
-
-        if (is_object($term)) {
-          $groups = $term->name . ' [tid: ' . $term->tid . ']';
-        }
-        else {
-          $groups = '[tid: ' . $term->tid . ']';
-        }
-      }
-      elseif (is_array($node->field_group) && isset($node->field_group['und'])) {
-        $groups = NULL;
-
-        foreach ($node->field_group['und'] as $field_group) {
-          if (!is_null($groups)) $groups .= ", ";
-
-          $term = taxonomy_term_load($field_group['tid']);
-
-          if (is_object($term)) {
-            $groups .= $term->name . ' [tid: ' . $term->tid . ']';
-          }
-          else {
-            $groups .= '[tid: ' . $term->tid . ']';
-          }
-        }
-      }
-
-      $row[] = check_plain($groups);
-      
+      $row[] = check_plain($result->node_id);
+      $row[] = check_plain($result->title);
+      $row[] = check_plain($result->name . ' [tid: ' . $result->field_group_tid . ']');
 
       $links = '';
-      $links .= '<a href="' . url('node/' . $node->nid) . '">' . t("View") . '</a> ';
-      $links .= '<a href="' . url('node/' . $node->nid . '/template', $options) . '">' . t("Edit") . '</a> ';
-      $links .= '<a href="' . url('node/' . $node->nid . '/delete', $options) . '">' . t("Delete") . '</a> ';
+      $links .= '<a href="' . url('node/' . $result->node_id) . '">' . t("View") . '</a> ';
+      $links .= '<a href="' . url('node/' . $result->node_id . '/template', $options) . '">' . t("Edit") . '</a> ';
+      $links .= '<a href="' . url('node/' . $result->node_id . '/delete', $options) . '">' . t("Delete") . '</a> ';
       $row[] = $links;
 
       $rows[] = $row;
@@ -148,7 +193,25 @@ function mcneese_management_templates_use_list_page($template_id) {
     }
   }
 
-  $header = array(t("Node ID"), t("Title"), t("Group"), t("Operations"));
+  $header = array();
+  $header[] = array(
+    'data' => t("Node ID"),
+    'field' => 'node_id',
+    'align' => 'center',
+  );
+  $header[] = array(
+    'data' => t("Title"),
+    'field' => 'title',
+    'align' => 'center',
+    'sort' => 'asc',
+  );
+  $header[] = array(
+    'data' => t("Group"),
+    'field' => 'field_group_tid',
+    'align' => 'center',
+  );
+  $header[] = t("Operations");
+
   $attributes = array();
   $attributes['id'] = 'mcneese_management_template_use_list';
   $attributes['summary'] = t("A listing of nodes associated with the specified template.");

@@ -19,10 +19,37 @@ function mcneese_management_templates_manage_page() {
 
   $template_url = 'admin/content/management/template';
 
+  // database sorting.
+  $order = NULL;
+  if (isset($_GET['order'])) {
+    $order = strtolower($_GET['order']);
+  }
+
+  $sort = NULL;
+  if (isset($_GET['sort'])) {
+    $sort = strtoupper($_GET['sort']);
+
+    if ($sort != 'ASC' && $sort != 'DESC') {
+      $sort = NULL;
+    }
+  }
+
   try {
     $query = db_select('mcneese_management_template', 'mmt');
     $query->fields('mmt');
-    $query->orderBy('machine_name', 'ASC');
+
+    if ($order == 'human name') {
+      $query->orderBy('mmt.human_name', $sort);
+    }
+    elseif ($order == 'machine name') {
+      $query->orderBy('mmt.machine_name', $sort);
+    }
+    elseif ($order == 'id') {
+      $query->orderBy('mmt.id', $sort);
+    }
+    else {
+      $query->orderBy('mmt.human_name', 'ASC');
+    }
 
     $executed = $query->execute();
 
@@ -48,7 +75,25 @@ function mcneese_management_templates_manage_page() {
     }
   }
 
-  $header = array(t("ID"), t("Machine Name"), t("Human Name"), t("Operations"));
+  $header = array();
+  $header[] = array(
+    'data' => t("ID"),
+    'field' => 'id',
+    'align' => 'center',
+  );
+  $header[] = array(
+    'data' => t("Machine Name"),
+    'field' => 'machine_name',
+    'align' => 'center',
+  );
+  $header[] = array(
+    'data' => t("Human Name"),
+    'field' => 'human_name',
+    'align' => 'center',
+    'sort' => 'asc',
+  );
+  $header[] = t("Operations");
+
   $attributes = array();
   $attributes['id'] = 'mcneese_management_template_manage';
   $attributes['summary'] = t("A listing of templates available for management.");
@@ -584,38 +629,75 @@ function mcneese_management_templates_manage_user_page($template_id) {
     drupal_exit();
   }
 
-  $query = db_select('mcneese_management_template_user', 'mmtu');
-  $query->fields('mmtu');
-  $query->condition('template_id', $template_id);
-  $query->orderBy('user_id', 'ASC');
-
-  $executed = $query->execute();
-
-  $rows = array();
-  foreach ($executed as $result) {
-    $row = array();
-
-    $user_id = check_plain($result->user_id);
-
-    $row[] = $user_id;
-
-    $user = user_load($user_id);
-
-    if (is_object($user)) {
-      $row[] = check_plain($user->name);
-    }
-    else {
-      $row[] = t("User Not Found");
-    }
-
-    $links = '';
-    $links .= '<a href="' . url($template_url . '/manage/user/delete/' . check_plain($template_id) . '/' . $user_id) . '">' . t("Delete") . '</a> ';
-    $row[] = $links;
-
-    $rows[] = $row;
+  // database sorting.
+  $order = NULL;
+  if (isset($_GET['order'])) {
+    $order = strtolower($_GET['order']);
   }
 
-  $header = array(t("ID"), t("User Name"), t("Operations"));
+  $sort = NULL;
+  if (isset($_GET['sort'])) {
+    $sort = strtoupper($_GET['sort']);
+
+    if ($sort != 'ASC' && $sort != 'DESC') {
+      $sort = NULL;
+    }
+  }
+
+  try {
+    $query = db_select('mcneese_management_template_user', 'mmtu');
+    $query->join('users', 'u', 'mmtu.user_id = u.uid');
+    $query->fields('mmtu');
+    $query->fields('u', array('name'));
+    $query->condition('template_id', $template_id);
+
+    if ($order == 'user name') {
+      $query->orderBy('u.name', $sort);
+    }
+    elseif ($order == 'id') {
+      $query->orderBy('mmtu.user_id', $sort);
+    }
+    else {
+      $query->orderBy('u.name', 'ASC');
+    }
+
+    $executed = $query->execute();
+
+    $rows = array();
+    foreach ($executed as $result) {
+      $row = array();
+
+      $user_id = check_plain($result->user_id);
+      $row[] = $user_id;
+      $row[] = check_plain($result->name);
+
+      $links = '';
+      $links .= '<a href="' . url($template_url . '/manage/user/delete/' . check_plain($template_id) . '/' . $user_id) . '">' . t("Delete") . '</a> ';
+      $row[] = $links;
+
+      $rows[] = $row;
+    }
+  }
+  catch (Exception $e) {
+    if (class_exists('cf_error')) {
+      cf_error::on_query_execution($e);
+    }
+  }
+
+  $header = array();
+  $header[] = array(
+    'data' => t("ID"),
+    'field' => 'id',
+    'align' => 'center',
+  );
+  $header[] = array(
+    'data' => t("User Name"),
+    'field' => 'name',
+    'align' => 'center',
+    'sort' => 'asc',
+  );
+  $header[] = t("Operations");
+
   $attributes = array();
   $attributes['id'] = 'mcneese_management_template_manage_user';
   $attributes['summary'] = t("A listing of users who have been granted access to the specified template.");
