@@ -639,6 +639,13 @@ $conf['image_allow_insecure_derivatives'] = FALSE;
  */
 $conf['allow_authorize_operations'] = FALSE;
 
+/**
+ * Change the frequency of updates.
+ * This also determines how often the cache is cleared/reset.
+ * The unit is in days.
+ */
+$conf['update_check_frequency'] = 32;
+
 
 /**
  * Assign php.ini variables based on  uid, role, or ip address.
