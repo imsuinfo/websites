@@ -87,12 +87,12 @@ function mcneese_management_templates_use_page() {
     'data' => t("Machine Name"),
     'field' => 'machine_name',
     'align' => 'center',
-    'sort' => 'asc',
   );
   $header[] = array(
     'data' => t("Human Name"),
     'field' => 'human_name',
     'align' => 'center',
+    'sort' => 'asc',
   );
   $header[] = t("Operations");
 
