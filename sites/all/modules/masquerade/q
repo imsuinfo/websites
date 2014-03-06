@@ -1,0 +1,145 @@
+[33mcommit 0a53138f7b9f354858fb85df239c82731b511bd0[m
+Author: Kevin Day <kday@mcneese.edu>
+Date:   Thu Mar 6 08:04:24 2014 -0600
+
+    Update Module: masquerade 7.x-1.0-rc6
+
+[1;33mdiff --git a/masquerade.info b/masquerade.info[m
+[1;33mindex 0b0d38f..7394a2a 100644[m
+[1;33m--- a/masquerade.info[m
+[1;33m+++ b/masquerade.info[m
+[1;35m@@ -4,9 +4,9 @@[m [mcore = 7.x[m
+ files[] = masquerade.test[m
+ configure = admin/config/people/masquerade[m
+ [m
+[1;31m-; Information added by drupal.org packaging script on 2012-11-01[m
+[1;31m-version = "7.x-1.0-rc5"[m
+[1;32m+[m[1;32m; Information added by Drupal.org packaging script on 2014-03-05[m
+[1;32m+[m[1;32mversion = "7.x-1.0-rc6"[m
+ core = "7.x"[m
+ project = "masquerade"[m
+[1;31m-datestamp = "1351786623"[m
+[1;32m+[m[1;32mdatestamp = "1393981725"[m
+ [m
+[1;33mdiff --git a/masquerade.install b/masquerade.install[m
+[1;33mindex a10d092..e3ea733 100644[m
+[1;33m--- a/masquerade.install[m
+[1;33m+++ b/masquerade.install[m
+[1;35m@@ -177,7 +177,7 @@[m [mfunction masquerade_update_7000() {[m
+ function masquerade_update_7001() {[m
+   db_update('block')[m
+     ->fields(array('cache' => DRUPAL_NO_CACHE))[m
+[1;31m-    ->condition('module', 'masqurade')[m
+[1;32m+[m[1;32m    ->condition('module', 'masquerade')[m
+     ->condition('delta', 'masquerade')[m
+     ->execute();[m
+ }[m
+[1;33mdiff --git a/masquerade.module b/masquerade.module[m
+[1;33mindex a487b60..f674659 100644[m
+[1;33m--- a/masquerade.module[m
+[1;33m+++ b/masquerade.module[m
+[1;35m@@ -371,6 +371,30 @@[m [mfunction masquerade_user_logout($account) {[m
+ }[m
+ [m
+ /**[m
+[1;32m+[m[1;32m * Implements hook_field_extra_fields().[m
+[1;32m+[m[1;32m */[m
+[1;32m+[m[1;32mfunction masquerade_field_extra_fields() {[m
+[1;32m+[m[1;32m  $return['user']['user']  = array([m
+[1;32m+[m[1;32m    'form' => array([m
+[1;32m+[m[1;32m      'masquerade' => array([m
+[1;32m+[m[1;32m        'label' => t('Masquerade'),[m
+[1;32m+[m[1;32m        'description' => t('User masquerade settings.'),[m
+[1;32m+[m[1;32m        'weight' => 50,[m
+[1;32m+[m[1;32m      ),[m
+[1;32m+[m[1;32m    ),[m
+[1;32m+[m[1;32m    'display' => array([m
+[1;32m+[m[1;32m      'masquerade' => array([m
+[1;32m+[m[1;32m        'label' => t('Masquerade'),[m
+[1;32m+[m[1;32m        'description' => t('Masquerade as user link.'),[m
+[1;32m+[m[1;32m        'weight' => 50,[m
+[1;32m+[m[1;32m      ),[m
+[1;32m+[m[1;32m    ),[m
+[1;32m+[m[1;32m  );[m
+[1;32m+[m
+[1;32m+[m[1;32m  return $return;[m
+[1;32m+[m[1;32m}[m
+[1;32m+[m
+[1;32m+[m[1;32m/**[m
+  * Implements hook_user_view().[m
+  */[m
+ function masquerade_user_view($account, $view_mode, $langcode) {[m
+[1;35m@@ -382,14 +406,19 @@[m [mfunction masquerade_user_view($account, $view_mode, $langcode) {[m
+ [m
+   global $user;[m
+ [m
+[1;31m-  if (user_access($perm) && empty($account->masquerading) && $user->uid != $account->uid) {[m
+[1;32m+[m[1;32m  // Query allowed uids so the "masquerade as <user>" link can be shown or[m
+[1;32m+[m[1;32m  // hidden.[m
+[1;32m+[m[1;32m  $allowed_uids = db_query("SELECT uid_to FROM {masquerade_users} WHERE uid_from = :uid_from", array(':uid_from' => $user->uid))[m
+[1;32m+[m[1;32m    ->fetchCol();[m
+[1;32m+[m
+[1;32m+[m[1;32m  if (user_access($perm) && empty($account->masquerading) && $user->uid != $account->uid && in_array($account->uid, $allowed_uids)) {[m
+     $account->content['masquerade'] = array([m
+       '#markup' => l(t('Masquerade as !user', array('!user' => $account->name)),[m
+         'masquerade/switch/' . $account->uid,[m
+         array('query' => array([m
+           'token' => drupal_get_token('masquerade/switch/' . $account->uid)),[m
+           'destination' => $_GET['q'],[m
+[1;31m-          'attributes' => array('class' => 'masquerade-switch'),[m
+[1;32m+[m[1;32m          'attributes' => array('class' => array('masquerade-switch')),[m
+         )),[m
+       '#weight' => 10,[m
+     );[m
+[1;35m@@ -616,14 +645,32 @@[m [mfunction masquerade_block_1_validate($form, &$form_state) {[m
+   global $user;[m
+   //unset($form);[m
+   $name = $form_state['values']['masquerade_user_field'];[m
+[1;32m+[m[1;32m  $allowed = FALSE;[m
+[1;32m+[m[1;32m  $to_uid = db_select('users', 'u')[m
+[1;32m+[m[1;32m    ->fields('u', array('uid'))[m
+[1;32m+[m[1;32m    ->condition('u.name', $name, '=')[m
+[1;32m+[m[1;32m    ->execute()[m
+[1;32m+[m[1;32m    ->fetchField();[m
+[1;32m+[m[1;32m  if ($to_uid !== FALSE) {[m
+[1;32m+[m[1;32m    $allowed = db_select('masquerade_users', 'm')[m
+[1;32m+[m[1;32m      ->fields('m', array('uid_to'))[m
+[1;32m+[m[1;32m      ->condition('m.uid_to', $to_uid, '=')[m
+[1;32m+[m[1;32m      ->condition('m.uid_from', $user->uid, '=')[m
+[1;32m+[m[1;32m      ->execute()[m
+[1;32m+[m[1;32m      ->fetchField();[m
+[1;32m+[m[1;32m  }[m
+   if (isset($_SESSION['masquerading'])) {[m
+     form_set_error('masquerade_user_field', t('You are already masquerading. Please <a href="@unswitch">switch back</a> to your account to masquerade as another user.', array('@unswitch' => url('masquerade/unswitch', array('query' => array('token' => drupal_get_token('masquerade/unswitch')))))));[m
+   }[m
+[1;32m+[m[1;32m  if ($allowed === FALSE) {[m
+[1;32m+[m[1;32m    form_set_error('masquerade_user_field', t('You are not allowed to masquerade as the selected user.'));[m
+[1;32m+[m[1;32m  }[m
+[1;32m+[m
+   if ($name != variable_get('anonymous', t('Anonymous')) && module_exists('alt_login')) {[m
+     $alt_login = db_query("SELECT u.name FROM {users} u INNER JOIN {alt_login} al ON u.uid = al.uid WHERE al.alt_login = :alt_login", array([m
+       ':alt_login' => $name[m
+     ))->fetchObject();[m
+[1;31m-    if ($alt_login->name) {[m
+[1;32m+[m[1;32m    if (isset($alt_login->name)) {[m
+       $name = $alt_login->name;[m
+     }[m
+   }[m
+[1;35m@@ -840,12 +887,11 @@[m [mfunction masquerade_switch_back() {[m
+     ':uid_as' => $user->uid,[m
+   ))->fetchField();[m
+   // erase record[m
+[1;31m-  $conditions = db_or();[m
+[1;31m-  $conditions->condition('sid', session_id());[m
+[1;31m-  $conditions->condition('uid_as', $user->uid);[m
+[1;31m-  $query = db_delete('masquerade');[m
+[1;31m-  $query->condition($conditions);[m
+[1;31m-  $query->execute();[m
+[1;32m+[m[1;32m  db_delete('masquerade')[m
+[1;32m+[m[1;32m    ->condition('sid', session_id())[m
+[1;32m+[m[1;32m    ->condition('uid_as', $user->uid)[m
+[1;32m+[m[1;32m    ->execute();[m
+[1;32m+[m
+   $oldname = ($user->uid == 0 ? variable_get('anonymous', t('Anonymous')) : $user->name);[m
+ [m
+   // Call logout hooks when switching from masquerading user.[m
