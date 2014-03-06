@@ -7,9 +7,9 @@ core = 7.x
 project = "webform_locked_fields"
 
 
-; Information added by drupal.org packaging script on 2013-10-26
-version = "7.x-1.x-dev"
+; Information added by Drupal.org packaging script on 2014-02-28
+version = "7.x-1.0-beta1"
 core = "7.x"
 project = "webform_locked_fields"
-datestamp = "1382755866"
+datestamp = "1393618718"
 

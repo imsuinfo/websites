@@ -17,7 +17,7 @@ function webform_locked_fields_menu() {
     'page arguments' => array('webform_locked_fields_component_locked', 1),
     'access callback' => 'user_access',
     'access arguments' => array('access all webform results'),
-    'type' => MENU_CALLBACK,
+    'type' => MENU_LOCAL_TASK,
   );
   return $items;
 }
@@ -76,9 +76,9 @@ function webform_locked_fields_component_locked_submit($form, &$form_state) {
 function webform_locked_fields_cids($node) {
   $cids = array();
   module_load_include('inc', 'webform', 'includes/webform.components');
-  // Generate an array of all cids that are locked.
+  // Generate an array of all cids that are not editable.
   foreach ($node->webform['components'] as $component) {
-    if (isset($component['extra']['locked']) && $component['extra']['locked']) {
+    if (isset($component['extra']['editable']) && !$component['extra']['editable']) {
       $cids[] = $component['cid'];
     }
   }
@@ -95,19 +95,19 @@ function webform_locked_fields_form_alter(&$form, &$form_state, $form_id) {
       $node = node_load($form['nid']['#value']);
       // Add a checkbox to specify whether the form is locked.
       if (user_access('administer webform locked fields') || !$cid || !in_array($cid, webform_locked_fields_cids($node))) {
-        $locked = isset($node->webform['components'][$cid]['extra']['locked']) ? $node->webform['components'][$cid]['extra']['locked'] : FALSE;
+        $editable = isset($node->webform['components'][$cid]['extra']['editable']) ? $node->webform['components'][$cid]['extra']['editable'] : TRUE;
         if (user_access('administer webform locked fields')) {
-          $form['extra']['locked'] = array(
+          $form['extra']['editable'] = array(
             '#type' => 'checkbox',
-            '#title' => t('Lock this component'),
-            '#default_value' => $locked,
-            '#description' => t('Check this box if you want to restrict the ability to change or delete this form component. If checked, this component can only be modified by users with "administer webform locked fields" permission.'),
+            '#title' => t('Webform creator can modify'),
+            '#default_value' => $editable,
+            '#description' => t('Check this box if webform creators should be allowed to change or delete this form component. If unchecked, this component can only be modified by users with "administer webform locked fields" permission.'),
           );
         }
         else {
-          $form['extra']['locked'] = array(
+          $form['extra']['editable'] = array(
             '#type' => 'value',
-            '#value' => $locked,
+            '#value' => $editable,
           );
         }
       }
