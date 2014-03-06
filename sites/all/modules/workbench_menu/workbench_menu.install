@@ -65,6 +65,13 @@ function workbench_menu_schema() {
         'not null' => TRUE,
         'default' => '',
       ),
+      'alias' => array(
+        'description' => $t("When not 0, designates that this menu is a link to another menu."),
+        'type' => 'int',
+        'size' => 'big',
+        'not null' => TRUE,
+        'default' => 0,
+      ),
     ),
     'primary key' => array('id'),
     'unique keys' => array(
@@ -530,6 +537,42 @@ function workbench_menu_update_7105() {
 
   try {
     db_query('ALTER TABLE {workbench_menu_items} DROP CONSTRAINT workbench_menu_items_parent_id_check1');
+
+    // force execution of transaction
+    unset($transaction);
+  }
+  catch (Exception $e) {
+    if (module_exists('cf_error')) {
+      cf_error::on_query_execution($e);
+    }
+
+    $transaction->rollback();
+
+    throw $e;
+  }
+}
+
+/**
+ * Add the alias column to allow for using menus at one path as another menu.
+ */
+function workbench_menu_update_7106() {
+  $alias_column = array(
+    'description' => "When not 0, designates that this menu is a link to another menu.",
+    'type' => 'int',
+    'size' => 'big',
+    'not null' => TRUE,
+    'default' => 0,
+  );
+
+  $query = db_select('workbench_menus', 'wm');
+  $query->fields('wm');
+
+  $results = (array) $query->execute()->fetchAll();
+
+  $transaction = db_transaction();
+
+  try {
+    db_add_field('workbench_menus', 'alias', $alias_column);
 
     // force execution of transaction
     unset($transaction);

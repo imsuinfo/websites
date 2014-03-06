@@ -49,6 +49,11 @@ function workbench_menu_permission() {
     'description' => t("Grants permissions to alter the menu hidden related settings for any workbench menus in which a user is able to edit."),
   );
 
+  $permissions['change workbench menu alias'] = array(
+    'title' => t("Change Workbench Menu Alias"),
+    'description' => t("Grants permissions to alter the menu alias or related settings for any workbench menus in which a user is able to edit."),
+  );
+
   $permissions['change workbench menu item active path'] = array(
     'title' => t("Change Workbench Menu Item Active Path"),
     'description' => t("Grants permissions to alter the active path for any menu item in which a user is able to edit."),
@@ -621,6 +626,16 @@ function workbench_menu_build_menus($path_string, &$menus_processed, &$breadcrum
     }
 
     $menus_processed[$menu->id] = NULL;
+
+    // replace the current menu with its menu alias.
+    if (!empty($menu->alias) && cf_is_integer($menu->alias)) {
+      $aliased_menus = workbench_menu_get_menus(array('id' => array($menu->alias)), 'id');
+
+      $menu_id = $menu->alias;
+      $menu = array_pop($aliased_menus);
+
+      $menus_processed[$menu->id] = NULL;
+    }
 
     $built_menu = array();
     $built_menu['structure'] = array();
@@ -1785,6 +1800,7 @@ function template_preprocess_workbench_menu_item(&$vars) {
  *  taxonomy human name as the value.
  */
 function workbench_menu_get_menus_options_list($with_path = FALSE, $with_id = FALSE) {
+  // clear cache for all menus with a given alias.function workbench_menu_get_menus_options_list($with_path = FALSE, $with_id = FALSE) {
   $variation = $with_path ? 't' : 'f';
   $variation .= $with_id ? 't' : 'f';
 
@@ -1912,6 +1928,8 @@ function workbench_menu_get_menus_at_node($node_or_nid) {
  *   workbench access group or an array of access ids.
  *   - path: A path string associated with a given meny or an array
  *   of path strings.
+ *   - alias: A unique id representing a specific menu or an array of
+ *   ids. This applies only to menus with the specified id as their alias.
  *   - fast: An array key whose value should be NULL. When specified, this will
  *   perform a fast load. The fast load does not perform the additional
  *   (expensive) operations that build the menu.
@@ -1969,6 +1987,15 @@ function workbench_menu_get_menus($conditions = array(), $keyed = NULL) {
     }
     elseif (is_array($conditions['path']) && !empty($conditions['path'])) {
       $and->condition('path', $conditions['path'], 'IN');
+    }
+  }
+
+  if (isset($conditions['alias'])) {
+    if (cf_is_integer($conditions['alias'])) {
+      $and->condition('alias', $conditions['alias']);
+    }
+    elseif (is_array($conditions['alias']) && !empty($conditions['alias'])) {
+      $and->condition('alias', $conditions['alias'], 'IN');
     }
   }
 
@@ -2088,6 +2115,7 @@ function workbench_menu_save_menus($menus) {
       $record['show_parents'] = $menu['show_parents'];
       $record['hidden'] = $menu['hidden'];
       $record['breadcrumb_name'] = $menu['breadcrumb_name'];
+      $record['alias'] = $menu['alias'];
 
       if (isset($menu['id'])) {
         $record['id'] = $menu['id'];
@@ -2585,30 +2613,7 @@ function workbench_menu_clear_cache_by_access_id($access_id, &$processed) {
   reset($menus);
   $menu = current($menus);
 
-  $menu_items = (array) workbench_menu_get_menus(array('menu_id' => $menu->id, 'fast' => NULL), 'id');
-
-  workbench_menu_clear_cache_at_path($menu->path);
-  $processed[$menu->id] = $menu->access_id;
-
-  // recursively process each associated menu.
-  $items = (array) workbench_menu_get_menu_items(array('item_type' => array('item_menu'), 'fast' => NULL), 'id');
-
-  foreach ($items as $item) {
-    $properties = unserialize($item->properties);
-    if ($properties['menu'] == $menu->id) {
-      workbench_menu_clear_cache_by_menu_id($item->menu_id, $processed);
-    }
-  }
-
-  // recursively process each associated menu items.
-  $items = (array) workbench_menu_get_menu_items(array('item_type' => array('item_menu_item'), 'fast' => NULL), 'id');
-
-  foreach ($items as $item) {
-    $properties = unserialize($item->properties);
-    if (array_key_exists($properties['menu_item'], $menu_items)) {
-      workbench_menu_clear_cache_by_menu_id($item->menu_id, $processed);
-    }
-  }
+  workbench_menu_clear_cache_by_menu_id($menu->id, $processed);
 }
 
 /**
@@ -2668,6 +2673,20 @@ function workbench_menu_clear_cache_by_menu_id($id, &$processed) {
     $properties = unserialize($item->properties);
     if (array_key_exists($properties['menu_item'], $menu_items)) {
       workbench_menu_clear_cache_by_menu_id($item->menu_id, $processed);
+    }
+  }
+
+  // clear cache for all menus with a given alias.
+  $menus = (array) workbench_menu_get_menus(array('alias' => $menu->id, 'fast' => NULL), 'id');
+
+  if (empty($menus)) {
+    return;
+  }
+
+  unset($menu);
+  foreach ($menus as $menu) {
+    if (!array_key_exists($menu->id, $processed)) {
+      workbench_menu_clear_cache_by_menu_id($menu->id, $processed);
     }
   }
 }

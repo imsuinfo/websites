@@ -156,6 +156,7 @@ function workbench_menu_edit_settings_form($form, &$form_state, $access_type, $a
   $default_show_parents = TRUE;
   $default_hidden = FALSE;
   $default_breadcrumb_name = '';
+  $default_alias = '';
 
   $term = taxonomy_term_load($access_id);
   $destination = isset($_GET['destination']) ? $_GET['destination'] : 'admin/workbench/menus';
@@ -189,6 +190,21 @@ function workbench_menu_edit_settings_form($form, &$form_state, $access_type, $a
 
     if (property_exists($menu, 'breadcrumb_name')) {
       $default_breadcrumb_name = &$menu->breadcrumb_name;
+    }
+
+    if (property_exists($menu, 'alias')) {
+      if (!empty($menu->alias)) {
+        $query_string = 'SELECT ttd.name AS name, wm.id AS id FROM {taxonomy_term_data} AS ttd INNER JOIN {workbench_menus AS wm ON ttd.tid = CAST(wm.access_id AS integer) WHERE wm.id = :id';
+        $results = db_query($query_string, array(':id' => $menu->alias));
+
+        foreach ($results as $result) {
+          $default_alias = $result->name . ' [id: ' . $result->id . ']';
+        }
+
+        unset($query_string);
+        unset($result);
+        unset($results);
+      }
     }
 
     if (property_exists($menu, 'items')) {
@@ -259,6 +275,17 @@ function workbench_menu_edit_settings_form($form, &$form_state, $access_type, $a
       t("Changing this auto-resets the menu cache for this menu."),
   );
 
+  $form['advanced']['alias'] = array(
+    '#type' => 'textfield',
+    '#title' => t("Menu Alias"),
+    '#required' => FALSE,
+    '#description' =>
+      t("Designate that this menu is nothing more than an alias for another menu specified here. The specified menu will be instead renderred. Specify the menu id."),
+    '#default_value' => $default_alias,
+    '#size' => 64,
+    '#autocomplete_path' => 'workbench_menu/autocomplete_menu_id',
+  );
+
   if (!(user_access('change workbench menu path') || user_access('administer workbench menu'))) {
     $form['path']['#disabled'] = TRUE;
   }
@@ -281,6 +308,11 @@ function workbench_menu_edit_settings_form($form, &$form_state, $access_type, $a
   if (!(user_access('change workbench menu breadcrumb') || user_access('administer workbench menu'))) {
     // completely hide field(s) from unprivileged users.
     unset($form['advanced']['breadcrumb_name']);
+  }
+
+  if (!(user_access('change workbench menu alias') || user_access('administer workbench menu'))) {
+    // completely hide field(s) from unprivileged users.
+    unset($form['advanced']['alias']);
   }
 
   workbench_menu_build_item_editing_form($form, 'admin/workbench/menus/taxonomy/' . $access_id, $items);
@@ -614,6 +646,21 @@ function workbench_menu_admin_settings_form($form, &$form_state, $access_type, $
       $default_breadcrumb_name = &$menu->breadcrumb_name;
     }
 
+    if (property_exists($menu, 'alias')) {
+      if (!empty($menu->alias)) {
+        $query_string = 'SELECT ttd.name AS name, wm.id AS id FROM {taxonomy_term_data} AS ttd INNER JOIN {workbench_menus AS wm ON ttd.tid = CAST(wm.access_id AS integer) WHERE wm.id = :id';
+        $results = db_query($query_string, array(':id' => $menu->alias));
+
+        foreach ($results as $result) {
+          $default_alias = $result->name . ' [id: ' . $result->id . ']';
+        }
+
+        unset($query_string);
+        unset($result);
+        unset($results);
+      }
+    }
+
     if (property_exists($menu, 'items')) {
       $items = &$menu->items;
     }
@@ -682,6 +729,17 @@ function workbench_menu_admin_settings_form($form, &$form_state, $access_type, $
       t("Changing this auto-resets the menu cache for this menu."),
   );
 
+  $form['advanced']['alias'] = array(
+    '#type' => 'textfield',
+    '#title' => t("Menu Alias"),
+    '#required' => FALSE,
+    '#description' =>
+      t("Designate that this menu is nothing more than an alias for another menu specified here. The specified menu will be instead renderred. Specify the menu id."),
+    '#default_value' => $default_alias,
+    '#size' => 64,
+    '#autocomplete_path' => 'workbench_menu/autocomplete_menu_id',
+  );
+
   if (!(user_access('change workbench menu path') || user_access('administer workbench menu'))) {
     $form['path']['#disabled'] = TRUE;
   }
@@ -696,6 +754,10 @@ function workbench_menu_admin_settings_form($form, &$form_state, $access_type, $
 
   if (!(user_access('change workbench menu breadcrumb') || user_access('administer workbench menu'))) {
     $form['advanced']['breadcrumb_name']['#disabled'] = TRUE;
+  }
+
+  if (!(user_access('change workbench menu alias') || user_access('administer workbench menu'))) {
+    $form['advanced']['alias']['#disabled'] = TRUE;
   }
 
   workbench_menu_build_item_editing_form($form, 'admin/config/workbench/access/menus/taxonomy/' . $access_id, $items);
@@ -777,6 +839,35 @@ function workbench_menu_admin_settings_form_validate($form, &$form_state) {
     }
   }
 
+  if (!empty($form_state['values']['alias'])) {
+    $field = &$form_state['values']['alias'];
+
+    if (cf_is_integer($field)) {
+      $menu_id = $field;
+    }
+    else {
+      $matches = array();
+      $matched = preg_match('@\[id:\s*(\d+)\]\s*$@', $field, $matches);
+
+      if ($matched > 0) {
+        $menu_id = $matches[1];
+      }
+    }
+
+    $menus = (array) workbench_menu_get_menus(array('id' => $menu_id, 'fast' => NULL), 'id');
+
+    if (empty($menus)) {
+      form_set_error('alias', t("%menu is not a valid menu for the menu alias.", array('%menu' => $field)));
+    }
+    else {
+      // @todo: add a check to ensure that the alias does not point to itself and throw an error if that is the case.
+      $menu = array_pop($menus);
+      $form_state['values']['alias'] = $menu->id;
+    }
+
+    unset($field);
+  }
+
   if (!cf_is_integer($form_state['values']['weight'])) {
     form_set_error('weight', t("The menu weight can only be a number."));
   }
@@ -807,6 +898,7 @@ function workbench_menu_admin_settings_form_submit($form, &$form_state) {
   $menu['show_parents'] = &$form_state['values']['show_parents'];
   $menu['hidden'] = &$form_state['values']['hidden'];
   $menu['breadcrumb_name'] = &$form_state['values']['breadcrumb_name'];
+  $menu['alias'] = &$form_state['values']['alias'];
   $menu['items'] = array();
 
   $user = cf_current_user();
