@@ -14,6 +14,8 @@
  */
 
 abstract class mcneese_file_db_stream_wrapper implements DrupalStreamWrapperInterface {
+  static protected $directoryless = TRUE;
+
   protected $file_meta = NULL;
   protected $user = 0;
   protected $uri = NULL;
@@ -466,10 +468,8 @@ abstract class mcneese_file_db_stream_wrapper implements DrupalStreamWrapperInte
    *   A file_meta object as returned by the database.
    */
   protected function load_file_meta($checksum, $assign = TRUE) {
-    $file_meta = FALSE;
-
     if (empty($checksum)) {
-      return $file_meta;
+      return FALSE;
     }
 
     // use existing data if possible
@@ -477,10 +477,26 @@ abstract class mcneese_file_db_stream_wrapper implements DrupalStreamWrapperInte
       return $this->file_meta;
     }
 
-    $files = (array) mcneese_file_db_load_available_files(array('checksum' => $checksum, 'association' => $this->get_association()));
+    $file_meta = FALSE;
+    $scheme = $this->get_scheme();
+    $cached_file_meta = &drupal_static('load_file_meta_' . $scheme, array());
 
-    if (!empty($files)) {
-      $file_meta = array_pop($files);
+    $shortsum = substr($checksum, 0, MCNEESE_FILE_DB_SHORT_SUM_SIZE);
+
+    if (isset($cached_file_meta['checksum'][$shortsum])) {
+      $id = $cached_file_meta['checksum'][$shortsum];
+
+      if (isset($cached_file_meta['id'][$id])) {
+        $file_meta = $cached_file_meta['id'][$id];
+      }
+    }
+
+    if ($file_meta === FALSE) {
+      $files = (array) mcneese_file_db_load_available_files(array('checksum' => $checksum, 'association' => $this->get_association()));
+
+      if (!empty($files)) {
+        $file_meta = array_pop($files);
+      }
     }
 
     if ($assign) {
@@ -489,6 +505,16 @@ abstract class mcneese_file_db_stream_wrapper implements DrupalStreamWrapperInte
 
       if ($file_meta !== FALSE) {
         $this->file_meta = $file_meta;
+      }
+    }
+
+    if ($file_meta !== FALSE) {
+      if (!isset($cached_file_meta['id'][$file_meta->id])) {
+        $cached_file_meta['id'][$file_meta->id] = $file_meta;
+      }
+
+      if (!isset($cached_file_meta['checksum'][$shortsum])) {
+        $cached_file_meta['checksum'][$shortsum] = $file_meta->id;
       }
     }
 
@@ -507,10 +533,8 @@ abstract class mcneese_file_db_stream_wrapper implements DrupalStreamWrapperInte
    *   A file_meta object as returned by the database.
    */
   protected function load_file_meta_by_id($id, $assign = TRUE) {
-    $file_meta = FALSE;
-
     if (empty($id)) {
-      return $file_meta;
+      return FALSE;
     }
 
     // use existing data if possible
@@ -518,10 +542,20 @@ abstract class mcneese_file_db_stream_wrapper implements DrupalStreamWrapperInte
       return $this->file_meta;
     }
 
-    $files = (array) mcneese_file_db_load_available_files(array('id' => $id, 'association' => $this->get_association()));
+    $file_meta = FALSE;
+    $scheme = $this->get_scheme();
+    $cached_file_meta = &drupal_static('load_file_meta_' . $scheme, array());
 
-    if (!empty($files)) {
-      $file_meta = array_pop($files);
+    if (isset($cached_file_meta['id'][$id])) {
+      $file_meta = $cached_file_meta['id'][$id];
+    }
+
+    if ($file_meta === FALSE) {
+      $files = (array) mcneese_file_db_load_available_files(array('id' => $id, 'association' => $this->get_association()));
+
+      if (!empty($files)) {
+        $file_meta = array_pop($files);
+      }
     }
 
     if ($assign) {
@@ -530,6 +564,12 @@ abstract class mcneese_file_db_stream_wrapper implements DrupalStreamWrapperInte
 
       if ($file_meta !== FALSE) {
         $this->file_meta = $file_meta;
+      }
+    }
+
+    if ($file_meta !== FALSE) {
+      if (!isset($cached_file_meta['id'][$id])) {
+        $cached_file_meta['id'][$id] = $file_meta;
       }
     }
 
@@ -548,14 +588,24 @@ abstract class mcneese_file_db_stream_wrapper implements DrupalStreamWrapperInte
    *   A file_meta object as returned by the database.
    */
   protected function load_file_meta_by_fid($fid, $assign = TRUE) {
-    $file_meta = FALSE;
-
     if (empty($fid) || !is_numeric($fid)) {
-      return $file_meta;
+      return FALSE;
+    }
+
+    $file_meta = FALSE;
+    $scheme = $this->get_scheme();
+    $cached_file_meta = &drupal_static('load_file_meta_' . $scheme, array());
+
+    if (isset($cached_file_meta['fid'][$fid])) {
+      $id = $cached_file_meta['fid'][$fid];
+
+      if (isset($cached_file_meta['id'][$id])) {
+        $file_meta = $cached_file_meta['id'][$id];
+      }
     }
 
     // load the drupal file database to determine the meta names.
-    if (is_numeric($fid)) {
+    if ($file_meta === FALSE && is_numeric($fid)) {
       $query = db_select('file_managed', 'fm');
       $query->fields('fm');
       $query->condition('fm.fid', $fid);
@@ -564,35 +614,26 @@ abstract class mcneese_file_db_stream_wrapper implements DrupalStreamWrapperInte
       if (!empty($found['uri'])) {
         $outer_parts = explode('://', $found['uri'], 2);
 
-        if ($outer_parts[0] == mcneese_file_db_unrestricted_stream_wrapper::SCHEME) {
+        if ($outer_parts[0] == $this->get_scheme()) {
           $filepath = $found['uri'];
           $inner_parts = explode('/', $outer_parts[1]);
 
           if (isset($inner_parts[0]) && isset($inner_parts[1])) {
             if ($inner_parts[0] == $this->get_path_by_hash()) {
-              $files = (array) mcneese_file_db_load_available_files(array('checksum' => $inner_parts[1], 'association' => $this->get_association()));
-
-              if (!empty($files)) {
-                $file_meta = array_pop($files);
-                unset($files);
-              }
+              $file_meta = $this->load_file_meta($inner_parts[1], $assign);
             }
           }
         }
       }
     }
 
-    // use existing data if possible
-    if (!empty($this->file_meta) && $this->file_meta->id == $file_meta->id) {
-      return $this->file_meta;
-    }
+    if ($file_meta !== FALSE) {
+      if (!isset($cached_file_meta[$scheme]['id'][$file_meta->id])) {
+        $cached_file_meta[$scheme]['id'][$file_meta->id] = $file_meta;
+      }
 
-    if ($assign) {
-      unset($this->file_meta);
-      $this->file_meta = NULL;
-
-      if ($file_meta !== FALSE) {
-        $this->file_meta = $file_meta;
+      if (!isset($cached_file_meta[$scheme]['fid'][$fid])) {
+        $cached_file_meta[$scheme]['fid'][$fid] = $file_meta->id;
       }
     }
 

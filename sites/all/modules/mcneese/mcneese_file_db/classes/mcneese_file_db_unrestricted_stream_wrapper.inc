@@ -180,19 +180,49 @@ class mcneese_file_db_unrestricted_stream_wrapper extends mcneese_file_db_stream
               $associated_id = $this->stream_fid;
             }
 
-            $query = $file_db->insert($this->get_association(), $options);
-            $fields = array('file_id' => $associated_id, 'server_id' => $conf[MCNEESE_FILE_DB_CONF_SERVER_ID]);
-            $query->fields($fields);
+            $query = $file_db->select($this->get_association(), 'assoc', $options);
+            $query->fields('assoc', array('file_id'));
+            $query->condition('file_id', $associated_id);
+            $query->condition('server_id', $conf[MCNEESE_FILE_DB_CONF_SERVER_ID]);
+            $query->countQuery();
 
-            $write_result = $query->execute();
+            $read_executed = $query->execute();
+            $read_result = 0;
+            if (is_object($read_executed)) {
+              $read_result = $read_executed->fetchField();
+            }
+
+            if ($read_result == 0) {
+              $query = $file_db->insert($this->get_association(), $options);
+              $fields = array('file_id' => $associated_id, 'server_id' => $conf[MCNEESE_FILE_DB_CONF_SERVER_ID]);
+              $query->fields($fields);
+
+              $write_result = $query->execute();
+            }
 
             $this->load_user();
 
-            $query = $file_db->insert('mcneese_file_db_users', $options);
-            $fields = array('file_id' => $associated_id, 'user_id' => $this->user, 'server_id' => $conf[MCNEESE_FILE_DB_CONF_SERVER_ID]);
-            $query->fields($fields);
 
-            $write_result = $query->execute();
+            $query = $file_db->select('mcneese_file_db_users', 'mfdu', $options);
+            $query->fields('mfdu', array('file_id'));
+            $query->condition('file_id', $associated_id);
+            $query->condition('user_id', $this->user);
+            $query->condition('server_id', $conf[MCNEESE_FILE_DB_CONF_SERVER_ID]);
+            $query->countQuery();
+
+            $read_executed = $query->execute();
+            $read_result = 0;
+            if (is_object($read_executed)) {
+              $read_result = $read_executed->fetchField();
+            }
+
+            if ($read_result == 0) {
+              $query = $file_db->insert('mcneese_file_db_users', $options);
+              $fields = array('file_id' => $associated_id, 'user_id' => $this->user, 'server_id' => $conf[MCNEESE_FILE_DB_CONF_SERVER_ID]);
+              $query->fields($fields);
+
+              $write_result = $query->execute();
+            }
 
             // @todo: add group relations
           }
@@ -424,9 +454,10 @@ class mcneese_file_db_unrestricted_stream_wrapper extends mcneese_file_db_stream
     $timestamp = strtotime($this->file_meta->timestamp);
 
     $stat = array();
+    $stat['mode'] = 100000 | 661; // 100000 = file, 661 = rw-,rw-,r--
     $stat['ino'] = 0;
     $stat['nlink'] = 1;
-    $stat['uid'] = 0; // @todo: should this be made to match the drupal uid?
+    $stat['uid'] = 0;
     $stat['gid'] = 0;
     $stat['rdev'] = 0;
     $stat['size'] = $this->file_meta->size;
@@ -453,7 +484,7 @@ class mcneese_file_db_unrestricted_stream_wrapper extends mcneese_file_db_stream
 
     // initialize the raw file so that it can be stat'd on stream_close().
     if (is_null($this->stream_fhandle) || empty($this->stream_fid)) {
-      $this->stream_fname = drupal_tempnam('temporary://', MCNEESE_FILE_DB_KEY);
+      $this->stream_fname = drupal_tempnam('temporary://', MCNEESE_FILE_DB_KEY . '_');
       $this->stream_position = 0;
       $this->stream_fhandle = fopen($this->stream_fname, 'w+b');
       $this->stream_last_write = 0;
