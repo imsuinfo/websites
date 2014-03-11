@@ -128,7 +128,6 @@ function workbench_moderation_node_history_view($node) {
 
     // Add row data.
     $row['data']['vid'] = $revision->vid;
-    $row['data']['info'] .= '<div class="revision-title">' . check_plain($revision->title) . '</div>';
     $row['data']['info'] .= '<div class="revision-log description">' . filter_xss($revision->log) . '</div>';
     $row['data']['info'] .= '<div class="revision-user description">' . t('Revised by !user', array('!user' => theme('username', array('account' => $revision)))) . '</div>';
 
@@ -252,7 +251,7 @@ function workbench_moderation_node_history_view($node) {
   }
 
   // Set the table header.
-  $header = array(t('Revision'), t('Title'), t('Actions'), t('Workflow Log'));
+  $header = array(t('Revision'), t('Workflow Notes'), t('Actions'), t('Workflow Log'));
 
   // Return properly styled output.
   return array(
