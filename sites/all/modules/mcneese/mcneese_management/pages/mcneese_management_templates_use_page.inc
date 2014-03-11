@@ -406,6 +406,10 @@ function mcneese_management_templates_use_add_form_submit($form, &$form_state) {
     $node->mcneese_management_template['data'] = $form_state['values']['settings']['template']['fields'];
   }
 
+  if (property_exists($node, 'log')) {
+    $node->log .= "\n" . 'Created via template interface.';
+  }
+
   node_save($node);
 
   // redirect after submitting.
@@ -519,6 +523,10 @@ function mcneese_management_templates_use_edit_form_submit($form, &$form_state) 
   $node->mcneese_management_template['data'] = array();
   if (isset($form_state['values']['settings']['template']['fields'])) {
     $node->mcneese_management_template['data'] = $form_state['values']['settings']['template']['fields'];
+  }
+
+  if (property_exists($node, 'log')) {
+    $node->log .= "\n" . 'Updated via template interface.';
   }
 
   node_save($node);
