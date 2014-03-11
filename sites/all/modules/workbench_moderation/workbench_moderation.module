@@ -23,7 +23,8 @@ function workbench_moderation_menu() {
     'page arguments' => array(1),
     'access callback' => '_workbench_moderation_access',
     'access arguments' => array('view history', 1),
-    'file' => 'workbench_moderation.node.inc'
+    'file' => 'workbench_moderation.node.inc',
+    'weight' => 2,
   );
 
   // Unpublishing a live revision.
