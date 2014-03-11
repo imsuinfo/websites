@@ -1158,6 +1158,7 @@ function mcneese_management_template_build_form(&$form) {
   $supported_attributes[] = 'required';
   $supported_attributes[] = 'resizable';
   $supported_attributes[] = 'rows';
+  $supported_attributes[] = 'serialized';
   $supported_attributes[] = 'size';
   $supported_attributes[] = 'suffix';
   $supported_attributes[] = 'title';
@@ -1170,6 +1171,7 @@ function mcneese_management_template_build_form(&$form) {
   $boolean_attributes[] = 'required';
   $boolean_attributes[] = 'resizable';
   $boolean_attributes[] = 'wysiwyg';
+  $boolean_attributes[] = 'serialized';
 
 
   $form['settings']['template'] = array();
