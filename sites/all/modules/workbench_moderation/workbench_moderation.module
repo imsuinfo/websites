@@ -1882,6 +1882,23 @@ function workbench_moderation_workbench_block() {
     );
   }
 
+  // if workbench_access is enabled, check to see if the user is in the proper group before adding the moderation forn.
+  if (property_exists($node, 'workbench_access') && function_exists('workbench_access_get_active_tree')) {
+    $access_tree = workbench_access_get_access_tree();
+
+    $not_found = TRUE;
+    foreach ($node->workbench_access as $term_id) {
+      if (array_key_exists($term_id, $access_tree)) {
+        $not_found = FALSE;
+        break;
+      }
+    }
+
+    if ($not_found) {
+      return $info_block_messages;
+    }
+  }
+
   // Add a moderation form.
   if ($revision_current && !$revision_published && _workbench_moderation_access('update', $node) && $moderate_form = drupal_get_form('workbench_moderation_moderate_form', $node, "node/{$node->nid}/current-revision")) {
     if ($moderate_form = drupal_render($moderate_form)) {
