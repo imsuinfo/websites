@@ -129,7 +129,6 @@ function workbench_moderation_node_history_view($node) {
     // Add row data.
     $row['data']['vid'] = $revision->vid;
     $row['data']['info'] .= '<div class="revision-log description">' . filter_xss($revision->log) . '</div>';
-    $row['data']['info'] .= '<div class="revision-user description">' . t('Revised by !user', array('!user' => theme('username', array('account' => $revision)))) . '</div>';
 
     // Revision operations.
     $revision_operations = array();
