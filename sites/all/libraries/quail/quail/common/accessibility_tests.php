@@ -5642,9 +5642,20 @@ class tableUsesCaption extends quailTableTest {
 	*/
 	function check() {
 		foreach($this->getAllElements('table') as $table) {
-			if($this->isData($table) && !$this->elementHasChild($table, 'caption'))
-				$this->addReport($table);
-			
+			if($this->isData($table)) {
+				if ($this->elementHasChild($table, 'caption')) {
+					foreach($table->childNodes as $child) {
+						if($this->propertyIsEqual($child, 'tagName', 'caption')) {
+							if (!$child->hasChildNodes()) {
+								$this->addReport($table);
+							}
+						}
+					}
+				}
+				else {
+					$this->addReport($table);
+				}
+			}
 		}
 	
 	}
