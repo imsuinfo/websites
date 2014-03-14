@@ -237,49 +237,52 @@ class date_ical_plugin_row_ical_entity extends views_plugin_row {
     $location = '';
     if (!empty($this->options['location_field']) && $this->options['location_field'] != 'none') {
       $location_fields = date_ical_get_location_fields($this->base_table);
-      $location_info = $location_fields['name'][$this->options['location_field']];
-      $location_field_name = $location_info['real_field_name'];
+
+      if (isset($location_fields['name'][$this->options['location_field']])) {
+        $location_info = $location_fields['name'][$this->options['location_field']];
+        $location_field_name = $location_info['real_field_name'];
       
-      // Only attempt this is the entity actually has this field.
-      $items = field_get_items($this->entity_type, $entity, $location_field_name);
-      if ($items) {
-        $location_field = $items[0];
-        if ($location_info['type'] == 'node_reference') {
-          // Make sure this Node Reference actually references a node.
-          if ($location_field['nid']) {
-            $node = node_load($location_field['nid']);
-            $location = check_plain($node->title);
-          }
-        }
-        elseif ($location_info['type'] == 'addressfield') {
-          $locations = array();
-          foreach ($location_field as $key => $loc) {
-            if ($loc && !in_array($key, array('first_name', 'last_name'))) {
-              $locations[] = $loc;
+        // Only attempt this is the entity actually has this field.
+        $items = field_get_items($this->entity_type, $entity, $location_field_name);
+        if ($items) {
+          $location_field = $items[0];
+          if ($location_info['type'] == 'node_reference') {
+            // Make sure this Node Reference actually references a node.
+            if ($location_field['nid']) {
+              $node = node_load($location_field['nid']);
+              $location = check_plain($node->title);
             }
           }
-          $location = implode(', ', array_reverse($locations));
-        }
-        elseif ($location_info['type'] == 'location') {
-          $included_fields = array(
-            'name',
-            'additional',
-            'street',
-            'city',
-            'province_name',
-            'postal_code',
-            'country_name'
-          );
-          $location_data = array();
-          foreach ($included_fields as $included_field) {
-            if (!empty($location_field[$included_field])) {
-              $location_data[] = $location_field[$included_field];
+          elseif ($location_info['type'] == 'addressfield') {
+            $locations = array();
+            foreach ($location_field as $key => $loc) {
+              if ($loc && !in_array($key, array('first_name', 'last_name'))) {
+                $locations[] = $loc;
+              }
             }
+            $location = implode(', ', array_reverse($locations));
           }
-          $location = check_plain(implode(', ', $location_data));
-        }
-        else {
-          $location = check_plain($location_field['value']);
+          elseif ($location_info['type'] == 'location') {
+            $included_fields = array(
+              'name',
+              'additional',
+              'street',
+              'city',
+              'province_name',
+              'postal_code',
+              'country_name'
+            );
+            $location_data = array();
+            foreach ($included_fields as $included_field) {
+              if (!empty($location_field[$included_field])) {
+                $location_data[] = $location_field[$included_field];
+              }
+            }
+            $location = check_plain(implode(', ', $location_data));
+          }
+          else {
+            $location = check_plain($location_field['value']);
+          }
         }
       }
     }
