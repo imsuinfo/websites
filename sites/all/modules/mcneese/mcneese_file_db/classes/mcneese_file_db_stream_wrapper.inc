@@ -1021,13 +1021,14 @@ abstract class mcneese_file_db_stream_wrapper implements DrupalStreamWrapperInte
       }
     }
 
+    $extension = '';
+    if (!is_null($this->file_meta) && !empty($this->file_meta->extension)) {
+      $extension .= '.' . $this->file_meta->extension;
+    }
+
     if (empty($this->tmp_filename)) {
       if (!is_null($this->file_meta) && !empty($this->file_meta->filename)) {
-        $filename .= '/' . $this->file_meta->filename;
-
-        if (!empty($this->file_meta->extension)) {
-          $filename .= '.' . $this->file_meta->extension;
-        }
+        $filename .= '/' . $this->file_meta->filename . $extension;
       }
     }
     else {
