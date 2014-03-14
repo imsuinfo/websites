@@ -53,7 +53,7 @@ class mcneese_file_db_restricted_stream_wrapper extends mcneese_file_db_stream_w
       return FALSE;
     }
 
-    $this->uri = $uri;
+    $this->uri = urldecode($uri);
     $parsed = $this->parse_uri();
 
     if ($parsed === FALSE) {
