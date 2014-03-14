@@ -12,17 +12,6 @@
  */
 
 /**
- * Work around cache bug that causes content to be loaded twice.
- */
-if (defined('DRUPAL_ROOT')) {
-  if (function_exists('request_path')) {
-    header('HTTP/1.1 307 Temporary Redirect', TRUE, 307);
-    header('Location: ' . request_path());
-    exit();
-  }
-}
-
-/**
  * Root directory of Drupal installation.
  */
 define('DRUPAL_ROOT', getcwd());
