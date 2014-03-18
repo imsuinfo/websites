@@ -1825,7 +1825,7 @@ function workbench_menu_admin_item_settings_edit_form_validate($form, &$form_sta
         $matched = preg_match('@^(\d+)(/.*|$|\?.*|#.*)@', $node_id, $matches);
 
         if ($matched == 0) {
-          $matched = preg_match('@\[nid: (\d+)\]\s*($|\?.*|#.*)@', $field, $matches);
+          $matched = preg_match('@\[nid:\s*(\d+)\]\s*($|\?.*|#.*)@', $field, $matches);
         }
 
         if ($matched > 0) {
@@ -2010,7 +2010,7 @@ function workbench_menu_admin_item_settings_edit_form_validate($form, &$form_sta
       $menu_id = $field;
 
       $matches = array();
-      $matched = preg_match('@\[id: (\d+)\]\s*$@', $field, $matches);
+      $matched = preg_match('@\[id:\s*(\d+)\]\s*$@', $field, $matches);
 
       if ($matched > 0) {
         $menu_id = $matches[1];
@@ -2026,7 +2026,7 @@ function workbench_menu_admin_item_settings_edit_form_validate($form, &$form_sta
       }
 
       $matches = array();
-      $matched = preg_match('@\[id: (\d+)\]\s*$@', $form['settings']['menu']['#default_value'], $matches);
+      $matched = preg_match('@\[id:\s*(\d+)\]\s*$@', $form['settings']['menu']['#default_value'], $matches);
 
       $original_menu_id = NULL;
       if ($matched > 0) {
@@ -2073,21 +2073,21 @@ function workbench_menu_admin_item_settings_edit_form_validate($form, &$form_sta
       $menu_item_id = $field_menu_item;
 
       $matches = array();
-      $matched = preg_match('@\[id: (\d+)\]\s*$@', $field_menu, $matches);
+      $matched = preg_match('@\[id:\s*(\d+)\]\s*$@', $field_menu, $matches);
 
       if ($matched > 0) {
         $menu_id = $matches[1];
       }
 
       $matches = array();
-      $matched = preg_match('@\[id: (\d+)\]\s*$@', $field_menu_item, $matches);
+      $matched = preg_match('@\[id:\s*(\d+)\]\s*$@', $field_menu_item, $matches);
 
       if ($matched > 0) {
         $menu_item_id = $matches[1];
       }
 
       $matches = array();
-      $matched = preg_match('@\[id: (\d+)\]\s*$@', $form['settings']['menu_item']['#default_value'], $matches);
+      $matched = preg_match('@\[id:\s*(\d+)\]\s*$@', $form['settings']['menu_item']['#default_value'], $matches);
 
       $original_menu_item_id = NULL;
       if ($matched > 0) {
