@@ -143,7 +143,7 @@ function mcneese_management_group_leader_operation_form($form, &$form_state, $ac
   $leaders = variable_get('mcneese_management_group_leaders', array());
 
   $fallback_user = user_load($fallback_uid);
-  $fallback_leader = $fallback_user->name . ' [uid:' . $fallback_uid . ']';
+  $fallback_leader = $fallback_user->name . ' [uid: ' . $fallback_uid . ']';
 
   if (array_key_exists($access_id, $leaders)) {
     $leader_uid = $leaders[$access_id];
@@ -153,7 +153,7 @@ function mcneese_management_group_leader_operation_form($form, &$form_state, $ac
   }
 
   $leader = user_load($leader_uid);
-  $default_leader = $leader->name . ' [uid:' . $leader_uid . ']';
+  $default_leader = $leader->name . ' [uid: ' . $leader_uid . ']';
 
   $form = array();
 
@@ -230,7 +230,7 @@ function mcneese_management_group_leader_operation_form_submit($form, &$form_sta
   }
   else {
     $matches = array();
-    $matched = preg_match('/ \[uid:(\d+)]\s*$/i', $user, $matches);
+    $matched = preg_match('/ \[uid:\s*(\d+)]\s*$/i', $user, $matches);
 
     if ($matched) {
       $user_id = $matches[1];

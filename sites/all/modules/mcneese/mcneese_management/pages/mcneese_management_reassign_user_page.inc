@@ -112,7 +112,7 @@ function mcneese_management_reassign_user_form_submit($form, &$form_state) {
   }
   else {
     $matches = array();
-    $matched = preg_match('/ \[uid:(\d+)]\s*$/i', $from_user, $matches);
+    $matched = preg_match('/ \[uid:\s*(\d+)]\s*$/i', $from_user, $matches);
 
     if ($matched) {
       $from_user_id = $matches[1];
@@ -130,7 +130,7 @@ function mcneese_management_reassign_user_form_submit($form, &$form_state) {
   }
   else {
     $matches = array();
-    $matched = preg_match('/ \[uid:(\d+)]\s*$/i', $to_user, $matches);
+    $matched = preg_match('/ \[uid:\s*(\d+)]\s*$/i', $to_user, $matches);
 
     if ($matched) {
       $to_user_id = $matches[1];

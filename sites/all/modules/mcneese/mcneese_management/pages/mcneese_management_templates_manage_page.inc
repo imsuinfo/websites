@@ -836,7 +836,7 @@ function mcneese_management_templates_manage_user_add_form_submit($form, &$form_
   }
   else {
     $matches = array();
-    $matched = preg_match('/ \[uid:(\d+)]\s*$/i', $user, $matches);
+    $matched = preg_match('/ \[uid:\s*(\d+)]\s*$/i', $user, $matches);
 
     if ($matched) {
       $user_id = $matches[1];
