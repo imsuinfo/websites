@@ -1185,3 +1185,11 @@ function killfile_can_undelete($node, $account = NULL){
 
   return (node_access('delete', $node, $account) && user_access('undelete killfiled content', $account));
 }
+
+/**
+ * Implements hook_query_TAG_alter() for workbench_menu_autocomplete_nid().
+ */
+function killfile_query_workbench_menu_autocomplete_nid_alter(QueryAlterableInterface $query) {
+  $query->leftjoin('killfile_nodes', 'kn', 'kn.nid = n.nid');
+  $query->isNull('kn.nid');
+}
