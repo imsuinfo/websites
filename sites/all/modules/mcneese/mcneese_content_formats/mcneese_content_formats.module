@@ -172,6 +172,66 @@ function mcneese_content_formats_node_presave($node) {
 }
 
 /**
+ * Implements hook_webform_component_presave().
+ */
+function mcneese_content_formats_webform_component_presave(&$component) {
+  $deny_abused_codes_value = FALSE;
+  $denied_tags_string = 'script noscript';
+  $denied_tags = explode(' ', $denied_tags_string);
+
+  if (!empty($component['nid'])) {
+    $node = node_load($component['nid']);
+
+    if (is_object($node)) {
+      $deny_abused_codes_value = variable_get('mcneese_content_formats_deny_abused_codes_' . $node->type, FALSE);
+
+      $denied_tags_string = variable_get('mcneese_content_formats_denied_tags_' . $node->type, 'script noscript');
+      $denied_tags = explode(' ', $denied_tags_string);
+    }
+  }
+
+  #if (user_access('bypass denied tags')) {
+  #  $denied_tags = array();
+  #}
+
+  $operations = array();
+  $operations['deny_abused_codes'] = $deny_abused_codes_value && !user_access('bypass deny abused codes');
+  $operations['fix_links'] = variable_get('mcneese_content_formats_fix_links_' . $node->type, FALSE);
+  $operations['fix_markup'] = variable_get('mcneese_content_formats_fix_markup_' . $node->type, FALSE);
+  $operations['denied_tags'] = $denied_tags;
+
+  $abused_codes = array();
+  $abused_codes['&#34;'] = '"';
+  $abused_codes['&#38;'] = '&amp;';
+  $abused_codes['&#39;'] = '\'';
+  $abused_codes['&#60;'] = '&lt;';
+  $abused_codes['&#62;'] = '&gt;';
+  $abused_codes['&quot;'] = '"';
+  $abused_codes['&ndash;'] = '-';
+  $abused_codes['&mdash;'] = '-';
+  $abused_codes['&lsquo;'] = '\'';
+  $abused_codes['&rsquo;'] = '\'';
+  $abused_codes['&ldquo;'] = '"';
+  $abused_codes['&rdquo;'] = '"';
+
+
+  $node_variables = array_keys(get_object_vars($node));
+
+  if (isset($component['type']) && $component['type'] == 'markup') {
+
+    if (!isset($component['extra']['format']) || $component['extra']['format'] != 'php_code') {
+
+      if ($operations['deny_abused_codes']) mcneese_content_formats_deny_abused_codes($abused_codes, $component['value']);
+      mcneese_content_formats_alter_dom($component['value'], $operations);
+    }
+  }
+
+  if (isset($component['name_html'])) {
+    mcneese_content_formats_alter_dom($component['name_html'], $operations);
+  }
+}
+
+/**
  * Strip out used code from index.
  *
  * @param array $abused_code
