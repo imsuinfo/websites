@@ -446,171 +446,181 @@ function mcneese_content_formats_alter_dom(&$text, $operations) {
           $change_tags[] = array('tag' => $tag, 'type' => 'br');
           $altered = TRUE;
         }
-     }
-     elseif ($tag->tagName == 'table') {
-       // table may not be empty
-       if ($tag->hasChildNodes()) {
-         // apply appropriate limitations on tags
-         $limited_tags = array();
-         $limited_tags['caption'] = NULL;
-         $limited_tags['thead'] = NULL;
-         $limited_tags['tbody'] = NULL;
-         $limited_tags['thead_tr'] = NULL;
-         $limited_tags['tbody_first_tr'] = NULL;
+      }
+      elseif ($tag->tagName == 'table') {
+        // table may not be empty
+        if ($tag->hasChildNodes()) {
+          // apply appropriate limitations on tags
+          $limited_tags = array();
+          $limited_tags['caption'] = NULL;
+          $limited_tags['thead'] = NULL;
+          $limited_tags['tbody'] = NULL;
+          $limited_tags['thead_tr'] = NULL;
+          $limited_tags['tbody_first_tr'] = NULL;
 
-         // apply appropriate fixes to badly placed/formed tags
-         $fix_tags_set = array();
-         $fix_tags_set['extra_head'] = array();
+          // generate random bytes to ensure that all tables have a unique tag id.
+          if ($tag->hasAttribute('id')) {
+            $table_id = $tag->getAttribute('id');
+          }
+          else {
+            $table_id = 'table-' . drupal_random_key(9);
+            $tag->setAttribute('id', $table_id);
+            $altered = TRUE;
+          }
 
-         foreach ($tag->childNodes as $child_tag_0) {
-           if ($child_tag_0 instanceOf DOMText) continue;
+          // apply appropriate fixes to badly placed/formed tags
+          $fix_tags_set = array();
+          $fix_tags_set['extra_head'] = array();
 
-           if ($child_tag_0->tagName == 'caption') {
-             if (is_null($limited_tags['caption'])) {
-               $limited_tags['caption'] = $child_tag_0;
-             }
-             else {
-               $remove_tags_children[] = $child_tag_0;
-             }
+          foreach ($tag->childNodes as $child_tag_0) {
+            if ($child_tag_0 instanceOf DOMText) continue;
 
-             continue;
-           }
-           elseif ($child_tag_0->tagName == 'thead') {
-             if (is_null($limited_tags['thead'])) {
-               $limited_tags['thead'] = $child_tag_0;
-             }
-             else {
-               $remove_tags_children[] = $child_tag_0;
-               continue;
-             }
-           }
-           elseif ($child_tag_0->tagName == 'tbody') {
-             if (is_null($limited_tags['tbody'])) {
-               $limited_tags['tbody'] = $child_tag_0;
-             }
-             else {
-               $remove_tags_children[] = $child_tag_0;
-               continue;
-             }
-           }
-           else {
-             // do not allow unsupported tags within the table.
-             $remove_tags_children[] = $child_tag_0;
-             continue;
-           }
+            if ($child_tag_0->tagName == 'caption') {
+              if (is_null($limited_tags['caption'])) {
+                $limited_tags['caption'] = $child_tag_0;
+              }
+              else {
+                $remove_tags_children[] = $child_tag_0;
+              }
 
-           if ($child_tag_0->hasChildNodes()) {
-             // thead must be treated differently
-             if ($child_tag_0->tagName == 'thead') {
-               foreach ($child_tag_0->childNodes as $child_tag_1) {
-                 if ($child_tag_1 instanceOf DOMText) continue;
+              continue;
+            }
+            elseif ($child_tag_0->tagName == 'thead') {
+              if (is_null($limited_tags['thead'])) {
+                $limited_tags['thead'] = $child_tag_0;
+              }
+              else {
+                $remove_tags_children[] = $child_tag_0;
+                continue;
+              }
+            }
+            elseif ($child_tag_0->tagName == 'tbody') {
+              if (is_null($limited_tags['tbody'])) {
+                $limited_tags['tbody'] = $child_tag_0;
+              }
+              else {
+                $remove_tags_children[] = $child_tag_0;
+                continue;
+              }
+            }
+            else {
+              // do not allow unsupported tags within the table.
+              $remove_tags_children[] = $child_tag_0;
+              continue;
+            }
 
-                 if ($child_tag_1->tagName == 'tr' && is_null($limited_tags['thead_tr'])) {
-                   $limited_tags['thead_tr'] = $child_tag_1;
-                 }
-                 else {
-                   $fix_tags_set['extra_head'][] = $child_tag_1;
-                 }
-               }
-             }
-             else {
-               $first_has_children = FALSE;
-               foreach ($child_tag_0->childNodes as $child_tag_1) {
-                 if ($child_tag_1 instanceOf DOMText) continue;
+            if ($child_tag_0->hasChildNodes()) {
+              // thead must be treated differently
+              if ($child_tag_0->tagName == 'thead') {
+                foreach ($child_tag_0->childNodes as $child_tag_1) {
+                  if ($child_tag_1 instanceOf DOMText) continue;
 
-                 if ($child_tag_1->tagName == 'tr' && is_null($limited_tags['tbody_first_tr'])) {
-                   $limited_tags['tbody_first_tr'] = $child_tag_1;
-                 }
+                  if ($child_tag_1->tagName == 'tr' && is_null($limited_tags['thead_tr'])) {
+                    $limited_tags['thead_tr'] = $child_tag_1;
+                  }
+                  else {
+                    $fix_tags_set['extra_head'][] = $child_tag_1;
+                  }
+                }
+              }
+              else {
+                $first_has_children = FALSE;
+                foreach ($child_tag_0->childNodes as $child_tag_1) {
+                  if ($child_tag_1 instanceOf DOMText) continue;
 
-                 if ($child_tag_1->tagName == 'tr' && $child_tag_1->hasChildNodes()) {
-                   // if all of the row cells are empty of tags or text, then remove the entire row.
-                   $found_content = FALSE;
-                   foreach ($child_tag_1->childNodes as $child_tag_2) {
-                     if ($child_tag_2 instanceOf DOMText) continue;
+                  if ($child_tag_1->tagName == 'tr' && is_null($limited_tags['tbody_first_tr'])) {
+                    $limited_tags['tbody_first_tr'] = $child_tag_1;
+                  }
 
-                     if ($child_tag_2->tagName == 'td' || $child_tag_2->tagName == 'th') {
-                       if ($child_tag_2->hasChildNodes()) {
-                         $found_content = TRUE;
+                  if ($child_tag_1->tagName == 'tr' && $child_tag_1->hasChildNodes()) {
+                    // if all of the row cells are empty of tags or text, then remove the entire row.
+                    $found_content = FALSE;
+                    foreach ($child_tag_1->childNodes as $child_tag_2) {
+                      if ($child_tag_2 instanceOf DOMText) continue;
 
-                         if (!$first_has_children && $limited_tags['tbody_first_tr'] === $child_tag_1) {
-                           $first_has_children = TRUE;
-                         }
+                      if ($child_tag_2->tagName == 'td' || $child_tag_2->tagName == 'th') {
+                        if ($child_tag_2->hasChildNodes()) {
+                          $found_content = TRUE;
 
-                         continue;
-                       }
-                     }
-                   }
+                          if (!$first_has_children && $limited_tags['tbody_first_tr'] === $child_tag_1) {
+                            $first_has_children = TRUE;
+                          }
 
-                   if ($found_content) {
-                     if (!$first_has_children) {
-                       $remove_tags_children[] = $limited_tags['tbody_first_tr'];
-                       $limited_tags['tbody_first_tr'] = $child_tag_1;
-                       $first_has_children = TRUE;
-                     }
-                   }
-                   else {
-                     if ($limited_tags['tbody_first_tr'] !== $child_tag_1) {
-                       $remove_tags_children[] = $child_tag_1;
-                     }
-                   }
-                 }
-                 else {
-                   if ($limited_tags['tbody_first_tr'] !== $child_tag_1) {
-                     $remove_tags_children[] = $child_tag_1;
-                   }
-                 }
-               }
-             }
-           }
-         }
+                          continue;
+                        }
+                      }
+                    }
 
-         // make sure a body tag always exists.
-         if (is_null($limited_tags['tbody'])) {
-           $limited_tags['tbody'] = $dom->get_dom()->createElement('tbody');
-           $tag->appendChild($limited_tags['tbody']);
-           $altered = TRUE;
-         }
+                    if ($found_content) {
+                      if (!$first_has_children) {
+                        $remove_tags_children[] = $limited_tags['tbody_first_tr'];
+                        $limited_tags['tbody_first_tr'] = $child_tag_1;
+                        $first_has_children = TRUE;
+                      }
+                    }
+                    else {
+                      if ($limited_tags['tbody_first_tr'] !== $child_tag_1) {
+                        $remove_tags_children[] = $child_tag_1;
+                      }
+                    }
+                  }
+                  else {
+                    if ($limited_tags['tbody_first_tr'] !== $child_tag_1) {
+                      $remove_tags_children[] = $child_tag_1;
+                    }
+                  }
+                }
+              }
+            }
+          }
 
-         // force extra header rows to be normal body rows.
-         while (!empty($fix_tags_set['extra_head'])) {
-           $fix_tag = array_pop($fix_tags_set['extra_head']);
+          // make sure a body tag always exists.
+          if (is_null($limited_tags['tbody'])) {
+            $limited_tags['tbody'] = $dom->get_dom()->createElement('tbody');
+            $tag->appendChild($limited_tags['tbody']);
+            $altered = TRUE;
+          }
 
-           $removed_tag = $dom->remove_element($fix_tag, FALSE);
-           if ($removed_tag) {
-             if ($removed_tag->hasChildNodes()) {
-               foreach ($removed_tag->childNodes as $child_tag) {
-                 if ($child_tag instanceOf DOMText) continue;
+          // force extra header rows to be normal body rows.
+          while (!empty($fix_tags_set['extra_head'])) {
+            $fix_tag = array_pop($fix_tags_set['extra_head']);
 
-                 if ($child_tag->hasAttribute('scope')) {
-                   $child_tag->removeAttribute('scope');
-                 }
+            $removed_tag = $dom->remove_element($fix_tag, FALSE);
+            if ($removed_tag) {
+              if ($removed_tag->hasChildNodes()) {
+                foreach ($removed_tag->childNodes as $child_tag) {
+                  if ($child_tag instanceOf DOMText) continue;
 
-                 $change_tags[] = array('tag' => $child_tag, 'type' => 'td');
-               }
-             }
+                  if ($child_tag->hasAttribute('scope')) {
+                    $child_tag->removeAttribute('scope');
+                  }
 
-             if ($limited_tags['tbody']->hasChildNodes()) {
-               $first_child = $limited_tags['tbody']->childNodes->item(0);
-               $limited_tags['tbody']->insertBefore($removed_tag, $first_child);
-             }
-             else {
-               $limited_tags['tbody']->appendChild($removed_tag);
-             }
-           }
+                  $change_tags[] = array('tag' => $child_tag, 'type' => 'td');
+                }
+              }
 
-           $altered = TRUE;
-         }
+              if ($limited_tags['tbody']->hasChildNodes()) {
+                $first_child = $limited_tags['tbody']->childNodes->item(0);
+                $limited_tags['tbody']->insertBefore($removed_tag, $first_child);
+              }
+              else {
+                $limited_tags['tbody']->appendChild($removed_tag);
+              }
+            }
 
-         if (!$tag->hasChildNodes()) {
-           $remove_tags[] = $tag;
-           continue;
-         }
-       }
-       else {
-         $remove_tags[] = $tag;
-         continue;
-       }
-     }
+            $altered = TRUE;
+          }
+
+          if (!$tag->hasChildNodes()) {
+            $remove_tags[] = $tag;
+            continue;
+          }
+        }
+        else {
+          $remove_tags[] = $tag;
+          continue;
+        }
+      }
 
 
       // replace name with id for all unsupported tags.
