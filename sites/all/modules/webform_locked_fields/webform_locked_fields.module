@@ -102,6 +102,7 @@ function webform_locked_fields_form_alter(&$form, &$form_state, $form_id) {
             '#title' => t('Webform creator can modify'),
             '#default_value' => $editable,
             '#description' => t('Check this box if webform creators should be allowed to change or delete this form component. If unchecked, this component can only be modified by users with "administer webform locked fields" permission.'),
+            '#weight' => 200,
           );
         }
         else {
