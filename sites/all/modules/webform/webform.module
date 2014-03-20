@@ -975,6 +975,7 @@ function webform_webform_component_info() {
         'email_address' => TRUE,
         'email_name' => TRUE,
         'title_display' => FALSE,
+        'label_classes' => FALSE,
         'private' => FALSE,
         'wrapper_classes' => FALSE,
         'css_classes' => FALSE,
@@ -985,6 +986,7 @@ function webform_webform_component_info() {
       'description' => t('Displays text as HTML in the form; does not render a field.'),
       'features' => array(
         'title_display' => FALSE,
+        'label_classes' => FALSE,
         'analysis' => FALSE,
         'csv' => FALSE,
         'default_value' => FALSE,
@@ -992,7 +994,6 @@ function webform_webform_component_info() {
         'email' => FALSE,
         'required' => FALSE,
         'conditional' => FALSE,
-        'title_display' => FALSE,
         'private' => FALSE,
         'wrapper_classes' => FALSE,
         'css_classes' => FALSE,
@@ -1019,6 +1020,7 @@ function webform_webform_component_info() {
         'private' => FALSE,
         'required' => FALSE,
         'title_display' => FALSE,
+        'label_classes' => FALSE,
         'wrapper_classes' => FALSE,
         'css_classes' => FALSE,
       ),
@@ -4241,6 +4243,10 @@ function _webform_component_classes(&$element, $component) {
   if (isset($component['extra']['legend_classes']) && drupal_strlen($component['extra']['legend_classes'])) {
     $element['#legend_attributes']['class'] = isset($element['#legend_attributes']['class']) ? $element['#legend_attributes']['class'] : array();
     $element['#legend_attributes']['class'] = array_merge($element['#legend_attributes']['class'], explode(' ' , $component['extra']['legend_classes']));
+  }
+  if (isset($component['extra']['label_classes']) && drupal_strlen($component['extra']['label_classes'])) {
+    $element['#label_attributes']['class'] = isset($element['#label_attributes']['class']) ? $element['#label_attributes']['class'] : array();
+    $element['#label_attributes']['class'] = array_merge($element['#label_attributes']['class'], explode(' ' , $component['extra']['label_classes']));
   }
 }
 

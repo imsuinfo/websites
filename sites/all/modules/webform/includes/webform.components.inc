@@ -519,6 +519,16 @@ function webform_component_edit_form($form, $form_state, $node, $component, $clo
       '#parents' => array('extra', 'css_classes'),
     );
   }
+  if (webform_component_feature($component['type'], 'title_display') && webform_component_feature($component['type'], 'label_classes')) {
+    $form['display']['label_classes'] = array(
+      '#type' => 'textfield',
+      '#title' => t('Title Classes'),
+      '#default_value' => isset($component['extra']['label_classes']) ? $component['extra']['label_classes'] : '',
+      '#description' => t('Apply a class to the title (aka label) field. Separate multiple classes by spaces.'),
+      '#weight' => 53,
+      '#parents' => array('extra', 'label_classes'),
+    );
+  }
 
   // Validation settings.
   $form['validation'] = array(
@@ -965,6 +975,7 @@ function webform_component_feature($type, $feature) {
     'wrapper_classes' => TRUE,
     'legend_classes' => FALSE,
     'css_classes' => TRUE,
+    'label_classes' => TRUE,
     'views_range' => FALSE,
   );
   return isset($components[$type]['features'][$feature]) ? $components[$type]['features'][$feature] : !empty($defaults[$feature]);
