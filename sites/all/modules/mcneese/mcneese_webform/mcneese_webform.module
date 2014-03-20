@@ -49,8 +49,31 @@ function mcneese_webform_webform_component_info() {
       'private' => FALSE,
       'wrapper_classes' => FALSE,
       'css_classes' => FALSE,
+      'label_classes' => FALSE,
     ),
     'file' => 'components/print_break.inc',
+  );
+
+  $components['input_list'] = array(
+    'label' => t("Input List"),
+    'description' => t("This is a structuring component designed to present options in a list format."),
+    'features' => array(
+      'title_display' => FALSE,
+      'analysis' => FALSE,
+      'csv' => FALSE,
+      'default_value' => FALSE,
+      'description' => FALSE,
+      'email' => FALSE,
+      'required' => FALSE,
+      'conditional' => FALSE,
+      'title_display' => FALSE,
+      'private' => FALSE,
+      'wrapper_classes' => TRUE,
+      'css_classes' => TRUE,
+      'label_classes' => FALSE,
+      'group' => TRUE,
+    ),
+    'file' => 'components/input_list.inc',
   );
 
   return $components;

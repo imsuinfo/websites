@@ -12,3 +12,4 @@ dependencies[] = webform
 files[] = mcneese_webform.module
 files[] = components/banner_id.inc
 files[] = components/print_break.inc
+files[] = components/input_list.inc
