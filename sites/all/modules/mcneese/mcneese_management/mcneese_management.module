@@ -1720,8 +1720,8 @@ function mcneese_management_template_process_form_state($form, &$form_state) {
     $target_field = $target_tag->getAttribute('field');
     if (empty($target_field)) continue;
 
-    $target_field_parts = array_reverse(explode('][', $target_field));
-    $target_name = array_pop($target_field_parts);
+    $target_field_parts = explode('][', $target_field);
+    $target_name = array_shift($target_field_parts);
 
     $target_type = 'string';
     if ($target_tag->hasAttribute('type')) {
