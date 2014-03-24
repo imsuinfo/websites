@@ -284,6 +284,45 @@ class cf_dom {
   }
 
   /**
+   * Converts the selected tag into HTML markup.
+   *
+   * @param DOMNode $element
+   *   The element to convert.
+   * @param bool $on_body
+   *   If TRUE, operate on body element.
+   *   If FALSE, operate on head element.
+   *   The supplied tag must be attached to the appropriate head or body.
+   *   This defaults to TRUE.
+   *
+   * @return string|bool
+   *   The markup text that the object was converted from.
+   *   FALSE on error.
+   */
+  public function get_tag_markup($element, $on_body = TRUE) {
+    if ($on_body) {
+      if (!($this->body instanceof DOMNode)) {
+        if (class_exists('cf_error')) {
+          cf_error::invalid_object('this->body');
+        }
+
+        return FALSE;
+      }
+
+      return $this->p_get_markup($element, $this->body);
+    }
+
+    if (!($this->head instanceof DOMNode)) {
+      if (class_exists('cf_error')) {
+        cf_error::invalid_object('this->head');
+      }
+
+      return FALSE;
+    }
+
+    return $this->p_get_markup($element, $this->head);
+  }
+
+  /**
    * Changes the element from one type to another.
    *
    * @param DOMNode $element
