@@ -2045,18 +2045,13 @@ function workbench_menu_admin_item_settings_edit_form_validate($form, &$form_sta
 
       if (cf_is_integer($menu_id)) {
         $query = db_select('workbench_menus', 'wm');
-        $query->fields('wm', array('id', 'access_id', 'breadcrumb_name'));
+        $query->fields('wm', array('id', 'access_id'));
         $query->condition('wm.id', $menu_id);
 
         $results = (array) $query->execute()->fetchAll();
 
         if (empty($results)) {
-          form_set_error('settings][menu', t("There is no menuu with an id of %menu_id .", array('%menu_id' => $menu_id)));
-        }
-        else {
-          $name = (string) db_query('SELECT ttd.name AS name FROM {taxonomy_term_data} AS ttd INNER JOIN {workbench_menus AS wm ON ttd.tid = CAST(wm.access_id AS integer) WHERE wm.id = :menu_id', array(':menu_id' => $menu_id))->fetchField();
-
-          $field = $name . ' [id: ' . $menu_id . ']';
+          form_set_error('settings][menu', t("There is no menu with an id of %menu_id .", array('%menu_id' => $menu_id)));
         }
       }
       else {
@@ -2137,19 +2132,13 @@ function workbench_menu_admin_item_settings_edit_form_validate($form, &$form_sta
 
       if (cf_is_integer($menu_id)) {
         $query = db_select('workbench_menus', 'wm');
-        $query->fields('wm', array('id', 'access_id', 'breadcrumb_name'));
+        $query->fields('wm', array('id', 'access_id'));
         $query->condition('wm.id', $menu_id);
 
         $results = (array) $query->execute()->fetchAll();
 
         if (empty($results)) {
-          form_set_error('settings][menu', t("There is no menuu with an id of %menu_id .", array('%menu_id' => $menu_id)));
-        }
-        else {
-          $result = array_pop($results);
-          $name = (string) db_query('SELECT ttd.name AS name FROM {taxonomy_term_data} AS ttd INNER JOIN {workbench_menus AS wm ON ttd.tid = CAST(wm.access_id AS integer) WHERE wm.id = :menu_id', array(':menu_id' => $menu_id))->fetchField();
-
-          $field_menu = $name . ' [id: ' . $menu_id . ']';
+          form_set_error('settings][menu', t("There is no menu with an id of %menu_id .", array('%menu_id' => $menu_id)));
         }
       }
       else {
