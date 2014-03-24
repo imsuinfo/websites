@@ -227,11 +227,13 @@ function mcneese_management_templates_manage_edit_form($form, &$form_state, $tem
   $help_input_markup .= '<ul>';
   $help_input_markup .= '<li><strong>name</strong>: Overrides HTML name attribute. Required unique identity for the template input field for use by the template targets.</li>';
   $help_input_markup .= '<li><strong>type</strong>: Overrides HTML name attribute. Designates the input field to be used on the template form.</li>';
-  $help_input_markup .= '<li><strong>wysiwyg</strong>: When set to "1", provides the user with a WYSIWYG such as ckeditor (may only work with textarea fields).</li>';
+  $help_input_markup .= '<li><strong>wysiwyg</strong>: When set to "1", provides the user with a WYSIWYG such as ckeditor (may only work with textarea and text_format fields).</li>';
   $help_input_markup .= '<li><strong>markup</strong>: When set to "1", adds the values of this field as HTML markup instead of plain text.</li>';
   $help_input_markup .= '<li><strong>schemes</strong>: A comma separated list of file schemes to use for file based input types such as media (might not yet be supported).</li>';
   $help_input_markup .= '<li><strong>file_types</strong>: A comma separated list of file types to use for file based input types such as media (might not yet be supported).</li>';
   $help_input_markup .= '<li><strong>serialized</strong>: When set to "1", loads and processes the default_value as a serialized string.</li>';
+  $help_input_markup .= '<li><strong>has_alt</strong>: Provide a custom alt textfield for targets that support special alt text handling.</li>';
+  $help_input_markup .= '<li><strong>has_title</strong>: Provide a custom title textfield for targets that support special title text handling.</li>';
   $help_input_markup .= '</ul>';
   $help_input_markup .= '<br>';
   $help_input_markup .= "The following Template Input types are supported:" . '<br>';
@@ -242,7 +244,7 @@ function mcneese_management_templates_manage_edit_form($form, &$form_state, $tem
   $help_input_markup .= '<li><strong>textfield</strong>: A standard drupal textfield.</li>';
   $help_input_markup .= '<li><strong>text_fromat</strong>: A <em>textarea</em> that adds support for WYSIWYG editing and handling.</li>';
   $help_input_markup .= '<li><strong>field_group</strong>: The McNeese www group field select list.</li>';
-  $help_input_markup .= '<li><strong>media</strong>: A drupal file field using the media module.</li>';
+  $help_input_markup .= '<li><strong>media</strong>: A drupal file field using the media module. This supports the following attributes: <em>has_alt</em>, <em>has_title</em></li>';
   $help_input_markup .= '</ul>';
   $help_input_markup .= '<br>';
   $help_input_markup .= 'Example Template Input fields:<br>';
@@ -250,6 +252,7 @@ function mcneese_management_templates_manage_edit_form($form, &$form_state, $tem
   $help_input_markup .= '<li><strong>' . check_plain('<ti name="field_title" title="Title" type="textfield"></ti>') . '</strong></li>';
   $help_input_markup .= '<li><strong>' . check_plain('<ti name="field_body" title="Body" type="textarea"></ti>') . '</strong></li>';
   $help_input_markup .= '<li><strong>' . check_plain('<ti name="field_markup" title="Markup" type="text_format" markup="1" format="full_html"></ti>') . '</strong></li>';
+  $help_input_markup .= '<li><strong>' . check_plain('<ti name="field_featured_image" title="Featured Image" type="media" required="1" has_alt="field_featured_image"></ti>') . '</strong></li>';
   $help_input_markup .= '</ul>';
   $help_input_markup .= '<br>';
 

@@ -1249,6 +1249,18 @@ function mcneese_management_template_build_form(&$form) {
   }
 
 
+  $node = &$form['node']['#value'];
+  $nid = NULL;
+  $vid = NULL;
+
+  if (property_exists($node, 'nid')) {
+    $nid = $node->nid;
+  }
+  if (property_exists($node, 'vid')) {
+    $vid = $node->vid;
+  }
+
+
   // process supported types.
   $supported_types = array();
   $supported_types[] = 'select';
@@ -1268,6 +1280,8 @@ function mcneese_management_template_build_form(&$form) {
   $supported_attributes[] = 'default_value';
   $supported_attributes[] = 'empty_value';
   $supported_attributes[] = 'empty_option';
+  $supported_attributes[] = 'has_alt';
+  $supported_attributes[] = 'has_title';
   $supported_attributes[] = 'id';
   $supported_attributes[] = 'maxlength';
   $supported_attributes[] = 'multiple';
@@ -1427,6 +1441,8 @@ function mcneese_management_template_build_form(&$form) {
     $ti_default = FALSE;
     $serialized = FALSE;
     $manual_cardinality = FALSE;
+    $has_alt = FALSE;
+    $has_title = FALSE;
     foreach ($supported_attributes as $attribute) {
       if (!$ti_tag->hasAttribute($attribute)) continue;
 
@@ -1443,6 +1459,12 @@ function mcneese_management_template_build_form(&$form) {
       }
       elseif ($attribute == 'default_value') {
         $ti_default = TRUE;
+      }
+      elseif ($attribute == 'has_alt') {
+        $has_alt = $ti_tag->getAttribute('has_alt');
+      }
+      elseif ($attribute == 'has_title') {
+        $has_title = $ti_tag->getAttribute('has_title');
       }
       elseif (in_array($attribute, $boolean_attributes)) {
         $field['#' . $attribute] = (bool) $ti_tag->getAttribute($attribute);
@@ -1589,6 +1611,33 @@ function mcneese_management_template_build_form(&$form) {
       if (empty($field['#media_options']['global']['types'])) {
         $field['#media_options']['global']['types'][] = variable_get('media__wysiwyg_allowed_types', array('audio', 'image', 'video', 'document'));
       }
+
+      $media_field_name = '';
+      if (!empty($field['#title'])) {
+        $media_field_name = $field['#title'] . ' ';
+      }
+
+      if ($has_alt) {
+        $field['alt'] = array(
+          '#title' => t($media_field_name . 'Alternate text'),
+          '#type' => 'textfield',
+          '#default_value' => '',
+          '#description' => t('This text will be used by screen readers, search engines, or when the image cannot be loaded.'),
+          '#maxlength' => variable_get('image_alt_length', 80),
+          '#weight' => 1,
+        );
+      }
+
+      if ($has_title) {
+        $field['title'] = array(
+          '#type' => 'textfield',
+          '#title' => t($media_field_name . 'Title'),
+          '#default_value' => '',
+          '#description' => t('The title is used as a tool tip when the user hovers the mouse over the image.'),
+          '#maxlength' => variable_get('image_title_length', 500),
+          '#weight' => 2,
+        );
+      }
     }
 
 
@@ -1625,6 +1674,35 @@ function mcneese_management_template_build_form(&$form) {
       elseif ($ti_type == 'media') {
         if (isset($ti_defaults[$cardinality_count])) {
           $fields[$cardinality_count]['#default_value'] = $ti_defaults[$cardinality_count];
+
+          $existing_values = array();
+          try {
+            $query = db_select('field_revision_' . $has_alt, 'fda');
+            $query->fields('fda');
+            $query->condition('entity_id', $nid);
+            $query->condition('revision_id', $vid);
+            $query->condition('delta', $cardinality_count);
+
+            $existing_values = (array) $query->execute()->fetchAssoc();
+          }
+          catch (Exception $e) {
+            if (class_exists('cf_error')) {
+              cf_error::on_query_execution($e);
+            }
+
+            throw $e;
+          }
+
+          if (!empty($has_alt) && array_key_exists($has_alt . '_alt', $existing_values)) {
+            $fields[$cardinality_count]['alt']['#default_value'] = $existing_values[$has_alt . '_alt'];
+          }
+
+          if (!empty($has_title) && array_key_exists($has_title . '_title', $existing_values)) {
+            $fields[$cardinality_count]['title']['#default_value'] = $existing_values[$has_title . '_title'];
+          }
+
+          unset($existing_values);
+          unset($query);
         }
       }
       elseif ($ti_type == 'checkbox' || $ti_type == 'radio' || $ti_type == 'select') {
@@ -1713,7 +1791,6 @@ function mcneese_management_template_process_form_state($form, &$form_state) {
   $inputs_tags = &$form['inputs_tags']['#value'];
   $targets_tags = &$form['targets_tags']['#value'];
 
-
   foreach($targets_tags as $target_tag_key => &$target_tag) {
     if (!$target_tag->hasAttribute('field')) continue;
 
@@ -1741,6 +1818,16 @@ function mcneese_management_template_process_form_state($form, &$form_state) {
     $target_key = NULL;
     if ($target_tag->hasAttribute('key')) {
       $target_key = $target_tag->getAttribute('key');
+    }
+
+    $target_has_alt = NULL;
+    if ($target_tag->hasAttribute('has_alt')) {
+      $target_has_alt = $target_tag->getAttribute('has_alt');
+    }
+
+    $target_has_title = NULL;
+    if ($target_tag->hasAttribute('has_title')) {
+      $target_has_title = $target_tag->getAttribute('has_title');
     }
 
     $target_inputs = array();
@@ -1814,11 +1901,31 @@ function mcneese_management_template_process_form_state($form, &$form_state) {
         $current = '';
         if ($target_tag->hasChildNodes()) {
           foreach ($target_tag->childNodes as $child) {
-            $current .= $form['targets_dom']['#value']->get_dom()->saveHTML($child); 
+            if (property_exists($child, 'tagName') && $child->tagName == 'body') {
+              if ($child->hasChildNodes()) {
+                foreach ($child->childNodes as $body_child) {
+                  $child_markup = $form['targets_dom']['#value']->get_tag_markup($body_child);
+
+                  if ($child_markup !== FALSE) {
+                    $current .= $child_markup;
+                  }
+                }
+
+                unset($body_child);
+              }
+            }
+            else {
+              $child_markup = $form['targets_dom']['#value']->get_tag_markup($child);
+
+              if ($child_markup !== FALSE) {
+                $current .= $child_markup;
+              }
+            }
           }
+
+          unset($child);
         }
 
-        unset($child);
         unset($current);
       }
       else {
@@ -1830,11 +1937,31 @@ function mcneese_management_template_process_form_state($form, &$form_state) {
           $current = '';
           if ($target_tag->hasChildNodes()) {
             foreach ($target_tag->childNodes as $child) {
-              $current .= $form['targets_dom']['#value']->get_dom()->saveHTML($child); 
+              if (property_exists($child, 'tagName') && $child->tagName == 'body') {
+                if ($child->hasChildNodes()) {
+                  foreach ($child->childNodes as $body_child) {
+                    $child_markup = $form['targets_dom']['#value']->get_tag_markup($body_child);
+
+                    if ($child_markup !== FALSE) {
+                      $current .= $child_markup;
+                    }
+                  }
+
+                  unset($body_child);
+                }
+              }
+              else {
+                $child_markup = $form['targets_dom']['#value']->get_tag_markup($child);
+
+                if ($child_markup !== FALSE) {
+                  $current .= $child_markup;
+                }
+              }
             }
+
+            unset($child);
           }
 
-          unset($child);
           unset($current);
         }
 
@@ -1888,13 +2015,11 @@ function mcneese_management_template_process_form_state($form, &$form_state) {
 
         $keys = (array) explode('][', $target_key);
         foreach ($keys as $key) {
-          if (isset($current[$key])) {
-            $current = &$current[$key];
+          if (!isset($current[$key])) {
+            $current[$key] = NULL;
           }
-          else {
-            // @todo: an error message should be presented here.
-            break;
-          }
+
+          $current = &$current[$key];
         }
 
         unset($key);
@@ -1909,7 +2034,13 @@ function mcneese_management_template_process_form_state($form, &$form_state) {
           $current = $form_state['targets'][$target_tag_key];
         }
 
-        $current_pre_key['format'] = $target_format;
+        if (!isset($current_pre_key['format'])) {
+          $current_pre_key['format'] = $target_format;
+        }
+
+        if (!isset($current_pre_key['summary'])) {
+          $current_pre_key['summary'] = NULL;
+        }
       }
       elseif ($target_type == 'integer') {
         $current = (int) $form_state['targets'][$target_tag_key];
@@ -1925,6 +2056,14 @@ function mcneese_management_template_process_form_state($form, &$form_state) {
       }
       elseif ($target_type == 'media') {
         $current = array('fid' => $form_state['targets'][$target_tag_key]);
+
+        if (array_key_exists('alt', $form_state['targets'][$target_tag_key][$cardinality_count])) {
+          $current_pre_key['alt'] = $form_state['targets'][$target_tag_key][$cardinality_count]['alt'];
+        }
+
+        if (array_key_exists('title', $form_state['targets'][$target_tag_key][$cardinality_count])) {
+          $current_pre_key['title'] = $form_state['targets'][$target_tag_key][$cardinality_count]['title'];
+        }
       }
       else {
         $current = $form_state['targets'][$target_tag_key];
@@ -1934,7 +2073,9 @@ function mcneese_management_template_process_form_state($form, &$form_state) {
       $current_start = &$current;
       for ($cardinality_count = 0; $cardinality_count < $target_cardinality; $cardinality_count++) {
         $current = &$current_start;
-        $current[$cardinality_count] = NULL;
+        if (!isset($current[$cardinality_count])) {
+          $current[$cardinality_count] = NULL;
+        }
         $current = &$current[$cardinality_count];
 
         $current_pre_key = &$current;
@@ -1942,7 +2083,10 @@ function mcneese_management_template_process_form_state($form, &$form_state) {
           $keys = (array) explode('][', $target_key);
 
           foreach ($keys as $key) {
-            $current[$key] = NULL;
+            if (!isset($current[$key])) {
+              $current[$key] = NULL;
+            }
+
             $current = &$current[$key];
           }
 
@@ -1958,8 +2102,13 @@ function mcneese_management_template_process_form_state($form, &$form_state) {
             $current = $form_state['targets'][$target_tag_key][$cardinality_count];
           }
 
-          $current_pre_key['format'] = $target_format;
-          $current_pre_key['summary'] = NULL;
+          if (!isset($current_pre_key['format'])) {
+            $current_pre_key['format'] = $target_format;
+          }
+
+          if (!isset($current_pre_key['summary'])) {
+            $current_pre_key['summary'] = NULL;
+          }
         }
         elseif ($target_type == 'integer') {
           $current = (int) $form_state['targets'][$target_tag_key][$cardinality_count];
@@ -1974,11 +2123,21 @@ function mcneese_management_template_process_form_state($form, &$form_state) {
           unset($term);
         }
         elseif ($target_type == 'media') {
-          $current = (array) file_load($form_state['targets'][$target_tag_key][$cardinality_count]);
+          $current = (array) file_load($form_state['targets'][$target_tag_key][$cardinality_count]['fid']);
+
+          if (array_key_exists('alt', $form_state['targets'][$target_tag_key][$cardinality_count])) {
+            $current_pre_key['alt'] = $form_state['targets'][$target_tag_key][$cardinality_count]['alt'];
+          }
+
+          if (array_key_exists('title', $form_state['targets'][$target_tag_key][$cardinality_count])) {
+            $current_pre_key['title'] = $form_state['targets'][$target_tag_key][$cardinality_count]['title'];
+          }
         }
         else {
           $current = $form_state['targets'][$target_tag_key][$cardinality_count];
         }
+
+        $processed_tagers[$target_name] = TRUE;
       }
     }
   }
@@ -2217,6 +2376,8 @@ function mcneese_management_template_process_template_input_tag($form, &$form_st
   $markup = FALSE;
   $format = NULL;
   $type = NULL;
+  $has_alt = NULL;
+  $has_title = NULL;
   if (isset($form['inputs_tags']['#value'][$input_name]) && is_object($form['inputs_tags']['#value'][$input_name])) {
     $ti_tag = &$form['inputs_tags']['#value'][$input_name];
     if ($ti_tag->hasAttribute('markup')) {
@@ -2228,6 +2389,14 @@ function mcneese_management_template_process_template_input_tag($form, &$form_st
 
     if ($ti_tag->hasAttribute('format')) {
       $format = $ti_tag->getAttribute('format');
+    }
+
+    if ($ti_tag->hasAttribute('has_alt')) {
+      $has_alt = $ti_tag->getAttribute('has_alt');
+    }
+
+    if ($ti_tag->hasAttribute('has_title')) {
+      $has_title = $ti_tag->getAttribute('has_title');
     }
   }
 
@@ -2332,7 +2501,26 @@ function mcneese_management_template_process_template_input_tag($form, &$form_st
     $target = '';
     if ($target_tag->hasChildNodes()) {
       foreach ($target_tag->childNodes as $child) {
-       $target .= $form['targets_dom']['#value']->get_dom()->saveHTML($child); 
+        if (property_exists($child, 'tagName') && $child->tagName == 'body') {
+          if ($child->hasChildNodes()) {
+            foreach ($child->childNodes as $body_child) {
+              $child_markup = $form['targets_dom']['#value']->get_tag_markup($body_child);
+
+              if ($child_markup !== FALSE) {
+                $target .= $child_markup;
+              }
+            }
+
+            unset($body_child);
+          }
+        }
+        else {
+          $child_markup = $form['targets_dom']['#value']->get_tag_markup($child);
+
+          if ($child_markup !== FALSE) {
+            $target .= $child_markup;
+          }
+        }
       }
 
       unset($child);
@@ -2352,20 +2540,25 @@ function mcneese_management_template_process_template_input_tag($form, &$form_st
     }
   }
   elseif ($type == 'media') {
+    if (!is_array($target)) {
+      $target = array();
+    }
+
     if (is_array($value)) {
+      $target = $value;
       if (isset($value['fid'])) {
-        $target = (int) $value['fid'];
+        $target['fid'] = (int) $value['fid'];
       }
     }
     elseif (cf_is_integer($value)) {
-      $target = (int) $value;
+      $target['fid'] = (int) $value;
     }
     elseif (is_string($value)) {
       $matches = array();
       $matched = preg_match('/ \[fid:\s*(\d+)]\s*$/i', $value, $matches);
 
       if ($matched) {
-        $target = (int) $matches[1];
+        $target['fid'] = (int) $matches[1];
       }
     }
   }
