@@ -308,7 +308,7 @@ class cf_dom {
         return FALSE;
       }
 
-      return $this->p_get_markup($element, $this->body);
+      return $this->p_get_markup(TRUE, $element);
     }
 
     if (!($this->head instanceof DOMNode)) {
@@ -319,7 +319,7 @@ class cf_dom {
       return FALSE;
     }
 
-    return $this->p_get_markup($element, $this->head);
+    return $this->p_get_markup(TRUE, $element);
   }
 
   /**
