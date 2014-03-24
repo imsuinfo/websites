@@ -1675,30 +1675,54 @@ function mcneese_management_template_build_form(&$form) {
         if (isset($ti_defaults[$cardinality_count])) {
           $fields[$cardinality_count]['#default_value'] = $ti_defaults[$cardinality_count];
 
-          $existing_values = array();
-          try {
-            $query = db_select('field_revision_' . $has_alt, 'fda');
-            $query->fields('fda');
-            $query->condition('entity_id', $nid);
-            $query->condition('revision_id', $vid);
-            $query->condition('delta', $cardinality_count);
+          if (!empty($has_alt)) {
+            $existing_values = array();
 
-            $existing_values = (array) $query->execute()->fetchAssoc();
-          }
-          catch (Exception $e) {
-            if (class_exists('cf_error')) {
-              cf_error::on_query_execution($e);
+            try {
+              $query = db_select('field_revision_' . $has_alt, 'fda');
+              $query->fields('fda');
+              $query->condition('entity_id', $nid);
+              $query->condition('revision_id', $vid);
+              $query->condition('delta', $cardinality_count);
+
+              $existing_values = (array) $query->execute()->fetchAssoc();
+            }
+            catch (Exception $e) {
+              if (class_exists('cf_error')) {
+                cf_error::on_query_execution($e);
+              }
+
+              $existing_values = array();
             }
 
-            throw $e;
+            if (array_key_exists($has_alt . '_alt', $existing_values)) {
+              $fields[$cardinality_count]['alt']['#default_value'] = $existing_values[$has_alt . '_alt'];
+            }
           }
 
-          if (!empty($has_alt) && array_key_exists($has_alt . '_alt', $existing_values)) {
-            $fields[$cardinality_count]['alt']['#default_value'] = $existing_values[$has_alt . '_alt'];
-          }
+          if (!empty($has_title)) {
+            $existing_values = array();
 
-          if (!empty($has_title) && array_key_exists($has_title . '_title', $existing_values)) {
-            $fields[$cardinality_count]['title']['#default_value'] = $existing_values[$has_title . '_title'];
+            try {
+              $query = db_select('field_revision_' . $has_title, 'fdt');
+              $query->fields('fdt');
+              $query->condition('entity_id', $nid);
+              $query->condition('revision_id', $vid);
+              $query->condition('delta', $cardinality_count);
+
+              $existing_values = (array) $query->execute()->fetchAssoc();
+            }
+            catch (Exception $e) {
+              if (class_exists('cf_error')) {
+                cf_error::on_query_execution($e);
+              }
+
+              $existing_values = array();
+            }
+
+            if (array_key_exists($has_title . '_title', $existing_values)) {
+              $fields[$cardinality_count]['title']['#default_value'] = $existing_values[$has_title . '_title'];
+            }
           }
 
           unset($existing_values);
