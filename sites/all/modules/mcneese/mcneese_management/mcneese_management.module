@@ -666,72 +666,218 @@ function mcneese_management_autocomplete_nid($string) {
 }
 
 /**
- * Get the status of the emergency mode.
+ * Get the status of the emergency mode for stage 3.
  *
- * @return bool
- *   TRUE when in emergency mode, FALSE otherwise.
+ * @param int $stage
+ *   (optional) The stage to assign. Values: 1, 2, or 3.
+ *   When TRUE, will return the active emergency mode setting.
+ *   When NULL, will return an array of emergency modes.
+ *
+ * @return bool|int|array
+ *   TRUE/FALSE for a stages particular setting.
+ *   When stage is TRUE, TRUE when in emergency mode, FALSE otherwise.
+ *   When stage is NULL, TRUE when in emergency mode, FALSE otherwise.
  */
-function mcneese_management_get_emergency_mode() {
-  return variable_get('emergency_mode', FALSE);
+function mcneese_management_get_emergency_mode($stage = TRUE) {
+  if ($stage === TRUE) {
+    return variable_get('emergency_mode', FALSE);
+  }
+
+  $emergency_modes = variable_get('emergency_modes', array());
+
+  if (is_null($stage)) {
+    return (array) $emergency_modes;
+  }
+
+  if ($stage == 3) {
+    if (array_key_exists('stage_3', $emergency_modes)) {
+      return (bool) $emergency_modes['stage_3'];
+    }
+  }
+  elseif ($stage == 2) {
+    if (array_key_exists('stage_2', $emergency_modes)) {
+      return (bool) $emergency_modes['stage_2'];
+    }
+  }
+  elseif ($stage == 1) {
+    if (array_key_exists('stage_1_mode', $emergency_modes)) {
+      return (bool) $emergency_modes['stage_1'];
+    }
+  }
+
+  return FALSE;
 }
 
 /**
- * Get the node id of the emergency node.
+ * Get the node id of the emergency node for stage 3 emergency.
  *
- * @return int
+ * @param int $stage
+ *   (optional) The stage to assign. Values: 1, 2, or 3.
+ *   When NULL, will return an array of emergency nodes.
+ *   When TRUE, will return the active emergency node.
+ *
+ * @return int|array
  *   The emergency node id.
+ *   When $stage is NULL, will return an array of emergency nodes.
+ *   When $stage is TRUE, will return the active emergency node.
+ *   If there is no active emergency, 0 is returned.
  */
-function mcneese_management_get_emergency_node() {
-  return variable_get('emergency_node', 0);
+function mcneese_management_get_emergency_node($stage = TRUE) {
+  $emergency_nodes = variable_get('emergency_nodes', array());
+
+  if ($stage === TRUE) {
+    $emergency = mcneese_management_get_emergency_mode(TRUE);
+
+    if ($emergency == 3) {
+      if (array_key_exists('stage_3', $emergency_nodes)) {
+        return (int) $emergency_nodes['stage_3'];
+      }
+    }
+    elseif ($emergency == 2) {
+      if (array_key_exists('stage_2', $emergency_nodes)) {
+        return (int) $emergency_nodes['stage_2'];
+      }
+    }
+    elseif ($emergency == 1) {
+      if (array_key_exists('stage_1', $emergency_nodes)) {
+        return (int) $emergency_nodes['stage_1'];
+      }
+    }
+
+    return 0;
+  }
+
+  if (is_null($stage)) {
+    return $emergency_nodes;
+  }
+
+  if ($stage == 3) {
+    if (array_key_exists('stage_3', $emergency_nodes)) {
+      return (int) $emergency_nodes['stage_3'];
+    }
+  }
+  elseif ($stage == 2) {
+    if (array_key_exists('stage_2', $emergency_nodes)) {
+      return (int) $emergency_nodes['stage_2'];
+    }
+  }
+  elseif ($stage == 1) {
+    if (array_key_exists('stage_1', $emergency_nodes)) {
+      return (int) $emergency_nodes['stage_1'];
+    }
+  }
+
+  return 0;
+}
+
+/**
+ * Sets the node associated with a given emergency stage.
+ *
+ * This resets the site cache if the related emergency mode is enabled.
+ *
+ * @param int $stage
+ *   The stage to assign. Values: 1, 2, or 3.
+ * @param int $node
+ *   The node id of the node to use for the given stage.
+ */
+function mcneese_management_set_emergency_node($stage, $node) {
+  if (!cf_is_integer($node) || $node <= 0) {
+    return;
+  }
+
+  $nodes = mcneese_management_get_emergency_node(NULL);
+
+  if ($stage == 3) {
+    $nodes['stage_3'] = $node;
+  }
+  elseif ($stage == 2) {
+    $nodes['stage_2'] = $node;
+  }
+  elseif ($stage == 1) {
+    $nodes['stage_1'] = $node;
+  }
+  else {
+    return;
+  }
+
+  variable_set('emergency_nodes', $nodes);
+
+  // caches must be flushed on mode change for the change to be noticed.
+  if (mcneese_management_get_emergency_mode($stage)) {
+    _drupal_flush_css_js();
+    drupal_clear_css_cache();
+    drupal_clear_js_cache();
+    cache_clear_all('*', 'cache', TRUE);
+    cache_clear_all('*', 'cache_block', TRUE);
+    cache_clear_all('*', 'cache_bootstrap', TRUE);
+    cache_clear_all('*', 'cache_field', TRUE);
+    cache_clear_all('*', 'cache_filter', TRUE);
+    cache_clear_all('*', 'cache_form', TRUE);
+    cache_clear_all('*', 'cache_menu', TRUE);
+    cache_clear_all('*', 'cache_page', TRUE);
+    cache_clear_all('*', 'cache_path', TRUE);
+  }
 }
 
 /**
  * Set the status of the emergency mode.
  *
+ * This resets the site cache.
+ *
+ * @param int $stage
+ *   The stage to assign. Values: NULL, 1, 2, or 3.
+ *   NULL can only be used to disable emergency node and then only for all stages.
  * @param bool $emergency_mode
  *   TRUE to enable emergency mode, FALSE to disable.
+ *   FALSE will disable all emergency modes, regardless of stage.
  */
-function mcneese_management_set_emergency_mode($emergency_mode) {
+function mcneese_management_set_emergency_mode($stage, $emergency_mode) {
   if (is_bool($emergency_mode)) {
     $mode = $emergency_mode;
   }
-  else if ($emergency_mode) {
+  elseif ($emergency_mode) {
     $mode = TRUE;
   }
   else {
     $mode = FALSE;
   }
 
-  if ($mode == TRUE && !mcneese_management_get_emergency_node() > 0) {
+  if ($mode == TRUE && !mcneese_management_get_emergency_node($stage) > 0) {
     // cannot set emergency mode to TRUE if there is no emergency node defined.
+    return;
+  }
+
+  // only function with valid stages.
+  if (!is_null($stage) || (is_null($stage) && $mode !== FALSE) || $stage != 1 && $stage != 2 && $stage != 3) {
     return;
   }
 
   $maintenance_mode = variable_get('maintenance_mode', FALSE);
 
-  if ($mode == TRUE || $maintenance_mode != FALSE) {
+  if ($mode === TRUE || $maintenance_mode !== FALSE) {
     variable_set('maintenance_mode', $mode);
   }
 
-  variable_set('emergency_mode', $mode);
+  if ($mode === FALSE) {
+    variable_set('emergency_mode', FALSE);
+  }
+  else {
+    variable_set('emergency_mode', $stage);
+  }
 
   // caches must be flushed on mode change for the change to be noticed.
   _drupal_flush_css_js();
   drupal_clear_css_cache();
   drupal_clear_js_cache();
-  cache_clear_all(NULL, 'cache_block');
-  cache_clear_all(NULL, 'cache_page');
-  cache_clear_all(NULL, 'cache_menu');
-}
-
-/**
- * Set the node id of the emergency node.
- *
- * @param int $node_id
- *   The emergency node id.
- */
-function mcneese_management_set_emergency_node($node_id) {
-  variable_set('emergency_node', $node_id);
+  cache_clear_all('*', 'cache', TRUE);
+  cache_clear_all('*', 'cache_block', TRUE);
+  cache_clear_all('*', 'cache_bootstrap', TRUE);
+  cache_clear_all('*', 'cache_field', TRUE);
+  cache_clear_all('*', 'cache_filter', TRUE);
+  cache_clear_all('*', 'cache_form', TRUE);
+  cache_clear_all('*', 'cache_menu', TRUE);
+  cache_clear_all('*', 'cache_page', TRUE);
+  cache_clear_all('*', 'cache_path', TRUE);
 }
 
 /**

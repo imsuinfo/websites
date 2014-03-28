@@ -19,19 +19,71 @@
  *   The form state array as defined by drupals form api.
  */
 function mcneese_management_emergency_settings_page($form, &$form_state) {
-  $emergency_mode = mcneese_management_get_emergency_mode();
-  $emergency_node = mcneese_management_get_emergency_node();
+  $emergency_modes = mcneese_management_get_emergency_mode(NULL);
+  $emergency_nodes = mcneese_management_get_emergency_node(NULL);
 
-  $node = NULL;
-  if (!is_null($emergency_node)) {
-    if ($emergency_node > 0) {
-      $node = node_load($emergency_node);
+  $stage_3_mode = FALSE;
+  $stage_2_mode = FALSE;
+  $stage_1_mode = FALSE;
+
+  $stage_3_node = NULL;
+  $stage_2_node = NULL;
+  $stage_1_node = NULL;
+
+  $stage_3_node_value = '';
+  $stage_2_node_value = '';
+  $stage_1_node_value = '';
+
+  if (is_array($emergency_modes)) {
+    if (array_key_exists('stage_3', $emergency_modes)) {
+      $stage_3_mode = (bool) $emergency_modes['stage_3'];
+    }
+
+    if (array_key_exists('stage_2', $emergency_modes)) {
+      $stage_2_mode = (bool) $emergency_modes['stage_2'];
+    }
+
+    if (array_key_exists('stage_1', $emergency_modes)) {
+      $stage_1_mode = (bool) $emergency_modes['stage_1'];
     }
   }
 
-  if (is_object($node)) {
-    $value = $node->title . ' [nid: ' . $node->nid . ']';
-    $emergency_node_value = check_plain($value);
+  if (is_array($emergency_nodes)) {
+    if (!empty($emergency_nodes['stage_3'])) {
+      if ($emergency_nodes['stage_3'] > 0) {
+        $stage_3_node = node_load($emergency_nodes['stage_3']);
+
+        if (is_object($stage_3_node)) {
+          $value = $stage_3_node->title . ' [nid: ' . $stage_3_node->nid . ']';
+          $stage_3_node_value = check_plain($value);
+          unset($value);
+        }
+      }
+    }
+
+    if (!empty($emergency_nodes['stage_2'])) {
+      if ($emergency_nodes['stage_2'] > 0) {
+        $stage_2_node = node_load($emergency_nodes['stage_2']);
+
+        if (is_object($stage_2_node)) {
+          $value = $stage_2_node->title . ' [nid: ' . $stage_2_node->nid . ']';
+          $stage_2_node_value = check_plain($value);
+          unset($value);
+        }
+      }
+    }
+
+    if (!empty($emergency_nodes['stage_1'])) {
+      if ($emergency_nodes['stage_1'] > 0) {
+        $stage_1_node = node_load($emergency_nodes['stage_1']);
+
+        if (is_object($stage_1_node)) {
+          $value = $stage_1_node->title . ' [nid: ' . $stage_1_node->nid . ']';
+          $stage_1_node_value = check_plain($value);
+          unset($value);
+        }
+      }
+    }
   }
 
   $form = array();
@@ -40,18 +92,81 @@ function mcneese_management_emergency_settings_page($form, &$form_state) {
     '#tree' => TRUE,
   );
 
-  $form['settings']['emergency_mode'] = array(
-    '#type' => 'checkbox',
-    '#title' => t('Emergency Mode'),
-    '#default_value' => $emergency_mode,
-    '#description' => t("Enable/Disable emergency mode."),
+  $form['settings']['stage_3'] = array(
+    '#type' => 'fieldset',
+    '#title' => t("Stage 3 Emergency Settings (Major Emergencies)"),
+    '#description' => t("This will place the entire site in an alert mode and not just the front page."),
+    '#collapsible' => TRUE,
+    '#collapsed' => FALSE,
+    '#tree' => TRUE,
   );
 
-  $form['settings']['emergency_node'] = array(
+  $form['settings']['stage_3']['mode'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('Emergency Mode'),
+    '#default_value' => $stage_3_mode,
+    '#description' => t("Enable/Disable emergency mode for a major emergency."),
+  );
+
+  $form['settings']['stage_3']['node'] = array(
     '#type' => 'textfield',
     '#title' => t("Emergency Node"),
-    '#default_value' => $emergency_node_value,
-    '#descriptio' =>
+    '#default_value' => $stage_3_node_value,
+    '#description' =>
+      t("Specify the numeric node id of the page that is to be used as the emergency node.") . '<br>' .
+      t("You can search for a specific node id by typing in the title in this field."),
+    '#size' => 64,
+    '#autocomplete_path' => 'admin/content/management/emergency/autocomplete_nid',
+  );
+
+  $form['settings']['stage_2'] = array(
+    '#type' => 'fieldset',
+    '#title' => t("Stage 2 Emergency Settings (Moderate Emergencies)"),
+    '#description' => t("This only affects the front page."),
+    '#collapsible' => TRUE,
+    '#collapsed' => TRUE,
+    '#tree' => TRUE,
+  );
+
+  $form['settings']['stage_2']['mode'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('Emergency Mode'),
+    '#default_value' => $stage_2_mode,
+    '#description' => t("Enable/Disable emergency mode for a moderate emergency."),
+  );
+
+  $form['settings']['stage_2']['node'] = array(
+    '#type' => 'textfield',
+    '#title' => t("Emergency Node"),
+    '#default_value' => $stage_2_node_value,
+    '#description' =>
+      t("Specify the numeric node id of the page that is to be used as the emergency node.") . '<br>' .
+      t("You can search for a specific node id by typing in the title in this field."),
+    '#size' => 64,
+    '#autocomplete_path' => 'admin/content/management/emergency/autocomplete_nid',
+  );
+
+  $form['settings']['stage_1'] = array(
+    '#type' => 'fieldset',
+    '#title' => t("Stage 1 Emergency Settings (Minor Emergencies)"),
+    '#description' => t("This only affects the front page."),
+    '#collapsible' => TRUE,
+    '#collapsed' => TRUE,
+    '#tree' => TRUE,
+  );
+
+  $form['settings']['stage_1']['mode'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('Emergency Mode'),
+    '#default_value' => $stage_1_mode,
+    '#description' => t("Enable/Disable emergency mode for a minor emergency."),
+  );
+
+  $form['settings']['stage_1']['node'] = array(
+    '#type' => 'textfield',
+    '#title' => t("Emergency Node"),
+    '#default_value' => $stage_1_node_value,
+    '#description' =>
       t("Specify the numeric node id of the page that is to be used as the emergency node.") . '<br>' .
       t("You can search for a specific node id by typing in the title in this field."),
     '#size' => 64,
@@ -82,32 +197,51 @@ function mcneese_management_emergency_settings_page($form, &$form_state) {
  *   The form state array as defined by drupals form api.
  */
 function mcneese_management_emergency_settings_page_validate($form, &$form_state) {
-  $emergency_node_value = &$form_state['values']['settings']['emergency_node'];
+  $node_values = array();
+  $node_values[1] = &$form_state['values']['settings']['stage_1']['node'];
+  $node_values[2] = &$form_state['values']['settings']['stage_2']['node'];
+  $node_values[3] = &$form_state['values']['settings']['stage_3']['node'];
 
-  $nid = NULL;
-  if (cf_is_integer($emergency_node_value)) {
-    if ($nid > 0) {
-      $nid = $emergency_node_value;
+  $stage_1_mode = &$form_state['values']['settings']['stage_1']['mode'];
+  $stage_2_mode = &$form_state['values']['settings']['stage_2']['mode'];
+  $stage_3_mode = &$form_state['values']['settings']['stage_3']['mode'];
+
+  if ($stage_3_mode && ($stage_2_mode || $stage_1_mode)) {
+    form_set_error('settings[stage_3][mode]', t("You may only enable one emergency mode at a time."));
+  }
+
+  if ($stage_2_mode && $stage_1_mode) {
+    form_set_error('settings[stage_2][mode]', t("You may only enable one emergency mode at a time."));
+  }
+
+  foreach ($node_values as $key => &$value) {
+    if (empty($value)) continue;
+
+    $nid = NULL;
+    if (cf_is_integer($value)) {
+      if ($nid > 0) {
+        $nid = $value;
+      }
     }
-  }
-  else {
-    $matches = array();
-    $matched = preg_match('/ \[nid:\s*(\d+)]\s*$/i', $emergency_node_value, $matches);
+    else {
+      $matches = array();
+      $matched = preg_match('/ \[nid:\s*(\d+)]\s*$/i', $value, $matches);
 
-    if ($matched && isset($matches[1]) && cf_is_integer($matches[1]) && $matches[1] > 0) {
-      $nid = $matches[1];
-      $emergency_node_value = $nid;
+      if ($matched && isset($matches[1]) && cf_is_integer($matches[1]) && $matches[1] > 0) {
+        $nid = $matches[1];
+        $value = $nid;
+      }
     }
-  }
 
-  if (is_null($nid)) {
-    form_set_error('emergency_node', t("An invalid value has been specified for the emergency node."));
-  }
-  else {
-    $node = node_load($nid);
+    if (is_null($nid)) {
+      form_set_error('settings[stage_' . $key . '][node', t("An invalid value has been specified for the stage :key emergency node.", array(':key' => $key)));
+    }
+    else {
+      $node = node_load($nid);
 
-    if (!is_object($node)) {
-      form_set_error('emergency_node', t("Cannot use %nid for the emergency node because no node by that id exists.", array('%nid' => $emergency_nid)));
+      if (!is_object($node)) {
+        form_set_error('settings[stage_' . $key . '][node', t("Cannot use %nid for the stage :key emergency node because no node by that id exists.", array(':key' => $key, '%nid' => $nid)));
+      }
     }
   }
 }
@@ -121,13 +255,79 @@ function mcneese_management_emergency_settings_page_validate($form, &$form_state
  *   The form state array as defined by drupals form api.
  */
 function mcneese_management_emergency_settings_page_submit($form, &$form_state) {
-  // avoid making changes if possible because some changes requires clearing the entire site cache.
-  if ($form['settings']['emergency_node']['#default_value'] != $form_state['values']['settings']['emergency_node']) {
-    mcneese_management_set_emergency_node($form_state['values']['settings']['emergency_node']);
+  $nodes = array();
+  $nodes['stage_1'] = $form_state['values']['settings']['stage_1']['node'];
+  $nodes['stage_2'] = $form_state['values']['settings']['stage_2']['node'];
+  $nodes['stage_3'] = $form_state['values']['settings']['stage_3']['node'];
+
+  $modes = array();
+  $modes['stage_1'] = (bool) $form_state['values']['settings']['stage_1']['mode'];
+  $modes['stage_2'] = (bool) $form_state['values']['settings']['stage_2']['mode'];
+  $modes['stage_3'] = (bool) $form_state['values']['settings']['stage_3']['mode'];
+
+  $emergency = $modes['stage_3'] || $modes['stage_2'] || $modes['stage_1'];
+  $existing_mode = mcneese_management_get_emergency_mode();
+  $existing_node = mcneese_management_get_emergency_node();
+
+  variable_set('emergency_nodes', $nodes);
+  variable_set('emergency_modes', $modes);
+
+  $clear_cache = FALSE;
+
+  if ($emergency) {
+    if ($existing_mode === FALSE) {
+      $clear_cache = TRUE;
+    }
+    elseif ($modes['stage_3'] && $existing_node != $nodes['stage_3']) {
+      $clear_cache = TRUE;
+    }
+    elseif ($modes['stage_2'] && $existing_node != $nodes['stage_2']) {
+      $clear_cache = TRUE;
+    }
+    elseif ($modes['stage_1'] && $existing_node != $nodes['stage_1']) {
+      $clear_cache = TRUE;
+    }
+  }
+  elseif ($existing_mode > 0) {
+    $clear_cache = TRUE;
   }
 
-  if ($form['settings']['emergency_mode']['#default_value'] != $form_state['values']['settings']['emergency_mode']) {
-    mcneese_management_set_emergency_mode($form_state['values']['settings']['emergency_mode']);
+  // avoid making changes if possible because some changes requires clearing the entire site cache.
+  if ($clear_cache) {
+    _drupal_flush_css_js();
+    drupal_clear_css_cache();
+    drupal_clear_js_cache();
+    cache_clear_all('*', 'cache', TRUE);
+    cache_clear_all('*', 'cache_block', TRUE);
+    cache_clear_all('*', 'cache_bootstrap', TRUE);
+    cache_clear_all('*', 'cache_field', TRUE);
+    cache_clear_all('*', 'cache_filter', TRUE);
+    cache_clear_all('*', 'cache_form', TRUE);
+    cache_clear_all('*', 'cache_menu', TRUE);
+    cache_clear_all('*', 'cache_page', TRUE);
+    cache_clear_all('*', 'cache_path', TRUE);
+  }
+
+  $maintenance_mode = variable_get('maintenance_mode', FALSE);
+
+  if ($emergency) {
+    if ($modes['stage_3']) {
+      variable_set('emergency_mode', 3);
+      variable_set('maintenance_mode', TRUE);
+    }
+    elseif ($modes['stage_2']) {
+      variable_set('emergency_mode', 2);
+    }
+    elseif ($modes['stage_1']) {
+      variable_set('emergency_mode', 1);
+    }
+  }
+  else {
+    if ($existing_mode == 3) {
+      variable_set('maintenance_mode', FALSE);
+    }
+
+    variable_set('emergency_mode', FALSE);
   }
 }
 
