@@ -501,7 +501,6 @@ function mcneese_functions_embed_ntas_widget($cache_id = NULL, $cache_expire = '
   print($markup);
 }
 
-
 /**
  * Generates and prints job opportunity listings.
  *

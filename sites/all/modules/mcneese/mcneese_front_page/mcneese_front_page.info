@@ -1,5 +1,5 @@
-name = McNeese Module - Functions
-description = "Provides Content specific module functionality."
+name = McNeese Module - Front Page
+description = "Provides Content specific module functionality for the front page."
 core = 7.x
 php = 5.3
 package = McNeese
@@ -13,4 +13,4 @@ dependencies[] = cf_http (7.x-2.x)
 dependencies[] = libraries (7.x-2.x)
 dependencies[] = mcneese_libraries
 
-files[] = mcneese_functions.module
+files[] = mcneese_front_page.module
