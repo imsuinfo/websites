@@ -214,6 +214,18 @@ function mcneese_management_emergency_settings_page_validate($form, &$form_state
     form_set_error('settings[stage_2][mode]', t("You may only enable one emergency mode at a time."));
   }
 
+  if ($stage_3_mode && empty($node_values[3])) {
+    form_set_error('settings[stage_3][mode]', t("Cannot enable emergency mode when no emergency node is defined."));
+  }
+
+  if ($stage_2_mode && empty($node_values[2])) {
+    form_set_error('settings[stage_2][mode]', t("Cannot enable emergency mode when no emergency node is defined."));
+  }
+
+  if ($stage_1_mode && empty($node_values[1])) {
+    form_set_error('settings[stage_1][mode]', t("Cannot enable emergency mode when no emergency node is defined."));
+  }
+
   foreach ($node_values as $key => &$value) {
     if (empty($value)) continue;
 
@@ -290,6 +302,79 @@ function mcneese_management_emergency_settings_page_submit($form, &$form_state) 
   }
   elseif ($existing_mode > 0) {
     $clear_cache = TRUE;
+  }
+
+  if ($modes['stage_1']) {
+    $node = node_load($nodes['stage_1']);
+
+    if (is_object($node) && $node->status != NODE_PUBLISHED) {
+      $node->status = NODE_PUBLISHED;
+      $node->revision = TRUE;
+      $node->log = t("Auto published when emergency mode level 1 was enabled.");
+
+      if (function_exists('workbench_moderation_node_type_moderated') && workbench_moderation_node_type_moderated($node->type)) {
+        $node->workbench_moderation_state_new = workbench_moderation_state_published();
+      }
+
+      node_save($node);
+    }
+  }
+  elseif ($form['settings']['stage_1']['mode']['#default_value']) {
+    $nid = NULL;
+    $node = NULL;
+    if (cf_is_integer($form['settings']['stage_1']['node']['#default_value'])) {
+      if ($nid > 0) {
+        $nid = $form['settings']['stage_1']['node']['#default_value'];
+      }
+    }
+    else {
+      $matches = array();
+      $matched = preg_match('/ \[nid:\s*(\d+)]\s*$/i', $form['settings']['stage_1']['node']['#default_value'], $matches);
+
+      if ($matched && isset($matches[1]) && cf_is_integer($matches[1]) && $matches[1] > 0) {
+        $nid = $matches[1];
+      }
+    }
+
+    if (is_numeric($nid)) {
+      $node = node_load($nid);
+    }
+
+    if (is_object($node) && $node->status > 0) {
+      $node->status = 0;
+      $node->revision = TRUE;
+      $node->log = t("Auto unpublished when emergency mode level 1 was disabled.");
+
+      if (function_exists('workbench_moderation_node_type_moderated') && workbench_moderation_node_type_moderated($node->type)) {
+        try {
+          // Remove the moderation record's "published" flag.
+          $query = db_update('workbench_moderation_node_history')
+            ->condition('hid', $node->workbench_moderation['published']->hid)
+            ->fields(array('published' => 0))
+            ->execute();
+        }
+        catch (Exception $e) {
+          if (class_exists('cf_error')) {
+            cf_error::on_query_execution($e);
+          }
+        }
+
+        // Moderate the revision.
+        workbench_moderation_moderate($node, workbench_moderation_state_none());
+
+        // Make sure the 'current' revision is the 'live' revision -- ie, the revision in {node}.
+        $live_revision = workbench_moderation_node_current_load($node);
+        $live_revision->status = 0;
+        $live_revision->revision = 0;
+        $live_revision->workbench_moderation['updating_live_revision'] = TRUE;
+        $live_revision->log = t("Auto unpublished when emergency mode level 1 was disabled.");
+
+        node_save($live_revision);
+      }
+      else {
+        node_save($node);
+      }
+    }
   }
 
   // avoid making changes if possible because some changes requires clearing the entire site cache.
