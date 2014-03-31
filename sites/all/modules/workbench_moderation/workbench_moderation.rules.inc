@@ -110,8 +110,6 @@ function workbench_moderation_rules_event_info() {
       'new_state' => array(
         'type' => 'text',
         'label' => t('New state'),
-        'optional' => TRUE,
-        'allow null' => TRUE,
       ),
     ),
     'access callback' => 'rules_node_integration_access',
