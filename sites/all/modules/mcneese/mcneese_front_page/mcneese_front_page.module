@@ -179,8 +179,8 @@ function mcneese_front_page_embed_featured() {
 
     $thumbnail_attributes = array();
     if ($fids['image'] == $fids['thumbnail']) {
-      $thumbnail_attributes['src'] = image_style_url('featured-thumbnail', $urls[$fids['image']]);
-      $thumbnail_attributes['alt'] = image_style_url('featured-thumbnail', $result->field_featured_image_alt);
+      $thumbnail_attributes['src'] = image_style_url('featured-thumbnail-alt', $urls[$fids['image']]);
+      $thumbnail_attributes['alt'] = image_style_url('featured-thumbnail-alt', $result->field_featured_image_alt);
     }
     else {
       $thumbnail_attributes['src'] = image_style_url('featured-thumbnail', $urls[$fids['thumbnail']]);
