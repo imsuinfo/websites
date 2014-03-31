@@ -768,14 +768,17 @@ abstract class mcneese_file_db_stream_wrapper implements DrupalStreamWrapperInte
         $this->image_style_by = NULL;
         $this->image_style_id = NULL;
 
-        if ($parts[2] != $this->get_scheme()) {
+        if (!isset($parts[2]) || $parts[2] != $this->get_scheme()) {
           return FALSE;
         }
 
-        if ($parts[3] == $this->get_external()) {
+        if (!isset($parts[3])) {
+          return FALSE;
+        }
+        elseif ($parts[3] == $this->get_external()) {
           $parts = array_slice($parts, 4);
         }
-        else if ($parts[3] == $this->get_path_by_hash() || $parts[3] == $this->get_path_by_id || $parts[3] == $this->get_path_by_fid()) {
+        elseif ($parts[3] == $this->get_path_by_hash() || $parts[3] == $this->get_path_by_id || $parts[3] == $this->get_path_by_fid()) {
           $parts = array_slice($parts, 3);
         }
         else {
