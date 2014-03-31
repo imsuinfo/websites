@@ -52,6 +52,8 @@ function mcneese_front_page_embed_featured() {
     }
   }
 
+  drupal_add_js(drupal_get_path('module', 'mcneese_front_page') . '/js/mcneese_front_page-featured.js', array('type' => 'file', 'group' => JS_DEFAULT, 'weight' => 20, 'preprocess' => TRUE));
+
   $cache_id = __function__;
   $cache_expire = '+1 week';
   $return_array = &drupal_static($cache_id, array('markup' => NULL));
@@ -110,6 +112,7 @@ function mcneese_front_page_embed_featured() {
   $attributes['class'] = array();
   $attributes['class'][] = 'mcneese-front_page-featured-image';
   $attributes['class'][] = 'cycle-slideshow';
+  $attributes['class'][] = 'noscript';
 
   $attributes['data-cycle-pause-on-hover'] = 'true';
   $attributes['data-cycle-speed'] = '400';
@@ -124,11 +127,7 @@ function mcneese_front_page_embed_featured() {
   $return_array['markup'] = '<div id="mcneese-front_page-featured">';
   $return_array['markup'] .= '  <div' . drupal_attributes($attributes) .'>';
 
-  $return_array['markup'] .= '    <div class="mcneese-front_page-featured-image-overlay cycle-overlay"></div>';
-
-  $return_array['markup'] .= '    <div id="mcneese-front_page-featured-image-previous" class="mcneese-front_page-featured-image-prevnext">Previous</div>';
-  $return_array['markup'] .= '    <div id="mcneese-front_page-featured-image-next" class="mcneese-front_page-featured-image-prevnext">Next</div>';
-
+  $count = 0;
   $image_thumbnails = array();
   foreach ($results as &$result) {
     if (empty($result->field_featured_image_fid)) {
@@ -194,6 +193,18 @@ function mcneese_front_page_embed_featured() {
     $image_thumbnails[] = $thumbnail_attributes;
 
     $return_array['markup'] .= '  <img ' . drupal_attributes($image_attributes) . '>';
+
+    if ($count == 0) {
+      $return_array['markup'] .= '    <div class="mcneese-front_page-featured-image-overlay cycle-overlay">' ;
+      $return_array['markup'] .= '<div class="mcneese-front_page-featured-image-overlay-title">' . $image_attributes['data-cycle-title'] . '</div>';
+      $return_array['markup'] .= '<div class="mcneese-front_page-featured-image-overlay-description">' . $image_attributes['data-cycle-desc'] . '</div>';
+      $return_array['markup'] .= '</div>';
+
+      $return_array['markup'] .= '    <div id="mcneese-front_page-featured-image-previous" class="mcneese-front_page-featured-image-prevnext noscript" style="display: none;">Previous</div>';
+      $return_array['markup'] .= '    <div id="mcneese-front_page-featured-image-next" class="mcneese-front_page-featured-image-prevnext noscript" style="display: none;">Next</div>';
+    }
+
+    $count++;
   }
 
   $return_array['markup'] .= '</div>';
@@ -225,6 +236,7 @@ function mcneese_front_page_embed_featured() {
     $return_array['markup'] .= '  <img ' . drupal_attributes($thumbnail_attributes) . '>';
     $count++;
   }
+
   $return_array['markup'] .= '  </div>';
   $return_array['markup'] .= '</div>';
 

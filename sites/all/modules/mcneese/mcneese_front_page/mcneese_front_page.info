@@ -14,3 +14,4 @@ dependencies[] = libraries (7.x-2.x)
 dependencies[] = mcneese_libraries
 
 files[] = mcneese_front_page.module
+files[] = js/mcneese_front_page-featured.js
