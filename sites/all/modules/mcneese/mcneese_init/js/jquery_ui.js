@@ -117,7 +117,7 @@
           item = $(this).accordion({heightStyle: 'fill'});
         }
         else if (heightStyle == 'content') {
-          item = $(this).accordion({heightStyle: 'content'});
+          item = $(this).accordion({heightStyle: 'content', autoHeight: false});
         }
 
         if (options != "") {
