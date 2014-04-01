@@ -19,6 +19,8 @@
  */
 function mcneese_init_init() {
   mcneese_init_rewrite_url();
+
+  drupal_add_js(drupal_get_path('module', 'mcneese_init') . '/js/jquery_ui.js', array('type' => 'file', 'group' => JS_DEFAULT, 'preprocess' => TRUE));
 }
 
 /**

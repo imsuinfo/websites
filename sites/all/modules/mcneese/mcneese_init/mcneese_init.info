@@ -8,3 +8,5 @@ package = McNeese
 version = "7.x-1.0"
 
 files[] = mcneese_init.module
+
+scripts[] = js/jquery_ui.js
