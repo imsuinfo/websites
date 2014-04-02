@@ -53,7 +53,7 @@ function workbench_moderation_menu() {
   );
 
   $items['node/%node/moderation/view'] = array(
-    'title' => 'Revisions',
+    'title' => 'View Revision',
     'type' => MENU_DEFAULT_LOCAL_TASK,
     'weight' => -1,
   );
@@ -183,13 +183,15 @@ function workbench_moderation_menu_alter(&$items) {
   $items['node/%node/view']['title arguments'] = array(1);
 
   // Redirect node/%node/revisions
+  $items['node/%node/revisions']['title'] = 'Workflow';
   $items['node/%node/revisions']['page arguments'] = array(1, $items['node/%node/revisions']['page callback']);
   $items['node/%node/revisions']['page callback'] = 'workbench_moderation_node_revisions_redirect';
 
   // Override the node revision view callback.
- $items['node/%node/revisions/%/view']['page callback'] = 'workbench_moderation_node_view_revision';
- $items['node/%node/revisions/%/view']['file path'] = drupal_get_path('module', 'workbench_moderation');
- $items['node/%node/revisions/%/view']['file'] = 'workbench_moderation.node.inc';
+  $items['node/%node/revisions/%/view']['title'] = 'View Revision';
+  $items['node/%node/revisions/%/view']['page callback'] = 'workbench_moderation_node_view_revision';
+  $items['node/%node/revisions/%/view']['file path'] = drupal_get_path('module', 'workbench_moderation');
+  $items['node/%node/revisions/%/view']['file'] = 'workbench_moderation.node.inc';
 
 
   // For revert and delete operations, use our own access check.
@@ -1564,11 +1566,6 @@ function workbench_moderation_store($node) {
   }
   watchdog('Workbench moderation', 'Saved node revision: %node as live version for node %live.', array('%node' => $node->vid, '%live' => $node->nid), WATCHDOG_NOTICE, l($node->title, 'node/' . $node->nid));
   $live_revision = workbench_moderation_node_live_load($node);
-
-  if (!is_object($live_revision)) {
-    $live_revision = $node;
-  }
-
   // Make sure we're published.
   $live_revision->status = 1;
   // Don't create a new revision.
