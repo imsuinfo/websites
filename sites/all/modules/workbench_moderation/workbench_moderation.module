@@ -1566,6 +1566,11 @@ function workbench_moderation_store($node) {
   }
   watchdog('Workbench moderation', 'Saved node revision: %node as live version for node %live.', array('%node' => $node->vid, '%live' => $node->nid), WATCHDOG_NOTICE, l($node->title, 'node/' . $node->nid));
   $live_revision = workbench_moderation_node_live_load($node);
+
+  if (!is_object($live_revision)) {
+    $live_revision = $node;
+  }
+
   // Make sure we're published.
   $live_revision->status = 1;
   // Don't create a new revision.
