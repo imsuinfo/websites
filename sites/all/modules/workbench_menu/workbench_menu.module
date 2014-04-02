@@ -409,31 +409,43 @@ function workbench_menu_process_path($url_path, $alter_breadcrumb = FALSE) {
     $path_string['normal'] = drupal_get_normal_path($path_string['original']);
     $path_string['alias'] = drupal_get_path_alias($path_string['original']);
 
-    $path_trail[] = $path_string;
-    $path_trail_last_alias[] = $path_string;
+    $router_item = menu_get_item($path_string['original']);
 
-    if ($path_string['normal'] != $path_string['alias']) {
-      $last_alias = $path_string['alias'];
-      $path_trail_last_alias = array();
+    if (empty($router_item['page_callback']) && $path_string['original'] != $path_string['normal']) {
+      $router_item = menu_get_item($path_string['normal']);
     }
 
-    if (empty($menus_cached[$path_string['alias']])) {
-      $menus_cached[$path_string['alias']] = (array) workbench_menu_build_menus($path_string['alias'], $menus_processed, $breadcrumbs_cached);
-
-      if (isset($menus_cached[$path_string['alias']]['total']) && $menus_cached[$path_string['alias']]['total'] > 0) {
-        $save_cache = TRUE;
-      }
+    if (empty($router_item['page_callback']) && $path_string['original'] != $path_string['alias']) {
+      $router_item = menu_get_item($path_string['alias']);
     }
 
-    if (isset($menus_cached[$path_string['alias']]) && isset($menus_cached[$path_string['alias']]['total'])) {
-      if ($menus_cached[$path_string['alias']]['total'] > 0) {
-        $menus_in_path[] = $menus_cached[$path_string['alias']];
-        $path_trail = array();
+    if (!empty($router_item['page_callback'])) {
+      $path_trail[] = $path_string;
+      $path_trail_last_alias[] = $path_string;
+
+      if ($path_string['normal'] != $path_string['alias']) {
+        $last_alias = $path_string['alias'];
+        $path_trail_last_alias = array();
       }
 
-      if (!empty($menus_cached[$path_string['alias']]['structure'])) {
-        $path_tree[] = $path_string['original'];
-        $menu_depth++;
+      if (empty($menus_cached[$path_string['alias']])) {
+        $menus_cached[$path_string['alias']] = (array) workbench_menu_build_menus($path_string['alias'], $menus_processed, $breadcrumbs_cached);
+
+        if (isset($menus_cached[$path_string['alias']]['total']) && $menus_cached[$path_string['alias']]['total'] > 0) {
+          $save_cache = TRUE;
+        }
+      }
+
+      if (isset($menus_cached[$path_string['alias']]) && isset($menus_cached[$path_string['alias']]['total'])) {
+        if ($menus_cached[$path_string['alias']]['total'] > 0) {
+          $menus_in_path[] = $menus_cached[$path_string['alias']];
+          $path_trail = array();
+        }
+
+        if (!empty($menus_cached[$path_string['alias']]['structure'])) {
+          $path_tree[] = $path_string['original'];
+          $menu_depth++;
+        }
       }
     }
 
