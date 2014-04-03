@@ -39,7 +39,7 @@ function mcneese_statistics_permission() {
 /**
  * Implements hook_menu().
  */
-function mcneese_management_menu() {
+function mcneese_statistics_menu() {
   $items = array();
 
   $items['admin/content/management/statistics'] = array(
