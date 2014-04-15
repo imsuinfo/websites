@@ -107,6 +107,7 @@ function webform_conditionals_form($form, &$form_state, $node) {
   $form['actions']['submit'] = array(
     '#type' => 'submit',
     '#value' => t('Save conditions'),
+    '#validate' => array('webform_conditionals_form_validate'),
     '#submit' => array('webform_conditionals_form_submit'),
   );
 
@@ -141,6 +142,8 @@ function webform_conditionals_form_add($form, &$form_state) {
 
 /**
  * Validate handler for webform_conditionals_form().
+ *
+ * Prohibit the source and target of a conditional rule from being the same.
  */
 function webform_conditionals_form_validate($form, &$form_state) {
   if (!empty($form_state['values']['conditionals'])) {
@@ -156,6 +159,16 @@ function webform_conditionals_form_validate($form, &$form_state) {
       else {
         if (!$numeric_target) {
           form_set_error('', t('E-mails can only be used in conjunction with show e-mail or don\'t e-mail conditions.'));
+        }
+      }
+    }
+  }
+
+  foreach ($form_state['complete form']['conditionals'] as $conditional_key => $conditional) {
+    if (substr($conditional_key, 0, 1) !== '#' && $conditional_key !== 'new') {
+      foreach ($conditional['rules'] as $rule_key => $rule) {
+        if (substr($rule_key, 0, 1) !== '#' && $rule['source']['#value'] === $conditional['target']['#value']) {
+          form_set_error('conditionals][' . $conditional_key . '][rules][' . $rule_key . '][source', t('The subject of the conditional cannot be the same as the component that is shown or hidden (%target).', array('%target' => $conditional['target']['#options'][$conditional['target']['#value']])));
         }
       }
     }
@@ -679,6 +692,18 @@ function _webform_conditional_operator_info() {
     'js comparison callback' => 'conditionalOperatorStringNotEqual',
     'form callback' => 'webform_conditional_form_select',
   );
+  $operators['select']['empty'] = array(
+    'label' => t('is empty'),
+    'comparison callback' => 'webform_conditional_operator_string_empty',
+    'js comparison callback' => 'conditionalOperatorStringEmpty',
+    'form callback' => FALSE, // No value form at all.
+  );
+  $operators['select']['not_empty'] = array(
+    'label' => t('is not empty'),
+    'comparison callback' => 'webform_conditional_operator_string_not_empty',
+    'js comparison callback' => 'conditionalOperatorStringNotEmpty',
+    'form callback' => FALSE, // No value form at all.
+  );
 
   // Date operators:
   $operators['date']['equal'] = array(
@@ -999,25 +1024,21 @@ function webform_conditional_operator_string_ends_with($input_values, $rule_valu
  * Conditional callback for checking for empty fields.
  */
 function webform_conditional_operator_string_empty($input_values, $rule_value) {
+  $empty = TRUE;
   foreach ($input_values as $value) {
-    if ($value !== '' || $value !== NULL) {
-      return FALSE;
+    if ($value !== '' && $value !== NULL && $value !== 0) {
+      $empty = FALSE;
+      break;
     }
   }
-  return TRUE;
+  return $empty;
 }
 
 /**
  * Conditional callback for checking for empty fields.
  */
 function webform_conditional_operator_string_not_empty($input_values, $rule_value) {
-  $empty = FALSE;
-  foreach ($input_values as $value) {
-    if ($value === '' || $value === NULL) {
-      $empty = TRUE;
-    }
-  }
-  return !$empty;
+  return !webform_conditional_operator_string_empty($input_values, $rule_value);
 }
 
 /**

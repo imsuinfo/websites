@@ -172,6 +172,13 @@ function _webform_edit_grid($component) {
 function _webform_render_grid($component, $value = NULL, $filter = TRUE) {
   $node = isset($component['nid']) ? node_load($component['nid']) : NULL;
 
+  $questions = _webform_select_options_from_text($component['extra']['questions'], TRUE);
+  $options = _webform_select_options_from_text($component['extra']['options'], TRUE);
+  if ($filter) {
+    $questions = _webform_select_replace_tokens($questions, $node);
+    $options = _webform_select_replace_tokens($options, $node);
+  }
+
   $element = array(
     '#type' => 'webform_grid',
     '#title' => $filter ? webform_filter_xss($component['name']) : $component['name'],
@@ -180,8 +187,8 @@ function _webform_render_grid($component, $value = NULL, $filter = TRUE) {
     '#weight' => $component['weight'],
     '#summary' => $component['extra']['summary'],
     '#description' => $filter ? webform_filter_descriptions($component['extra']['description'], $node) : $component['extra']['description'],
-    '#grid_questions' => _webform_select_options_from_text($component['extra']['questions'], TRUE),
-    '#grid_options' => _webform_select_options_from_text($component['extra']['options'], TRUE),
+    '#grid_questions' => $questions,
+    '#grid_options' => $options,
     '#optrand' => $component['extra']['optrand'],
     '#qrand' => $component['extra']['qrand'],
     '#theme' => 'webform_grid',
@@ -251,8 +258,11 @@ function webform_expand_grid($element) {
  * Implements _webform_display_component().
  */
 function _webform_display_grid($component, $value, $format = 'html') {
+  $node = node_load($component['nid']);
   $questions = _webform_select_options_from_text($component['extra']['questions'], TRUE);
+  $questions = _webform_select_replace_tokens($questions, $node);
   $options = _webform_select_options_from_text($component['extra']['options'], TRUE);
+  $options = _webform_select_replace_tokens($options, $node);
 
   $element = array(
     '#title' => $component['name'],
@@ -329,9 +339,12 @@ function theme_webform_display_grid($variables) {
  */
 function _webform_analysis_grid($component, $sids = array()) {
   // Generate the list of options and questions.
-  $options = _webform_select_options_from_text($component['extra']['options'], TRUE);
+  $node = node_load($component['nid']);
   $questions = _webform_select_options_from_text($component['extra']['questions'], TRUE);
-  $summary = isset($element['#summary']) ? $element['#summary'] : '';
+  $questions = _webform_select_replace_tokens($questions, $node);
+  $options = _webform_select_options_from_text($component['extra']['options'], TRUE);
+  $options = _webform_select_replace_tokens($options, $node);
+  $summary = isset($element['#summary']) ? $element['#summary'] : ''
 
   // Generate a lookup table of results.
   $query = db_select('webform_submitted_data', 'wsd')
@@ -383,8 +396,11 @@ function _webform_analysis_grid($component, $sids = array()) {
  * Implements _webform_table_component().
  */
 function _webform_table_grid($component, $value) {
+  $node = node_load($component['nid']);
   $questions = _webform_select_options_from_text($component['extra']['questions'], TRUE);
+  $questions = _webform_select_replace_tokens($questions, $node);
   $options = _webform_select_options_from_text($component['extra']['options'], TRUE);
+  $options = _webform_select_replace_tokens($options, $node);
 
   $output = '';
   // Set the value as a single string.
@@ -401,10 +417,13 @@ function _webform_table_grid($component, $value) {
  * Implements _webform_csv_headers_component().
  */
 function _webform_csv_headers_grid($component, $export_options) {
+  $node = node_load($component['nid']);
+  $items = _webform_select_options_from_text($component['extra']['questions'], TRUE);
+  $items = _webform_select_replace_tokens($items, $node);
+
   $header = array();
   $header[0] = array('');
   $header[1] = array($export_options['header_keys'] ? $component['form_key'] : $component['name']);
-  $items = _webform_select_options_from_text($component['extra']['questions'], TRUE);
   $count = 0;
   foreach ($items as $key => $item) {
     // Empty column per sub-field in main header.
@@ -424,8 +443,12 @@ function _webform_csv_headers_grid($component, $export_options) {
  * Implements _webform_csv_data_component().
  */
 function _webform_csv_data_grid($component, $export_options, $value) {
+  $node = node_load($component['nid']);
   $questions = _webform_select_options_from_text($component['extra']['questions'], TRUE);
+  $questions = _webform_select_replace_tokens($questions, $node);
   $options = _webform_select_options_from_text($component['extra']['options'], TRUE);
+  $options = _webform_select_replace_tokens($options, $node);
+
   $return = array();
   foreach ($questions as $key => $question) {
     if (isset($value[$key]) && isset($options[$value[$key]])) {
@@ -475,7 +498,6 @@ function theme_webform_grid($variables) {
   }
 
   $option_count = count($header) - 1;
-
   $output = theme('table', array('header' => $header, 'rows' => $rows, 'attributes' => array('class' => array('webform-grid', 'webform-grid-' . $option_count), 'summary' => $summary), 'caption' => $element['#title']));
   $output = '<fieldset style="padding: 0px; margin: 0px; border: 0px none;"><legend class="element-invisible">' . $element['#title'] . '</legend>' . $output . '</fieldset>';
   return $output;

@@ -350,7 +350,6 @@ function webform_email_edit_form($form, $form_state, $node, $email = array(), $c
     '#wysiwyg' => FALSE,
   );
 
-
   // Add the always send option
   $form['send_email'] = array(
     '#type' => 'select',
@@ -530,6 +529,9 @@ function webform_email_edit_form_submit($form, &$form_state) {
   // Ensure a webform record exists.
   $node = $form['#node'];
   webform_ensure_record($node);
+
+  // Remove duplicate email To: addresses.
+  $form_state['values']['email_custom'] = implode(',', array_unique(array_map('trim', explode(',', $form_state['values']['email_custom']))));
 
   // Merge the e-mail, name, address, and subject options into single values.
   $email = array(
