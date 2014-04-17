@@ -344,7 +344,7 @@ function _webform_analysis_grid($component, $sids = array()) {
   $questions = _webform_select_replace_tokens($questions, $node);
   $options = _webform_select_options_from_text($component['extra']['options'], TRUE);
   $options = _webform_select_replace_tokens($options, $node);
-  $summary = isset($element['#summary']) ? $element['#summary'] : ''
+  $summary = isset($element['#summary']) ? $element['#summary'] : '';
 
   // Generate a lookup table of results.
   $query = db_select('webform_submitted_data', 'wsd')
