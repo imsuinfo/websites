@@ -377,9 +377,9 @@ function jquery_update_jqueryui_replace(&$javascript, $cdn, $path, $min) {
     'ui.accordion', 'ui.autocomplete', 'ui.button', 'ui.datepicker', 'ui.dialog', 'ui.draggable',
     'ui.droppable', 'ui.mouse', 'ui.position', 'ui.progressbar', 'ui.resizable', 'ui.selectable',
     'ui.slider', 'ui.sortable', 'ui.tabs', 'ui.widget', 'ui.spinner', 'ui.menu', 'ui.tooltip',
-    'effects.blind', 'effects.bounce', 'effects.clip', 'effects.drop', 'effects.explode', 'effects.fade',
-    'effects.fold', 'effects.highlight', 'effects.pulsate', 'effects.scale', 'effects.shake', 'effects.slide',
-    'effects.transfer',
+    'effect.blind', 'effect.bounce', 'effect.clip', 'effect.drop', 'effect.explode', 'effect.fade',
+    'effect.fold', 'effect.highlight', 'effect.pulsate', 'effect.scale', 'effect.shake', 'effect.slide',
+    'effect.transfer',
   ));
   $names['ui'] = 'ui.core';
   $names['effects'] = 'ui.effect';
