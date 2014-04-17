@@ -38,7 +38,8 @@ function _webform_edit_layout_box($component) {
       'vert' => t('Vertical'),
     ),
   );
-  $form['extra']['description'] = array(); // Hide the description box.
+  // Hide the description box.
+  $form['extra']['description']['#access'] = FALSE;
   return $form;
 }
 
@@ -66,8 +67,8 @@ function webform_layout_box_prerender($element) {
   && ($n = count($element['#webform_component']['children'])) > 1) {
     $classes[] = 'child-width-' . $n;
   }
-  $id = 'webform-component-' . str_replace('_', '-', implode('--', array_slice($element['#parents'], 1)));
-  $element['#prefix'] = '<div id="' . $id . '" class="' . implode(' ', $classes) . '">';
+  $classes[] = 'webform-component--' . str_replace('_', '-', implode('--', array_slice($element['#parents'], 1)));
+  $element['#prefix'] = '<div class="' . implode(' ', $classes) . '">';
   return $element;
 }
 
