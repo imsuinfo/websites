@@ -583,13 +583,22 @@ function mcneese_front_page_embed_events($highlight) {
 
     if (empty($result->body_summary)) {
       $body = check_markup($result->body_value, 'full_html');
-      $body = truncate_utf8($body, 400, TRUE, FALSE, 200);
+
+      if (is_object($image)) {
+        $body = truncate_utf8($body, 400, TRUE, FALSE, 200);
+      }
+      else {
+        $body = truncate_utf8($body, 600, TRUE, FALSE, 300);
+      }
     }
     else {
       $body = check_markup($result->body_summary, 'full_html');
 
       if (is_object($image)) {
         $body = truncate_utf8($body, 400, TRUE, FALSE, 200);
+      }
+      else {
+        $body = truncate_utf8($body, 600, TRUE, FALSE, 300);
       }
     }
 
@@ -799,13 +808,22 @@ function mcneese_front_page_embed_spotlight() {
 
     if (empty($result->body_summary)) {
       $body = check_markup($result->body_value, 'full_html');
-      $body = truncate_utf8($body, 120, TRUE, FALSE, 60);
+
+      if (is_object($image)) {
+        $body = truncate_utf8($body, 120, TRUE, FALSE, 60);
+      }
+      else {
+        $body = truncate_utf8($body, 240, TRUE, FALSE, 120);
+      }
     }
     else {
       $body = check_markup($result->body_summary, 'full_html');
 
       if (is_object($image)) {
         $body = truncate_utf8($body, 120, TRUE, FALSE, 60);
+      }
+      else {
+        $body = truncate_utf8($body, 240, TRUE, FALSE, 120);
       }
     }
 
