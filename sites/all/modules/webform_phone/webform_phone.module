@@ -43,7 +43,8 @@
   /** Implementation of hook_webform_validator_alter(). */
   function webform_phone_webform_validator_alter(&$validators) {
     $validators['unique']['component_types'][] = 'phone';
-    $validators['oneoftwo']['component_types'][] = 'phone';
-    $validators['oneofseveral']['component_types'][] = 'phone';
+    // webform_validaton combined 'oneoftwo' and 'oneofseveral' into 'someofseveral' as of 7.x-1.5
+    if (array_key_exists('oneoftwo', $validators)) {$validators['oneoftwo']['component_types'][] = 'phone';}
+    if (array_key_exists('oneofseveral', $validators)) {$validators['oneofseveral']['component_types'][] = 'phone';}
+    if (array_key_exists('someofseveral', $validators)) {$validators['someofseveral']['component_types'][] = 'phone';}
   }
-
