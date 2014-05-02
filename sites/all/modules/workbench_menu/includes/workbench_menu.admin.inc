@@ -611,6 +611,7 @@ function workbench_menu_admin_settings_form($form, &$form_state, $access_type, $
   $default_show_parents = TRUE;
   $default_hidden = FALSE;
   $default_breadcrumb_name = '';
+  $default_alias = '';
 
   $term = taxonomy_term_load($access_id);
   $destination = isset($_GET['destination']) ? $_GET['destination'] : 'admin/config/workbench/access/menus';
