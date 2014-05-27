@@ -355,11 +355,6 @@ function views_permission() {
  * Implement hook_menu().
  */
 function views_menu() {
-  // Any event which causes a menu_rebuild could potentially mean that the
-  // Views data is updated -- module changes, profile changes, etc.
-  cache_clear_all('*', 'cache_views', TRUE);
-  cache_clear_all('*', 'cache_views_data', TRUE);
-
   $items = array();
   $items['views/ajax'] = array(
     'title' => 'Views',
