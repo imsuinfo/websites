@@ -646,6 +646,11 @@ $conf['allow_authorize_operations'] = FALSE;
  */
 $conf['update_check_frequency'] = 32;
 
+/**
+ * Force Clean URLS
+ **/
+$conf['clean_url'] = TRUE;
+
 
 /**
  * Assign php.ini variables based on  uid, role, or ip address.
