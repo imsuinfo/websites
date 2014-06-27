@@ -38,8 +38,10 @@ function _webform_edit_layout_box($component) {
       'vert' => t('Vertical'),
     ),
   );
-  // Hide the description box.
+  // Hide the description box - this element has no description
   $form['extra']['description']['#access'] = FALSE;
+  // Hide wrapper css class input - this element doesn't get a wrapper.
+  $form['display']['wrapper_classes']['#access'] = FALSE;
   return $form;
 }
 
@@ -62,13 +64,16 @@ function _webform_render_layout_box($component, $value = NULL, $filter = TRUE) {
  * Pre-render function to set a layout_box ID and classes.
  */
 function webform_layout_box_prerender($element) {
-  $classes = array('webform-layout-box', $element['#webform_component']['extra']['align']);
-  if ($element['#webform_component']['extra']['align'] == 'equal'
-  && ($n = count($element['#webform_component']['children'])) > 1) {
-    $classes[] = 'child-width-' . $n;
+  $attributes = empty($element['#attributes']) ? array('class' => array()) : $element['#attributes'];
+  $attributes['class'][] = 'webform-layout-box';
+  $attributes['class'][] = $element['#webform_component']['extra']['align'];
+  $attributes['class'][] = 'webform-component--' . str_replace('_', '-', implode('--', array_slice($element['#parents'], 1)));
+  // css class for number of children
+  $n = count($element['#webform_component']['children']);
+  if ($element['#webform_component']['extra']['align'] == 'equal' && $n > 1) {
+    $attributes['class'][] = 'child-width-' . $n;
   }
-  $classes[] = 'webform-component--' . str_replace('_', '-', implode('--', array_slice($element['#parents'], 1)));
-  $element['#prefix'] = '<div class="' . implode(' ', $classes) . '">';
+  $element['#prefix'] = '<div ' . drupal_attributes($attributes) . '">';
   return $element;
 }
 
