@@ -1785,7 +1785,7 @@ function views_ui_edit_form_get_build_from_option($id, $option, $view, $display)
       }
     }
   }
-  $option_build['#attributes']['class'][] = drupal_clean_css_identifier($display_id . '-' . $id);
+  $option_build['#attributes']['class'][] = drupal_clean_css_identifier($display_id . '-' . $id, array(' ' => '-', '_' => '-', '/' => '-', '[' => '-', ']' => ''));
   if (!empty($view->changed_sections[$display_id . '-' . $id])) {
     $option_build['#changed'] = TRUE;
   }
@@ -1826,7 +1826,7 @@ function template_preprocess_views_ui_display_tab_bucket(&$variables) {
     $variables['item_help_icon'] = render($element['#item_help_icon']);
   }
   if (!empty($element['#name'])) {
-    $variables['classes_array'][] = drupal_clean_css_identifier(strtolower($element['#name']));
+    $variables['classes_array'][] = drupal_clean_css_identifier(strtolower($element['#name']), array(' ' => '-', '_' => '-', '/' => '-', '[' => '-', ']' => ''));
   }
   if (!empty($element['#overridden'])) {
     $variables['classes_array'][] = 'overridden';
@@ -2335,7 +2335,7 @@ function views_ui_edit_form_get_bucket($type, $view, $display) {
       $link_attributes['class'][] = 'views-field-excluded';
     }
     $build['fields'][$id]['#link'] = l($link_text, "admin/structure/views/nojs/config-item/$view->name/$display->id/$type/$id", array('attributes' => $link_attributes, 'html' => TRUE));
-    $build['fields'][$id]['#class'][] = drupal_clean_css_identifier($display->id . '-' . $type . '-' . $id);
+    $build['fields'][$id]['#class'][] = drupal_clean_css_identifier($display->id . '-' . $type . '-' . $id, array(' ' => '-', '_' => '-', '/' => '-', '[' => '-', ']' => ''));
     if (!empty($view->changed_sections[$display->id . '-' . $type . '-' . $id])) {
       // @TODO: #changed is no longer being used?
       $build['fields'][$id]['#changed'] = TRUE;

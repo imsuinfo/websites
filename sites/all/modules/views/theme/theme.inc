@@ -48,7 +48,7 @@ function template_preprocess_views_view(&$vars) {
 
   $vars['rows']       = (!empty($view->result) || $view->style_plugin->even_empty()) ? $view->style_plugin->render($view->result) : '';
 
-  $vars['css_name']   = drupal_clean_css_identifier($view->name);
+  $vars['css_name']   = drupal_clean_css_identifier($view->name, array(' ' => '-', '_' => '-', '/' => '-', '[' => '-', ']' => ''));
   $vars['name']       = $view->name;
   $vars['display_id'] = $view->current_display;
 
@@ -57,7 +57,7 @@ function template_preprocess_views_view(&$vars) {
 
   $vars['classes_array'] = array();
   $vars['classes_array'][] = 'view';
-  $vars['classes_array'][] = 'view-' . drupal_clean_css_identifier($vars['name']);
+  $vars['classes_array'][] = 'view-' . drupal_clean_css_identifier($vars['name'], array(' ' => '-', '_' => '-', '/' => '-', '[' => '-', ']' => ''));
   $vars['classes_array'][] = 'view-id-' . $vars['name'];
   $vars['classes_array'][] = 'view-display-id-' . $vars['display_id'];
 
@@ -231,7 +231,7 @@ function template_preprocess_views_view_fields(&$vars) {
         $object->separator = filter_xss_admin($vars['options']['separator']);
       }
 
-      $object->class = drupal_clean_css_identifier($id);
+      $object->class = drupal_clean_css_identifier($id, array(' ' => '-', '_' => '-', '/' => '-', '[' => '-', ']' => ''));
 
       $previous_inline = $object->inline;
       $object->inline_html = $object->handler->element_wrapper_type(TRUE, TRUE);
@@ -491,7 +491,7 @@ function template_preprocess_views_view_table(&$vars) {
   foreach ($columns as $field => $column) {
     // Create a second variable so we can easily find what fields we have and what the
     // CSS classes should be.
-    $vars['fields'][$field] = drupal_clean_css_identifier($field);
+    $vars['fields'][$field] = drupal_clean_css_identifier($field, array(' ' => '-', '_' => '-', '/' => '-', '[' => '-', ']' => ''));
     if ($active == $field) {
       $vars['fields'][$field] .= ' active';
     }
@@ -538,7 +538,7 @@ function template_preprocess_views_view_table(&$vars) {
       }
       // Add a CSS align class to each field if one was set
       if (!empty($options['info'][$field]['align'])) {
-        $vars['header_classes'][$field] .= ' ' . drupal_clean_css_identifier($options['info'][$field]['align']);
+        $vars['header_classes'][$field] .= ' ' . drupal_clean_css_identifier($options['info'][$field]['align'], array(' ' => '-', '_' => '-', '/' => '-', '[' => '-', ']' => ''));
       }
 
       // Add a header label wrapper if one was selected.
@@ -553,7 +553,7 @@ function template_preprocess_views_view_table(&$vars) {
 
     // Add a CSS align class to each field if one was set
     if (!empty($options['info'][$field]['align'])) {
-      $vars['fields'][$field] .= ' ' . drupal_clean_css_identifier($options['info'][$field]['align']);
+      $vars['fields'][$field] .= ' ' . drupal_clean_css_identifier($options['info'][$field]['align'], array(' ' => '-', '_' => '-', '/' => '-', '[' => '-', ']' => ''));
     }
 
     // Render each field into its appropriate column.

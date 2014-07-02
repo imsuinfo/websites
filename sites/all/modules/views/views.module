@@ -1994,7 +1994,7 @@ function views_exposed_form($form, &$form_state) {
 
   $form['#action'] = url($view->display_handler->get_url());
   $form['#theme'] = views_theme_functions('views_exposed_form', $view, $display);
-  $form['#id'] = drupal_clean_css_identifier('views_exposed_form-' . check_plain($view->name) . '-' . check_plain($display->id));
+  $form['#id'] = drupal_clean_css_identifier('views_exposed_form-' . check_plain($view->name) . '-' . check_plain($display->id), array(' ' => '-', '_' => '-', '/' => '-', '[' => '-', ']' => ''));
 //  $form['#attributes']['class'] = array('views-exposed-form');
 
   // If using AJAX, we need the form plugin.
