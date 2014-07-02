@@ -116,7 +116,7 @@ function views_theme($existing, $type, $theme, $path) {
         }
 
         if (!function_exists('theme_' . $def['theme'])) {
-          $hooks[$def['theme']]['template'] = drupal_clean_css_identifier($def['theme']);
+          $hooks[$def['theme']]['template'] = drupal_clean_css_identifier($def['theme'], array(' ' => '-', '_' => '-', '/' => '-', '[' => '-', ']' => ''));
         }
       }
       if (isset($def['additional themes'])) {
@@ -134,7 +134,7 @@ function views_theme($existing, $type, $theme, $path) {
           );
 
           if (!function_exists('theme_' . $theme)) {
-            $hooks[$theme]['template'] = drupal_clean_css_identifier($theme);
+            $hooks[$theme]['template'] = drupal_clean_css_identifier($theme, array(' ' => '-', '_' => '-', '/' => '-', '[' => '-', ']' => ''));
           }
         }
       }
