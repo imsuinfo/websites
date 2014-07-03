@@ -597,26 +597,6 @@ function masquerade_block_1() {
   else {
     $quick_switches = variable_get('masquerade_quick_switches', array());
 
-    // Add in user-specific switches, and prevent duplicates.
-    $user_switches = db_query("SELECT uid_to FROM {masquerade_users} WHERE uid_from = :uid_from", array(':uid_from' => $user->uid))->fetchCol();
-    $masquerade_switches = array_unique(array_merge($quick_switches, $user_switches));
-
-    foreach ($masquerade_switches as $switch_user) {
-      if (!isset($_SESSION['user']->uid) || $switch_user != $_SESSION['user']->uid) {
-        $account = user_load($switch_user);
-        if (isset($account->uid)) {
-          $switch_link = 'masquerade/switch/' . $account->uid;
-          if ($account->uid) {
-            $quick_switch_links[] = l($account->name, $switch_link, array('query' => array('token' => drupal_get_token($switch_link))));
-          }
-          if ($switch_user == 0) {
-            $account->name = variable_get('anonymous', t('Anonymous'));
-            $quick_switch_links[] = l($account->name, $switch_link, array('query' => array('token' => drupal_get_token($switch_link))));
-          }
-        }
-      }
-    }
-
     if (masquerade_menu_access('autocomplete')) {
       $markup_value .= t('Enter the username to masquerade as.');
       $form['masquerade_user_field'] = array(
