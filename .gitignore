@@ -11,3 +11,8 @@ private
 # Custom ignores
 sites/default/deprecated
 *.swp
+
+# Ignore Mac Files
+._*
+.apdisk
+
