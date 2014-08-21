@@ -38,10 +38,10 @@ function _webform_edit_layout_box($component) {
       'vert' => t('Vertical'),
     ),
   );
-  // Hide the description box - this element has no description
-  $form['extra']['description']['#access'] = FALSE;
-  // Hide wrapper css class input - this element doesn't get a wrapper.
-  $form['display']['wrapper_classes']['#access'] = FALSE;
+  // Hide name, it's never shown
+  $form['name']['#type'] = 'value';
+  // Hack - name is required by webform but we don't expose it to the user. Instead we'll replace it with the value of form_key.
+  $form['name']['#value'] = 'box';
   return $form;
 }
 
@@ -69,11 +69,11 @@ function webform_layout_box_prerender($element) {
   $attributes['class'][] = $element['#webform_component']['extra']['align'];
   $attributes['class'][] = 'webform-component--' . str_replace('_', '-', implode('--', array_slice($element['#parents'], 1)));
   // css class for number of children
-  $n = count($element['#webform_component']['children']);
+  $n = empty($element['#webform_component']['children']) ? 0 : count($element['#webform_component']['children']);
   if ($element['#webform_component']['extra']['align'] == 'equal' && $n > 1) {
     $attributes['class'][] = 'child-width-' . $n;
   }
-  $element['#prefix'] = '<div ' . drupal_attributes($attributes) . '">';
+  $element['#prefix'] = '<div ' . drupal_attributes($attributes) . '>';
   return $element;
 }
 
@@ -83,16 +83,15 @@ function webform_layout_box_prerender($element) {
 function _webform_display_layout_box($component, $value, $format = 'html') {
   if ($format == 'text') {
     $element = array(
-      '#title' => $component['name'],
+      '#title' => '',
       '#weight' => $component['weight'],
-      '#theme_wrappers' => array('webform_element_text'),
+      '#theme_wrappers' => array(),
     );
   }
   else {
     $element = _webform_render_layout_box($component, $value);
   }
 
-  $element['#webform_component'] = $component;
   $element['#format'] = $format;
 
   return $element;
