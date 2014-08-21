@@ -83,7 +83,7 @@ function webform_components_form($form, $form_state, $node) {
   $form['add']['name'] = array(
     '#type' => 'textfield',
     '#size' => 24,
-    '#maxlength' => 255,
+    '#maxlength' => NULL,
   );
 
   $form['add']['type'] = array(
@@ -533,6 +533,7 @@ function webform_component_edit_form($form, $form_state, $node, $component, $clo
       '#parents' => array('extra', 'css_classes'),
     );
   }
+
   if (webform_component_feature($component['type'], 'title_display') && webform_component_feature($component['type'], 'label_classes')) {
     $form['display']['label_classes'] = array(
       '#type' => 'textfield',
