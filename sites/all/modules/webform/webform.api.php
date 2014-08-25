@@ -241,10 +241,8 @@ function hook_webform_submission_actions($node, $submission) {
  * @param integer $sid
  *    The id of the most recent submission to be presented for editing. Change
  *    to a different draft's sid or set to NULL for a new draft.
- * @param array $context
- *    Array of context with indices 'nid' and 'uid'.
  */
-function hook_webform_draft_alter(&$sid, $context) {
+function hook_webform_draft_alter(&$sid) {
   if ($_GET['newdraft']) {
     $sid = NULL;
   }

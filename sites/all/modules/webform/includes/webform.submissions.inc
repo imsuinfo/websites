@@ -41,15 +41,15 @@ function webform_submission_data($node, $submitted) {
 /**
  * Given set of $form_state values, prepare a psuedo-submission.
  */
-function webform_submission_create($node, $account, $form_state, $is_preview = FALSE) {
+function webform_submission_create($node, $account, $form_state) {
   $submission = (object) array(
     'nid' => $node->nid,
     'uid' => $account->uid,
     'submitted' => REQUEST_TIME,
     'remote_addr' => ip_address(),
     'is_draft' => TRUE,
-    'preview' => $is_preview,
-    'serial' => _webform_submission_serial_next_value($node->nid, !$is_preview),
+    'preview' => FALSE,
+    'serial' => _webform_submission_serial_next_value($node->nid),
     'data' => webform_submission_data($node, $form_state['values']['submitted']),
   );
   drupal_alter('webform_submission_create', $submission, $node, $account, $form_state);
@@ -466,7 +466,17 @@ function webform_submission_delete_form($form, $form_state, $node, $submission) 
 
   $question = t('Are you sure you want to delete this submission?');
 
-  return confirm_form($form, NULL, "node/{$node->nid}/submission/{$submission->sid}", $question, t('Delete'), t('Cancel'));
+  if (isset($_GET['destination'])) {
+    $destination = $_GET['destination'];
+  }
+  elseif (webform_results_access($node)) {
+    $destination = 'node/' . $node->nid . '/webform-results';
+  }
+  else {
+    $destination = 'node/' . $node->nid . '/submissions';
+  }
+
+  return confirm_form($form, NULL, $destination, $question, t('Delete'), t('Cancel'));
 }
 
 function webform_submission_delete_form_submit($form, &$form_state) {
@@ -475,10 +485,7 @@ function webform_submission_delete_form_submit($form, &$form_state) {
   webform_submission_delete($node, $submission);
   drupal_set_message(t('Submission deleted.'));
 
-  // If no destination query was supplied in the URL (e.g. Edit tab), redirect
-  // to the most-privledged destination.
-  $form_state['redirect'] = 'node/' . $node->nid .
-                            (webform_results_access($node) ? '/webform-results' : '/submissions');
+  $form_state['redirect'] = 'node/' . $node->nid . '/webform-results';
 }
 
 /**
