@@ -21,3 +21,5 @@ sites/default/gnupg
 .apdisk
 .DS_Store
 
+# Custom sub-websites
+fcs
