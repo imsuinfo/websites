@@ -704,6 +704,12 @@ $conf['mcneese_management_group_leader_unassigned'] = 197; # 197 = nobody
 
 
 /**
+ * Disable HTML 5 tools chrome frame header
+ */
+$conf['html5_tools_add_chrome_frame_header'] = 0;
+
+
+/**
  * Additional file_db variables.
  */
 $conf['file_db_server_id'] = 2;
