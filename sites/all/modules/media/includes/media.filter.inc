@@ -597,6 +597,17 @@ function media_get_wysiwyg_allowed_view_modes($file) {
  * Can also have additional params depending on the media type.
  */
 function media_format_form($form, $form_state, $file) {
+  $scheme = file_uri_scheme($file->uri);
+  if ($scheme == 'dbu' || $scheme == 'dbr') {
+    $target = file_uri_target($uri);
+
+    $parts = explode('/', $target);
+    $parts[0] = 'f';
+    $parts[1] = $file->fid;
+
+    $file->uri = $scheme . '://' . implode('/', $parts);
+  }
+
   $form = array();
   $form['#media'] = $file;
 
