@@ -448,7 +448,9 @@ function search_by_page_path_field_prefix() {
  * Returns the content portion of the rendered page at the given path.
  *
  * Note: As a side effect, theme, pager, and page title variables may be
- * altered. The calling function needs to make sure they are restored.
+ * altered. The calling function needs to make sure they are restored. Do not
+ * call this during rendering of search results! Use
+ * search_by_page_stored_page_content() instead.
  *
  * @param $path
  *    Path to render.
@@ -512,6 +514,29 @@ function search_by_page_page_content($path) {
   drupal_static_reset('menu_tree_page_data');
   drupal_static_reset('menu_get_item');
   return $content;
+}
+
+/**
+ * Returns the stored content from the last indexing of a page.
+ *
+ * @param string $module
+ *   Name of the module for the path.
+ * @param int $modid
+ *   ID of this path within this module.
+ * @param int $environment
+ *   ID of the environment.
+ *
+ * @return string
+ *   The stored content from last indexing of the page.
+ */
+function search_by_page_stored_page_content($module, $modid, $environment) {
+  return db_select('sbp_path', 'p')
+    ->fields('p', array('page_data'))
+    ->condition('from_module', $module)
+    ->condition('modid', $modid)
+    ->condition('environment', $environment)
+    ->execute()
+    ->fetchField();
 }
 
 /**
@@ -832,6 +857,11 @@ function search_by_page_update_index() {
 
       // Add to search index (already marked as updated).
       search_index($item->pid, 'search_by_page', $content);
+      // Add to SBP table.
+      db_update('sbp_path')
+        ->condition('pid', $item->pid)
+        ->fields(array('page_data' => $content))
+        ->execute();
     }
     else {
       $con = $content;
@@ -1048,7 +1078,7 @@ function search_by_page_block_info() {
 
     $ret[$envid] = array(
       'info' => t('Search by page @environment', array('@environment' => $envname)),
-      'cache' => DRUPAL_CACHE_GLOBAL,
+      'cache' => DRUPAL_NO_CACHE,
     );
   }
 

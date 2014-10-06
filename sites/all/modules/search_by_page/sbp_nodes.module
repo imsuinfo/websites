@@ -147,9 +147,8 @@ function sbp_nodes_sbp_details($id, $environment, $keys = NULL) {
   // See if we want to display an excerpt or a teaser
 
   if (search_by_page_setting_get('sbp_nodes_display_type', $environment, 'excerpts') == 'excerpts') {
-    $node_view = node_view($node);
-    $content = drupal_render($node_view);
-    $content = search_by_page_strip_tags($content, $environment);
+    $view = node_view($node);
+    $content = search_by_page_strip_tags(drupal_render($view), $environment);
     $ret['snippet'] = search_by_page_excerpt($keys, $content);
   }
   else {
