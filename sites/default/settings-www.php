@@ -730,3 +730,5 @@ $conf['phplot_api_default_scheme'] = 'public';
 
 // manually turn on maintenance mode
 #$conf['maintenance_mode'] = TRUE;
+
+$conf['disable_frontpage_featured'] = TRUE;

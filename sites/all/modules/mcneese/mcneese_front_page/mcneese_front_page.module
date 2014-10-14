@@ -45,6 +45,11 @@ function mcneese_front_page_embed_featured() {
     }
   }
 
+  $disable_frontpage_featured = variable_get('disable_frontpage_featured', FALSE);
+  if ($disable_frontpage_featured) {
+    return;
+  }
+
   $cycle2 = libraries_load('cycle2');
   if (empty($cycle2['loaded'])) {
     if (class_exists('cf_error')) {
