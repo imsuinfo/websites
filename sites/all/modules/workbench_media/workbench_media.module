@@ -117,7 +117,7 @@ function workbench_media_preprocess_views_view_table(&$vars) {
       $external_url = $wrappers[$wrapper_class]->getExternalUrl();
 
       if ($scheme == 'dbu') {
-        $fp = $base_path . 'f/f/' . $vars['result'][$id]->fid;
+        $fp = '/f/f/' . $vars['result'][$id]->fid;
         $row['uri'] = '<strong>Unique Path:</strong><br>';
         $row['uri'] .= '<a href="' . $base_url . $external_url . '">' . $external_url . '</a>';
         $row['uri'] .= '<br><br><strong>ID Path</strong>:<br>';
@@ -126,12 +126,12 @@ function workbench_media_preprocess_views_view_table(&$vars) {
       }
       else {
         $row['uri'] = '<strong>File Path:</strong><br>';
-        $row['uri'] .= '<a href="' . $base_url . $external_url . '">' . $external_url . '</a>';
-        $view_path = $base_url . $external_url;
+        $row['uri'] .= '<a href="' . $base_url . '/' . $external_url . '">' . $external_url . '</a>';
+        $view_path = $base_url . '/' . $external_url;
       }
     }
 
     $row['filename'] = '<a href="' . $view_path . '">' . $row['filename'] . '</a>';
-    $row['fid'] = '<a href="' . $file_path . '/edit' . '">' . $row['fid'] . '</a>';
+    $row['fid'] = '<a href="' . $file_path . '/edit' . '">' . $vars['result'][$id]->fid. '</a>';
   }
 }
