@@ -290,14 +290,20 @@ function mcneese_management_emergency_settings_page_submit($form, &$form_state) 
     if ($existing_mode === FALSE) {
       $clear_cache = TRUE;
     }
-    elseif ($modes['stage_3'] && $existing_node != $nodes['stage_3']) {
-      $clear_cache = TRUE;
+    elseif ($modes['stage_3']) {
+      if ($existing_node != $nodes['stage_3']) {
+        $clear_cache = TRUE;
+      }
     }
-    elseif ($modes['stage_2'] && $existing_node != $nodes['stage_2']) {
-      $clear_cache = TRUE;
+    elseif ($modes['stage_2']) {
+      if ($existing_node != $nodes['stage_2']) {
+        $clear_cache = TRUE;
+      }
     }
-    elseif ($modes['stage_1'] && $existing_node != $nodes['stage_1']) {
-      $clear_cache = TRUE;
+    elseif ($modes['stage_1']) {
+      if ($existing_node != $nodes['stage_1']) {
+        $clear_cache = TRUE;
+      }
     }
   }
   elseif ($existing_mode > 0) {
