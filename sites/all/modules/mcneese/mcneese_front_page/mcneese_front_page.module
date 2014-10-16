@@ -38,7 +38,7 @@ function mcneese_front_page_embed_featured() {
       $node = node_load($nid);
 
       if (isset($node->body['und'][0]['value']) && !empty($node->body['und'][0]['format'])) {
-        return check_markup($node->body['und'][0]['value'], $node->body['und'][0]['format']);
+        return array('markup' => check_markup($node->body['und'][0]['value'], $node->body['und'][0]['format']));
       }
 
       return array('markup' => NULL);
