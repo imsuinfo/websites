@@ -231,17 +231,14 @@ function mcneese_management_emergency_settings_page_validate($form, &$form_state
 
     $nid = NULL;
     if (cf_is_integer($value)) {
-      if ($nid > 0) {
-        $nid = $value;
-      }
+      $nid = (int) trim($value);
     }
     else {
       $matches = array();
-      $matched = preg_match('/ \[nid:\s*(\d+)]\s*$/i', $value, $matches);
+      $matched = preg_match('@\[nid:\s*(\d+)\s*\].*@', $value, $matches);
 
-      if ($matched && isset($matches[1]) && cf_is_integer($matches[1]) && $matches[1] > 0) {
-        $nid = $matches[1];
-        $value = $nid;
+      if ($matched && isset($matches[1])) {
+        $nid = (int) trim($matches[1]);
       }
     }
 
@@ -251,7 +248,10 @@ function mcneese_management_emergency_settings_page_validate($form, &$form_state
     else {
       $node = node_load($nid);
 
-      if (!is_object($node)) {
+      if (is_object($node)) {
+        $value = $nid;
+      }
+      else {
         form_set_error('settings[stage_' . $key . '][node', t("Cannot use %nid for the stage :key emergency node because no node by that id exists.", array(':key' => $key, '%nid' => $nid)));
       }
     }
@@ -268,9 +268,9 @@ function mcneese_management_emergency_settings_page_validate($form, &$form_state
  */
 function mcneese_management_emergency_settings_page_submit($form, &$form_state) {
   $nodes = array();
-  $nodes['stage_1'] = $form_state['values']['settings']['stage_1']['node'];
-  $nodes['stage_2'] = $form_state['values']['settings']['stage_2']['node'];
-  $nodes['stage_3'] = $form_state['values']['settings']['stage_3']['node'];
+  $nodes['stage_1'] = (int) $form_state['values']['settings']['stage_1']['node'];
+  $nodes['stage_2'] = (int) $form_state['values']['settings']['stage_2']['node'];
+  $nodes['stage_3'] = (int) $form_state['values']['settings']['stage_3']['node'];
 
   $modes = array();
   $modes['stage_1'] = (bool) $form_state['values']['settings']['stage_1']['mode'];
@@ -321,22 +321,19 @@ function mcneese_management_emergency_settings_page_submit($form, &$form_state) 
   }
   elseif ($form['settings']['stage_1']['mode']['#default_value']) {
     $nid = NULL;
-    $node = NULL;
-    if (cf_is_integer($form['settings']['stage_1']['node']['#default_value'])) {
-      if ($nid > 0) {
-        $nid = $form['settings']['stage_1']['node']['#default_value'];
-      }
+    if (cf_is_integer($value)) {
+      $nid = (int) trim($value);
     }
     else {
       $matches = array();
-      $matched = preg_match('/ \[nid:\s*(\d+)]\s*$/i', $form['settings']['stage_1']['node']['#default_value'], $matches);
+      $matched = preg_match('@\[nid:\s*(\d+)\s*\].*@', $form['settings']['stage_1']['mode']['#default_value'], $matches);
 
-      if ($matched && isset($matches[1]) && cf_is_integer($matches[1]) && $matches[1] > 0) {
-        $nid = $matches[1];
+      if ($matched && isset($matches[1])) {
+        $nid = (int) trim($matches[1]);
       }
     }
 
-    if (is_numeric($nid)) {
+    if (!is_null($nid)) {
       $node = node_load($nid);
     }
 
