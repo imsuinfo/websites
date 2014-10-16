@@ -60,7 +60,7 @@ function mcneese_front_page_embed_featured() {
   drupal_add_js(drupal_get_path('module', 'mcneese_front_page') . '/js/mcneese_front_page-featured.js', array('type' => 'file', 'group' => JS_DEFAULT, 'weight' => 20, 'preprocess' => TRUE));
 
   $cache_id = __function__;
-  $cache_expire = '+1 week';
+  $cache_expire = '+3 hours';
   $return_array = &drupal_static($cache_id, array('markup' => NULL));
   if (isset($return_array['markup']) && !is_null($return_array['markup'])) {
     return $return_array;
