@@ -76,6 +76,12 @@ function mfcs_build_calendar_month_markup($items, $month_start, $month_stop, $ab
   }
 
   global $base_path;
+  global $mfcs_determined;
+
+  $url_arguments = '';
+  if (!empty($mfcs_determined['complete'])) {
+    $url_arguments .= '?' . $mfcs_determined['complete'];
+  }
 
   $week_start = 0;
   $week_stop = 6;
@@ -111,8 +117,8 @@ function mfcs_build_calendar_month_markup($items, $month_start, $month_stop, $ab
   $url_base_month = $base_path . 'requests/calendar-0/month/';
   $url_base_day = $base_path . 'requests/calendar-0/day/';
 
-  $last_url = $url_base_month . date('Y', $last_month) . '/' . strtolower(date('F', $last_month));
-  $next_url = $url_base_month . date('Y', $next_month) . '/' . strtolower(date('F', $next_month));
+  $last_url = $url_base_month . date('Y', $last_month) . '/' . strtolower(date('F', $last_month)) . $url_arguments;
+  $next_url = $url_base_month . date('Y', $next_month) . '/' . strtolower(date('F', $next_month)) . $url_arguments;
 
   $markup .= '<div class="calendar-navigation">';
   $markup .= '<div class="calendar-navigation-previous">';
@@ -167,7 +173,7 @@ function mfcs_build_calendar_month_markup($items, $month_start, $month_stop, $ab
 
     $markup .= '<div class="calendar-day-wrapper weekday-' . $week_count . ' day-' . $current_day . ' month-' . $current_month . $extra_class . '">';
     $markup .= '<div class="calendar-day weekday-' . $week_count . ' day-' . $current_day . ' month-' . $current_month . $extra_class . '">';
-    $markup .= '<div class="calendar-label"><a href="' . $url_base_day . $current_year . '/' . $current_month_name . '/' . $current_day. '">' . $current_day . '</a></div>';
+    $markup .= '<div class="calendar-label"><a href="' . $url_base_day . $current_year . '/' . $current_month_name . '/' . $current_day . $url_arguments. '">' . $current_day . '</a></div>';
     if (!empty($items[$current_month_day])) {
       foreach ($items[$current_month_day] as $item_id => $item) {
         $markup .= '<div class="calendar-item"><a class="calendar-item-link" href="' . $item['href'] . '" title="' . $item['tooltip'] . '">' . $item['title'] . '</a></div>';
@@ -192,16 +198,15 @@ function mfcs_build_calendar_month_markup($items, $month_start, $month_stop, $ab
   $markup .= '</div>';
 
 
-  // iCal links
-  $year = date('Y', $month_start);
-  $month = date('F', $month_start);
-  $markup .= '<div class="calendar-ical-links no-print">' . "\n";
-  $markup .= '<h3 class="calendar-ical-title">iCal Download Options</h3>' . "\n";
-  $markup .= '  <ul class="calendar-ical-links-list">' . "\n";
-  $markup .= '    <li class="calendar-ical-links-list-item calendar-ical-links-list-item-month"><div class="calendar-ical-links-list-item-label">Month:</div> <a href="' . $base_path . 'requests/ical-0/month/' . $year . '/' . $month . '" title="Download iCal for the month of ' . $month . ' ' . $year . '">' . $month . ' ' . $year . '</a></li>' . "\n";
-  $markup .= '    <li class="calendar-ical-links-list-item calendar-ical-links-list-item-year"><div class="calendar-ical-links-list-item-label">Year:</div> <a href="' . $base_path . 'requests/ical-0/year/' . $year . '" title="Download iCal for the year ' . $year . '">' . $year . '</a></li>' . "\n";
-  $markup .= '  </ul>' . "\n";
-  $markup .= '</div>' . "\n";
+  // calendar links
+  $markup .= '<div id="mfcs-links_and_filters" class="links_and_filters-wrapper no-print">' . "\n";
+
+  $markup .= '<div class="links_and_filters links_and_filters-group group-1">' . "\n";
+  $markup .= mfcs_build_calendar_ical_links_markup($month_start, TRUE, TRUE, FALSE);
+  $markup .= '</div>' . "\n"; // filter-group-1
+
+  $markup .= mfcs_build_determined_filters_markup();
+  $markup .= '</div>' . "\n"; // #mfcs-links_and_filters
 
 
   // end wrapper (calendar-month-wrapper)
@@ -262,6 +267,12 @@ function mfcs_build_calendar_day_markup($items, $day_start, $day_stop, $title, $
   }
 
   global $base_path;
+  global $mfcs_determined;
+
+  $url_arguments = '';
+  if (!empty($mfcs_determined['complete'])) {
+    $url_arguments .= '?' . $mfcs_determined['complete'];
+  }
 
   $module_path = drupal_get_path('module', 'mfcs');
 
@@ -291,8 +302,8 @@ function mfcs_build_calendar_day_markup($items, $day_start, $day_stop, $title, $
 
   $url_base_day = $base_path . 'requests/calendar-0/day/';
 
-  $last_url = $url_base_day . date('Y', $last_day) . '/' . strtolower(date('F', $last_day)) . '/' . date('d', $last_day);
-  $next_url = $url_base_day . date('Y', $next_day) . '/' . strtolower(date('F', $next_day)) . '/' . date('d', $next_day);
+  $last_url = $url_base_day . date('Y', $last_day) . '/' . strtolower(date('F', $last_day)) . '/' . date('d', $last_day) . $url_arguments;
+  $next_url = $url_base_day . date('Y', $next_day) . '/' . strtolower(date('F', $next_day)) . '/' . date('d', $next_day) . $url_arguments;
 
   $markup .= '<div class="calendar-navigation">';
   $markup .= '<div class="calendar-navigation-previous">';
@@ -335,7 +346,7 @@ function mfcs_build_calendar_day_markup($items, $day_start, $day_stop, $title, $
 
       $item_even = TRUE;
       $item_count = 0;
-      $left_offset = ($row_even ? 4 : 16);
+      $left_offset = 0;
       foreach ($all_day as $item_id => $item) {
         $item_class = "";
 
@@ -424,7 +435,7 @@ function mfcs_build_calendar_day_markup($items, $day_start, $day_stop, $title, $
     $item_width = 178;
 
     $left_offset = 0;
-    $left_offset_min = 30;
+    $left_offset_min = 20;
     $left_offset_max = 186;
 
     $left_offset_increment = $left_offset_min;
@@ -598,18 +609,14 @@ function mfcs_build_calendar_day_markup($items, $day_start, $day_stop, $title, $
   $markup .= '</div>';
 
 
-  // iCal links
-  $year = date('Y', $day_start);
-  $month = date('F', $day_start);
-  $day = date('d', $day_start);
-  $markup .= '<div class="calendar-ical-links no-print">' . "\n";
-  $markup .= '<h3 class="calendar-ical-title">iCal Download Options</h3>' . "\n";
-  $markup .= '  <ul class="calendar-ical-links-list">' . "\n";
-  $markup .= '    <li class="calendar-ical-links-list-item calendar-ical-links-list-item-day"><div class="calendar-ical-links-list-item-label">Day:</div> <a href="' . $base_path . 'requests/ical-0/day/' . $year . '/' . $month . '/' . $day . '" title="Download iCal for ' . $month . ' ' . $day . ', ' . $year . '">' . $month . ' ' . $day . ', ' . $year . '</a></li>' . "\n";
-  $markup .= '    <li class="calendar-ical-links-list-item calendar-ical-links-list-item-month"><div class="calendar-ical-links-list-item-label">Month:</div> <a href="' . $base_path . 'requests/ical-0/month/' . $year . '/' . $month . '" title="Download iCal for the month of ' . $month . ' ' . $year . '">' . $month . ' ' . $year . '</a></li>' . "\n";
-  $markup .= '    <li class="calendar-ical-links-list-item calendar-ical-links-list-item-year"><div class="calendar-ical-links-list-item-label">Year:</div> <a href="' . $base_path . 'requests/ical-0/year/' . $year . '" title="Download iCal for the year ' . $year . '">' . $year . '</a></li>' . "\n";
-  $markup .= '  </ul>' . "\n";
+  // calendar links
+  $markup .= '<div id="mfcs-links_and_filters" class="links_and_filters-wrapper no-print">' . "\n";
+  $markup .= '<div class="links_and_filters links_and_filters-group group-1">' . "\n";
+  $markup .= mfcs_build_calendar_ical_links_markup($day_start);
   $markup .= '</div>' . "\n";
+
+  $markup .= mfcs_build_determined_filters_markup();
+  $markup .= '</div>' . "\n"; // #mfcs-links_and_filters
 
 
   // end wrappers (main)
@@ -626,6 +633,450 @@ function mfcs_build_calendar_day_markup($items, $day_start, $day_stop, $title, $
   return $markup;
 }
 
+/**
+ * Build a list of links that change the url path to apply a filter.
+ *
+ * @param int $date_start
+ *   The time start unix timestamp.
+ * @param bool $year
+ *   (optional) If TRUE, show year, FALSE hide year.
+ * @param bool $month
+ *   (optional) If TRUE, show month, FALSE hide month.
+ * @param bool $day
+ *   (optional) If TRUE, show day, FALSE hide day.
+ * @param string|null $id
+ *   (optional) The HTML id attribute to use.
+ *
+ * @return string|bool
+ *   The generate HTML markup or FALSE on error.
+ */
+function mfcs_build_calendar_ical_links_markup($date_start, $year = TRUE, $month = TRUE, $day = TRUE, $id = NULL) {
+  if (!cf_is_integer($date_start)) {
+    cf_error::invalid_integer('date_start');
+    return FALSE;
+  }
+
+  if (!is_bool($year)) {
+    cf_error::invalid_bool('year');
+    return FALSE;
+  }
+
+  if (!is_bool($month)) {
+    cf_error::invalid_bool('month');
+    return FALSE;
+  }
+
+  if (!is_bool($day)) {
+    cf_error::invalid_bool('day');
+    return FALSE;
+  }
+
+  if (!is_null($id) && !is_string($id)) {
+    cf_error::invalid_string('id');
+    return FALSE;
+  }
+
+  global $base_path;
+  global $mfcs_determined;
+
+  $url_arguments = '';
+  if (!empty($mfcs_determined['complete'])) {
+    $url_arguments .= '?' . $mfcs_determined['complete'];
+  }
+
+  if (!empty($id)) {
+    $id = ' id="' . $id . '"';
+  }
+
+  $markup = '<div' . $id . ' class="links_and_filters ical">' . "\n";
+  $markup .= '<h3 class="links_and_filters-title ical">iCal Download Options</h3>' . "\n";
+  $markup .= '<ul class="links_and_filters-list ical">' . "\n";
+
+  if ($year) {
+    $year = date('Y', $date_start);
+
+    if ($month) {
+      $month = date('F', $date_start);
+
+      if ($day) {
+        $day = date('d', $date_start);
+
+        $markup .= '<li class="links_and_filters-list-item item-day ical">';
+        $markup .= '<div class="links_and_filters-list-item-label item-day item-label ical">Day:</div> ';
+        $markup .= '<a href="' . $base_path . 'requests/ical-0/day/' . $year . '/' . $month . '/' . $day . $url_arguments . '" title="Download iCal for ' . $month . ' ' . $day . ', ' . $year . '" class="links_and_filters-list-item-link item-day ical item-link">' . $month . ' ' . $day . ', ' . $year . '</a>';
+        $markup .= '</li>' . "\n";
+      }
+
+      $markup .= '<li class="links_and_filters-list-item item-month ical">';
+      $markup .= '<div class="links_and_filters-list-item-label item-month item-label ical">Month:</div> ';
+      $markup .= '<a href="' . $base_path . 'requests/ical-0/month/' . $year . '/' . $month . $url_arguments . '" title="Download iCal for the month of ' . $month . ' ' . $year . '" class="links_and_filters-list-item-link item-month ical item-link">' . $month . ' ' . $year . '</a>';
+      $markup .= '</li>' . "\n";
+    }
+
+    $markup .= '<li class="links_and_filters-list-item item-year ical">';
+    $markup .= '<div class="links_and_filters-list-item-label item-year item-label ical">Year:</div> ';
+    $markup .= '<a href="' . $base_path . 'requests/ical-0/year/' . $year . $url_arguments . '" title="Download iCal for the year ' . $year . '" class="links_and_filters-list-item-link item-year ical item-link">' . $year . '</a>';
+    $markup .= '</li>' . "\n";
+  }
+
+  $markup .= '</ul>' . "\n";
+  $markup .= '</div>' . "\n";
+
+  return $markup;
+}
+
+/**
+ * Build a list of links that change the url path to apply a filter.
+ *
+ * @param string|null $id
+ *   The HTML id attribute to use.
+ *
+ * @return string|bool
+ *   The generate HTML markup or FALSE on error.
+ */
+function mfcs_build_determined_filters_markup($id = NULL) {
+  if (!is_null($id) && !is_string($id)) {
+    cf_error::invalid_string('id');
+    return FALSE;
+  }
+
+  global $base_path;
+  global $mfcs_determined;
+
+  mfcs_include(MFCS_INCLUDE_LIST_OPTIONS);
+
+  $request_type_options = mfcs_get_request_type_list_options();
+  $request_classification_options = mfcs_get_request_classification_list_options();
+  $building_list_options = mfcs_get_request_building_list_options();
+
+  $type_id = NULL;
+  $classifications_id = NULL;
+  if (!empty($id)) {
+    $type_id = ' id="' . $id . '-types"';
+    $classifications_id = ' id="' . $id . '-classifications"';
+  }
+
+
+  // build the url arguments outside of the loop to avoid repitition.
+  $url_arguments_classifications = '';
+  if (!empty($mfcs_determined['get']['classifications'])) {
+    $url_arguments_classifications = 'classifications=' . implode(',', $mfcs_determined['get']['classifications']);
+  }
+
+  $url_arguments_types = '';
+  if (!empty($mfcs_determined['get']['types'])) {
+    $url_arguments_types = 'types=' . implode(',', $mfcs_determined['get']['types']);
+  }
+
+  $url_arguments_buildings = '';
+  if (!empty($mfcs_determined['get']['buildings'])) {
+    $url_arguments_buildings = 'buildings=' . implode(',', $mfcs_determined['get']['buildings']);
+  }
+
+  $url_arguments_remaining = $mfcs_determined['remaining'];
+
+
+  // classifications
+  $markup = '<div class="links_and_filters links_and_filters-group group-2">' . "\n";
+  $markup .= '<div' . $id . ' class="links_and_filters filter_classifications">' . "\n";
+  $markup .= '<h3 class="links_and_filters-title filter_classifications">Filter by Classification</h3>' . "\n";
+  $markup .= '  <ul class="links_and_filters-list filter_classifications">' . "\n";
+
+  foreach ($request_classification_options as $classification_id => $classification) {
+    $current_get = array();
+    if (!empty($mfcs_determined['get']['classifications'])) {
+      $current_get = $mfcs_determined['get']['classifications'];
+    }
+
+    $link_cg = $base_path . $_GET['q'];
+
+    if (isset($mfcs_determined['get']['classifications'][$classification_id])) {
+      unset($current_get[$classification_id]);
+      $link_action_css = 'link-remove';
+      $link_action_text = 'Unfilter: ';
+    }
+    else {
+      $current_get[$classification_id] = $classification_id;
+      $link_action_css = 'link-add';
+      $link_action_text = 'Filter: ';
+    }
+
+    $first = TRUE;
+    $add_qmark = TRUE;
+
+    if (!empty($current_get)) {
+      $link_cg .= '?';
+      $add_qmark = FALSE;
+
+      if ($first) {
+        $first = FALSE;
+      }
+      else {
+        $link_cg .= '&';
+      }
+
+      $link_cg .= 'classifications=' . urlencode(implode(',', $current_get));
+    }
+
+    if (!empty($url_arguments_types)) {
+      if ($add_qmark) {
+        $link_cg .= '?';
+        $add_qmark = FALSE;
+      }
+
+      if ($first) {
+        $first = FALSE;
+      }
+      else {
+        $link_cg .= '&';
+      }
+
+      $link_cg .= $url_arguments_types;
+    }
+
+    if (!empty($url_arguments_buildings)) {
+      if ($add_qmark) {
+        $link_cg .= '?';
+        $add_qmark = FALSE;
+      }
+
+      if ($first) {
+        $first = FALSE;
+      }
+      else {
+        $link_cg .= '&';
+      }
+
+      $link_cg .= $url_arguments_buildings;
+    }
+
+    if (!empty($url_arguments_remaining)) {
+      if (!$added_qmark) {
+        $link_cg .= '?';
+        $added_qmark = TRUE;
+      }
+
+      if ($first) {
+        $first = FALSE;
+      }
+      else {
+        $link_cg .= '&';
+      }
+
+      $link_cg .= $url_arguments_remaining;
+    }
+
+    $markup .= '<li' . $id . ' class="links_and_filters-list-item item-' . $classification_id . ' filter_classifications">' . "\n";
+    $markup .= '<a href="' . $link_cg . '" class="links_and_filters-list-item-link item-' . $classification_id . ' item-link ' . $link_action_css . ' filter_classifications" title="' . $link_action_text . $classification . '">' . $link_action_text . $classification . '</a>' . "\n";
+    $markup .= '</li>' . "\n";
+  }
+
+  $markup .= '</ul>' . "\n";
+  $markup .= '</div>' . "\n";
+
+
+  // types
+  $markup .= '<div' . $id . ' class="links_and_filters filter_types">' . "\n";
+  $markup .= '<h3 class="links_and_filters-title filter_types">Filter by Type</h3>' . "\n";
+  $markup .= '  <ul class="links_and_filters-list filter_types">' . "\n";
+
+  foreach ($request_type_options as $type_id => $type) {
+    $current_get = array();
+    if (!empty($mfcs_determined['get']['types'])) {
+      $current_get = $mfcs_determined['get']['types'];
+    }
+
+    $link_cg = $base_path . $_GET['q'];
+
+    if (isset($mfcs_determined['get']['types'][$type_id])) {
+      unset($current_get[$type_id]);
+      $link_action_css = 'link-remove';
+      $link_action_text = 'Unfilter: ';
+    }
+    else {
+      $current_get[$type_id] = $type_id;
+      $link_action_css = 'link-add';
+      $link_action_text = 'Filter: ';
+    }
+
+    $first = TRUE;
+    $add_qmark = TRUE;
+
+    if (!empty($url_arguments_classifications)) {
+      $link_cg .= '?';
+      $add_qmark = FALSE;
+
+      if ($first) {
+        $first = FALSE;
+      }
+      else {
+        $link_cg .= '&';
+      }
+
+      $link_cg .= $url_arguments_classifications;
+    }
+
+    if (!empty($current_get)) {
+      if ($add_qmark) {
+        $link_cg .= '?';
+        $add_qmark = FALSE;
+      }
+
+      if ($first) {
+        $first = FALSE;
+      }
+      else {
+        $link_cg .= '&';
+      }
+
+      $link_cg .= 'types=' . urlencode(implode(',', $current_get));
+    }
+
+    if (!empty($url_arguments_buildings)) {
+      if ($add_qmark) {
+        $link_cg .= '?';
+        $add_qmark = FALSE;
+      }
+
+      if ($first) {
+        $first = FALSE;
+      }
+      else {
+        $link_cg .= '&';
+      }
+
+      $link_cg .= $url_arguments_buildings;
+    }
+
+    if (!empty($url_arguments_remaining)) {
+      if ($add_qmark) {
+        $link_cg .= '?';
+        $add_qmark = FALSE;
+      }
+
+      if ($first) {
+        $first = FALSE;
+      }
+      else {
+        $link_cg .= '&';
+      }
+
+      $link_cg .= $url_arguments_remaining;
+    }
+
+    $markup .= '<li' . $id . ' class="links_and_filters-list-item item-' . $type_id . ' filter_types">' . "\n";
+    $markup .= '<a href="' . $link_cg . '" class="links_and_filters-list-item-link item-' . $type_id . ' item-link ' . $link_action_css . ' filter_types" title="' . $link_action_text . $type . '">' . $link_action_text . $type . '</a>' . "\n";
+    $markup .= '</li>' . "\n";
+  }
+
+  $markup .= '</ul>' . "\n";
+  $markup .= '</div>' . "\n";
+
+  $markup .= '</div>' . "\n"; // links_and_filters-group group-2
+
+
+  // buildings
+  $markup .= '<div class="links_and_filters links_and_filters-group group-3">' . "\n";
+  $markup .= '<div' . $id . ' class="links_and_filters filter_buildings">' . "\n";
+  $markup .= '<h3 class="links_and_filters-title filter_buildings">Filter by Building</h3>' . "\n";
+  $markup .= '  <ul class="links_and_filters-list filter_buildings">' . "\n";
+
+  foreach ($building_list_options as $building_id => $building) {
+    $current_get = array();
+    if (!empty($mfcs_determined['get']['buildings'])) {
+      $current_get = $mfcs_determined['get']['buildings'];
+    }
+
+    $link_cg = $base_path . $_GET['q'];
+
+    if (isset($mfcs_determined['get']['buildings'][$building_id])) {
+      unset($current_get[$building_id]);
+      $link_action_css = 'link-remove';
+      $link_action_text = 'Unfilter: ';
+    }
+    else {
+      $current_get[$building_id] = $building_id;
+      $link_action_css = 'link-add';
+      $link_action_text = 'Filter: ';
+    }
+
+    $first = TRUE;
+    $add_qmark = TRUE;
+
+    if (!empty($url_arguments_classifications)) {
+      $link_cg .= '?';
+      $add_qmark = FALSE;
+
+      if ($first) {
+        $first = FALSE;
+      }
+      else {
+        $link_cg .= '&';
+      }
+
+      $link_cg .= $url_arguments_classifications;
+    }
+
+    if (!empty($url_arguments_types)) {
+      if ($add_qmark) {
+        $link_cg .= '?';
+        $add_qmark = FALSE;
+      }
+
+      if ($first) {
+        $first = FALSE;
+      }
+      else {
+        $link_cg .= '&';
+      }
+
+      $link_cg .= $url_arguments_types;
+    }
+
+    if (!empty($current_get)) {
+      if ($add_qmark) {
+        $link_cg .= '?';
+        $add_qmark = FALSE;
+      }
+
+      if ($first) {
+        $first = FALSE;
+      }
+      else {
+        $link_cg .= '&';
+      }
+
+      $link_cg .= 'buildings=' . urlencode(implode(',', $current_get));
+    }
+
+    if (!empty($url_arguments_remaining)) {
+      if ($add_qmark) {
+        $link_cg .= '?';
+        $add_qmark = FALSE;
+      }
+
+      if ($first) {
+        $first = FALSE;
+      }
+      else {
+        $link_cg .= '&';
+      }
+
+      $link_cg .= $url_arguments_remaining;
+    }
+
+    $markup .= '<li' . $id . ' class="links_and_filters-list-item item-' . $type_id . ' filter_types">' . "\n";
+    $markup .= '<a href="' . $link_cg . '" class="links_and_filters-list-item-link item-' . $type_id . ' item-link ' . $link_action_css . ' filter_types" title="' . $link_action_text . $building . '">' . $link_action_text . $building . '</a>' . "\n";
+    $markup .= '</li>' . "\n";
+  }
+
+  $markup .= '</ul>' . "\n";
+  $markup .= '</div>' . "\n";
+
+  $markup .= '</div>' . "\n"; // links_and_filters-group group-3
+
+  return $markup;
+}
 
 /**
  * Renders HTML for a self-contained request view page useful for printing.

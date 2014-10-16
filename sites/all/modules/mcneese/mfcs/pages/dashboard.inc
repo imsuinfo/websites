@@ -20,7 +20,13 @@
  */
 function mfcs_dashboard_page() {
   global $base_path;
+  global $mfcs_determined;
   $user = cf_current_user();
+
+  $url_arguments = '';
+  if (!empty($mfcs_determined['complete'])) {
+    $url_arguments .= '?' . $mfcs_determined['complete'];
+  }
 
   mfcs_add_canonical_headers('requests');
 
@@ -38,7 +44,7 @@ function mfcs_dashboard_page() {
   $items_array_current = 1;
 
   if ($can_create) {
-    $link = '<h4 class="item-link-wrapper inline-block"><a href="' . $base_path . 'requests/create-0" class="item-link">New Request</a></h4>';
+    $link = '<h4 class="item-link-wrapper inline-block"><a href="' . $base_path . 'requests/create-0' . $url_arguments . '" class="item-link">New Request</a></h4>';
     $help = '<div class="item-description inline-block">Make a request to use the facilities or host special events at McNeese State University or related facilities.</div>';
     $items_array[] = array(
       'data' => $link . '<br>' . $help,
@@ -48,7 +54,7 @@ function mfcs_dashboard_page() {
   }
 
   if ($can_list) {
-    $link = '<h4 class="item-link-wrapper inline-block"><a href="' . $base_path . 'requests/list-0" class="item-link">List Requests</a></h4>';
+    $link = '<h4 class="item-link-wrapper inline-block"><a href="' . $base_path . 'requests/list-0' . $url_arguments . '" class="item-link">List Requests</a></h4>';
     $help = '<div class="item-description inline-block">View a list of requests available to the current user.</div>';
     $items_array[] = array(
       'data' => $link . '<br>' . $help,
@@ -73,7 +79,7 @@ function mfcs_dashboard_page() {
   }
 
   if ($can_review) {
-    $link = '<h4 class="item-link-wrapper inline-block"><a href="' . $base_path . 'requests/review-0" class="item-link">Review Requests</a></h4>';
+    $link = '<h4 class="item-link-wrapper inline-block"><a href="' . $base_path . 'requests/review-0' . $url_arguments . '" class="item-link">Review Requests</a></h4>';
     $help = '<div class="item-description inline-block">Manage requests the current user is allowed to review.</div>';
     $items_array[] = array(
       'data' => $link . '<br>' . $help,
@@ -113,7 +119,7 @@ function mfcs_dashboard_page() {
   }
 
   if ($can_search) {
-    $link = '<h4 class="item-link-wrapper inline-block"><a href="' . $base_path . 'requests/search-0" class="item-link">Search Requests</a></h4>';
+    $link = '<h4 class="item-link-wrapper inline-block"><a href="' . $base_path . 'requests/search-0' . $url_arguments . '" class="item-link">Search Requests</a></h4>';
     $help = '<div class="item-description inline-block">Use advanced search tools to help locate and find one or more requests.</div>';
     $items_array[] = array(
       'data' => $link . '<br>' . $help,
@@ -197,57 +203,126 @@ function mfcs_dashboard_page() {
     mfcs_include(MFCS_INCLUDE_MISCELLANEOUS);
     $search = mfcs_miscellaneous_generate_requests_by_date_search($absolute_start, $absolute_stop);
 
-    $sorting = array(
-      'order' => 'date',
-      'sort' => 'ASC',
-    );
+    if (!empty($mfcs_determined['filters'])) {
+      foreach ($mfcs_determined['filters'] as $filter_key => $filter) {
+        $search[$filter_key] = $filter;
+      }
+    }
 
-    $results = mfcs_request_load_listing($search, FALSE, 0, 0, $sorting);
+    $url_arguments = '';
+    if (!empty($mfcs_determined['complete'])) {
+      $url_arguments .= '?' . $mfcs_determined['complete'];
+    }
+
+    // load rooms and buildings separately to avoid performing joining on tables.
+    $rooms = mfcs_load_rooms();
+    $buildings = mfcs_load_buildings();
+
+    if (!is_array($rooms)) {
+      $rooms = array();
+    }
+
+    if (!is_array($buildings)) {
+      $buildings = array();
+    }
 
     $rows = array();
     $rows_count = 0;
-    if (!empty($results)) {
-      foreach ($results as $item) {
-        foreach ($item->date as $delta => $date) {
-          if ($date < $absolute_start || $date >= $absolute_stop) {
-            continue;
-          }
+    $rows_per_day = 5;
+    $current_date = $absolute_start;
+    while ($current_date < $absolute_stop) {
+      $next_date = strtotime('+1 days', $current_date);
 
-          $day = date('j', $date);
-          $month = date('n', $date);
-          $month_day = $month . '-' . $day;
-          if (!isset($rows[$month_day])) {
-            $rows[$month_day] = array();
-          }
+      $search['field_dates-date-start-0']['search'] = $current_date;
+      $search['field_dates-date-stop-0']['search'] = $next_date;
 
-          $is_current_month = TRUE;
-          if ($date < $month_start || $date >= $month_stop) {
-            $is_current_month = FALSE;
-          }
+      $results = mfcs_request_load_listing($search, FALSE, 0, $rows_per_day);
 
-          if (isset($rows[$month_day][$item->id])) {
-            $rows[$month_day][$item->id]['time_start'][] = array('start' => $item->time_start, 'stop' => $item->time_stop);
-          }
-          else {
-            $item_title = check_plain($item->title);
-            $rows[$month_day][$item->id] = array(
-              'href' => $base_path . 'requests/view-0/' . $item->id,
-              'title' => $item_title,
-              'tooltip' => '[' . $item->id . '] ' . check_plain($item->building_name) . ' ' . check_plain($item->room_name) . ': ' . $item_title,
-              'date' => $date,
-              'month' => $month,
-              'day' => $day,
-              'times' => array(array('start' => $item->time_start, 'stop' => $item->time_stop)),
-            );
-            unset($item_title);
+      if (!empty($results)) {
+        foreach ($results as $item) {
+          foreach ($item->date as $delta => $date) {
+            if ($date < $current_date || $date >= $next_date) {
+              continue;
+            }
+
+            $year = date('Y', $date);
+            $day = date('j', $date);
+            $month = date('n', $date);
+            $month_day = $month . '-' . $day;
+            if (!isset($rows[$month_day])) {
+              $rows[$month_day] = array();
+            }
+
+            if (isset($rows[$month_day][$item->id])) {
+              $rows[$month_day][$item->id]['time_start'][] = array('start' => $item->time_start, 'stop' => $item->time_stop);
+            }
+            else {
+              $room_name = '';
+              if (array_key_exists($item->room, $rooms)) {
+                $room_name = check_plain($rooms[$item->room]->room_name);
+              }
+
+              $building_name = '';
+              if (array_key_exists($item->building, $buildings)) {
+                $building_name = check_plain($buildings[$item->building]->building_name);
+              }
+
+              $month_day_count = count($rows[$month_day]);
+              if ($month_day_count == $rows_per_day) {
+                $year = date('Y', $date);
+                $month_name = date('F', $date);
+                $month_name_lower = strtolower($month_name);
+
+                $rows[$month_day][$item->id] = array(
+                  'href' => $base_path . 'requests/calendar-0/day/' . $year . '/' . $month_name_lower . '/' . $day . $url_arguments,
+                  'title' => '. . .',
+                  'tooltip' => 'View more requests on ' . $month_name . ' ' . $day . ', ' . $year,
+                  'date' => $date,
+                  'month' => $month,
+                  'day' => $day,
+                  'times' => NULL,
+                );
+
+                unset($year);
+                unset($month_name);
+                unset($month_name_lower);
+              }
+              else {
+                $item_title = check_plain($item->title);
+
+                $location = (int) $item->location;
+                $building = (int) $item->building;
+                $room = (int) $item->room;
+                $type = (int) $item->type;
+
+                $rows[$month_day][$item->id] = array(
+                  'href' => $base_path . 'requests/view-0/' . $item->id . $url_arguments,
+                  'title' => $item_title,
+                  'tooltip' => '[' . $item->id . '] ' . $building_name . ' ' . $room_name . ': ' . $item_title,
+                  'date' => $date,
+                  'year' => $year,
+                  'month' => $month,
+                  'day' => date('j', $date),
+                  'location' => $location,
+                  'building' => $building,
+                  'room' => $room,
+                  'type' => $type,
+                  'building_name' => $building_name,
+                  'room_name' => $room_name,
+                );
+                unset($item_title);
+              }
+            }
           }
         }
       }
+
+      $current_date = $next_date;
     }
 
     mfcs_include(MFCS_INCLUDE_OUTPUT);
 
-    $title = '<h3><a href="' . $base_path . 'requests/calendar-0/month">' . "Requests for " . date("F, Y", $month_start) . '</a></h3>';
+    $title = '<h3><a href="' . $base_path . 'requests/calendar-0/month' . $url_arguments . '">' . "Requests for " . date("F, Y", $month_start) . '</a></h3>';
     $result = mfcs_build_calendar_month_markup($rows, $month_start, $month_stop, $absolute_start, $absolute_stop, $title, 'mfcs-calendar-0-month');
     if ($result !== FALSE) {
       $markup .= $result;

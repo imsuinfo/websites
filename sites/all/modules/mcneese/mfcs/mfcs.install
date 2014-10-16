@@ -175,6 +175,69 @@ function mfcs_schema() {
         'unsigned' => TRUE,
         'not null' => TRUE,
       ),
+      'status' => array(
+        'description' => $t("Represents the current status of the request."),
+        'type' => 'int',
+        'size' => 'big',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+      ),
+      'step' => array(
+        'description' => $t("Represents the current step of the request."),
+        'type' => 'int',
+        'size' => 'big',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+      ),
+      'type' => array(
+        'description' => $t("Represents the current type of the request."),
+        'type' => 'int',
+        'size' => 'big',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+      ),
+      'classification' => array(
+        'description' => $t("Represents the current classification of the request."),
+        'type' => 'int',
+        'size' => 'big',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+      ),
+      'location' => array(
+        'description' => $t("Represents the current step of the request."),
+        'type' => 'int',
+        'size' => 'big',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+      ),
+      'building' => array(
+        'description' => $t("Represents the current step of the request."),
+        'type' => 'int',
+        'size' => 'big',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+      ),
+      'room' => array(
+        'description' => $t("Represents the current step of the request."),
+        'type' => 'int',
+        'size' => 'big',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+      ),
+      'venue_coordinator' => array(
+        'description' => $t("Represents the current user id of the venue coordinator of the request."),
+        'type' => 'int',
+        'size' => 'big',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+      ),
+      'title' => array(
+        'description' => $t("Represents the current title of the request."),
+        'type' => 'varchar',
+        'length' => '255',
+        'not null' => FALSE,
+        'default' => '',
+      ),
     ),
     'primary key' => array('id'),
   );
@@ -300,6 +363,55 @@ function mfcs_schema() {
     ),
   );
 
+  $schema['mfcs_proxy_venue_coordinator'] = array(
+    'description' => $t("McNeese Facilities Use allowing one user to proxy as another for the purposes of venue coordinator."),
+    'fields' => array(
+      'id' => array(
+        'description' => $t("The primary key used to represent an reviewer."),
+        'type' => 'serial',
+        'size' => 'big',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+      ),
+      'user_id' => array(
+        'description' => $t("This is the system id. Represents the user who created the request."),
+        'type' => 'int',
+        'size' => 'big',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+      ),
+      'proxy_id' => array(
+        'description' => $t("This is the system id. Represents the user who created the request."),
+        'type' => 'int',
+        'size' => 'big',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+      ),
+      'disabled' => array(
+        'description' => $t("Boolean designating that the account is disabled. This is used as a soft-delete to prevent loss of records."),
+        'type' => 'int',
+        'size' => 'tiny',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'default' => 0,
+      ),
+    ),
+    'primary key' => array('id'),
+    'unique keys' => array(
+      'reviewer' => array('user_id', 'proxy_id'),
+    ),
+    'foreign keys' => array(
+      'user_id' => array(
+        'table' => 'users',
+        'columns' => array('user_id' => 'uid'),
+      ),
+      'proxy_id' => array(
+        'table' => 'users',
+        'columns' => array('user_id' => 'uid'),
+      ),
+    ),
+  );
+
   $schema['mfcs_reviewed'] = array(
     'description' => $t("McNeese Facilities Use maintains a log of currently review requests that are open for review for the currently active review step."),
     'fields' => array(
@@ -318,7 +430,7 @@ function mfcs_schema() {
         'not null' => TRUE,
       ),
     ),
-    'primary key' => array('request_id', 'reviewer_classification'),
+    'primary key' => array('request_id', 'classification'),
     'foreign keys' => array(
       'request_id' => array(
         'table' => 'mfcs_requests',
@@ -864,6 +976,30 @@ function mfcs_schema() {
   );
 
 
+  // create the mapping table that maps the latest request.
+  // to greatly reduce the number of joins, all current field revisions are merged into a single table.
+  $current_table_name = 'mfcs_current';
+  $schema[$current_table_name] = array(
+    'description' => $t("McNeese Facilities Use Requests field table representing the current (active) revisions for fields."),
+    'fields' => array(
+      'request_id' => array(
+        'description' => $t("Foreign key to the primary key in the {mfcs_requests} table."),
+        'type' => 'int',
+        'size' => 'big',
+        'unsigned' => TRUE,
+        'not null' => FALSE,
+      ),
+    ),
+    'primary key' => array('request_id'),
+    'foreign keys' => array(
+      'request_id' => array(
+        'table' => 'mfcs_requests',
+        'columns' => array('request_id' => 'id'),
+      ),
+    ),
+  );
+
+
   // create the secondary tables associated with the table mfcs_requests.
   $structure = mfcs_table_install_structure();
 
@@ -1140,44 +1276,16 @@ function mfcs_schema() {
       }
     }
 
-    // create the tirtiary tables that map the secondary tables for mfcs_requests to the primary table mfcs_requests.
-    $table_name = 'mfcs_current_' . $structure_name;
-    $schema[$table_name] = array(
-      'description' => $t("McNeese Facilities Use Requests field table representing the current (active) revisions for fields structured under: " . $structure_name . "."),
-      'fields' => array(
-        'request_id' => array(
-          'description' => $t("Foreign key to the primary key in the {mfcs_requests} table."),
-          'type' => 'int',
-          'size' => 'big',
-          'unsigned' => TRUE,
-          'not null' => FALSE,
-        ),
-      ),
-      'primary key' => array('request_id'),
-      'foreign keys' => array(
-        'request_id' => array(
-          'table' => 'mfcs_requests',
-          'columns' => array('request_id' => 'id'),
-        ),
-      ),
-    );
-
+    // populate the mapping table fields.
     foreach ($structure_array as $field_name => &$field_type) {
       $field_table_name = 'mfcs_field_' . $structure_name . '_' . $field_name;
 
-      $schema[$table_name]['fields'][$field_name] = array(
+      $schema[$current_table_name]['fields'][$structure_name . '_' . $field_name] = array(
         'description' => $t("Foreign key to the current revision in the " . $field_table_name . " table."),
         'type' => 'int',
         'size' => 'big',
         'unsigned' => TRUE,
         'not null' => FALSE,
-      );
-
-      $schema[$table_name]['foreign keys'][$field_name] = array(
-        $field_name => array(
-          'table' => $field_table_name,
-          'columns' => array($field_name => 'revision'),
-        ),
       );
     }
   }
@@ -1199,6 +1307,8 @@ function mfcs_install() {
   $key2_foreign = 'user_id_fkey';
   $key2_name_1 = 'coordinator_id';
   $key2_foreign_1 = 'coordinator_id_fkey';
+  $key2_name_2 = 'proxy_id';
+  $key2_foreign_2 = 'proxy_id_fkey';
   $table2_foreign = 'users';
   $table2_foreign_key = 'uid';
 
@@ -1224,10 +1334,14 @@ function mfcs_install() {
 
   $structure = mfcs_table_install_structure();
 
+  db_query('ALTER TABLE {mfcs_current} ADD CONSTRAINT ' . $key1_foreign . ' FOREIGN KEY (' . $key1_name . ') REFERENCES {' . $table1_foreign . '} (' . $table1_foreign_key . ') ON DELETE CASCADE');
   db_query('ALTER TABLE {mfcs_request_revisions} ADD CONSTRAINT ' . $key1_foreign . ' FOREIGN KEY (' . $key1_name . ') REFERENCES {' . $table1_foreign . '} (' . $table1_foreign_key . ') ON DELETE CASCADE');
   db_query('ALTER TABLE {mfcs_request_revisions} ADD CONSTRAINT ' . $key2_foreign . ' FOREIGN KEY (' . $key2_name . ') REFERENCES {' . $table2_foreign . '} (' . $table2_foreign_key . ') ON DELETE RESTRICT');
-  db_query('ALTER TABLE {mfcs_reviewers} ADD CONSTRAINT ' . $key2_foreign . ' FOREIGN KEY (' . $key2_name . ') REFERENCES {' . $table2_foreign . '} (' . $table2_foreign_key . ') ON DELETE CASCADE');
+  db_query('ALTER TABLE {mfcs_reviewers} ADD CONSTRAINT ' . $key2_foreign . ' FOREIGN KEY (' . $key2_name . ') REFERENCES {' . $table2_foreign . '} (' . $table2_foreign_key . ') ON DELETE RESTRICT');
   db_query('ALTER TABLE {mfcs_search_settings} ADD CONSTRAINT ' . $key2_foreign . ' FOREIGN KEY (' . $key2_name . ') REFERENCES {' . $table2_foreign . '} (' . $table2_foreign_key . ') ON DELETE CASCADE');
+  db_query('ALTER TABLE {mfcs_reviewed} ADD CONSTRAINT ' . $key1_foreign . ' FOREIGN KEY (' . $key1_name . ') REFERENCES {' . $table1_foreign . '} (' . $table1_foreign_key . ') ON DELETE CASCADE');
+  db_query('ALTER TABLE {mfcs_proxy_venue_coordinator} ADD CONSTRAINT ' . $key2_foreign . ' FOREIGN KEY (' . $key2_name . ') REFERENCES {' . $table2_foreign . '} (' . $table2_foreign_key . ') ON DELETE RESTRICT');
+  db_query('ALTER TABLE {mfcs_proxy_venue_coordinator} ADD CONSTRAINT ' . $key2_foreign_2 . ' FOREIGN KEY (' . $key2_name_2 . ') REFERENCES {' . $table2_foreign . '} (' . $table2_foreign_key . ') ON DELETE RESTRICT');
 
   db_query('ALTER TABLE {mfcs_banner_building_to_location} ADD CONSTRAINT ' . $key3_foreign . ' FOREIGN KEY (' . $key3_name . ') REFERENCES {' . $table3_foreign . '} (' . $table3_foreign_key . ') ON DELETE CASCADE');
   db_query('ALTER TABLE {mfcs_banner_building_to_location} ADD CONSTRAINT ' . $key4_foreign . ' FOREIGN KEY (' . $key4_name . ') REFERENCES {' . $table4_foreign . '} (' . $table4_foreign_key . ') ON DELETE CASCADE');
@@ -1236,18 +1350,6 @@ function mfcs_install() {
   db_query('ALTER TABLE {mfcs_banner_event_roles_to_users} ADD CONSTRAINT ' . $key6_foreign . ' FOREIGN KEY (' . $key6_name . ') REFERENCES {' . $table6_foreign . '} (' . $table6_foreign_key . ') ON DELETE CASCADE');
 
   db_query('ALTER TABLE {mfcs_request_reminders} ADD CONSTRAINT ' . $key1_foreign . ' FOREIGN KEY (' . $key1_name . ') REFERENCES {' . $table1_foreign . '} (' . $table1_foreign_key . ') ON DELETE CASCADE');
-
-  foreach ($structure as $structure_name => &$structure_array) {
-    $table1_name = 'mfcs_current_' . $structure_name;
-
-    db_query('ALTER TABLE {' . $table1_name . '} ADD CONSTRAINT ' . $key1_foreign . ' FOREIGN KEY (' . $key1_name . ') REFERENCES {' . $table1_foreign . '} (' . $table1_foreign_key . ') ON DELETE CASCADE');
-
-    foreach ($structure_array as $field_name => &$field_type) {
-      $field_table1_name = 'mfcs_field_' . $structure_name . '_' . $field_name;
-
-      db_query('ALTER TABLE {' . $field_table1_name . '} ADD CONSTRAINT ' . $key1_foreign . ' FOREIGN KEY (' . $key1_name . ') REFERENCES {' . $table1_foreign . '} (' . $table1_foreign_key . ') ON DELETE CASCADE');
-    }
-  }
 
   db_query('ALTER TABLE {mfcs_review_classifications} ADD CONSTRAINT review_fkey FOREIGN KEY (review_id) REFERENCES {mfcs_field_review_review} (id) ON DELETE CASCADE');
 
@@ -1258,15 +1360,15 @@ function mfcs_install() {
 
 
   // create a views to simplify time based sorting.
-  $view_query = ' SELECT mcd.request_id AS request_id, mfdd.delta AS delta, mfdd.value AS date, mfdd.value_month AS value_month, mfdd.value_day AS value_day, mfdts.value AS time_start, mfdtsp.value AS time_stop, mfdc.value AS category';
-  $view_query .= ' FROM {mfcs_current_dates} mcd';
-  $view_query .= ' INNER JOIN {mfcs_field_dates_date} mfdd ON mcd.request_id = mfdd.request_id AND mcd.date = mfdd.revision';
-  $view_query .= ' INNER JOIN {mfcs_field_dates_time_start} mfdts ON mcd.request_id = mfdts.request_id AND mcd.time_start = mfdts.revision AND mfdd.delta = mfdts.delta';
-  $view_query .= ' INNER JOIN {mfcs_field_dates_time_stop} mfdtsp ON mcd.request_id = mfdtsp.request_id AND mcd.time_stop = mfdtsp.revision AND mfdd.delta = mfdtsp.delta';
-  $view_query .= ' INNER JOIN {mfcs_field_dates_category} mfdc ON mcd.request_id = mfdc.request_id AND mcd.category = mfdc.revision AND mfdd.delta = mfdc.delta';
+  $view_query = ' SELECT mc.request_id AS request_id, mfdd.delta AS delta, mfdd.value AS date, mfdd.value_month AS value_month, mfdd.value_day AS value_day, mfdts.value AS time_start, mfdtsp.value AS time_stop, mfdc.value AS category';
+  $view_query .= ' FROM {mfcs_current} mc';
+  $view_query .= ' INNER JOIN {mfcs_field_dates_date} mfdd ON mc.request_id = mfdd.request_id AND mc.dates_date = mfdd.revision';
+  $view_query .= ' INNER JOIN {mfcs_field_dates_time_start} mfdts ON mc.request_id = mfdts.request_id AND mc.dates_time_start = mfdts.revision AND mfdd.delta = mfdts.delta';
+  $view_query .= ' INNER JOIN {mfcs_field_dates_time_stop} mfdtsp ON mc.request_id = mfdtsp.request_id AND mc.dates_time_stop = mfdtsp.revision AND mfdd.delta = mfdtsp.delta';
+  $view_query .= ' INNER JOIN {mfcs_field_dates_category} mfdc ON mc.request_id = mfdc.request_id AND mc.dates_category = mfdc.revision AND mfdd.delta = mfdc.delta';
 
-  db_query('CREATE VIEW {mfcs_view_dates_asc} AS' . $views_query . ' ORDER BY mfdd.value ASC, mfdts.value ASC');
-  db_query('CREATE VIEW {mfcs_view_dates_desc} AS' . $views_query . ' ORDER BY mfdd.value DESC, mfdts.value DESC');
+  db_query('CREATE VIEW {mfcs_view_dates_asc} AS' . $view_query . ' ORDER BY mfdd.value ASC, mfdts.value ASC');
+  db_query('CREATE VIEW {mfcs_view_dates_desc} AS' . $view_query . ' ORDER BY mfdd.value DESC, mfdts.value DESC');
 
   db_query('CREATE VIEW {mfcs_view_dates_asc_distinct} AS SELECT DISTINCT ON (request_id) * FROM {mfcs_view_dates_asc}');
   db_query('CREATE VIEW {mfcs_view_dates_desc_distinct} AS SELECT DISTINCT ON (request_id) * FROM {mfcs_view_dates_desc}');
@@ -1297,6 +1399,7 @@ function mfcs_uninstall() {
   $key1_foreign = 'request_id_fkey';
   $key2_foreign = 'user_id_fkey';
   $key2_foreign_1 = 'coordinator_id_fkey';
+  $key2_foreign_2 = 'proxy_id_fkey';
   $key3_foreign = 'location_fkey';
   $key4_foreign = 'building_fkey';
   $key5_foreign = 'room_fkey';
@@ -1305,16 +1408,20 @@ function mfcs_uninstall() {
 
   $structure = mfcs_table_install_structure();
 
-  db_query('DROP VIEW {mfcs_view_dates_asc}');
-  db_query('DROP VIEW {mfcs_view_dates_desc}');
-
   db_query('DROP VIEW {mfcs_view_dates_asc_distinct}');
   db_query('DROP VIEW {mfcs_view_dates_desc_distinct}');
 
+  db_query('DROP VIEW {mfcs_view_dates_asc}');
+  db_query('DROP VIEW {mfcs_view_dates_desc}');
+
+  db_query('ALTER TABLE {mfcs_current} DROP CONSTRAINT IF EXISTS ' . $key1_foreign);
   db_query('ALTER TABLE {mfcs_request_revisions} DROP CONSTRAINT IF EXISTS ' . $key1_foreign);
   db_query('ALTER TABLE {mfcs_request_revisions} DROP CONSTRAINT IF EXISTS ' . $key2_foreign);
   db_query('ALTER TABLE {mfcs_reviewers} DROP CONSTRAINT IF EXISTS ' . $key2_foreign);
   db_query('ALTER TABLE {mfcs_search_settings} DROP CONSTRAINT IF EXISTS ' . $key2_foreign);
+  db_query('ALTER TABLE {mfcs_reviewed} DROP CONSTRAINT IF EXISTS ' . $key1_foreign);
+  db_query('ALTER TABLE {mfcs_proxy_venue_coordinator} DROP CONSTRAINT IF EXISTS ' . $key2_foreign);
+  db_query('ALTER TABLE {mfcs_proxy_venue_coordinator} DROP CONSTRAINT IF EXISTS ' . $key2_foreign_2);
   db_query('ALTER TABLE {mfcs_banner_building_to_location} DROP CONSTRAINT IF EXISTS ' . $key3_foreign);
   db_query('ALTER TABLE {mfcs_banner_building_to_location} DROP CONSTRAINT IF EXISTS ' . $key4_foreign);
   db_query('ALTER TABLE {mfcs_banner_rooms} DROP CONSTRAINT IF EXISTS ' . $key4_foreign);
@@ -1322,16 +1429,4 @@ function mfcs_uninstall() {
   db_query('ALTER TABLE {mfcs_banner_event_roles_to_users} DROP CONSTRAINT IF EXISTS ' . $key6_foreign);
   db_query('ALTER TABLE {mfcs_request_reminders} DROP CONSTRAINT IF EXISTS ' . $key1_foreign);
   db_query('ALTER TABLE {mfcs_review_classifications} DROP CONSTRAINT IF EXISTS ' . $keyR_foreign);
-
-  foreach ($structure as $structure_name => &$structure_array) {
-    $table_name = 'mfcs_current_' . $structure_name;
-
-    db_query('ALTER TABLE {' . $table_name . '} DROP CONSTRAINT IF EXISTS ' . $key1_foreign);
-
-    foreach ($structure_array as $field_name => &$field_type) {
-      $field_table_name = 'mfcs_field_' . $structure_name . '_' . $field_name;
-
-      db_query('ALTER TABLE {' . $field_table_name . '} DROP CONSTRAINT IF EXISTS ' . $key1_foreign);
-    }
-  }
 }

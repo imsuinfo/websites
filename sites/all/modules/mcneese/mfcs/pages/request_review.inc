@@ -29,6 +29,12 @@ function mfcs_request_review_0_page($form, &$form_state, $page_number = 0) {
   mfcs_add_canonical_headers('requests/review-0');
 
   global $base_path;
+  global $mfcs_determined;
+
+  $url_arguments = '';
+  if (!empty($mfcs_determined['complete'])) {
+    $url_arguments .= '?' . $mfcs_determined['complete'];
+  }
 
   $rows_per_page = 25;
   $start_range = $page_number * $rows_per_page;
@@ -83,14 +89,21 @@ function mfcs_request_review_0_page($form, &$form_state, $page_number = 0) {
     }
   }
 
-  if (!empty($url_extras)) {
-    $url_extras = '?' . $url_extras;
+  if (empty($url_arguments)) {
+    if (!empty($url_extras)) {
+      $url_arguments = '?' . $url_extras;
+    }
+  }
+  else {
+    if (!empty($url_extras)) {
+      $url_arguments .= '&' . $url_extras;
+    }
   }
 
 
   mfcs_include(MFCS_INCLUDE_LIST_OPTIONS);
 
-  $items = mfcs_request_load_listing(NULL, FALSE, $page_number * $rows_per_page, $rows_per_page, $sorting, TRUE);
+  $items = mfcs_request_load_listing(NULL, FALSE, $page_number * $rows_per_page, $rows_per_page, $sorting, MFCS_REVIEW_RESTRICTION_REVIEW);
 
   $rows = array();
   $total_results = count($items);
@@ -98,21 +111,24 @@ function mfcs_request_review_0_page($form, &$form_state, $page_number = 0) {
   $table = mfcs_build_request_table($items, $rows_per_page, $columns);
   $table['attributes']['class'] = array('mfcs-table-requests', 'mfcs-review_page-table');
 
+  if (is_null($order) && isset($table['header']['id'])) {
+    $table['header']['id']['sort'] = 'DESC';
+  }
 
   $navigation = "";
   if ($page_number > 0) {
     if ($page_number == 1) {
-      $navigation .= '<a href="' . $base_path . 'requests/review-0' . $url_extras . '" class="request-listing-page-choice request-listing-page-previous no-print" title="Previous Page">Prev</a>';
+      $navigation .= '<a href="' . $base_path . 'requests/review-0' . $url_arguments . '" class="request-listing-page-choice request-listing-page-previous no-print" title="Previous Page">Prev</a>';
     }
     else {
       $previous_page = $page_number - 1;
-      $navigation .= '<a href="' . $base_path . 'requests/review-0/' . $previous_page . $url_extras . '" class="request-listing-page-choice request-listing-page-previous no-print" title="Previous Page">Prev</a>';
+      $navigation .= '<a href="' . $base_path . 'requests/review-0/' . $previous_page . $url_arguments . '" class="request-listing-page-choice request-listing-page-previous no-print" title="Previous Page">Prev</a>';
     }
   }
 
   if ($total_results > $rows_per_page) {
     $next_page = $page_number + 1;
-    $navigation .= '<a href="' . $base_path . 'requests/review-0/' . $next_page . $url_extras . '" class="request-listing-page-choice request-listing-page-next no-print" title="Next Page">Next</a>';
+    $navigation .= '<a href="' . $base_path . 'requests/review-0/' . $next_page . $url_arguments . '" class="request-listing-page-choice request-listing-page-next no-print" title="Next Page">Next</a>';
   }
 
   $output .= '<div class="request-listing-page-navigator request-listing-page-navigator-top no-print">' . $navigation . '</div>';

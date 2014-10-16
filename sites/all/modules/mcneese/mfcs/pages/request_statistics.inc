@@ -162,12 +162,9 @@ function mfcs_request_statistics_load_counts($start, $stop) {
   try {
     $query = db_select('mfcs_requests', 'mer');
 
-    $query->innerJoin('mfcs_current_top', 'mct', 'mer.id = mct.request_id');
-    $query->innerJoin('mfcs_field_top_status', 'mfts', 'mct.request_id = mfts.request_id AND mct.status = mfts.revision AND mfts.delta = 0');
-
     $query->addExpression('count(mer.id)');
 
-    $query->condition('mfts.value', MFCS_REQUEST_STATUS_DELETED, '<>');
+    $query->condition('mer.status', MFCS_REQUEST_STATUS_DELETED, '<>');
 
     // total
     $the_query = clone($query);
@@ -193,12 +190,9 @@ function mfcs_request_statistics_load_counts($start, $stop) {
 
     $query = db_select('mfcs_requests', 'mer');
 
-    $query->innerJoin('mfcs_current_top', 'mct', 'mer.id = mct.request_id');
-    $query->innerJoin('mfcs_field_top_status', 'mfts', 'mct.request_id = mfts.request_id AND mct.status = mfts.revision AND mfts.delta = 0');
-
     $query->addExpression('count(mer.id)');
 
-    $query->condition('mfts.value', MFCS_REQUEST_STATUS_DELETED, '<>');
+    $query->condition('mer.status', MFCS_REQUEST_STATUS_DELETED, '<>');
 
     if (!is_null($start)) {
       $query->condition('mer.created', $start, '>=');
@@ -207,37 +201,37 @@ function mfcs_request_statistics_load_counts($start, $stop) {
 
     // status (locked)
     $the_query = clone($query);
-    $the_query->condition('mfts.value', MFCS_REQUEST_STATUS_LOCKED);
+    $the_query->condition('mer.status', MFCS_REQUEST_STATUS_LOCKED);
     $counts['status']['locked'] = $the_query->execute()->fetchField();
 
     // status (unlocked)
     $the_query = clone($query);
-    $the_query->condition('mfts.value', MFCS_REQUEST_STATUS_UNLOCKED);
+    $the_query->condition('mer.status', MFCS_REQUEST_STATUS_UNLOCKED);
     $counts['status']['unlocked'] = $the_query->execute()->fetchField();
 
     // status (closed, accepted)
     $the_query = clone($query);
-    $the_query->condition('mfts.value', MFCS_REQUEST_STATUS_CLOSED_ACCEPTED);
+    $the_query->condition('mer.status', MFCS_REQUEST_STATUS_CLOSED_ACCEPTED);
     $counts['status']['accepted'] = $the_query->execute()->fetchField();
 
     // status (closed, denied)
     $the_query = clone($query);
-    $the_query->condition('mfts.value', MFCS_REQUEST_STATUS_CLOSED_DENIED);
+    $the_query->condition('mer.status', MFCS_REQUEST_STATUS_CLOSED_DENIED);
     $counts['status']['denied'] = $the_query->execute()->fetchField();
 
     // status (closed, unavailable)
     $the_query = clone($query);
-    $the_query->condition('mfts.value', MFCS_REQUEST_STATUS_CLOSED_UNAVAILABLE);
+    $the_query->condition('mer.status', MFCS_REQUEST_STATUS_CLOSED_UNAVAILABLE);
     $counts['status']['unavailable'] = $the_query->execute()->fetchField();
 
     // status (closed, due to lock)
     $the_query = clone($query);
-    $the_query->condition('mfts.value', MFCS_REQUEST_STATUS_CLOSED_DUE_TO_LOCK);
+    $the_query->condition('mer.status', MFCS_REQUEST_STATUS_CLOSED_DUE_TO_LOCK);
     $counts['status']['due_to_lock'] = $the_query->execute()->fetchField();
 
     // status (cancelled)
     $the_query = clone($query);
-    $the_query->condition('mfts.value', MFCS_REQUEST_STATUS_CANCELLED);
+    $the_query->condition('mer.status', MFCS_REQUEST_STATUS_CANCELLED);
     $counts['status']['cancelled'] = $the_query->execute()->fetchField();
 
 
@@ -254,13 +248,9 @@ function mfcs_request_statistics_load_counts($start, $stop) {
 
     $query = db_select('mfcs_requests', 'mer');
 
-    $query->innerJoin('mfcs_current_top', 'mct', 'mer.id = mct.request_id');
-    $query->innerJoin('mfcs_field_top_step', 'mftsp', 'mct.request_id = mftsp.request_id AND mct.step = mftsp.revision AND mftsp.delta = 0');
-    $query->innerJoin('mfcs_field_top_status', 'mfts', 'mct.request_id = mfts.request_id AND mct.status = mfts.revision AND mfts.delta = 0');
-
     $query->addExpression('count(mer.id)');
 
-    $query->condition('mfts.value', MFCS_REQUEST_STATUS_DELETED, '<>');
+    $query->condition('mer.status', MFCS_REQUEST_STATUS_DELETED, '<>');
 
     if (!is_null($start)) {
       $query->condition('mer.created', $start, '>=');
@@ -269,37 +259,37 @@ function mfcs_request_statistics_load_counts($start, $stop) {
 
     // step (changes required)
     $the_query = clone($query);
-    $the_query->condition('mftsp.value', MFCS_REVIEW_STEP_CHANGES_REQUIRED);
+    $the_query->condition('mer.step', MFCS_REVIEW_STEP_CHANGES_REQUIRED);
     $counts['step']['changes_required'] = $the_query->execute()->fetchField();
 
     // step (completed)
     $the_query = clone($query);
-    $the_query->condition('mftsp.value', MFCS_REVIEW_STEP_COMPLETED);
+    $the_query->condition('mer.step', MFCS_REVIEW_STEP_COMPLETED);
     $counts['step']['completed'] = $the_query->execute()->fetchField();
 
     // step (make decisions)
     $the_query = clone($query);
-    $the_query->condition('mftsp.value', MFCS_REVIEW_STEP_MAKE_DECISIONS);
+    $the_query->condition('mer.step', MFCS_REVIEW_STEP_MAKE_DECISIONS);
     $counts['step']['make_decisions'] = $the_query->execute()->fetchField();
 
     // step (release hold)
     $the_query = clone($query);
-    $the_query->condition('mftsp.value', MFCS_REVIEW_STEP_RELEASE_HOLD);
+    $the_query->condition('mer.step', MFCS_REVIEW_STEP_RELEASE_HOLD);
     $counts['step']['release_hold'] = $the_query->execute()->fetchField();
 
     // step (review)
     $the_query = clone($query);
-    $the_query->condition('mftsp.value', MFCS_REVIEW_STEP_REVIEW);
+    $the_query->condition('mer.step', MFCS_REVIEW_STEP_REVIEW);
     $counts['step']['review'] = $the_query->execute()->fetchField();
 
     // step (requirements)
     $the_query = clone($query);
-    $the_query->condition('mftsp.value', MFCS_REVIEW_STEP_REQUIREMENTS);
+    $the_query->condition('mer.step', MFCS_REVIEW_STEP_REQUIREMENTS);
     $counts['step']['requirements'] = $the_query->execute()->fetchField();
 
     // step (venue available)
     $the_query = clone($query);
-    $the_query->condition('mftsp.value', MFCS_REVIEW_STEP_VENUE_AVAILABLE);
+    $the_query->condition('mer.step', MFCS_REVIEW_STEP_VENUE_AVAILABLE);
     $counts['step']['venue_available'] = $the_query->execute()->fetchField();
 
 
@@ -313,15 +303,9 @@ function mfcs_request_statistics_load_counts($start, $stop) {
 
     $query = db_select('mfcs_requests', 'mer');
 
-    $query->innerJoin('mfcs_current_top', 'mct', 'mer.id = mct.request_id');
-    $query->innerJoin('mfcs_field_top_status', 'mfts', 'mct.request_id = mfts.request_id AND mct.status = mfts.revision AND mfts.delta = 0');
-
-    $query->innerJoin('mfcs_current_request_coordinator', 'mcrc', 'mer.id = mcrc.request_id');
-    $query->innerJoin('mfcs_field_request_coordinator_classification', 'mfrcc', 'mcrc.request_id = mfrcc.request_id AND mcrc.classification = mfrcc.revision AND mfrcc.delta = 0');
-
     $query->addExpression('count(mer.id)');
 
-    $query->condition('mfts.value', MFCS_REQUEST_STATUS_DELETED, '<>');
+    $query->condition('mer.status', MFCS_REQUEST_STATUS_DELETED, '<>');
 
     if (!is_null($start)) {
       $query->condition('mer.created', $start, '>=');
@@ -330,22 +314,22 @@ function mfcs_request_statistics_load_counts($start, $stop) {
 
     // classification (student)
     $the_query = clone($query);
-    $the_query->condition('mfrcc.value', MFCS_EVENT_CLASSIFICATION_STUDENT);
+    $the_query->condition('mer.classification', MFCS_EVENT_CLASSIFICATION_STUDENT);
     $counts['classification']['student'] = $the_query->execute()->fetchField();
 
     // classification (camps)
     $the_query = clone($query);
-    $the_query->condition('mfrcc.value', MFCS_EVENT_CLASSIFICATION_CAMPS);
+    $the_query->condition('mer.classification', MFCS_EVENT_CLASSIFICATION_CAMPS);
     $counts['classification']['camps'] = $the_query->execute()->fetchField();
 
     // classification (faculty)
     $the_query = clone($query);
-    $the_query->condition('mfrcc.value', MFCS_EVENT_CLASSIFICATION_FACULTY);
+    $the_query->condition('mer.classification', MFCS_EVENT_CLASSIFICATION_FACULTY);
     $counts['classification']['faculty'] = $the_query->execute()->fetchField();
 
     // classification (external)
     $the_query = clone($query);
-    $the_query->condition('mfrcc.value', MFCS_EVENT_CLASSIFICATION_EXTERNAL);
+    $the_query->condition('mer.classification', MFCS_EVENT_CLASSIFICATION_EXTERNAL);
     $counts['classification']['external'] = $the_query->execute()->fetchField();
 
 
@@ -365,15 +349,10 @@ function mfcs_request_statistics_load_counts($start, $stop) {
     );
 
     $query = db_select('mfcs_requests', 'mer');
-    $query->innerJoin('mfcs_current_top', 'mct', 'mer.id = mct.request_id');
-    $query->innerJoin('mfcs_field_top_status', 'mfts', 'mct.request_id = mfts.request_id AND mct.status = mfts.revision AND mfts.delta = 0');
-
-    $query->innerJoin('mfcs_current_information', 'mci', 'mer.id = mci.request_id');
-    $query->innerJoin('mfcs_field_information_type', 'mfit', 'mci.request_id = mfit.request_id AND mci.type = mfit.revision AND mfit.delta = 0');
 
     $query->addExpression('count(mer.id)');
 
-    $query->condition('mfts.value', MFCS_REQUEST_STATUS_DELETED, '<>');
+    $query->condition('mer.status', MFCS_REQUEST_STATUS_DELETED, '<>');
 
     if (!is_null($start)) {
       $query->condition('mer.created', $start, '>=');
@@ -382,62 +361,62 @@ function mfcs_request_statistics_load_counts($start, $stop) {
 
     // type (athletic)
     $the_query = clone($query);
-    $the_query->condition('mfit.value', MFCS_REQUEST_TYPE_ATHLETIC);
+    $the_query->condition('mer.type', MFCS_REQUEST_TYPE_ATHLETIC);
     $counts['type']['athletic'] = $the_query->execute()->fetchField();
 
     // type (banquet)
     $the_query = clone($query);
-    $the_query->condition('mfit.value', MFCS_REQUEST_TYPE_BANQUET);
+    $the_query->condition('mer.type', MFCS_REQUEST_TYPE_BANQUET);
     $counts['type']['banquet'] = $the_query->execute()->fetchField();
 
     // type (ceremony)
     $the_query = clone($query);
-    $the_query->condition('mfit.value', MFCS_REQUEST_TYPE_CEREMONY);
+    $the_query->condition('mer.type', MFCS_REQUEST_TYPE_CEREMONY);
     $counts['type']['ceremony'] = $the_query->execute()->fetchField();
 
     // type (fair)
     $the_query = clone($query);
-    $the_query->condition('mfit.value', MFCS_REQUEST_TYPE_FAIR);
+    $the_query->condition('mer.type', MFCS_REQUEST_TYPE_FAIR);
     $counts['type']['fair'] = $the_query->execute()->fetchField();
 
     // type (lecture)
     $the_query = clone($query);
-    $the_query->condition('mfit.value', MFCS_REQUEST_TYPE_LECTURE);
+    $the_query->condition('mer.type', MFCS_REQUEST_TYPE_LECTURE);
     $counts['type']['lecture'] = $the_query->execute()->fetchField();
 
     // type (meeting)
     $the_query = clone($query);
-    $the_query->condition('mfit.value', MFCS_REQUEST_TYPE_MEETING);
+    $the_query->condition('mer.type', MFCS_REQUEST_TYPE_MEETING);
     $counts['type']['meeting'] = $the_query->execute()->fetchField();
 
     // type (other)
     $the_query = clone($query);
-    $the_query->condition('mfit.value', MFCS_REQUEST_TYPE_OTHER);
+    $the_query->condition('mer.type', MFCS_REQUEST_TYPE_OTHER);
     $counts['type']['other'] = $the_query->execute()->fetchField();
 
     // type (performance)
     $the_query = clone($query);
-    $the_query->condition('mfit.value', MFCS_REQUEST_TYPE_PERFORMANCE);
+    $the_query->condition('mer.type', MFCS_REQUEST_TYPE_PERFORMANCE);
     $counts['type']['performance'] = $the_query->execute()->fetchField();
 
     // type (quick_meeting)
     $the_query = clone($query);
-    $the_query->condition('mfit.value', MFCS_REQUEST_TYPE_QUICK_MEETING);
+    $the_query->condition('mer.type', MFCS_REQUEST_TYPE_QUICK_MEETING);
     $counts['type']['quick_meeting'] = $the_query->execute()->fetchField();
 
     // type (reception)
     $the_query = clone($query);
-    $the_query->condition('mfit.value', MFCS_REQUEST_TYPE_RECEPTION);
+    $the_query->condition('mer.type', MFCS_REQUEST_TYPE_RECEPTION);
     $counts['type']['reception'] = $the_query->execute()->fetchField();
 
     // type (talent)
     $the_query = clone($query);
-    $the_query->condition('mfit.value', MFCS_REQUEST_TYPE_TALENT);
+    $the_query->condition('mer.type', MFCS_REQUEST_TYPE_TALENT);
     $counts['type']['talent'] = $the_query->execute()->fetchField();
 
     // type (workshop)
     $the_query = clone($query);
-    $the_query->condition('mfit.value', MFCS_REQUEST_TYPE_WORKSHOP);
+    $the_query->condition('mer.type', MFCS_REQUEST_TYPE_WORKSHOP);
     $counts['type']['workshop'] = $the_query->execute()->fetchField();
   }
   catch (Exception $ex) {
@@ -490,10 +469,10 @@ function mfcs_request_statistics_render_request_classification($counts, $classif
     'text_description' => 'A bar chart representing the number of requests for each classification they belong to. There are a total of ' . $counts['main']['total'] . 'requests.',
     'text_x' => "Requests",
     'text_y' => "Classifications",
-    'chart_width' => 400,
     'chart_height' => 220,
     'line_start_x' => 75,
     'line_start_y' => 25,
+    'name' => 'classification',
   );
 
   $options['rows']['student'] = array(
@@ -527,12 +506,14 @@ function mfcs_request_statistics_render_request_classification($counts, $classif
 
   $chart_markup = mfcs_request_statistics_render_chart($options);
 
+  $width = 450;
+  $svg_options = ' version="1.1" viewBox="0 0 ' . $options['chart_width'] . ' ' . $options['chart_height'] . '" preserveAspectRatio="yes" xmlns="http://www.w3.org/2000/svg"';
+
 
   // render the markup
   $markup = '<div class="statistics-block statistics-block-main">' . "\n";
-
-  $markup .= '<div class="statistics-block-chart">' . "\n";
-  $markup .= '  <svg class="statistics-block-chart-main" title="Requests by Classification" width="' . $options['chart_width'] . '" height="' . $options['chart_height'] . '">' . $chart_markup . '</svg>' . "\n";
+  $markup .= '<div id="' . 'mfcs-statistics-' . $options['name'] . '-wrapper" class="statistics-block-chart">' . "\n";
+  $markup .= '  <svg id="' . 'mfcs-statistics-' . $options['name'] . '" class="statistics-block-chart-main" title="Requests by Classification" width="' . $width . '"' . $svg_options . '>' . $chart_markup . '</svg>' . "\n";
   $markup .= '</div>' . "\n";
 
   $markup .= '<div class="statistics-block-text">' . "\n";
@@ -593,10 +574,10 @@ function mfcs_request_statistics_render_request_type($counts, $type_options) {
     'text_description' => 'A bar chart representing the number of requests for each type they belong to.',
     'text_x' => "Requests",
     'text_y' => "Type",
-    'chart_width' => 400,
     'chart_height' => 220,
     'line_start_x' => 90,
     'line_start_y' => 25,
+    'name' => 'type',
   );
 
   $options['rows']['athletic'] = array(
@@ -686,6 +667,9 @@ function mfcs_request_statistics_render_request_type($counts, $type_options) {
 
   $chart_markup = mfcs_request_statistics_render_chart($options);
 
+  $width = 450;
+  $svg_options = ' version="1.1" viewBox="0 0 ' . $options['chart_width'] . ' ' . $options['chart_height'] . '" preserveAspectRatio="yes" xmlns="http://www.w3.org/2000/svg"';
+
   // render the markup
   $markup = '<div class="statistics-block statistics-block-request_type">' . "\n";
 
@@ -705,8 +689,8 @@ function mfcs_request_statistics_render_request_type($counts, $type_options) {
   $markup .= '<div class="statistics-block-text-item"><em>' . $counts['type']['workshop'] . "</em> <strong>" . $type_options[MFCS_REQUEST_TYPE_WORKSHOP] . "</strong> (<em>" . $options['rows']['workshop']['percent'] . '%</em> of requests). ' . "</div>\n";
   $markup .= '</div>' . "\n"; // statistics-block-text
 
-  $markup .= '<div class="statistics-block-chart">' . "\n";
-  $markup .= '  <svg class="statistics-block-chart-request_type" title="Requests by Type" width="' . $options['chart_width'] . '" height="' . $options['chart_height'] . '">' . $chart_markup . '</svg>' . "\n";
+  $markup .= '<div id="' . 'mfcs-statistics-' . $options['name'] . '-wrapper" class="statistics-block-chart">' . "\n";
+  $markup .= '  <svg id="' . 'mfcs-statistics-' . $options['name'] . '" class="statistics-block-chart-request_type" title="Requests by Type" width="' . $width . '"' . $svg_options . '>' . $chart_markup . '</svg>' . "\n";
   $markup .= '</div>' . "\n";
 
   $markup .= '</div>' . "\n"; // statistics-block
@@ -753,10 +737,10 @@ function mfcs_request_statistics_render_request_step($counts, $step_options) {
     'text_description' => 'A bar chart representing the number of requests for each step they are currently in.',
     'text_x' => "Requests",
     'text_y' => "Step",
-    'chart_width' => 400,
     'chart_height' => 220,
     'line_start_x' => 120,
     'line_start_y' => 25,
+    'name' => 'step',
   );
 
   // currently this is not used so do not expose it to the user.
@@ -815,11 +799,14 @@ function mfcs_request_statistics_render_request_step($counts, $step_options) {
 
   $chart_markup = mfcs_request_statistics_render_chart($options);
 
+  $width = 450;
+  $svg_options = ' version="1.1" viewBox="0 0 ' . $options['chart_width'] . ' ' . $options['chart_height'] . '" preserveAspectRatio="yes" xmlns="http://www.w3.org/2000/svg"';
+
   // render the markup
   $markup = '<div class="statistics-block statistics-block-request_step">' . "\n";
 
-  $markup .= '<div class="statistics-block-chart">' . "\n";
-  $markup .= '  <svg class="statistics-block-chart-request_step" title="Requests by Step" width="' . $options['chart_width'] . '" height="' . $options['chart_height'] . '">' . $chart_markup . '</svg>' . "\n";
+  $markup .= '<div id="' . 'mfcs-statistics-' . $options['name'] . '-wrapper" class="statistics-block-chart">' . "\n";
+  $markup .= '  <svg id="' . 'mfcs-statistics-' . $options['name'] . '" class="statistics-block-chart-request_step" title="Requests by Step" width="' . $width . '"' . $svg_options . '>' . $chart_markup . '</svg>' . "\n";
   $markup .= '</div>' . "\n"; // statistics-block-chart
 
   $markup .= '<div class="statistics-block-text">' . "\n";
@@ -876,10 +863,10 @@ function mfcs_request_statistics_render_request_status($counts, $status_options)
     'text_description' => 'A bar chart representing the number of requests based on their current status.',
     'text_x' => "Requests",
     'text_y' => "Status",
-    'chart_width' => 400,
     'chart_height' => 220,
     'line_start_x' => 120,
     'line_start_y' => 25,
+    'name' => 'status',
   );
 
   $options['rows']['locked'] = array(
@@ -935,6 +922,9 @@ function mfcs_request_statistics_render_request_status($counts, $status_options)
 
   $chart_markup = mfcs_request_statistics_render_chart($options);
 
+  $width = 450;
+  $svg_options = ' version="1.1" viewBox="0 0 ' . $options['chart_width'] . ' ' . $options['chart_height'] . '" preserveAspectRatio="yes" xmlns="http://www.w3.org/2000/svg"';
+
   // render the markup
   $markup = '<div class="statistics-block statistics-block-request_step">' . "\n";
 
@@ -948,8 +938,8 @@ function mfcs_request_statistics_render_request_status($counts, $status_options)
   $markup .= '<div class="statistics-block-text-item"><em>' . $counts['status']['cancelled'] . "</em> <strong>" . $status_options[MFCS_REQUEST_STATUS_CANCELLED] . "</strong> (<em>" . $options['rows']['cancelled']['percent'] . '%</em> of requests). ' . "</div>\n";
   $markup .= '</div>' . "\n"; // statistics-block-text
 
-  $markup .= '<div class="statistics-block-chart">' . "\n";
-  $markup .= '  <svg class="statistics-block-chart-request_status" title="Requests by Status" width="' . $options['chart_width'] . '" height="' . $options['chart_height'] . '">' . $chart_markup . '</svg>' . "\n";
+  $markup .= '<div id="' . 'mfcs-statistics-' . $options['name'] . '-wrapper" class="statistics-block-chart">' . "\n";
+  $markup .= '  <svg id="' . 'mfcs-statistics-' . $options['name'] . '" class="statistics-block-chart-request_status" title="Requests by Status" width="' . $width . '"' . $svg_options . '>' . $chart_markup . '</svg>' . "\n";
   $markup .= '</div>' . "\n"; // statistics-block-chart
 
   $markup .= '</div>' . "\n"; // statistics-block
@@ -1008,21 +998,21 @@ function mfcs_request_statistics_render_chart(&$options) {
   }
 
   $increment_value = 1;
-  $increment_width = 17;
+  $increment_width = 15;
   if ($highest < 5) {
-    $increment_width = 60;
+    $increment_width = 56;
     $increment_split = 5;
   }
   elseif ($highest < 100) {
-    $increment_width = 33;
+    $increment_width = 31;
     $increment_split = 9;
   }
   elseif ($highest < 1000) {
-    $increment_width = 37;
+    $increment_width = 35;
     $increment_split = 8;
   }
   else {
-    $increment_width = 42;
+    $increment_width = 40;
     $increment_split = 7;
   }
 
@@ -1030,15 +1020,19 @@ function mfcs_request_statistics_render_chart(&$options) {
     $increment_value = ceil($highest / $increment_split);
   }
 
-  $row_increment_y = 30;
+  $row_increment_y = 25;
 
   $row_padding_x = 0;
-  $row_padding_y = 10;
+  $row_padding_y = 7;
 
   $options['chart_width'] = $options['line_start_x'] + (($increment_width + $row_padding_x) * ($increment_split + 1));
   $options['chart_height'] = $total_rows * ($row_increment_y + $row_padding_y) + 60;
 
-  $text_x_x_offset = ($options['chart_width'] / 2);
+  // add additional pixels to the width to reduce occurances of truncated numbers.
+  $unpadded_width = $options['chart_width'];
+  $options['chart_width'] += 12;
+
+  $text_x_x_offset = ($unpadded_width / 2);
   $text_x_y_offset = $options['line_start_y'] + (($row_increment_y + $row_padding_y) * $total_rows) + 30;
 
 
@@ -1080,9 +1074,14 @@ function mfcs_request_statistics_render_chart(&$options) {
   $x1 = $options['line_start_x'];
   $y1 = $options['line_start_y'] + $row_padding_y;
   $y2 = $y1 + 10;
-  $bar_height = 20;
+  $bar_height = 16;
 
-  foreach ($options['rows'] as $row) {
+  $row_name = '';
+  if (!empty($options['name'])) {
+    $row_name .= '-' . $options['name'];
+  }
+
+  foreach ($options['rows'] as $row_number => $row) {
     $bar_width = ($row['total'] * $increment_width) / $increment_value;
 
     $label_font_size = 12;
@@ -1092,7 +1091,7 @@ function mfcs_request_statistics_render_chart(&$options) {
       $y2_offset -= 4;
     }
 
-    $chart_markup .= '<g id="mfcs-statistics-block-main-bar-student">' . "\n";
+    $chart_markup .= '<g id="mfcs-statistics' . $row_name . '-bar-' . $row_number . '" class="row-bar">' . "\n";
     $chart_markup .= '  <title>' . $row['text'] . ': ' . $row['total'] . ' (' . $row['percent'] . '%)' . '</title>' . "\n";
     $chart_markup .= '  <text font-size="' . $label_font_size . '" x="0" y="' . $y2_offset . '" style="line-height: 12px;">' . $row['label'] . '</text>' . "\n";
 

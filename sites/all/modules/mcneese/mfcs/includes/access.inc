@@ -154,13 +154,10 @@ function mfcs_page_request_access_operation_edit(&$request_ids, &$processed, &$a
       try {
         $query = db_select('mfcs_requests', 'mer');
 
-        $query->innerJoin('mfcs_current_information', 'mci', 'mer.id = mci.request_id');
-        $query->innerJoin('mfcs_field_information_type', 'mfit', 'mci.request_id = mfit.request_id AND mci.type = mfit.revision AND mfit.delta = 0');
-
         $query->addField('mer', 'id', 'id');
 
         $query->condition('mer.id', $request_ids, 'IN');
-        $query->condition('mfit.value', MFCS_REQUEST_TYPE_QUICK_MEETING);
+        $query->condition('mer.type', MFCS_REQUEST_TYPE_QUICK_MEETING);
 
         $access_results = $query->execute()->fetchAllAssoc('id');
 
@@ -200,13 +197,10 @@ function mfcs_page_request_access_operation_edit(&$request_ids, &$processed, &$a
     try {
       $query = db_select('mfcs_requests', 'mer');
 
-      $query->innerJoin('mfcs_current_top', 'mct', 'mer.id = mct.request_id');
-      $query->innerJoin('mfcs_field_top_status', 'mfts', 'mct.request_id = mfts.request_id AND mct.status = mfts.revision AND mfts.delta = 0');
-
       $query->addField('mer', 'id', 'id');
 
       $query->condition('mer.id', $request_ids, 'IN');
-      $query->condition('mfts.value', $edit_request_status, 'IN');
+      $query->condition('mer.status', $edit_request_status, 'IN');
 
       if ($roles['requester'] && !$roles['manager']) {
         $query->condition('mer.user_id', $user->uid);
@@ -309,33 +303,28 @@ function mfcs_page_request_access_operation_view(&$request_ids, &$processed, &$a
     try {
       $query = db_select('mfcs_requests', 'mer');
 
-      $query->innerJoin('mfcs_current_top', 'mct', 'mer.id = mct.request_id');
-      $query->innerJoin('mfcs_field_top_status', 'mfts', 'mct.request_id = mfts.request_id AND mct.status = mfts.revision AND mfts.delta = 0');
-
       $query->addField('mer', 'id', 'id');
 
       $query->condition('mer.id', $request_ids, 'IN');
 
       if ($roles['requester'] && !$roles['manager']) {
-        $query->innerJoin('mfcs_field_top_step', 'mftsp', 'mct.request_id = mftsp.request_id AND mct.step = mftsp.revision AND mftsp.delta = 0');
-
         $or = db_or();
 
         $and = db_and();
         $and->condition('mer.user_id', $user->uid);
-        $and->condition('mfts.value', $request_status, 'IN');
+        $and->condition('mer.status', $request_status, 'IN');
         $or->condition($and);
 
         // always show completed and accepted requests when there are no restrictions.
         $and = db_and();
-        $and->condition('mfts.value', MFCS_REQUEST_STATUS_CLOSED_ACCEPTED);
-        $and->condition('mftsp.value', MFCS_REVIEW_STEP_COMPLETED);
+        $and->condition('mer.status', MFCS_REQUEST_STATUS_CLOSED_ACCEPTED);
+        $and->condition('mer.step', MFCS_REVIEW_STEP_COMPLETED);
         $or->condition($and);
 
         $query->condition($or);
       }
       else {
-        $query->condition('mfts.value', MFCS_REQUEST_STATUS_DELETED, '<>');
+        $query->condition('mer.status', MFCS_REQUEST_STATUS_DELETED, '<>');
       }
 
       $access_results = $query->execute()->fetchAllAssoc('id');
@@ -372,7 +361,7 @@ function mfcs_page_request_access_operation_view(&$request_ids, &$processed, &$a
       return TRUE;
     }
 
-    $review_access = mfcs_page_request_reviewer_access($user, $request_ids, NULL);
+    $review_access = mfcs_page_request_reviewer_access($user, $request_ids, MFCS_REVIEW_RESTRICTION_NONE);
 
     if (is_array($review_access)) {
       foreach ($request_ids as $id) {
@@ -456,7 +445,7 @@ function mfcs_page_request_access_operation_review(&$request_ids, &$processed, &
       return TRUE;
     }
 
-    $review_access = mfcs_page_request_reviewer_access($user, $request_ids, TRUE);
+    $review_access = mfcs_page_request_reviewer_access($user, $request_ids, MFCS_REVIEW_RESTRICTION_REVIEW);
 
     if (is_array($review_access)) {
       foreach ($request_ids as $id) {
@@ -555,7 +544,7 @@ function mfcs_page_request_access_operation_log(&$request_ids, &$processed, &$ac
       return TRUE;
     }
 
-    $review_access = mfcs_page_request_reviewer_access($user, $request_ids, NULL);
+    $review_access = mfcs_page_request_reviewer_access($user, $request_ids, MFCS_REVIEW_RESTRICTION_NONE);
 
     if (is_array($review_access)) {
       foreach ($request_ids as $id) {
@@ -649,21 +638,22 @@ function mfcs_page_request_access_operation_cancel(&$request_ids, &$processed, &
     MFCS_REQUEST_STATUS_UNLOCKED,
   );
 
+  $proxies = mfcs_get_proxy_venue_coordinator($user->uid);
+  $venue_coordinator_ids = array();
+  if (!empty($proxies)) {
+    $venue_coordinator_ids = $proxies;
+  }
+  $venue_coordinator_ids[$user->uid] = $user->uid;
+
   // if the user is the venue coordinator, then allow them to cancel a request at any point in the process.
   try {
     $query = db_select('mfcs_requests', 'mer');
 
-    $query->innerJoin('mfcs_current_top', 'mct', 'mer.id = mct.request_id');
-    $query->innerJoin('mfcs_field_top_status', 'mfts', 'mct.request_id = mfts.request_id AND mct.status = mfts.revision AND mfts.delta = 0');
-
-    $query->innerJoin('mfcs_current_venue_coordinator', 'mcvc', 'mer.id = mcvc.request_id');
-    $query->innerJoin('mfcs_field_venue_coordinator_user_id', 'mfvcui', 'mcvc.request_id = mfvcui.request_id AND mcvc.user_id = mfvcui.revision AND mfvcui.delta = 0');
-
     $query->addField('mer', 'id', 'id');
 
     $query->condition('mer.id', $request_ids, 'IN');
-    $query->condition('mfts.value', $cancellable_status_admin, 'IN');
-    $query->condition('mfvcui.value', $user->uid);
+    $query->condition('mer.status', $cancellable_status_admin, 'IN');
+    $query->condition('mer.venue_coordinator', $venue_coordinator_ids, 'IN');
 
     $access_results = $query->execute()->fetchAllAssoc('id');
 
@@ -693,19 +683,16 @@ function mfcs_page_request_access_operation_cancel(&$request_ids, &$processed, &
     try {
       $query = db_select('mfcs_requests', 'mer');
 
-      $query->innerJoin('mfcs_current_top', 'mct', 'mer.id = mct.request_id');
-      $query->innerJoin('mfcs_field_top_status', 'mfts', 'mct.request_id = mfts.request_id AND mct.status = mfts.revision AND mfts.delta = 0');
-
       $query->addField('mer', 'id', 'id');
 
       $query->condition('mer.id', $request_ids, 'IN');
 
       if ($roles['requester'] && !$roles['manager']) {
         $query->condition('mer.user_id', $user->uid);
-        $query->condition('mfts.value', $cancellable_status_normal, 'IN');
+        $query->condition('mer.status', $cancellable_status_normal, 'IN');
       }
       else {
-        $query->condition('mfts.value', $cancellable_status_admin, 'IN');
+        $query->condition('mer.status', $cancellable_status_admin, 'IN');
       }
 
       $access_results = $query->execute()->fetchAllAssoc('id');
@@ -800,21 +787,22 @@ function mfcs_page_request_access_operation_uncancel(&$request_ids, &$processed,
     MFCS_REQUEST_STATUS_CANCELLED,
   );
 
+  $proxies = mfcs_get_proxy_venue_coordinator($user->uid);
+  $venue_coordinator_ids = array();
+  if (!empty($proxies)) {
+    $venue_coordinator_ids = $proxies;
+  }
+  $venue_coordinator_ids[$user->uid] = $user->uid;
+
   // if the user is the venue coordinator, then allow them to uncancel a request at any point in the process.
   try {
     $query = db_select('mfcs_requests', 'mer');
 
-    $query->innerJoin('mfcs_current_top', 'mct', 'mer.id = mct.request_id');
-    $query->innerJoin('mfcs_field_top_status', 'mfts', 'mct.request_id = mfts.request_id AND mct.status = mfts.revision AND mfts.delta = 0');
-
-    $query->innerJoin('mfcs_current_venue_coordinator', 'mcvc', 'mer.id = mcvc.request_id');
-    $query->innerJoin('mfcs_field_venue_coordinator_user_id', 'mfvcui', 'mcvc.request_id = mfvcui.request_id AND mcvc.user_id = mfvcui.revision AND mfvcui.delta = 0');
-
     $query->addField('mer', 'id', 'id');
 
     $query->condition('mer.id', $request_ids, 'IN');
-    $query->condition('mfts.value', $uncancellable_status, 'IN');
-    $query->condition('mfvcui.value', $user->uid);
+    $query->condition('mer.status', $uncancellable_status, 'IN');
+    $query->condition('mer.venue_coordinator', $venue_coordinator_ids, 'IN');
 
     $access_results = $query->execute()->fetchAllAssoc('id');
 
@@ -844,13 +832,10 @@ function mfcs_page_request_access_operation_uncancel(&$request_ids, &$processed,
     try {
       $query = db_select('mfcs_requests', 'mer');
 
-      $query->innerJoin('mfcs_current_top', 'mct', 'mer.id = mct.request_id');
-      $query->innerJoin('mfcs_field_top_status', 'mfts', 'mct.request_id = mfts.request_id AND mct.status = mfts.revision AND mfts.delta = 0');
-
       $query->addField('mer', 'id', 'id');
 
       $query->condition('mer.id', $request_ids, 'IN');
-      $query->condition('mfts.value', $uncancellable_status, 'IN');
+      $query->condition('mer.status', $uncancellable_status, 'IN');
 
       $access_results = $query->execute()->fetchAllAssoc('id');
 
@@ -941,15 +926,12 @@ function mfcs_page_request_access_operation_history(&$request_ids, &$processed, 
     try {
       $query = db_select('mfcs_requests', 'mer');
 
-      $query->innerJoin('mfcs_current_top', 'mct', 'mer.id = mct.request_id');
-      $query->innerJoin('mfcs_field_top_status', 'mfts', 'mct.request_id = mfts.request_id AND mct.status = mfts.revision AND mfts.delta = 0');
-
       $query->addField('mer', 'id', 'id');
 
       $query->condition('mer.id', $request_ids, 'IN');
 
       if (!$roles['administer']) {
-        $query->condition('mfts.value', MFCS_REQUEST_STATUS_DELETED, '<>');
+        $query->condition('mer.status', MFCS_REQUEST_STATUS_DELETED, '<>');
       }
 
       $access_results = $query->execute()->fetchAllAssoc('id');
@@ -1059,15 +1041,11 @@ function mfcs_page_request_access_operation_agreement(&$request_ids, &$processed
     try {
       $query = db_select('mfcs_requests', 'mer');
 
-      $query->innerJoin('mfcs_current_top', 'mct', 'mer.id = mct.request_id');
-      $query->innerJoin('mfcs_field_top_status', 'mfts', 'mct.request_id = mfts.request_id AND mct.status = mfts.revision AND mfts.delta = 0');
-      $query->innerJoin('mfcs_field_top_step', 'mftsp', 'mct.request_id = mftsp.request_id AND mct.step = mftsp.revision AND mftsp.delta = 0');
-
       $query->addField('mer', 'id', 'id');
 
       $query->condition('mer.id', $request_ids, 'IN');
-      $query->condition('mfts.value', $agreement_request_status, 'IN');
-      $query->condition('mftsp.value', $agreement_request_step, 'IN');
+      $query->condition('mer.status', $agreement_request_status, 'IN');
+      $query->condition('mer.step', $agreement_request_step, 'IN');
 
       // the submitter should be the only non-manager/non-reviewer that can access the agreement.
       if (!$roles['manager'] && !$roles['reviewer']) {
@@ -1170,13 +1148,10 @@ function mfcs_page_request_access_operation_delete(&$request_ids, &$processed, &
   try {
     $query = db_select('mfcs_requests', 'mer');
 
-    $query->innerJoin('mfcs_current_top', 'mct', 'mer.id = mct.request_id');
-    $query->innerJoin('mfcs_field_top_status', 'mfts', 'mct.request_id = mfts.request_id AND mct.status = mfts.revision AND mfts.delta = 0');
-
     $query->addField('mer', 'id', 'id');
 
     $query->condition('mer.id', $request_ids, 'IN');
-    $query->condition('mfts.value', MFCS_REQUEST_STATUS_DELETED);
+    $query->condition('mer.status', MFCS_REQUEST_STATUS_DELETED);
 
     $access_results = $query->execute()->fetchAllAssoc('id');
 

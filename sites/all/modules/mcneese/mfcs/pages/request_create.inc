@@ -505,6 +505,15 @@ function mfcs_request_create_0_form_submit($form, &$form_state) {
     'user_id' => (int) $user_data['user_id'],
     'created' => $instance,
     'updated' => $instance,
+    'status' =>  $form_state['values']['request']['status'][0],
+    'step' => $form_state['values']['request']['step'][0],
+    'type' =>  $form_state['values']['request']['information']['type'][0],
+    'classification' => $form_state['values']['request']['request_coordinator']['classification'][0],
+    'location' =>  $form_state['values']['request']['location'][0],
+    'building' => $form_state['values']['request']['building'][0],
+    'room' => $form_state['values']['request']['room'][0],
+    'venue_coordinator' => $form_state['values']['request']['venue_coordinator']['user_id'][0],
+    'title' => $form_state['values']['request']['information']['title'][0],
   );
 
   $mfcs_request_revisions = array(
@@ -516,15 +525,12 @@ function mfcs_request_create_0_form_submit($form, &$form_state) {
   mfcs_include(MFCS_INCLUDE_TABLE);
 
   $structure = mfcs_table_structure();
-  $structure_tables = array();
+  $structure_current = array();
   $structure_field_tables = array();
 
   foreach ($structure as $table_name => &$fields) {
-    $db_table = 'mfcs_current_' . $table_name;
-    $structure_tables[$db_table] = array();
-
     foreach ($fields as $field_name => &$field_values) {
-      $structure_tables[$db_table][$field_name] = 0;
+      $structure_current[$table_name . '_' . $field_name] = 0;
 
       // manual processing fields must not be auto-populated through the normal form submit process.
       if (array_key_exists('manual_processing', $field_values) && $field_values['manual_processing']) {
@@ -558,7 +564,7 @@ function mfcs_request_create_0_form_submit($form, &$form_state) {
         }
       }
 
-      mfcs_build_table_structure($structure, $structure_tables, $structure_field_tables, $table_name, $field_name, $db_table, $db_table_field, $user_data, $current, $form_state);
+      mfcs_build_table_structure($structure, $structure_current, $structure_field_tables, $table_name, $field_name, $db_table_field, $user_data, $current, $form_state);
     }
   }
 
@@ -602,13 +608,10 @@ function mfcs_request_create_0_form_submit($form, &$form_state) {
       }
     }
 
-    foreach ($structure_tables as $table_name => $fields) {
-      $fields['request_id'] = $request_id;
-
-      $query = db_insert($table_name);
-      $query->fields($fields);
-      $query->execute();
-    }
+    $structure_current['request_id'] = $request_id;
+    $query = db_insert('mfcs_current');
+    $query->fields($structure_current);
+    $query->execute();
 
     // enforce transaction execution
     unset($transaction);
@@ -645,10 +648,10 @@ function mfcs_request_create_0_form_submit($form, &$form_state) {
   // redirect after submitting.
   if (empty($form_state['values']['redirect_to'])) {
     if (empty($request_id)) {
-      $form_state['redirect'] = 'requests';
+      $form_state['redirect'] = mfcs_build_redirect_array('requests');
     }
     else {
-      $form_state['redirect'] = 'requests/view-0/' . $request_id;
+      $form_state['redirect'] = mfcs_build_redirect_array('requests/view-0/' . $request_id);
     }
   }
   else {
