@@ -327,8 +327,8 @@ function mcneese_management_emergency_settings_page_submit($form, &$form_state) 
   }
   elseif ($form['settings']['stage_1']['mode']['#default_value']) {
     $nid = NULL;
-    if (cf_is_integer($value)) {
-      $nid = (int) trim($value);
+    if (cf_is_integer($form['settings']['stage_1']['mode']['#default_value'])) {
+      $nid = (int) trim($form['settings']['stage_1']['mode']['#default_value']);
     }
     else {
       $matches = array();
@@ -339,6 +339,7 @@ function mcneese_management_emergency_settings_page_submit($form, &$form_state) 
       }
     }
 
+    $node = NULL;
     if (!is_null($nid)) {
       $node = node_load($nid);
     }
