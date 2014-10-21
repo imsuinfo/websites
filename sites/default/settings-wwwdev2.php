@@ -730,3 +730,6 @@ ini_set('display_startup_errors', TRUE);
 
 // manually turn on maintenance mode
 #$conf['maintenance_mode'] = TRUE;
+
+// disable the front page featured region
+#$conf['disable_frontpage_featured'] = TRUE;
