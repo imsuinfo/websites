@@ -249,13 +249,12 @@ function mcneese_front_page_embed_featured() {
     if ($fids['image'] == $fids['thumbnail']) {
       $thumbnail_attributes['src'] = image_style_url('featured-thumbnail-alt', $urls[$fids['image']]);
       $thumbnail_attributes['alt'] = $result->field_featured_image_alt;
-
-      $thumbnail_title = preg_replace('/&apos;/i', "'", check_plain($result->title));
-      $thumbnail_attributes['title'] = $thumbnail_title;
+      $thumbnail_attributes['title'] = $result->title;
     }
     else {
       $thumbnail_attributes['src'] = image_style_url('featured-thumbnail', $urls[$fids['thumbnail']]);
       $thumbnail_attributes['alt'] = $result->field_featured_thumbnail_alt;
+      $thumbnail_attributes['title'] = $result->title;
     }
     $thumbnail_attributes['width'] = 130;
     $thumbnail_attributes['height'] = 123;
@@ -480,12 +479,12 @@ function mcneese_front_page_embed_highlight() {
     }
 
     if (empty($image_attributes['alt'])) {
-      $image_attributes['alt'] = check_plain($image->alt);
+      $image_attributes['alt'] = $image->alt;
     }
 
-    $image_attributes['title'] = check_plain($result->title);
+    $image_attributes['title'] = $result->title;
     if (empty($image_attributes['title'])) {
-      $image_attributes['title'] = check_plain($result->field_hightlight_image_title);
+      $image_attributes['title'] = $result->field_hightlight_image_title;
     }
 
     $return_array['markup'] = '<div ' . drupal_attributes($attributes) . '>';
@@ -630,6 +629,7 @@ function mcneese_front_page_embed_events($highlight) {
     }
 
     $title = NULL;
+    $title_raw = NULL;
     $date = NULL;
     $image = NULL;
     $body = NULL;
@@ -640,9 +640,11 @@ function mcneese_front_page_embed_events($highlight) {
     }
 
     if (empty($result->field_title_short)) {
+      $title_raw = $result->title;
       $title = check_plain($result->title);
     }
     else {
+      $title_raw = $result->field_title_short;
       $title = check_plain($result->field_title_short);
     }
 
@@ -692,10 +694,10 @@ function mcneese_front_page_embed_events($highlight) {
       }
 
       if (empty($image_attributes['alt'])) {
-        $image_attributes['alt'] = check_plain($image->alt);
+        $image_attributes['alt'] = $image->alt;
       }
 
-      $image_attributes['title'] = $title;
+      $image_attributes['title'] = $title_raw;
     }
     else {
       $image = NULL;
@@ -855,6 +857,7 @@ function mcneese_front_page_embed_spotlight() {
     }
 
     $title = NULL;
+    $title_raw = NULL;
     $date = NULL;
     $image = NULL;
     $body = NULL;
@@ -865,9 +868,11 @@ function mcneese_front_page_embed_spotlight() {
     }
 
     if (empty($result->field_title_short)) {
+      $title_raw = $result->title;
       $title = check_plain($result->title);
     }
     else {
+      $title_raw = $result->field_title_short;
       $title = check_plain($result->field_title_short);
     }
 
@@ -917,10 +922,10 @@ function mcneese_front_page_embed_spotlight() {
       }
 
       if (empty($image_attributes['alt'])) {
-        $image_attributes['alt'] = check_plain($image->alt);
+        $image_attributes['alt'] = $image->alt;
       }
 
-      $image_attributes['title'] = $title;
+      $image_attributes['title'] = $title_raw;
     }
     else {
       $image = NULL;
