@@ -601,11 +601,13 @@ function media_format_form($form, $form_state, $file) {
   if ($scheme == 'dbu' || $scheme == 'dbr') {
     $target = file_uri_target($uri);
 
-    $parts = explode('/', $target);
-    $parts[0] = 'f';
-    $parts[1] = $file->fid;
+    if (!empty($file->fid) && ($parts[0] == 'i' || $parts[0] == 'c')) {
+      $parts = explode('/', $target);
+      $parts[0] = 'f';
+      $parts[1] = $file->fid;
 
-    $file->uri = $scheme . '://' . implode('/', $parts);
+      $file->uri = $scheme . '://' . implode('/', $parts);
+    }
   }
 
   $form = array();
