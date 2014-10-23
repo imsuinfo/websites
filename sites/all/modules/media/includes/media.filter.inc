@@ -599,14 +599,17 @@ function media_get_wysiwyg_allowed_view_modes($file) {
 function media_format_form($form, $form_state, $file) {
   $scheme = file_uri_scheme($file->uri);
   if ($scheme == 'dbu' || $scheme == 'dbr') {
-    $target = file_uri_target($uri);
+    $target = file_uri_target($file->uri);
 
-    if (!empty($file->fid) && ($parts[0] == 'i' || $parts[0] == 'c')) {
+    if (!empty($file->fid)) {
       $parts = explode('/', $target);
-      $parts[0] = 'f';
-      $parts[1] = $file->fid;
 
-      $file->uri = $scheme . '://' . implode('/', $parts);
+      if ($parts[0] == 'i' || $parts[0] == 'c') {
+        $parts[0] = 'f';
+        $parts[1] = $file->fid;
+
+        $file->uri = $scheme . '://' . implode('/', $parts);
+      }
     }
   }
 
