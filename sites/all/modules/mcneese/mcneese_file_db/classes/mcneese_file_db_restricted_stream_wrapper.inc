@@ -134,7 +134,7 @@ class mcneese_file_db_restricted_stream_wrapper extends mcneese_file_db_stream_w
 
         // if the checksum already exists in the database, then delete the current newly created file.
         if ($this->checksum_exists($this->tmp_checksum, 'restricted')) {
-          $transaction = db_transaction();
+          $transaction = mcneese_file_db_transaction();
 
           try {
             $file_db = mcneese_file_db_prepare_connection();
@@ -160,7 +160,7 @@ class mcneese_file_db_restricted_stream_wrapper extends mcneese_file_db_stream_w
         }
         else {
           $associated_id = $this->get_checksum_file_id($this->tmp_checksum, FALSE);
-          $transaction = db_transaction();
+          $transaction = mcneese_file_db_transaction();
 
           try {
             $file_db = mcneese_file_db_prepare_connection();
