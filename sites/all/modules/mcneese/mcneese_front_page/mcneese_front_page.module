@@ -189,6 +189,7 @@ function mcneese_front_page_embed_featured() {
     $image_attributes['alt'] = '';
     $image_attributes['data-cycle-title'] = '<a href="' . $base_path . 'node/' . $result->nid . '">' . check_plain($result->title) . '</a>';
     $image_attributes['data-cycle-desc'] = check_markup($result->field_headline_value, $result->field_headline_format);
+    $image_attributes['data-manual-trump'] = FALSE;
     $image_attributes['width'] = 690;
     $image_attributes['height'] = 379;
 
