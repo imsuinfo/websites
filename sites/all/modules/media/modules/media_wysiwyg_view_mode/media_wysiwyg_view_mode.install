@@ -10,6 +10,6 @@
  */
 function media_wysiwyg_view_mode_uninstall() {
   db_delete('variable')
-    ->condition('name', "media_wysiwyg_view_mode_%", "LIKE")
+    ->condition('name', "media_wysiwyg_view_mode_%", "ILIKE")
     ->execute();
 }
