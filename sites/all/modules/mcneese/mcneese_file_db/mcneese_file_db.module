@@ -889,222 +889,269 @@ function mcneese_file_db_print_image_style($file_uri) {
  * Implements hook_file_validate().
  */
 function mcneese_file_db_file_validate($file) {
-  return mcneese_file_db_file_mangle($file);
+  $errors = array();
+
+  if (empty($file->uri) || !file_exists($file->uri)) {
+    $errors[] = t("The file was not found at: '%uri'", array('%uri' => $file->uri));
+    return $errors;
+  }
+
+  // save the original uri in ouri because drupal and other functions eventually change the uri.
+  $file->ouri = $file->uri;
+
+  $outer_parts = explode('://', $file->destination, 2);
+  if (empty($outer_parts[0])) {
+    return $errors;
+  }
+
+  $scheme = $outer_parts[0];
+  if ($scheme == mcneese_file_db_unrestricted_stream_wrapper::SCHEME) {
+    $association = mcneese_file_db_unrestricted_stream_wrapper::ASSOCIATION;
+  }
+  elseif ($scheme == mcneese_file_db_restricted_stream_wrapper::SCHEME) {
+    $association = mcneese_file_db_restricted_stream_wrapper::ASSOCIATION;
+  }
+  else {
+    return $errors;
+  }
+
+  $fixed_uri = preg_replace('@/+@i', '/', $outer_parts[1]);
+  $inner_parts = explode('/', $fixed_uri);
+
+  $file->checksum = hash_file(MCNEESE_FILE_DB_PATH_BY_HASH_ALGORITHM, $file->ouri);
+  $file->shortsum = substr($file->checksum, 0, MCNEESE_FILE_DB_SHORT_SUM_SIZE);
+
+  if (!empty($inner_parts[1]) && $inner_parts[1] == MCNEESE_FILE_DB_PATH_BY_HASH && $inner_parts[1] == $shortsum) {
+    if (empty($inner_parts[3])) {
+      $inner_parts[] = drupal_random_key(6);
+    }
+  }
+  else {
+    $inner_parts = array(MCNEESE_FILE_DB_PATH_BY_HASH, $file->shortsum, array_pop($inner_parts), drupal_random_key(6));
+  }
+
+  $file->destination = $scheme . '://' . implode('/', $inner_parts);
+  $file->filesize = filesize($file->ouri);
+
+  // always check to see if the file is properly associated.
+  mcneese_file_db_check_existence($file->checksum, $association);
+
+  return $errors;
 }
 
 /**
  * Implements hook_file_presave().
  */
 function mcneese_file_db_file_presave($file) {
-  // don't do anything for temporary files.
-  if ($file->status == 0) {
-    return;
+  if (empty($file->destination)) {
+    $outer_parts = explode('://', $file->uri, 2);
+    if (empty($outer_parts[0]) || empty($outer_parts[1])) {
+      return;
+    }
   }
-
-  $outer_parts = explode('://', $file->uri, 2);
-
-  if (count($outer_parts) < 2) return;
+  else {
+    $outer_parts = explode('://', $file->destination, 2);
+    if (empty($outer_parts[0]) || empty($outer_parts[1])) {
+      return;
+    }
+  }
 
   $scheme = $outer_parts[0];
+  $inner_parts = explode('/', $outer_parts[1]);
 
-  $parts = explode('/', $outer_parts[1]);
-
-  if (count($parts) < 3) {
+  if ($scheme == mcneese_file_db_unrestricted_stream_wrapper::SCHEME) {
+    $association = mcneese_file_db_unrestricted_stream_wrapper::ASSOCIATION;
+  }
+  elseif ($scheme == mcneese_file_db_restricted_stream_wrapper::SCHEME) {
+    $association = mcneese_file_db_restricted_stream_wrapper::ASSOCIATION;
+  }
+  else {
     return;
   }
 
-  if ($parts[0] != mcneese_file_db_unrestricted_stream_wrapper::SCHEME && $parts[0] != mcneese_file_db_restricted_stream_wrapper::SCHEME) {
-    return;
+  if (empty($file->checksum)) {
+    $checksum = hash_file(MCNEESE_FILE_DB_PATH_BY_HASH_ALGORITHM, $file->uri);
+  }
+  else {
+    $checksum = $file->checksum;
   }
 
-  // strip the extra dbu or dbr.
-  array_shift($parts);
-  $file->uri = $scheme . '://' . implode('/', $parts);
-
-  // when uploading a file, do not use its temporary name, use its permanent name.
-  if (!empty($parts[2])) {
-    $file->filename = $parts[2];
+  if (empty($file->shortsum)) {
+    $shortsum = substr($checksum, 0, MCNEESE_FILE_DB_SHORT_SUM_SIZE);
   }
+  else {
+    $shortsum = $file->shortsum;
+  }
+
+  $shortsum = substr($checksum, 0, MCNEESE_FILE_DB_SHORT_SUM_SIZE);
+
+  // always check to see if the file is properly associated.
+  mcneese_file_db_check_existence($checksum, $association);
 }
 
 /**
  * Implements hook_file_insert().
  */
 function mcneese_file_db_file_insert($file) {
-  $file->destination = $file->uri;
-  mcneese_file_db_file_mangle($file, 'insert');
-  unset($file->destination);
 }
 
 /**
  * Implements hook_file_update().
  */
 function mcneese_file_db_file_update($file) {
-  $file->destination = $file->uri;
-  mcneese_file_db_file_mangle($file, 'update');
-  unset($file->destination);
-}
-
-/**
- * Processes and alters the file uri.
- *
- * If the file is not in the database, it will be added.
- * This is expected to be valled by hook_file_validate(), hook_file_insert(),
- * and hook_file_update().
- *
- * @param object $file
- *   A file object returned by file_load().
- * @param string $process
- *   Set to the process name: 'validate', 'insert', or 'update'
- *
- * @return array
- *   An array of errors to be handled by functions like hook_file_validate().
- */
-function mcneese_file_db_file_mangle(&$file, $process = 'validate') {
-  $errors = array();
-
-  if (!file_exists($file->uri)) {
-    $errors[] = t("The file was not found at: '%uri'", array('%uri' => $file->uri));
-    return $errors;
+  if (empty($file->uri) || !file_exists($file->uri)) {
+    return;
   }
 
-  $association = mcneese_file_db_unrestricted_stream_wrapper::ASSOCIATION;
-  $outer_parts = explode('://', $file->destination, 2);
+  if (empty($file->replace_upload->uri) || !file_exists($file->replace_upload->uri)) {
+    return;
+  }
+
+  // save the original uri in ouri because drupal and other functions eventually change the uri.
+  $file->ouri = $file->uri;
+
+  $outer_parts = explode('://', $file->uri, 2);
+  if (empty($outer_parts[0])) {
+    return;
+  }
+
   $scheme = $outer_parts[0];
-  $uniqueness = '/' . drupal_random_key(6);
-
-  $checksum = hash_file(MCNEESE_FILE_DB_PATH_BY_HASH_ALGORITHM, $file->uri);
-  $shortsum = substr($checksum, 0, MCNEESE_FILE_DB_SHORT_SUM_SIZE);
-
-  $temporary_to_permanent = FALSE;
-  if ($file->status == FILE_STATUS_PERMANENT && $scheme == 'temporary') {
-    $inner_parts = explode('/', $outer_parts[1]);
-
-    if (empty($inner_parts)) return array();
-
-    $inner_scheme = NULL;
-    if ($inner_parts[0] == mcneese_file_db_unrestricted_stream_wrapper::SCHEME || $inner_parts[0] == mcneese_file_db_restricted_stream_wrapper::SCHEME) {
-      if (empty($inner_parts[1])) {
-        return array();
-      }
-
-      // forcefully reconstruct the temporary uri as permanenent uri.
-      if ($inner_parts[1] == $shortsum) {
-        $scheme = array_shift($inner_parts);
-        $temporary_to_permanent = $scheme . '://' . MCNEESE_FILE_DB_PATH_BY_HASH . '/' . $shortsum;
-
-        if ($scheme == mcneese_file_db_restricted_stream_wrapper::SCHEME) {
-          $association = mcneese_file_db_restricted_stream_wrapper::ASSOCIATION;
-        }
-
-        if (empty($file->filename)) {
-          $temporary_to_permanent .= '/file' . $uniqueness;
-        }
-        else {
-          $temporary_to_permanent .= '/' . $file->filename . $uniqueness;
-        }
-      }
-      elseif ($inner_parts[1] == MCNEESE_FILE_DB_PATH_BY_HASH && !empty($inner_parts[2]) && $inner_parts[2] == $shortsum) {
-        $scheme = array_shift($inner_parts);
-        $temporary_to_permanent = $scheme . '://' . MCNEESE_FILE_DB_PATH_BY_HASH . '/' . $shortsum;
-
-        if (empty($file->filename)) {
-          $temporary_to_permanent .= '/file' . $uniqueness;
-        }
-        else {
-          $temporary_to_permanent .= '/' . $file->filename . $uniqueness;
-        }
-      }
-    }
-    elseif ($inner_parts[0] != $shortsum) {
-      return array();
-    }
-
-    unset($inner_parts);
+  if ($scheme == mcneese_file_db_unrestricted_stream_wrapper::SCHEME) {
+    $association = mcneese_file_db_unrestricted_stream_wrapper::ASSOCIATION;
   }
-  elseif ($scheme != mcneese_file_db_unrestricted_stream_wrapper::SCHEME) {
-    if ($scheme == mcneese_file_db_restricted_stream_wrapper::SCHEME) {
-      $association = mcneese_file_db_restricted_stream_wrapper::ASSOCIATION;
-    }
-    else {
-      return array();
-    }
-  }
-
-  unset($outer_parts);
-
-
-  // do not save temporary uploads to the file_db.
-  if ($file->status == 0) {
-    $destination = $scheme . '/' . MCNEESE_FILE_DB_PATH_BY_HASH . '/' . $shortsum;
-    $file->destination = 'temporary://' . $destination;
-
-    if (empty($file->filename)) {
-      $filename = 'file';
-    }
-    else {
-      $filename = $file->filename;
-    }
-
-    $file->destination .= '/' . $filename . $uniqueness;
-    file_prepare_directory($file->destination, FILE_CREATE_DIRECTORY);
-
-    $wrapper = file_stream_wrapper_get_instance_by_scheme('temporary');
-    $tempname = basename(tempnam($wrapper->getDirectoryPath() . '/' . $destination . '/' . $filename, 'file_'));
-    $file->destination .= $tempname;
-
-    unset($tempname);
-    unset($destination);
-    unset($wrapper);
-
-    if (empty($file->destination)) {
-      $errors[] = t("Failed to prepare the files temporary upload destination.");
-      return $errors;
-    }
-
-    return array();
-  }
-
-  $file->destination = $scheme . '://' . MCNEESE_FILE_DB_PATH_BY_HASH . '/' . $shortsum;
-  if (empty($file->filename)) {
-    $file->destination .= '/file' . $uniqueness;
+  elseif ($scheme == mcneese_file_db_restricted_stream_wrapper::SCHEME) {
+    $association = mcneese_file_db_restricted_stream_wrapper::ASSOCIATION;
   }
   else {
-    $file->destination .= '/' . $file->filename . $uniqueness;
+    return;
   }
 
-  if (!empty($temporary_to_permanent)) {
-    if ($process == 'update') {
-      $moved = file_move($file, $temporary_to_permanent, FILE_EXISTS_REPLACE);
-      $file->uri = $file->destination;
-      unset($file->destination);
+  $fixed_uri = preg_replace('@/+@i', '/', $outer_parts[1]);
+  $inner_parts = explode('/', $fixed_uri);
 
-      if (!is_object($moved)) return array();
+  $file->checksum = hash_file(MCNEESE_FILE_DB_PATH_BY_HASH_ALGORITHM, $file->ouri);
+  $file->shortsum = substr($file->checksum, 0, MCNEESE_FILE_DB_SHORT_SUM_SIZE);
 
-      $transaction = db_transaction();
-
-      try {
-        $query = db_update('file_managed');
-        $query->condition('fid', $file->fid);
-        $query->fields(array('uri' => $file->uri, 'status' => FILE_STATUS_PERMANENT));
-        $query->execute();
-
-        unset($transaction);
-      }
-      catch (Exception $e) {
-        $transaction->rollback();
-        cf_error::on_query_execution($e);
-
-        throw $e;
-      }
+  if (!empty($inner_parts[1]) && $inner_parts[1] == MCNEESE_FILE_DB_PATH_BY_HASH && $inner_parts[1] == $shortsum) {
+    if (empty($inner_parts[3])) {
+      $inner_parts[] = drupal_random_key(6);
     }
   }
+  else {
+    $inner_parts = array(MCNEESE_FILE_DB_PATH_BY_HASH, $file->shortsum, array_pop($inner_parts), drupal_random_key(6));
+  }
+
+  // the filename can change, so rebuild the uri.
+  if (!empty($file->filename)) {
+    $inner_parts[2] = $file->filename;
+  }
+
+  // the filemime can change, so rebuild the mimetype.
+  include_once DRUPAL_ROOT . '/includes/file.mimetypes.inc';
+  $mapping = file_mimetype_mapping();
+  $file->filemime = file_get_mimetype($file->ouri, $mapping);
+
+  $file->uri = $scheme . '://' . implode('/', $inner_parts);
+  $file->filesize = filesize($file->ouri);
+
+  drupal_write_record('file_managed', $file, 'fid');
 
 
   // always check to see if the file is properly associated.
+  mcneese_file_db_check_existence($file->checksum, $association);
+}
+
+/**
+ * Implements hook_file_download().
+ */
+function mcneese_file_db_file_download($uri) {
+  $outer_parts = explode('://', $uri, 2);
+  if (empty($outer_parts[0])) {
+    return NULL;
+  }
+
+  $scheme = $outer_parts[0];
+  if ($scheme == mcneese_file_db_unrestricted_stream_wrapper::SCHEME) {
+    $association = mcneese_file_db_unrestricted_stream_wrapper::ASSOCIATION;
+  }
+  elseif ($scheme == mcneese_file_db_restricted_stream_wrapper::SCHEME) {
+    $association = mcneese_file_db_restricted_stream_wrapper::ASSOCIATION;
+  }
+  else {
+    return NULL;
+  }
+
+  // Get the file record based on the URI.
+  $files = file_load_multiple(array(), array('uri' => $uri));
+  if (!empty($files)) {
+    $file = array_pop($files);
+  }
+  else {
+    return NULL;
+  }
+
+  // Access is granted.
+  $headers = file_get_content_headers($file);
+
+  if ($scheme == mcneese_file_db_unrestricted_stream_wrapper::SCHEME) {
+    $headers['Cache-Control'] = 'Public';
+  }
+  else {
+    // @todo: for scheme == mcneese_file_db_restricted_stream_wrapper::SCHEME, perform access checks here (-1 is returned on access denied).
+  }
+
+  return $headers;
+}
+
+/**
+ * Implements hook_file_entity_access().
+ */
+function mcneese_file_db_file_entity_access($op, $file = NULL, $account = NULL) {
+  if (empty($file->uri)) {
+    return FILE_ENTITY_ACCESS_IGNORE;
+  }
+
+  $outer_parts = explode('://', $file->uri, 2);
+  if (empty($outer_parts[0])) {
+    return FILE_ENTITY_ACCESS_IGNORE;
+  }
+
+  $scheme = $outer_parts[0];
+  if ($scheme == mcneese_file_db_unrestricted_stream_wrapper::SCHEME) {
+    $association = mcneese_file_db_unrestricted_stream_wrapper::ASSOCIATION;
+
+    if ($op == 'view' || $op == 'download') {
+      return FILE_ENTITY_ACCESS_ALLOW;
+    }
+
+    // @todo: handle 'update', 'delete', and 'create' access controls.
+  }
+  elseif ($scheme == mcneese_file_db_restricted_stream_wrapper::SCHEME) {
+    $association = mcneese_file_db_restricted_stream_wrapper::ASSOCIATION;
+
+    // @todo: perform all access checks.
+  }
+  else {
+    return FILE_ENTITY_ACCESS_IGNORE;
+  }
+
+  return FILE_ENTITY_ACCESS_IGNORE;
+}
+
+/**
+ * Ensure that file exists and is associated.
+ *
+ * If the file is unassociated, then it will become associated.
+ *
+ * @param string $checksum
+ *   The full checksum string to check.
+ * @param string association
+ *   The association string to check against.
+ */
+function mcneese_file_db_check_existence($checksum, $association) {
   $loaded = mcneese_file_db_load_available_files(array('checksum' => $checksum, 'association' => $association));
 
-  if (!empty($loaded)) return array();
+  if (!empty($loaded)) return;
 
   global $conf;
 
@@ -1139,8 +1186,6 @@ function mcneese_file_db_file_mangle(&$file, $process = 'validate') {
 
     throw $e;
   }
-
-  return $errors;
 }
 
 /**

@@ -123,7 +123,7 @@ class mcneese_file_db_unrestricted_stream_wrapper extends mcneese_file_db_stream
           }
         }
         else if ($fields['mimetype'] == 'application/octet-stream') {
-          // try to avoid using octet-strema and instead use the extension to derive the mime type.
+          // try to avoid using octet-stream and instead use the extension to derive the mime type.
           if (!empty($mapping['extensions'][$fields['extension']])) {
             $fields['mimetype'] = $mapping['mimetypes'][$mapping['extensions'][$fields['extension']]];
           }
@@ -587,7 +587,7 @@ class mcneese_file_db_unrestricted_stream_wrapper extends mcneese_file_db_stream
       }
 
       try {
-        // only dis-associated files if all references ahve been deleted.
+        // only dis-associate files if all references have been deleted.
         $shortsum = substr($this->file_meta->checksum, 0, MCNEESE_FILE_DB_SHORT_SUM_SIZE);
 
         $check_uri = $this->get_scheme() . '://' . $this->get_path_by_hash() . '/' . $shortsum;

@@ -587,7 +587,7 @@ class mcneese_file_db_restricted_stream_wrapper extends mcneese_file_db_stream_w
       }
 
       try {
-        // only dis-associated files if all references ahve been deleted.
+        // only dis-associate files if all references have been deleted.
         $shortsum = substr($this->file_meta->checksum, 0, MCNEESE_FILE_DB_SHORT_SUM_SIZE);
 
         $check_uri = $this->get_scheme() . '://' . $this->get_path_by_hash() . '/' . $shortsum;
@@ -686,10 +686,6 @@ class mcneese_file_db_restricted_stream_wrapper extends mcneese_file_db_stream_w
         return $wrapper->getMimeType($this->image_style_uri);
       }
 
-      return 'application/octet-stream';
-    }
-
-    if (empty($this->file_meta)) {
       return 'application/octet-stream';
     }
 

@@ -814,7 +814,6 @@ abstract class mcneese_file_db_stream_wrapper implements DrupalStreamWrapperInte
         else {
           return FALSE;
         }
-
       }
       else {
         $this->tmp_by = $parts[0];
