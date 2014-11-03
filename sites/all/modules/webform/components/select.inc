@@ -32,6 +32,9 @@ function _webform_defaults_select() {
       'empty_value' => FALSE,
       'empty_value_text' => '',
       'inline_options' => FALSE,
+      'multicolumn_enabled' => FALSE,
+      'multicolumn_count' => 2,
+      'multicolumn_width' => 100,
     ),
   );
 }
@@ -104,6 +107,42 @@ function _webform_edit_select($component) {
       ),
     );
   }
+
+  $other['multicolumn_enabled'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('Enable Multi-Column'),
+    '#default_value' => $component['extra']['multicolumn_enabled'],
+    '#description' => t('Check this option if you want to display checkboxes or radios in multiple columns.'),
+    '#parents' => array('extra', 'multicolumn_enabled'),
+    '#attributes' => array('class' => array('multicolumn-enabled-checkbox')),
+    '#weight' => 10,
+  );
+  $other['multicolumn_count'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Number of columns'),
+    '#default_value' => $component['extra']['multicolumn_count'],
+    '#description' => t('Number of columns to display under for multi-columns.'),
+    '#parents' => array('extra', 'multicolumn_count'),
+    '#weight' => 10.1,
+    '#states' => array(
+      'visible' => array(
+        ':input.multicolumn-enabled-checkbox' => array('checked' => TRUE),
+      ),
+    ),
+  );
+  $other['multicolumn_width'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Width of the columns'),
+    '#default_value' => $component['extra']['multicolumn_width'],
+    '#description' => t('The width of the multiple columns specified in pixels. Columns will all be the same width.'),
+    '#parents' => array('extra', 'multicolumn_width'),
+    '#weight' => 10.2,
+    '#states' => array(
+      'visible' => array(
+        ':input.multicolumn-enabled-checkbox' => array('checked' => TRUE),
+      ),
+    ),
+  );
 
   if (module_exists('options_element')) {
     $options = _webform_select_options($component, FALSE, FALSE);
@@ -463,6 +502,25 @@ function _webform_render_select($component, $value = NULL, $filter = TRUE) {
     }
   }
 
+  if ($element['#type'] == 'checkboxes' || $element['#type'] == 'radios' || $element['#type'] == 'select_or_other') {
+    if (!empty($component['extra']['multicolumn_enabled']) && $component['extra']['multicolumn_enabled'] == 1) {
+      $multicolumn_count = 0;
+      if (!empty($component['extra']['multicolumn_count']) && is_numeric($component['extra']['multicolumn_count'])) {
+        $multicolumn_count = intval($component['extra']['multicolumn_count']);
+      }
+
+      $multicolumn_width = 0;
+      if (!empty($component['extra']['multicolumn_width']) && is_numeric($component['extra']['multicolumn_width'])) {
+        $multicolumn_width = intval($component['extra']['multicolumn_width']);
+      }
+
+      if ($multicolumn_count > 0 && $multicolumn_width > 0) {
+        $element['#multicolumn_count'] = $multicolumn_count;
+        $element['#multicolumn_width'] = $multicolumn_width;
+      }
+    }
+  }
+
   return $element;
 }
 
@@ -491,7 +549,10 @@ function webform_expand_select_or_other($element) {
   }
 
   // Sanitize the options in Select or other check boxes and radio buttons.
-  if ($element['#select_type'] == 'checkboxes' || $element['#select_type'] == 'radios') {
+  if ($element['#select_type'] == 'checkboxes') {
+    $element['select']['#process'] = array_merge(element_info_property($element['#select_type'], '#process'), array('webform_expand_select_ids', 'webform_expand_checkboxes'));
+  }
+  elseif ($element['#select_type'] == 'radios') {
     $element['select']['#process'] = array_merge(element_info_property($element['#select_type'], '#process'), array('webform_expand_select_ids'));
   }
 
@@ -514,10 +575,34 @@ function webform_expand_checkboxes($element) {
 
   $element = form_process_checkboxes($element);
 
+  $multicolumn = FALSE;
+  $multicolumn_count = 0;
+  $multicolumn_width = 0;
+  if (!empty($element['#multicolumn_count']) && is_numeric($element['#multicolumn_count'])) {
+    $multicolumn_count = intval($element['#multicolumn_count']);
+  }
+  if (!empty($element['#multicolumn_width']) && is_numeric($element['#multicolumn_width'])) {
+    $multicolumn_width = intval($element['#multicolumn_width']);
+  }
+  if ($multicolumn_count > 0 && $multicolumn_width > 0) {
+    $multicolumn = TRUE;
+  }
+
+
   // Escape the values of checkboxes.
   foreach (element_children($element) as $key) {
-    $element[$key]['#return_value'] = check_plain($element[$key]['#return_value']);
-    $element[$key]['#name'] = $element['#name'] . '[' . $element[$key]['#return_value'] . ']';
+    if ($multicolumn) {
+      if (!is_array($element[$key])) continue;
+
+      foreach (element_children($element[$key]) as $subkey) {
+        $element[$key][$subkey]['#return_value'] = check_plain($element[$key][$subkey]['#return_value']);
+        $element[$key][$subkey]['#name'] = $element['#name'] . '[' . $element[$key][$subkey]['#return_value'] . ']';
+      }
+    }
+    else {
+      $element[$key]['#return_value'] = check_plain($element[$key]['#return_value']);
+      $element[$key]['#name'] = $element['#name'] . '[' . $element[$key]['#return_value'] . ']';
+    }
   }
 
   foreach ($default_value as $key => $val) {
@@ -533,13 +618,41 @@ function webform_expand_checkboxes($element) {
 function webform_expand_select_ids($element) {
   $id = $element['#id'] = str_replace('_', '-', _webform_safe_name(strip_tags($element['#id'])));
   $delta = 0;
-  foreach (element_children($element) as $key) {
-    $delta++;
-    // Convert the #id for each child to a safe name, regardless of key.
-    $element[$key]['#id'] = $id . '-' . $delta;
 
-    // Prevent scripts or CSS in the labels for each checkbox or radio.
-    $element[$key]['#title'] = isset($element[$key]['#title']) ? webform_filter_xss($element[$key]['#title']) : '';
+  $multicolumn = FALSE;
+  $multicolumn_count = 0;
+  $multicolumn_width = 0;
+  if (!empty($element['#multicolumn_count']) && is_numeric($element['#multicolumn_count'])) {
+    $multicolumn_count = intval($element['#multicolumn_count']);
+  }
+  if (!empty($element['#multicolumn_width']) && is_numeric($element['#multicolumn_width'])) { 
+    $multicolumn_width = intval($element['#multicolumn_width']);
+  }
+  if ($multicolumn_count > 0 && $multicolumn_width > 0) {
+    $multicolumn = TRUE;
+  }
+
+  foreach (element_children($element) as $key) {
+    if ($multicolumn) {
+      if (!is_array($element[$key])) continue;
+
+      foreach (element_children($element[$key]) as $subkey) {
+        $delta++;
+        // Convert the #id for each child to a safe name, regardless of key.
+        $element[$key][$subkey]['#id'] = $id . '-' . $delta;
+
+        // Prevent scripts or CSS in the labels for each checkbox or radio.
+        $element[$key][$subkey]['#title'] = isset($element[$key][$subkey]['#title']) ? webform_filter_xss($element[$key][$subkey]['#title']) : '';
+      }
+    }
+    else {
+      $delta++;
+      // Convert the #id for each child to a safe name, regardless of key.
+      $element[$key]['#id'] = $id . '-' . $delta;
+
+      // Prevent scripts or CSS in the labels for each checkbox or radio.
+      $element[$key]['#title'] = isset($element[$key]['#title']) ? webform_filter_xss($element[$key]['#title']) : '';
+    }
   }
   return $element;
 }
@@ -587,6 +700,8 @@ function _webform_submit_select($component, $value) {
   if (is_array($value)) {
     $return = array();
     foreach ($value as $key => $option_value) {
+      if (is_array($option_value)) continue;
+
       // Handle options that are specified options.
       if ($option_value !== '' && isset($options[$option_value])) {
         // Checkboxes submit an integer value of 0 when unchecked. A checkbox
