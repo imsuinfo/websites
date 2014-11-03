@@ -89,9 +89,9 @@ function workbench_moderation_node_history_view($node) {
 
   // Get all of the node revisions, each with its most recent moderation.
   $query = db_select('node', 'n');
-  $query->leftJoin('node_revision', 'r', 'n.nid = r.nid');
-  $query->leftJoin('users', 'u', 'r.uid = u.uid');
-  $query->leftJoin('workbench_moderation_node_history', 'm', 'r.vid = m.vid');
+  $query->innerJoin('node_revision', 'r', 'n.nid = r.nid');
+  $query->innerJoin('users', 'u', 'r.uid = u.uid');
+  $query->innerJoin('workbench_moderation_node_history', 'm', 'r.vid = m.vid');
   $query->addField('n', 'vid', 'live_revision');
   $query->condition('n.nid', $node->nid)
     ->orderBy('r.vid', 'DESC')
