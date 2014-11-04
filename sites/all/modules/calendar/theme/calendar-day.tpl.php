@@ -39,7 +39,7 @@ $params = array(
   <caption class="hidden">
     <?php print theme('date_nav_title', $params) ?>
   </caption>
-  <col width="<?php print $first_column_width?>"></col>
+  <col width="<?php print $first_column_width?>%"></col>
   <thead>
     <?php foreach ($columns as $column): ?>
     <col width="<?php print $column_width; ?>%"></col>

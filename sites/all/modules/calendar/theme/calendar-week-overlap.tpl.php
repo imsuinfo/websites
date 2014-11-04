@@ -57,6 +57,9 @@ $params = array(
   </div>
   <div id="multi-day-container">
   <table class="full" summary="This is a calendar.">
+  <caption class="hidden">
+    <?php print theme('date_nav_title', $params) ?>
+  </caption>
   <tbody>
   <tr class="holder"><td class="calendar-time-holder"></td><td class="calendar-day-holder"></td><td class="calendar-day-holder"></td><td class="calendar-day-holder"></td><td class="calendar-day-holder"></td><td class="calendar-day-holder"></td><td class="calendar-day-holder"></td><td class="calendar-day-holder"></td></tr>
     <?php for ($i = 0; $i < $multiday_rows; $i++): ?>

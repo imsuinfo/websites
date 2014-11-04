@@ -396,14 +396,6 @@ table.calendar-legend tr.even .stripe {
 }
 
 /**
- * The following are not used by default but are available for themes.
- */
-.calendar-calendar td.past {}
-.calendar-calendar td.future {}
-.calendar-calendar td.has-events {}
-.calendar-calendar td.has-no-events {}
-
-/**
  * Hide captions
  **/
 .calendar-calendar table > caption.hidden {
@@ -413,3 +405,11 @@ table.calendar-legend tr.even .stripe {
   margin: 0;
   padding: 0;
 }
+
+/**
+ * The following are not used by default but are available for themes.
+ */
+.calendar-calendar td.past {}
+.calendar-calendar td.future {}
+.calendar-calendar td.has-events {}
+.calendar-calendar td.has-no-events {}

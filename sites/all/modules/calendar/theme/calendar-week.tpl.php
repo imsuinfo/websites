@@ -28,14 +28,14 @@
 //dsm($items);
 $index = 0;
 $header_ids = array();
+foreach ($day_names as $key => $value) {
+  $header_ids[$key] = $value['header_id'];
+}
 $params = array(
   'view' => $view,
   'granularity' => 'week',
   'link' => FALSE,
 );
-foreach ($day_names as $key => $value) {
-  $header_ids[$key] = $value['header_id'];
-}
 ?>
 <div class="calendar-calendar"><div class="week-view">
 <table class="full" summary="This is a calendar.">
