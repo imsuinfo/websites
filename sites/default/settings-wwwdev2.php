@@ -715,6 +715,12 @@ $conf['html5_tools_add_chrome_frame_header'] = 0;
 
 
 /**
+ * Allow any/all attributes to be specified in the media_wysiwyg tag.
+ */
+$conf['media_wysiwyg_wysiwyg_allowed_attributes'] = NULL;
+
+
+/**
  * Additional file_db variables.
  */
 $conf['file_db_server_id'] = 7;
