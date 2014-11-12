@@ -667,6 +667,7 @@ $conf['role_php_ini'] = array();
 $conf['role_php_ini']['memory_limit'] = array('1' => '128M', '2' => '256M', '3' => '512M');
 $conf['role_php_ini']['max_execution_time'] = array('1' => '45', '2' => '60', '3' => '90');
 $conf['role_php_ini']['max_input_time'] = array('1' => '45', '2' => '60', '3' => '90');
+$conf['role_php_ini']['include_path'] = array('1' => '/var/www/drupal/sandbox:/usr/local/lib/php', '2' => '/var/www/drupal/sandbox:/usr/local/lib/php');
 
 $conf['user_php_ini'] = array();
 
@@ -674,6 +675,7 @@ $conf['ip_php_ini'] = array();
 $conf['ip_php_ini']['memory_limit'] = array('127.0.0.1' => '512M');
 $conf['ip_php_ini']['max_execution_time'] = array('127.0.0.1' => '960');
 $conf['ip_php_ini']['max_input_time'] = array('127.0.0.1' => '960');
+$conf['ip_php_ini']['include_path'] = array('127.0.0.1' => '/var/www/drupal/sandbox:/usr/local/lib/php');
 
 
 /**
