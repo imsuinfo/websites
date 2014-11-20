@@ -664,7 +664,7 @@ $conf['file_temporary_path'] = '/var/www/webfiles/temporary/wwwdev';
  * Order of operations do apply.
  */
 $conf['role_php_ini'] = array();
-$conf['role_php_ini']['memory_limit'] = array('1' => '128M', '2' => '256M', '3' => '512M');
+$conf['role_php_ini']['memory_limit'] = array('1' => '192M', '2' => '256M', '3' => '512M');
 $conf['role_php_ini']['max_execution_time'] = array('1' => '45', '2' => '60', '3' => '90');
 $conf['role_php_ini']['max_input_time'] = array('1' => '45', '2' => '60', '3' => '90');
 $conf['role_php_ini']['include_path'] = array('1' => '/var/www/drupal/wwwdev:/usr/local/lib/php', '2' => '/var/www/drupal/wwwdev:/usr/local/lib/php');
