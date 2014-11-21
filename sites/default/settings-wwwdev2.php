@@ -723,6 +723,12 @@ $conf['media_wysiwyg_wysiwyg_allowed_attributes'] = NULL;
 
 
 /**
+ * restrict/reduce ultimate crons memory reservation code.
+ */
+$conf['ultimate_cron_reserve_memory'] = 1;
+
+
+/**
  * Additional file_db variables.
  */
 $conf['file_db_server_id'] = 7;
@@ -740,4 +746,4 @@ ini_set('display_startup_errors', TRUE);
 #$conf['maintenance_mode'] = TRUE;
 
 // disable the front page featured region
-#$conf['disable_frontpage_featured'] = TRUE;
+$conf['disable_frontpage_featured'] = TRUE;

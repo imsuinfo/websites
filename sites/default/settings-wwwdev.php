@@ -723,12 +723,20 @@ $conf['media_wysiwyg_wysiwyg_allowed_attributes'] = NULL;
 
 
 /**
+ * restrict/reduce ultimate crons memory reservation code.
+ */
+$conf['ultimate_cron_reserve_memory'] = 1;
+
+
+/**
  * Additional file_db variables.
  */
 $conf['file_db_server_id'] = 6;
 $conf['file_entity_default_scheme'] = 'dbu';
 $conf['image_style_default_scheme'] = 'public';
 $conf['phplot_api_default_scheme'] = 'public';
+
+$conf['ultimate_cron_reserve_memory'] = 1;
 
 
 // enable all errors
