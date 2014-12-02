@@ -1,4 +1,5 @@
 core = 7.x
+api = 2
 
 ; Libraries
 libraries[phplot][download][type] = "get"

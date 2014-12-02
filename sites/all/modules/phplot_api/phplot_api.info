@@ -10,9 +10,9 @@ files[] = phplot_api.install
 files[] = phplot_api.module
 files[] = includes/phplot_api_plot.inc
 
-; Information added by drupal.org packaging script on 2013-07-31
-version = "7.x-1.2"
+; Information added by Drupal.org packaging script on 2014-12-02
+version = "7.x-1.3"
 core = "7.x"
 project = "phplot_api"
-datestamp = "1375306581"
+datestamp = "1417558681"
 
