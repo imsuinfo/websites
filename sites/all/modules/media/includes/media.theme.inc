@@ -112,6 +112,10 @@ function theme_media_formatter_large_icon($variables) {
 function theme_media_formatter_link($variables) {
   $file = $variables['file'];
 
+  if (!is_object($file)) {
+    return '';
+  }
+
   $url = rawurldecode(file_create_url($file->uri));
 
   // Set options as per anchor format described at
