@@ -534,7 +534,7 @@ function quail_api_get_display_levels_list($display_levels = NULL) {
  *   standards list.
  *
  * @return array
- *   An array of qual test display levels, each initialized to TRUE.
+ *   An array of quail test display levels, each initialized to TRUE.
  */
 function quail_api_get_default_display_level($display_levels = NULL) {
   if (is_null($display_levels)) {
@@ -699,7 +699,7 @@ function quail_api_get_validation_methods_list($validation_methods = NULL) {
  *   An array containing a single standard to use as returned by:
  *   quail_api_get_standards().
  * @param string|null $display_level
- *   (optional) An array of booleans representing the qual test display levels
+ *   (optional) An array of booleans representing the quail test display levels
  *   (defaults to quail_api_create_quail_display_level_array()).
  *
  * @return array

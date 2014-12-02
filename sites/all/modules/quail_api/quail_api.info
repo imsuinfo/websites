@@ -3,7 +3,7 @@ description = "Integrates the Quail library into a drupal module for use as an A
 package = Accessibility
 core = 7.x
 
-dependencies[] = libraries (7.x-2.x)
+dependencies[] = libraries
 
 files[] = quail_api.install
 files[] = quail_api.module
@@ -11,9 +11,9 @@ files[] = includes/quail_api_reporters.inc
 files[] = includes/quail_api_guidelines.inc
 files[] = includes/quail_api_handler_field_markup.inc
 
-; Information added by drupal.org packaging script on 2013-07-31
-version = "7.x-1.2"
+; Information added by Drupal.org packaging script on 2014-12-02
+version = "7.x-1.3"
 core = "7.x"
 project = "quail_api"
-datestamp = "1375306285"
+datestamp = "1417559286"
 

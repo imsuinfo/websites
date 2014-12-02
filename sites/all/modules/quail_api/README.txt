@@ -81,4 +81,7 @@ The following (optional) patches have been provided to help reduce the number of
   - This patch is an attempt to reduce the number of false-positives by throwing out text that ends in a period.
   - Such cases are more likely to be sentences rather than headers.
 - quail-php_54.patch
-  - Fixes a bug in the qual library when using php 5.4+.
+  - Fixes a bug in the quail library when using php 5.4+.
+  - This version does not always apply due to tabs, instead use the quail-php_54-2.patch.
+- quail-php_54-2.patch
+  - Fixes a bug in the quail library when using php 5.4+.
