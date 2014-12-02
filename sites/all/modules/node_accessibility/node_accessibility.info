@@ -12,9 +12,9 @@ files[] = node_accessibility.module
 files[] = includes/pages.inc
 files[] = includes/node_accessibility_handler_link_validate_node.inc
 
-; Information added by drupal.org packaging script on 2013-03-25
-version = "7.x-1.3"
+; Information added by Drupal.org packaging script on 2014-12-02
+version = "7.x-1.4"
 core = "7.x"
 project = "node_accessibility"
-datestamp = "1364228412"
+datestamp = "1417559888"
 

@@ -505,7 +505,7 @@ function node_accessibility_perform_validation($nodes_or_nids, $vids = array(), 
   }
 
   $node_type_settings = node_accessibility_load_node_type_settings();
-  
+
 
   $results = array();
   $standards = quail_api_get_standards(NULL, 'snippet');

@@ -123,8 +123,8 @@ function node_accessibility_uninstall() {
  * see: https://drupal.org/node/2101573
  */
 function node_accessibility_update_7100() {
-  $query = db_select('node_accessibility_types', 'nat'); 
-  $query->fields('nat'); 
+  $query = db_select('node_accessibility_types', 'nat');
+  $query->fields('nat');
   $query->orderBy('nat.type', 'ASC');
 
   $node_type_settings = array();
@@ -146,4 +146,3 @@ function node_accessibility_update_7100() {
 
   db_drop_table('node_accessibility_types');
 }
-
