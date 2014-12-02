@@ -14,9 +14,9 @@ files[] = includes/feeds.inc
 files[] = includes/unkillfile.inc
 files[] = includes/killfile_handler_link_unkillfile.inc
 
-; Information added by drupal.org packaging script on 2013-03-25
-version = "7.x-1.4"
+; Information added by Drupal.org packaging script on 2014-12-02
+version = "7.x-1.5"
 core = "7.x"
 project = "killfile"
-datestamp = "1364241911"
+datestamp = "1417559606"
 

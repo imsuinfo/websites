@@ -742,21 +742,21 @@ function killfile_get_node_type_settings($node_types) {
   $query->fields('knt');
   $query->orderBy('knt.type', 'ASC');
 
-  $and = NULL;
+  $or = NULL;
 
   foreach ($node_types as $node_type){
-    if (is_null($and)) $and = db_and();
+    if (is_null($or)) $or = db_or();
 
     if (is_object($node_type)){
-      $and->condition('type', $node_type->type, '=');
+      $or->condition('type', $node_type->type, '=');
     }
     else {
-      $and->condition('type', $node_type, '=');
+      $or->condition('type', $node_type, '=');
     }
   }
 
-  if (is_object($and)){
-    $query->condition($and);
+  if (is_object($or)){
+    $query->condition($or);
   }
 
   return $query->execute()->fetchAll();
@@ -788,21 +788,21 @@ function killfile_get_node_delete_settings($nodes_or_nids) {
   $query->fields('kn');
   $query->orderBy('kn.nid', 'ASC');
 
-  $and = NULL;
+  $or = NULL;
 
   foreach ($nodes_or_nids as $node_or_nid){
-    if (is_null($and)) $and = db_and();
+    if (is_null($or)) $or = db_or();
 
     if (is_object($node_or_nid)){
-      $and->condition('nid', $node_or_nid->nid, '=');
+      $or->condition('nid', $node_or_nid->nid, '=');
     }
     else {
-      $and->condition('nid', $node_or_nid, '=');
+      $or->condition('nid', $node_or_nid, '=');
     }
   }
 
-  if (is_object($and)){
-    $query->condition($and);
+  if (is_object($or)){
+    $query->condition($or);
   }
 
   return $query->execute()->fetchAll();
