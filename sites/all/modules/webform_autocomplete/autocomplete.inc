@@ -156,14 +156,14 @@ function _webform_render_autocomplete($component, $value = NULL, $filter = TRUE)
 
   $element = array(
     '#type' => 'textfield',
-    '#title' => $filter ? _webform_filter_xss($component['name']) : $component['name'],
+    '#title' => $filter ? webform_filter_xss($component['name']) : $component['name'],
     '#title_display' => $component['extra']['title_display'] ? $component['extra']['title_display'] : 'before',
-    '#default_value' => $filter ? _webform_filter_values($component['value'], $node, NULL, NULL, FALSE) : $component['value'],
-    '#required' => $component['mandatory'],
+    '#default_value' => $filter ? webform_replace_tokens($component['value'], $node, NULL, NULL, FALSE) : $component['value'],
+    '#required' => $component['required'],
     '#weight' => $component['weight'],
-    '#field_prefix' => empty($component['extra']['field_prefix']) ? NULL : ($filter ? _webform_filter_xss($component['extra']['field_prefix']) : $component['extra']['field_prefix']),
-    '#field_suffix' => empty($component['extra']['field_suffix']) ? NULL : ($filter ? _webform_filter_xss($component['extra']['field_suffix']) : $component['extra']['field_suffix']),
-    '#description' => $filter ? _webform_filter_descriptions($component['extra']['description'], $node) : $component['extra']['description'],
+    '#field_prefix' => empty($component['extra']['field_prefix']) ? NULL : ($filter ? webform_filter_xss($component['extra']['field_prefix']) : $component['extra']['field_prefix']),
+    '#field_suffix' => empty($component['extra']['field_suffix']) ? NULL : ($filter ? webform_filter_xss($component['extra']['field_suffix']) : $component['extra']['field_suffix']),
+    '#description' => $filter ? webform_filter_descriptions($component['extra']['description'], $node) : $component['extra']['description'],
     '#attributes' => $component['extra']['attributes'],
     '#theme_wrappers' => array('webform_element'),
     '#translatable' => array('title', 'description', 'field_prefix', 'field_suffix'),
@@ -283,7 +283,7 @@ function webform_autocomplete_js($node, $cid, $str = '') {
       
       $db = db_query("SELECT DISTINCT data
         FROM {webform_submitted_data}
-        WHERE nid = :nid AND cid = :cid AND data LIKE :str LIMIT " . ($result_count - $count),
+        WHERE nid = :nid AND cid = :cid AND data ILIKE :str LIMIT " . ($result_count - $count),
         array(':nid' => $node->nid, ':cid' => $cid, ':str' => $str_like)
       );
       foreach ($db as $row) {

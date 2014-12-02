@@ -8,6 +8,8 @@
 
 /**
  * Implements hook_menu().
+ *
+ * @return array
  */
 function webform_autocomplete_menu() {
   $items = array();
@@ -25,6 +27,8 @@ function webform_autocomplete_menu() {
 
 /**
  * Implements hook_webform_component_info().
+ *
+ * @return array
  */
 function webform_autocomplete_webform_component_info() {
   return array(
@@ -55,6 +59,7 @@ function webform_autocomplete_access($node, $cid) {
     return FALSE;
   }
   if (variable_get('webform_submission_access_control', 1)) {
+    $allowed_roles = array();
     foreach ($node->webform['roles'] as $rid) {
       $allowed_roles[$rid] = isset($user->roles[$rid]) ? TRUE : FALSE;
     }
