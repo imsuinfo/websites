@@ -471,7 +471,6 @@ function _webform_analysis_date($component, $sids = array()) {
   return array(
     'table_rows' => $rows,
     'table_caption' => $component['name'],
-    'table_summary' => t("A date field."),
   );
 }
 

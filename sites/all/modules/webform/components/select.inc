@@ -391,6 +391,10 @@ function _webform_render_select($component, $value = NULL, $filter = TRUE) {
   // Convert the user-entered options list into an array.
   $default_value = $filter ? webform_replace_tokens($component['value'], $node) : $component['value'];
   $options = _webform_select_options($component, !$component['extra']['aslist'], $filter);
+  if (empty($options)) {
+    // Make element inaccessible if there are no options as there is no point in showing it.
+    $element['#access'] = FALSE;
+  }
 
   if ($component['extra']['optrand']) {
     _webform_shuffle_options($options);
@@ -870,7 +874,6 @@ function _webform_analysis_select($component, $sids = array(), $single = FALSE) 
   return array(
     'table_rows' => $rows,
     'table_caption' => $component['name'],
-    'table_summary' => t("A select field."),
     'other_data' => $other,
   );
 }

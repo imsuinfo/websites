@@ -274,7 +274,6 @@ function _webform_analysis_email($component, $sids = array()) {
   return array(
     'table_rows' => $rows,
     'table_caption' => $component['name'],
-    'table_summary' => t("An email field."),
     'other_data' => $other,
   );
 

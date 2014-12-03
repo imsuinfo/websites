@@ -257,12 +257,11 @@ function theme_webform_time($variables) {
 
 function webform_validate_time($element, $form_state) {
   $form_key = $element['#webform_component']['form_key'];
-  $name = $element['#webform_component']['name'];
 
   // Check if the user filled the required fields.
   foreach ($element['#hourformat'] == '12-hour' ? array('hour', 'minute', 'ampm') : array('hour', 'minute') as $field_type) {
     if ($element[$field_type]['#value'] === '' && $element['#required']) {
-      form_error($element, t('%field field is required.', array('%field' => $name)));
+      form_error($element, t('!name field is required.', array('!name' => $element['#title'])));
       return;
     }
   }
@@ -270,7 +269,7 @@ function webform_validate_time($element, $form_state) {
   // Check for a valid time.
   if ($element['hour']['#value'] !== '' || $element['minute']['#value'] !== '') {
     if (!is_numeric($element['hour']['#value']) || !is_numeric($element['minute']['#value']) || (isset($element['ampm']) && $element['ampm']['#value'] === '')) {
-      form_error($element, t('Entered %name is not a valid time.', array('%name' => $name)));
+      form_error($element, t('Entered !name is not a valid time.', array('!name' => $element['#title'])));
       return;
     }
   }
@@ -361,7 +360,6 @@ function _webform_analysis_time($component, $sids = array()) {
   return array(
     'table_rows' => $rows,
     'table_caption' => $component['name'],
-    'table_summary' => t("A time field."),
   );
 }
 

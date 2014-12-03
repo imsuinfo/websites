@@ -207,7 +207,6 @@ function _webform_analysis_textarea($component, $sids = array()) {
   return array(
     'table_rows' => $rows,
     'table_caption' => $component['name'],
-    'table_summary' => t("A textarea field."),
     'other_data' => $other,
   );
 }

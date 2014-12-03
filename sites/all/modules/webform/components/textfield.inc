@@ -245,7 +245,6 @@ function _webform_analysis_textfield($component, $sids = array()) {
   return array(
     'table_rows' => $rows,
     'table_caption' => $component['name'],
-    'table_summary' => t("A text field."),
     'other_data' => $other,
   );
 }

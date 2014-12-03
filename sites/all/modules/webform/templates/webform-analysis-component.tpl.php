@@ -12,7 +12,6 @@
  *   - table_rows: If this component has a table that should be rendered, an
  *     array of values
  *   - table_caption: A caption or heading displayed on the table.
- *   - table_summary: A summary describing the table.
  */
 ?>
 <div class="<?php print $classes; ?>">
