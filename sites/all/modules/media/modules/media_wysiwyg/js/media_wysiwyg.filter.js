@@ -86,6 +86,10 @@
           // @see replaceTokenWidthPlaceholder()
           Drupal.settings.tagmap[macro] = Drupal.media.filter.outerHTML(el);
 
+          if (macro == false) {
+            return el[0].outerHTML;
+          }
+
           return macro;
         });
       }
