@@ -121,7 +121,7 @@ function workbench_menu_edit_settings_form($form, &$form_state, $access_type, $a
 
   if (!cf_is_integer($access_id)) {
     if (class_exists('cf_error')) {
-      cf_error::not_numeric('access_id');
+      cf_error::invalid_numeric('access_id');
     }
 
     drupal_not_found();
@@ -443,7 +443,7 @@ function workbench_menu_edit_item_settings($access_type, $access_id, $operation 
 
   if (!cf_is_integer($access_id)) {
     if (class_exists('cf_error')) {
-      cf_error::not_numeric('access_id');
+      cf_error::invalid_numeric('access_id');
     }
 
     drupal_not_found();
@@ -562,7 +562,7 @@ function workbench_menu_admin_settings($access_type = NULL, $access_id = NULL) {
  * @param int $access_id
  *   The id for this specific access (here, a taxnomy term tid).
  *
- * @return
+ * @return array
  *   The built form array.
  */
 function workbench_menu_admin_settings_form($form, &$form_state, $access_type, $access_id) {
@@ -577,7 +577,7 @@ function workbench_menu_admin_settings_form($form, &$form_state, $access_type, $
 
   if (!cf_is_integer($access_id)) {
     if (class_exists('cf_error')) {
-      cf_error::not_numeric('access_id');
+      cf_error::invalid_numeric('access_id');
     }
 
     drupal_not_found();
@@ -1191,7 +1191,7 @@ function workbench_menu_admin_item_settings($access_type, $access_id, $operation
 
   if (!cf_is_integer($access_id)) {
     if (class_exists('cf_error')) {
-      cf_error::not_numeric('access_id');
+      cf_error::invalid_numeric('access_id');
     }
 
     drupal_not_found();
@@ -1610,7 +1610,7 @@ function workbench_menu_admin_item_settings_edit_form($form, &$form_state, $acce
 
   if (!cf_is_integer($access_id)) {
     if (class_exists('cf_error')) {
-      cf_error::not_numeric('access_id');
+      cf_error::invalid_numeric('access_id');
     }
 
     drupal_not_found();
@@ -1619,7 +1619,7 @@ function workbench_menu_admin_item_settings_edit_form($form, &$form_state, $acce
 
   if (!cf_is_integer($item_id)) {
     if (class_exists('cf_error')) {
-      cf_error::not_numeric('item_id');
+      cf_error::invalid_numeric('item_id');
     }
 
     drupal_not_found();
@@ -1806,7 +1806,7 @@ function workbench_menu_admin_item_settings_edit_form_validate($form, &$form_sta
   if ($original_item_type != $item_type) {
     if ($item_type == 'item_menu' || $item_type == 'item_menu_item' || $original_item_type == 'item_menu' || $original_item_type == 'item_menu_item') {
       if (!user_access('use advanced workbench menu item types')) {
-        form_set_error('settings][item_type', "You are not authorized to use or change advanced item types");
+        form_set_error('settings][item_type', "You are not authorized to use or change advanced item types.");
       }
     }
   }
@@ -2036,7 +2036,7 @@ function workbench_menu_admin_item_settings_edit_form_validate($form, &$form_sta
 
       if ($original_menu_id != $menu_id) {
         if (!user_access('use advanced workbench menu item types')) {
-          form_set_error('settings][item_type', "You are not authorized to use or change advanced item types");
+          form_set_error('settings][item_type', "You are not authorized to use or change advanced item types.");
         }
       }
 
@@ -2092,7 +2092,7 @@ function workbench_menu_admin_item_settings_edit_form_validate($form, &$form_sta
 
       if ($original_menu_item_id != $menu_item_id) {
         if (!user_access('use advanced workbench menu item types')) {
-          form_set_error('settings][item_type', "You are not authorized to use or change advanced item types");
+          form_set_error('settings][item_type', "You are not authorized to use or change advanced item types.");
         }
       }
 
@@ -2260,7 +2260,7 @@ function workbench_menu_admin_item_settings_delete_form($form, &$form_state, $ac
 
   if (!cf_is_integer($access_id)) {
     if (class_exists('cf_error')) {
-      cf_error::not_numeric('access_id');
+      cf_error::invalid_numeric('access_id');
     }
 
     drupal_not_found();
@@ -2269,7 +2269,7 @@ function workbench_menu_admin_item_settings_delete_form($form, &$form_state, $ac
 
   if (!cf_is_integer($item_id)) {
     if (class_exists('cf_error')) {
-      cf_error::not_numeric('item_id');
+      cf_error::invalid_numeric('item_id');
     }
 
     drupal_not_found();

@@ -446,7 +446,7 @@ function workbench_menu_load_menu_item_rules_action($item_id) {
 function workbench_menu_load_menus_by_path_rules_action($path) {
   if (!is_string($path)) {
     if (class_exists('cf_error')) {
-      cf_error::not_string('path');
+      cf_error::invalid_string('path');
     }
 
     return array('menus' => array());

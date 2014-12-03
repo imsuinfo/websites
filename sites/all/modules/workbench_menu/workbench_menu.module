@@ -829,7 +829,7 @@ function workbench_menu_build_menu_item($menu, $item, &$variables) {
     $field = & $item['item']->properties['menu'];
     $item_menus = array();
 
-    // do not allow menu item types that point to its own menu.
+    // do not allow menu item item types that point to its own menu.
     if ($item['item']->properties['menu'] == $menu->id) {
       return array('structure' => array(), 'settings' => array());
     }
@@ -2768,7 +2768,7 @@ function workbench_menu_autocomplete_nid($string) {
 
   if (!is_string($string)) {
     if (class_exists('cf_error')) {
-      cf_error::not_string('string');
+      cf_error::invalid_string('string');
     }
 
     drupal_json_output(array());
@@ -2870,7 +2870,7 @@ function workbench_menu_autocomplete_fid($string) {
 
   if (!is_string($string)) {
     if (class_exists('cf_error')) {
-      cf_error::not_string('string');
+      cf_error::invalid_string('string');
     }
 
     drupal_json_output(array());
@@ -2974,7 +2974,7 @@ function workbench_menu_autocomplete_menu_id($string) {
 
   if (!is_string($string)) {
     if (class_exists('cf_error')) {
-      cf_error::not_string('string');
+      cf_error::invalid_string('string');
     }
 
     return array();
@@ -3078,7 +3078,7 @@ function workbench_menu_autocomplete_menu_item_id($string) {
 
   if (!is_string($string)) {
     if (class_exists('cf_error')) {
-      cf_error::not_string('string');
+      cf_error::invalid_string('string');
     }
 
     return array();
@@ -3170,7 +3170,7 @@ function workbench_menu_autocomplete_menu_item_id($string) {
 function workbench_menu_menu_exists($menu_id = NULL, $is_access_id = FALSE) {
   if (!cf_is_integer($menu_id)) {
     if (class_exists('cf_error')) {
-      cf_error::not_numeric('menu_id');
+      cf_error::invalid_numeric('menu_id');
     }
 
     return NULL;
@@ -3219,7 +3219,7 @@ function workbench_menu_menu_exists($menu_id = NULL, $is_access_id = FALSE) {
 function workbench_menu_menu_item_exists($item_id, $menu_id = NULL, $is_access_id = FALSE) {
   if (!cf_is_integer($item_id)) {
     if (class_exists('cf_error')) {
-      cf_error::not_numeric('item_id');
+      cf_error::invalid_numeric('item_id');
     }
 
     return NULL;
@@ -3232,7 +3232,7 @@ function workbench_menu_menu_item_exists($item_id, $menu_id = NULL, $is_access_i
   if (!is_null($menu_id)) {
     if (!cf_is_integer($menu_id)) {
       if (class_exists('cf_error')) {
-        cf_error::not_numeric('menu_id');
+        cf_error::invalid_numeric('menu_id');
       }
 
       return NULL;
@@ -3272,7 +3272,7 @@ function workbench_menu_menu_item_exists($item_id, $menu_id = NULL, $is_access_i
 function workbench_menu_access_menu($access_id, $account = NULL) {
   if (!cf_is_integer($access_id)) {
     if (class_exists('cf_error')) {
-      cf_error::not_numeric('access_id');
+      cf_error::invalid_numeric('access_id');
     }
 
     return FALSE;
