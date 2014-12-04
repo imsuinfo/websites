@@ -18,6 +18,14 @@ function clone_rules_event_info() {
         'original_node' => array('type' => 'node', 'label' => t('The original node')),
       ),
     ),
+    'clone_node_prepare' => array(
+      'label' => t('Peparing a cloned node'),
+      'group' => t('Node'),
+      'variables' => array(
+        'cloned_node' => array('type' => 'node', 'label' => t('The cloned node')),
+        'original_node' => array('type' => 'node', 'label' => t('The original node')),
+      ),
+    ),
   );
   return $items;
 }

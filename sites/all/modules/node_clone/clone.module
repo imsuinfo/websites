@@ -232,8 +232,12 @@ function clone_action_clone($original_node, $context) {
     // Let other modules do special fixing up.
     $context = array('method' => 'action', 'original_node' => $original_node);
     drupal_alter('clone_node', $node, $context);
+    $rules_module_exists = module_exists('rules');
+    if ($rules_module_exists) {
+      rules_invoke_event('clone_node_prepare', $node, $original_node);
+    }
     node_save($node);
-    if (module_exists('rules')) {
+    if ($rules_module_exists) {
       rules_invoke_event('clone_node', $node, $original_node);
     }
   }

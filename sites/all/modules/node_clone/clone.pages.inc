@@ -156,6 +156,10 @@ function clone_node_prepopulate($original_node) {
       // Let other modules do special fixing up.
       $context = array('method' => 'prepopulate', 'original_node' => $original_node);
       drupal_alter('clone_node', $node, $context);
+
+      if (module_exists('rules')) {
+        rules_invoke_event('clone_node_prepare', $node, $original_node);
+      }
       // Make sure the file defining the node form is loaded.
       $form_state = array();
       $form_state['build_info']['args'] = array($node);
@@ -178,8 +182,12 @@ function clone_node_save($nid, $account = NULL) {
       $context = array('method' => 'save-edit', 'original_node' => $original_node);
       drupal_alter('clone_node', $node, $context);
 
+      $rules_module_exists = module_exists('rules');
+      if ($rules_module_exists) {
+        rules_invoke_event('clone_node_prepare', $node, $original_node);
+      }
       node_save($node);
-      if (module_exists('rules')) {
+      if ($rules_module_exists) {
         rules_invoke_event('clone_node', $node, $original_node);
       }
       return $node->nid;
