@@ -821,12 +821,6 @@ function search_by_page_update_index() {
     $info = module_invoke($item->from_module, 'sbp_details', $item->modid, $item->environment);
     if (!$info) {
       // Module indicated not to index this page after all
-      watchdog('search_by_page', 'Content was skipped - PID (%pid), path (%path)',
-        array(
-          '%pid' => $item->pid,
-          '%path' => $item->page_path),
-        WATCHDOG_NOTICE);
-
       // Remove content from the search index.
       _search_by_page_remove_searchinfo($item->pid);
       continue;
