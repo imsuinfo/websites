@@ -358,6 +358,20 @@ function mfcs_request_create_0_form_validate($form, &$form_state) {
               $form_state['values']['request']['step'][0] = MFCS_REVIEW_STEP_COMPLETED;
               $form_state['rebuild'] = FALSE;
             }
+            else {
+              $proxies_returned = mfcs_get_proxy_venue_coordinators(array('mpvc.user_id' => $form_state['values']['request']['venue_coordinator']['user_id'][0], 'mpvc.disabled' => 0));
+              if (empty($proxies_returned['results'])) {
+                form_set_error('request][information][type][0', "You are not authorized to create a quick meeting.");
+              }
+              else {
+                $form_state['values']['request']['status'][0] = MFCS_REQUEST_STATUS_CLOSED_ACCEPTED;
+                $form_state['values']['request']['step'][0] = MFCS_REVIEW_STEP_COMPLETED;
+                $form_state['rebuild'] = FALSE;
+              }
+            }
+          }
+          else {
+            form_set_error('request][information][type][0', "An internal error occured while trying to determine the venue coordinator for this request. Please contact the support staff.");
           }
         }
       }
@@ -407,7 +421,25 @@ function mfcs_request_create_0_form_validate($form, &$form_state) {
             form_set_error('', "An internal error occurred while checking the room for availability. Please contact the support staff.");
           }
           elseif (!empty($requests_using_room)) {
-            mfcs_display_room_unavailable_message();
+            $problematic_dates = array();
+            foreach ($requests_using_room as $request_using_room) {
+              if (isset($request_using_room->date)) {
+                if (isset($request_using_room->time_start)) {
+                  $problematic_date = date("Y/m/d", $request_using_room->date) . " from " . date("h:ia", $request_using_room->time_start) . " to " . date("h:ia", $request_using_room->time_stop) . '.';
+                  $problematic_dates[$problematic_date] = $problematic_date;
+                }
+                else {
+                  $problematic_date = date("Y/m/d", $request_using_room->date) . " (all day).";
+                  $problematic_dates[$problematic_date] = $problematic_date;
+                }
+              }
+              elseif (isset($request_using_room->reserved_day)) {
+                $problematic_date = date("Y/m/d", $request_using_room->reserved_day) . " from " . date("h:ia", $request_using_room->reserved_time_start) . " to " . date("h:ia", $request_using_room->reserved_time_stop) . '.';
+                $problematic_dates[$problematic_date] = $problematic_date;
+              }
+            }
+            ksort($problematic_dates);
+            mfcs_display_room_unavailable_message($problematic_dates);
 
             // force the status to be closed due to room being unavailable on save.
             if (!isset($form_state['room_unavailable_prior_settings'])) {

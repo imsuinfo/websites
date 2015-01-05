@@ -58,7 +58,488 @@ function mcneese_libraries_libraries_info() {
     'd3.js',
   );
 
+  // datatables
+  $libraries['datatables'] = array();
+  $libraries['datatables']['name'] = "DataTables";
+  $libraries['datatables']['vendor url '] = 'https://datatables.net/';
+  $libraries['datatables']['download url'] = 'https://datatables.net/';
+
+  // hard-code the version number.
+  $libraries['datatables']['version'] = 1;
+
+  $libraries['datatables']['files'] = array();
+  $libraries['datatables']['files']['js'] = array(
+    'media/js/jquery.dataTables.js',
+    'extensions/ColVis/js/dataTables.colVis.js',
+    'extensions/KeyTable/js/dataTables.keyTable.js',
+  );
+  $libraries['datatables']['files']['css'] = array(
+    'media/css/jquery.dataTables.css',
+    'extensions/ColVis/css/dataTables.colVis.css',
+    'extensions/KeyTable/css/dataTables.KeyTable.css',
+  );
+
+  // fullcalendar
+  $libraries['fullcalendar'] = array();
+  $libraries['fullcalendar']['name'] = "FullCalendar";
+  $libraries['fullcalendar']['vendor url '] = 'http://fullcalendar.io';
+  $libraries['fullcalendar']['download url'] = 'http://fullcalendar.io/download/';
+
+  // hard-code the version number.
+  $libraries['fullcalendar']['version'] = 2;
+
+  $libraries['fullcalendar']['files'] = array();
+  $libraries['fullcalendar']['files']['js'] = array(
+    'lib/moment.min.js',
+    'fullcalendar.js',
+  );
+  $libraries['fullcalendar']['files']['css'] = array(
+    'fullcalendar.css',
+    'fullcalendar.print.css',
+  );
+
   return $libraries;
+}
+
+/**
+ * Custom theme_table that uses datatables javascript.
+ *
+ * This is a modified version of theme_table() to assist in utilizing the
+ * datatables library.
+ *
+ * @param array $variables
+ *   Variables array with the same values as theme_table().
+ * @param array $datatable_settings
+ *   An array of settings to apply to the datatable.
+ *
+ * @see: theme_table().
+ * @see: https://datatables.net/reference/
+ */
+function mcneese_libraries_theme_table($variables, $datatable_settings = array()) {
+  if (!is_array($variables)) {
+    cf_error::invalid_array('variables');
+    return FALSE;
+  }
+
+  if (!is_array($datatable_settings)) {
+    cf_error::invalid_array('datatable_settings');
+    return FALSE;
+  }
+
+  $id = NULL;
+  if (!empty($variables['attributes']['id'])) {
+    $id = $variables['attributes']['id'];
+  }
+
+  $sort = NULL;
+  if (!empty($datatable_settings['sort'])) {
+    $sort = $datatable_settings['sort'];
+  }
+
+  $order = NULL;
+  if (!empty($datatable_settings['order'])) {
+    $order = $datatable_settings['order'];
+  }
+
+  $script_markup = '';
+  if (!is_null($id)) {
+    $datatables = libraries_load('datatables');
+    if (empty($datatables['loaded'])) {
+      if (class_exists('cf_error')) {
+        cf_error::failed_to_load('datatables');
+      }
+    }
+    else {
+      $boolean_settings = array(
+        'autoWidth',
+        'deferRender',
+        'info',
+        'jQueryUI',
+        'lengthChange',
+        'ordering',
+        'paging',
+        'processing',
+        'scrollCollapse',
+        'scrollX',
+        'scrollY',
+        'searching',
+        'serverSide',
+        'stateSave',
+      );
+
+      $string_settings = array(
+        'pagingType',
+        'scrollX',
+        'scrollY',
+        'dom',
+      );
+
+      $direct_settings = array(
+        'visible',
+        'targets',
+      );
+
+      $integer_settings = array(
+        'displayLength',
+        'displayStart',
+        'pageLength',
+        'searchDelay',
+        'tabIndex',
+      );
+
+      $inline_array_settings = array(
+        'columns',
+        'columnDefs',
+      );
+
+      $array_settings = array(
+        'oColVis',
+        'oLanguage',
+      );
+
+      $datatable_js = '(function ($) {' . "\n";
+      $datatable_js .= '$(document).ready( function () {' . "\n";
+      $datatable_js .= '  var table = $(\'#' . $id . '\').DataTable( {' . "\n";
+
+      $datatable_js_settings = array();
+
+
+      // handle common setting types.
+      foreach ($boolean_settings as $boolean_setting) {
+        if (array_key_exists($boolean_setting, $datatable_settings) && is_bool($datatable_settings[$boolean_setting])) {
+          $datatable_js_settings[] = '"' . $boolean_setting . '": ' . ($datatable_settings[$boolean_setting] ? 'true' : 'false');
+        }
+      }
+
+      foreach ($string_settings as $string_setting) {
+        if (array_key_exists($string_setting, $datatable_settings) && is_string($datatable_settings[$string_setting])) {
+          $datatable_js_settings[] = '"' . $string_setting . '": "' . $datatable_settings[$string_setting] . '"';
+        }
+      }
+
+      foreach ($direct_settings as $direct_setting) {
+        if (array_key_exists($direct_setting, $datatable_settings) && is_string($datatable_settings[$direct_setting])) {
+          $datatable_js_settings[] = '"' . $direct_setting . '": ' . $datatable_settings[$direct_setting];
+        }
+      }
+
+      foreach ($integer_settings as $integer_setting) {
+        if (array_key_exists($integer_setting, $datatable_settings) && is_int($datatable_settings[$integer_setting])) {
+          $datatable_js_settings[] = '"' . $integer_setting . '": ' . $datatable_settings[$integer_setting];
+        }
+      }
+
+
+      // handle remaining setting types.
+      if (!is_null($sort) && !is_null($order)) {
+        if (is_integer($order)) {
+          $datatable_js_settings[] = '"order": [[ ' . $order . ', "' . $sort . '" ]]';
+        }
+        elseif (is_string($order)) {
+          $datatable_js_settings[] = '"order": [[ "' . $order . '", "' . $sort . '" ]]';
+        }
+      }
+
+      if (array_key_exists('ajax', $datatable_settings)) {
+        if (is_array($datatable_settings['ajax'])) {
+          $js_settings = array();
+          foreach ($datatable_settings['ajax'] as $key => $value) {
+            if (is_bool($value)) {
+              $js_settings[] = '"' . $key . '": ' . ($value ? 'true' : 'false');
+            }
+            else {
+              $js_settings[] = '"' . $key . '": ' . $value;
+            }
+          }
+
+          $datatable_js_settings[] = 'ajax: {' . "\n" . implode(', ', $js_settings) . "\n}\n";
+
+          unset($js_settings);
+        }
+        elseif (is_string($datatable_settings['ajax'])) {
+          $datatable_js_settings[] = 'ajax: ' . $datatable_settings['ajax'];
+        }
+      }
+
+      if (array_key_exists('order', $datatable_settings)) {
+        if (is_array($datatable_settings['order'])) {
+          $js_settings = array();
+          foreach ($datatable_settings['order'] as $key => $value) {
+            if (!is_numeric($key)) continue;
+
+            if ($value == 'asc' || $value == 'desc') {
+              $js_settings[] = '[ ' . intval($key) . ', "' . $value . '" ]';
+            }
+          }
+
+          if (count($js_settings) == 1) {
+            $datatable_js_settings[] = 'order: ' . "\n" . implode(', ', $js_settings) . "\n";
+          }
+          else {
+            $datatable_js_settings[] = 'order: [' . "\n" . implode(', ', $js_settings) . "\n]\n";
+          }
+
+          unset($js_settings);
+        }
+      }
+
+      foreach ($inline_array_settings as $inline_array_setting) {
+        if (array_key_exists($inline_array_setting, $datatable_settings) && is_array($datatable_settings[$inline_array_setting])) {
+          $js_settings = array();
+          foreach ($datatable_settings[$inline_array_setting] as $key => $value) {
+            if (is_array($value)) {
+              $d_j_s = array();
+              foreach ($value as $k => $v) {
+                if ($k == 'targets' && $inline_array_setting == 'columnDefs') {
+                  if (is_array($v)) {
+                    $d_j_s[] = '"' . $k . '": [ ' . implode(', ', $v) . ' ]';
+                  }
+                }
+                elseif (is_string($v)) {
+                  $d_j_s[] = '"' . $k . '": "' . $v . '"';
+                }
+                elseif (is_bool($v)) {
+                  $d_j_s[] = '"' . $k . '": ' . ($v ? 'true' : 'false');
+                }
+                elseif (is_int($v)) {
+                  $d_j_s[] = '"' . $k . '": ' . $v;
+                }
+              }
+
+              if (!empty($d_j_s)) {
+                $js_settings[] = '{ ' . implode(', ', $d_j_s) . ' }';
+              }
+            }
+            elseif (is_string($value)) {
+              $js_settings[] = '"' . $key . '": "' . $value . '"';
+            }
+            elseif (is_bool($value)) {
+              $js_settings[] = '"' . $key . '": ' . ($value ? 'true' : 'false');
+            }
+            elseif (is_int($value)) {
+              $js_settings[] = '"' . $key . '": ' . $value;
+            }
+            elseif (is_null($value)) {
+              $js_settings[] = 'null';
+            }
+          }
+
+          if (!empty($js_settings)) {
+            $datatable_js_settings[] = $inline_array_setting . ': [ ' . "\n" . implode(', ', $js_settings) . "\n" . ' ]';
+          }
+
+          unset($js_settings);
+        }
+      }
+
+      foreach ($array_settings as $array_setting) {
+        if (!array_key_exists($array_setting, $datatable_settings) || !is_array($datatable_settings[$array_setting])) {
+          continue;
+        }
+
+        $js_settings = array();
+        foreach ($datatable_settings[$array_setting] as $key => $value) {
+          if (is_bool($value)) {
+            $js_settings[] = '"' . $key . '": ' . ($value ? 'true' : 'false');
+          }
+          else {
+            $js_settings[] = '"' . $key . '": ' . $value;
+          }
+        }
+
+        $datatable_js_settings[] = '"' . $array_setting . '": {' . "\n" . implode(', ', $js_settings) . "\n}\n";
+
+        unset($js_settings);
+      }
+
+      if (array_key_exists('displayLength', $datatable_settings)) {
+        $datatable_js_settings[] = 'displayLength: ' . $datatable_settings['displayLength'];
+      }
+
+      if (array_key_exists('lengthMenu', $datatable_settings)) {
+        if (is_array($datatable_settings['lengthMenu'])) {
+          $datatable_js_settings[] = '"lengthMenu": [[' . implode(', ', array_keys($datatable_settings['lengthMenu'])) . '], [' . implode(', ', $datatable_settings['lengthMenu']) . ']]';
+        }
+      }
+
+      // see: https://datatables.net/examples/advanced_init/row_callback.html.
+      if (array_key_exists('rowCreated', $datatable_settings)) {
+        $js_setting = '"rowCreated": function ( row, data, index ) {' . "\n";
+        $js_settings .= $datatable_settings['rowCreated'];
+        $js_settings .= '}';
+        $datatable_js_settings[] = $js_setting;
+
+        unset($js_setting);
+      }
+
+      // see: https://datatables.net/examples/advanced_init/row_grouping.html.
+      if (array_key_exists('drawCallback', $datatable_settings)) {
+        $js_setting = '"drawCallback": function ( setttings ) {' . "\n";
+        $js_settings .= $datatable_settings['drawCallback'];
+        $js_settings .= '}';
+        $datatable_js_settings[] = $js_setting;
+
+        unset($js_setting);
+      }
+
+      // see: https://datatables.net/examples/advanced_init/footer_callback.html.
+      if (array_key_exists('footerCallback', $datatable_settings)) {
+        $js_setting = '"footerCallback": function ( row, data, start, end, display ) {' . "\n";
+        $js_settings .= $datatable_settings['footerCallback'];
+        $js_settings .= '}';
+        $datatable_js_settings[] = $js_setting;
+
+        unset($js_setting);
+      }
+
+      $datatable_js .= implode(",\n", $datatable_js_settings) . "\n";
+      $datatable_js .= '} );' . "\n\n";
+
+
+      if (array_key_exists('KeyTable', $datatable_settings) && $datatable_settings['KeyTable'] === TRUE) {
+        $datatable_js .= '$.fn.dataTable.KeyTable( table );' . "\n";
+      }
+
+
+      // catch all for all remaining js, including advanced js.
+      if (array_key_exists('custom_js', $datatable_settings)) {
+        $datatable_js .= $datatable_settings['custom_js'];
+      }
+
+
+      // hidden columns are expected to have 'script-hidden' class name added to them.
+      // remove this from the datatable on load so that the columns can be dynamically unhidden as needed.
+      $datatable_js .= 'table.columns(\'.script-hidden\').header().to$().removeClass(\'script-hidden\');';
+
+
+      $datatable_js .= '});' . "\n";
+      $datatable_js .= '})(jQuery);' . "\n";
+
+      drupal_add_js($datatable_js, array('type' => 'inline', 'cache' => FALSE, 'preprocess' => FALSE));
+    }
+  }
+
+  $attributes = array();
+  if (!empty($variables['attributes'])) {
+    $attributes = $variables['attributes'];
+  }
+
+  if (!isset($attributes['class'])) {
+    $attributes['class'] = array();
+  }
+  $attributes['class'][] = 'dataTable';
+  $attributes['role'] = 'grid';
+
+  $output = '<table' . drupal_attributes($attributes) . '>' . "\n";
+  if (array_key_exists('caption', $variables)) {
+    $output .= '<caption>' . $variables['caption'] . '</caption>' . "\n";
+  }
+
+  // Format the table columns:
+  if (!empty($variables['colgroups'])) {
+    foreach ($variables['colgroups'] as $number => $colgroup) {
+      $attributes = array();
+
+      // Check if we're dealing with a simple or complex column.
+      if (isset($colgroup['data'])) {
+        foreach ($colgroup as $key => $value) {
+          if ($key == 'data') {
+            $cols = $value;
+          }
+          else {
+            $attributes[$key] = $value;
+          }
+        }
+      }
+      else {
+        $cols = $colgroup;
+      }
+
+      // Build colgroup.
+      if (is_array($cols) && count($cols)) {
+        $output .= ' <colgroup' . drupal_attributes($attributes) . '>';
+        $i = 0;
+        foreach ($cols as $col) {
+          $output .= ' <col' . drupal_attributes($col) . '>';
+        }
+        $output .= ' </colgroup>' . "\n";
+      }
+      else {
+        $output .= ' <colgroup' . drupal_attributes($attributes) . '>' . "\n";
+      }
+    }
+  }
+
+  // Add the 'empty' row message if available.
+  if (!count($variables['rows']) && !empty($variables['empty'])) {
+    $header_count = 0;
+    foreach ($variables['header'] as $header_cell) {
+      if (is_array($header_cell)) {
+        $header_count += isset($header_cell['colspan']) ? $header_cell['colspan'] : 1;
+      }
+      else {
+        $header_count++;
+      }
+    }
+    $variables['rows'][] = array(array('data' => $variables['empty'], 'colspan' => $header_count, 'class' => array('empty', 'message')));
+  }
+
+  // Format the table header:
+  if (count($variables['header'])) {
+    // HTML requires that the thead tag has tr tags in it followed by tbody
+    // tags. Using ternary operator to check and see if we have any rows.
+    $output .= (count($variables['rows']) ? ' <thead><tr>' : ' <tr>');
+    foreach ($variables['header'] as $cell) {
+      $output .= _theme_table_cell($cell, TRUE);
+    }
+    // Using ternary operator to close the tags based on whether or not there are rows
+    $output .= (count($variables['rows']) ? ' </tr></thead>' . "\n" : '</tr>' . "\n");
+  }
+
+  // Format the table rows:
+  if (count($variables['rows'])) {
+    $output .= '<tbody>' . "\n";
+    $flip = array('even' => 'odd', 'odd' => 'even');
+    $class = 'even';
+    foreach ($variables['rows'] as $number => $row) {
+      // Check if we're dealing with a simple or complex row
+      if (isset($row['data'])) {
+        $cells = $row['data'];
+        $no_striping = isset($row['no_striping']) ? $row['no_striping'] : FALSE;
+
+        // Set the attributes array and exclude 'data' and 'no_striping'.
+        $row_attributes = $row;
+        unset($row_attributes['data']);
+        unset($row_attributes['no_striping']);
+      }
+      else {
+        $cells = $row;
+        $row_attributes = array();
+        $no_striping = FALSE;
+      }
+      if (count($cells)) {
+        // Add odd/even class
+        if (!$no_striping) {
+          $class = $flip[$class];
+          $row_attributes['class'][] = $class;
+        }
+
+        $row_attributes['role'] = 'row';
+
+        // Build row
+        $output .= ' <tr' . drupal_attributes($row_attributes) . '>';
+        $i = 0;
+        foreach ($cells as $cell) {
+          $output .= _theme_table_cell($cell);
+        }
+        $output .= ' </tr>' . "\n";
+      }
+    }
+    $output .= '</tbody>' . "\n";
+  }
+
+  $output .= '</table>' . $script_markup . "\n";
+  return $output;
 }
 
 /**

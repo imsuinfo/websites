@@ -1002,10 +1002,12 @@ function mfcs_request_view_0_form($form, &$form_state, $request_id, $mode = MFCS
         'mr.disabled' => 0,
       );
 
-      $reviewers = mfcs_get_reviewers($reviewer_conditions, TRUE);
-      if (!is_array($reviewers)) {
-        $reviewers = array();
+      $reviewers_returned = mfcs_get_reviewers($reviewer_conditions);
+      $reviewers = array();
+      if (isset($reviewers_returned['results']) && is_array($reviewers_returned['results'])) {
+        $reviewers = $reviewers_returned['results'];
       }
+      unset($reviewers_returned);
 
       $form['review']['operations']['as_reviewer']['#markup'] = '<div class="request-section-review-operations-as_reviewer">';
 
@@ -2692,25 +2694,6 @@ function mfcs_build_reviews_log(&$form, &$form_state, $request_id, $revision_id 
         $review->reviewer_classifications = array();
         if (is_array($review_classifications)) {
           foreach ($review_classifications as $review_classification) {
-            // some classifications are not allowed in certain steps.
-            if ($review->step == MFCS_REVIEW_STEP_REVIEW || $review->step == MFCS_REVIEW_STEP_REQUIREMENTS) {
-              if ($review_classification->classification == MFCS_REVIEW_CLASSIFICATION_VENUE_COORDINATOR) {
-                continue;
-              }
-              elseif ($review_classification->classification == MFCS_REVIEW_CLASSIFICATION_VENUE_COORDINATOR_PROXY) {
-                continue;
-              }
-              elseif ($review_classification->classification == MFCS_REVIEW_CLASSIFICATION_SYSTEM_ADMINISTRATOR) {
-                continue;
-              }
-              elseif ($review_classification->classification == MFCS_REVIEW_CLASSIFICATION_MANAGER) {
-                continue;
-              }
-              elseif ($review_classification->classification == MFCS_REVIEW_CLASSIFICATION_FAILSAFE_COORDINATOR) {
-                continue;
-              }
-            }
-
             $review->reviewer_classifications[$review_classification->classification] = $review_classification->classification;
           }
         }

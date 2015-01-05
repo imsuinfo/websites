@@ -228,7 +228,6 @@ function mfcs_dashboard_page() {
 
     $rows = array();
     $rows_count = 0;
-    $rows_per_day = 5;
     $current_date = $absolute_start;
     while ($current_date < $absolute_stop) {
       $next_date = strtotime('+1 days', $current_date);
@@ -236,10 +235,20 @@ function mfcs_dashboard_page() {
       $search['field_dates-date-start-0']['search'] = $current_date;
       $search['field_dates-date-stop-0']['search'] = $next_date;
 
-      $results = mfcs_request_load_listing($search, FALSE, 0, $rows_per_day);
+      $options = array(
+        'limit' => 4,
+        'sort' => array('date' => 'ASC'),
+      );
 
-      if (!empty($results)) {
-        foreach ($results as $item) {
+      $items_returned = mfcs_request_load_listing($search, $options);
+
+      $items = array();
+      if (isset($items_returned['results']) && is_array($items_returned['results'])) {
+        $items = $items_returned['results'];
+      }
+
+      if (!empty($items)) {
+        foreach ($items as $item) {
           foreach ($item->date as $delta => $date) {
             if ($date < $current_date || $date >= $next_date) {
               continue;
@@ -268,7 +277,7 @@ function mfcs_dashboard_page() {
               }
 
               $month_day_count = count($rows[$month_day]);
-              if ($month_day_count == $rows_per_day) {
+              if ($options['limit'] > 0 && $month_day_count == $options['limit']) {
                 $year = date('Y', $date);
                 $month_name = date('F', $date);
                 $month_name_lower = strtolower($month_name);
@@ -323,7 +332,7 @@ function mfcs_dashboard_page() {
     mfcs_include(MFCS_INCLUDE_OUTPUT);
 
     $title = '<h3><a href="' . $base_path . 'requests/calendar-0/month' . $url_arguments . '">' . "Requests for " . date("F, Y", $month_start) . '</a></h3>';
-    $result = mfcs_build_calendar_month_markup($rows, $month_start, $month_stop, $absolute_start, $absolute_stop, $title, 'mfcs-calendar-0-month');
+    $result = mfcs_build_calendar_month_markup($rows, $month_start, $month_stop, $absolute_start, $absolute_stop, $title, 'mfcs-calendar-0-month', 3);
     if ($result !== FALSE) {
       $markup .= $result;
     }

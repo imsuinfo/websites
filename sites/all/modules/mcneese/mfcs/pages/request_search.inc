@@ -75,6 +75,26 @@ function mfcs_request_search_0_form($form, &$form_state) {
     }
   }
 
+  $form['form']['list_options'] = array(
+    '#type' => 'value',
+    '#value' => array(),
+  );
+
+  // default sorting options
+  $sorting = array('id' => 'DESC');
+  $columns = mfcs_request_search_0_columns();
+  $columns['id']['class'][] = 'sorting_1';
+  $columns_default = array(0 => 'desc');
+
+  $form['form']['list_options']['#value'] = array(
+    'join' => TRUE,
+    'limit' => $form['form']['per_page']['#value'],
+    'count' => TRUE,
+    'dom' => 'lfCrtip',
+    'columns' => $columns,
+    'columns_default' => $columns_default,
+  );
+
   mfcs_include(MFCS_INCLUDE_TABLE);
   mfcs_include(MFCS_INCLUDE_LIST_OPTIONS);
 
@@ -223,22 +243,30 @@ function mfcs_request_search_0_form($form, &$form_state) {
 
   // populate the search results.
   if (isset($form_state['simple_search-results']) && is_array($form_state['simple_search-results'])) {
-    $request_table_extra = array(
-      'table_sort' => FALSE,
+    $items_returned = array(
+      'results' => $form_state['simple_search-results'],
+      'count' => $form_state['simple_search-count'],
     );
-    $simple_table = mfcs_build_request_table($form_state['simple_search-results'], $form['form']['per_page']['#value'], NULL, NULL, $request_table_extra);
+
+    $simple_table = mfcs_build_request_ajax_table($items_returned, array(), $form['form']['list_options']['#value']);
+    $simple_table['datatable_settings']['dom'] = 'Crt';
+    $simple_table['datatable_settings']['columnDefs'] = array(
+      array(
+        'visible' => FALSE,
+        'targets' => array(1, 6, 7, 8, 9),
+      ),
+    );
 
     $simple_table['caption'] = t("Simple Search Results");
-    $simple_table['header']['submitted_on']['sort'] = 'desc';
 
-    $simple_table['attributes']['id'] = 'mfcs-management_page-simple_table';
-    $simple_table['attributes']['class'] = array ('mfcs-table-requests', 'mfcs-management_page-simple_table');
-    $simple_table['attributes']['summary'] = 'A table containing the search results.';
+    $simple_table['attributes']['id'] = 'mfcs-search_0-simple_table';
+    $simple_table['attributes']['class'][] = 'mfcs-table-requests';
+    $simple_table['attributes']['class'][] = 'mfcs-management_page-simple_table';
 
     $simple_table['empty'] = t("No requests were found matching your simple search query.");
 
     $form['simple']['results']['table'] = array(
-      '#markup' => theme('table', $simple_table),
+      '#markup' => mcneese_libraries_theme_table($simple_table, $simple_table['datatable_settings']),
     );
 
     $form['simple']['results']['navigation'] = array(
@@ -283,15 +311,26 @@ function mfcs_request_search_0_form($form, &$form_state) {
       ),
     );
 
-    $total_results = count($form_state['simple_search-results']);
+    $start_results = $form['form']['per_page']['#value'] * $form['form']['simple_search-page_number']['#value'];
+    $total_results = $start_results + count($form_state['simple_search-results']);
 
     if ($form['form']['simple_search-page_number']['#value'] < 1) {
       unset($form['simple']['results']['navigation']['previous']);
     }
 
-    if ($total_results <= $form['form']['per_page']['#value']) {
+    if ($total_results >= $form_state['simple_search-count']) {
       unset($form['simple']['results']['navigation']['next']);
     }
+
+    $navigation_total = $total_results;
+    $navigation_start = $navigation_total == 0 ? 0 : $start_results + 1;
+    if ($total_results > $form_state['simple_search-count']) {
+      $navigation_total = $form_state['simple_search-count'];
+    }
+
+    $form['simple']['results']['table']['#markup'] .= '<div class="table_listing-comment">' . "\n";
+    $form['simple']['results']['table']['#markup'] .= "Showing " . $navigation_start . " to " . $navigation_total . " of " . $form_state['simple_search-count'] . " entries.\n";
+    $form['simple']['results']['table']['#markup'] .= '</div>' . "\n";
   }
 
   $form['advanced'] = array(
@@ -426,22 +465,30 @@ function mfcs_request_search_0_form($form, &$form_state) {
 
   // populate the search results.
   if (isset($form_state['advanced_search-results']) && is_array($form_state['advanced_search-results'])) {
-    $request_table_extra = array(
-      'table_sort' => FALSE,
+    $items_returned = array(
+      'results' => $form_state['advanced_search-results'],
+      'count' => $form_state['advanced_search-count'],
     );
-    $advanced_table = mfcs_build_request_table($form_state['advanced_search-results'], $form['form']['per_page']['#value'], NULL, NULL, $request_table_extra);
+
+    $advanced_table = mfcs_build_request_ajax_table($items_returned, array(), $form['form']['list_options']['#value']);
+    $advanced_table['datatable_settings']['dom'] = 'Crt';
+    $advanced_table['datatable_settings']['columnDefs'] = array(
+      array(
+        'visible' => FALSE,
+        'targets' => array(1, 6, 7, 8, 9),
+      ),
+    );
 
     $advanced_table['caption'] = t("Advanced Search Results");
-    $advanced_table['header']['submitted_on']['sort'] = 'desc';
 
-    $advanced_table['attributes']['id'] = 'mfcs-management_page-advanced_table';
-    $advanced_table['attributes']['class'] = array('mfcs-table-requests', 'mfcs-management_page-advanced_table');
-    $advanced_table['attributes']['summary'] = 'A table containing the search results.';
+    $advanced_table['attributes']['id'] = 'mfcs-search_0-advanced_table';
+    $advanced_table['attributes']['class'][] = 'mfcs-table-requests';
+    $advanced_table['attributes']['class'][] = 'mfcs-management_page-advanced_table';
 
     $advanced_table['empty'] = t("No requests were found matching your advanced search query.");
 
     $form['advanced']['results']['table'] = array(
-      '#markup' => theme('table', $advanced_table),
+      '#markup' => mcneese_libraries_theme_table($advanced_table, $advanced_table['datatable_settings']),
     );
 
     $form['advanced']['results']['navigation'] = array(
@@ -486,15 +533,26 @@ function mfcs_request_search_0_form($form, &$form_state) {
       ),
     );
 
-    $total_results = count($form_state['advanced_search-results']);
+    $start_results = $form['form']['per_page']['#value'] * $form['form']['advanced_search-page_number']['#value'];
+    $total_results = $start_results + count($form_state['advanced_search-results']);
 
     if ($form['form']['advanced_search-page_number']['#value'] < 1) {
       unset($form['advanced']['results']['navigation']['previous']);
     }
 
-    if ($total_results <= $form['form']['per_page']['#value']) {
+    if ($total_results >= $form_state['advanced_search-count']) {
       unset($form['advanced']['results']['navigation']['next']);
     }
+
+    $navigation_total = $total_results;
+    $navigation_start = $navigation_total == 0 ? 0 : $start_results + 1;
+    if ($total_results > $form_state['advanced_search-count']) {
+      $navigation_total = $form_state['advanced_search-count'];
+    }
+
+    $form['advanced']['results']['table']['#markup'] .= '<div class="table_listing-comment">' . "\n";
+    $form['advanced']['results']['table']['#markup'] .= "Showing " . $navigation_start . " to " . $navigation_total . " of " . $form_state['advanced_search-count'] . " entries.\n";
+    $form['advanced']['results']['table']['#markup'] .= '</div>' . "\n";
   }
 
   // tweak printing display based on results
@@ -566,6 +624,12 @@ function mfcs_request_search_0_form_validate($form, &$form_state) {
   if ($clicked_id == 'search-simple-submit-search') {
     if (empty($form_state['values']['simple']['text']) && !is_numeric($form_state['values']['simple']['text'])) {
       form_set_error('simple][text', "You must supply some text to search for.");
+    }
+    else {
+      $search_string = preg_replace('/(\s)/i', ' ', $form_state['values']['simple']['text']);
+      if (empty($search_string)) {
+        form_set_error('simple][text', "You must supply some text to search for.");
+      }
     }
   }
   elseif ($clicked_id == 'search-simple-submit-clear') {
@@ -972,18 +1036,37 @@ function mfcs_request_search_0_form_submit($form, &$form_state) {
   }
 
   if ($clicked_id == 'search-simple-submit-search') {
-    $search = $form_state['values']['simple']['text'];
-    $sensitive = (bool) $form_state['values']['simple']['sensitive'];
+    $conditions = array();
+    $options = $form['form']['list_options']['#value'];
+    $options['search'] = preg_replace('/(\s)/i', ' ', $form_state['values']['simple']['text']);
+    $options['sensitive'] = (bool) $form_state['values']['simple']['sensitive'];
+    $options['start'] = $form['form']['simple_search-page_number']['#value'] * $form['form']['per_page']['#value'];
 
-    $per_page = $form['form']['per_page']['#value'];
-    $start = $form['form']['simple_search-page_number']['#value'] * $per_page;
+    mfcs_request_search_0_simple_search_preprocess($conditions, $options);
 
-    $form_state['simple_search-results'] = mfcs_request_load_listing($search, $sensitive, $start, $per_page);
-    $form_state['simple_search-search'] = $search;
-    $form_state['simple_search-sensitive'] = $sensitive;
+    $items_returned = mfcs_request_load_listing($conditions, $options);
+
+    $items = array();
+    $count = NULL;
+    if (isset($items_returned['results']) && is_array($items_returned['results'])) {
+      $items = $items_returned['results'];
+
+      if (isset($items_returned['count'])) {
+        $count = $items_returned['count'];
+      }
+    }
+    else {
+      $items = FALSE;
+    }
+
+    $form_state['simple_search-results'] = $items;
+    $form_state['simple_search-count'] = $count;
+    $form_state['simple_search-search'] = $options['search'];
+    $form_state['simple_search-sensitive'] = $options['sensitive'];
   }
   elseif ($clicked_id == 'search-simple-submit-clear') {
     unset($form_state['simple_search-results']);
+    unset($form_state['simple_search-count']);
     unset($form_state['simple_search-search']);
     unset($form_state['values']['simple']['text']);
     unset($form_state['input']['simple']['text']);
@@ -992,55 +1075,115 @@ function mfcs_request_search_0_form_submit($form, &$form_state) {
   }
   elseif ($clicked_id == 'search-simple-results-navigation-previous') {
     $previous_page = $form['form']['simple_search-page_number']['#value'] - 1;
-    $search = $form_state['simple_search-search'];
-    $sensitive = (bool) $form_state['simple_search-sensitive'];
 
-    $per_page = $form['form']['per_page']['#value'];
-    $start = $previous_page * $per_page;
+    $conditions = array();
+    $options = $form['form']['list_options']['#value'];
+    $options['search'] = $form_state['simple_search-search'];
+    $options['sensitive'] = (bool) $form_state['values']['simple']['sensitive'];
+    $options['start'] = $previous_page * $form['form']['per_page']['#value'];
 
-    $form_state['simple_search-results'] = mfcs_request_load_listing($search, $sensitive, $start, $per_page);
+    mfcs_request_search_0_simple_search_preprocess($conditions, $options);
+
+    $items_returned = mfcs_request_load_listing($conditions, $options);
+
+    $items = array();
+    $count = NULL;
+    if (isset($items_returned['results']) && is_array($items_returned['results'])) {
+      $items = $items_returned['results'];
+
+      if (isset($items_returned['count'])) {
+        $count = $items_returned['count'];
+      }
+    }
+    else {
+      $items = FALSE;
+    }
+
+    $form_state['simple_search-results'] = $items;
+    $form_state['simple_search-count'] = $count;
     $form_state['simple_search-page_number'] = $previous_page;
-    $form_state['simple_search-search'] = $search;
-    $form_state['simple_search-sensitive'] = $sensitive;
   }
   elseif ($clicked_id == 'search-simple-results-navigation-next') {
     $next_page = $form['form']['simple_search-page_number']['#value'] + 1;
-    $search = $form_state['simple_search-search'];
-    $sensitive = (bool) $form_state['simple_search-sensitive'];
 
-    $per_page = $form['form']['per_page']['#value'];
-    $start = $next_page * $per_page;
+    $conditions = array();
+    $options = $form['form']['list_options']['#value'];
+    $options['search'] = $form_state['simple_search-search'];
+    $options['sensitive'] = (bool) $form_state['values']['simple']['sensitive'];
+    $options['start'] = $next_page * $form['form']['per_page']['#value'];
 
-    $form_state['simple_search-results'] = mfcs_request_load_listing($search, $sensitive, $start, $per_page);
+    mfcs_request_search_0_simple_search_preprocess($conditions, $options);
+
+    $items_returned = mfcs_request_load_listing($conditions, $options);
+
+    $items = array();
+    $count = NULL;
+    if (isset($items_returned['results']) && is_array($items_returned['results'])) {
+      $items = $items_returned['results'];
+
+      if (isset($items_returned['count'])) {
+        $count = $items_returned['count'];
+      }
+    }
+    else {
+      $items = FALSE;
+    }
+
+    $form_state['simple_search-results'] = $items;
+    $form_state['simple_search-count'] = $count;
     $form_state['simple_search-page_number'] = $next_page;
-    $form_state['simple_search-search'] = $search;
-    $form_state['simple_search-sensitive'] = $sensitive;
   }
   elseif ($clicked_id == 'search-advanced-results-navigation-previous') {
     $previous_page = $form['form']['advanced_search-page_number']['#value'] - 1;
-    $search = $form_state['advanced_search-search'];
-    $sensitive = (bool) $form_state['advanced_search-sensitive'];
 
-    $per_page = $form['form']['per_page']['#value'];
-    $start = $previous_page * $per_page;
+    $options = $form['form']['list_options']['#value'];
+    $options['sensitive'] = (bool) $form_state['values']['advanced']['sensitive'];
+    $options['start'] = $previous_page * $form['form']['per_page']['#value'];
 
-    $form_state['advanced_search-results'] = mfcs_request_load_listing($search, $sensitive, $start, $per_page);
+    $items_returned = mfcs_request_load_listing($form_state['advanced_search-search'], $options);
+
+    $items = array();
+    $count = NULL;
+    if (isset($items_returned['results']) && is_array($items_returned['results'])) {
+      $items = $items_returned['results'];
+
+      if (isset($items_returned['count'])) {
+        $count = $items_returned['count'];
+      }
+    }
+    else {
+      $items = FALSE;
+    }
+
+    $form_state['advanced_search-results'] = $items;
+    $form_state['advanced_search-count'] = $count;
     $form_state['advanced_search-page_number'] = $previous_page;
-    $form_state['advanced_search-search'] = $search;
-    $form_state['advanced_search-sensitive'] = $sensitive;
   }
   elseif ($clicked_id == 'search-advanced-results-navigation-next') {
     $next_page = $form['form']['advanced_search-page_number']['#value'] + 1;
-    $search = $form_state['advanced_search-search'];
-    $sensitive = (bool) $form_state['advanced_search-sensitive'];
 
-    $per_page = $form['form']['per_page']['#value'];
-    $start = $next_page * $per_page;
+    $options = $form['form']['list_options']['#value'];
+    $options['sensitive'] = (bool) $form_state['values']['advanced']['sensitive'];
+    $options['start'] = $next_page * $form['form']['per_page']['#value'];
 
-    $form_state['advanced_search-results'] = mfcs_request_load_listing($search, $sensitive, $start, $per_page);
+    $items_returned = mfcs_request_load_listing($form_state['advanced_search-search'], $options);
+
+    $items = array();
+    $count = NULL;
+    if (isset($items_returned['results']) && is_array($items_returned['results'])) {
+      $items = $items_returned['results'];
+
+      if (isset($items_returned['count'])) {
+        $count = $items_returned['count'];
+      }
+    }
+    else {
+      $items = FALSE;
+    }
+
+    $form_state['advanced_search-results'] = $items;
+    $form_state['advanced_search-count'] = $count;
     $form_state['advanced_search-page_number'] = $next_page;
-    $form_state['advanced_search-search'] = $search;
-    $form_state['advanced_search-sensitive'] = $sensitive;
   }
   elseif ($clicked_id == 'search-advanced-submit-search') {
     $sensitive = (bool) $form_state['values']['advanced']['sensitive'];
@@ -1054,6 +1197,7 @@ function mfcs_request_search_0_form_submit($form, &$form_state) {
 
     if (empty($form_state['values']['advanced']['targets'])) {
       $form_state['advanced_search-results'] = array();
+      $form_state['advanced_search-count'] = NULL;
       $form_state['advanced_search-search'] = array();
       $form_state['advanced_search-sensitive'] = $sensitive;
     }
@@ -1061,14 +1205,35 @@ function mfcs_request_search_0_form_submit($form, &$form_state) {
       $search = mfcs_request_search_0_form_build_search_targets($structure, $form_state['values']['advanced']['targets'], 0);
 
       if (is_array($search)) {
-        $form_state['advanced_search-results'] = mfcs_request_load_listing($search, $sensitive, $start, $per_page);
+        $options = $form['form']['list_options']['#value'];
+        $options['sensitive'] = $sensitive;
+        $options['start'] = $start;
+
+        $items_returned = mfcs_request_load_listing($search, $options);
+
+        $items = array();
+        $count = NULL;
+        if (isset($items_returned['results']) && is_array($items_returned['results'])) {
+          $items = $items_returned['results'];
+
+          if (isset($items_returned['count'])) {
+            $count = $items_returned['count'];
+          }
+        }
+        else {
+          $items = FALSE;
+        }
+
+        $form_state['advanced_search-results'] = $items;
+        $form_state['advanced_search-count'] = $count;
         $form_state['advanced_search-search'] = $search;
-        $form_state['advanced_search-sensitive'] = $sensitive;
+        $form_state['advanced_search-sensitive'] = $options['sensitive'];
       }
     }
   }
   elseif ($clicked_id == 'search-advanced-submit-clear') {
     unset($form_state['advanced_search-results']);
+    unset($form_state['advanced_search-count']);
     unset($form_state['advanced_search-search']);
     unset($form_state['values']['advanced']);
     unset($form_state['input']['advanced']);
@@ -1077,6 +1242,7 @@ function mfcs_request_search_0_form_submit($form, &$form_state) {
   }
   elseif ($clicked_id == 'search-advanced-submit-reset') {
     unset($form_state['advanced_search-results']);
+    unset($form_state['advanced_search-count']);
     unset($form_state['advanced_search-search']);
     $form_state['advanced_search-clear'] = TRUE;
 
@@ -1363,6 +1529,203 @@ function mfcs_request_search_0_form_submit($form, &$form_state) {
   $form_state['rebuild'] = TRUE;
   $form_state['redirect'] = FALSE;
   $form_state['submitted'] = TRUE;
+}
+
+/**
+ * Preprocess the simple search data.
+ *
+ * This will search through lists, the database stores the values as integers
+ * and not strings. It will then populate the appropriate options and
+ * conditions variables to search by those numeric ids.
+ *
+ * @param array $conditions
+ *   An array of conditions containing what to search for.
+ * @param array $options
+ *   An array of options to be passed to the load listing function.
+ *
+ * @return bool
+ *   TRUE on success, FALSE otherwise.
+ *
+ * @see: mfcs_request_load_listing()
+ */
+function mfcs_request_search_0_simple_search_preprocess(&$conditions, &$options) {
+  if (!is_array($conditions)) {
+    cf_error::invalid_array($conditions);
+    return FALSE;
+  }
+
+  if (!is_array($options)) {
+    cf_error::invalid_array($options);
+    return FALSE;
+  }
+
+
+  // search through the listings.
+  mfcs_include(MFCS_INCLUDE_LIST_OPTIONS);
+
+  $regex_safe_search = preg_quote($options['search'], '/');
+
+  $type_options = mfcs_get_request_type_list_options();
+  $status_options = mfcs_get_request_status_list_options();
+  $step_options = mfcs_get_request_steps_list_options();
+
+  $room_options = mfcs_get_request_room_list_options(NULL, NULL, TRUE);
+  $building_options = mfcs_get_request_building_list_options(NULL, NULL, TRUE);
+
+  $limit_type = array();
+  foreach ($type_options as $key => $value) {
+    if (preg_match('/' . $regex_safe_search . '/i', $value) > 0) {
+      $limit_type[$key] = $key;
+    }
+  }
+
+  $limit_status = array();
+  foreach ($status_options as $key => $value) {
+    if (preg_match('/' . $regex_safe_search . '/i', $value) > 0) {
+      $limit_status[$key] = $key;
+    }
+  }
+
+  $limit_step = array();
+  foreach ($step_options as $key => $value) {
+    if (preg_match('/' . $regex_safe_search . '/i', $value) > 0) {
+      $limit_step[$key] = $key;
+    }
+  }
+
+  $limit_room = array();
+  foreach ($room_options as $key => $value) {
+    if (preg_match('/' . $regex_safe_search . '/i', $value) > 0) {
+      $limit_room[$key] = $key;
+    }
+  }
+
+  $limit_building = array();
+  foreach ($building_options as $key => $value) {
+    if (preg_match('/' . $regex_safe_search . '/i', $value) > 0) {
+      $limit_building[$key] = $key;
+    }
+  }
+
+
+  // build the search conditions
+  $conditions['or_1'] = array();
+
+  $conditions['or_1']['value_id'] = array(
+    'field' => 'text(mer.id)',
+    'operator' => MFCS_OPERATOR_LIKE,
+    'search' => $options['search'],
+    'expression' => TRUE,
+  );
+
+  $conditions['or_1']['value_title'] = array(
+    'field' => 'mer.title',
+    'operator' => MFCS_OPERATOR_LIKE,
+    'search' => $options['search'],
+  );
+
+  if (!empty($limit_building)) {
+    $conditions['or_1']['value_building'] = array(
+      'field' => 'mer.building',
+      'operator' => MFCS_OPERATOR_IS_IN,
+      'search' => $limit_building,
+    );
+  }
+
+  if (!empty($limit_room)) {
+    $conditions['or_1']['value_room'] = array(
+      'field' => 'mer.room',
+      'operator' => MFCS_OPERATOR_IS_IN,
+      'search' => $limit_room,
+    );
+  }
+
+  if (!empty($limit_type)) {
+    $conditions['or_1']['value_type'] = array(
+      'field' => 'mer.type',
+      'operator' => MFCS_OPERATOR_IS_IN,
+      'search' => $limit_type,
+    );
+  }
+
+  // Commented out because this is confusing because the date format will not match.
+  #$conditions['or_1']['value_date'] = array(
+  #  'field' => 'text(to_timestamp(mer.created))',
+  #  'operator' => MFCS_OPERATOR_LIKE,
+  #  'search' => $options['search'],
+  #  'expression' => TRUE,
+  #);
+
+  if (!empty($limit_status)) {
+    $conditions['or_1']['value_status'] = array(
+      'field' => 'mer.status',
+      'operator' => MFCS_OPERATOR_IS_IN,
+      'search' => $limit_status,
+    );
+  }
+
+  if (!empty($limit_step)) {
+    $conditions['or_1']['value_step'] = array(
+      'field' => 'mer.step',
+      'operator' => MFCS_OPERATOR_IS_IN,
+      'search' => $limit_step,
+    );
+  }
+
+  $conditions['or_1']['value_submitted_by_id'] = array(
+    'field' => 'text(mer.user_id)',
+    'operator' => MFCS_OPERATOR_LIKE,
+    'search' => $options['search'],
+    'expression' => TRUE,
+  );
+
+  $conditions['or_1']['value_submitted_by_name'] = array(
+    'field' => 'sb_u.name',
+    'operator' => MFCS_OPERATOR_LIKE,
+    'search' => $options['search'],
+  );
+
+  $conditions['or_1']['field_information-organization-0'] = array(
+    'group_name' => 'information',
+    'field_name' => 'organization',
+    'column' => 'value',
+    'search' => $options['search'],
+    'type' => 'text',
+    'multiple' => FALSE,
+    'operator' => MFCS_OPERATOR_LIKE,
+  );
+
+  $conditions['or_1']['field_top-additional-0'] = array(
+    'group_name' => 'top',
+    'field_name' => 'additional',
+    'column' => 'value',
+    'search' => $options['search'],
+    'type' => 'text',
+    'multiple' => FALSE,
+    'operator' => MFCS_OPERATOR_LIKE,
+  );
+
+  $conditions['or_1']['field_plans-activities-0'] = array(
+    'group_name' => 'plans',
+    'field_name' => 'activities',
+    'column' => 'value',
+    'search' => $options['search'],
+    'type' => 'text',
+    'multiple' => FALSE,
+    'operator' => MFCS_OPERATOR_LIKE,
+  );
+
+  $conditions['or_1']['field_plans-description-0'] = array(
+    'group_name' => 'plans',
+    'field_name' => 'description',
+    'column' => 'value',
+    'search' => $options['search'],
+    'type' => 'text',
+    'multiple' => FALSE,
+    'operator' => MFCS_OPERATOR_LIKE,
+  );
+
+  return TRUE;
 }
 
 /**
@@ -3131,6 +3494,110 @@ function mfcs_search_target_grouping_load($user = NULL) {
   }
 
   return $grouping;
+}
+
+/**
+ * Returns an array of columns for the request search list.
+ *
+ * @return array
+ *   An array of columns for the request search list.
+ */
+function mfcs_request_search_0_columns() {
+  return array(
+    'id' => array(
+      'id' => 0,
+      'column' => 'id',
+      'name' => "ID",
+      'class' => array('column-id'),
+      'sanitize' => FALSE,
+      'align' => 'center',
+    ),
+    'type' => array(
+      'id' => 1,
+      'column' => 'type',
+      'name' => "Type",
+      'class' => array('column-type', 'no-script-hidden'),
+      'align' => 'center',
+      #'visible' => FALSE,
+    ),
+    'title' => array(
+      'id' => 2,
+      'column' => 'title',
+      'name' => "Title",
+      'class' => array('column-title'),
+      'align' => 'center',
+    ),
+    'building' => array(
+      'id' => 3,
+      'column' => 'building',
+      'name' => "Building",
+      'class' => array('column-building'),
+      'align' => 'center',
+    ),
+    'room' => array(
+      'id' => 4,
+      'column' => 'room',
+      'name' => "Room",
+      'class' => array('column-room'),
+      'align' => 'center',
+    ),
+    'date' => array(
+      'id' => 5,
+      'column' => 'date',
+      'name' => "Date",
+      'class' => array('column-date'),
+      'align' => 'center',
+    ),
+    'status' => array(
+      'id' => 6,
+      'column' => 'status',
+      'name' => "Status",
+      'class' => array('column-status', 'no-script-hidden'),
+      'align' => 'center',
+      #'visible' => FALSE,
+    ),
+    'step' => array(
+      'id' => 7,
+      'column' => 'step',
+      'name' => "Step",
+      'class' => array('column-step', 'no-script-hidden'),
+      'align' => 'center',
+      #'visible' => FALSE,
+    ),
+    'submitted_by_id' => array(
+      'id' => 8,
+      'column' => 'user_id',
+      'name' => "Submitted By ID",
+      'class' => array('column-submitted_by_id', 'no-script-hidden'),
+      'sanitize' => FALSE,
+      'align' => 'center',
+      #'visible' => FALSE,
+    ),
+    'submitted_by' => array(
+      'id' => 9,
+      'column' => 'user_id',
+      'name' => "Submitted By",
+      'class' => array('column-submitted_by', 'no-script-hidden'),
+      'align' => 'center',
+      #'visible' => FALSE,
+    ),
+    'submitted_on' => array(
+      'id' => 10,
+      'column' => 'created',
+      'name' => "Submitted On",
+      'class' => array('column-submitted_on'),
+      'align' => 'center',
+    ),
+    'operations' => array(
+      'id' => 11,
+      'column' => NULL,
+      'name' => "Operations",
+      'class' => array('column-operations', 'no-print'),
+      'align' => 'center',
+      'searchable' => FALSE,
+      'orderable' => FALSE,
+    ),
+  );
 }
 
 /**

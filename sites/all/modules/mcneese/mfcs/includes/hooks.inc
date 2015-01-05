@@ -197,6 +197,31 @@ function mfcs_hook_menu() {
     'tab_root' => 'requests',
   );
 
+  $items['requests/proxy-0/%'] = array(
+    'title' => "Manage Proxies",
+    'description' => "List users who are able to proxy as a venue coordinator.",
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('mfcs_request_proxy_0_form', 2),
+    'file' => 'request_proxy.inc',
+    'file path' => $module_path . '/pages',
+    'access callback' => 'mfcs_page_request_access',
+    'access arguments' => array('proxy'),
+    'tab_parent' => 'requests',
+    'tab_root' => 'requests',
+  );
+
+  $items['requests/proxy-0/ajax'] = array(
+    'title' => "Manage Proxies",
+    'description' => "List users who are able to proxy as a venue coordinator.",
+    'page callback' => 'mfcs_ajax_proxy_0_list',
+    'file' => 'ajax.inc',
+    'file path' => $module_path . '/includes',
+    'access callback' => 'mfcs_page_request_access',
+    'access arguments' => array('proxy'),
+    'tab_parent' => 'requests',
+    'tab_root' => 'requests',
+  );
+
   $items['requests/proxy-0/delete/%'] = array(
     'title' => "Delete Proxy",
     'description' => "Delete a proxy",
@@ -241,6 +266,32 @@ function mfcs_hook_menu() {
     'file path' => $module_path . '/pages',
     'access callback' => 'mfcs_page_request_access',
     'access arguments' => array('reviewers'),
+    'tab_parent' => 'requests/reviewers-0',
+    'tab_root' => 'requests/reviewers-0',
+  );
+
+  $items['requests/reviewers-0/list/%/%/%'] = array(
+    'title' => "List Reviewers",
+    'description' => "List Reviewers",
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('mfcs_request_reviewers_0_form', 3, 4, 5),
+    'file' => 'request_reviewers.inc',
+    'file path' => $module_path . '/pages',
+    'access callback' => 'mfcs_page_request_access',
+    'access arguments' => array('reviewers'),
+    'tab_parent' => 'requests/reviewers-0',
+    'tab_root' => 'requests/reviewers-0',
+  );
+
+  $items['requests/reviewers-0/ajax/list/%/%'] = array(
+    'title' => "",
+    'page callback' => 'mfcs_ajax_reviewers_0_list',
+    'page arguments' => array(4, 5),
+    'file' => 'ajax.inc',
+    'file path' => $module_path . '/includes',
+    'access callback' => 'mfcs_page_request_access',
+    'access arguments' => array('reviewers'),
+    'type' => MENU_CALLBACK,
     'tab_parent' => 'requests/reviewers-0',
     'tab_root' => 'requests/reviewers-0',
   );
@@ -302,6 +353,19 @@ function mfcs_hook_menu() {
     'access arguments' => array('review'),
     'tab_parent' => 'requests',
     'tab_root' => 'requests',
+  );
+
+  $items['requests/review-0/ajax'] = array(
+    'title' => "",
+    'page callback' => 'mfcs_ajax_review_0',
+    'page arguments' => array(),
+    'file' => 'ajax.inc',
+    'file path' => $module_path . '/includes',
+    'access callback' => 'mfcs_page_request_access',
+    'access arguments' => array('review'),
+    'type' => MENU_CALLBACK,
+    'tab_parent' => 'requests/review-0',
+    'tab_root' => 'requests/review-0',
   );
 
   $items['requests/delete-0/%'] = array(
@@ -447,6 +511,19 @@ function mfcs_hook_menu() {
     'tab_root' => 'requests',
   );
 
+  $items['requests/calendar-0/day/%/%/%/%'] = array(
+    'title' => "Request Calendar",
+    'description' => "Requests Calendar - Day",
+    'page callback' => 'mfcs_request_calendar_day_0_page',
+    'page arguments' => array(3, 4, 5, 6),
+    'file' => 'request_calendar.inc',
+    'file path' => $module_path . '/pages',
+    'access callback' => 'mfcs_page_request_access',
+    'access arguments' => array('list'),
+    'tab_parent' => 'requests',
+    'tab_root' => 'requests',
+  );
+
   $items['requests/ical-0/%'] = array(
     'title' => "Request iCal",
     'description' => "Request iCal",
@@ -551,6 +628,19 @@ function mfcs_hook_menu() {
     'tab_root' => 'requests',
   );
 
+  $items['requests/list-0/ajax'] = array(
+    'title' => "",
+    'page callback' => 'mfcs_ajax_list_0',
+    'page arguments' => array(),
+    'file' => 'ajax.inc',
+    'file path' => $module_path . '/includes',
+    'access callback' => 'mfcs_page_request_access',
+    'access arguments' => array('list'),
+    'type' => MENU_CALLBACK,
+    'tab_parent' => 'requests/list-0',
+    'tab_root' => 'requests/list-0',
+  );
+
   $items['requests/search-0'] = array(
     'title' => "Search Requests",
     'description' => "Search Requests",
@@ -562,6 +652,32 @@ function mfcs_hook_menu() {
     'access arguments' => array('search'),
     'tab_parent' => 'requests',
     'tab_root' => 'requests',
+  );
+
+  $items['requests/search-0/ajax/simple/%'] = array(
+    'title' => "",
+    'page callback' => 'mfcs_ajax_search_simple_0',
+    'page arguments' => array(4),
+    'file' => 'ajax.inc',
+    'file path' => $module_path . '/pages',
+    'access callback' => 'mfcs_page_request_access',
+    'access arguments' => array('search'),
+    'type' => MENU_CALLBACK,
+    'tab_parent' => 'requests/search-0',
+    'tab_root' => 'requests/search-0',
+  );
+
+  $items['requests/search-0/ajax/advanced/%'] = array(
+    'title' => "",
+    'page callback' => 'mfcs_ajax_search_simple_0',
+    'page arguments' => array(4),
+    'file' => 'ajax.inc',
+    'file path' => $module_path . '/pages',
+    'access callback' => 'mfcs_page_request_access',
+    'access arguments' => array('search'),
+    'type' => MENU_CALLBACK,
+    'tab_parent' => 'requests/search-0',
+    'tab_root' => 'requests/search-0',
   );
 
   $items['requests/view-0/%'] = array(
@@ -834,6 +950,13 @@ function mfcs_hook_cronapi() {
   );
 
   return $items;
+}
+
+/**
+ * Internal function for hook_user_login().
+ */
+function mfcs_hook_user_login(&$edit, $account, $category) {
+  mfcs_synchronize_user_settings();
 }
 
 /**

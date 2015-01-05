@@ -102,11 +102,6 @@ function mfcs_request_calendar_month_0_page($year = NULL, $month = NULL) {
     $url_arguments .= '?' . $mfcs_determined['complete'];
   }
 
-  $sorting = array(
-    'order' => 'date',
-    'sort' => 'ASC',
-  );
-
   // load rooms and buildings separately to avoid performing joining on tables.
   $rooms = mfcs_load_rooms();
   $buildings = mfcs_load_buildings();
@@ -120,7 +115,6 @@ function mfcs_request_calendar_month_0_page($year = NULL, $month = NULL) {
   }
 
   $rows = array();
-  $rows_per_day = 0;
   $current_date = $absolute_start;
   while ($current_date < $absolute_stop) {
     $next_date = strtotime('+1 days', $current_date);
@@ -128,10 +122,20 @@ function mfcs_request_calendar_month_0_page($year = NULL, $month = NULL) {
     $search['field_dates-date-start-0']['search'] = $current_date;
     $search['field_dates-date-stop-0']['search'] = $next_date;
 
-    $results = mfcs_request_load_listing($search, FALSE, 0, $rows_per_day);
+    $options = array(
+      'limit' => 0,
+      'sort' => array('date' => 'ASC'),
+    );
 
-    if (!empty($results)) {
-      foreach ($results as $item) {
+    $items_returned = mfcs_request_load_listing($search, $options);
+
+    $items = array();
+    if (isset($items_returned['results']) && is_array($items_returned['results'])) {
+      $items = $items_returned['results'];
+    }
+
+    if (!empty($items)) {
+      foreach ($items as $item) {
         foreach ($item->date as $delta => $date) {
           if ($date < $current_date || $date >= $next_date) {
             continue;
@@ -160,7 +164,7 @@ function mfcs_request_calendar_month_0_page($year = NULL, $month = NULL) {
             }
 
             $month_day_count = count($rows[$month_day]);
-            if ($rows_per_day > 0 && $month_day_count == $rows_per_day) {
+            if ($options['limit'] > 0 && $month_day_count == $options['limit']) {
               $month_name = date('F', $date);
               $month_name_lower = strtolower($month_name);
 
@@ -235,11 +239,14 @@ function mfcs_request_calendar_month_0_page($year = NULL, $month = NULL) {
  * @param string $day
  *   (optional) When specified, represents the day.
  *   Causes $year and $month to be required.
+ * @param int $page_number
+ *   (optional) The page number. Requests are broken up into different pages
+ *   to better handle large numbers of requests per time slot.
  *
  * @return string
  *   The HTML output representing the page.
  */
-function mfcs_request_calendar_day_0_page($year = NULL, $month = NULL, $day = NULL) {
+function mfcs_request_calendar_day_0_page($year = NULL, $month = NULL, $day = NULL, $page_number = 0) {
   if (!is_null($year) && !cf_is_integer($year)) {
     cf_error::invalid_integer('year');
 
@@ -252,11 +259,12 @@ function mfcs_request_calendar_day_0_page($year = NULL, $month = NULL, $day = NU
     drupal_exit();
   }
 
+  if (!cf_is_integer($page_number) || $page_number < 0) {
+    $page_number = 0;
+  }
+
   global $base_path;
   global $mfcs_determined;
-  $module_path = drupal_get_path('module', 'mfcs');
-
-  drupal_add_js($module_path . '/js/calendar-day-zindex.js', array('type' => 'file', 'group' => JS_DEFAULT, 'preprocess' => TRUE));
 
   $user = cf_current_user();
 
@@ -295,11 +303,6 @@ function mfcs_request_calendar_day_0_page($year = NULL, $month = NULL, $day = NU
     $url_arguments .= '?' . $mfcs_determined['complete'];
   }
 
-  $sorting = array(
-    'order' => 'date',
-    'sort' => 'ASC',
-  );
-
   // load rooms and buildings separately to avoid performing joining on tables.
   $rooms = mfcs_load_rooms();
   $buildings = mfcs_load_buildings();
@@ -312,77 +315,125 @@ function mfcs_request_calendar_day_0_page($year = NULL, $month = NULL, $day = NU
     $buildings = array();
   }
 
-  $results = mfcs_request_load_listing($search, FALSE, 0, 0, $sorting);
+  $options = array(
+    'limit' => 0,
+    'sort' => array('date' => 'ASC'),
+  );
+
+  $items_returned = mfcs_request_load_listing($search, $options);
+
+  $items = array();
+  if (isset($items_returned['results']) && is_array($items_returned['results'])) {
+    $items = $items_returned['results'];
+  }
 
   $rows = array(
     'all_day' => array(),
     'range' => array(),
+    'slots_max' => 0,
   );
 
-  // pre-populate range at 1-hour intevals
-  $range_interval = "+1 hours";
+  // Set range at 1-hour intervals.
+  $range_interval = 3600; // 3600 = +1 hour
 
   $current_time = $day_start;
-  do {
+  while ($current_time < $day_stop) {
     $rows['range'][$current_time] = array();
-    $current_time = strtotime($range_interval, $current_time);
-  } while ($current_time < $day_stop);
+    $current_time += $range_interval;
+  }
+  unset($current_time);
 
-  if (!empty($results)) {
-    foreach ($results as $item) {
+  $processed_items = array();
+
+  if (!empty($items)) {
+    foreach ($items as $item) {
       foreach ($item->date as $delta => $date) {
         if ($date < $day_start || $date >= $day_stop) {
           continue;
         }
 
-        foreach ($item->time_start as $time_delta => $time_start) {
-          if (!is_null($time_start) && ($time_start < $day_start || $time_start >= $day_stop)) {
+        $item_title = check_plain($item->title);
+
+        $room_name = '';
+        if (array_key_exists($item->room, $rooms)) {
+          $room_name = check_plain($rooms[$item->room]->room_name);
+        }
+
+        $building_name = '';
+        if (array_key_exists($item->building, $buildings)) {
+          $building_name = check_plain($buildings[$item->building]->building_name);
+        }
+
+        $location = (int) $item->location;
+        $building = (int) $item->building;
+        $room = (int) $item->room;
+        $type = (int) $item->type;
+
+        if (is_null($item->time_start[$delta])) {
+          if (!isset($rows['all_day'][$date])) {
+            $rows['all_day'][$date] = array();
+          }
+
+          $rows['all_day'][$date][$item->id] = array(
+            'id' => $item->id,
+            'href' => $base_path . 'requests/view-0/' . $item->id . $url_arguments,
+            'title' => $item_title,
+            'tooltip' => '[' . $item->id . '] ' . $building_name . ' ' . $room_name . ': ' . $item_title,
+            'date' => $date,
+            'year' => $year,
+            'month' => $month,
+            'day' => date('j', $date),
+            'location' => $location,
+            'building' => $building,
+            'room' => $room,
+            'type' => $type,
+            'building_name' => $building_name,
+            'room_name' => $room_name,
+          );
+        }
+        else {
+          // floor() and ceil() to nearest hours.
+          $time_offset_start = $item->time_start[$delta] % $range_interval;
+          $time_offset_stop = $item->time_stop[$delta] % $range_interval;
+          $time_floor = $item->time_start[$delta] - $time_offset_start;
+          $time_ceiling = $item->time_stop[$delta] - $time_offset_stop;
+          if ($time_offset_stop > 0) {
+            $time_ceiling += $range_interval;
+          }
+          $time_zindex = 100 + (int) date("G", $time_floor);
+
+          // @fixme: Filter out overlapping times. This needs to be fixed so that the use case can never happen. (result of a bug on insert, not checking to see if multiple dates overlap.)
+          if (isset($processed_items[$item->id][$time_floor])) {
             continue;
           }
 
-          $item_title = check_plain($item->title);
+          // preprocess the slots in an attempt to find the leftmost slot that is available for all date slots.
+          $time_slot = 0;
+          do {
+            $time_slot_found = TRUE;
+            $time_count = $time_floor;
+            while ($time_count < $time_ceiling) {
+              while (!empty($rows['range'][$time_count][$time_slot])) {
+                $time_slot_found = FALSE;
+                break;
+              }
 
-          $room_name = '';
-          if (array_key_exists($item->room, $rooms)) {
-            $room_name = check_plain($rooms[$item->room]->room_name);
-          }
-
-          $building_name = '';
-          if (array_key_exists($item->building, $buildings)) {
-            $building_name = check_plain($buildings[$item->building]->building_name);
-          }
-
-          $location = (int) $item->location;
-          $building = (int) $item->building;
-          $room = (int) $item->room;
-          $type = (int) $item->type;
-
-          if (is_null($time_start)) {
-            if (!isset($rows['all_day'][$date])) {
-              $rows['all_day'][$date] = array();
+              $time_count += $range_interval;
             }
 
-            $rows['all_day'][$date][$item->id] = array(
-              'href' => $base_path . 'requests/view-0/' . $item->id . $url_arguments,
-              'title' => $item_title,
-              'tooltip' => '[' . $item->id . '] ' . $building_name . ' ' . $room_name . ': ' . $item_title,
-              'date' => $date,
-              'year' => $year,
-              'month' => $month,
-              'day' => date('j', $date),
-              'location' => $location,
-              'building' => $building,
-              'room' => $room,
-              'type' => $type,
-              'building_name' => $building_name,
-              'room_name' => $room_name,
-            );
-          }
-          else {
-            // floor() to nearest hour.
-            $time_floor = $time_start - ($time_start % 3600);
+            if ($time_slot_found) {
+              break;
+            }
 
-            $rows['range'][$time_floor][$item->id] = array(
+            $time_slot++;
+          } while (TRUE);
+
+          $time_count = $time_floor;
+          while ($time_count < $time_ceiling) {
+            $processed_items[$item->id][$time_count] = $time_slot;
+
+            $rows['range'][$time_count][$time_slot][$item->id] = array(
+              'id' => $item->id,
               'href' => $base_path . 'requests/view-0/' . $item->id . $url_arguments,
               'title' => $item_title,
               'tooltip' => '[' . $item->id . '] ' . $building_name . ' ' . $room_name . ': ' . $item_title,
@@ -396,21 +447,48 @@ function mfcs_request_calendar_day_0_page($year = NULL, $month = NULL, $day = NU
               'type' => $type,
               'building_name' => $building_name,
               'room_name' => $room_name,
-              'time_start' => $time_start,
-              'time_stop' => $item->time_stop[$time_delta],
+              'time_start' => $item->time_start[$delta],
+              'time_stop' => $item->time_stop[$delta],
+              'slot_start' => FALSE,
+              'slot_stop' => FALSE,
+              'offset_start' => 0,
+              'offset_stop' => 0,
+              'z-index' => $time_zindex,
             );
+
+            if ($time_count == $time_floor) {
+              $rows['range'][$time_count][$time_slot][$item->id]['slot_start'] = TRUE;
+              $rows['range'][$time_count][$time_slot][$item->id]['offset_start'] = $time_offset_start;
+            }
+
+            if (($time_count + $range_interval) == $time_ceiling) {
+              $rows['range'][$time_count][$time_slot][$item->id]['slot_stop'] = TRUE;
+              $rows['range'][$time_count][$time_slot][$item->id]['offset_stop'] = $time_offset_stop;
+            }
+
+            $time_count += $range_interval;
+          }
+
+          $slots_max = count($rows['range'][$time_floor]);
+          if ($rows['slots_max'] < $slots_max) {
+            $rows['slots_max'] = $slots_max;
           }
         }
       }
     }
   }
 
+  foreach ($rows['range'] as $time_floor => &$time_slots) {
+    ksort($time_slots);
+  }
+
+
   mfcs_include(MFCS_INCLUDE_OUTPUT);
 
   $markup = '';
-  $title = '<h3>' . "Requests for " . '<a href="' . $base_path . 'requests/calendar-0/month/' . date("Y/F", $day_start) . $url_arguments . '" title="Requests for ' . date("F, Y", $day_start) . '">' . date("F", $day_start) . '</a> ' . date("j, Y", $day_start) . '</h3>';
+  $title = '<h3>' . "Requests for " . '<a href="' . $base_path . 'requests/calendar-0/month/' . date("Y/F", $day_start) . $url_arguments . '" title="Requests for ' . date("F, Y", $day_start) . '">' . date("F", $day_start) . '</a> ' . date("j, Y", $day_start) . ' (Page #' . ($page_number + 1) . ')</h3>';
 
-  $result = mfcs_build_calendar_day_markup($rows, $day_start, $day_stop, $title, 'mfcs-calendar-0-day');
+  $result = mfcs_build_calendar_day_markup($rows, $day_start, $day_stop, $title, $page_number, 'mfcs-calendar-0-day');
   if ($result !== FALSE) {
     $markup .= $result;
   }
