@@ -16,6 +16,7 @@ sites/default/deprecated
 sites/default/gnupg
 *.swp
 favicon.ico
+access_denied
 
 # Ignore Mac Files
 ._*
