@@ -18,7 +18,7 @@
  * @param array $form_state
  *   The form state array as defined by drupals form api
  * @param int $request_id
- *   The unique identifier for an request.
+ *   The unique identifier for a request.
  * @param bool $contained
  *   (optional) When TRUE, the page is self-contained, asuch as with a PDF.
  *
@@ -163,6 +163,26 @@ function mfcs_request_agreement_0_form($form, &$form_state, $request_id, $contai
       'amount' => 'amount',
     ),
     'name' => "Custodial",
+  );
+
+  $requirements['maintenance'] = array(
+    'calculate' => array(
+      'quantity' => 'quantity',
+      'hours' => 'hours',
+      'days' => 'days',
+      'amount' => 'amount',
+    ),
+    'name' => "Maintenance",
+  );
+
+  $requirements['grounds'] = array(
+    'calculate' => array(
+      'quantity' => 'quantity',
+      'hours' => 'hours',
+      'days' => 'days',
+      'amount' => 'amount',
+    ),
+    'name' => "Grounds",
   );
 
   $requirements['security'] = array(
@@ -401,7 +421,7 @@ function mfcs_request_agreement_0_form_submit($form, &$form_state) {
  * Renders a PDF of a given request agreement.
  *
  * @param int $request_id
- *   The unique identifier for an request.
+ *   The unique identifier for a request.
  *
  * @return exit
  *   This function should not return.

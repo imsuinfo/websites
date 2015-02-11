@@ -52,6 +52,8 @@ function mfcs_request_statistics_0_page($year = NULL, $month = NULL, $day = NULL
     drupal_exit();
   }
 
+  global $base_path;
+
   $user = cf_current_user();
 
   mfcs_include(MFCS_INCLUDE_MISCELLANEOUS);
@@ -65,6 +67,7 @@ function mfcs_request_statistics_0_page($year = NULL, $month = NULL, $day = NULL
 
     $year_start = strtotime('midnight january 1,  ' . $current_date['year']);
     $year_stop = strtotime('next year', $year_start);
+    $year_last = strtotime('previous year', $year_start);
     $month_start = strtotime('midnight ' . $current_date['month'] . ' 1,  ' . $current_date['year']);
     $month_stop = strtotime('next month', $month_start);
     $day_start = strtotime('midnight ' . $current_date['month'] . ' ' . $current_date['day'] . ' ' . $current_date['year']);
@@ -72,6 +75,19 @@ function mfcs_request_statistics_0_page($year = NULL, $month = NULL, $day = NULL
 
     $month_name = date('F', $month_start);
   }
+  else {
+    $instance = mfcs_instance();
+    $year = date('Y', $instance);
+    $year_start = strtotime('midnight january 1, ' . $year);
+    $year_stop = strtotime('next year', $year_start);
+    $year_last = strtotime('previous year', $year_start);
+
+    $month = NULL;
+    $day = NULL;
+  }
+
+  $string_year_previous = date('Y', $year_last);
+  $string_year_next = date('Y', $year_stop);
 
   $status_options = mfcs_get_request_status_list_options();
   $steps_options = mfcs_get_request_steps_list_options();
@@ -81,23 +97,23 @@ function mfcs_request_statistics_0_page($year = NULL, $month = NULL, $day = NULL
   $now = date("Y/m/d h:i:s a");
 
   $markup = '<div id="mfcs-statistics-page" class="statistics-page">' . "\n";
-  $markup .= '<div class="statistics-title">' . "\n";
-  if (is_null($year)) {
-    mfcs_add_canonical_headers('requests/statistics-0');
-    $markup .= '<h3 class="statistics-title-text">' . 'Request Statistics <span class="statistics-title-text-note">(generated on ' . $now . ')</span></h3>' . "\n";
 
-    $counts = mfcs_request_statistics_load_counts(NULL, NULL);
-  }
-  elseif (is_null($month)) {
-    $year = date('Y', $day_start);
+  // next/prev years
+  $markup .= '<div class="statistics-navigation position-relative no-print clear">' . "\n";
+  $markup .= '  <a href="' . $base_path . 'requests/statistics-0/' . $string_year_previous . '" class="statistics-navigation-link link-previous inline-block" title="Statistics for ' . $string_year_previous . '">Prev</a>' . "\n";
+  $markup .= '  <a href="' . $base_path . 'requests/statistics-0/' . $string_year_next . '" class="statistics-navigation-link link-previous inline-block float-right" title="Statistics for for ' . $string_year_next . '">Next</a>' . "\n";
+  $markup .= '</div>' . "\n";
+
+  $markup .= '<div class="statistics-title">' . "\n";
+  if (is_null($month)) {
     mfcs_add_canonical_headers('requests/statistics-0/' . $year);
     $markup .= '<h3 class="statistics-title-text">' . "Request Statistics for the year " . $year . ' <span class="statistics-title-text-note">(generated on ' . $now . ')</span></h3>' . "\n";
 
     $counts = mfcs_request_statistics_load_counts($year_start, $year_stop);
   }
   elseif (is_null($day)) {
-    $month = strtolower(date('F', $day_start));
-    $year = date('Y', $day_start);
+    $month = strtolower(date('F', $month_start));
+    $year = date('Y', $month_start);
     mfcs_add_canonical_headers('requests/statistics-0/' . $year . '/' . $month);
     $markup .= '<h3 class="statistics-title-text">' . "Request Statistics for " . $month_name . " " . $year . ' <span class="statistics-title-text-note">(generated on ' . $now . ')</span></h3>' . "\n";
 
@@ -314,22 +330,22 @@ function mfcs_request_statistics_load_counts($start, $stop) {
 
     // classification (student)
     $the_query = clone($query);
-    $the_query->condition('mer.classification', MFCS_EVENT_CLASSIFICATION_STUDENT);
+    $the_query->condition('mer.classification', MFCS_REQUEST_CLASSIFICATION_STUDENT);
     $counts['classification']['student'] = $the_query->execute()->fetchField();
 
     // classification (camps)
     $the_query = clone($query);
-    $the_query->condition('mer.classification', MFCS_EVENT_CLASSIFICATION_CAMPS);
+    $the_query->condition('mer.classification', MFCS_REQUEST_CLASSIFICATION_CAMPS);
     $counts['classification']['camps'] = $the_query->execute()->fetchField();
 
     // classification (faculty)
     $the_query = clone($query);
-    $the_query->condition('mer.classification', MFCS_EVENT_CLASSIFICATION_FACULTY);
+    $the_query->condition('mer.classification', MFCS_REQUEST_CLASSIFICATION_FACULTY);
     $counts['classification']['faculty'] = $the_query->execute()->fetchField();
 
     // classification (external)
     $the_query = clone($query);
-    $the_query->condition('mer.classification', MFCS_EVENT_CLASSIFICATION_EXTERNAL);
+    $the_query->condition('mer.classification', MFCS_REQUEST_CLASSIFICATION_EXTERNAL);
     $counts['classification']['external'] = $the_query->execute()->fetchField();
 
 
@@ -477,14 +493,14 @@ function mfcs_request_statistics_render_request_classification($counts, $classif
 
   $options['rows']['student'] = array(
     'total' => $counts['classification']['student'],
-    'text' => $classification_options[MFCS_EVENT_CLASSIFICATION_STUDENT],
+    'text' => $classification_options[MFCS_REQUEST_CLASSIFICATION_STUDENT],
     'label' => "Student Org.",
     'color' => '#5f71a6',
   );
 
   $options['rows']['faculty'] = array(
     'total' => $counts['classification']['faculty'],
-    'text' => $classification_options[MFCS_EVENT_CLASSIFICATION_FACULTY],
+    'text' => $classification_options[MFCS_REQUEST_CLASSIFICATION_FACULTY],
     'label' => "Faculty, Staff,",
     'label_2' => "Athletics",
     'color' => '#5d9ea3',
@@ -492,15 +508,15 @@ function mfcs_request_statistics_render_request_classification($counts, $classif
 
   $options['rows']['camps'] = array(
     'total' => $counts['classification']['camps'],
-    'text' => $classification_options[MFCS_EVENT_CLASSIFICATION_CAMPS],
-    'label' => $classification_options[MFCS_EVENT_CLASSIFICATION_CAMPS],
+    'text' => $classification_options[MFCS_REQUEST_CLASSIFICATION_CAMPS],
+    'label' => $classification_options[MFCS_REQUEST_CLASSIFICATION_CAMPS],
     'color' => '#ab6fa3',
   );
 
   $options['rows']['external'] = array(
     'total' => $counts['classification']['external'],
-    'text' => $classification_options[MFCS_EVENT_CLASSIFICATION_EXTERNAL],
-    'label' => $classification_options[MFCS_EVENT_CLASSIFICATION_EXTERNAL],
+    'text' => $classification_options[MFCS_REQUEST_CLASSIFICATION_EXTERNAL],
+    'label' => $classification_options[MFCS_REQUEST_CLASSIFICATION_EXTERNAL],
     'color' => '#ab6f06',
   );
 
@@ -525,10 +541,10 @@ function mfcs_request_statistics_render_request_classification($counts, $classif
     $markup .= '</div>' . "\n";
   }
 
-  $markup .= '<div class="statistics-block-text-item"><em>' . $counts['classification']['student'] . "</em> <strong>" . $classification_options[MFCS_EVENT_CLASSIFICATION_STUDENT] . "</strong> (<em>" . $options['rows']['student']['percent'] . '%</em> of requests). ' . "</div>\n";
-  $markup .= '<div class="statistics-block-text-item"><em>' . $counts['classification']['faculty'] . "</em> <strong>" . $classification_options[MFCS_EVENT_CLASSIFICATION_FACULTY] . "</strong> (<em>" . $options['rows']['faculty']['percent'] . '%</em> of requests). ' . "</div>\n";
-  $markup .= '<div class="statistics-block-text-item"><em>' . $counts['classification']['camps'] . "</em> <strong>" . $classification_options[MFCS_EVENT_CLASSIFICATION_CAMPS] . "</strong> (<em>" . $options['rows']['camps']['percent'] . '%</em> of requests). ' . "</div>\n";
-  $markup .= '<div class="statistics-block-text-item"><em>' . $counts['classification']['external'] . "</em> <strong>" . $classification_options[MFCS_EVENT_CLASSIFICATION_EXTERNAL] . "</strong> (<em>" . $options['rows']['external']['percent'] . '%</em> of requests). ' . "</div>\n";
+  $markup .= '<div class="statistics-block-text-item"><em>' . $counts['classification']['student'] . "</em> <strong>" . $classification_options[MFCS_REQUEST_CLASSIFICATION_STUDENT] . "</strong> (<em>" . $options['rows']['student']['percent'] . '%</em> of requests). ' . "</div>\n";
+  $markup .= '<div class="statistics-block-text-item"><em>' . $counts['classification']['faculty'] . "</em> <strong>" . $classification_options[MFCS_REQUEST_CLASSIFICATION_FACULTY] . "</strong> (<em>" . $options['rows']['faculty']['percent'] . '%</em> of requests). ' . "</div>\n";
+  $markup .= '<div class="statistics-block-text-item"><em>' . $counts['classification']['camps'] . "</em> <strong>" . $classification_options[MFCS_REQUEST_CLASSIFICATION_CAMPS] . "</strong> (<em>" . $options['rows']['camps']['percent'] . '%</em> of requests). ' . "</div>\n";
+  $markup .= '<div class="statistics-block-text-item"><em>' . $counts['classification']['external'] . "</em> <strong>" . $classification_options[MFCS_REQUEST_CLASSIFICATION_EXTERNAL] . "</strong> (<em>" . $options['rows']['external']['percent'] . '%</em> of requests). ' . "</div>\n";
 
   $markup .= '</div>' . "\n"; // statistics-block-text
   $markup .= '</div>' . "\n"; // statistics-block-main

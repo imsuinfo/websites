@@ -361,7 +361,7 @@ function mfcs_page_request_access_operation_view(&$request_ids, &$processed, &$a
       return TRUE;
     }
 
-    $review_access = mfcs_page_request_reviewer_access($user, $request_ids, MFCS_REVIEW_RESTRICTION_NONE);
+    $review_access = mfcs_page_request_reviewer_access($user, $request_ids, MFCS_REVIEW_RESTRICTION_VIEW);
 
     if (is_array($review_access)) {
       foreach ($request_ids as $id) {
@@ -446,6 +446,97 @@ function mfcs_page_request_access_operation_review(&$request_ids, &$processed, &
     }
 
     $review_access = mfcs_page_request_reviewer_access($user, $request_ids, MFCS_REVIEW_RESTRICTION_REVIEW);
+
+    if (is_array($review_access)) {
+      foreach ($request_ids as $id) {
+        $processed[$id] = array_key_exists($id, $review_access) && $review_access[$id];
+        $access[$id] = $processed[$id];
+      }
+    }
+    else {
+      foreach ($request_ids as $id) {
+        $processed[$id] = FALSE;
+        $access[$id] = FALSE;
+      }
+    }
+
+    return TRUE;
+  }
+
+  if (array_key_exists(NULL, $request_ids)) {
+    $access[NULL] = FALSE;
+    $processed[NULL] = FALSE;
+    return TRUE;
+  }
+
+  foreach ($request_ids as $request_id) {
+    $access[$request_id] = FALSE;
+    $processed[$request_id] = FALSE;
+  }
+
+  return TRUE;
+}
+
+/**
+ * Perform the access control check for the comment operation.
+ *
+ * @param array $request_ids
+ *   The array of requests ids yet to be processed.
+ * @param array $processed
+ *   The array of already processed request ids and the access results.
+ * @param array $access
+ *   The static variable representing the processed array used to increase
+ *   performance.
+ * @param array roles
+ *   An array of relevant roles associated with access control for requests.
+ * @param object user
+ *   The drupal user object to check access against.
+ *
+ * @return bool
+ *   TRUE on successfull execution, FALSE otherwise.
+ *   The return results do not represent the access control results.
+ */
+function mfcs_page_request_access_operation_comment(&$request_ids, &$processed, &$access, $roles, $user) {
+  if (!is_array($request_ids)) {
+    cf_error::invalid_array('request_ids');
+    return FALSE;
+  }
+
+  if (!is_array($processed)) {
+    cf_error::invalid_array('processed');
+    return FALSE;
+  }
+
+  if (!is_array($access)) {
+    cf_error::invalid_array('access');
+    return FALSE;
+  }
+
+  if (!is_array($roles)) {
+    cf_error::invalid_array('roles');
+    return FALSE;
+  }
+
+  if (!is_object($user)) {
+    cf_error::invalid_object('user');
+    return FALSE;
+  }
+
+  if ($roles['reviewer'] || $roles['manager'] || $roles['administer']) {
+    if (array_key_exists(NULL, $request_ids)) {
+      $access[NULL] = TRUE;
+      $processed[NULL] = TRUE;
+      return TRUE;
+    }
+
+    // managers should always be able to comment.
+    if ($roles['manager'] || $roles['administer']) {
+      $processed[$id] = TRUE;
+      $access[$id] = TRUE;
+      return TRUE;
+    }
+
+    $review_access = mfcs_page_request_reviewer_access($user, $request_ids, MFCS_REVIEW_RESTRICTION_COMMENT);
 
     if (is_array($review_access)) {
       foreach ($request_ids as $id) {
@@ -629,13 +720,13 @@ function mfcs_page_request_access_operation_cancel(&$request_ids, &$processed, &
     }
   }
 
-  $cancellable_status_normal = array(
-    MFCS_REQUEST_STATUS_UNLOCKED,
-  );
-
-  $cancellable_status_admin = array(
+  $cancellable_status = array(
     MFCS_REQUEST_STATUS_LOCKED,
     MFCS_REQUEST_STATUS_UNLOCKED,
+    MFCS_REQUEST_STATUS_CLOSED_ACCEPTED,
+    MFCS_REQUEST_STATUS_CLOSED_DENIED,
+    MFCS_REQUEST_STATUS_CLOSED_UNAVAILABLE,
+    MFCS_REQUEST_STATUS_CLOSED_DUE_TO_LOCK,
   );
 
   $proxies = mfcs_get_proxy_venue_coordinator($user->uid);
@@ -645,6 +736,8 @@ function mfcs_page_request_access_operation_cancel(&$request_ids, &$processed, &
   }
   $venue_coordinator_ids[$user->uid] = $user->uid;
 
+  $today = strtotime('midnight today', mfcs_instance());
+
   // if the user is the venue coordinator, then allow them to cancel a request at any point in the process.
   try {
     $query = db_select('mfcs_requests', 'mer');
@@ -652,8 +745,12 @@ function mfcs_page_request_access_operation_cancel(&$request_ids, &$processed, &
     $query->addField('mer', 'id', 'id');
 
     $query->condition('mer.id', $request_ids, 'IN');
-    $query->condition('mer.status', $cancellable_status_admin, 'IN');
+    $query->condition('mer.status', $cancellable_status, 'IN');
     $query->condition('mer.venue_coordinator', $venue_coordinator_ids, 'IN');
+
+    // see: mfcs_request_is_still_upcoming().
+    $query->innerJoin('mfcs_field_dates_date', 'mfdd', 'mer.id = mfdd.request_id');
+    $query->condition('mfdd.value', $today, '>=');
 
     $access_results = $query->execute()->fetchAllAssoc('id');
 
@@ -689,11 +786,15 @@ function mfcs_page_request_access_operation_cancel(&$request_ids, &$processed, &
 
       if ($roles['requester'] && !$roles['manager']) {
         $query->condition('mer.user_id', $user->uid);
-        $query->condition('mer.status', $cancellable_status_normal, 'IN');
+        $query->condition('mer.status', $cancellable_status, 'IN');
       }
       else {
-        $query->condition('mer.status', $cancellable_status_admin, 'IN');
+        $query->condition('mer.status', $cancellable_status, 'IN');
       }
+
+      // see: mfcs_request_is_still_upcoming().
+      $query->innerJoin('mfcs_field_dates_date', 'mfdd', 'mer.id = mfdd.request_id');
+      $query->condition('mfdd.value', $today, '>=');
 
       $access_results = $query->execute()->fetchAllAssoc('id');
 
@@ -794,6 +895,8 @@ function mfcs_page_request_access_operation_uncancel(&$request_ids, &$processed,
   }
   $venue_coordinator_ids[$user->uid] = $user->uid;
 
+  $today = strtotime('midnight today', mfcs_instance());
+
   // if the user is the venue coordinator, then allow them to uncancel a request at any point in the process.
   try {
     $query = db_select('mfcs_requests', 'mer');
@@ -803,6 +906,10 @@ function mfcs_page_request_access_operation_uncancel(&$request_ids, &$processed,
     $query->condition('mer.id', $request_ids, 'IN');
     $query->condition('mer.status', $uncancellable_status, 'IN');
     $query->condition('mer.venue_coordinator', $venue_coordinator_ids, 'IN');
+
+    // see: mfcs_request_is_still_upcoming().
+    $query->innerJoin('mfcs_field_dates_date', 'mfdd', 'mer.id = mfdd.request_id');
+    $query->condition('mfdd.value', $today, '>=');
 
     $access_results = $query->execute()->fetchAllAssoc('id');
 
@@ -836,6 +943,10 @@ function mfcs_page_request_access_operation_uncancel(&$request_ids, &$processed,
 
       $query->condition('mer.id', $request_ids, 'IN');
       $query->condition('mer.status', $uncancellable_status, 'IN');
+
+      // see: mfcs_request_is_still_upcoming().
+      $query->innerJoin('mfcs_field_dates_date', 'mfdd', 'mer.id = mfdd.request_id');
+      $query->condition('mfdd.value', $today, '>=');
 
       $access_results = $query->execute()->fetchAllAssoc('id');
 

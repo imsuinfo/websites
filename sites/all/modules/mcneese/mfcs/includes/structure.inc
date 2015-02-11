@@ -1778,7 +1778,7 @@ function mfcs_get_request_field_information_title($form, &$form_state, &$fields,
     $values = $request_state['information']['title'];
   }
 
-  $field_title = "Request Title";
+  $field_title = "Request Name"; // renamed from title to "Request Name" as per fcs-23.
   $limits_check = array(
     'title' => $field_title,
     'field' => 'title',
@@ -1820,6 +1820,7 @@ function mfcs_get_request_field_information_title($form, &$form_state, &$fields,
             'form-item-delta-' . $key,
           ),
         ),
+        '#description' => t("The Name of the Event or Meeting."),
       );
     }
     krsort($fields['information']['title']);
@@ -2100,7 +2101,7 @@ function mfcs_get_request_field_information_adviser_approval($form, &$form_state
   if (isset($form['form']['target_section']['#value']) && $form['form']['target_section']['#value'] == 'information') {
     // The adviser field is dependent on another that does not appear in the same section..
     // Don't render the field if the the dependency determines that it must not be renderred.
-    if (!isset($fields['request_coordinator']['classification'][0]['#value']) || $fields['request_coordinator']['classification'][0]['#value'] != MFCS_EVENT_CLASSIFICATION_STUDENT) {
+    if (!isset($fields['request_coordinator']['classification'][0]['#value']) || $fields['request_coordinator']['classification'][0]['#value'] != MFCS_REQUEST_CLASSIFICATION_STUDENT) {
       $render_field = FALSE;
     }
   }
@@ -3421,7 +3422,7 @@ function mfcs_get_request_field_setup_standard_blue_chairs($form, &$form_state, 
     $values = $request_state['setup']['standard_blue_chairs'];
   }
 
-  $field_title = "How Many Standard Blue Chairs Will You Need?";
+  $field_title = "How Many Standard Chairs Will You Need?"; // renamed "Blue Chairs" to "Chairs" as per fcs-22.
   $limits_check = array(
     'title' => $field_title,
     'field' => 'standard_blue_chairs',
@@ -6263,6 +6264,7 @@ function mfcs_get_request_field_additional($form, &$form_state, &$fields, &$requ
             'form-item-delta-' . $key,
           ),
         ),
+        '#description_before' => "Please use this comment box to provide University Police with details about reserving spaces in parking lots and/or when buildings need to be opened/closed for weekend and after-hours events.",
       );
     }
     krsort($fields['additional']);

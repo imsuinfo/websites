@@ -18,7 +18,7 @@
  * @param array $form_state
  *   The form state array as defined by drupals form api
  * @param int $request_id
- *   The unique identifier for an request.
+ *   The unique identifier for a request.
  * @param string|null $target_section
  *   (optional) Load only the specified section.
  *
@@ -32,8 +32,8 @@ function mfcs_request_edit_0_form($form, &$form_state, $request_id, $target_sect
     return '';
   }
 
-  if (!cf_is_integer($request_id)) {
-    cf_error::invalid_integer('request_id');
+  if (!is_null($target_section) && !is_string($target_section)) {
+    cf_error::invalid_string('target_section');
     drupal_not_found();
     drupal_exit();
   }
@@ -713,6 +713,16 @@ function mfcs_request_edit_0_form_submit($form, &$form_state) {
           'value' => MFCS_REVIEW_STEP_VENUE_AVAILABLE,
         );
 
+        $mfcs_requests = array(
+          'step' => MFCS_REVIEW_STEP_VENUE_AVAILABLE,
+          'updated' => $instance,
+        );
+
+        $query = db_update('mfcs_requests');
+        $query->fields($mfcs_requests);
+        $query->condition('id', $request_id);
+        $query->execute();
+
         $query = db_insert('mfcs_field_top_step');
         $query->fields($mfcs_field_top_step);
         $query->execute();
@@ -752,7 +762,7 @@ function mfcs_request_edit_0_form_submit($form, &$form_state) {
         $mfcs_current['requirements_custodial'] = NULL;
         $mfcs_current['requirements_security'] = NULL;
         $mfcs_current['requirements_other'] = NULL;
-        $mfcs_current['requirements_waved'] = NULL;
+        $mfcs_current['requirements_waived'] = NULL;
         $mfcs_current['requirements_university'] = NULL;
 
         $mfcs_current['insurance_contractor'] = NULL;

@@ -18,7 +18,7 @@
  * @param array $form_state
  *   The form state array as defined by drupals form api
  * @param int $request_id
- *   The unique identifier for an request.
+ *   The unique identifier for a request.
  * @param int $mode
  *   Specifies the mode that alters how the form is rendered.
  * @param null|int $revision_id
@@ -33,12 +33,6 @@
 function mfcs_request_view_0_form($form, &$form_state, $request_id, $mode = MFCS_VIEW_MODE_NORMAL, $revision_id = NULL, $contained = FALSE) {
   if (!is_string($mode) || !($mode == MFCS_VIEW_MODE_DISPLAY || $mode == MFCS_VIEW_MODE_LOG || $mode == MFCS_VIEW_MODE_OPERATIONS)) {
     $mode = MFCS_VIEW_MODE_NORMAL;
-  }
-
-  if (!is_null($revision_id) && !cf_is_integer($revision_id)) {
-    cf_error::invalid_integer('revision_id');
-    drupal_not_found();
-    drupal_exit();
   }
 
   $request = mfcs_load_request_by_id($request_id, NULL, $revision_id);
@@ -136,6 +130,7 @@ function mfcs_request_view_0_form($form, &$form_state, $request_id, $mode = MFCS
 
   $venue_coordinator = (in_array($request['venue_coordinator']['user_id'][0]->value, $venue_coordinator_ids));
 
+  $administer = user_access('mfcs administer', $user);
   $manager = user_access('mfcs manage', $user);
   $reviewer = user_access('mfcs review', $user);
   $requester = user_access('mfcs request', $user);
@@ -180,7 +175,8 @@ function mfcs_request_view_0_form($form, &$form_state, $request_id, $mode = MFCS
       MFCS_REQUEST_STATUS_CLOSED_ACCEPTED, // added due to insurance provided exception.
     );
 
-    if (!in_array($status, $allowed_statuses)) {
+
+    if (!$can_comment_request && !in_array($status, $allowed_statuses)) {
       $show_operations = FALSE;
 
       if ($mode == MFCS_VIEW_MODE_OPERATIONS) {
@@ -198,7 +194,7 @@ function mfcs_request_view_0_form($form, &$form_state, $request_id, $mode = MFCS
       MFCS_REVIEW_STEP_COMPLETED, // added due to insurance provided exception.
     );
 
-    if (!in_array($step, $allowed_steps)) {
+    if (!$can_comment_request && !in_array($step, $allowed_steps)) {
       $show_operations = FALSE;
 
       if ($mode == MFCS_VIEW_MODE_OPERATIONS) {
@@ -870,19 +866,65 @@ function mfcs_request_view_0_form($form, &$form_state, $request_id, $mode = MFCS
         '#weight' => 1,
       );
 
-      $reviewers_yet_to_review = mfcs_get_reviewers_yet_to_review($request_id);
+      $decisions = mfcs_get_requests_current_review_decisions(array($request_id => NULL), $request['request_coordinator']['classification'][0]->value, $request['top']['step'][0]->value);
 
       $yet_to_review_markup = '';
-      if (!empty($reviewers_yet_to_review)) {
-        $yet_to_review_markup .= '<div id="request-' . $request_id . '-section-review-log-yet_to_review" class="request-section-review-log-yet_to_review">';
-        $yet_to_review_markup .= '<div class="request-section-review-log-yet_to_review-label">Reviewer classifications that have not yet reviewed:</div>';
-        $yet_to_review_markup .= '<ul class="request-section-review-log-yet_to_review-list">';
+      if (!empty($decisions[$request_id]) && is_array($decisions[$request_id])) {
+        // preprocess and generate a list of reviewer classifications that have not yet reviewed.
+        $yet_to_review = array();
+        foreach ($decisions[$request_id]['needed'] as $classification_id => $classification_name) {
+          if (array_key_exists($classification_id, $decisions[$request_id]['completed'])) {
+            continue;
+          }
 
-        foreach ($reviewers_yet_to_review as $yet_to_review_classification) {
-          $yet_to_review_markup .= '<li class="request-section-review-log-yet_to_review-list_item">' . $yet_to_review_classification . '</li>';
+          $yet_to_review[$classification_id] = $classification_name;
         }
 
-        $yet_to_review_markup .= '</ul>';
+        if (!empty($yet_to_review)) {
+          $module_path = drupal_get_path('module', 'mfcs');
+          drupal_add_js($module_path . '/js/request_view-reviewers.js', array('type' => 'file', 'group' => JS_DEFAULT, 'preprocess' => TRUE));
+
+          $yet_to_review_markup .= '<div id="request-' . $request_id . '-section-review-log-yet_to_review" class="request-section-review-log-yet_to_review">' . "\n";
+          $yet_to_review_markup .= '<div class="yet_to_review-label">Reviewer classifications that have not yet reviewed:</div>' . "\n";
+          $yet_to_review_markup .= '<ul class="yet_to_review-list">' . "\n";
+
+          foreach ($yet_to_review as $classification_id => $classification_name) {
+            $yet_to_review_markup .= '<li class="yet_to_review-list_item">' . "\n";
+            $yet_to_review_markup .= $classification_name . "\n";
+
+            // create a javascript based users list to easily display the users associated with the given classification.
+            $yet_to_review_markup .= '<div class="details_list inline" title="View list of users associated with this reviewer classification.">' . "\n";
+            $yet_to_review_markup .= '<span class="no-script-hidden no-print details_list-label label-' . $classification_id . '">(<span class="details_list-link link-' . $classification_id . ' inline fake_link">Details</span>)</span>';
+            $yet_to_review_markup .= '<ul class="script-hidden details_list-item item-' . $classification_id . '">' . "\n";
+            if (!empty($decisions[$request_id]['reviewers'][$classification_id])) {
+              foreach ($decisions[$request_id]['reviewers'][$classification_id] as $user_id) {
+                $basic_user_settings = mfcs_load_basic_user_settings_by_user_id($user_id);
+                if ($basic_user_settings === FALSE) {
+                  continue;
+                }
+
+                $yet_to_review_markup .= '<li class="details_list-user">' . "\n";
+                if (empty($basic_user_settings['first_name']) || empty($basic_user_settings['last_name'])) {
+                  $yet_to_review_markup .= '<span class="details_list-user_name">' . $basic_user_settings['name'] . '</span>' . "\n";
+                }
+                else {
+                  $yet_to_review_markup .= '<span class="details_list-user_name">' . "\n";
+                  $yet_to_review_markup .= $basic_user_settings['first_name'] . ' ' . $basic_user_settings['last_name'] . "\n";
+                  $yet_to_review_markup .= '</span>' . "\n";
+                }
+                $yet_to_review_markup .= '<span class="details_list-user_id">(id: ' . $user_id . ')</span>' . "\n";
+                $yet_to_review_markup .= '</li>' . "\n";
+              }
+            }
+
+            $yet_to_review_markup .= '</ul>' . "\n";
+            $yet_to_review_markup .= '</div>' . "\n";
+            $yet_to_review_markup .= '</li>' . "\n";
+          }
+
+          $yet_to_review_markup .= '</ul>' . "\n";
+          $yet_to_review_markup .= '</div>' . "\n";
+        }
       }
 
       $form['review']['log']['yet_to_review'] = array(
@@ -891,8 +933,8 @@ function mfcs_request_view_0_form($form, &$form_state, $request_id, $mode = MFCS
       );
 
       $form['review']['log']['history'] = array(
-        '#prefix' => '<div id="request-' . $request_id . '-section-review-log-history" class="request-section-review-log-history mode-' . $mode . '">',
-        '#suffix' => '</div>',
+        '#prefix' => '<div id="request-' . $request_id . '-section-review-log-history" class="request-section-review-log-history mode-' . $mode . '">' . "\n",
+        '#suffix' => '</div>' . "\n",
         '#weight' => 3,
       );
 
@@ -1027,10 +1069,13 @@ function mfcs_request_view_0_form($form, &$form_state, $request_id, $mode = MFCS
         $reviewer_classification_all[$reviewer->reviewer_classification] = $reviewer_classification_options[$reviewer->reviewer_classification];
       }
 
-      if ($can_comment_request) {
-        if (empty($reviewer_classification)) {
-          if ($manager) {
-            $reviewer_classification[MFCS_REVIEW_CLASSIFICATION_MANAGER] = 'Manager';
+      if ($can_comment_request && !$can_review_request) {
+        if (empty($reviewer_classification) && empty($venue_coordinator)) {
+          if ($administer) {
+            $reviewer_classification[MFCS_REVIEWER_CLASSIFICATION_SYSTEM_ADMINISTRATOR] = 'Administrator';
+          }
+          elseif ($manager) {
+            $reviewer_classification[MFCS_REVIEWER_CLASSIFICATION_MANAGER] = 'Manager';
           }
         }
       }
@@ -1049,7 +1094,7 @@ function mfcs_request_view_0_form($form, &$form_state, $request_id, $mode = MFCS
       $insurance_provided_available_only = &$form['form']['insurance_provided_available_only']['#value'];
       if ($can_review_request && ($step == MFCS_REVIEW_STEP_REVIEW || $step == MFCS_REVIEW_STEP_REQUIREMENTS || $step == MFCS_REVIEW_STEP_MAKE_DECISIONS || $step == MFCS_REVIEW_STEP_COMPLETED)) {
         if ($status == MFCS_REQUEST_STATUS_LOCKED || $status == MFCS_REQUEST_STATUS_CLOSED_ACCEPTED) {
-          if (isset($reviewer_classification_all[MFCS_REVIEW_CLASSIFICATION_PURCHASING])) {
+          if (isset($reviewer_classification_all[MFCS_REVIEWER_CLASSIFICATION_PURCHASING])) {
             if ((isset($request['insurance']['contractor'][0]->value) && $request['insurance']['contractor'][0]->value == 1) || (isset($request['insurance']['unaffiliated'][0]->value) && $request['insurance']['unaffiliated'][0]->value == 1)) {
               if (isset($request['insurance']['provided'][0]->value) && $request['insurance']['provided'][0]->value != 1) {
                 $insurance_provided_available = TRUE;
@@ -1064,12 +1109,12 @@ function mfcs_request_view_0_form($form, &$form_state, $request_id, $mode = MFCS
         if (empty($reviewer_classification) || ($step != MFCS_REVIEW_STEP_REVIEW && $step != MFCS_REVIEW_STEP_REQUIREMENTS)) {
 
           if ($request['venue_coordinator']['user_id'][0]->value == $user->uid) {
-            $reviewer_classification[MFCS_REVIEW_CLASSIFICATION_VENUE_COORDINATOR] = "Venue Coordinator";
-            $reviewer_classification_all[MFCS_REVIEW_CLASSIFICATION_VENUE_COORDINATOR] = "Venue Coordinator";
+            $reviewer_classification[MFCS_REVIEWER_CLASSIFICATION_VENUE_COORDINATOR] = "Venue Coordinator";
+            $reviewer_classification_all[MFCS_REVIEWER_CLASSIFICATION_VENUE_COORDINATOR] = "Venue Coordinator";
           }
           else {
-            $reviewer_classification[MFCS_REVIEW_CLASSIFICATION_VENUE_COORDINATOR_PROXY] = "Venue Coordinator (Proxy)";
-            $reviewer_classification_all[MFCS_REVIEW_CLASSIFICATION_VENUE_COORDINATOR_PROXY] = "Venue Coordinator (Proxy)";
+            $reviewer_classification[MFCS_REVIEWER_CLASSIFICATION_VENUE_COORDINATOR_PROXY] = "Venue Coordinator (Proxy)";
+            $reviewer_classification_all[MFCS_REVIEWER_CLASSIFICATION_VENUE_COORDINATOR_PROXY] = "Venue Coordinator (Proxy)";
           }
         }
       }
@@ -1097,7 +1142,7 @@ function mfcs_request_view_0_form($form, &$form_state, $request_id, $mode = MFCS
             $decision_options[MFCS_REVIEW_DECISION_COMMENT] = $decision_options_all[MFCS_REVIEW_DECISION_COMMENT];
           }
 
-          $reviewer_classification[MFCS_REVIEW_CLASSIFICATION_PURCHASING] = $reviewer_classification_all[MFCS_REVIEW_CLASSIFICATION_PURCHASING];
+          $reviewer_classification[MFCS_REVIEWER_CLASSIFICATION_PURCHASING] = $reviewer_classification_all[MFCS_REVIEWER_CLASSIFICATION_PURCHASING];
           $insurance_provided_available_only = TRUE;
         }
       }
@@ -1146,6 +1191,16 @@ function mfcs_request_view_0_form($form, &$form_state, $request_id, $mode = MFCS
           '#value' => FALSE,
         );
 
+        $form['form']['requirements-maintenance'] = array(
+          '#type' => 'value',
+          '#value' => FALSE,
+        );
+
+        $form['form']['requirements-grounds'] = array(
+          '#type' => 'value',
+          '#value' => FALSE,
+        );
+
         $form['form']['requirements-security'] = array(
           '#type' => 'value',
           '#value' => FALSE,
@@ -1166,15 +1221,23 @@ function mfcs_request_view_0_form($form, &$form_state, $request_id, $mode = MFCS
         }
         else {
           foreach ($reviewers as $reviewer) {
-            if ($reviewer->reviewer_classification == MFCS_REVIEW_CLASSIFICATION_FACILITIES) {
+            if ($reviewer->reviewer_classification == MFCS_REVIEWER_CLASSIFICATION_FACILITIES_CUSTODIAL || $reviewer->reviewer_classification == MFCS_REVIEWER_CLASSIFICATION_CUSTODIAL) {
               $uses['custodial'] = "Custodial";
               $form['form']['requirements-custodial']['#value'] = TRUE;
             }
-            elseif ($reviewer->reviewer_classification == MFCS_REVIEW_CLASSIFICATION_SECURITY) {
+            elseif ($reviewer->reviewer_classification == MFCS_REVIEWER_CLASSIFICATION_MAINTENANCE) {
+              $uses['maintenance'] = "Maintenance";
+              $form['form']['requirements-maintenance']['#value'] = TRUE;
+            }
+            elseif ($reviewer->reviewer_classification == MFCS_REVIEWER_CLASSIFICATION_FACILITIES) {
+              $uses['grounds'] = "Grounds";
+              $form['form']['requirements-grounds']['#value'] = TRUE;
+            }
+            elseif ($reviewer->reviewer_classification == MFCS_REVIEWER_CLASSIFICATION_SECURITY) {
               $uses['security'] = "Security";
               $form['form']['requirements-security']['#value'] = TRUE;
             }
-            elseif ($reviewer->reviewer_classification == MFCS_REVIEW_CLASSIFICATION_PURCHASING) {
+            elseif ($reviewer->reviewer_classification == MFCS_REVIEWER_CLASSIFICATION_PURCHASING) {
               $insurance_requirement = TRUE;
               $form['form']['requirements-insurance']['#value'] = TRUE;
             }
@@ -1187,11 +1250,11 @@ function mfcs_request_view_0_form($form, &$form_state, $request_id, $mode = MFCS
           $form['review']['operations']['decision']['#options'] = $decision_options;
         }
 
-        $requirements_amount_defaults = array('custodial' => '18.50', 'security' => '30.00');
-        $uses_personnel = array('custodial', 'security');
-        $uses_hours = array('custodial', 'security');
-        $uses_requirements = array('facilities' => TRUE, 'equipment' => FALSE, 'custodial' => TRUE, 'security' => TRUE);
-        $uses_review = array('facilities' => FALSE, 'equipment' => FALSE, 'custodial' => TRUE, 'security' => TRUE);
+        $requirements_amount_defaults = array('custodial' => '18.50', 'maintenance' => '18.50', 'grounds' => '18.50', 'security' => '30.00');
+        $uses_personnel = array('custodial', 'maintenance', 'grounds', 'security');
+        $uses_hours = array('custodial', 'maintenance', 'grounds', 'security');
+        $uses_requirements = array('facilities' => TRUE, 'equipment' => FALSE, 'custodial' => TRUE, 'maintenance' => TRUE, 'grounds' => TRUE, 'security' => TRUE);
+        $uses_review = array('facilities' => FALSE, 'equipment' => FALSE, 'custodial' => TRUE, 'maintenance' => TRUE, 'grounds' => TRUE, 'security' => TRUE);
         foreach ($uses as $use_name => $use_title) {
           if ($uses_review[$use_name] && $step != MFCS_REVIEW_STEP_REVIEW) {
             continue;
@@ -1337,7 +1400,7 @@ function mfcs_request_view_0_form($form, &$form_state, $request_id, $mode = MFCS
               '#id' => 'request-review-operations-requirements-other',
               '#type' => 'checkbox',
               '#title' => 'Other Fees',
-              '#description' => "Other charges, unknown presently, will be agreemented to the presenter at a later time.",
+              '#description' => "Other charges, unknown presently, will be provided to the presenter at a later time.",
               '#default_value' => NULL,
               '#attributes' => array(
                 'class' => array(
@@ -1479,8 +1542,8 @@ function mfcs_request_view_0_form($form, &$form_state, $request_id, $mode = MFCS
           '#weight' => 4,
         );
 
-        if (!empty($request['requirements']['waved'][0])) {
-          $form['review']['operations']['presidents_approval']['#default_value'] = $request['requirements']['waved'][0]->value;
+        if (!empty($request['requirements']['waived'][0])) {
+          $form['review']['operations']['presidents_approval']['#default_value'] = $request['requirements']['waived'][0]->value;
         }
 
         $form['review']['operations']['university_business'] = array(
@@ -1752,16 +1815,16 @@ function mfcs_request_view_0_form_pre_validate(&$form, &$form_state) {
   $unrequire_usage_fields = TRUE;
   if ($step == MFCS_REVIEW_STEP_VENUE_AVAILABLE) {
     if ($decision == MFCS_REVIEW_DECISION_REQUIREMENT) {
-      $requirements_waved = FALSE;
+      $requirements_waived = FALSE;
       if (isset($form_state['values']['review']['operations']['presidents_approval']) && $form_state['values']['review']['operations']['presidents_approval'] == 1) {
-        $requirements_waved = TRUE;
+        $requirements_waived = TRUE;
       }
 
       if (isset($form_state['values']['review']['operations']['university_business']) && $form_state['values']['review']['operations']['university_business'] == 1) {
-        $requirements_waved = TRUE;
+        $requirements_waived = TRUE;
       }
 
-      $unrequire_usage_fields = $requirements_waved;
+      $unrequire_usage_fields = $requirements_waived;
     }
   }
 
@@ -1888,14 +1951,19 @@ function mfcs_request_view_0_form_validate($form, &$form_state) {
       );
     }
 
-    if (!in_array($status, $allowed_statuses)) {
-      form_set_error('', "Illegal operation detected. Operations cannot be performed for the request's current status.");
-      $failure = TRUE;
+    if ($can_comment_request && $decision == MFCS_REVIEW_DECISION_COMMENT) {
+      // if there are any cases where a comment cannot be posted, then is the place to add the restriction.
     }
+    else {
+      if (!in_array($status, $allowed_statuses)) {
+        form_set_error('', "Illegal operation detected. Operations cannot be performed for the request's current status.");
+        $failure = TRUE;
+      }
 
-    if (!in_array($step, $allowed_steps)) {
-      form_set_error('', "Illegal operation detected. Operations cannot be performed for the request's current step.");
-      $failure = TRUE;
+      if (!in_array($step, $allowed_steps)) {
+        form_set_error('', "Illegal operation detected. Operations cannot be performed for the request's current step.");
+        $failure = TRUE;
+      }
     }
 
     if (!($mode == MFCS_VIEW_MODE_NORMAL || $mode == MFCS_VIEW_MODE_DISPLAY || $mode == MFCS_VIEW_MODE_LOG || $mode == MFCS_VIEW_MODE_OPERATIONS)) {
@@ -1919,7 +1987,7 @@ function mfcs_request_view_0_form_validate($form, &$form_state) {
       }
     }
 
-    // A request was made to have the requirements waved options be displayed with the requirements to avoid confusion.
+    // A request was made to have the requirements waived options be displayed with the requirements to avoid confusion.
     // To do this without changing the underlining design, when the requirement is specified with a wave checked, then convert the decision to a wave.
     if ($step == MFCS_REVIEW_STEP_VENUE_AVAILABLE && $decision == MFCS_REVIEW_DECISION_REQUIREMENT) {
       if (isset($form_state['values']['review']['operations']['presidents_approval']) && $form_state['values']['review']['operations']['presidents_approval'] == 1) {
@@ -1934,8 +2002,8 @@ function mfcs_request_view_0_form_validate($form, &$form_state) {
 
     $requirements_required = TRUE;
     if ($step == MFCS_REVIEW_STEP_VENUE_AVAILABLE) {
-      if (isset($request['requirements']['waved'][0]->value)) {
-        if ($request['requirements']['waved'][0]->value == 1) {
+      if (isset($request['requirements']['waived'][0]->value)) {
+        if ($request['requirements']['waived'][0]->value == 1) {
           $requirements_required = FALSE;
         }
       }
@@ -2034,6 +2102,56 @@ function mfcs_request_view_0_form_validate($form, &$form_state) {
         }
       }
 
+      if (array_key_exists('maintenance', $requirements) && !empty($requirements['maintenance']['amount'])) {
+        $matches = array();
+        $matched = preg_match('/^(\d+|\d+\.\d|\d+\.\d\d)$/i', $requirements['maintenance']['amount'], $matches);
+
+        if (!$matched) {
+          form_set_error('review][operations][requirements][maintenance][amount', t("@maintenance is not a valid maintenance requirement amount. Use only numbers and two decimal places. Do not provide a dollar sign.", array('@maintenance' => $requirements['maintenance']['amount'])));
+          $failure = TRUE;
+        }
+
+        if (isset($requirements['maintenance']['quantity']) && intval($requirements['maintenance']['quantity']) != $requirements['maintenance']['quantity']) {
+          form_set_error('review][operations][requirements][maintenance][quantity', t("@quantity is not an allowed number. Use only numbers without decimal places.", array('@quantity' => $requirements['maintenance']['quantity'])));
+          $failure = TRUE;
+        }
+
+        if (isset($requirements['maintenance']['hours']) && !cf_is_integer($requirements['maintenance']['hours'])) {
+          form_set_error('review][operations][requirements][maintenance][hours', t("@hours is not an valid number. Use only numbers.", array('@hours' => $requirements['maintenance']['hours'])));
+          $failure = TRUE;
+        }
+
+        if (isset($requirements['maintenance']['days']) && intval($requirements['maintenance']['days']) != $requirements['maintenance']['days']) {
+          form_set_error('review][operations][requirements][maintenance][days', t("@days is not an allowed number. Use only numbers without decimal places.", array('@days' => $requirements['maintenance']['days'])));
+          $failure = TRUE;
+        }
+      }
+
+      if (array_key_exists('grounds', $requirements) && !empty($requirements['grounds']['amount'])) {
+        $matches = array();
+        $matched = preg_match('/^(\d+|\d+\.\d|\d+\.\d\d)$/i', $requirements['grounds']['amount'], $matches);
+
+        if (!$matched) {
+          form_set_error('review][operations][requirements][grounds][amount', t("@grounds is not a valid grounds requirement amount. Use only numbers and two decimal places. Do not provide a dollar sign.", array('@grounds' => $requirements['grounds']['amount'])));
+          $failure = TRUE;
+        }
+
+        if (isset($requirements['grounds']['quantity']) && intval($requirements['grounds']['quantity']) != $requirements['grounds']['quantity']) {
+          form_set_error('review][operations][requirements][grounds][quantity', t("@quantity is not an allowed number. Use only numbers without decimal places.", array('@quantity' => $requirements['grounds']['quantity'])));
+          $failure = TRUE;
+        }
+
+        if (isset($requirements['grounds']['hours']) && !cf_is_integer($requirements['grounds']['hours'])) {
+          form_set_error('review][operations][requirements][grounds][hours', t("@hours is not an valid number. Use only numbers.", array('@hours' => $requirements['grounds']['hours'])));
+          $failure = TRUE;
+        }
+
+        if (isset($requirements['grounds']['days']) && intval($requirements['grounds']['days']) != $requirements['grounds']['days']) {
+          form_set_error('review][operations][requirements][grounds][days', t("@days is not an allowed number. Use only numbers without decimal places.", array('@days' => $requirements['grounds']['days'])));
+          $failure = TRUE;
+        }
+      }
+
       if (array_key_exists('security', $requirements) && !empty($requirements['security']['amount'])) {
         $matches = array();
         $matched = preg_match('/^(\d+|\d+\.\d|\d+\.\d\d)$/i', $requirements['security']['amount'], $matches);
@@ -2066,8 +2184,8 @@ function mfcs_request_view_0_form_validate($form, &$form_state) {
       $requirements_not_supplied = TRUE;
 
       if ($step == MFCS_REVIEW_STEP_VENUE_AVAILABLE) {
-        if (isset($request['requirements']['waved'][0]->value)) {
-          if ($request['requirements']['waved'][0]->value) {
+        if (isset($request['requirements']['waived'][0]->value)) {
+          if ($request['requirements']['waived'][0]->value) {
             $requirements_not_supplied = FALSE;
           }
         }
@@ -2084,7 +2202,7 @@ function mfcs_request_view_0_form_validate($form, &$form_state) {
       }
 
       if ($requirements_not_supplied) {
-        form_set_error('review][operations][decision', t("The request cannot be approved until the requirements are either specified or waved."));
+        form_set_error('review][operations][decision', t("The request cannot be approved until the requirements are either specified or waived."));
       }
     }
 
@@ -2103,23 +2221,46 @@ function mfcs_request_view_0_form_validate($form, &$form_state) {
         $custodial_requirements_required = $form['form']['requirements-custodial']['#value'];
       }
 
+      $maintenance_requirements_required = FALSE;
+      if (isset($form['form']['requirements-maintenance']['#value'])) {
+        $maintenance_requirements_required = $form['form']['requirements-maintenance']['#value'];
+      }
+
+      $grounds_requirements_required = FALSE;
+      if (isset($form['form']['requirements-grounds']['#value'])) {
+        $grounds_requirements_required = $form['form']['requirements-grounds']['#value'];
+      }
+
       $security_requirements_required = FALSE;
-      if (isset($form['form']['requirements-custodial']['#value'])) {
+      if (isset($form['form']['requirements-security']['#value'])) {
         $security_requirements_required = $form['form']['requirements-security']['#value'];
       }
 
       $insurance_requirements_required = FALSE;
-      if (isset($form['form']['requirements-custodial']['#value'])) {
+      if (isset($form['form']['requirements-insurance']['#value'])) {
         $insurance_requirements_required = $form['form']['requirements-insurance']['#value'];
       }
 
-      if (!$custodial_requirements_required && !$security_requirements_required && !$insurance_requirements_required) {
+      if (!$custodial_requirements_required && !$maintenance_requirements_required && !$grounds_requirements_required && !$security_requirements_required && !$insurance_requirements_required) {
         $requirements_not_supplied = FALSE;
         $requirements_exist = FALSE;
       }
 
+      // @fixme: the logic of these functions does not seem correct. Should it be !isset(...->amount)?
       if (isset($form['review']['operations']['requirements']['custodial'])) {
         if (isset($request['requirements']['custodial'][0]->amount)) {
+          $requirements_not_supplied = FALSE;
+        }
+      }
+
+      if (isset($form['review']['operations']['requirements']['maintenance'])) {
+        if (isset($request['requirements']['maintenance'][0]->amount)) {
+          $requirements_not_supplied = FALSE;
+        }
+      }
+
+      if (isset($form['review']['operations']['requirements']['grounds'])) {
+        if (isset($request['requirements']['grounds'][0]->amount)) {
           $requirements_not_supplied = FALSE;
         }
       }
@@ -2261,11 +2402,14 @@ function mfcs_request_view_0_form_submit($form, &$form_state) {
       }
     }
 
-    if ($step == MFCS_REVIEW_STEP_VENUE_AVAILABLE) {
+    if ($decision == MFCS_REVIEW_DECISION_COMMENT) {
+      // comments do not need to be processed on a per step basis, so skip the $step conditions below.
+    }
+    elseif ($step == MFCS_REVIEW_STEP_VENUE_AVAILABLE) {
       if (isset($form_state['values']['review']['operations']['presidents_approval'])) {
-        $extra['requirements']['waved'] = $form_state['values']['review']['operations']['presidents_approval'];
+        $extra['requirements']['waived'] = $form_state['values']['review']['operations']['presidents_approval'];
 
-        if ($extra['requirements']['waved'] == 1) {
+        if ($extra['requirements']['waived'] == 1) {
           $extra['requirements']['other'] = 0;
         }
       }
@@ -2278,13 +2422,13 @@ function mfcs_request_view_0_form_submit($form, &$form_state) {
         }
       }
 
-      // when the request type is a quick meeting, then mark this as waved due to university business.
+      // when the request type is a quick meeting, then mark this as waived due to university business.
       if ($type == MFCS_REQUEST_TYPE_QUICK_MEETING) {
         $form_state['values']['review']['operations']['university_business'] = 1;
         unset($extra['requirements']);
         $requirements_extra = array(
           'send_email' => FALSE,
-          'requirements' => array('other' => 0, 'waved' => 0, 'university' => 1),
+          'requirements' => array('other' => 0, 'waived' => 0, 'university' => 1),
         );
 
         $success = mfcs_workflow_step_review($request_id, $form['form']['user']['#value'], MFCS_REVIEW_DECISION_REQUIREMENT, "", $requirements_extra);
@@ -2301,7 +2445,12 @@ function mfcs_request_view_0_form_submit($form, &$form_state) {
     }
 
     if ($success) {
-      drupal_set_message("Your review or comment has been recieved.");
+      if ($decision == MFCS_REVIEW_DECISION_COMMENT) {
+        drupal_set_message("Your comment has been received.");
+      }
+      else {
+        drupal_set_message("Your review has been received.");
+      }
     }
     else {
       form_set_error('form', "An error occurred while trying to submit the request review. Please contact the support staff.");
@@ -2409,7 +2558,7 @@ function mfcs_request_view_0_form_submit_pdf($form, &$form_state) {
  * Renders a PDF of a given request.
  *
  * @param int $request_id
- *   The unique identifier for an request.
+ *   The unique identifier for a request.
  * @param int|null $mode
  *   Specifies the mode that alters how the form is rendered.
  *   1: Render only the display part.
@@ -2516,7 +2665,7 @@ function mfcs_request_pdf_0_page($request_id, $mode, $revision_id = NULL) {
  * Renders a self-contained/printrable view of a given request.
  *
  * @param int $request_id
- *   The unique identifier for an request.
+ *   The unique identifier for a request.
  * @param int|null $mode
  *   Specifies the mode that alters how the form is rendered.
  *   1: Render only the display part.
@@ -2712,9 +2861,11 @@ function mfcs_build_reviews_log(&$form, &$form_state, $request_id, $revision_id 
     'facilities',
     'equipment',
     'custodial',
+    'maintenance',
+    'grounds',
     'security',
     'other',
-    'waved',
+    'waived',
     'university',
   );
   $changelog_fields['insurance'] = array(
@@ -2737,6 +2888,9 @@ function mfcs_build_reviews_log(&$form, &$form_state, $request_id, $revision_id 
       $decision = $review->decision;
       $message = $review->message;
       $date = $review->date;
+
+      $user_can_administer = mfcs_user_can_administer($user_id);
+      $user_can_manage = mfcs_user_can_manage($user_id);
 
       $changelog = mfcs_load_request_by_timestamp($request_id, $date, $user_id, $changelog_fields);
 
@@ -2765,20 +2919,29 @@ function mfcs_build_reviews_log(&$form, &$form_state, $request_id, $revision_id 
           $reviewer_classification .= ', ';
         }
 
-        if ($classification == MFCS_REVIEW_CLASSIFICATION_VENUE_COORDINATOR) {
+        if ($classification == MFCS_REVIEWER_CLASSIFICATION_VENUE_COORDINATOR) {
           $reviewer_classification .= "Venue Coordinator";
         }
-        elseif ($classification == MFCS_REVIEW_CLASSIFICATION_VENUE_COORDINATOR_PROXY) {
+        elseif ($classification == MFCS_REVIEWER_CLASSIFICATION_VENUE_COORDINATOR_PROXY) {
           $reviewer_classification .= "Venue Coordinator (Proxy)";
         }
-        elseif ($classification == MFCS_REVIEW_CLASSIFICATION_MANAGER) {
+        elseif ($classification == MFCS_REVIEWER_CLASSIFICATION_MANAGER) {
           $reviewer_classification .= "Manager";
         }
-        elseif ($classification == MFCS_REVIEW_CLASSIFICATION_SYSTEM_ADMINISTRATOR) {
+        elseif ($classification == MFCS_REVIEWER_CLASSIFICATION_SYSTEM_ADMINISTRATOR) {
           $reviewer_classification .= "System Administrator";
         }
         else {
           $reviewer_classification .= $reviewer_classification_options[$classification];
+        }
+      }
+
+      if (is_null($reviewer_classification)) {
+        if ($user_can_administer) {
+          $reviewer_classification = "Administrator";
+        }
+        elseif ($user_can_manage) {
+          $reviewer_classification = "Manager";
         }
       }
 
@@ -2788,6 +2951,7 @@ function mfcs_build_reviews_log(&$form, &$form_state, $request_id, $revision_id 
 
       if ($user_id == 1) {
         $user_name .= "System";
+        $reviewer_classification = "";
       }
       else {
         if (isset($users[$user_id]->field_user_first_name['und'][0]['value'])) {
@@ -2843,7 +3007,7 @@ function mfcs_build_reviews_log(&$form, &$form_state, $request_id, $revision_id 
         $markup .= $user_name_markup . ' ' . $user_id_markup . ' has designated the <strong class="review-item-label-text-row-decision">' . $decision_options[$decision] . '</strong>' . $reviewer_classification . '.';
       }
       elseif (($review_step == MFCS_REVIEW_STEP_REVIEW || $review_step == MFCS_REVIEW_STEP_VENUE_AVAILABLE) && $decision == MFCS_REVIEW_DECISION_WAVE) {
-        $markup .= $user_name_markup . ' ' . $user_id_markup . ' has waved the <strong class="review-item-label-text-row-decision">' . $decision_options[MFCS_REVIEW_DECISION_REQUIREMENT] . '</strong> ' . $reviewer_classification . '.';
+        $markup .= $user_name_markup . ' ' . $user_id_markup . ' has waived the <strong class="review-item-label-text-row-decision">' . $decision_options[MFCS_REVIEW_DECISION_REQUIREMENT] . '</strong> ' . $reviewer_classification . '.';
       }
       elseif ($review_step == MFCS_REVIEW_STEP_REQUIREMENTS && $decision == MFCS_REVIEW_DECISION_APPROVE) {
         $markup .= $user_name_markup . ' ' . $user_id_markup . ' has accepted the <strong class="review-item-label-text-row-decision">' . $review_step_options[$review_step] . '</strong>' . $reviewer_classification . '.';
@@ -2856,6 +3020,15 @@ function mfcs_build_reviews_log(&$form, &$form_state, $request_id, $revision_id 
       }
       elseif ($decision == MFCS_REVIEW_DECISION_APPROVE && $type == MFCS_REQUEST_TYPE_QUICK_MEETING) {
         $markup .= $user_name_markup . ' ' . $user_id_markup . ' has designated that the <strong class="review-item-label-text-row-decision">Venue is Available</strong>, <strong class="review-item-label-text-row-decision">Confirmed</strong>, and <strong class="review-item-label-text-row-decision">Reserved</strong>' . $reviewer_classification . '.';
+      }
+      elseif ($decision == MFCS_REVIEW_DECISION_CLOSED) {
+        $markup .= $user_name_markup . ' ' . $user_id_markup . ' has <strong class="review-item-label-text-row-decision">Closed</strong> the request' . $reviewer_classification . '.';
+      }
+      elseif ($decision == MFCS_REVIEW_DECISION_CANCELLED) {
+        $markup .= $user_name_markup . ' ' . $user_id_markup . ' has <strong class="review-item-label-text-row-decision">Cancelled</strong> the request' . $reviewer_classification . '.';
+      }
+      elseif ($decision == MFCS_REVIEW_DECISION_UNCANCELLED) {
+        $markup .= $user_name_markup . ' ' . $user_id_markup . ' has <strong class="review-item-label-text-row-decision">Uncancelled</strong> the request' . $reviewer_classification . '.';
       }
       else {
         $markup .= $user_name_markup . ' ' . $user_id_markup . ' chose to <strong class="review-item-label-text-row-decision">' . $decision_options[$decision] . '</strong> the request' . $reviewer_classification . '.';
@@ -2926,6 +3099,32 @@ function mfcs_build_reviews_log(&$form, &$form_state, $request_id, $revision_id 
         $message .= '</div>';
       }
 
+      if (!empty($changelog['requirements']['maintenance'])) {
+        $message .= '<div class="review-item-message-requirements-maintenance review-item-message-requirements review-item-message-requirements">';
+        $message .= '<div class="item-label">Maintenance Fees:</div> ';
+
+        $value = reset($changelog['requirements']['maintenance']);
+        $value_markup = mfcs_build_request_value_structure($request_id, 'requirements', 'maintenance', 0, $value, $presentation['requirements']['maintenance'], $changelog);
+
+        if ($value_markup !== FALSE && !isset($value_markup['no_values'])) {
+          $message .= drupal_render($value_markup);
+        }
+        $message .= '</div>';
+      }
+
+      if (!empty($changelog['requirements']['grounds'])) {
+        $message .= '<div class="review-item-message-requirements-grounds review-item-message-requirements review-item-message-requirements">';
+        $message .= '<div class="item-label">Grounds Fees:</div> ';
+
+        $value = reset($changelog['requirements']['grounds']);
+        $value_markup = mfcs_build_request_value_structure($request_id, 'requirements', 'grounds', 0, $value, $presentation['requirements']['grounds'], $changelog);
+
+        if ($value_markup !== FALSE && !isset($value_markup['no_values'])) {
+          $message .= drupal_render($value_markup);
+        }
+        $message .= '</div>';
+      }
+
       if ($review_step == MFCS_REVIEW_STEP_VENUE_AVAILABLE && ($decision == MFCS_REVIEW_DECISION_REQUIREMENT || $decision == MFCS_REVIEW_DECISION_WAVE) || ($type == MFCS_REQUEST_TYPE_QUICK_MEETING && $decision == MFCS_REVIEW_DECISION_REQUIREMENT)) {
         if (!empty($changelog['requirements']['other'])) {
           $message .= '<div class="review-item-message-requirements-other review-item-message-requirements review-item-message-requirements">';
@@ -2947,19 +3146,19 @@ function mfcs_build_reviews_log(&$form, &$form_state, $request_id, $revision_id 
           $message .= '</div>';
         }
 
-        if (!empty($changelog['requirements']['waved'])) {
-          $message .= '<div class="review-item-message-requirements-waved review-item-message-requirements review-item-message-requirements">';
-          $message .= '<div class="item-label">Waved with Presidents Approval:</div> ';
+        if (!empty($changelog['requirements']['waived'])) {
+          $message .= '<div class="review-item-message-requirements-waived review-item-message-requirements review-item-message-requirements">';
+          $message .= '<div class="item-label">Waived with Presidents Approval:</div> ';
 
           // always display the boolean when displayed in the review log.
-          foreach ($presentation['requirements']['waved']['display'] as &$value) {
+          foreach ($presentation['requirements']['waived']['display'] as &$value) {
             if ($value == 'when_true' || $value == 'when_false') {
               $value = 'raw';
             }
           }
 
-          $value = reset($changelog['requirements']['waved']);
-          $value_markup = mfcs_build_request_value_structure($request_id, 'requirements', 'waved', 0, $value, $presentation['requirements']['waved'], $changelog);
+          $value = reset($changelog['requirements']['waived']);
+          $value_markup = mfcs_build_request_value_structure($request_id, 'requirements', 'waived', 0, $value, $presentation['requirements']['waived'], $changelog);
 
           if ($value_markup !== FALSE && !isset($value_markup['no_values'])) {
             $message .= drupal_render($value_markup);

@@ -18,7 +18,7 @@
  * @param array $form_state
  *   The form state array as defined by drupals form api
  * @param int $request_id
- *   The unique identifier for an request.
+ *   The unique identifier for a request.
  *
  * @return string
  *   The HTML output representing the page.
@@ -151,6 +151,8 @@ function mfcs_request_cancel_0_form_submit($form, &$form_state) {
   $cancelled = mfcs_workflow_set_status($request_id, MFCS_REQUEST_STATUS_CANCELLED);
 
   if ($cancelled) {
+    mfcs_workflow_step_review($request_id, $user, MFCS_REVIEW_DECISION_CANCELLED);
+
     $parameters = array();
     $parameters['changed_by'] = $user->uid;
     $parameters['changed_type'] = 'user';
@@ -190,7 +192,7 @@ function mfcs_request_cancel_0_form_submit($form, &$form_state) {
  * @param array $form_state
  *   The form state array as defined by drupals form api
  * @param int $request_id
- *   The unique identifier for an request.
+ *   The unique identifier for a request.
  *
  * @return string
  *   The HTML output representing the page.
@@ -350,6 +352,8 @@ function mfcs_request_uncancel_0_form_submit($form, &$form_state) {
   }
 
   if ($uncancelled) {
+    mfcs_workflow_step_review($request_id, $user, MFCS_REVIEW_DECISION_UNCANCELLED);
+
     $parameters = array();
     $parameters['changed_by'] = $user->uid;
     $parameters['changed_type'] = 'user';

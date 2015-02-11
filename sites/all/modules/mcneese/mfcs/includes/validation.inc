@@ -130,7 +130,15 @@ function mfcs_pre_validate_request_fields(&$form, &$form_state, $dont_validate =
     }
 
     if (!is_object($coordinator)) {
-      $coordinator = user_load(MFCS_REVIEW_CLASSIFICATION_FAILSAFE_COORDINATOR);
+      global $conf;
+
+      if (empty($conf['fcs_failsafe_coordinator']) || !is_integer($conf['fcs_failsafe_coordinator'])) {
+        watchdog(MFCS_WATCHDOG_ID, "Failed to load 'fcs_failsafe_coordinator' settings. Your settings.php does not contain the failsafe coordinator user id.", array(), WATCHDOG_CRITICAL);
+        $coordinator = user_load(1); // as a last resort fall back to the default drupal admin account.
+      }
+      else {
+        $coordinator = user_load($conf['fcs_failsafe_coordinator']);
+      }
     }
 
     // override field settings with the proper attributes.
@@ -161,7 +169,15 @@ function mfcs_pre_validate_request_fields(&$form, &$form_state, $dont_validate =
       }
 
       if (!is_object($coordinator)) {
-        $coordinator = user_load(MFCS_REVIEW_CLASSIFICATION_FAILSAFE_COORDINATOR);
+        global $conf;
+
+        if (empty($conf['fcs_failsafe_coordinator']) || !is_integer($conf['fcs_failsafe_coordinator'])) {
+          watchdog(MFCS_WATCHDOG_ID, "Failed to load 'fcs_failsafe_coordinator' settings. Your settings.php does not contain the failsafe coordinator user id.", array(), WATCHDOG_CRITICAL);
+          $coordinator = user_load(1); // as a last resort fall back to the default drupal admin account.
+        }
+        else {
+          $coordinator = user_load($conf['fcs_failsafe_coordinator']);
+        }
       }
 
       // override field settings with the proper attributes.
@@ -178,7 +194,7 @@ function mfcs_pre_validate_request_fields(&$form, &$form_state, $dont_validate =
     $is_required = FALSE;
 
     if (isset($location_state['request_coordinator']['classification']) && array_key_exists(0, $location_state['request_coordinator']['classification'])) {
-      if ($location_state['request_coordinator']['classification'][0] == MFCS_EVENT_CLASSIFICATION_STUDENT) {
+      if ($location_state['request_coordinator']['classification'][0] == MFCS_REQUEST_CLASSIFICATION_STUDENT) {
         $is_required = TRUE;
       }
     }
@@ -408,7 +424,15 @@ function mfcs_validate_request_fields($form, &$form_state) {
               $passed = FALSE;
             }
             else {
-              $value = date($location_form['dates']['group_dates'][$key]['dates']['time_start'][$key]['#expected_format']['date'], $start_timestamp[$key]);
+              $matched = preg_match('/(pm|am)\s*$/i', $value);
+
+              if (!$matched) {
+                form_set_error($ps_p . '][dates][time_start][' . $key, t("'@value' is missing a valid 'am' or 'pm'. Please specify either am or pm at the end of the start time.", array('@value' => $value)));
+                $passed = FALSE;
+              }
+              else {
+                $value = date($location_form['dates']['group_dates'][$key]['dates']['time_start'][$key]['#expected_format']['date'], $start_timestamp[$key]);
+              }
             }
           }
         }
@@ -451,7 +475,15 @@ function mfcs_validate_request_fields($form, &$form_state) {
               $passed = FALSE;
             }
             else {
-              $value = date($location_form['dates']['group_dates'][$key]['dates']['time_stop'][$key]['#expected_format']['date'], $stop_timestamp[$key]);
+              $matched = preg_match('/(pm|am)\s*$/i', $value);
+
+              if (!$matched) {
+                form_set_error($ps_p . '][dates][time_stop][' . $key, t("'@value' is missing a valid 'am' or 'pm'. Please specify either am or pm at the end of the stop time.", array('@value' => $value)));
+                $passed = FALSE;
+              }
+              else {
+                $value = date($location_form['dates']['group_dates'][$key]['dates']['time_stop'][$key]['#expected_format']['date'], $stop_timestamp[$key]);
+              }
             }
           }
         }
@@ -499,7 +531,7 @@ function mfcs_validate_request_fields($form, &$form_state) {
     $no_actual_request = TRUE;
     if (!empty($location_state['dates']['category'])) {
       foreach ($location_state['dates']['category'] as $key => &$value) {
-        if ($value == MFCS_EVENT_DATES_CATEGORY_ACTUAL) {
+        if ($value == MFCS_REQUEST_DATES_CATEGORY_ACTUAL) {
           $no_actual_request = FALSE;
           break;
         }

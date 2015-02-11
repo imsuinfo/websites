@@ -1208,6 +1208,7 @@ function mfcs_request_search_0_form_submit($form, &$form_state) {
         $options = $form['form']['list_options']['#value'];
         $options['sensitive'] = $sensitive;
         $options['start'] = $start;
+        $options['distinct_id'] = TRUE;
 
         $items_returned = mfcs_request_load_listing($search, $options);
 
@@ -1325,6 +1326,12 @@ function mfcs_request_search_0_form_submit($form, &$form_state) {
         $transaction->rollback();
         cf_error::on_exception($ex);
 
+        form_set_error('form', "An error occurred while trying to save the advanced search settings. Please contact the support staff.");
+        watchdog(MFCS_WATCHDOG_ID, "An error occured while trying to save the advanced search settings.", array(), WATCHDOG_ERROR);
+
+        $form_state['rebuild'] = TRUE;
+        $form_state['redirect'] = FALSE;
+        $form_state['submitted'] = FALSE;
         return FALSE;
       }
     }
@@ -1350,6 +1357,12 @@ function mfcs_request_search_0_form_submit($form, &$form_state) {
         $transaction->rollback();
         cf_error::on_exception($ex);
 
+        form_set_error('form', "An error occurred while trying to delete the advanced search settings. Please contact the support staff.");
+        watchdog(MFCS_WATCHDOG_ID, "An error occured while trying to delete the advanced search settings.", array(), WATCHDOG_ERROR);
+
+        $form_state['rebuild'] = TRUE;
+        $form_state['redirect'] = FALSE;
+        $form_state['submitted'] = FALSE;
         return FALSE;
       }
 

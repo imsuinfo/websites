@@ -104,7 +104,7 @@ function mfcs_table_structure($include_mer = FALSE) {
       ),
       'title' => array(
         'path' => 'request][information][title',
-        'name' => "Title",
+        'name' => "Request Name", // renamed from "Request Title" to "Request Name" as per fcs-23.
         'type' => 'text',
         'size' => 255,
         'manual_processing' => TRUE,
@@ -199,6 +199,26 @@ function mfcs_table_structure($include_mer = FALSE) {
       'storage' => 'currency',
       'allows_null' => TRUE,
     ),
+    'maintenance' => array(
+      'path' => 'request][requirements][maintenance',
+      'name' => "Maintenance Fees",
+      'type' => 'requirements',
+      'manual_processing' => TRUE,
+      'columns' => array('quantity', 'hours', 'days', 'amount'),
+      'size' => array('normal', 'normal', 'normal', 'normal'),
+      'storage' => 'currency',
+      'allows_null' => TRUE,
+    ),
+    'grounds' => array(
+      'path' => 'request][requirements][grounds',
+      'name' => "Grounds Fees",
+      'type' => 'requirements',
+      'manual_processing' => TRUE,
+      'columns' => array('quantity', 'hours', 'days', 'amount'),
+      'size' => array('normal', 'normal', 'normal', 'normal'),
+      'storage' => 'currency',
+      'allows_null' => TRUE,
+    ),
     'security' => array(
       'path' => 'request][requirements][security',
       'name' => "Security Fees",
@@ -217,9 +237,9 @@ function mfcs_table_structure($include_mer = FALSE) {
       'manual_processing' => TRUE,
       'allows_null' => TRUE,
     ),
-    'waved' => array(
-      'name' => "Requirements / Fees Waved (with Presidents Approval)",
-      'path' => 'request][requirements][waved',
+    'waived' => array(
+      'name' => "Requirements / Fees Waived (with Presidents Approval)",
+      'path' => 'request][requirements][waived',
       'type' => 'bool',
       'size' => 'tiny',
       'manual_processing' => TRUE,
@@ -339,7 +359,7 @@ function mfcs_table_structure($include_mer = FALSE) {
   $structure['information'] = array(
     'title' => array(
       'path' => 'request][information][title',
-      'name' => "Title",
+      'name' => "Request Name", // renamed from "Request Title" to "Request Name" as per fcs-23.
       'type' => 'text',
       'size' => 255,
       'hide_from_search' => TRUE,
@@ -488,7 +508,7 @@ function mfcs_table_structure($include_mer = FALSE) {
     ),
     'standard_blue_chairs' => array(
       'path' => 'request][setup][standard_blue_chairs',
-      'name' => "Standard Blue Chairs",
+      'name' => "Standard Chairs", // renamed "Blue Chairs" to "Chairs" as per fcs-22.
       'type' => 'number',
       'size' => 'normal',
     ),
@@ -1025,6 +1045,48 @@ function mfcs_table_presentation($option = NULL) {
         'hide' => FALSE,
       ),
     ),
+    'maintenance' => array(
+      'label' => 'Maintenance Use',
+      'combined' => TRUE,
+      'value_names' => array(
+        'quantity',
+        'hours',
+        'days',
+        'amount',
+      ),
+      'type' => array(
+        'quantity' => 'requirement_personnel',
+        'hours' => 'requirement_hours',
+        'days' => 'requirement_days',
+        'amount' => 'requirement_amount',
+       ),
+      'group' => 'requirements',
+      'request_type' => array(
+        'show' => TRUE,
+        'hide' => FALSE,
+      ),
+    ),
+    'grounds' => array(
+      'label' => 'Grounds Use',
+      'combined' => TRUE,
+      'value_names' => array(
+        'quantity',
+        'hours',
+        'days',
+        'amount',
+      ),
+      'type' => array(
+        'quantity' => 'requirement_personnel',
+        'hours' => 'requirement_hours',
+        'days' => 'requirement_days',
+        'amount' => 'requirement_amount',
+       ),
+      'group' => 'requirements',
+      'request_type' => array(
+        'show' => TRUE,
+        'hide' => FALSE,
+      ),
+    ),
     'security' => array(
       'label' => 'Security Use',
       'combined' => TRUE,
@@ -1060,8 +1122,8 @@ function mfcs_table_presentation($option = NULL) {
         'hide' => FALSE,
       ),
     ),
-    'waved' => array(
-      'label' => 'Requirements / Fees Waved',
+    'waived' => array(
+      'label' => 'Requirements / Fees Waived',
       'type' => array(
         'value' => 'boolean',
       ),
@@ -1300,7 +1362,7 @@ function mfcs_table_presentation($option = NULL) {
 
   $presentation['information'] = array(
     'title' => array(
-      'label' => 'Request Title',
+      'label' => 'Request Name', // renamed from "Request Title" to "Request Name" as per fcs-23.
       'weight' => 1,
       'request_type' => array(
         'show' => TRUE,
@@ -1531,7 +1593,7 @@ function mfcs_table_presentation($option = NULL) {
       ),
     ),
     'standard_blue_chairs' => array(
-      'label' => 'Quantity of Blue Chairs',
+      'label' => 'Quantity of Chairs', // renamed "Blue Chairs" to "Chairs" as per fcs-22.
       'request_type' => array(
         'show' => TRUE,
         'hide' => FALSE,

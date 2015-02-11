@@ -18,7 +18,7 @@
  * @param array $form_state
  *   The form state array as defined by drupals form api
  * @param int $request_id
- *   The unique identifier for an request.
+ *   The unique identifier for a request.
  * @param int $page_number
  *   (optional) Page number to view results.
  *
@@ -141,29 +141,43 @@ function mfcs_request_history_0_form($form, &$form_state, $request_id, $page_num
         if ($request['top']['status'][0]->value != MFCS_REQUEST_STATUS_DELETED) {
           $form['history'][$fieldset_name]['history_item-view_revision-link'] = array(
             '#markup' => '<a href="' . $base_path . 'requests/view-0/' . $request_id . '/' . MFCS_VIEW_MODE_NORMAL . '/' . $revision_id . $url_arguments . '" class="history_item-view_revision-link" title="View this Revision">Revision #' . $revision_id . '</a>',
+            '#weight' => -10,
           );
         }
 
-        $deleted_markup = "";
-        if (isset($history['top']['status'][0]->value) && $history['top']['status'][0]->value == MFCS_REQUEST_STATUS_DELETED) {
-          $deleted_markup = '<div class="history_item-deleted">';
+        if (!empty($revision->message)) {
+          $message_markup = '<div class="history_item-message">';
 
           if (!empty($revision->message)) {
-            $deleted_markup .= '<strong class="deleted-message-title">Message</strong>:' . "<br>\n";
-            $deleted_markup .= '<pre class="history_item-message-preserved">' . $revision->message . "</pre>\n";
+            $message_markup .= '<pre class="history_item-message-preserved">' . $revision->message . "</pre>\n";
           }
+
+          $message_markup .= '</div>';
+
+          $form['history'][$fieldset_name]['history_item-message'] = array(
+            '#markup' => $message_markup,
+            '#weight' => -2,
+          );
 
           if (!empty($revision->signature)) {
-            $deleted_markup .= '<strong class="deleted-signature-title">Signature</strong>:' . "<br>\n";
-            $deleted_markup .= '<pre class="history_item-signature-preserved">' . $revision->signature . "</pre>\n";
+            $form['history'][$fieldset_name]['history_item-signature_fieldset'] = array(
+              '#type' => 'fieldset',
+              '#id' => $fieldset_id . '-signature',
+              '#collapsible' => TRUE,
+              '#collapsed' => TRUE,
+              '#title' => '<strong class="history_items-title">Signature</strong>',
+              '#weight' => -1,
+              '#attributes' => array(
+                'class' => array(
+                  'history_item-signature',
+                ),
+              ),
+            );
+
+            $form['history'][$fieldset_name]['history_item-signature_fieldset']['signature'] = array(
+              '#markup' => '<pre class="history_item-signature-preserved">' . $revision->signature . "</pre>\n",
+            );
           }
-
-          $deleted_markup .= '</div>';
-
-          $form['history'][$fieldset_name]['history_item-deleted'] = array(
-            '#markup' => $deleted_markup,
-            '#weight' => -1,
-          );
         }
 
         if ($revision->revision == 0) {
@@ -191,6 +205,7 @@ function mfcs_request_history_0_form($form, &$form_state, $request_id, $page_num
                 ),
               ),
               '#prefix' => '<div class="history_item-label"><strong class="updater_name">' . $updater_name . '</strong> <span class="updater_id">[id: ' . $user_id . ']</span> has created the request.</div> ',
+              '#weight' => -5,
             );
 
             $notes_markup = '<div class="history_item-notes">';
@@ -251,8 +266,7 @@ function mfcs_request_history_0_form($form, &$form_state, $request_id, $page_num
                     if ($field_name == 'review') {
                       $step_options = mfcs_get_request_steps_list_options();
                       $decision_options = mfcs_get_reviewer_decision_list_options();
-
-
+                      $custom_message = "";
 
                       if ($value->decision == MFCS_REVIEW_DECISION_AMENDMENT) {
                         $custom_message = 'During the <strong class="review-step">' . $step_options[$value->step] . ' Step</strong> ';
@@ -273,6 +287,22 @@ function mfcs_request_history_0_form($form, &$form_state, $request_id, $page_num
                       elseif ($value->decision == MFCS_REVIEW_DECISION_REQUIREMENT) {
                         $custom_message = 'During the <strong class="review-step">' . $step_options[$value->step] . ' Step</strong> ';
                         $custom_message .= 'assigned a <strong class="review-decision">' . $decision_options[$value->decision] . '</strong>. ';
+                      }
+                      elseif ($value->decision == MFCS_REVIEW_DECISION_CANCELLED) {
+                        $custom_message = 'During the <strong class="review-step">' . $step_options[$value->step] . ' Step</strong> ';
+                        $custom_message .= ' the request was <strong class="review-decision">' . "Cancelled" . '</strong>. ';
+                      }
+                      elseif ($value->decision == MFCS_REVIEW_DECISION_UNCANCELLED) {
+                        $custom_message = 'During the <strong class="review-step">' . $step_options[$value->step] . ' Step</strong> ';
+                        $custom_message .= ' the request was <strong class="review-decision">' . "Uncancelled" . '</strong>. ';
+                      }
+                      elseif ($value->decision == MFCS_REVIEW_DECISION_CLOSED) {
+                        $custom_message = 'During the <strong class="review-step">' . $step_options[$value->step] . ' Step</strong> ';
+                        $custom_message .= ' the request was <strong class="review-decision">' . "Closed" . '</strong>. ';
+                      }
+                      elseif ($value->decision == MFCS_REVIEW_DECISION_AMENDMENT) {
+                        $custom_message = 'During the <strong class="review-step">' . $step_options[$value->step] . ' Step</strong> ';
+                        $custom_message .= ' the request was <strong class="review-decision">' . "Amended" . '</strong>. ';
                       }
 
                       $processed_values[$value->user_id]['fields'][$group_name][$field_name][$key] = array(
@@ -371,6 +401,26 @@ function mfcs_request_history_0_form($form, &$form_state, $request_id, $page_num
             }
           }
 
+          if (empty($processed_values)) {
+            $updater_name = mfcs_request_history_0_form_build_updater_name($revision->user_id, $processed_values);
+
+            $values_name = 'history_items-' . $revision->date . '-changes_by-' . $revision->user_id;
+            $form['history'][$fieldset_name][$values_name] = array(
+              '#id' => $fieldset_id . '-changes_by-' . $revision->user_id,
+              '#type' => 'container',
+              '#tree' => TRUE,
+              '#attributes' => array(
+                'class' => array(
+                  'history_item-values',
+                ),
+              ),
+              '#prefix' => '<div class="history_item-label"><strong class="updater_name">' . $updater_name . '</strong> <span class="updater_id">[id: ' . $revision->user_id . ']</span> has altered the request.</div> ',
+              '#weight' => -5,
+            );
+
+            $processed_values = array();
+          }
+
           foreach ($processed_values as $user_id => $processed_value) {
             $values_name = 'history_items-' . $revision->date . '-changes_by-' . $user_id;
             $form['history'][$fieldset_name][$values_name] = array(
@@ -383,6 +433,7 @@ function mfcs_request_history_0_form($form, &$form_state, $request_id, $page_num
                 ),
               ),
               '#prefix' => '<div class="history_item-label"><strong class="updater_name">' . $updater_name . '</strong> <span class="updater_id">[id: ' . $user_id . ']</span> has made the following changes:</div> ',
+              '#weight' => -5,
             );
 
             $history_items = array();

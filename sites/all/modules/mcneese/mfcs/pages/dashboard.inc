@@ -148,7 +148,14 @@ function mfcs_dashboard_page() {
   $item_list_3 = theme('item_list', array('items' => $items_3, 'type' => 'ul'));
 
   $markup = '<div id="mfcs-dashboard_page-choices" class="mfcs-dashboard_page-choices">';
-  $markup .= '<h3 class="mfcs-dashboard_page-choices-header">Facilities Use and Special Event Request Form</h3>';
+
+  if (!$can_create && !$can_list && !$can_search && !$can_review) {
+    $markup .= '<h3 class="mfcs-dashboard_page-choices-header">Insufficient Access</h3>';
+    $markup .= '<div>You lack sufficient access to perform any actions on this website. If you believe this is in error, then please contact the support staff through the proper channels.</div>';
+  }
+  else {
+    $markup .= '<h3 class="mfcs-dashboard_page-choices-header">Facilities Use and Special Event Request Form</h3>';
+  }
 
   if (!empty($items_1)) {
     $markup .= '<div class="mfcs-dashboard_page-choices-list_1">' . $item_list_1 . '</div>';
@@ -167,6 +174,7 @@ function mfcs_dashboard_page() {
 
   if ($can_list) {
     mfcs_include(MFCS_INCLUDE_LIST_OPTIONS);
+    mfcs_include(MFCS_INCLUDE_MISCELLANEOUS);
 
     $instance = mfcs_instance();
 
@@ -200,7 +208,6 @@ function mfcs_dashboard_page() {
     #  $absolute_stop = $month_stop;
     #}
 
-    mfcs_include(MFCS_INCLUDE_MISCELLANEOUS);
     $search = mfcs_miscellaneous_generate_requests_by_date_search($absolute_start, $absolute_stop);
 
     if (!empty($mfcs_determined['filters'])) {
@@ -227,7 +234,6 @@ function mfcs_dashboard_page() {
     }
 
     $rows = array();
-    $rows_count = 0;
     $current_date = $absolute_start;
     while ($current_date < $absolute_stop) {
       $next_date = strtotime('+1 days', $current_date);
@@ -238,6 +244,7 @@ function mfcs_dashboard_page() {
       $options = array(
         'limit' => 4,
         'sort' => array('date' => 'ASC'),
+        'distinct_id' => TRUE,
       );
 
       $items_returned = mfcs_request_load_listing($search, $options);

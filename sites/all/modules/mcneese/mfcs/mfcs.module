@@ -62,41 +62,49 @@ define('MFCS_REQUEST_STATUS_CANCELLED', 7);
  define('MFCS_REVIEW_DECISION_WAVE', 135);
  define('MFCS_REVIEW_DECISION_REQUIREMENT', 136);
 
+ // These are hidden/reserved and are used to populate the review log when certain operations have been performed.
+ define('MFCS_REVIEW_DECISION_CLOSED', 1);
+ define('MFCS_REVIEW_DECISION_CANCELLED', 2);
+ define('MFCS_REVIEW_DECISION_UNCANCELLED', 3);
+
 /**
  * Defines Taxonomy TIDs for review classifications.
  */
- define('MFCS_REVIEW_CLASSIFICATION_ADMINISTRATIVE_ACCOUNTING', 105);
- define('MFCS_REVIEW_CLASSIFICATION_EVENT_COORDINATOR', 99);
- define('MFCS_REVIEW_CLASSIFICATION_FACILITIES', 104);
- define('MFCS_REVIEW_CLASSIFICATION_FACULTY_ADVISOR', 100);
- define('MFCS_REVIEW_CLASSIFICATION_FOOD_SERVICES', 108);
- define('MFCS_REVIEW_CLASSIFICATION_HOUSING', 107);
- define('MFCS_REVIEW_CLASSIFICATION_MAINTENANCE', 103);
- define('MFCS_REVIEW_CLASSIFICATION_PURCHASING', 106);
- define('MFCS_REVIEW_CLASSIFICATION_SECURITY', 102);
- define('MFCS_REVIEW_CLASSIFICATION_STUDENT_SERVICES', 101);
- define('MFCS_REVIEW_CLASSIFICATION_VENUE_COORDINATOR', 112);
- define('MFCS_REVIEW_CLASSIFICATION_VENUE_COORDINATOR_PROXY', 144);
+ define('MFCS_REVIEWER_CLASSIFICATION_ADMINISTRATIVE_ACCOUNTING', 105);
+ define('MFCS_REVIEWER_CLASSIFICATION_CUSTODIAL', 147);
+ define('MFCS_REVIEWER_CLASSIFICATION_EVENT_COORDINATOR', 99);
+ define('MFCS_REVIEWER_CLASSIFICATION_FACILITIES_CUSTODIAL', 104);
+ define('MFCS_REVIEWER_CLASSIFICATION_FACILITIES', 146);
+ define('MFCS_REVIEWER_CLASSIFICATION_FACULTY_ADVISOR', 100);
+ define('MFCS_REVIEWER_CLASSIFICATION_FOOD_SERVICES', 108);
+ define('MFCS_REVIEWER_CLASSIFICATION_HOUSING', 107);
+ define('MFCS_REVIEWER_CLASSIFICATION_MAINTENANCE', 103);
+ define('MFCS_REVIEWER_CLASSIFICATION_PURCHASING', 106);
+ define('MFCS_REVIEWER_CLASSIFICATION_SECURITY', 102);
+ define('MFCS_REVIEWER_CLASSIFICATION_STUDENT_SERVICE_ADMINISTRATION', 145);
+ define('MFCS_REVIEWER_CLASSIFICATION_UNIVERSITY_SERVICES', 101);
+ define('MFCS_REVIEWER_CLASSIFICATION_VENUE_COORDINATOR', 112);
+ define('MFCS_REVIEWER_CLASSIFICATION_VENUE_COORDINATOR_PROXY', 144);
 
- // these are not classifications, they are user ids.
- define('MFCS_REVIEW_CLASSIFICATION_SYSTEM_ADMINISTRATOR', 1);
- define('MFCS_REVIEW_CLASSIFICATION_MANAGER', 2);
- define('MFCS_REVIEW_CLASSIFICATION_FAILSAFE_COORDINATOR', 45); // @fixme: this is a hardcoded id to shogan.
+ // these are not taxonomy-created classifications, they are instead unique ids.
+ define('MFCS_REVIEWER_CLASSIFICATION_SYSTEM_ADMINISTRATOR', 1);
+ define('MFCS_REVIEWER_CLASSIFICATION_MANAGER', 2);
+ define('MFCS_REVIEWER_CLASSIFICATION_REQUESTER', 3);
 
 /**
  * Defines Taxonomy TIDs for request classifications.
  */
- define('MFCS_EVENT_CLASSIFICATION_STUDENT', 1);
- define('MFCS_EVENT_CLASSIFICATION_CAMPS', 2);
- define('MFCS_EVENT_CLASSIFICATION_FACULTY', 3);
- define('MFCS_EVENT_CLASSIFICATION_EXTERNAL', 4);
+ define('MFCS_REQUEST_CLASSIFICATION_STUDENT', 1);
+ define('MFCS_REQUEST_CLASSIFICATION_CAMPS', 2);
+ define('MFCS_REQUEST_CLASSIFICATION_FACULTY', 3);
+ define('MFCS_REQUEST_CLASSIFICATION_EXTERNAL', 4);
 
 /**
  * Defines Taxonomy TIDs for request dates categories.
  */
- define('MFCS_EVENT_DATES_CATEGORY_ACTUAL', 137);
- define('MFCS_EVENT_DATES_CATEGORY_SETUP', 138);
- define('MFCS_EVENT_DATES_CATEGORY_CLEANUP', 139);
+ define('MFCS_REQUEST_DATES_CATEGORY_ACTUAL', 137);
+ define('MFCS_REQUEST_DATES_CATEGORY_SETUP', 138);
+ define('MFCS_REQUEST_DATES_CATEGORY_CLEANUP', 139);
 
 /**
  * Defines operator codes for building search queries.
@@ -130,11 +138,6 @@ define('MFCS_REQUEST_STATUS_CANCELLED', 7);
  * Defines a recursion limit for the search and/or operations.
  */
  define('MFCS_MAX_SEARCH_RECURSION', 3);
-
-/**
- * Defines a failsafe coordinator id to use.
- */
- define('MFCS_FAILSAFE_COORDINATOR_ID', 45);
 
 /**
  * Defines a standardized string for consiting watchdog error reporting.
@@ -251,6 +254,15 @@ define('MFCS_INCLUDE_TESTING', 15);
 define('MFCS_REVIEW_RESTRICTION_NONE', 0);
 define('MFCS_REVIEW_RESTRICTION_VIEW', 1);
 define('MFCS_REVIEW_RESTRICTION_REVIEW', 2);
+define('MFCS_REVIEW_RESTRICTION_COMMENT', 3);
+
+/**
+ * Defines troubleshoot codes
+ */
+define('MFCS_TROUBLESHOOT_NONE', 0);
+define('MFCS_TROUBLESHOOT_REQUESTS_REVIEW_RECHECK', 1);
+define('MFCS_TROUBLESHOOT_MER_CACHE_SYNCHRONIZE', 2);
+define('MFCS_TROUBLESHOOT_BANNER_CACHE_SYNCHRONIZE', 3);
 
 
 
@@ -420,7 +432,24 @@ function mfcs_page_request_access($operation = NULL, $request_id = NULL, $user =
     'reviewer' => user_access('mfcs review', $user),
     'requester' => user_access('mfcs request', $user),
     'administer' => user_access('mfcs administer', $user),
+
+    // @fixme: these roles are hardcoded, implement a more dynamic approach.
+    'role_student' => array_search('student role', $user->roles),
+    'role_camp' => array_search('camp role', $user->roles),
+    'role_employee' => array_search('employee role', $user->roles),
+    'role_external' => array_search('external role', $user->roles),
+    'bannerless_exception' => array_search('bannerless exception', $user->roles),
   );
+
+  // Access will only be granted to administrators, managers, and requestors.
+  if (!$roles['administer'] && !$roles['manager'] && !$roles['reviewer'] && !$roles['requester']) {
+    return FALSE;
+  }
+
+  // Deny access to requesters and reviewers who do not have a student, camp, employee, or external role.
+  if (($roles['reviewer'] || $roles['requester']) && !$roles['role_student'] && !$roles['role_camp'] && !$roles['role_employee'] && !$roles['role_external'] && !$roles['bannerless_exception']) {
+    return FALSE;
+  }
 
   mfcs_include(MFCS_INCLUDE_ACCESS);
 
@@ -526,7 +555,18 @@ function mfcs_page_request_access($operation = NULL, $request_id = NULL, $user =
     return $processed[$request_id];
   }
   elseif ($operation == 'comment') {
-    // @todo: currently disabled feature. Enable if such functionality is requested.
+    $operation_result = mfcs_page_request_access_operation_comment($request_ids, $processed, $access, $roles, $user);
+
+    // if something went wrong with the operation check, return FALSE but do not cache.
+    if ($operation_result === FALSE) {
+      return FALSE;
+    }
+
+    if (is_array($request_id)) {
+      return $processed;
+    }
+
+    return $processed[$request_id];
   }
   elseif ($operation == 'log') {
     $operation_result = mfcs_page_request_access_operation_log($request_ids, $processed, $access, $roles, $user);
@@ -636,6 +676,14 @@ function mfcs_page_request_access($operation = NULL, $request_id = NULL, $user =
       }
     }
   }
+  elseif ($operation == 'troubleshoot') {
+    if (is_null($request_id)) {
+      if ($roles['manager'] || $roles['administer']) {
+        $access[$request_id] = TRUE;
+        return TRUE;
+      }
+    }
+  }
 
   if (is_array($request_id)) {
     foreach ($request_ids as $request_id) {
@@ -723,7 +771,6 @@ function mfcs_request_access($operation, $request, $user = NULL, $section = NULL
     return FALSE;
   }
 
-
   $request_status = array(
     MFCS_REQUEST_STATUS_LOCKED,
     MFCS_REQUEST_STATUS_UNLOCKED,
@@ -734,10 +781,36 @@ function mfcs_request_access($operation, $request, $user = NULL, $section = NULL
     MFCS_REQUEST_STATUS_CANCELLED,
   );
 
-  $manager = user_access('mfcs manage', $user);
-  $reviewer = user_access('mfcs review', $user);
-  $requester = user_access('mfcs request', $user);
-  $administer = user_access('mfcs administer', $user);
+  $roles = array(
+    'manager' => user_access('mfcs manage', $user),
+    'reviewer' => user_access('mfcs review', $user),
+    'requester' => user_access('mfcs request', $user),
+    'administer' => user_access('mfcs administer', $user),
+
+    // @fixme: these roles are hardcoded, implement a more dynamic approach.
+    'role_student' => array_search('student role', $user->roles),
+    'role_camp' => array_search('camp role', $user->roles),
+    'role_employee' => array_search('employee role', $user->roles),
+    'role_external' => array_search('external role', $user->roles),
+    'bannerless_exception' => array_search('bannerless exception', $user->roles),
+  );
+
+  // Access will only be granted to administrators, managers, and requestors.
+  if (!$roles['administer'] && !$roles['manager'] && !$roles['reviewer'] && !$roles['requester']) {
+    return FALSE;
+  }
+
+  // Deny access to requesters and reviewers who do not have a student, camp, employee, or external role.
+  if (($roles['reviewer'] || $roles['requester']) && !$roles['role_student'] && !$roles['role_camp'] && !$roles['role_employee'] && !$roles['role_external'] && !$roles['bannerless_exception']) {
+    return FALSE;
+  }
+
+  $proxies = mfcs_get_proxy_venue_coordinator($user->uid);
+  $venue_coordinator_ids = array();
+  if (!empty($proxies)) {
+    $venue_coordinator_ids = $proxies;
+  }
+  $venue_coordinator_ids[$user->uid] = $user->uid;
 
   if ($operation == 'create') {
     if ($request['top']['status'][0]->value == MFCS_REQUEST_STATUS_DELETED) {
@@ -762,7 +835,7 @@ function mfcs_request_access($operation, $request, $user = NULL, $section = NULL
 
     // when quick meeting is enabled, a section is not null, then additional checks are required.
     $is_quick_meeting = FALSE;
-    if (!is_null($request_id) && !is_null($section) && ($manager || $requester)) {
+    if (!is_null($request_id) && !is_null($section) && ($roles['manager'] || $roles['requester'])) {
       if (isset($request['information']['type'][0]->value) && $request['information']['type'][0]->value == MFCS_REQUEST_TYPE_QUICK_MEETING) {
         $is_quick_meeting = TRUE;
 
@@ -782,11 +855,11 @@ function mfcs_request_access($operation, $request, $user = NULL, $section = NULL
 
     $valid_status = in_array($request['top']['status'][0]->value, $edit_request_status);
 
-    if ($manager) {
+    if ($roles['manager']) {
       $access[$request_id] = $valid_status;
       return $valid_status;
     }
-    elseif ($requester) {
+    elseif ($roles['requester']) {
       if ($valid_status) {
         if (isset($request['mer']['user_id'][0]->value) && $request['mer']['user_id'][0]->value == $user->uid) {
           $access[$request_id] = TRUE;
@@ -801,20 +874,20 @@ function mfcs_request_access($operation, $request, $user = NULL, $section = NULL
       return FALSE;
     }
 
-    if ($manager) {
+    if ($roles['manager']) {
       $access[$request_id] = TRUE;
       return TRUE;
     }
-    elseif ($reviewer) {
+    elseif ($roles['reviewer']) {
       // due to its complexity, the database calling function for reviewer access will be used.
-      $review_access = mfcs_page_request_reviewer_access($user, $request_id, MFCS_REVIEW_RESTRICTION_NONE);
+      $review_access = mfcs_page_request_reviewer_access($user, $request_id, MFCS_REVIEW_RESTRICTION_VIEW);
 
       if (is_array($review_access) && array_key_exists($request_id, $review_access)) {
         $access[$request_id] = $review_access[$request_id];
         return $review_access[$request_id];
       }
     }
-    elseif ($requester) {
+    elseif ($roles['requester']) {
       if ($request['top']['status'][0]->value == MFCS_REQUEST_STATUS_CLOSED_ACCEPTED && $request['top']['step'][0]->value == MFCS_REVIEW_STEP_COMPLETED) {
         // always show completed and accepted requests when there are no restrictions
         $access[$request_id] = TRUE;
@@ -827,7 +900,7 @@ function mfcs_request_access($operation, $request, $user = NULL, $section = NULL
     }
   }
   elseif ($operation == 'review') {
-    if (!$reviewer) {
+    if (!$roles['reviewer']) {
       $access[$request_id] = FALSE;
       return FALSE;
     }
@@ -846,14 +919,30 @@ function mfcs_request_access($operation, $request, $user = NULL, $section = NULL
     }
   }
   elseif ($operation == 'comment') {
+    if (!$roles['reviewer'] && !$roles['manager'] && !$roles['administer']) {
+      $access[$request_id] = FALSE;
+      return FALSE;
+    }
+
     if ($request['top']['status'][0]->value == MFCS_REQUEST_STATUS_DELETED) {
       $access[$request_id] = FALSE;
       return FALSE;
     }
 
-    // @todo: currently disabled feature. Enable if such functionality is requested.
-    $access[$request_id] = FALSE;
-    return FALSE;
+    // managers and administration should always be able to comment.
+    if ($roles['manager'] || $roles['administer']) {
+      $access[$request_id] = TRUE;
+      return TRUE;
+    }
+    elseif ($roles['reviewer']) {
+      // due to its complexity, the database calling function for reviewer access will be used.
+      $comment_access = mfcs_page_request_reviewer_access($user, $request_id, MFCS_REVIEW_RESTRICTION_COMMENT);
+
+      if (is_array($comment_access) && array_key_exists($request_id, $comment_access)) {
+        $access[$request_id] = $comment_access[$request_id];
+        return $comment_access[$request_id];
+      }
+    }
   }
   elseif ($operation == 'log') {
     if ($request['top']['status'][0]->value == MFCS_REQUEST_STATUS_DELETED) {
@@ -861,17 +950,17 @@ function mfcs_request_access($operation, $request, $user = NULL, $section = NULL
       return FALSE;
     }
 
-    if ($manager) {
+    if ($roles['manager']) {
       $access[$request_id] = TRUE;
       return TRUE;
     }
-    elseif ($reviewer) {
+    elseif ($roles['reviewer']) {
       // due to its complexity, the database calling function for reviewer access will be used.
-      $review_access = mfcs_page_request_reviewer_access($user, $request_id, MFCS_REVIEW_RESTRICTION_NONE);
+      $log_access = mfcs_page_request_reviewer_access($user, $request_id, MFCS_REVIEW_RESTRICTION_VIEW);
 
-      if (is_array($review_access) && array_key_exists($request_id, $review_access)) {
-        $access[$request_id] = $review_access[$request_id];
-        return $review_access[$request_id];
+      if (is_array($log_access) && array_key_exists($request_id, $log_access)) {
+        $access[$request_id] = $log_access[$request_id];
+        return $log_access[$request_id];
       }
     }
   }
@@ -894,32 +983,39 @@ function mfcs_request_access($operation, $request, $user = NULL, $section = NULL
       return FALSE;
     }
 
-    $cancellable_status_normal = array(
-      MFCS_REQUEST_STATUS_UNLOCKED,
-    );
-
-    $cancellable_status_admin = array(
+    $cancellable_status = array(
       MFCS_REQUEST_STATUS_LOCKED,
       MFCS_REQUEST_STATUS_UNLOCKED,
+      MFCS_REQUEST_STATUS_CLOSED_ACCEPTED,
+      MFCS_REQUEST_STATUS_CLOSED_DENIED,
+      MFCS_REQUEST_STATUS_CLOSED_UNAVAILABLE,
+      MFCS_REQUEST_STATUS_CLOSED_DUE_TO_LOCK,
     );
 
+    if (!in_array($request['top']['status'][0]->value, $cancellable_status)) {
+      $access[$request_id] = FALSE;
+      return FALSE;
+    }
+
+    // do not allow cancelling requests that have no upcoming dates.
+    if (!mfcs_request_is_still_upcoming($request_id)) {
+      $access[$request_id] = FALSE;
+      return FALSE;
+    }
+
     // if the user is the venue coordinator, then allow them to cancel an request at any point in the process.
-    if ($request['venue_coordinator']['user_id'][0]->value == $user->uid && in_array($request['top']['status'][0]->value, $cancellable_status_admin)) {
+    if (array_key_exists($request['venue_coordinator']['user_id'][0]->value, $venue_coordinator_ids)) {
       $access[$request_id] = TRUE;
       return TRUE;
     }
 
-    if ($manager) {
-      if (in_array($request['top']['status'][0]->value, $cancellable_status_admin)) {
-        $access[$request_id] = TRUE;
-        return TRUE;
-      }
+    if ($roles['manager']) {
+      $access[$request_id] = TRUE;
+      return TRUE;
     }
-    elseif ($requester) {
-      if ($request['mer']['user_id'][0]->value == $user->uid && in_array($request['top']['status'][0]->value, $cancellable_status_normal)) {
-        $access[$request_id] = TRUE;
-        return TRUE;
-      }
+    elseif ($roles['requester'] && $request['mer']['user_id'][0]->value == $user->uid) {
+      $access[$request_id] = TRUE;
+      return TRUE;
     }
   }
   elseif ($operation == 'uncancel') {
@@ -932,13 +1028,24 @@ function mfcs_request_access($operation, $request, $user = NULL, $section = NULL
       MFCS_REQUEST_STATUS_CANCELLED,
     );
 
+    if (!in_array($request['top']['status'][0]->value, $uncancellable_status)) {
+      $access[$request_id] = FALSE;
+      return FALSE;
+    }
+
+    // do not allow uncancelling requests that have no upcoming dates.
+    if (!mfcs_request_is_still_upcoming($request_id)) {
+      $access[$request_id] = FALSE;
+      return FALSE;
+    }
+
     // if the user is the venue coordinator, then allow them to uncancel an request at any point in the process.
-    if ($request['venue_coordinator']['user_id'][0]->value == $user->uid && in_array($request['top']['status'][0]->value, $uncancellable_status)) {
+    if (array_key_exists($request['venue_coordinator']['user_id'][0]->value, $venue_coordinator_ids)) {
       $access[$request_id] = TRUE;
       return TRUE;
     }
 
-    if ($manager) {
+    if ($roles['manager']) {
       if (in_array($request['top']['status'][0]->value, $uncancellable_status)) {
         $access[$request_id] = TRUE;
         return TRUE;
@@ -946,12 +1053,12 @@ function mfcs_request_access($operation, $request, $user = NULL, $section = NULL
     }
   }
   elseif ($operation == 'history') {
-    if ($request['top']['status'][0]->value == MFCS_REQUEST_STATUS_DELETED && !$administer) {
+    if ($request['top']['status'][0]->value == MFCS_REQUEST_STATUS_DELETED && !$roles['administer']) {
       $access[$request_id] = FALSE;
       return FALSE;
     }
 
-    if ($manager) {
+    if ($roles['manager']) {
       $access[$request_id] = TRUE;
       return TRUE;
     }
@@ -969,7 +1076,7 @@ function mfcs_request_access($operation, $request, $user = NULL, $section = NULL
       MFCS_REQUEST_STATUS_CANCELLED,
     );
 
-    if ($manager || $reviewer) {
+    if ($roles['manager'] || $roles['reviewer']) {
       $agreement_request_step = array(
         MFCS_REVIEW_STEP_COMPLETED,
         MFCS_REVIEW_STEP_MAKE_DECISIONS,
@@ -1045,8 +1152,6 @@ function mfcs_page_request_reviewer_access($user, $request_id, $review_restricti
     $access[$id] = FALSE;
   }
 
-  $reviewer_settings = mfcs_get_reviewer_settings_by_user_id($user->uid);
-
   $show_status_venue_coordinator = array(
     MFCS_REQUEST_STATUS_LOCKED,
     MFCS_REQUEST_STATUS_UNLOCKED,
@@ -1057,7 +1162,19 @@ function mfcs_page_request_reviewer_access($user, $request_id, $review_restricti
     MFCS_REVIEW_STEP_MAKE_DECISIONS,
   );
 
+  // if the reviewer is associated with the requests classification, then allow access when in these statuses.
   $show_status_reviewer = array(
+    MFCS_REQUEST_STATUS_UNLOCKED,
+    MFCS_REQUEST_STATUS_LOCKED,
+    MFCS_REQUEST_STATUS_CLOSED_ACCEPTED,
+    MFCS_REQUEST_STATUS_CLOSED_DENIED,
+    MFCS_REQUEST_STATUS_CLOSED_UNAVAILABLE,
+    MFCS_REQUEST_STATUS_CLOSED_DUE_TO_LOCK,
+    MFCS_REQUEST_STATUS_CANCELLED,
+  );
+
+  // if the reviewer is associated with the requests and the request is in one of these status, then the reviewer can review.
+  $show_status_reviewer_review = array(
     MFCS_REQUEST_STATUS_LOCKED,
   );
 
@@ -1090,6 +1207,8 @@ function mfcs_page_request_reviewer_access($user, $request_id, $review_restricti
   }
   $venue_coordinator_ids[$user->uid] = $user->uid;
 
+  $reviewer_settings = mfcs_get_reviewer_settings_by_user_id($user->uid);
+
   try {
     $query = db_select('mfcs_requests', 'mer');
 
@@ -1109,7 +1228,7 @@ function mfcs_page_request_reviewer_access($user, $request_id, $review_restricti
       $already_venue_coordinated_query = db_select('mfcs_reviewed', 'mrd_vc');
       $already_venue_coordinated_query->addField('mrd_vc', 'request_id', 'request_id');
       $already_venue_coordinated_query->where('mrd_vc.request_id = mer.id');
-      $already_venue_coordinated_query->condition('mrd_vc.classification', MFCS_REVIEW_CLASSIFICATION_VENUE_COORDINATOR);
+      $already_venue_coordinated_query->condition('mrd_vc.classification', MFCS_REVIEWER_CLASSIFICATION_VENUE_COORDINATOR);
 
       $and = db_and();
       $and->condition('mer.status', $show_status_venue_coordinator, 'IN');
@@ -1133,7 +1252,7 @@ function mfcs_page_request_reviewer_access($user, $request_id, $review_restricti
         $already_reviewed_query->condition('mr_r.disabled', 0);
 
         $and = db_and();
-        $and->condition('mer.status', $show_status_reviewer, 'IN');
+        $and->condition('mer.status', $show_status_reviewer_review, 'IN');
         $and->condition('mer.step', $show_step_reviewer, 'IN');
         $and->condition('mer.id', $already_reviewed_query, 'NOT IN');
 
@@ -1151,7 +1270,7 @@ function mfcs_page_request_reviewer_access($user, $request_id, $review_restricti
         $or->condition($and);
 
         // special case reviewer access: insurance provided
-        if (array_key_exists(MFCS_REVIEW_CLASSIFICATION_PURCHASING, $reviewer_settings['classifications'])) {
+        if (array_key_exists(MFCS_REVIEWER_CLASSIFICATION_PURCHASING, $reviewer_settings['request_classifications'])) {
           $has_insurance_query = db_select('mfcs_current', 'mc');
           $has_insurance_query->leftJoin('mfcs_field_insurance_contractor', 'mfic', 'mc.request_id = mfic.request_id AND mc.insurance_contractor = mfic.revision AND mfic.delta = 0');
           $has_insurance_query->leftJoin('mfcs_field_insurance_unaffiliated', 'mfiu', 'mc.request_id = mfiu.request_id AND mc.insurance_unaffiliated = mfiu.revision AND mfiu.delta = 0');
@@ -1189,38 +1308,58 @@ function mfcs_page_request_reviewer_access($user, $request_id, $review_restricti
       // always show accepted requests.
       $or->condition('mer.status', MFCS_REQUEST_STATUS_CLOSED_ACCEPTED);
 
-      // process venue coordinator access.
+      // always allow venue coordinator access. to view.
       $or->condition('mer.venue_coordinator', $venue_coordinator_ids, 'IN');
 
-      // process review access.
-      if (!empty($reviewer_settings['steps'])) {
+      // allow reviewer access to view if they are allowed to review the request at some point.
+      if (!empty($reviewer_settings['request_classifications'])) {
         $and = db_and();
-        $and->condition('mer.step', $reviewer_settings['steps'], 'IN');
+        $and->condition('mer.classification', $reviewer_settings['request_classifications'], 'IN');
+        $and->condition('mer.status', $show_status_reviewer, 'IN');
 
         $or->condition($and);
       }
     }
-    else {
+    elseif ($review_restrictions == MFCS_REVIEW_RESTRICTION_COMMENT) {
+      if (is_null($or)) {
+        $or = db_or();
+      }
+
+      // allow venue coordinator for the request access to comment.
+      $or->condition('mer.venue_coordinator', $venue_coordinator_ids, 'IN');
+
+      // allow reviewer access to comment if they are allowed to review the request at some point.
+      if (!empty($reviewer_settings['request_classifications'])) {
+        $and = db_and();
+        $and->condition('mer.classification', $reviewer_settings['request_classifications'], 'IN');
+        $and->condition('mer.status', $show_status_reviewer, 'IN');
+
+        $or->condition($and);
+      }
+    }
+    elseif ($review_restrictions == MFCS_REVIEW_RESTRICTION_NONE) {
       if (is_null($or)) {
         $or = db_or();
       }
 
       // always show completed and accepted requests when there are no restrictions.
-      $and = db_and();
-      $and->condition('mer.status', MFCS_REQUEST_STATUS_CLOSED_ACCEPTED);
-      $and->condition('mer.step', MFCS_REVIEW_STEP_COMPLETED);
-      $or->condition($and);
+      $or->condition('mer.status', MFCS_REQUEST_STATUS_CLOSED_ACCEPTED);
 
-      // process venue coordinator access.
+      // always allow venue coordinator access.
       $or->condition('mer.venue_coordinator', $venue_coordinator_ids, 'IN');
 
-      // process reviewer access.
-      if (!empty($reviewer_settings['steps'])) {
+      // allow reviewer access if they are allowed to review the request at some point.
+      if (!empty($reviewer_settings['request_classifications'])) {
         $and = db_and();
-        $and->condition('mer.status', MFCS_REQUEST_STATUS_LOCKED);
-        $and->condition('mer.step', $show_step_reviewer, 'IN');
+        $and->condition('mer.classification', $reviewer_settings['request_classifications'], 'IN');
+        $and->condition('mer.status', $show_status_reviewer, 'IN');
+
         $or->condition($and);
       }
+    }
+    else {
+      // no access should be allowed for unknown review_restrictions.
+      return $access;
     }
 
     if (!is_null($or)) {
@@ -1881,6 +2020,114 @@ function mfcs_load_request_user_role_mapping() {
 }
 
 /**
+ * Returns user's basic information.
+ *
+ * This is different from user_load in that it loads a small set of fields.
+ * This includes some hardcoded fields that are expected to be created via
+ * the drupal field api frontend.
+ *
+ * Information loaded is:
+ * - 'user_id': the users id.
+ * - 'name': user's system/login name.
+ * - 'email': user's e-mail address.
+ * - 'status': user's enabled/disabled status.
+ * - 'first_name': user's first name (custom field).
+ * - 'last_name': user's last name (custom field).
+ * - 'banner_id': user's banner id (custom field).
+ *
+ * @param integer $user_id
+ *   The user id number uniquely representing some user.
+ *
+ * @return array|bool
+ *   An array containing the user information.
+ *   FALSE is returned on error.
+ */
+function mfcs_load_basic_user_settings_by_user_id($user_id) {
+  if (!cf_is_integer($user_id)) {
+    cf_error::invalid_integer('user_id');
+
+    return FALSE;
+  }
+
+  $cache_id = __function__;
+  $user = &drupal_static($cache_id, NULL);
+  if (isset($user[$user_id]) && is_array($user[$user_id])) {
+    return $user[$user_id];
+  }
+
+  $user[$user_id] = NULL;
+
+  try {
+    $query = db_select('users', 'u');
+    $query->leftJoin('field_data_field_user_first_name', 'fdfufn', 'u.uid = fdfufn.entity_id AND fdfufn.delta = 0');
+    $query->leftJoin('field_data_field_user_last_name', 'fdfuln', 'u.uid = fdfuln.entity_id AND fdfuln.delta = 0');
+    $query->leftJoin('field_data_field_user_banner_id', 'fdfubi', 'u.uid = fdfubi.entity_id AND fdfubi.delta = 0');
+
+    $query->addField('u', 'name', 'name');
+    $query->addField('u', 'mail', 'email');
+    $query->addField('u', 'status', 'status');
+
+    $query->addField('fdfufn', 'field_user_first_name_value', 'first_name');
+    $query->addField('fdfuln', 'field_user_last_name_value', 'last_name');
+    $query->addField('fdfubi', 'field_user_banner_id_value', 'banner_id');
+
+    $query->condition('u.uid', $user_id);
+
+    $query->range(0, 1);
+
+    $rows = $query->execute()->fetchAll();
+
+    if (!empty($rows) && is_array($rows)) {
+      $user[$user_id] = array(
+        'user_id' => $user_id,
+        'name' => '',
+        'email' => '',
+        'status' => '',
+        'first_name' => '',
+        'last_name' => '',
+        'banner_id' => '',
+      );
+
+      foreach ($rows as $row) {
+        if (property_exists($row, 'name') && !is_null($row->name)) {
+          $user[$user_id]['name'] = $row->name;
+        }
+
+        if (property_exists($row, 'email') && !is_null($row->email)) {
+          $user[$user_id]['email'] = $row->email;
+        }
+
+        if (property_exists($row, 'status') && !is_null($row->status)) {
+          $user[$user_id]['status'] = $row->status;
+        }
+
+        if (property_exists($row, 'first_name') && !is_null($row->first_name)) {
+          $user[$user_id]['first_name'] = $row->first_name;
+        }
+
+        if (property_exists($row, 'last_name') && !is_null($row->last_name)) {
+          $user[$user_id]['last_name'] = $row->last_name;
+        }
+
+        if (property_exists($row, 'banner_id') && !is_null($row->banner_id)) {
+          $user[$user_id]['banner_id'] = $row->banner_id;
+        }
+
+        break;
+      }
+    }
+  } catch (Exception $ex) {
+    cf_error::on_exception($ex);
+
+    return FALSE;
+  }
+
+  if (is_null($user[$user_id])) return FALSE;
+
+  return $user[$user_id];
+}
+
+/**
  * Returns user's information.
  *
  * This is different from user_load in that this loads user banner information.
@@ -2304,10 +2551,25 @@ function mfcs_ensure_user_by_email($email, $roles = array()) {
 /**
  * Synchronizes the local database with the banner venue information.
  *
+ * @param object|null $transaction
+ *   (optional) If not NULL, then a transaction object created by the
+ *   caller.
+ * @param object|null $user
+ *   (optional) The user object or NULL for the current user.
+ *
  * @return bool
  *   TRUE on success, FALSE otherwise.
  */
-function mfcs_sync_banner_to_local() {
+function mfcs_sync_banner_to_local($transaction = NULL, $user = NULL) {
+  if (is_null($user)) {
+    $user = cd_current_user();
+  }
+
+  if (!is_object($user)) {
+    cf_error::invalid_object('user');
+    return FALSE;
+  }
+
   $join = ' inner join ucs.msu_venue_list mvl on (mvl.category = mvd.category and mvl.building_code = mvd.building_code and mvl.room_number = mvd.room_number)';
 
   $select = 'mvd.*';
@@ -2325,7 +2587,10 @@ function mfcs_sync_banner_to_local() {
 
   $instance = mfcs_instance();
 
-  $transaction = db_transaction();
+  if (!is_object($transaction)) {
+    $transaction = db_transaction();
+  }
+
   try {
     // disable all locations, buildings, and rooms such that the ones that are not added back will be disabled.
     $query = db_update('mfcs_banner_locations');
@@ -2428,7 +2693,7 @@ function mfcs_sync_banner_to_local() {
         // add the room and venue coordinators.
         $room_coordinator = NULL;
         if (!empty($coordinator_room_item['email'])) {
-          $room_coordinator = mfcs_ensure_user_by_email($coordinator_room_item['email'], array('reviewer'));
+          $room_coordinator = mfcs_ensure_user_by_email($coordinator_room_item['email'], array('reviewer', 'requester'));
         }
 
         if (!is_object($room_coordinator) && !empty($coordinator_venue_item['email'])) {
@@ -2439,7 +2704,15 @@ function mfcs_sync_banner_to_local() {
           $room_item['coordinator_id'] = $room_coordinator->uid;
         }
         else {
-          $room_item['coordinator_id'] = MFCS_FAILSAFE_COORDINATOR_ID;
+          global $conf;
+
+          if (empty($conf['fcs_failsafe_coordinator']) || !is_integer($conf['fcs_failsafe_coordinator'])) {
+            watchdog(MFCS_WATCHDOG_ID, "Failed to load 'fcs_failsafe_coordinator' settings. Your settings.php does not contain the failsafe coordinator user id.", array(), WATCHDOG_CRITICAL);
+            $room_item['coordinator_id'] = 1; // as a last resort fall back to the default drupal admin account.
+          }
+          else {
+            $room_item['coordinator_id'] = $conf['fcs_failsafe_coordinator'];
+          }
         }
 
         // add/update the location.
@@ -2760,11 +3033,6 @@ function mfcs_sync_banner_to_local_classes() {
     return TRUE;
   }
 
-  $rooms_list = array();
-  foreach ($rooms as $room) {
-    $rooms_list[$room->room_id] = $room->room_number;
-  }
-
 
   $classes_query = 'select ssrmeet_start_date, ssrmeet_end_date, ssrmeet_begin_time, ssrmeet_end_time, ';
   $classes_query .= 'ssrmeet_bldg_code, ssrmeet_room_code, ssrmeet_mon_day, ssrmeet_tue_day, ';
@@ -2822,7 +3090,16 @@ function mfcs_sync_banner_to_local_classes() {
         $start_time_string = implode(':', str_split($class['ssrmeet_begin_time'], 2));
         $stop_time_string = implode(':', str_split($class['ssrmeet_end_time'], 2));
 
-        $class_room = array_search($class['ssrmeet_room_code'], $rooms_list);
+        // search the system by both building code and room code.
+        $class_room = FALSE;
+        foreach ($rooms as $room) {
+          if ($class['ssrmeet_room_code'] != $room->room_number) continue;
+
+          if ($class['ssrmeet_bldg_code'] == $room->building_code) {
+            $class_room = $room->room_id;
+             break;
+          }
+        }
         if ($class_room === FALSE) {
           continue;
         }
@@ -3011,6 +3288,8 @@ function mfcs_autocancel_old_requests_cron() {
     $cancelled = mfcs_workflow_set_status($request_id, MFCS_REQUEST_STATUS_CANCELLED, $system_user);
 
     if ($cancelled) {
+      mfcs_workflow_step_review($request_id, $system_user, MFCS_REVIEW_DECISION_CANCELLED);
+
       $parameters = array();
       $parameters['changed_by'] = $system_user->uid;
       $parameters['changed_type'] = 'user';
@@ -3022,6 +3301,98 @@ function mfcs_autocancel_old_requests_cron() {
     else {
       watchdog(MFCS_WATCHDOG_ID, "An error occured while trying to auto-cancel the request: @request_id.", array('@request_id' => $request_id), WATCHDOG_ERROR);
     }
+  }
+}
+
+/**
+ * Executes the cron queue to block accounts lacking the proper banner roles.
+ *
+ * An exception to this are the accounts defined in the settings array
+ * 'fcs_no_auto_block_accounts'.
+ *
+ * @see mfcs_cronapi()
+ */
+function mfcs_auto_block_accounts_cron() {
+  global $conf;
+
+  $no_auto_block_accounts = array();
+  if (isset($conf['fcs_no_auto_block_accounts']) && is_array($conf['fcs_no_auto_block_accounts'])) {
+    $no_auto_block_accounts = $conf['fcs_no_auto_block_accounts'];
+  }
+
+  $banner_roles = array();
+  if (isset($conf['fcs_banner_roles']) && is_array($conf['fcs_banner_roles'])) {
+    $banner_roles = $conf['fcs_banner_roles'];
+  }
+
+  // the variable should not be empty, but if it is return so that no roles ever get disabled.
+  if (empty($banner_roles)) {
+    cf_error::invalid_variable('fcs_banner_roles', "The 'fcs_banner_roles' array is not properly defined or is empty");
+    return;
+  }
+
+  // do not block administrator roles.
+  $banner_roles['administrator'] = 'administrator';
+
+  // do not block bannerless exception roles.
+  $banner_roles['bannerless exception'] = 'bannerless exception';
+
+  $transaction = db_transaction();
+  try {
+    $query = db_select('users', 'u');
+    $query->addField('u', 'uid', 'user_id');
+    $query->addField('u', 'name', 'user_name');
+
+    $query->condition('u.name', $no_auto_block_accounts, 'NOT IN');
+
+    // do not process anonymous
+    $query->condition('u.uid', 0, '<>');
+
+    // do not process system admin account
+    $query->condition('u.uid', 1, '<>');
+
+    // only check enabled accounts
+    $query->condition('u.status', 1);
+
+    $users = $query->execute()->fetchAll();
+
+    if (empty($users)) return;
+
+    // using user_load() is not the most efficient way, but it works and functions like mfcs_synchronize_user_settings() expect a user object.
+    foreach ($users as $u) {
+      // first synchronize the users setting
+      $user = user_load($u->user_id);
+      if (!is_object($user)) continue;
+
+      mfcs_synchronize_user_settings($user);
+
+      // once the user is synchronized, check their roles and block account as necessary.
+      $block_user = TRUE;
+      foreach ($banner_roles as $banner_role) {
+        if (array_search($banner_role, $user->roles) !== FALSE) {
+          $block_user = FALSE;
+          break;
+        }
+      }
+
+      // if the user does not have the appropriate banner roles, then block that user.
+      if ($block_user) {
+        watchdog(MFCS_WATCHDOG_ID, "Auto-blocking the user @user (@user_id) and removing all existing roles, reason: Not in appropriate banner groups or local admin groups.", array('@user' => $user->name, '@user_id' => $user->uid), WATCHDOG_INFO);
+
+        $block_query = db_update('users');
+        $block_query->fields(array('status' => 0));
+        $block_query->condition('uid', $user->uid);
+        $block_query->execute();
+
+        $delete_query = db_delete('users_roles');
+        $delete_query->condition('uid', $user->uid);
+        $delete_query->execute();
+      }
+    }
+  }
+  catch (Exception $ex) {
+    $transaction->rollback();
+    cf_error::on_query_execution($ex);
   }
 }
 
@@ -3918,7 +4289,7 @@ function mfcs_convert_value_from_database_format($value, $method, $option = arra
  *   request to return.
  */
 function mfcs_load_request_by_id($request_id, $reset_action = NULL, $revision_id = NULL) {
-  if (!cf_is_integer($request_id)) {
+  if (!cf_is_integer($request_id) || $request_id < 0) {
     if (!($reset_action === FALSE && is_null($request_id))) {
       cf_error::invalid_integer('request_id');
       return FALSE;
@@ -3930,7 +4301,7 @@ function mfcs_load_request_by_id($request_id, $reset_action = NULL, $revision_id
     return FALSE;
   }
 
-  if (!is_null($revision_id) && !cf_is_integer($revision_id)) {
+  if (!is_null($revision_id) && (!cf_is_integer($revision_id) || $revision_id < 0)) {
     cf_error::invalid_integer('revision_id');
     return FALSE;
   }
@@ -4156,7 +4527,7 @@ function mfcs_load_request_by_id($request_id, $reset_action = NULL, $revision_id
  * @see mfcs_table_structure()
  */
 function mfcs_load_request_by_timestamp($request_id, $timestamp, $revision_user_id, $desired_fields = array()) {
-  if (!cf_is_integer($request_id)) {
+  if (!cf_is_integer($request_id) || $request_id < 0) {
     cf_error::invalid_integer('request_id');
     return FALSE;
   }
@@ -5222,6 +5593,8 @@ function mfcs_get_user_information($user_id) {
  *   - 'steps': request steps array.
  *   - 'for_steps': array keyed by request steps containing each associated
  *                  request classification (not reviewer classification).
+ *   - 'request_classifications': classifications of requests the user is
+ *     allowed to review.
  *   FALSE is returned on error.
  */
 function mfcs_get_reviewer_settings_by_user_id($user_id, $disabled = FALSE) {
@@ -5263,11 +5636,13 @@ function mfcs_get_reviewer_settings_by_user_id($user_id, $disabled = FALSE) {
     'classifications' => array(),
     'steps' => array(),
     'for_step' => array(),
+    'request_classifications' => array(),
   );
 
   foreach ($reviewers as $reviewer) {
     $settings['classifications'][$reviewer->reviewer_classification] = $reviewer->reviewer_classification;
     $settings['steps'][$reviewer->review_step] = $reviewer->review_step;
+    $settings['request_classifications'][$reviewer->request_classification] = $reviewer->request_classification;
 
     // provides 'request classifications' (and not 'review classifications') information on a per step basis.
     if (!array_key_exists($reviewer->review_step, $settings['for_step'])) {
@@ -5554,6 +5929,9 @@ function mfcs_display_room_unavailable_message($dates) {
  *                     of an array. The value array will contain an 'alias'
  *                     string, an 'on' string, a 'join' string, and a 'columns'
  *                     array.
+ *     'distinct': Process the entire query as distinct.
+ *     'distinct_id': Custom option to load mer.id as distinct. This overrides
+ *                    'distinct' when TRUE.
  *
  * @return array|false
  *   An array of containing the following:
@@ -5600,6 +5978,19 @@ function mfcs_request_load_listing($conditions = array(), $options = array()) {
   $results = TRUE;
   if (isset($options['results']) && is_bool($options['results'])) {
     $results = $options['results'];
+  }
+
+  $distinct = FALSE;
+  if (isset($options['distinct']) && is_bool($options['distinct'])) {
+    $distinct = (bool) $options['distinct'];
+  }
+
+  $distinct_id = FALSE;
+  if (isset($options['distinct_id']) && is_bool($options['distinct_id'])) {
+    $distinct_id = (bool) $options['distinct_id'];
+    if ($distinct_id) {
+      $distinct = FALSE;
+    }
   }
 
   $return = array(
@@ -5711,7 +6102,17 @@ function mfcs_request_load_listing($conditions = array(), $options = array()) {
       $count_query->addExpression('count(mer.id)');
     }
 
-    $query->addField('mer', 'id', 'id');
+    if ($distinct) {
+      $query->distinct();
+    }
+
+    if ($distinct_id) {
+      $query->distinct('mer.id');
+    }
+    else {
+      $query->addField('mer', 'id', 'id');
+    }
+
     $query->addField('mer', 'user_id', 'user_id');
     $query->addField('mer', 'created', 'created');
     $query->addField('mer', 'updated', 'updated');
@@ -5839,7 +6240,7 @@ function mfcs_request_load_listing($conditions = array(), $options = array()) {
         $already_venue_coordinated_query = db_select('mfcs_reviewed', 'mrd_vc');
         $already_venue_coordinated_query->addField('mrd_vc', 'request_id', 'request_id');
         $already_venue_coordinated_query->where('mrd_vc.request_id = mer.id');
-        $already_venue_coordinated_query->condition('mrd_vc.classification', MFCS_REVIEW_CLASSIFICATION_VENUE_COORDINATOR);
+        $already_venue_coordinated_query->condition('mrd_vc.classification', MFCS_REVIEWER_CLASSIFICATION_VENUE_COORDINATOR);
 
         $and = db_and();
         $and->condition('mer.status', $show_status_venue_coordinator, 'IN');
@@ -6545,7 +6946,7 @@ function mfcs_get_latest_reviews($request_id, $steps = array(), $decisions = arr
     // some classifications are only allowed in certain steps.
     $and = db_and();
     $and->condition('mfrr.step', array(MFCS_REVIEW_STEP_REVIEW, MFCS_REVIEW_STEP_REQUIREMENTS), 'IN');
-    $and->condition('mrc.classification', array(MFCS_REVIEW_CLASSIFICATION_VENUE_COORDINATOR, MFCS_REVIEW_CLASSIFICATION_VENUE_COORDINATOR_PROXY), 'IN');
+    $and->condition('mrc.classification', array(MFCS_REVIEWER_CLASSIFICATION_VENUE_COORDINATOR, MFCS_REVIEWER_CLASSIFICATION_VENUE_COORDINATOR_PROXY), 'IN');
     $and->not();
     $query->condition($and);
 
@@ -7545,91 +7946,140 @@ function mfcs_request_get_available_venue_coordinators() {
 }
 
 /**
- * Loads a list of reviewers who have yet to review the given request.
+ * Gets the current review decisions and the total for the given requests.
  *
- * This only applies to the current active review state.
+ * @param array $request_ids
+ *   An array of request ids to check.
+ *   The array should be keyed by request id with a value being defined as the
+ *   revision number. The value may also be NULL, in which case the current
+ *   revision is used.
+ * @param int $classification
+ *   The requests current classification.
+ * @param int $step
+ *   The requests current step.
  *
- * @param int $request_id
- *   The request id of the request to operate on.
- *
- * @return array|bool
- *   An array of reviewers, with their reviewer classifications, who have not
- *   yet reviewed the given request. FALSE is returned on error.
+ * @param array|bool.
+ *   The array is be keyed by request id and the value is an array:
+ *   'current': an array of reviews
+ *   FALSE is returned on error.
  */
-function mfcs_get_reviewers_yet_to_review($request_id) {
-  $request = mfcs_load_request_by_id($request_id);
-
-  if (empty($request)) {
+function mfcs_get_requests_current_review_decisions($request_ids, $classification, $step) {
+  if (!is_array($request_ids) || empty($request_ids)) {
+    cf_error::invalid_array('request_ids');
     return FALSE;
   }
 
-  $conditions = array(
-    'mr.request_classification' => $request['request_coordinator']['classification'][0]->value,
-    'mr.review_step' => $request['top']['step'][0]->value,
-    'mr.disabled' => 0,
-  );
-
-  $reviewers_returned = mfcs_get_reviewers($conditions);
-  $reviewers = array();
-  if (isset($reviewers_returned['results']) && is_array($reviewers_returned['results'])) {
-    $reviewers = $reviewers_returned['results'];
+  if (!cf_is_integer($classification)) {
+    cf_error::invalid_integer('classification');
+    return FALSE;
   }
-  unset($reviewers_returned);
 
-  if (empty($reviewers)) {
-    return array();
+  if (!cf_is_integer($step)) {
+    cf_error::invalid_integer('step');
+    return FALSE;
+  }
+
+  // do not operate on steps that cannot be normally reviewed.
+  if ($step != MFCS_REVIEW_STEP_REVIEW && $step != MFCS_REVIEW_STEP_REQUIREMENTS) {
+    return FALSE;
   }
 
   mfcs_include(MFCS_INCLUDE_LIST_OPTIONS);
 
   $reviewer_classification_options = mfcs_get_reviewer_classification_list_options();
 
-  $review_classifications = array();
-  $reviewer_ids = array();
-  $yet_to_review = array();
-
-  foreach ($reviewers as $reviewer) {
-    if (!isset($review_classifications[$reviewer->user_id])) {
-      $review_classifications[$reviewer->user_id] = array();
-    }
-
-    $review_classifications[$reviewer->user_id][$reviewer->reviewer_classification] = $reviewer->reviewer_classification;
-    $reviewer_ids[$reviewer->user_id] = $reviewer->user_id;
-    $yet_to_review[$reviewer->reviewer_classification] = $reviewer_classification_options[$reviewer->reviewer_classification];
+  $reviewers_returned = mfcs_get_reviewers(array('mr.request_classification' => $classification, 'mr.review_step' => $step, 'mr.disabled' => 0));
+  $reviewers = array();
+  if (isset($reviewers_returned['results']) && is_array($reviewers_returned['results'])) {
+    $reviewers = $reviewers_returned['results'];
   }
-  unset($reviewers);
+  unset($reviewers_returned);
 
-  try {
-    $query = db_select('mfcs_field_review_review', 'mfrr');
-    $query->innerJoin('mfcs_current', 'mc', 'mfrr.request_id = mc.request_id and mfrr.revision = mc.review_review');
+  $required_reviewers_classifications = array();
+  $reviewers_by_classification = array();
+  foreach ($reviewers as $reviewer) {
+    if (!array_key_exists($reviewer->reviewer_classification, $required_reviewers_classifications)) {
+      // never count venue coordinator or the proxy reviewer classifications.
+      if ($reviewer->reviewer_classification == MFCS_REVIEWER_CLASSIFICATION_VENUE_COORDINATOR || $reviewer->reviewer_classification == MFCS_REVIEWER_CLASSIFICATION_VENUE_COORDINATOR_PROXY) {
+        continue;
+      }
 
-    $query->addField('mfrr', 'user_id', 'user_id');
+      $required_reviewers_classifications[$reviewer->reviewer_classification] = $reviewer_classification_options[$reviewer->reviewer_classification];
 
-    $query->condition('mfrr.request_id', $request_id);
-    $query->condition('mfrr.step', $request['top']['step'][0]->value);
-    $query->condition('mfrr.user_id', $reviewer_ids, 'IN');
-    $query->condition('mfrr.decision', array(MFCS_REVIEW_DECISION_APPROVE, MFCS_REVIEW_DECISION_DENY), 'IN');
-    $query->distinct();
-
-    $results = $query->execute()->fetchAll();
-
-    if (!empty($results)) {
-      foreach ($results as $result) {
-        if (array_key_exists($result->user_id, $review_classifications)) {
-          foreach ($review_classifications[$result->user_id] as $review_classification) {
-            unset($yet_to_review[$review_classification]);
-          }
-        }
+      if (!isset($reviewers_by_classification[$reviewer->reviewer_classification][$reviewer->user_id])) {
+        $reviewers_by_classification[$reviewer->reviewer_classification][$reviewer->user_id] = $reviewer->user_id;
       }
     }
   }
-  catch (Exception $ex) {
-    cf_error::on_query_execution($ex);
 
-    return FALSE;
+  $total_required = count($required_reviewers_classifications);
+  $required_reviewers_classifications_ids = array_keys($required_reviewers_classifications);
+
+  $review_decisions = array(
+    MFCS_REVIEW_DECISION_DENY,
+    MFCS_REVIEW_DECISION_APPROVE,
+  );
+
+  $decisions = array();
+  foreach ($request_ids as $request_id => $review_revision) {
+    if (array_key_exists($request_id, $decisions)) {
+      continue;
+    }
+
+    // require a valid integer be used for the revision number.
+    if (!is_null($review_revision) && (!cf_is_integer($review_revision) || $review_revision < 0)) {
+      watchdog(MFCS_WATCHDOG_ID, "Failed to load reviewer classification count for request %request_id (revision: %review_revision) does not have a valid revision number (and is not NULL).", array('%request_id' => $request_id, '%review_revision' => $review_revision), WATCHDOG_ERROR);
+      continue;
+    }
+
+    $decisions[$request_id] = array(
+      'current' => 0,
+      'total' => $total_required,
+      'completed' => array(),
+      'needed' => $required_reviewers_classifications,
+      'reviewers' => $reviewers_by_classification,
+    );
+
+    try {
+      $query = db_select('mfcs_field_review_review', 'mfrr');
+
+      if (is_null($review_revision)) {
+        $query->innerJoin('mfcs_current', 'mc', 'mfrr.request_id = mc.request_id and mfrr.revision = mc.review_review');
+      }
+      $query->innerJoin('mfcs_review_classifications', 'mrc', 'mfrr.id = mrc.review_id');
+
+      $query->addField('mrc', 'classification', 'classification');
+      $query->addField('mfrr', 'user_id', 'user_id');
+
+      $query->condition('mfrr.request_id', $request_id);
+      if (!is_null($review_revision)) {
+        $query->condition('mfrr.revision', $review_revision);
+      }
+      $query->condition('mfrr.decision', $review_decisions, 'IN');
+      $query->condition('mrc.classification', $required_reviewers_classifications_ids, 'IN');
+      $query->distinct();
+
+      $reviews = $query->execute()->fetchAll();
+
+      if ($reviews === FALSE) {
+        watchdog(MFCS_WATCHDOG_ID, "Failed to load reviewer classification count for request %request_id (review revision: %review_revision) with classification %classification on step %step. Assuming current reviewed is 0.", array('%request_id' => $request_id, '%review_revision' => (is_null($review_revision) ? 'NULL' : $review_revision), '%classification' => $classification, '%step' => $step), WATCHDOG_ERROR);
+      }
+      else {
+        foreach ($reviews as $review) {
+          $decisions[$request_id]['completed'][$review->classification] = $reviewer_classification_options[$review->classification];
+        }
+
+        $decisions[$request_id]['current'] = count($decisions[$request_id]['completed']);
+      }
+    }
+    catch (Exception $ex) {
+      cf_error::on_query_execution($ex);
+
+      return FALSE;
+    }
   }
 
-  return $yet_to_review;
+  return $decisions;
 }
 
 /**
@@ -8236,6 +8686,177 @@ function mfcs_build_redirect_array($path, $fragment = NULL) {
   global $mfcs_determined;
 
   return array($path, array('query' => $mfcs_determined['redirect'], 'fragment' => $fragment));
+}
+
+/**
+ * Returns whether or not the specified user has manage access.
+ *
+ * Unlike user_access() this does not require the entire drupal object.
+ * Only the user id is necessary, which increases performance and uses less
+ * memory.
+ *
+ * @param bool $reset
+ *   (optional) When TRUE, will reset the instance to the current timestamp.
+ *
+ * @return bool
+ *   TRUE if the user is a manager, FALSE otherwise.
+ */
+function mfcs_user_can_manage($user_id) {
+  static $can_manage;
+  $can_manage = &drupal_static(__function__, array());
+
+  if (!array_key_exists($user_id, $can_manage)) {
+    try {
+      $query = db_select('users', 'u');
+      $query->innerJoin('users_roles', 'ur', 'u.uid = ur.uid');
+      $query->innerJoin('role_permission', 'rp', 'ur.rid = rp.rid');
+
+      $query->condition('u.uid', $user_id);
+      $query->condition('rp.permission', 'mfcs manage');
+      $query->range(0, 1);
+
+      $results = $query->execute()->fetchAll();
+
+      $can_manage[$user_id] = !empty($results);
+    }
+    catch (Exception $ex) {
+      cf_error::on_exception($ex);
+      return FALSE;
+    }
+
+  }
+
+  return $can_manage[$user_id];
+}
+
+/**
+ * Returns whether or not the specified user has administration access.
+ *
+ * Unlike user_access() this does not require the entire drupal object.
+ * Only the user id is necessary, which increases performance and uses less
+ * memory.
+ *
+ * @param bool $reset
+ *   (optional) When TRUE, will reset the instance to the current timestamp.
+ *
+ * @return bool
+ *   TRUE if the user is an administrator, FALSE otherwise.
+ */
+function mfcs_user_can_administer($user_id) {
+  static $can_administer;
+  $can_administer = &drupal_static(__function__, array());
+
+  if (!array_key_exists($user_id, $can_administer)) {
+    try {
+      $query = db_select('users', 'u');
+      $query->innerJoin('users_roles', 'ur', 'u.uid = ur.uid');
+
+      $query->condition('u.uid', $user_id);
+      $query->condition('ur.rid', 3); // @fixme: this is a hardcoded value for the 'administer' role, might need to find a dynamic way to implement this.
+      $query->range(0, 1);
+
+      $results = $query->execute()->fetchAll();
+
+      $can_administer[$user_id] = !empty($results);
+    }
+    catch (Exception $ex) {
+      cf_error::on_exception($ex);
+      return FALSE;
+    }
+
+  }
+
+  return $can_administer[$user_id];
+}
+
+/**
+ * Returns TRUE if the given request dates have not come to pass.
+ *
+ * To keep queries as simple as possible, this operates on a per-day basis.
+ * Change this to a per minute basis if this becomes a problem.
+ *
+ * This does not check to see if a request by the specified id exists.
+ *
+ * @param int $request_id
+ *   The request id integer.
+ *
+ * @return bool
+ *   TRUE when the request has upcoming dates.
+ *   FALSE on error or when the request has no upcoming dates.
+ */
+function mfcs_request_is_still_upcoming($request_id) {
+  if (!cf_is_integer($request_id)) {
+    cf_error::invalid_integer('request_id');
+    return FALSE;
+  }
+
+  $today = strtotime('midnight today', mfcs_instance());
+
+  try {
+    $query = db_select('mfcs_field_dates_date', 'mfdd');
+    $query->addExpression('count(mfdd.request_id)');
+
+    $query->condition('mfdd.request_id', $request_id);
+    $query->condition('mfdd.value', $today, '>=');
+
+    $upcoming_dates = $query->execute()->fetchField();
+    return $upcoming_dates > 0;
+  }
+  catch (Exception $ex) {
+    cf_error::on_exception($ex);
+    return FALSE;
+  }
+
+  return FALSE;
+}
+
+/**
+ * Sign the message us GNU PG.
+ *
+ * @param string $message
+ *   A string to sign.
+ * @param $content_type
+ *   (optional) The content type to use, such as: 'multipart/mixed'.
+ *
+ * @param string|false
+ *   Signature string on success, FALSE otherwise.
+ */
+function mfcs_gpg_sign($message) {
+  global $conf;
+
+  if (empty($conf['fcs_email']) || empty($message)) {
+    return FALSE;
+  }
+
+  if (!class_exists('gnupg') || !isset($conf['gpg-mail'][$conf['fcs_email']]['fingerprint'])) {
+    return FALSE;
+  }
+
+  if (!is_string($conf['gpg-mail'][$conf['fcs_email']]['fingerprint'])) {
+    return FALSE;
+  }
+
+  $gpg = new gnupg();
+  if (!is_object($gpg)) {
+    return FALSE;
+  }
+
+  try {
+    $fingerprint = $conf['gpg-mail'][$conf['fcs_email']]['fingerprint'];
+
+    $gpg->seterrormode(gnupg::ERROR_EXCEPTION);
+    $gpg->addsignkey($fingerprint);
+    $gpg->setsignmode(gnupg::SIG_MODE_DETACH);
+    $gpg->setarmor(1);
+
+    return $gpg->sign($message);
+    #$valid = $gpg->verify($message, $signature);
+  }
+  catch (Exception $ex) {
+    watchdog(MFCS_WATCHDOG_ID, "Failed to sign PGP key: @key, reason: @reason", array('@key' => $fingerprint, '@reason' => $ex->getMessage()), WATCHDOG_ERROR);
+  }
+
+  return FALSE;
 }
 
 /**

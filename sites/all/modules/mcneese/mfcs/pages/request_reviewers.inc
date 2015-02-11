@@ -106,21 +106,21 @@ function mfcs_request_reviewers_0_page() {
  *   The HTML output representing the page.
  */
 function mfcs_request_reviewers_0_form($form, &$form_state, $classification, $review_step, $page_number = 0) {
-  if (!cf_is_integer($classification)) {
+  if (!cf_is_integer($classification) || $classification < 0) {
     cf_error::invalid_integer('classification');
     drupal_not_found();
     drupal_exit();
     return array();
   }
 
-  if (!cf_is_integer($review_step)) {
+  if (!cf_is_integer($review_step) || $review_step < 0) {
     cf_error::invalid_integer('review_step');
     drupal_not_found();
     drupal_exit();
     return array();
   }
 
-  if (!cf_is_integer($page_number)) {
+  if (!cf_is_integer($page_number) || $page_number < 0) {
     $page_number = 0;
   }
 
@@ -605,6 +605,7 @@ function mfcs_request_reviewers_0_form_submit($form, &$form_state) {
     $clicked_id = $form_state['triggering_element']['#id'];
   }
 
+  $failure = FALSE;
   if ($clicked_id == 'submit-reviewer-add') {
     $values = array();
     $values['request_classification'] = $form['form']['request_classification']['#value'];
@@ -634,7 +635,6 @@ function mfcs_request_reviewers_0_form_submit($form, &$form_state) {
       }
     }
 
-    $failure = FALSE;
     $transaction = db_transaction();
     try {
       $query = db_select('mfcs_reviewers', 'mr');
@@ -672,6 +672,7 @@ function mfcs_request_reviewers_0_form_submit($form, &$form_state) {
     $classification = $form['form']['request_classification']['#value'];
     $step = $form['form']['review_step']['#value'];
 
+    $transaction = db_transaction();
     try {
       $query = db_select('mfcs_requests', 'mer');
 
@@ -692,16 +693,20 @@ function mfcs_request_reviewers_0_form_submit($form, &$form_state) {
       }
     }
     catch (Exception $ex) {
+      $transaction->rollback();
       cf_error::on_query_execution($ex);
 
-      return FALSE;
+      $failure = TRUE;
     }
 
-    $checked = mfcs_check_if_requests_are_fully_reviewed($request_ids, $classification, $step);
+    $decisions = FALSE;
+    if (!$failure) {
+      $decisions = mfcs_get_requests_current_review_decisions($request_ids, $classification, $step);
+    }
 
-    if ($checked === FALSE) {
-      form_set_error('form', "An error occurred while trying to submit the recheck the requests. Please contact the support staff.");
-      watchdog(MFCS_WATCHDOG_ID, "An error occured while trying to submit the recheck the requests.", array(), WATCHDOG_ERROR);
+    if ($decisions === FALSE) {
+      form_set_error('form', "An error occurred while trying to recheck the requests. Please contact the support staff.");
+      watchdog(MFCS_WATCHDOG_ID, "An error occured while trying to recheck the requests.", array(), WATCHDOG_ERROR);
 
       $form_state['rebuild'] = TRUE;
       $form_state['redirect'] = FALSE;
@@ -709,9 +714,9 @@ function mfcs_request_reviewers_0_form_submit($form, &$form_state) {
       return FALSE;
     }
 
-    if (is_array($checked)) {
-      foreach ($checked as $request_id => $check) {
-        if ($check === FALSE) {
+    if (is_array($decisions)) {
+      foreach ($decisions as $request_id => $decision) {
+        if ($decision['current'] < $decision['total']) {
           continue;
         }
 
@@ -752,7 +757,7 @@ function mfcs_request_reviewers_0_form_submit($form, &$form_state) {
  *   The HTML output representing the page.
  */
 function mfcs_request_reviewers_0_delete_form($form, &$form_state, $id) {
-  if (!cf_is_integer($id)) {
+  if (!cf_is_integer($id) || $id < 0) {
     cf_error::invalid_integer('id');
     drupal_not_found();
     drupal_exit();
@@ -892,6 +897,14 @@ function mfcs_request_reviewers_0_delete_form_submit($form, &$form_state) {
   catch (Exception $ex) {
     $transaction->rollback();
     cf_error::on_query_execution($ex);
+
+    form_set_error('form', "An error occurred while trying to delete the reviewer. Please contact the support staff.");
+    watchdog(MFCS_WATCHDOG_ID, "An error occured while trying to delete the reviewer '%reviewer_id'.", array('%reviewer_id' => $form['form']['id']['#value']), WATCHDOG_ERROR);
+
+    $form_state['rebuild'] = TRUE;
+    $form_state['redirect'] = FALSE;
+    $form_state['submitted'] = FALSE;
+    return;
   }
 
   // redirect after submitting.
