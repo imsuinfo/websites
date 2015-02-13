@@ -94,7 +94,7 @@ function unrestricted_not_found() {
 }
 
 /**
- * Exits with 505.
+ * Exits with 503.
  *
  * @param string $message
  *   (optional) Additional information to display..
@@ -103,7 +103,7 @@ function unrestricted_service_unavailable($message = NULL) {
   $instance = unrestricted_get_instance();
 
   $headers = array();
-  $headers['status'] = array('value' => '505 Service Unavailable', 'status_code' => 505);
+  $headers['status'] = array('value' => '503 Service Unavailable', 'status_code' => 503);
   $headers['Content-Type'] = array('value' => 'text/html');
   $headers['Date'] = array('value' => date('r', $instance));
 
@@ -115,7 +115,7 @@ function unrestricted_service_unavailable($message = NULL) {
     print(file_get_contents($file));
   }
   else {
-    print("<h1>Service Unavailable (505)</h1>\n");
+    print("<h1>Service Unavailable (503)</h1>\n");
 
     if (is_string($message)) {
       print($message . "<br>\n");
