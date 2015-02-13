@@ -210,7 +210,9 @@
  *   );
  * @endcode
  */
-include_once DRUPAL_ROOT . '/sites/default/passwords.php';
+if (!defined('DO_NOT_INCLUDE_PASSWORDS')) {
+  include_once DRUPAL_ROOT . '/sites/default/passwords.php';
+}
 
 $databases = array (
   'file_db' =>
@@ -737,6 +739,50 @@ $conf['image_style_default_scheme'] = 'public';
 $conf['phplot_api_default_scheme'] = 'public';
 
 $conf['ultimate_cron_reserve_memory'] = 1;
+
+
+/**
+ *  GNU PG Support
+ */
+putenv('GNUPGHOME=/var/www/drupal/wwwdev/sites/default/gnupg');
+$conf['gpg-mail'] = array(
+  'no-reply@mcneese.edu' => array(
+    'fingerprint' => '8FB5449D91992AF6AD8C1751BD57A1F7557EC223',
+    'short_id' => '557EC223',
+  ),
+  'webmaster@mcneese.edu' => array(
+    'fingerprint' => '8FB5449D91992AF6AD8C1751BD57A1F7557EC223',
+    'short_id' => '557EC223',
+  ),
+  'financialaid@mcneese.edu' => array(
+    'fingerprint' => '8FB5449D91992AF6AD8C1751BD57A1F7557EC223',
+    'short_id' => '557EC223',
+  ),
+  'internships@mcneese.edu' => array(
+    'fingerprint' => '8FB5449D91992AF6AD8C1751BD57A1F7557EC223',
+    'short_id' => '557EC223',
+  ),
+  'studentunion@mcneese.edu' => array(
+    'fingerprint' => '8FB5449D91992AF6AD8C1751BD57A1F7557EC223',
+    'short_id' => '557EC223',
+  ),
+  'studentlife@mcneese.edu' => array(
+    'fingerprint' => '8FB5449D91992AF6AD8C1751BD57A1F7557EC223',
+    'short_id' => '557EC223',
+  ),
+  'internationaloffice@mcneese.edu' => array(
+    'fingerprint' => '8FB5449D91992AF6AD8C1751BD57A1F7557EC223',
+    'short_id' => '557EC223',
+  ),
+);
+
+/**
+ * e-mail specific settings.
+ */
+#$conf['mail_system'] = array('default-system' => 'DefaultMailSystem');
+$conf['mail_system'] = array('default-system' => 'McNeeseMail');
+$conf['system_mail_id'] = 'wwwdev.mcneese.edu';
+$conf['system_mail_name'] = 'McNeese State University';
 
 
 // enable all errors
