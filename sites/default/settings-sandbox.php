@@ -210,7 +210,14 @@
  *   );
  * @endcode
  */
-if (!defined('DO_NOT_INCLUDE_PASSWORDS')) {
+if (defined('DO_NOT_INCLUDE_PASSWORDS')) {
+  $dbp = array(
+    'www_user' => NULL,
+    'sandbox_user' => NULL,
+  );
+  $dhs = NULL;
+}
+else {
   include_once DRUPAL_ROOT . '/sites/default/passwords.php';
 }
 
