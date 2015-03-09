@@ -549,10 +549,7 @@ function webform_expand_select_or_other($element) {
   }
 
   // Sanitize the options in Select or other check boxes and radio buttons.
-  if ($element['#select_type'] == 'checkboxes') {
-    $element['select']['#process'] = array_merge(element_info_property($element['#select_type'], '#process'), array('webform_expand_select_ids', 'webform_expand_checkboxes'));
-  }
-  elseif ($element['#select_type'] == 'radios') {
+  if ($element['#select_type'] == 'checkboxes' || $element['#select_type'] == 'radios') {
     $element['select']['#process'] = array_merge(element_info_property($element['#select_type'], '#process'), array('webform_expand_select_ids'));
   }
 
