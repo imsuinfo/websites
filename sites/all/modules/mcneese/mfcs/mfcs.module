@@ -247,6 +247,8 @@ define('MFCS_INCLUDE_REQUEST_CREATE', 12);
 define('MFCS_INCLUDE_REQUEST_VIEW', 13);
 define('MFCS_INCLUDE_REQUEST_LIST', 14);
 define('MFCS_INCLUDE_TESTING', 15);
+define('MFCS_INCLUDE_VIEW', 16);
+define('MFCS_INCLUDE_MANAGEMENT', 17);
 
 /**
  * Defines review restrictions.
@@ -257,13 +259,37 @@ define('MFCS_REVIEW_RESTRICTION_REVIEW', 2);
 define('MFCS_REVIEW_RESTRICTION_COMMENT', 3);
 
 /**
- * Defines troubleshoot codes
+ * Defines troubleshoot codes.
  */
 define('MFCS_TROUBLESHOOT_NONE', 0);
 define('MFCS_TROUBLESHOOT_REQUESTS_REVIEW_RECHECK', 1);
 define('MFCS_TROUBLESHOOT_MER_CACHE_SYNCHRONIZE', 2);
 define('MFCS_TROUBLESHOOT_BANNER_CACHE_SYNCHRONIZE', 3);
 
+/**
+ * Defines some hard-limits.
+ */
+define('MFCS_EMAIL_MAX_SUBJECT_LENGTH', 384);
+define('MFCS_EMAIL_MAX_DESTINATION_LENGTH', 255);
+
+/**
+ * Define a default range (in seconds) for nearby requests.
+ */
+define('MFCS_NEARBY_REQUESTS_RANGE_SECONDS', 1800);
+
+
+/**
+ * Defines a series of bitwise values for designating problems a particular user is having.
+ */
+define('MFCS_USER_PROBLEM_NONE', 0);
+define('MFCS_USER_PROBLEM_MASK', 18446744073709551615);
+define('MFCS_USER_PROBLEM_SYSTEM', 1);
+define('MFCS_USER_PROBLEM_MFCS', 2);
+define('MFCS_USER_PROBLEM_ACCOUNT_CREATE_BANNER_UNAVAILABLE', 4);
+define('MFCS_USER_PROBLEM_ACCOUNT_SYNC_BANNER_UNAVAILABLE', 8);
+define('MFCS_USER_PROBLEM_ACCOUNT_LOGIN_PROBLEMS_MULTIPLE', 16);
+define('MFCS_USER_PROBLEM_FORM_ERROR_USER', 32);
+define('MFCS_USER_PROBLEM_FORM_ERROR_SYSTEM', 64);
 
 
 /**
@@ -677,6 +703,14 @@ function mfcs_page_request_access($operation = NULL, $request_id = NULL, $user =
     }
   }
   elseif ($operation == 'troubleshoot') {
+    if (is_null($request_id)) {
+      if ($roles['manager'] || $roles['administer']) {
+        $access[$request_id] = TRUE;
+        return TRUE;
+      }
+    }
+  }
+  elseif ($operation == 'problems') {
     if (is_null($request_id)) {
       if ($roles['manager'] || $roles['administer']) {
         $access[$request_id] = TRUE;
@@ -1473,7 +1507,7 @@ function mfcs_mail($key, &$message, $params) {
     return;
   }
 
-  $message['subject'] = $subject;
+  $message['subject'] = substr($subject, 0, MFCS_EMAIL_MAX_SUBJECT_LENGTH);
   $message['body'] = array($body);
   $message['markup'] = isset($params['markup']) ? array($markup) : array();
   $message['from_address'] = isset($params['from']) ? $params['from'] : $message['from'];
@@ -1567,6 +1601,12 @@ function mfcs_include($id) {
   }
   elseif ($id == MFCS_INCLUDE_TESTING) {
     require_once($module_path . '/includes/testing.inc');
+  }
+  elseif ($id == MFCS_INCLUDE_VIEW) {
+    require_once($module_path . '/includes/view.inc');
+  }
+  elseif ($id == MFCS_INCLUDE_MANAGEMENT) {
+    require_once($module_path . '/includes/management.inc');
   }
 }
 
@@ -1815,7 +1855,7 @@ function mfcs_load_buildings($location = NULL, $building = NULL, $disabled = FAL
  * @param bool $disabled
  *   (optional) When TRUE, will also load the disabled rooms.
  *
- * @return array|bool
+ * @return array|object|bool
  *   An array of rooms or a single room array.
  *   FALSE is returned on error.
  */
@@ -1959,6 +1999,181 @@ function mfcs_load_request_user_roles() {
   if (empty($roles)) return FALSE;
 
   return $roles;
+}
+
+/**
+ * Returns mfcs-specific user data.
+ *
+ * mfcs-specific columns:
+ *   'problems' is a unsigned 64-bit integer containging bitwise flags.
+ *
+ * @param int|array $user_ids
+ *   The user id or an array of user ids.
+ * @param bool $join
+ *   (optional) When TRUE, will join additional relevant tables.
+ * @param bool $deleted
+ *   (optional) When FALSE, will join the users table and only load users with
+ *   a status > 0. When TRUE, no restrictions are applied and users table is
+ *   not loaded (unless $join = TRUE).
+ *
+ * @return array|false
+ *   An array of objects containing the mfcs-specific user fields.
+ *
+ *   FALSE is returned on error.
+ */
+function mfcs_load_users($user_ids, $join = FALSE, $deleted = FALSE) {
+  if (is_array($user_ids)) {
+    if (empty($user_ids)) {
+      cf_error::invalid_variable('user_ids', "No user ids have been specified.");
+      return FALSE;
+    }
+  }
+  elseif (cf_is_integer($user_ids)) {
+    if ($user_ids < 0) {
+      cf_error::invalid_variable('user_ids', "The user id must not be negative.");
+      return FALSE;
+    }
+  }
+  else {
+    cf_error::invalid_variable('user_ids', "Must be an array of integers or a single integer.");
+    return FALSE;
+  }
+
+  if (!is_bool($join)) {
+    cf_error::invalid_bool('join');
+    return FALSE;
+  }
+
+  if (!is_bool($deleted)) {
+    cf_error::invalid_bool('deleted');
+    return FALSE;
+  }
+
+  $users = array();
+  try {
+    $query = db_select('mfcs_users', 'mu');
+
+    $query->addField('mu', 'user_id', 'user_id');
+    $query->addField('mu', 'problems', 'problems');
+    $query->addField('mu', 'date', 'date');
+
+    if (is_array($user_ids)) {
+      $query->condition('mu.user_id', $user_ids, 'IN');
+    }
+    else {
+      $query->condition('mu.user_id', $user_ids);
+    }
+
+    if ($deleted === FALSE) {
+      $query->innerJoin('users', 'u', 'mu.user_id = u.uid');
+      $query->condition('u.status', 0, '>');
+    }
+
+    $query->orderBy('mu.user_id');
+
+    $users = $query->execute()->fetchAllAssoc('user_id');
+
+    if (is_array($users) && !empty($users)) {
+      return $users;
+    }
+  }
+  catch (Exception $ex) {
+    cf_error::on_query_execution($ex);
+
+    return FALSE;
+  }
+
+  return FALSE;
+}
+
+/**
+ * Saves mfcs-specific user data for a single user.
+ *
+ * @param int $user_id
+ *   The user id of the user to load.
+ * @param array $data
+ *   An array of user data to save.
+ *   Each field will be the fields to save/update.
+ *   The 'date' field will be updated by this function.
+ *
+ * @return bool
+ *   TRUE is returned when the user exists and the data has been updated.
+ *   Otherwise, FALSE is returned.
+ */
+function mfcs_save_user($user_id, $data) {
+  if (!cf_is_integer($user_id)) {
+    cf_error::invalid_integer('user_id');
+    return FALSE;
+  }
+
+  if (!is_array($data) || empty($data)) {
+    cf_error::invalid_array('data');
+    return FALSE;
+  }
+
+  // ensure only this function assignes the date and user_id, overriding any existing values.
+  $data['date'] = mfcs_instance();
+  $data['user_id'] = $user_id;
+
+  $transaction = db_transaction();
+
+  try {
+
+    $query = db_select('users', 'u');
+    $query->condition('u.uid', $user_id);
+    $query->addExpression('count(u.uid)');
+
+    $user_exists = $query->execute()->fetchField();
+
+    if ($user_exists == 0) {
+      unset($transaction);
+      return FALSE;
+    }
+
+    // at this time only the 'problems' field exists, so if the problems is set to none, just delete the entry.
+    if (array_key_exists('problems', $data) && $data['problems'] == MFCS_USER_PROBLEM_NONE) {
+      $query = db_delete('mfcs_users');
+      $query->condition('user_id', $user_id);
+      $query->execute();
+
+      // enforce transaction execution
+      unset($transaction);
+      return TRUE;
+    }
+
+    $do_insert = FALSE;
+    $query = db_select('mfcs_users', 'mu');
+    $query->condition('mu.user_id', $user_id);
+    $query->addExpression('count(mu.user_id)');
+
+    $user_exists = $query->execute()->fetchField();
+
+    if ($user_exists == 0) {
+      $do_insert = TRUE;
+    }
+
+    if ($do_insert) {
+      $query = db_insert('mfcs_users');
+    }
+    else {
+      $query = db_update('mfcs_users');
+      $query->condition('user_id', $user_id);
+    }
+
+    $query->fields($data);
+    $query->execute();
+
+    // enforce transaction execution
+    unset($transaction);
+  }
+  catch (Exception $ex) {
+    $transaction->rollback();
+    cf_error::on_query_execution($ex);
+
+    return FALSE;
+  }
+
+  return TRUE;
 }
 
 /**
@@ -2311,6 +2526,23 @@ function mfcs_synchronize_user_settings($user = NULL, $roles = array()) {
     return TRUE;
   }
 
+  $mfcs_users = mfcs_load_users($user->uid);
+  $problems = MFCS_USER_PROBLEM_NONE;
+  if (isset($mfcs_users[$user->uid])) {
+    $problems = $mfcs_users[$user->uid]->problems;
+  }
+
+  // if banner was unavailable when the users account was first created, then attempt a banner sync for that user.
+  if (($problems * MFCS_USER_PROBLEM_ACCOUNT_CREATE_BANNER_UNAVAILABLE > 0)) {
+    $result = mfcs_sync_banner_to_local_users($user->uid);
+
+    if ($result === TRUE) {
+      $problems -= MFCS_USER_PROBLEM_ACCOUNT_CREATE_BANNER_UNAVAILABLE;
+
+      mfcs_save_user($user->uid, array('problems' => $problems));
+    }
+  }
+
   $mappings = mfcs_load_request_user_role_mapping();
 
   // unset all system role information associated with oracle.
@@ -2383,7 +2615,31 @@ function mfcs_synchronize_user_settings($user = NULL, $roles = array()) {
     // Note: the system used to refer to requests as events, but because this is a drupal field, 'event' cannot be changed to 'request' in this explicit case.
     $edit = array('field_user_event_roles' => array('und' => $request_roles), 'roles' => $system_roles);
 
-    if (user_save($user, $edit)) return TRUE;
+    if (user_save($user, $edit)) {
+      // check to see if the user has any synchronization problem flags set and unset them.
+      if ($problems != MFCS_USER_PROBLEM_NONE) {
+        $update = FALSE;
+
+        if (($problems & MFCS_USER_PROBLEM_ACCOUNT_SYNC_BANNER_UNAVAILABLE) > 0) {
+          $update = TRUE;
+          $problems -= MFCS_USER_PROBLEM_ACCOUNT_SYNC_BANNER_UNAVAILABLE;
+        }
+
+        if ($update) {
+          mfcs_save_user($user->uid, array('problems' => $problems));
+        }
+      }
+
+      return TRUE;
+    }
+
+    // account synchronization failed, so assign the problem flag.
+    // this is done here instead of at the FALSE below to ensure that non-banner accounts to not get this problem flag.
+    if (($problems & MFCS_USER_PROBLEM_ACCOUNT_SYNC_BANNER_UNAVAILABLE) == 0) {
+      $problems += MFCS_USER_PROBLEM_ACCOUNT_SYNC_BANNER_UNAVAILABLE;
+
+      mfcs_save_user($user->uid, array('problems' => $problems));
+    }
   }
 
   return FALSE;
@@ -2889,7 +3145,7 @@ function mfcs_sync_banner_to_local($transaction = NULL, $user = NULL) {
 /**
  * Synchronizes the local database with the banner venue information for users.
  *
- * @param null|string $user_id
+ * @param null|int $user_id
  *   (optional) If not NULL, the user id of the user to sync data from.
  *   When NULL, process all local users.
  *
@@ -3394,730 +3650,6 @@ function mfcs_auto_block_accounts_cron() {
     $transaction->rollback();
     cf_error::on_query_execution($ex);
   }
-}
-
-/**
- * Generate an array structure for a specific request item.
- *
- * @param int $request_id
- *   The id representing the specific request.
- * @param string $field_group
- *   The name of the group the values are associated with.
- * @param string $field_name
- *   The name of the field the values are associated with.
- * @param array $values
- *   An array of values associated with this field.
- * @param array $presentation
- *   A collection of variables to tweak how this value is presented.
- * @param array $request
- *   The request array containing all of the request values.
- *
- * @return array|bool|null
- *   The built array.
- *   NULL is returned when there should be no array to build.
- *   FALSE is returned on failure.
- */
-function mfcs_build_request_item_structure($request_id, $field_group, $field_name, $values, $presentation, $request) {
-  if (!cf_is_integer($request_id)) {
-    cf_error::invalid_integer('request_id');
-    return FALSE;
-  }
-
-  if (!is_string($field_group)) {
-    cf_error::invalid_string('field_group');
-    return FALSE;
-  }
-
-  if (!is_string($field_name)) {
-    cf_error::invalid_string('field_name');
-    return FALSE;
-  }
-
-  if (!is_array($values)) {
-    cf_error::invalid_array('values');
-    return FALSE;
-  }
-
-  if (!is_array($presentation)) {
-    cf_error::invalid_array('presentation');
-    return FALSE;
-  }
-
-  $request = mfcs_load_request_by_id($request_id);
-  if (empty($request)) {
-    return FALSE;
-  }
-
-  // define if the label should be displayed or not.
-  $label_display = TRUE;
-  if (!empty($presentation['label_display'])) {
-    $label_display = (bool) $presentation['label_display'];
-  }
-
-  // define when label gets placed (prepend or postpend).
-  $label_prepend = TRUE;
-  if (!empty($presentation['label_prepend'])) {
-    $label_prepend = (bool) $presentation['label_prepend'];
-  }
-
-  // define when label gets placed (prepend or postpend).
-  $size = 'auto';
-  if (!empty($presentation['size'])) {
-    $size = (string) $presentation['size'];
-  }
-
-  // define the label text presented to the user.
-  $label = '';
-  if (isset($presentation['label'])) {
-    $label = $presentation['label'];
-  }
-
-  $label_length = strlen($label);
-
-  $output = array();
-  $no_values = TRUE;
-  foreach ($values as $delta => &$value) {
-    $generated = mfcs_build_request_value_structure($request_id, $field_group, $field_name, $delta, $value, $presentation, $request);
-
-    if ($generated !== FALSE && !isset($generated['no_values'])) {
-      $id = 'field-request-' . $request_id . '-item-' . $field_group . '-' . $field_name . '-' . $delta;
-
-      if ($size == 'auto') {
-        $size = 'small';
-
-        $value_length = 0;
-        if (!empty($generated)) {
-          foreach ($generated as $key => $generated_value) {
-            if (isset($generated_value['markup']['#length'])) {
-              $value_length += $generated_value['markup']['#length'];
-            }
-          }
-        }
-
-        if ($label_length + $value_length > 50) {
-          $size = 'large';
-        }
-      }
-
-      $output[$delta] = array(
-        '#id' => $id,
-        '#type' => 'container',
-        '#attributes' => array(
-          'class' => array(
-            'item-delta-' . $delta,
-            'item-request-' . $request_id,
-            'item-group-' . $field_group,
-            'item-field-' . $field_name,
-            'item-size-' . $size,
-            'item-request',
-          ),
-        ),
-      );
-
-      if ($label_display) {
-        $output[$delta]['label'] = array(
-          '#type' => 'container',
-          '#attributes' => array(
-            'class' => array(
-              'item-label',
-            ),
-          ),
-          '#weight' => ($label_prepend) ? -1 : 1,
-        );
-
-        $output[$delta]['label']['markup'] = array(
-          '#markup' => $label,
-        );
-      }
-
-      $output[$delta]['value'] = $generated;
-      $no_values = FALSE;
-    }
-
-    unset($generated);
-  }
-
-  if ($no_values) {
-    // this is added in case later on it is decided that $output should be returned.
-    // the item class needs to communicate that this group has no values.
-    $delta = 0;
-
-    $class = $field_group . '-' . $field_name . '-' . $delta;
-    $id = 'field-request-' . $request_id . '-item-' . $class;
-
-    $output = array();
-    $output[$delta] = array(
-      '#id' => $id,
-      '#type' => 'container',
-      '#attributes' => array(
-        'class' => array(
-          'field-request-item',
-          'field-request-item-' . $class,
-          'field-request-item-size-' . $size,
-        ),
-      ),
-    );
-
-    $output['item']['#attributes']['class'][] = 'field-request-item-no_values';
-
-    return NULL;
-  }
-
-  return $output;
-}
-
-/**
- * Generate an array structure for a specific request value.
- *
- * @param int $request_id
- *   The id representing the specific request.
- * @param string $field_group
- *   The name of the group the values are associated with.
- * @param string $field_name
- *   The name of the field the values are associated with.
- * @param int $delta
- *   This is for multiple values, each value has its own delta.
- * @param object $value
- *   The value object in the format in the database structure or in a sumulated
- *   structure.
- * @param array $presentation
- *   A collection of variables to tweak how this value is presented.
- * @param array $request
- *   The request array containing all of the request values.
- * @param array $options
- *   (optional) An array of options tweaking how this function will run.
- *   - 'no_prefix': If TRUE, don't show prefix.
- *   - 'no_suffix': If TRUE, don't show suffix.
- *   - 'print_delta_for_multiple': If TRUE, prepend the delta to the value for
- *      fields that have #multiple set to TRUE.
- *
- * @return array|bool
- *   The built array.
- *   FALSE is returend on failure.
- */
-function mfcs_build_request_value_structure($request_id, $field_group, $field_name, $delta, $value, $presentation, $request, $options = array()) {
-  if (!is_string($field_group)) {
-    cf_error::invalid_string('field_group');
-    return FALSE;
-  }
-
-  if (!is_string($field_name)) {
-    cf_error::invalid_string('field_name');
-    return FALSE;
-  }
-
-  if (!cf_is_integer($delta)) {
-    cf_error::invalid_integer('delta');
-    return FALSE;
-  }
-
-  if (!is_object($value)) {
-    cf_error::invalid_object('value');
-    return FALSE;
-  }
-
-  if (!is_array($presentation)) {
-    cf_error::invalid_array('presentation');
-    return FALSE;
-  }
-
-  $request = mfcs_load_request_by_id($request_id);
-  if (empty($request)) {
-    return FALSE;
-  }
-
-  if (!is_array($options)) {
-    cf_error::invalid_array('options');
-    return FALSE;
-  }
-
-  // define the combined option.
-  $combined = FALSE;
-  if (!empty($presentation['combined'])) {
-    $combined = (bool) $presentation['combined'];
-  }
-
-  // define the presentation type.
-  $type = array('value' => 'string');
-  if (!empty($presentation['type'])) {
-    $type = (array) $presentation['type'];
-  }
-
-  // define the presentation display.
-  $display = array('value' => 'raw');
-  if (!empty($presentation['display'])) {
-    $display = (array) $presentation['display'];
-  }
-
-  // define the presentation value names.
-  $value_names = array('value');
-  if (!empty($presentation['value_names'])) {
-    $value_names = (array) $presentation['value_names'];
-  }
-
-  // define a prefix to append before the value.
-  $prefix_span_class = 'item-value-instance ';
-  $prefix_span_class .= 'item-value-instance-' . $field_group . ' ';
-  $prefix_span_class .= 'item-value-instance-' . $field_group . '-' . $field_name . ' ';
-  $prefix_span_class .= 'item-value-instance-' . $field_group . '-' . $field_name . '-' . $delta . ' ';
-  $prefix = '<span class="' . $prefix_span_class . '">';
-  if (!empty($presentation['prefix'])) {
-    $prefix .= $presentation['prefix'];
-  }
-
-  if (isset($options['no_prefix']) && $options['no_prefix']) {
-    $prefix = '';
-  }
-
-  // define a suffix to prepend after the value.
-  $suffix = '';
-  if (!empty($presentation['suffix'])) {
-    $suffix = $presentation['suffix'];
-  }
-  $suffix .= '</span>';
-
-  if (isset($options['no_suffix']) && $options['no_suffix']) {
-    $suffix = '';
-  }
-
-  $delta_prefix = '';
-  if (isset($options['print_delta_for_multiple']) && $options['print_delta_for_multiple']) {
-    if (isset($presentation['multiple']) && $presentation['multiple']) {
-      $delta_prefix = '<span class="item-delta">[' . $delta . ']</span> ';
-    }
-  }
-
-  $venue_coordinator = NULL;
-  if (!empty($request['venue_coordinator']['user_id'][0]->value)) {
-    $venue_coordinator = user_load($request['venue_coordinator']['user_id'][0]->value);
-  }
-
-  global $base_path;
-  global $mfcs_determined;
-
-  $url_arguments = '';
-  if (!empty($mfcs_determined['complete'])) {
-    $url_arguments .= '?' . $mfcs_determined['complete'];
-  }
-
-  $id = 'field-request-' . $request_id . '-item-' . $field_group . '-' . $field_name . '-' . $delta . '-value';
-
-  $output = array();
-  $empty_value = TRUE;
-  $no_values = TRUE;
-
-  foreach ($value_names as $value_name) {
-    if ($combined) {
-      if (!isset($output['value']['markup']['#markup'])) {
-        $output['value'] = array(
-          '#id' => $id . '-' . $value_name,
-          '#type' => 'container',
-          '#attributes' => array(
-            'class' => array(
-              'item-value',
-              'item-value-name-' . $value_name,
-            ),
-          ),
-        );
-
-        $output['value']['markup'] = array(
-          '#markup' => NULL,
-        );
-
-        if (!array_key_exists('value', $type)) {
-          $type['value'] = 'string';
-        }
-
-        $output['value']['#attributes']['class'][] = 'item-value-type-value';
-
-        $output['value']['markup']['#length'] = 0;
-      }
-
-      $markup = &$output['value']['markup']['#markup'];
-      $output_value = &$output['value'];
-      $length = &$output['value']['markup']['#length'];
-    }
-    else {
-      $output[$value_name] = array(
-        '#id' => $id . '-' . $value_name,
-        '#type' => 'container',
-        '#attributes' => array(
-          'class' => array(
-            'item-value',
-            'item-value-name-' . $value_name,
-          ),
-        ),
-      );
-
-      $output[$value_name]['markup'] = array(
-        '#markup' => NULL,
-      );
-
-      if (!array_key_exists($value_name, $type)) {
-        $type[$value_name] = 'string';
-      }
-
-      $output[$value_name]['#attributes']['class'][] = 'item-value-type-' . $type[$value_name];
-      $output['value']['markup']['#length'] = 0;
-
-      $markup = &$output[$value_name]['markup']['#markup'];
-      $output_value = &$output[$value_name];
-      $length = &$output['value']['markup']['#length'];
-    }
-
-    if (property_exists($value, $value_name) && (is_numeric($value->$value_name) || !empty($value->$value_name))) {
-      if ($type[$value_name] == 'string' || $type[$value_name] == 'text') {
-        $markup .= check_plain($value->$value_name);
-
-        $length += strlen($value->$value_name);
-      }
-      elseif ($type[$value_name] == 'text_lined') {
-        $markup .= preg_replace("/\n/", "<br>\n", check_plain($value->$value_name));
-
-        $length += strlen($value->$value_name);
-      }
-      elseif ($type[$value_name] == 'timestamp') {
-        if (!array_key_exists($value_name, $display)) {
-          $display[$value_name] = 'Y/m/d h:ia';
-        }
-
-        if ($display[$value_name] == 'stamp') {
-          $markup .= check_plain($value->$value_name);
-        }
-        else {
-          $markup .= check_plain(date($display[$value_name], $value->$value_name));
-        }
-
-        $length += strlen($value->$value_name);
-      }
-      elseif ($type[$value_name] == 'timestamp_linked_month') {
-        if (!array_key_exists($value_name, $display)) {
-          $display[$value_name] = 'Y/m/d';
-        }
-
-        if ($display[$value_name] == 'stamp') {
-          $markup .= check_plain($value->$value_name);
-        }
-        else {
-          $s_year = date('Y', $value->$value_name);
-          $s_month = date('F', $value->$value_name);
-          $s_title = $s_month . " " . $s_year;
-
-          $markup .= '<a href="' . $base_path . 'requests/calendar-0/month/' . $s_year . '/' . $s_month . $url_arguments .'" title="' . $s_title . '">' . check_plain(date($display[$value_name], $value->$value_name)) . '</a>';
-
-          unset($s_year);
-          unset($s_month);
-          unset($s_title);
-        }
-
-        $length += strlen($value->$value_name);
-      }
-      elseif ($type[$value_name] == 'timestamp_linked_day') {
-        if (!array_key_exists($value_name, $display)) {
-          $display[$value_name] = 'Y/m/d';
-        }
-
-        if ($display[$value_name] == 'stamp') {
-          $markup .= check_plain($value->$value_name);
-        }
-        else {
-          $s_year = date('Y', $value->$value_name);
-          $s_month = date('F', $value->$value_name);
-          $s_day = date('d', $value->$value_name);
-          $s_title = $s_month . ", " . $s_day . ", " . $s_year;
-
-          $markup .= '<a href="' . $base_path . 'requests/calendar-0/day/' . $s_year . '/' . $s_month . '/' . $s_day . $url_arguments .'" title="' . $s_title . '">' . check_plain(date($display[$value_name], $value->$value_name)) . '</a>';
-
-          unset($s_year);
-          unset($s_month);
-          unset($s_day);
-          unset($s_title);
-        }
-
-        $length += strlen($value->$value_name);
-      }
-      elseif ($type[$value_name] == 'timestamp_linked_hour') {
-        if (!array_key_exists($value_name, $display)) {
-          $display[$value_name] = 'h:ia';
-        }
-
-        if ($display[$value_name] == 'stamp') {
-          $markup .= check_plain($value->$value_name);
-        }
-        else {
-          $s_year = date('Y', $value->$value_name);
-          $s_month = date('F', $value->$value_name);
-          $s_day = date('d', $value->$value_name);
-          $s_hour = date('h', $value->$value_name);
-          $s_ampm = date('a', $value->$value_name);
-          $s_title = $s_month . ", " . $s_day . ", " . $s_year . " at " . $s_hour . ':00' . $s_ampm;
-          $s_id = 'time_slot-' . $s_hour . '_00' . $s_ampm;
-
-          $markup .= '<a href="' . $base_path . 'requests/calendar-0/day/' . $s_year . '/' . $s_month . '/' . $s_day . $url_arguments . '#' . $s_id .'" title="' . $s_title . '">' . check_plain(date($display[$value_name], $value->$value_name)) . '</a>';
-
-          unset($s_year);
-          unset($s_month);
-          unset($s_day);
-          unset($s_hour);
-          unset($s_ampm);
-          unset($s_title);
-          unset($s_id);
-        }
-
-        $length += strlen($value->$value_name);
-      }
-      elseif ($type[$value_name] == 'taxonomy') {
-        $term = taxonomy_term_load($value->$value_name);
-
-        if (is_object($term)) {
-          $markup .= check_plain($term->name);
-          $length += strlen($term->name);
-        }
-
-        unset($term);
-      }
-      elseif ($type[$value_name] == 'user_id') {
-        $user = user_load($value->$value_name);
-
-        if (is_object($user)){
-          if (!array_key_exists($value_name, $display)) {
-            $display[$value_name] = 'name';
-          }
-
-          $user_name = check_plain($user->name);
-
-          if (!empty($user->field_user_last_name['und'][0]['value'])) {
-            $user_name = check_plain($user->field_user_last_name['und'][0]['value']) . ', ';
-          }
-
-          if (!empty($user->field_user_first_name['und'][0]['value'])) {
-            $user_name .= check_plain($user->field_user_first_name['und'][0]['value']);
-          }
-
-          if ($display[$value_name] == 'account_name') {
-            $markup .= '<a href="' . $base_path . 'user/' . $user->uid . $url_arguments . '">' . $user_name . '</a>';
-            $length += strlen($user_name);
-          }
-          elseif ($display[$value_name] != 'pass' && property_exists($user, $display)) {
-            $markup .= check_plain($user->$display[$value_name]);
-            $length += strlen($user->$display[$value_name]);
-          }
-        }
-
-        unset($user);
-      }
-      elseif ($type[$value_name] == 'status') {
-        mfcs_include(MFCS_INCLUDE_LIST_OPTIONS);
-
-        $status_options = mfcs_get_request_status_list_options();
-
-        if (isset($status_options[$value->$value_name])) {
-          $markup .= $status_options[$value->$value_name];
-          $length += strlen($value->$value_name);
-        }
-      }
-      elseif ($type[$value_name] == 'step') {
-        mfcs_include(MFCS_INCLUDE_LIST_OPTIONS);
-
-        $step_options = mfcs_get_request_steps_list_options();
-
-        if (isset($step_options[$value->$value_name])) {
-          $markup .= $step_options[$value->$value_name];
-          $length += strlen($step_options[$value->$value_name]);
-        }
-      }
-      elseif ($type[$value_name] == 'location') {
-        mfcs_include(MFCS_INCLUDE_LIST_OPTIONS);
-
-        $location_options = mfcs_get_request_location_list_options(NULL, FALSE, TRUE);
-
-        if (isset($location_options[$value->$value_name])) {
-          $markup .= $location_options[$value->$value_name];
-          $length += strlen($location_options[$value->$value_name]);
-        }
-      }
-      elseif ($type[$value_name] == 'building') {
-        mfcs_include(MFCS_INCLUDE_LIST_OPTIONS);
-
-        $building_options = mfcs_get_request_building_list_options(NULL, NULL, TRUE);
-
-        if (isset($building_options[$value->$value_name])) {
-          $markup .= $building_options[$value->$value_name];
-          $length += strlen($building_options[$value->$value_name]);
-        }
-      }
-      elseif ($type[$value_name] == 'room') {
-        mfcs_include(MFCS_INCLUDE_LIST_OPTIONS);
-
-        $room_options = mfcs_get_request_room_list_options(NULL, NULL, TRUE);
-
-        if (isset($room_options[$value->$value_name])) {
-          $markup .= $room_options[$value->$value_name];
-          $length += strlen($room_options[$value->$value_name]);
-        }
-      }
-      elseif ($type[$value_name] == 'currency') {
-        $currency = mfcs_convert_value_from_database_format($value->$value_name, 'currency');
-
-        if ($currency !== FALSE) {
-          $processed_markup = '$' . printf('%01.2f', $currency);
-          $markup .= $processed_markup;
-          $length += strlen($processed_markup);
-        }
-      }
-      elseif ($type[$value_name] == 'boolean') {
-        $boolean = (bool) $value->$value_name;
-
-        if ($boolean) {
-          $markup .= 'yes';
-          $length += 3;
-        }
-        else {
-          $markup .= 'no';
-          $length += 2;
-        }
-
-        if ($display[$value_name] == 'when_true') {
-          if (!$boolean) {
-            continue;
-          }
-        }
-        elseif ($display[$value_name] == 'when_false') {
-          if ($boolean) {
-            continue;
-          }
-        }
-      }
-      elseif ($type[$value_name] == 'requirement_personnel') {
-        $markup .= ' ' . $value->$value_name . ' personnel';
-        $length += strlen($value->$value_name . ' personnel');
-      }
-      elseif ($type[$value_name] == 'requirement_hours') {
-        $hours = mfcs_convert_value_from_database_format($value->$value_name, 'currency');
-
-        if (intval($hours) == $hours) {
-          $markup .= ' ' . $hours . ' hours';
-        }
-        else {
-          $markup .= ' ' . sprintf('%01.2f', $hours) . ' hours';
-        }
-
-        $length += strlen($hours . ' hours');
-      }
-      elseif ($type[$value_name] == 'requirement_days') {
-        $days = mfcs_convert_value_from_database_format($value->$value_name, 'currency');
-
-        if (intval($days) == $days) {
-          $markup .= ' ' . $days . ' days';
-        }
-        else {
-          $markup .= ' ' . sprintf('%01.2f', $days) . ' days';
-        }
-
-        $length += strlen($days . 'days');
-      }
-      elseif ($type[$value_name] == 'requirement_amount') {
-        $amount = mfcs_convert_value_from_database_format($value->$value_name, 'currency');
-
-        if ($amount !== FALSE) {
-          $processed_markup = ' at $' . sprintf('%01.2f', $amount);
-
-          // calculate total and append from other fields that should exist.
-          $total = $amount;
-
-          if (in_array('quantity', $value_names) && isset($value->quantity) && is_numeric($value->quantity)) {
-            $total = $total * $value->quantity;
-          }
-
-          if (in_array('hours', $value_names) && isset($value->hours) && is_numeric($value->hours)) {
-            $hours = mfcs_convert_value_from_database_format($value->hours, 'currency');
-
-            if ($hours !== FALSE) {
-              $total = $total * $hours;
-            }
-          }
-
-          if (in_array('days', $value_names) && isset($value->days) && is_numeric($value->days)) {
-            $days = mfcs_convert_value_from_database_format($value->days, 'currency');
-
-            if ($days !== FALSE) {
-              $total = $total * $days;
-            }
-          }
-
-          $processed_markup .= ' = $' . sprintf('%01.2f', $total);
-
-          $markup .= $processed_markup;
-          $length += strlen($processed_markup);
-        }
-      }
-      elseif ($type[$value_name] == 'venue_coordinator') {
-        if ($display[$value_name] == 'name') {
-          $processed_markup = '';
-
-          $first_name = FALSE;
-          if (!empty($venue_coordinator->field_user_last_name['und'][0]['safe_value'])) {
-            $first_name = TRUE;
-            $processed_markup .= $venue_coordinator->field_user_last_name['und'][0]['safe_value'];
-          }
-
-          if (!empty($venue_coordinator->field_user_first_name['und'][0]['safe_value'])) {
-            if ($first_name) {
-              $processed_markup .=  ', ';
-            }
-
-            $processed_markup .= $venue_coordinator->field_user_first_name['und'][0]['safe_value'];
-          }
-
-          $markup .= $processed_markup;
-          $length += strlen($processed_markup);
-        }
-        elseif ($display[$value_name] == 'email') {
-          $markup .= $venue_coordinator->mail;
-          $length += strlen($venue_coordinator->mail);
-        }
-        elseif ($display[$value_name] == 'phone') {
-          if (!empty($venue_coordinator->field_user_phone_number['und'][0]['safe_value'])) {
-            $markup .= $venue_coordinator->field_user_phone_number['und'][0]['safe_value'];
-            $length += strlen($venue_coordinator->field_user_phone_number['und'][0]['safe_value']);
-          }
-        }
-      }
-      elseif ($type[$value_name] == 'review_decision') {
-        if ($value->$value_name == MFCS_REVIEW_DECISION_APPROVE) {
-          $markup .= "Approved";
-          $length += strlen("Approved");
-        }
-        elseif ($value->$value_name == MFCS_REVIEW_DECISION_DENY) {
-          $markup .= "Denied";
-          $length += strlen("Denied");
-        }
-      }
-
-      if (!is_numeric($markup) && empty($markup)) {
-        $output_value['#attributes']['class'][] = 'empty_value';
-      }
-      else {
-        $empty_value = FALSE;
-
-        if (!$combined) {
-          $markup = $delta_prefix . $prefix . $markup . $suffix;
-        }
-      }
-
-      $no_values = FALSE;
-    }
-  }
-
-  if ($no_values) {
-    $output_value['#attributes']['class'][] = 'no_value';
-    $output['no_values'] = TRUE;
-  }
-  elseif ($combined && !$empty_value) {
-    $output['value']['markup']['#markup'] = $delta_prefix . $prefix . $output['value']['markup']['#markup'] . $suffix;
-  }
-
-  return $output;
 }
 
 /***
@@ -5938,6 +5470,8 @@ function mfcs_display_room_unavailable_message($dates) {
  *   - 'results': database objects representing the items.
  *   - 'count': total results loaded before a range limit is applied.
  *   FALSE is returned on error.
+ *
+ * @see: mfcs_request_process_query_search_array()
  */
 function mfcs_request_load_listing($conditions = array(), $options = array()) {
   if (!is_array($conditions)) {
@@ -6107,7 +5641,7 @@ function mfcs_request_load_listing($conditions = array(), $options = array()) {
     }
 
     if ($distinct_id) {
-      $query->distinct('mer.id');
+      $query->distinct(array('field' => 'mer.id', 'alias' => 'id'));
     }
     else {
       $query->addField('mer', 'id', 'id');
@@ -6207,7 +5741,7 @@ function mfcs_request_load_listing($conditions = array(), $options = array()) {
 
     if (!empty($conditions)) {
       $operand = db_and();
-      $result = mfcs_request_process_listing_search_array($query, $count_query, $operand, $already_joined, $already_joined_count, $already_added, $conditions, 1, $like);
+      $result = mfcs_request_process_query_search_array($query, $count_query, $operand, $already_joined, $already_joined_count, $already_added, $conditions, 1, $like);
 
       if ($result) {
         if (is_null($outermost_and)) {
@@ -6344,22 +5878,68 @@ function mfcs_request_load_listing($conditions = array(), $options = array()) {
     }
 
     if (is_null($sort)) {
-      $query->orderBy('mer.id', 'DESC');
+      // default to sorting/ordering by request id.
+      if ($distinct || $distinct_id) {
+        // when a query is distinct, the order by values must be defined in the select columns.
+        $query->orderBy('id' , 'DESC');
+      }
+      else {
+        $query->orderBy('mer.id', 'DESC');
+      }
     }
     else {
       if (!empty($sort)) {
+        // When selecting distinct on a specific column/alias, it must be specified in order by if order by is used.
+        // And distinct field must be the first column to be ordered by.
+        if ($distinct_id) {
+          if (array_key_exists('id', $sort) && !empty($sort['id'])) {
+            $query->orderBy('id' , $sort['id']);
+          }
+          else {
+            $query->orderBy('id' , 'DESC');
+          }
+        }
+
+
         foreach ($sort as $sort_name => $sort_value) {
           if ($sort_name == 'id') {
-            $query->orderBy('mer.id', is_null($sort_value) ? 'DESC' : $sort_value);
+            // when a query is distinct, the order by values must be defined in the select columns.
+            if  ($distinct_id) {
+              continue;
+            }
+            elseif ($distinct) {
+              $query->orderBy('id' , is_null($sort_value) ? 'ASC' : $sort_value);
+            }
+            else {
+              $query->orderBy('mer.id', is_null($sort_value) ? 'ASC' : $sort_value);
+            }
           }
           elseif ($sort_name == 'title') {
-            $query->orderBy('mer.title', is_null($sort_value) ? 'ASC' : $sort_value);
+            // when a query is distinct, the order by values must be defined in the select columns.
+            if ($distinct || $distinct_id) {
+              $query->orderBy('title' , is_null($sort_value) ? 'ASC' : $sort_value);
+            }
+            else {
+              $query->orderBy('mer.title', is_null($sort_value) ? 'ASC' : $sort_value);
+            }
           }
           elseif ($sort_name == 'status') {
-            $query->orderBy('mer.status', is_null($sort_value) ? 'ASC' : $sort_value);
+            // when a query is distinct, the order by values must be defined in the select columns.
+            if ($distinct || $distinct_id) {
+              $query->orderBy('status' , is_null($sort_value) ? 'ASC' : $sort_value);
+            }
+            else {
+              $query->orderBy('mer.status', is_null($sort_value) ? 'ASC' : $sort_value);
+            }
           }
           elseif ($sort_name == 'step') {
-            $query->orderBy('mer.step', is_null($sort_value) ? 'ASC' : $sort_value);
+            // when a query is distinct, the order by values must be defined in the select columns.
+            if ($distinct || $distinct_id) {
+              $query->orderBy('step' , is_null($sort_value) ? 'ASC' : $sort_value);
+            }
+            else {
+              $query->orderBy('mer.step', is_null($sort_value) ? 'ASC' : $sort_value);
+            }
           }
           elseif ($sort_name == 'location') {
             if (!array_key_exists('mfcs_banner_locations', $already_joined)) {
@@ -6367,7 +5947,22 @@ function mfcs_request_load_listing($conditions = array(), $options = array()) {
               $already_joined['mfcs_banner_locations'] = 'mbl';
             }
 
-            $query->orderBy($already_joined['mfcs_banner_locations'] . '.human_name', is_null($sort_value) ? 'ASC' : $sort_value);
+            // when a query is distinct, the order by values must be defined in the select columns.
+            if ($distinct || $distinct_id) {
+              $existing_alias = array_search($already_joined['mfcs_banner_locations'] . '.human_name', $already_added);
+              if ($existing_alias === FALSE) {
+                $query->addField($already_joined['mfcs_banner_locations'], 'human_name', 'banner_locations_human_name');
+                $already_added['banner_locations_human_name'] = $already_joined['mfcs_banner_locations'] . '.human_name';
+
+                $query->orderBy('banner_locations_human_name', is_null($sort_value) ? 'ASC' : $sort_value);
+              }
+              else {
+                $query->orderBy($existing_alias, is_null($sort_value) ? 'ASC' : $sort_value);
+              }
+            }
+            else {
+              $query->orderBy($already_joined['mfcs_banner_locations'] . '.human_name', is_null($sort_value) ? 'ASC' : $sort_value);
+            }
           }
           elseif ($sort_name == 'building') {
             if (!array_key_exists('mfcs_banner_buildings', $already_joined)) {
@@ -6375,7 +5970,22 @@ function mfcs_request_load_listing($conditions = array(), $options = array()) {
               $already_joined['mfcs_banner_buildings'] = 'mbb';
             }
 
-            $query->orderBy($already_joined['mfcs_banner_buildings'] . '.human_name', is_null($sort_value) ? 'ASC' : $sort_value);
+            // when a query is distinct, the order by values must be defined in the select columns.
+            if ($distinct || $distinct_id) {
+              $existing_alias = array_search($already_joined['mfcs_banner_buildings'] . '.human_name', $already_added);
+              if ($existing_alias === FALSE) {
+                $query->addField($already_joined['mfcs_banner_buildings'], 'human_name', 'banner_buildings_human_name');
+                $already_added['banner_buildings_human_name'] = $already_joined['mfcs_banner_buildings'] . '.human_name';
+
+                $query->orderBy('banner_buildings_human_name', is_null($sort_value) ? 'ASC' : $sort_value);
+              }
+              else {
+                $query->orderBy($existing_alias, is_null($sort_value) ? 'ASC' : $sort_value);
+              }
+            }
+            else {
+              $query->orderBy($already_joined['mfcs_banner_buildings'] . '.human_name', is_null($sort_value) ? 'ASC' : $sort_value);
+            }
           }
           elseif ($sort_name == 'room') {
             if (!array_key_exists('mfcs_banner_rooms', $already_joined)) {
@@ -6383,7 +5993,22 @@ function mfcs_request_load_listing($conditions = array(), $options = array()) {
               $already_joined['mfcs_banner_rooms'] = 'mbr';
             }
 
-            $query->orderBy($already_joined['mfcs_banner_rooms'] . '.human_name', is_null($sort_value) ? 'ASC' : $sort_value);
+            // when a query is distinct, the order by values must be defined in the select columns.
+            if ($distinct || $distinct_id) {
+              $existing_alias = array_search($already_joined['mfcs_banner_rooms'] . '.human_name', $already_added);
+              if ($existing_alias === FALSE) {
+                $query->addField($already_joined['mfcs_banner_rooms'], 'human_name', 'banner_rooms_human_name');
+                $already_added['banner_rooms_human_name'] = $already_joined['mfcs_banner_rooms'] . '.human_name';
+
+                $query->orderBy('banner_rooms_human_name' , is_null($sort_value) ? 'ASC' : $sort_value);
+              }
+              else {
+                $query->orderBy($existing_alias, is_null($sort_value) ? 'ASC' : $sort_value);
+              }
+            }
+            else {
+              $query->orderBy($already_joined['mfcs_banner_rooms'] . '.human_name', is_null($sort_value) ? 'ASC' : $sort_value);
+            }
           }
           elseif ($sort_name == 'date') {
             if (!array_key_exists('mfcs_field_dates_date', $already_joined)) {
@@ -6396,17 +6021,67 @@ function mfcs_request_load_listing($conditions = array(), $options = array()) {
               $already_joined['mfcs_field_dates_time_start'] = 'mfdts';
             }
 
-            $query->orderBy($already_joined['mfcs_field_dates_date'] . '.value', is_null($sort_value) ? 'ASC' : $sort_value);
-            $query->orderBy($already_joined['mfcs_field_dates_time_start'] . '.value', is_null($sort_value) ? 'ASC' : $sort_value);
+            // when a query is distinct, the order by values must be defined in the select columns.
+            if ($distinct || $distinct_id) {
+              $existing_alias = array_search($already_joined['mfcs_field_dates_date'] . '.value', $already_added);
+              if ($existing_alias === FALSE) {
+                $query->addField($already_joined['mfcs_field_dates_date'], 'value', 'dates_date_value');
+                $already_added['dates_date_value'] = $already_joined['mfcs_field_dates_date'] . '.value';
+
+                $query->orderBy('dates_date_value', is_null($sort_value) ? 'ASC' : $sort_value);
+              }
+              else {
+                $query->orderBy($existing_alias, is_null($sort_value) ? 'ASC' : $sort_value);
+              }
+
+              $existing_alias = array_search($already_joined['mfcs_field_dates_time_start'] . '.value', $already_added);
+              if ($existing_alias === FALSE) {
+                $query->addField($already_joined['mfcs_field_dates_time_start'], 'value', 'dates_time_start');
+                $already_added['dates_time_start'] = $already_joined['mfcs_field_dates_time_start'] . '.value';
+
+                $query->orderBy('dates_time_start', is_null($sort_value) ? 'ASC' : $sort_value);
+              }
+              else {
+                $query->orderBy($existing_alias, is_null($sort_value) ? 'ASC' : $sort_value);
+              }
+            }
+            else {
+              $query->orderBy($already_joined['mfcs_field_dates_date'] . '.value', is_null($sort_value) ? 'ASC' : $sort_value);
+              $query->orderBy($already_joined['mfcs_field_dates_time_start'] . '.value', is_null($sort_value) ? 'ASC' : $sort_value);
+            }
           }
           elseif ($sort_name == 'submitted by') {
-            $query->orderBy('mer.user_id', is_null($sort_value) ? 'ASC' : $sort_value);
+            // when a query is distinct, the order by values must be defined in the select columns.
+            if ($distinct || $distinct_id) {
+              $query->orderBy('user_id' , is_null($sort_value) ? 'ASC' : $sort_value);
+            }
+            else {
+              $query->orderBy('mer.user_id', is_null($sort_value) ? 'ASC' : $sort_value);
+            }
           }
           elseif ($sort_name == 'submitted on') {
-            $query->orderBy('mer.created', is_null($sort_value) ? 'DESC' : $sort_value);
+            // when a query is distinct, the order by values must be defined in the select columns.
+            if ($distinct || $distinct_id) {
+              $query->orderBy('created' , is_null($sort_value) ? 'DESC' : $sort_value);
+            }
+            else {
+              $query->orderBy('mer.created', is_null($sort_value) ? 'DESC' : $sort_value);
+            }
           }
           elseif (!empty($sort_name)) {
-            $query->orderBy($sort_name, $sort_value);
+            // when a query is distinct, the order by values must be defined in the select columns.
+            if ($distinct || $distinct_id) {
+              $existing_alias = array_search($sort_name . '.human_name', $already_added);
+              if ($existing_alias === FALSE) {
+                $query->orderBy($sort_name, $sort_value);
+              }
+              else {
+                $query->orderBy($existing_alias, $sort_value);
+              }
+            }
+            else {
+              $query->orderBy($sort_name, $sort_value);
+            }
           }
         }
       }
@@ -6475,7 +6150,7 @@ function mfcs_request_load_listing($conditions = array(), $options = array()) {
 }
 
 /**
- * Recursively append search conditions for loading a list of requests.
+ * Recursively append search conditions for to a given query.
  *
  * @param object|null $query
  *   The query object. Set to null if not using.
@@ -6490,16 +6165,19 @@ function mfcs_request_load_listing($conditions = array(), $options = array()) {
  * @param array $already_added
  *   An array of field names that have already been added as select parameters
  *   for the query object.
+ * @param array $conditions
+ *   The collection of search conditions.
+ * @param int $recurse_count
+ *   A number representing the number of executions this function has within
+ *   itself, including the very first call (should start at 1).
  * @param string $like
  *   The appropriate SQL like or ilike string for sensitive and insensitive.
  *
  * @param bool
  *   TRUE when a valid field is found and added to the $operand and FALSE
  *   otherwise.
- *
- * @see mfcs_request_load_listing()
  */
-function mfcs_request_process_listing_search_array(&$query, &$count_query, &$operand, &$already_joined, &$already_joined_count, &$already_added, $search, $recurse_count, $like) {
+function mfcs_request_process_query_search_array(&$query, &$count_query, &$operand, &$already_joined, &$already_joined_count, &$already_added, $conditions, $recurse_count, $like) {
   if (!is_null($query) && !is_object($query)) {
     cf_error::invalid_object('query');
     return FALSE;
@@ -6515,8 +6193,8 @@ function mfcs_request_process_listing_search_array(&$query, &$count_query, &$ope
     return FALSE;
   }
 
-  if (!is_array($search)) {
-    cf_error::invalid_array('search');
+  if (!is_array($conditions)) {
+    cf_error::invalid_array('conditions');
     return FALSE;
   }
 
@@ -6540,6 +6218,11 @@ function mfcs_request_process_listing_search_array(&$query, &$count_query, &$ope
     return FALSE;
   }
 
+  if (!cf_is_integer($recurse_count)) {
+    cf_error::invalid_integer('recurse_count');
+    return FALSE;
+  }
+
   if (!is_string($like)) {
     cf_error::invalid_string('like');
     return FALSE;
@@ -6549,11 +6232,11 @@ function mfcs_request_process_listing_search_array(&$query, &$count_query, &$ope
     return FALSE;
   }
   $found_values = FALSE;
+  $expression_count = 0;
 
   // process the inner fields, can be either a 'field_+', 'or_+', 'and_+', 'nor_+', or 'nand_+'.
-  foreach ($search as $search_operand_or_field => $search_values) {
+  foreach ($conditions as $search_operand_or_field => $search_values) {
     $search_op = explode('_', $search_operand_or_field, 2);
-    $expression_count = 0;
 
     if (count($search_op) != 2) {
       // not valid, just skip.
@@ -6605,8 +6288,10 @@ function mfcs_request_process_listing_search_array(&$query, &$count_query, &$ope
           }
         }
         else {
-          $already_joined[$mfcs_field] = 'mfg_c_' . $already_joined_count;
-          $already_joined_count++;
+          if (!array_key_exists($mfcs_field, $already_joined)) {
+            $already_joined[$mfcs_field] = 'mfg_c_' . $already_joined_count;
+            $already_joined_count++;
+          }
 
           $field_alias = $already_joined[$mfcs_field];
 
@@ -6730,14 +6415,14 @@ function mfcs_request_process_listing_search_array(&$query, &$count_query, &$ope
         continue;
       }
 
-      $expression = FALSE;
-      if (isset($search_values['expression']) && is_bool($search_values['expression'])) {
-        $expression = $search_values['expression'];
-      }
-
       if (empty($search_values['field'])) {
         // not valid, just skip.
         continue;
+      }
+
+      $expression = FALSE;
+      if (array_key_exists('expression', $search_values) && is_bool($search_values['expression'])) {
+        $expression = $search_values['expression'];
       }
 
       $field = $search_values['field'];
@@ -6876,7 +6561,7 @@ function mfcs_request_process_listing_search_array(&$query, &$count_query, &$ope
     }
 
     $next_count = $recurse_count + 1;
-    $result = mfcs_request_process_listing_search_array($query, $count_query, $inner_operand, $already_joined, $already_joined_count, $already_added, $search_values, $next_count, $like);
+    $result = mfcs_request_process_query_search_array($query, $count_query, $inner_operand, $already_joined, $already_joined_count, $already_added, $search_values, $next_count, $like);
 
     if ($result) {
       $operand->condition($inner_operand);

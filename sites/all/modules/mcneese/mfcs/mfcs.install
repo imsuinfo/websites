@@ -27,12 +27,12 @@ function mfcs_table_install_structure() {
   );
 
   $structure['requirements'] = array(
-    'facilities' => array('quantity' => 'unsigned', 'hours' => 'unsigned', 'days' => 'unsigned', 'amount' => 'unsigned'),
-    'equipment' => array('quantity' => 'unsigned', 'hours' => 'unsigned', 'days' => 'unsigned', 'amount' => 'unsigned'),
-    'security' => array('quantity' => 'unsigned', 'hours' => 'unsigned', 'days' => 'unsigned', 'amount' => 'unsigned'),
-    'custodial' => array('quantity' => 'unsigned', 'hours' => 'unsigned', 'days' => 'unsigned', 'amount' => 'unsigned'),
-    'maintenance' => array('quantity' => 'unsigned', 'hours' => 'unsigned', 'days' => 'unsigned', 'amount' => 'unsigned'),
-    'grounds' => array('quantity' => 'unsigned', 'hours' => 'unsigned', 'days' => 'unsigned', 'amount' => 'unsigned'),
+    'facilities' => array('quantity' => 'requirement', 'hours' => 'requirement', 'days' => 'requirement', 'amount' => 'requirement'),
+    'equipment' => array('quantity' => 'requirement', 'hours' => 'requirement', 'days' => 'requirement', 'amount' => 'requirement'),
+    'security' => array('quantity' => 'requirement', 'hours' => 'requirement', 'days' => 'requirement', 'amount' => 'requirement'),
+    'custodial' => array('quantity' => 'requirement', 'hours' => 'requirement', 'days' => 'requirement', 'amount' => 'requirement'),
+    'maintenance' => array('quantity' => 'requirement', 'hours' => 'requirement', 'days' => 'requirement', 'amount' => 'requirement'),
+    'grounds' => array('quantity' => 'requirement', 'hours' => 'requirement', 'days' => 'requirement', 'amount' => 'requirement'),
     'other' => 'unsigned_tiny',
     'waived' => 'unsigned_tiny',
     'university' => 'unsigned_tiny',
@@ -985,7 +985,7 @@ function mfcs_schema() {
       'destination' => array(
         'description' => $t("The 'to' destination address. 'to' would be used instead of 'destination' if it was not a reserved SQL word."),
         'type' => 'varchar',
-        'length' => '127',
+        'length' => '255',
         'serialize' => FALSE,
         'not null' => TRUE,
         'default' => '',
@@ -993,7 +993,7 @@ function mfcs_schema() {
       'title' => array(
         'description' => $t("The title or subject used by the e-mail."),
         'type' => 'varchar',
-        'length' => '127',
+        'length' => '384',
         'serialize' => FALSE,
         'not null' => TRUE,
         'default' => '',
@@ -1058,6 +1058,41 @@ function mfcs_schema() {
       ),
     ),
     'primary key' => array('id'),
+    'foreign keys' => array(
+      'user_id' => array(
+        'table' => 'users',
+        'columns' => array('user_id' => 'uid'),
+      ),
+    ),
+  );
+
+  $schema['mfcs_users'] = array(
+    'description' => $t("McNeese Facilities Use Users table. This represents custom settings or exceptional cases involved with users."),
+    'fields' => array(
+      'user_id' => array(
+        'description' => $t("This is the system id"),
+        'type' => 'int',
+        'size' => 'big',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+      ),
+      'problems' => array(
+        'description' => $t("Represents a series of problems, using bitwise operations."),
+        'type' => 'int',
+        'size' => 'big',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'default' => 0,
+      ),
+      'date' => array(
+        'description' => $t("Represents the row was last updated."),
+        'type' => 'int',
+        'size' => 'big',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+      ),
+    ),
+    'primary key' => array('user_id'),
     'foreign keys' => array(
       'user_id' => array(
         'table' => 'users',
@@ -1364,6 +1399,14 @@ function mfcs_schema() {
             $schema[$table_name]['primary key'][] = $name;
           }
         }
+        elseif ($type == 'requirement') {
+          $schema[$table_name]['fields'][$name] = array(
+            'type' => 'int',
+            'size' => 'normal',
+            'not null' => FALSE,
+            'unsigned' => TRUE,
+          );
+        }
       }
     }
 
@@ -1386,6 +1429,11 @@ function mfcs_schema() {
 
 /**
  * Implementation of hook_install().
+ *
+ * All tables should have have ownership changed from the drupal user account
+ * to the database admin (usually postgres).
+ *
+ * This will significantly enhance security.
  */
 function mfcs_install() {
   // drupal does not support automatically assigning foreign key relations, so this must be manually performed.
@@ -1425,6 +1473,7 @@ function mfcs_install() {
 
   $structure = mfcs_table_install_structure();
 
+  db_query('ALTER TABLE {requests} ADD CONSTRAINT ' . $key2_foreign . ' FOREIGN KEY (' . $key2_name . ') REFERENCES {' . $table2_foreign . '} (' . $table2_foreign_key . ') ON DELETE RESTRICT');
   db_query('ALTER TABLE {mfcs_current} ADD CONSTRAINT ' . $key1_foreign . ' FOREIGN KEY (' . $key1_name . ') REFERENCES {' . $table1_foreign . '} (' . $table1_foreign_key . ') ON DELETE CASCADE');
   db_query('ALTER TABLE {mfcs_request_revisions} ADD CONSTRAINT ' . $key1_foreign . ' FOREIGN KEY (' . $key1_name . ') REFERENCES {' . $table1_foreign . '} (' . $table1_foreign_key . ') ON DELETE CASCADE');
   db_query('ALTER TABLE {mfcs_request_revisions} ADD CONSTRAINT ' . $key2_foreign . ' FOREIGN KEY (' . $key2_name . ') REFERENCES {' . $table2_foreign . '} (' . $table2_foreign_key . ') ON DELETE RESTRICT');
@@ -1446,6 +1495,7 @@ function mfcs_install() {
   db_query('ALTER TABLE {mfcs_review_classifications} ADD CONSTRAINT review_fkey FOREIGN KEY (review_id) REFERENCES {mfcs_field_review_review} (id) ON DELETE CASCADE');
 
   db_query('ALTER TABLE {mfcs_log_troubleshoot} ADD CONSTRAINT ' . $key2_foreign . ' FOREIGN KEY (' . $key2_name . ') REFERENCES {' . $table2_foreign . '} (' . $table2_foreign_key . ') ON DELETE RESTRICT');
+  db_query('ALTER TABLE {mfcs_users} ADD CONSTRAINT ' . $key2_foreign . ' FOREIGN KEY (' . $key2_name . ') REFERENCES {' . $table2_foreign . '} (' . $table2_foreign_key . ') ON DELETE RESTRICT');
 
   foreach ($structure as $structure_name => &$structure_array) {
     foreach ($structure_array as $field_name => &$field_type) {
@@ -1484,6 +1534,9 @@ function mfcs_install() {
 
 /**
  * Implementation of hook_uninstall().
+ *
+ * All tables will have to have ownership changed back to the drupal database
+ * user account prior to uninstallation or access denied errors will occur.
  */
 function mfcs_uninstall() {
   // restore the mail system default.
@@ -1516,6 +1569,7 @@ function mfcs_uninstall() {
   db_query('DROP VIEW {mfcs_view_dates_asc}');
   db_query('DROP VIEW {mfcs_view_dates_desc}');
 
+  db_query('ALTER TABLE {mfcs_requests} DROP CONSTRAINT IF EXISTS ' . $key2_foreign);
   db_query('ALTER TABLE {mfcs_current} DROP CONSTRAINT IF EXISTS ' . $key1_foreign);
   db_query('ALTER TABLE {mfcs_request_revisions} DROP CONSTRAINT IF EXISTS ' . $key1_foreign);
   db_query('ALTER TABLE {mfcs_request_revisions} DROP CONSTRAINT IF EXISTS ' . $key2_foreign);
@@ -1534,6 +1588,7 @@ function mfcs_uninstall() {
   db_query('ALTER TABLE {mfcs_review_classifications} DROP CONSTRAINT IF EXISTS ' . $keyR_foreign);
   db_query('ALTER TABLE {mfcs_field_review_review} DROP CONSTRAINT IF EXISTS ' . $key1_foreign);
   db_query('ALTER TABLE {mfcs_log_troubleshoot} DROP CONSTRAINT IF EXISTS ' . $key2_foreign);
+  db_query('ALTER TABLE {mfcs_users} DROP CONSTRAINT IF EXISTS ' . $key2_foreign);
 
   foreach ($structure as $structure_name => &$structure_array) {
     foreach ($structure_array as $field_name => &$field_type) {

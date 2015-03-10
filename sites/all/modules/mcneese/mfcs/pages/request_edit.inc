@@ -310,7 +310,6 @@ function mfcs_request_edit_0_form_validate($form, &$form_state) {
   }
 
   $can_edit_request = mfcs_request_access('edit', $request, $user);
-  $can_cancel_request = mfcs_request_access('cancel', $request, $user);
 
   if (!$can_edit_request) {
     form_set_error('', "Illegal operation detected. Unauthorized access attempt.");
@@ -318,30 +317,18 @@ function mfcs_request_edit_0_form_validate($form, &$form_state) {
   }
 
   if ($clicked_id == 'submit-request-cancel') {
-    if (!$can_cancel_request) {
-      form_set_error('', "Illegal operation detected. Unauthorized access attempt.");
-      $no_problems = FALSE;
-    }
+    $form_state['rebuild'] = FALSE;
 
-    if (isset($form_state['ajax'])) {
-      // ajax method of cancelling.
-      $form_state['values']['form']['step'] = 'cancel';
-    }
-    else {
-      // non-ajax method of cancelling.
-      $form_state['rebuild'] = FALSE;
-
-      if (empty($form_state['values']['redirect_to'])) {
-        if (empty($request_id)) {
-          $form_state['redirect'] = mfcs_build_redirect_array('requests');
-        }
-        else {
-          $form_state['redirect'] = mfcs_build_redirect_array('requests/view-0/');
-        }
+    if (empty($form_state['values']['redirect_to'])) {
+      if (empty($request_id)) {
+        $form_state['redirect'] = mfcs_build_redirect_array('requests');
       }
       else {
-        $form_state['redirect'] = $form_state['values']['redirect_to'];
+        $form_state['redirect'] = mfcs_build_redirect_array('requests/view-0/');
       }
+    }
+    else {
+      $form_state['redirect'] = $form_state['values']['redirect_to'];
     }
 
     return;

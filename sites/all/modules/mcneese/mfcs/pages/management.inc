@@ -15,8 +15,6 @@
  *
  * @return string
  *   The HTML output representing the page.
- *
- * @see mfcs_blocks_at_path()
  */
 function mfcs_management_page() {
   global $base_path;
@@ -130,8 +128,28 @@ function mfcs_management_page() {
       $items_array = &$items_1;
     }
 
-    $link = '<h4 class="item-link-wrapper inline-block"><a href="' . $base_path . 'requests/troubleshoot-0' . $url_arguments . '" class="item-link">Troubleshooting</a></h4>';
+    $link = '<h4 class="item-link-wrapper inline-block"><a href="' . $base_path . 'requests/troubleshoot-0' . $url_arguments . '" class="item-link">Troubleshooting Tools</a></h4>';
     $help = '<div class="item-description inline-block">Utilize troubleshooting tools to help fix problems on the system.</div>';
+    $items_array[] = array(
+      'data' => $link . '<br>' . $help,
+      'class' => array(
+      ),
+    );
+
+    $c_1 = count($items_1);
+    $c_2 = count($items_2);
+    if ($c_1 == $c_2) {
+      $items_array = &$items_1;
+    }
+    elseif ($c_1 > $c_2) {
+      $items_array = &$items_2;
+    }
+    else {
+      $items_array = &$items_1;
+    }
+
+    $link = '<h4 class="item-link-wrapper inline-block"><a href="' . $base_path . 'requests/problems-0' . $url_arguments . '" class="item-link">Manage Problems</a></h4>';
+    $help = '<div class="item-description inline-block">Manage problems that have been detected by the system.</div>';
     $items_array[] = array(
       'data' => $link . '<br>' . $help,
       'class' => array(
@@ -139,16 +157,15 @@ function mfcs_management_page() {
     );
   }
 
-  $item_list_1 = theme('item_list', array('items' => $items_1, 'type' => 'ul'));
-  $item_list_2 = theme('item_list', array('items' => $items_2, 'type' => 'ul'));
-
   $markup = '<div id="mfcs-management_page-choices" class="mfcs-management_page-choices">';
 
   if (!empty($items_1)) {
+    $item_list_1 = theme('item_list', array('items' => $items_1, 'type' => 'ul'));
     $markup .= '<div class="mfcs-management_page-choices-list_1">' . $item_list_1 . '</div>';
   }
 
   if (!empty($items_2)) {
+    $item_list_2 = theme('item_list', array('items' => $items_2, 'type' => 'ul'));
     $markup .= '<div class="mfcs-management_page-choices-list_2">' . $item_list_2 . '</div>';
   }
 

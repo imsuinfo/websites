@@ -42,33 +42,39 @@ function mfcs_hook_permission() {
 }
 
 /**
- * Internal function for hook_permission.
+ * Internal function for hook_menu.
  */
 function mfcs_hook_menu() {
-  $items = array();
-
   $module_path = drupal_get_path('module', 'mfcs');
 
+  $items = array();
+  mfcs_hook_menu_requests_basic($items, $module_path);
+  mfcs_hook_menu_requests_reviewing($items, $module_path);
+  mfcs_hook_menu_requests_listing($items, $module_path);
+
+  mfcs_hook_menu_management($items, $module_path);
+
+  return $items;
+}
+
+/**
+ * hook_menu() entries related to requests.
+ *
+ * @param array $items
+ *   An array of menu items.
+ * @param string $module_path
+ *   The filesystem path to the module.
+ */
+function mfcs_hook_menu_requests_basic(&$items, $module_path) {
   $items['requests'] = array(
     'title' => "Requests Dashboard",
     'description' => "Requests Dashboard",
     'page callback' => 'mfcs_dashboard_page',
     'file' => 'dashboard.inc',
     'file path' => $module_path . '/pages',
-    'access callback' => 'mfcs_dashboard_page_access',
     'tab_parent' => '',
     'tab_root' => '',
-  );
-
-  $items['requests/management'] = array(
-    'title' => "Requests Management",
-    'description' => "Requests Management",
-    'page callback' => 'mfcs_management_page',
-    'file' => 'management.inc',
-    'file path' => $module_path . '/pages',
-    'access callback' => 'mfcs_management_page_access',
-    'tab_parent' => '',
-    'tab_root' => '',
+    'access callback' => TRUE, // prevent drupals access callback from being called.
   );
 
   $items['requests/create-0'] = array(
@@ -184,190 +190,6 @@ function mfcs_hook_menu() {
     'type' => MENU_CALLBACK,
   );
 
-  $items['requests/proxy-0'] = array(
-    'title' => "Manage Proxies",
-    'description' => "List users who are able to proxy as a venue coordinator.",
-    'page callback' => 'drupal_get_form',
-    'page arguments' => array('mfcs_request_proxy_0_form'),
-    'file' => 'request_proxy.inc',
-    'file path' => $module_path . '/pages',
-    'access callback' => 'mfcs_page_request_access',
-    'access arguments' => array('proxy'),
-    'tab_parent' => 'requests',
-    'tab_root' => 'requests',
-  );
-
-  $items['requests/proxy-0/%'] = array(
-    'title' => "Manage Proxies",
-    'description' => "List users who are able to proxy as a venue coordinator.",
-    'page callback' => 'drupal_get_form',
-    'page arguments' => array('mfcs_request_proxy_0_form', 2),
-    'file' => 'request_proxy.inc',
-    'file path' => $module_path . '/pages',
-    'access callback' => 'mfcs_page_request_access',
-    'access arguments' => array('proxy'),
-    'tab_parent' => 'requests',
-    'tab_root' => 'requests',
-  );
-
-  $items['requests/proxy-0/ajax'] = array(
-    'title' => "Manage Proxies",
-    'description' => "List users who are able to proxy as a venue coordinator.",
-    'page callback' => 'mfcs_ajax_proxy_0_list',
-    'file' => 'ajax.inc',
-    'file path' => $module_path . '/includes',
-    'access callback' => 'mfcs_page_request_access',
-    'access arguments' => array('proxy'),
-    'tab_parent' => 'requests',
-    'tab_root' => 'requests',
-  );
-
-  $items['requests/proxy-0/delete/%'] = array(
-    'title' => "Delete Proxy",
-    'description' => "Delete a proxy",
-    'page callback' => 'drupal_get_form',
-    'page arguments' => array('mfcs_request_proxy_0_delete_form', 3),
-    'file' => 'request_proxy.inc',
-    'file path' => $module_path . '/pages',
-    'access callback' => 'mfcs_page_request_access',
-    'access arguments' => array('proxy'),
-    'tab_parent' => 'requests/proxy-0',
-    'tab_root' => 'requests/proxy-0',
-  );
-
-  $items['requests/proxy-0/autocomplete/user_id'] = array(
-    'title' => "",
-    'page callback' => 'mfcs_autocomplete_user_id',
-    'file' => 'autocomplete.inc',
-    'file path' => $module_path . '/includes',
-    'access callback' => 'mfcs_page_request_access',
-    'access arguments' => array('reviewers'),
-    'type' => MENU_CALLBACK,
-  );
-
-  $items['requests/reviewers-0'] = array(
-    'title' => "Manage Reviewers",
-    'description' => "Review Request",
-    'page callback' => 'mfcs_request_reviewers_0_page',
-    'file' => 'request_reviewers.inc',
-    'file path' => $module_path . '/pages',
-    'access callback' => 'mfcs_page_request_access',
-    'access arguments' => array('reviewers'),
-    'tab_parent' => 'requests',
-    'tab_root' => 'requests',
-  );
-
-  $items['requests/reviewers-0/list/%/%'] = array(
-    'title' => "List Reviewers",
-    'description' => "List Reviewers",
-    'page callback' => 'drupal_get_form',
-    'page arguments' => array('mfcs_request_reviewers_0_form', 3, 4),
-    'file' => 'request_reviewers.inc',
-    'file path' => $module_path . '/pages',
-    'access callback' => 'mfcs_page_request_access',
-    'access arguments' => array('reviewers'),
-    'tab_parent' => 'requests/reviewers-0',
-    'tab_root' => 'requests/reviewers-0',
-  );
-
-  $items['requests/reviewers-0/list/%/%/%'] = array(
-    'title' => "List Reviewers",
-    'description' => "List Reviewers",
-    'page callback' => 'drupal_get_form',
-    'page arguments' => array('mfcs_request_reviewers_0_form', 3, 4, 5),
-    'file' => 'request_reviewers.inc',
-    'file path' => $module_path . '/pages',
-    'access callback' => 'mfcs_page_request_access',
-    'access arguments' => array('reviewers'),
-    'tab_parent' => 'requests/reviewers-0',
-    'tab_root' => 'requests/reviewers-0',
-  );
-
-  $items['requests/reviewers-0/ajax/list/%/%'] = array(
-    'title' => "",
-    'page callback' => 'mfcs_ajax_reviewers_0_list',
-    'page arguments' => array(4, 5),
-    'file' => 'ajax.inc',
-    'file path' => $module_path . '/includes',
-    'access callback' => 'mfcs_page_request_access',
-    'access arguments' => array('reviewers'),
-    'type' => MENU_CALLBACK,
-    'tab_parent' => 'requests/reviewers-0',
-    'tab_root' => 'requests/reviewers-0',
-  );
-
-  $items['requests/reviewers-0/delete/%'] = array(
-    'title' => "Delete Reviewer",
-    'description' => "Delete Reviewer",
-    'page callback' => 'drupal_get_form',
-    'page arguments' => array('mfcs_request_reviewers_0_delete_form', 3),
-    'file' => 'request_reviewers.inc',
-    'file path' => $module_path . '/pages',
-    'access callback' => 'mfcs_page_request_access',
-    'access arguments' => array('reviewers'),
-    'tab_parent' => 'requests/reviewers-0',
-    'tab_root' => 'requests/reviewers-0',
-  );
-
-  $items['requests/reviewers-0/autocomplete/user_id'] = array(
-    'title' => "",
-    'page callback' => 'mfcs_autocomplete_user_id',
-    'file' => 'autocomplete.inc',
-    'file path' => $module_path . '/includes',
-    'access callback' => 'mfcs_page_request_access',
-    'access arguments' => array('reviewers'),
-    'type' => MENU_CALLBACK,
-  );
-
-  $items['requests/reviewers-0/autocomplete/reviewer_classification'] = array(
-    'title' => "",
-    'page callback' => 'mfcs_request_reviewers_0_autocomplete_reviewer_classification',
-    'file' => 'autocomplete.inc',
-    'file path' => $module_path . '/includes',
-    'access callback' => 'mfcs_page_request_access',
-    'access arguments' => array('reviewers'),
-    'type' => MENU_CALLBACK,
-  );
-
-  $items['requests/review-0'] = array(
-    'title' => "Review Requests",
-    'description' => "Review Request",
-    'page callback' => 'drupal_get_form',
-    'page arguments' => array('mfcs_request_review_0_page'),
-    'file' => 'request_review.inc',
-    'file path' => $module_path . '/pages',
-    'access callback' => 'mfcs_page_request_access',
-    'access arguments' => array('review'),
-    'tab_parent' => 'requests',
-    'tab_root' => 'requests',
-  );
-
-  $items['requests/review-0/%'] = array(
-    'title' => "Review Requests",
-    'description' => "Review Request",
-    'page callback' => 'drupal_get_form',
-    'page arguments' => array('mfcs_request_review_0_page', 2),
-    'file' => 'request_review.inc',
-    'file path' => $module_path . '/pages',
-    'access callback' => 'mfcs_page_request_access',
-    'access arguments' => array('review'),
-    'tab_parent' => 'requests',
-    'tab_root' => 'requests',
-  );
-
-  $items['requests/review-0/ajax'] = array(
-    'title' => "",
-    'page callback' => 'mfcs_ajax_review_0',
-    'page arguments' => array(),
-    'file' => 'ajax.inc',
-    'file path' => $module_path . '/includes',
-    'access callback' => 'mfcs_page_request_access',
-    'access arguments' => array('review'),
-    'type' => MENU_CALLBACK,
-    'tab_parent' => 'requests/review-0',
-    'tab_root' => 'requests/review-0',
-  );
-
   $items['requests/delete-0/%'] = array(
     'title' => "Delete Request",
     'description' => "Delete Request",
@@ -407,6 +229,214 @@ function mfcs_hook_menu() {
     'tab_root' => 'requests',
   );
 
+  $items['requests/view-0/%'] = array(
+    'title' => "View Request",
+    'description' => "View Request",
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('mfcs_request_view_0_form', 2),
+    'file' => 'request_view.inc',
+    'file path' => $module_path . '/pages',
+    'access callback' => 'mfcs_page_request_access',
+    'access arguments' => array('view', 2),
+    'tab_parent' => 'requests/list-0',
+    'tab_root' => 'requests/list-0',
+  );
+
+  $items['requests/view-0/%/%'] = array(
+    'title' => "View Request",
+    'description' => "View Request",
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('mfcs_request_view_0_form', 2, 3),
+    'file' => 'request_view.inc',
+    'file path' => $module_path . '/pages',
+    'access callback' => 'mfcs_page_request_access',
+    'access arguments' => array('view', 2),
+    'tab_parent' => 'requests/list-0',
+    'tab_root' => 'requests/list-0',
+  );
+
+  $items['requests/pdf-0/%'] = array(
+    'title' => "Request PDF",
+    'description' => "Download Request PDF",
+    'page callback' => 'mfcs_request_pdf_0_page',
+    'page arguments' => array(2),
+    'file' => 'request_view.inc',
+    'file path' => $module_path . '/pages',
+    'access callback' => 'mfcs_page_request_access',
+    'access arguments' => array('view', 2),
+    'tab_parent' => 'requests/list-0',
+    'tab_root' => 'requests/list-0',
+    'type' => MENU_CALLBACK,
+  );
+
+  $items['requests/pdf-0/%/%'] = array(
+    'title' => "Request PDF",
+    'description' => "Download Request PDF",
+    'page callback' => 'mfcs_request_pdf_0_page',
+    'page arguments' => array(2, 3),
+    'file' => 'request_view.inc',
+    'file path' => $module_path . '/pages',
+    'access callback' => 'mfcs_page_request_access',
+    'access arguments' => array('view', 2),
+    'tab_parent' => 'requests/list-0',
+    'tab_root' => 'requests/list-0',
+    'type' => MENU_CALLBACK,
+  );
+
+  $items['requests/pdf-0/%/%/%'] = array(
+    'title' => "Request PDF",
+    'description' => "Download Request PDF",
+    'page callback' => 'mfcs_request_pdf_0_page',
+    'page arguments' => array(2, 3, 4),
+    'file' => 'request_view.inc',
+    'file path' => $module_path . '/pages',
+    'access callback' => 'mfcs_page_request_access',
+    'access arguments' => array('view', 2),
+    'tab_parent' => 'requests/list-0',
+    'tab_root' => 'requests/list-0',
+    'type' => MENU_CALLBACK,
+  );
+
+  $items['requests/print-0/%'] = array(
+    'title' => "Printable Request",
+    'description' => "Self-contained/Printable Request",
+    'page callback' => 'mfcs_request_print_0_page',
+    'page arguments' => array(2),
+    'file' => 'request_view.inc',
+    'file path' => $module_path . '/pages',
+    'access callback' => 'mfcs_page_request_access',
+    'access arguments' => array('view', 2),
+    'tab_parent' => 'requests/list-0',
+    'tab_root' => 'requests/list-0',
+    'type' => MENU_CALLBACK,
+  );
+
+  $items['requests/print-0/%/%'] = array(
+    'title' => "Printable Request",
+    'description' => "Self-contained/Printable Request",
+    'page callback' => 'mfcs_request_print_0_page',
+    'page arguments' => array(2, 3),
+    'file' => 'request_view.inc',
+    'file path' => $module_path . '/pages',
+    'access callback' => 'mfcs_page_request_access',
+    'access arguments' => array('view', 2),
+    'tab_parent' => 'requests/list-0',
+    'tab_root' => 'requests/list-0',
+    'type' => MENU_CALLBACK,
+  );
+
+  $items['requests/print-0/%/%/%'] = array(
+    'title' => "Printable Request",
+    'description' => "Self-contained/Printable Request",
+    'page callback' => 'mfcs_request_print_0_page',
+    'page arguments' => array(2, 3, 4),
+    'file' => 'request_view.inc',
+    'file path' => $module_path . '/pages',
+    'access callback' => 'mfcs_page_request_access',
+    'access arguments' => array('view', 2),
+    'tab_parent' => 'requests/list-0',
+    'tab_root' => 'requests/list-0',
+    'type' => MENU_CALLBACK,
+  );
+}
+
+/**
+ * hook_menu() entries related to requests reviewing.
+ *
+ * @param array $items
+ *   An array of menu items.
+ * @param string $module_path
+ *   The filesystem path to the module.
+ */
+function mfcs_hook_menu_requests_reviewing(&$items, $module_path) {
+  $items['requests/review-0'] = array(
+    'title' => "Review Requests",
+    'description' => "Review Request",
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('mfcs_request_review_0_page'),
+    'file' => 'request_review.inc',
+    'file path' => $module_path . '/pages',
+    'access callback' => 'mfcs_page_request_access',
+    'access arguments' => array('review'),
+    'tab_parent' => 'requests',
+    'tab_root' => 'requests',
+  );
+
+  $items['requests/review-0/%'] = array(
+    'title' => "Review Requests",
+    'description' => "Review Request",
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('mfcs_request_review_0_page', 2),
+    'file' => 'request_review.inc',
+    'file path' => $module_path . '/pages',
+    'access callback' => 'mfcs_page_request_access',
+    'access arguments' => array('review'),
+    'tab_parent' => 'requests',
+    'tab_root' => 'requests',
+  );
+
+  $items['requests/review-0/ajax'] = array(
+    'title' => "",
+    'page callback' => 'mfcs_ajax_review_0',
+    'page arguments' => array(),
+    'file' => 'ajax.inc',
+    'file path' => $module_path . '/includes',
+    'access callback' => 'mfcs_page_request_access',
+    'access arguments' => array('review'),
+    'type' => MENU_CALLBACK,
+    'tab_parent' => 'requests/review-0',
+    'tab_root' => 'requests/review-0',
+  );
+
+  $items['requests/history-0/%'] = array(
+    'title' => "Request History",
+    'description' => "Request History",
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('mfcs_request_history_0_form', 2),
+    'file' => 'request_history.inc',
+    'file path' => $module_path . '/pages',
+    'access callback' => 'mfcs_page_request_access',
+    'access arguments' => array('history', 2),
+    'tab_parent' => 'requests',
+    'tab_root' => 'requests',
+  );
+
+  $items['requests/agreement-0/%'] = array(
+    'title' => "Facilities Use Agreement",
+    'description' => "Facilities Use Agreement",
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('mfcs_request_agreement_0_form', 2),
+    'file' => 'request_agreement.inc',
+    'file path' => $module_path . '/pages',
+    'access callback' => 'mfcs_page_request_access',
+    'access arguments' => array('agreement', 2),
+    'tab_parent' => 'requests',
+    'tab_root' => 'requests',
+  );
+
+  $items['requests/agreement-0/%/pdf'] = array(
+    'title' => "Facilities Use Agreement",
+    'description' => "Facilities Use Agreement",
+    'page callback' => 'mfcs_request_agreement_0_pdf',
+    'page arguments' => array(2),
+    'file' => 'request_agreement.inc',
+    'file path' => $module_path . '/pages',
+    'access callback' => 'mfcs_page_request_access',
+    'access arguments' => array('agreement', 2),
+    'tab_parent' => 'requests',
+    'tab_root' => 'requests',
+  );
+}
+
+/**
+ * hook_menu() entries related to request listing.
+ *
+ * @param array $items
+ *   An array of menu items.
+ * @param string $module_path
+ *   The filesystem path to the module.
+ */
+function mfcs_hook_menu_requests_listing(&$items, $module_path) {
   $items['requests/list-0'] = array(
     'title' => "List Requests",
     'description' => "List Requests",
@@ -418,6 +448,32 @@ function mfcs_hook_menu() {
     'access arguments' => array('list'),
     'tab_parent' => 'requests',
     'tab_root' => 'requests',
+  );
+
+  $items['requests/list-0/%'] = array(
+    'title' => "List Requests",
+    'description' => "List Requests",
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('mfcs_request_list_0_form', 2),
+    'file' => 'request_list.inc',
+    'file path' => $module_path . '/pages',
+    'access callback' => 'mfcs_page_request_access',
+    'access arguments' => array('list'),
+    'tab_parent' => 'requests',
+    'tab_root' => 'requests',
+  );
+
+  $items['requests/list-0/ajax'] = array(
+    'title' => "",
+    'page callback' => 'mfcs_ajax_list_0',
+    'page arguments' => array(),
+    'file' => 'ajax.inc',
+    'file path' => $module_path . '/includes',
+    'access callback' => 'mfcs_page_request_access',
+    'access arguments' => array('list'),
+    'type' => MENU_CALLBACK,
+    'tab_parent' => 'requests/list-0',
+    'tab_root' => 'requests/list-0',
   );
 
   $items['requests/calendar-0/month'] = array(
@@ -615,32 +671,6 @@ function mfcs_hook_menu() {
     'tab_root' => 'requests',
   );
 
-  $items['requests/list-0/%'] = array(
-    'title' => "List Requests",
-    'description' => "List Requests",
-    'page callback' => 'drupal_get_form',
-    'page arguments' => array('mfcs_request_list_0_form', 2),
-    'file' => 'request_list.inc',
-    'file path' => $module_path . '/pages',
-    'access callback' => 'mfcs_page_request_access',
-    'access arguments' => array('list'),
-    'tab_parent' => 'requests',
-    'tab_root' => 'requests',
-  );
-
-  $items['requests/list-0/ajax'] = array(
-    'title' => "",
-    'page callback' => 'mfcs_ajax_list_0',
-    'page arguments' => array(),
-    'file' => 'ajax.inc',
-    'file path' => $module_path . '/includes',
-    'access callback' => 'mfcs_page_request_access',
-    'access arguments' => array('list'),
-    'type' => MENU_CALLBACK,
-    'tab_parent' => 'requests/list-0',
-    'tab_root' => 'requests/list-0',
-  );
-
   $items['requests/search-0'] = array(
     'title' => "Search Requests",
     'description' => "Search Requests",
@@ -679,154 +709,172 @@ function mfcs_hook_menu() {
     'tab_parent' => 'requests/search-0',
     'tab_root' => 'requests/search-0',
   );
+}
 
-  $items['requests/view-0/%'] = array(
-    'title' => "View Request",
-    'description' => "View Request",
+/**
+ * hook_menu() entries related to management.
+ *
+ * @param array $items
+ *   An array of menu items.
+ * @param string $module_path
+ *   The filesystem path to the module.
+ */
+function mfcs_hook_menu_management(&$items, $module_path) {
+
+  $items['requests/management'] = array(
+    'title' => "Requests Management",
+    'description' => "Requests Management",
+    'page callback' => 'mfcs_management_page',
+    'file' => 'management.inc',
+    'file path' => $module_path . '/pages',
+    'access callback' => 'mfcs_management_page_access',
+    'tab_parent' => '',
+    'tab_root' => '',
+  );
+
+  $items['requests/proxy-0'] = array(
+    'title' => "Manage Proxies",
+    'description' => "List users who are able to proxy as a venue coordinator.",
     'page callback' => 'drupal_get_form',
-    'page arguments' => array('mfcs_request_view_0_form', 2),
-    'file' => 'request_view.inc',
+    'page arguments' => array('mfcs_request_proxy_0_form'),
+    'file' => 'request_proxy.inc',
     'file path' => $module_path . '/pages',
     'access callback' => 'mfcs_page_request_access',
-    'access arguments' => array('view', 2),
-    'tab_parent' => 'requests/list-0',
-    'tab_root' => 'requests/list-0',
-  );
-
-  $items['requests/view-0/%/%'] = array(
-    'title' => "View Request",
-    'description' => "View Request",
-    'page callback' => 'drupal_get_form',
-    'page arguments' => array('mfcs_request_view_0_form', 2, 3),
-    'file' => 'request_view.inc',
-    'file path' => $module_path . '/pages',
-    'access callback' => 'mfcs_page_request_access',
-    'access arguments' => array('view', 2),
-    'tab_parent' => 'requests/list-0',
-    'tab_root' => 'requests/list-0',
-  );
-
-  $items['requests/pdf-0/%'] = array(
-    'title' => "Request PDF",
-    'description' => "Download Request PDF",
-    'page callback' => 'mfcs_request_pdf_0_page',
-    'page arguments' => array(2),
-    'file' => 'request_view.inc',
-    'file path' => $module_path . '/pages',
-    'access callback' => 'mfcs_page_request_access',
-    'access arguments' => array('view', 2),
-    'tab_parent' => 'requests/list-0',
-    'tab_root' => 'requests/list-0',
-    'type' => MENU_CALLBACK,
-  );
-
-  $items['requests/pdf-0/%/%'] = array(
-    'title' => "Request PDF",
-    'description' => "Download Request PDF",
-    'page callback' => 'mfcs_request_pdf_0_page',
-    'page arguments' => array(2, 3),
-    'file' => 'request_view.inc',
-    'file path' => $module_path . '/pages',
-    'access callback' => 'mfcs_page_request_access',
-    'access arguments' => array('view', 2),
-    'tab_parent' => 'requests/list-0',
-    'tab_root' => 'requests/list-0',
-    'type' => MENU_CALLBACK,
-  );
-
-  $items['requests/pdf-0/%/%/%'] = array(
-    'title' => "Request PDF",
-    'description' => "Download Request PDF",
-    'page callback' => 'mfcs_request_pdf_0_page',
-    'page arguments' => array(2, 3, 4),
-    'file' => 'request_view.inc',
-    'file path' => $module_path . '/pages',
-    'access callback' => 'mfcs_page_request_access',
-    'access arguments' => array('view', 2),
-    'tab_parent' => 'requests/list-0',
-    'tab_root' => 'requests/list-0',
-    'type' => MENU_CALLBACK,
-  );
-
-  $items['requests/print-0/%'] = array(
-    'title' => "Printable Request",
-    'description' => "Self-contained/Printable Request",
-    'page callback' => 'mfcs_request_print_0_page',
-    'page arguments' => array(2),
-    'file' => 'request_view.inc',
-    'file path' => $module_path . '/pages',
-    'access callback' => 'mfcs_page_request_access',
-    'access arguments' => array('view', 2),
-    'tab_parent' => 'requests/list-0',
-    'tab_root' => 'requests/list-0',
-    'type' => MENU_CALLBACK,
-  );
-
-  $items['requests/print-0/%/%'] = array(
-    'title' => "Printable Request",
-    'description' => "Self-contained/Printable Request",
-    'page callback' => 'mfcs_request_print_0_page',
-    'page arguments' => array(2, 3),
-    'file' => 'request_view.inc',
-    'file path' => $module_path . '/pages',
-    'access callback' => 'mfcs_page_request_access',
-    'access arguments' => array('view', 2),
-    'tab_parent' => 'requests/list-0',
-    'tab_root' => 'requests/list-0',
-    'type' => MENU_CALLBACK,
-  );
-
-  $items['requests/print-0/%/%/%'] = array(
-    'title' => "Printable Request",
-    'description' => "Self-contained/Printable Request",
-    'page callback' => 'mfcs_request_print_0_page',
-    'page arguments' => array(2, 3, 4),
-    'file' => 'request_view.inc',
-    'file path' => $module_path . '/pages',
-    'access callback' => 'mfcs_page_request_access',
-    'access arguments' => array('view', 2),
-    'tab_parent' => 'requests/list-0',
-    'tab_root' => 'requests/list-0',
-    'type' => MENU_CALLBACK,
-  );
-
-  $items['requests/history-0/%'] = array(
-    'title' => "Request History",
-    'description' => "Request History",
-    'page callback' => 'drupal_get_form',
-    'page arguments' => array('mfcs_request_history_0_form', 2),
-    'file' => 'request_history.inc',
-    'file path' => $module_path . '/pages',
-    'access callback' => 'mfcs_page_request_access',
-    'access arguments' => array('history', 2),
+    'access arguments' => array('proxy'),
     'tab_parent' => 'requests',
     'tab_root' => 'requests',
   );
 
-  $items['requests/agreement-0/%'] = array(
-    'title' => "Facilities Use Agreement",
-    'description' => "Facilities Use Agreement",
+  $items['requests/proxy-0/%'] = array(
+    'title' => "Manage Proxies",
+    'description' => "List users who are able to proxy as a venue coordinator.",
     'page callback' => 'drupal_get_form',
-    'page arguments' => array('mfcs_request_agreement_0_form', 2),
-    'file' => 'request_agreement.inc',
+    'page arguments' => array('mfcs_request_proxy_0_form', 2),
+    'file' => 'request_proxy.inc',
     'file path' => $module_path . '/pages',
     'access callback' => 'mfcs_page_request_access',
-    'access arguments' => array('agreement', 2),
+    'access arguments' => array('proxy'),
     'tab_parent' => 'requests',
     'tab_root' => 'requests',
   );
 
-  $items['requests/agreement-0/%/pdf'] = array(
-    'title' => "Facilities Use Agreement",
-    'description' => "Facilities Use Agreement",
-    'page callback' => 'mfcs_request_agreement_0_pdf',
-    'page arguments' => array(2),
-    'file' => 'request_agreement.inc',
-    'file path' => $module_path . '/pages',
+  $items['requests/proxy-0/ajax'] = array(
+    'title' => "Manage Proxies",
+    'description' => "List users who are able to proxy as a venue coordinator.",
+    'page callback' => 'mfcs_ajax_proxy_0_list',
+    'file' => 'ajax.inc',
+    'file path' => $module_path . '/includes',
     'access callback' => 'mfcs_page_request_access',
-    'access arguments' => array('agreement', 2),
+    'access arguments' => array('proxy'),
     'tab_parent' => 'requests',
     'tab_root' => 'requests',
+  );
+
+  $items['requests/proxy-0/delete/%'] = array(
+    'title' => "Delete Proxy",
+    'description' => "Delete a proxy",
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('mfcs_request_proxy_0_delete_form', 3),
+    'file' => 'request_proxy.inc',
+    'file path' => $module_path . '/pages',
+    'access callback' => 'mfcs_page_request_access',
+    'access arguments' => array('proxy'),
+    'tab_parent' => 'requests/proxy-0',
+    'tab_root' => 'requests/proxy-0',
+  );
+
+  $items['requests/proxy-0/autocomplete/user_id'] = array(
+    'title' => "",
+    'page callback' => 'mfcs_autocomplete_user_id',
+    'file' => 'autocomplete.inc',
+    'file path' => $module_path . '/includes',
+    'access callback' => 'mfcs_page_request_access',
+    'access arguments' => array('reviewers'),
+    'type' => MENU_CALLBACK,
+  );
+
+  $items['requests/reviewers-0'] = array(
+    'title' => "Manage Reviewers",
+    'description' => "Review Request",
+    'page callback' => 'mfcs_request_reviewers_0_page',
+    'file' => 'request_reviewers.inc',
+    'file path' => $module_path . '/pages',
+    'access callback' => 'mfcs_page_request_access',
+    'access arguments' => array('reviewers'),
+    'tab_parent' => 'requests',
+    'tab_root' => 'requests',
+  );
+
+  $items['requests/reviewers-0/list/%/%'] = array(
+    'title' => "List Reviewers",
+    'description' => "List Reviewers",
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('mfcs_request_reviewers_0_form', 3, 4),
+    'file' => 'request_reviewers.inc',
+    'file path' => $module_path . '/pages',
+    'access callback' => 'mfcs_page_request_access',
+    'access arguments' => array('reviewers'),
+    'tab_parent' => 'requests/reviewers-0',
+    'tab_root' => 'requests/reviewers-0',
+  );
+
+  $items['requests/reviewers-0/list/%/%/%'] = array(
+    'title' => "List Reviewers",
+    'description' => "List Reviewers",
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('mfcs_request_reviewers_0_form', 3, 4, 5),
+    'file' => 'request_reviewers.inc',
+    'file path' => $module_path . '/pages',
+    'access callback' => 'mfcs_page_request_access',
+    'access arguments' => array('reviewers'),
+    'tab_parent' => 'requests/reviewers-0',
+    'tab_root' => 'requests/reviewers-0',
+  );
+
+  $items['requests/reviewers-0/ajax/list/%/%'] = array(
+    'title' => "",
+    'page callback' => 'mfcs_ajax_reviewers_0_list',
+    'page arguments' => array(4, 5),
+    'file' => 'ajax.inc',
+    'file path' => $module_path . '/includes',
+    'access callback' => 'mfcs_page_request_access',
+    'access arguments' => array('reviewers'),
+    'type' => MENU_CALLBACK,
+    'tab_parent' => 'requests/reviewers-0',
+    'tab_root' => 'requests/reviewers-0',
+  );
+
+  $items['requests/reviewers-0/delete/%'] = array(
+    'title' => "Delete Reviewer",
+    'description' => "Delete Reviewer",
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('mfcs_request_reviewers_0_delete_form', 3),
+    'file' => 'request_reviewers.inc',
+    'file path' => $module_path . '/pages',
+    'access callback' => 'mfcs_page_request_access',
+    'access arguments' => array('reviewers'),
+    'tab_parent' => 'requests/reviewers-0',
+    'tab_root' => 'requests/reviewers-0',
+  );
+
+  $items['requests/reviewers-0/autocomplete/user_id'] = array(
+    'title' => "",
+    'page callback' => 'mfcs_autocomplete_user_id',
+    'file' => 'autocomplete.inc',
+    'file path' => $module_path . '/includes',
+    'access callback' => 'mfcs_page_request_access',
+    'access arguments' => array('reviewers'),
+    'type' => MENU_CALLBACK,
+  );
+
+  $items['requests/reviewers-0/autocomplete/reviewer_classification'] = array(
+    'title' => "",
+    'page callback' => 'mfcs_request_reviewers_0_autocomplete_reviewer_classification',
+    'file' => 'autocomplete.inc',
+    'file path' => $module_path . '/includes',
+    'access callback' => 'mfcs_page_request_access',
+    'access arguments' => array('reviewers'),
+    'type' => MENU_CALLBACK,
   );
 
   $items['requests/statistics-0'] = array(
@@ -920,7 +968,7 @@ function mfcs_hook_menu() {
   );
 
   $items['requests/troubleshoot-0'] = array(
-    'title' => "Troubleshooting",
+    'title' => "Troubleshooting Tools",
     'description' => "Troubleshoot problems on the system using pre-built tools.",
     'page callback' => 'drupal_get_form',
     'page arguments' => array('mfcs_request_troubleshoot_0_form'),
@@ -932,7 +980,69 @@ function mfcs_hook_menu() {
     'tab_root' => 'requests',
   );
 
-  return $items;
+  $items['requests/problems-0'] = array(
+    'title' => "Manage Problems",
+    'description' => "Manage problems detected by the system.",
+    'page callback' => 'mfcs_management_problems_page',
+    'page arguments' => array(),
+    'file' => 'request_problems.inc',
+    'file path' => $module_path . '/pages',
+    'access callback' => 'mfcs_page_request_access',
+    'access arguments' => array('problems'),
+    'tab_parent' => 'requests',
+    'tab_root' => 'requests',
+  );
+
+  $items['requests/problems-0/users'] = array(
+    'title' => "User Problems",
+    'description' => "View a list of users with problems that the system has detected.",
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('mfcs_request_problems_0_users_form'),
+    'file' => 'request_problems.inc',
+    'file path' => $module_path . '/pages',
+    'access callback' => 'mfcs_page_request_access',
+    'access arguments' => array('problems'),
+    'tab_parent' => 'requests/problems-0',
+    'tab_root' => 'requests/problems-0',
+  );
+
+  $items['requests/problems-0/users/ajax'] = array(
+    'title' => "User Problems",
+    'description' => "View a list of users with problems that the system has detected.",
+    'page callback' => 'mfcs_ajax_problems_0_users_list',
+    'file' => 'ajax.inc',
+    'file path' => $module_path . '/includes',
+    'access callback' => 'mfcs_page_request_access',
+    'access arguments' => array('problems'),
+    'tab_parent' => 'requests/problems-0',
+    'tab_root' => 'requests/problems-0',
+  );
+
+  $items['requests/problems-0/users/%'] = array(
+    'title' => "User Problems",
+    'description' => "View a list of users with problems that the system has detected.",
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('mfcs_request_problems_0_users_form', 3),
+    'file' => 'request_problems.inc',
+    'file path' => $module_path . '/pages',
+    'access callback' => 'mfcs_page_request_access',
+    'access arguments' => array('problems'),
+    'tab_parent' => 'requests/problems-0',
+    'tab_root' => 'requests/problems-0',
+  );
+
+  $items['requests/problems-0/users/user/%'] = array(
+    'title' => "User Problems",
+    'description' => "Manage problems detected by the system that are specific to a single user.",
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('mfcs_request_problems_0_user_form', 4),
+    'file' => 'request_problems.inc',
+    'file path' => $module_path . '/pages',
+    'access callback' => 'mfcs_page_request_access',
+    'access arguments' => array('problems'),
+    'tab_parent' => 'requests/problems-0/users',
+    'tab_root' => 'requests/problems-0/users',
+  );
 }
 
 /**
@@ -983,7 +1093,27 @@ function mfcs_hook_user_login(&$edit, $account, $category) {
  * Internal function for hook_user_insert().
  */
 function mfcs_hook_user_insert(&$edit, $account, $category) {
-  mfcs_sync_banner_to_local_users($account->uid);
+  $result = mfcs_sync_banner_to_local_users($account->uid);
+
+  // account synchronization failed, so assign the appropriate problem flag.
+  if ($result === FALSE) {
+    // if the user does not have a valid banner id, then there is nothing to syncrhonize to.
+    // do not flag this as a problem.
+    $user = user_load($account->uid);
+    if (is_object($user) && empty($user->field_user_banner_id['und'][0]['value'])) {
+      return;
+    }
+
+    $mfcs_users = mfcs_load_users($account->uid);
+
+    $problems = MFCS_USER_PROBLEM_NONE + MFCS_USER_PROBLEM_ACCOUNT_CREATE_BANNER_UNAVAILABLE;
+    if (isset($mfcs_users[$account->uid])) {
+      $problems = $mfcs_users[$account->uid]->problems;
+      $problems += MFCS_USER_PROBLEM_ACCOUNT_CREATE_BANNER_UNAVAILABLE;
+    }
+
+    mfcs_save_user($account->uid, array('problems' => $problems));
+  }
 }
 
 /**
