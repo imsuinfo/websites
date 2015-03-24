@@ -7,6 +7,9 @@ sites/*/files
 sites/*/private
 files
 private
+access_denied
+not_found
+service_unavailable
 
 # ignore .gitignore files inside of drupal subdirectories
 sites/all/*/*/.gitignore
@@ -16,14 +19,8 @@ sites/default/deprecated
 sites/default/gnupg
 *.swp
 favicon.ico
-access_denied
-not_found
-service_unavailable
 
 # Ignore Mac Files
 ._*
 .apdisk
 .DS_Store
-
-# Custom sub-websites
-fcs

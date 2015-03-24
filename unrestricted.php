@@ -396,7 +396,7 @@ function unrestricted_get_file_information($uri, $settings) {
         $connect_string .= ' ' . $option_name . "=" . $settings['database_drupal'][$option_name];
       }
     }
-  
+
     if (!array_key_exists('connect_type', $settings['database_drupal']) || is_null($settings['database_drupal']['connect_type'])) {
       $drupal_connection = pg_connect($connect_string);
     }
