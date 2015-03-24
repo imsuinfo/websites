@@ -792,6 +792,14 @@ $conf['system_mail_id'] = 'wwwdev.mcneese.edu';
 $conf['system_mail_name'] = 'McNeese State University';
 
 
+/**
+ *  Static registry support
+ */
+if (file_exists(DRUPAL_ROOT . '/sites/default/registry-wwwdev.php')) {
+  include_once DRUPAL_ROOT . '/sites/default/registry-wwwdev.php';
+}
+
+
 // enable all errors
 error_reporting(E_ALL | E_STRICT);
 ini_set('display_errors', TRUE);

@@ -790,6 +790,14 @@ $conf['system_mail_id'] = 'sandbox.mcneese.edu';
 $conf['system_mail_name'] = 'McNeese State University';
 
 
+/**
+ *  Static registry support
+ */
+if (file_exists(DRUPAL_ROOT . '/sites/default/registry-sandbox.php')) {
+  include_once DRUPAL_ROOT . '/sites/default/registry-sandbox.php';
+}
+
+
 // enable all errors
 #error_reporting(E_ALL);
 #ini_set('display_errors', TRUE);
