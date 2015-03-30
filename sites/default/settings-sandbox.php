@@ -276,8 +276,8 @@ $databases = array (
     'default' =>
     array (
       'database' => 'sandbox',
-      'username' => 'sandbox_user',
-      'password' => $dbp['sandbox_user'],
+      'username' => 'www_user',
+      'password' => $dbp['www_user'],
       'host' => '192.251.101.223',
       'port' => '5092',
       'driver' => 'pgsql',
