@@ -2440,3 +2440,29 @@ function workbench_access_workbench_moderation_access_alter(&$access, $op, $node
     }
   }
 }
+
+/**
+ * Implements hook_webform_submission_access().
+ */
+function workbench_access_webform_submission_access($node, $submission, $op, $user) {
+  if ($op != 'view') return NULL;
+  if (!isset($node->webform) || !is_array($node->webform)) return NULL;
+
+  // grant access to download file if the user is the owner of the webform.
+  if ($node->uid == $user->uid) {
+    return TRUE;
+  }
+
+  // grant access to download file if the user is belongs to a workbench access group assigned to the node.
+  if (isset($node->workbench_access) && is_array($node->workbench_access)) {
+    if (isset($user->workbench_access) && is_array($user->workbench_access)) {
+      foreach ($user->workbench_access as $key => $value) {
+        if (in_array($key, $node->workbench_access)) {
+          return TRUE;
+        }
+      }
+    }
+  }
+
+  return NULL;
+}
