@@ -240,6 +240,7 @@ $databases = array (
       'driver' => 'pgsql',
       'prefix' => '',
       'transactions' => TRUE,
+      'sslmode' => 'disable', # disable, allow, prefer, require (prefer disable when only providing public access)
     ),
   ),
   'wwwdev' =>
