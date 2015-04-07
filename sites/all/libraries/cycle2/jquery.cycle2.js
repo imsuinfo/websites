@@ -775,10 +775,8 @@ function initAutoHeight( e, opts ) {
 
         clone.css({
             position: 'static',
-            visibility: 'hidden',
             display: 'block'
         }).prependTo( opts.container ).addClass('cycle-sentinel cycle-slide').removeClass('cycle-slide-active');
-        clone.find( '*' ).css( 'visibility', 'hidden' );
 
         opts._sentinel = clone;
     }
