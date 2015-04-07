@@ -120,7 +120,7 @@ function mcneese_front_page_embed_featured() {
   $attributes['class'][] = 'noscript';
 
   $attributes['data-cycle-pause-on-hover'] = 'true';
-  $attributes['data-cycle-speed'] = '350';
+  $attributes['data-cycle-speed'] = '500';
   $attributes['data-cycle-timeout'] = '12000';
 
   $attributes['data-cycle-overlay-template'] = '<div class="mcneese-front_page-featured-image-overlay-title">{{title}}</div><div class="mcneese-front_page-featured-image-overlay-description">{{desc}}</div>';
@@ -189,7 +189,10 @@ function mcneese_front_page_embed_featured() {
     $image_attributes['alt'] = '';
     $image_attributes['data-cycle-title'] = '<a href="' . $base_path . 'node/' . $result->nid . '">' . check_plain($result->title) . '</a>';
     $image_attributes['data-cycle-desc'] = check_markup($result->field_headline_value, $result->field_headline_format);
-    $image_attributes['data-manual-trump'] = FALSE;
+    $image_attributes['data-cycle-manual-trump'] = 'false';
+    $image_attributes['data-cycle-update-view'] = -1;
+    $image_attributes['data-cycle-hide-non-active'] = 'false';
+    $image_attributes['data-cycle-sync'] = 'false';
     $image_attributes['width'] = 690;
     $image_attributes['height'] = 379;
 
