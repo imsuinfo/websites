@@ -83,3 +83,83 @@ function killfile_schema() {
     ),
   );
 }
+
+/**
+ * Migrate commands from old killfile to new killfile.
+ */
+function migrate_killfile_nodes_to_separate_tables() {
+  $sql_migrate = "
+    create table node_deleted as select * from node;
+
+    alter table node_deleted alter nid set not null;
+    alter table node_deleted alter type set not null;
+    alter table node_deleted alter language set not null;
+    alter table node_deleted alter title set not null;
+    alter table node_deleted alter uid set not null;
+    alter table node_deleted alter status set not null;
+    alter table node_deleted alter created set not null;
+    alter table node_deleted alter changed set not null;
+    alter table node_deleted alter comment set not null;
+    alter table node_deleted alter promote set not null;
+    alter table node_deleted alter sticky set not null;
+    alter table node_deleted alter tnid set not null;
+    alter table node_deleted alter translate set not null;
+    alter table node_deleted alter type set default ''::character varying;
+    alter table node_deleted alter language set default ''::character varying;
+    alter table node_deleted alter title set default ''::character varying;
+    alter table node_deleted alter uid set default 0;
+    alter table node_deleted alter status set default 1;
+    alter table node_deleted alter created set default 0;
+    alter table node_deleted alter changed set default 0;
+    alter table node_deleted alter comment set default 0;
+    alter table node_deleted alter promote set default 0;
+    alter table node_deleted alter sticky set default 0;
+    alter table node_deleted alter tnid set default 0;
+    alter table node_deleted alter translate set default 0;
+
+    alter table node_deleted add primary key (nid);
+    alter table node_deleted add constraint node_deleted_vid_key unique (vid);
+    alter table node_deleted add constraint node_nid_check CHECK (nid >= 0);
+    alter table node_deleted add constraint node_tnid_check CHECK (tnid >= 0);
+    alter table node_deleted add constraint node_vid_check CHECK (vid >= 0);
+
+    delete from node_deleted where not nid in (select nid from killfile_nodes);
+    delete from node where vid in (select nid from killfile_nodes);
+
+    alter table node_deleted owner to APPROPRIATE_USER_NAME ;
+
+
+
+    create table node_revision_deleted as select * from node_revision;
+
+    alter table node_revision_deleted alter nid set not null;
+    alter table node_revision_deleted alter title set not null;
+    alter table node_revision_deleted alter uid set not null;
+    alter table node_revision_deleted alter log set not null;
+    alter table node_revision_deleted alter title set not null;
+    alter table node_revision_deleted alter timestamp set not null;
+    alter table node_revision_deleted alter status set not null;
+    alter table node_revision_deleted alter comment set not null;
+    alter table node_revision_deleted alter promote set not null;
+    alter table node_revision_deleted alter sticky set not null;
+    alter table node_revision_deleted alter uid set default 0;
+    alter table node_revision_deleted alter title set default ''::character varying;
+    alter table node_revision_deleted alter timestamp set default 0;
+    alter table node_revision_deleted alter status set default 1;
+    alter table node_revision_deleted alter comment set default 0;
+    alter table node_revision_deleted alter promote set default 0;
+    alter table node_revision_deleted alter sticky set default 0;
+
+    alter table node_revision_deleted add primary key (nid);
+    alter table node_revision_deleted add constraint node_revision_deleted_vid_key unique (vid);
+    alter table node_revision_deleted add constraint node_nid_check CHECK (nid >= 0);
+    alter table node_revision_deleted add constraint node_vid_check CHECK (vid >= 0);
+
+    delete from node_revision_deleted where not nid in (select nid from killfile_nodes);
+    delete from node_revision where nid in (select nid from killfile_nodes);
+
+    alter table node_revision_deleted owner to APPROPRIATE_USER_NAME ;
+  ";
+
+  db_query($sql_migrate);
+}
