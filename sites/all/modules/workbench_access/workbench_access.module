@@ -764,6 +764,8 @@ function workbench_access_node_presave($node) {
   if (isset($node->workbench_access_fields)) {
     $node->workbench_access = array();
     foreach ($node->workbench_access_fields as $field) {
+      if (!property_exists($node, $field)) continue;
+
       if (!is_array($node->{$field})) {
         $node->workbench_access[] = $node->{$field};
       }
