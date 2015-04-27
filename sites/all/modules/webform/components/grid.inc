@@ -323,7 +323,9 @@ function theme_webform_display_grid($variables) {
     }
 
     $option_count = count($header) - 1;
-    $output = theme('table', array('header' => $header, 'rows' => $rows, 'sticky' => $element['#sticky'], 'attributes' => array('class' => array('webform-grid', 'webform-grid-' . $option_count))));
+drupal_set_message("DEBUG: table should have caption: " . $element['#title']);
+    $output = theme('table', array('header' => $header, 'rows' => $rows, 'sticky' => $element['#sticky'], 'attributes' => array('class' => array('webform-grid', 'webform-grid-' . $option_count)), 'caption' => '<div class="element-invisible">' . $element['#title'] . '</div>'));
+    //$output = '<fieldset style="padding: 0px; margin: 0px; border: 0px none;"><legend class="element-invisible">' . $element['#title'] . '</legend>' . $output . '</fieldset>';
   }
   else {
     $items = array();
@@ -512,5 +514,5 @@ function theme_webform_grid($variables) {
   }
 
   $option_count = count($header) - 1;
-  return theme('table', array('header' => $header, 'rows' => $rows, 'sticky' => $element['#sticky'], 'attributes' => array('class' => array('webform-grid', 'webform-grid-' . $option_count))));
+  return theme('table', array('header' => $header, 'rows' => $rows, 'sticky' => $element['#sticky'], 'attributes' => array('class' => array('webform-grid', 'webform-grid-' . $option_count)), 'caption' => '<div class="element-invisible">' . $element['#title'] . '</div>'));
 }
