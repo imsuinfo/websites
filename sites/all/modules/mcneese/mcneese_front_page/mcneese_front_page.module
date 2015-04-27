@@ -120,12 +120,14 @@ function mcneese_front_page_embed_featured() {
   $attributes['data-cycle-pause-on-hover'] = 'true';
   $attributes['data-cycle-speed'] = '500';
   $attributes['data-cycle-timeout'] = '12000';
-  $attributes['data-cycle-sync'] = 'false';
-  $attributes['data-cycle-hide-non-active'] = 'false';
-  $attributes['data-cycle-update-view'] = -1;
-  $attributes['data-cycle-manual-trump'] = 'false';
+  //$attributes['data-cycle-sync'] = 'false';
+  //$attributes['data-cycle-hide-non-active'] = 'false';
+  //$attributes['data-cycle-update-view'] = -1;
+  //$attributes['data-cycle-manual-trump'] = 'false';
   $attributes['data-cycle-swipe'] = 'true';
   $attributes['data-cycle-swipe-fx'] = 'scrollHorz';
+  $attributes['data-cycle-auto-height'] = '690:379';
+  $attributes['data-cycle-fx'] = 'fade';
 
   $attributes['data-cycle-overlay-template'] = '<div class="mcneese-front_page-featured-image-overlay-title">{{title}}</div><div class="mcneese-front_page-featured-image-overlay-description">{{desc}}</div>';
 
@@ -135,24 +137,9 @@ function mcneese_front_page_embed_featured() {
   $return_array['markup'] = '<div id="mcneese-front_page-featured">';
   $return_array['markup'] .= '  <div' . drupal_attributes($attributes) .'>';
 
-  // prepare for slide randomization.
-  srand();
-  $transitions_all = array(
-    'fade',
-    'fadeout',
-    'scrollHorz',
-    'scrollVert',
-    'tileSlide',
-    'tileBlind',
-    'tileSlide-horizontal',
-    'tileBlind-horizontal',
-    #'flipHorz', // does not render properly, buggy.
-    #'flipVert', // does not render properly, buggy.
-  );
 
   $count = 0;
   $image_thumbnails = array();
-  $transitions = array();
   foreach ($results as &$result) {
     if (empty($result->field_featured_image_fid)) {
       continue;
@@ -193,58 +180,8 @@ function mcneese_front_page_embed_featured() {
     $image_attributes['alt'] = '';
     $image_attributes['data-cycle-title'] = '<a href="' . $base_path . 'node/' . $result->nid . '">' . check_plain($result->title) . '</a>';
     $image_attributes['data-cycle-desc'] = check_markup($result->field_headline_value, $result->field_headline_format);
-    $image_attributes['data-cycle-manual-trump'] = 'false';
     $image_attributes['width'] = 690;
     $image_attributes['height'] = 379;
-
-    // cycle2 does not appear to support random slide transitions, so we simulate by randomizing per page load and applying per-slide transitions.
-    if (empty($transitions)) {
-      $transitions = $transitions_all;
-    }
-
-    $slide = rand(0, count($transitions) - 1);
-    $transition = $transitions[$slide];
-    unset($transitions[$slide]);
-    $transitions = array_values($transitions);
-
-    if ($transition == 'fade') {
-      $image_attributes['data-cycle-fx'] = 'fade';
-    }
-    elseif ($transition == 'fadeout') {
-      $image_attributes['data-cycle-fx'] = 'fadeout';
-    }
-    elseif ($transition == 'scrollHorz') {
-      $image_attributes['data-cycle-fx'] = 'scrollHorz';
-    }
-    elseif ($transition == 'scrollVert') {
-      $image_attributes['data-cycle-fx'] = 'scrollVert';
-    }
-    elseif ($transition == 'tileSlide') {
-      $image_attributes['data-cycle-fx'] = 'tileSlide';
-
-      $tile_count = rand(5, 10);
-      $image_attributes['data-cycle-tile-count'] = $tile_count;
-    }
-    elseif ($transition == 'tileSlide-horizontal') {
-      $image_attributes['data-cycle-fx'] = 'tileSlide';
-      $image_attributes['data-cycle-tile-vertical'] = 'false';
-
-      $tile_count = rand(5, 10);
-      $image_attributes['data-cycle-tile-count'] = $tile_count;
-    }
-    elseif ($transition == 'tileBlind') {
-      $image_attributes['data-cycle-fx'] = 'tileBlind';
-
-      $tile_count = rand(5, 10);
-      $image_attributes['data-cycle-tile-count'] = $tile_count;
-    }
-    elseif ($transition == 'tileBlind-horizontal') {
-      $image_attributes['data-cycle-fx'] = 'tileBlind';
-      $image_attributes['data-cycle-tile-vertical'] = 'false';
-
-      $tile_count = rand(5, 10);
-      $image_attributes['data-cycle-tile-count'] = $tile_count;
-    }
 
     if (property_exists($result, 'field_featured_image_alt')) {
       $image_attributes['alt'] = check_plain($result->field_featured_image_alt);
