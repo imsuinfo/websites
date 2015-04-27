@@ -83,7 +83,6 @@ function mcneese_front_page_embed_featured() {
 
     $query->leftJoin('field_revision_field_featured_thumbnail', 'frfft', '(wmnh.published = 1 AND wmnh.nid = frfft.entity_id AND wmnh.vid = frfft.revision_id)');
     $query->leftJoin('node_revision', 'nr', '(wmnh.published = 1 AND wmnh.nid = nr.nid AND wmnh.vid = nr.vid)');
-    $query->leftJoin('killfile_nodes', 'kn', '(wmnh.published = 1 AND wmnh.nid = kn.nid)');
 
     $query->fields('wmnh', array('nid', 'vid'));
     $query->fields('nr', array('title'));
@@ -94,7 +93,6 @@ function mcneese_front_page_embed_featured() {
 
     $query->condition('wmnh.published', 1);
     $query->condition('frff.field_featured_value', 1);
-    $query->isNull('kn.nid');
 
     $query->range(0, 6);
     $query->orderBy('frfod.field_order_date_value', 'DESC');
@@ -431,7 +429,6 @@ function mcneese_front_page_embed_highlight() {
       //$query->leftJoin('field_revision_field_event_datetime', 'frfed', '(wmnh.published = 1 AND wmnh.nid = frfed.entity_id AND wmnh.vid = frfed.revision_id)');
 
       $query->leftJoin('node_revision', 'nr', '(wmnh.published = 1 AND wmnh.nid = nr.nid AND wmnh.vid = nr.vid)');
-      $query->leftJoin('killfile_nodes', 'kn', '(wmnh.published = 1 AND wmnh.nid = kn.nid)');
 
       $query->fields('wmnh', array('nid', 'vid'));
       $query->fields('nr', array('title'));
@@ -443,7 +440,6 @@ function mcneese_front_page_embed_highlight() {
 
       $query->condition('wmnh.published', 1);
       $query->condition('frfh.field_highlight_value', 1);
-      $query->isNull('kn.nid');
 
       $query->range(0, 1);
       $query->orderBy('frfod.field_order_date_value', 'DESC');
@@ -557,7 +553,6 @@ function mcneese_front_page_embed_events($highlight) {
 
 
     $query->leftJoin('node_revision', 'nr', '(wmnh.published = 1 AND wmnh.nid = nr.nid AND wmnh.vid = nr.vid)');
-    $query->leftJoin('killfile_nodes', 'kn', '(wmnh.published = 1 AND wmnh.nid = kn.nid)');
 
     $query->fields('wmnh', array('nid', 'vid'));
     $query->fields('nr', array('title'));
@@ -569,7 +564,6 @@ function mcneese_front_page_embed_events($highlight) {
 
     $query->condition('wmnh.published', 1);
     $query->condition('frfe.field_event_value', 1);
-    $query->isNull('kn.nid');
 
     if (isset($highlight['event']) && property_exists($highlight['event'], 'nid')) {
       $query->condition('wmnh.nid', $highlight['event']->nid, '<>');
@@ -807,7 +801,6 @@ function mcneese_front_page_embed_spotlight() {
     //$query->leftJoin('field_revision_field_event_datetime', 'frfed', '(wmnh.published = 1 AND wmnh.nid = frfed.entity_id AND wmnh.vid = frfed.revision_id)');
 
     $query->leftJoin('node_revision', 'nr', '(wmnh.published = 1 AND wmnh.nid = nr.nid AND wmnh.vid = nr.vid)');
-    $query->leftJoin('killfile_nodes', 'kn', '(wmnh.published = 1 AND wmnh.nid = kn.nid)');
 
     $query->fields('wmnh', array('nid', 'vid'));
     $query->fields('nr', array('title'));
@@ -818,7 +811,6 @@ function mcneese_front_page_embed_spotlight() {
 
     $query->condition('wmnh.published', 1);
     $query->condition('frfs.field_spotlight_value', 1);
-    $query->isNull('kn.nid');
 
     $query->range(0, 3);
     $query->orderBy('frfod.field_order_date_value', 'DESC');
