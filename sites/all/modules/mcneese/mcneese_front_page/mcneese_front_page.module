@@ -118,7 +118,7 @@ function mcneese_front_page_embed_featured() {
   $attributes['class'][] = 'noscript';
 
   $attributes['data-cycle-pause-on-hover'] = 'true';
-  $attributes['data-cycle-speed'] = '500';
+  $attributes['data-cycle-speed'] = '700';
   $attributes['data-cycle-timeout'] = '12000';
   //$attributes['data-cycle-sync'] = 'false';
   //$attributes['data-cycle-hide-non-active'] = 'false';
