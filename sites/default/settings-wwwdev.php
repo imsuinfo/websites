@@ -815,7 +815,6 @@ $conf['error_document_file_500'] = '/var/www/error_documents/5xx/wwwdev/500.html
 #$conf['error_document_custom_menu_1_logged_in'] = NULL;
 #$conf['error_document_custom_menu_2_logged_in'] = NULL;
 $conf['error_document_load_blocks'] = TRUE;
-$conf['error_document_custom_menu_1_logged_in'] = "<div>HELLO WORLD</div>";
 
 
 // enable all errors
