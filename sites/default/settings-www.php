@@ -804,6 +804,13 @@ if (file_exists(DRUPAL_ROOT . '/sites/default/registry-www.php')) {
   include_once DRUPAL_ROOT . '/sites/default/registry-www.php';
 }
 
+/**
+ * Custom Error Pages
+ */
+#$conf['error_document_file_403'] = '/var/www/error_documents/4xx/403-www.html';
+#$conf['error_document_file_404'] = '/var/www/error_documents/4xx/404-www.html';
+#$conf['error_document_file_500'] = '/var/www/error_documents/5xx/500-www.html';
+
 
 // enable all errors
 #error_reporting(E_ALL);
