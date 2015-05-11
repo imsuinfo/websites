@@ -821,4 +821,4 @@ $conf['error_document_file_500'] = '/var/www/error_documents/5xx/500-sandbox.htm
 #$conf['maintenance_mode'] = TRUE;
 
 // disable the front page featured region
-$conf['disable_frontpage_featured'] = TRUE;
+#$conf['disable_frontpage_featured'] = TRUE;

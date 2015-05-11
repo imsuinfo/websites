@@ -821,4 +821,4 @@ if (file_exists(DRUPAL_ROOT . '/sites/default/registry-www.php')) {
 #$conf['maintenance_mode'] = TRUE;
 
 // disable the front page featured region
-$conf['disable_frontpage_featured'] = TRUE;
+#$conf['disable_frontpage_featured'] = TRUE;
