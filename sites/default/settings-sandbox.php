@@ -807,9 +807,12 @@ if (file_exists(DRUPAL_ROOT . '/sites/default/registry-sandbox.php')) {
 /**
  * Custom Error Pages
  */
-$conf['error_document_file_403'] = '/var/www/error_documents/4xx/403-sandbox.html';
-$conf['error_document_file_404'] = '/var/www/error_documents/4xx/404-sandbox.html';
-$conf['error_document_file_500'] = '/var/www/error_documents/5xx/500-sandbox.html';
+$conf['error_document_file_403'] = '/var/www/error_documents/4xx/sandbox/403.html';
+$conf['error_document_file_404'] = '/var/www/error_documents/4xx/sandbox/404.html';
+$conf['error_document_file_500'] = '/var/www/error_documents/5xx/sandbox/500.html';
+#$conf['error_document_custom_menu_1_logged_in'] = NULL;
+#$conf['error_document_custom_menu_2_logged_in'] = NULL;
+$conf['error_document_load_blocks'] = TRUE;
 
 
 // enable all errors

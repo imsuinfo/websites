@@ -809,9 +809,13 @@ if (file_exists(DRUPAL_ROOT . '/sites/default/registry-wwwdev.php')) {
 /**
  * Custom Error Pages
  */
-$conf['error_document_file_403'] = '/var/www/error_documents/4xx/403-wwwdev.html';
-$conf['error_document_file_404'] = '/var/www/error_documents/4xx/404-wwwdev.html';
-$conf['error_document_file_500'] = '/var/www/error_documents/5xx/500-wwwdev.html';
+$conf['error_document_file_403'] = '/var/www/error_documents/4xx/wwwdev/403.html';
+$conf['error_document_file_404'] = '/var/www/error_documents/4xx/wwwdev/404.html';
+$conf['error_document_file_500'] = '/var/www/error_documents/5xx/wwwdev/500.html';
+#$conf['error_document_custom_menu_1_logged_in'] = NULL;
+#$conf['error_document_custom_menu_2_logged_in'] = NULL;
+$conf['error_document_load_blocks'] = TRUE;
+$conf['error_document_custom_menu_1_logged_in'] = "<div>HELLO WORLD</div>";
 
 
 // enable all errors
