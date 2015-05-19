@@ -6,6 +6,10 @@ Drupal.behaviors.initColorbox = {
       return;
     }
 
+    if (!settings.colorbox) {
+      return;
+    }
+
     if (settings.colorbox.mobiledetect && window.matchMedia) {
       // Disable Colorbox for small screens.
       var mq = window.matchMedia("(max-device-width: " + settings.colorbox.mobiledevicewidth + ")");
