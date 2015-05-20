@@ -54,6 +54,8 @@ function mfcs_hook_menu() {
 
   mfcs_hook_menu_management($items, $module_path);
 
+  mfcs_hook_menu_help($items, $module_path);
+
   return $items;
 }
 
@@ -78,8 +80,8 @@ function mfcs_hook_menu_requests_basic(&$items, $module_path) {
   );
 
   $items['requests/create-0'] = array(
-    'title' => "New Request",
-    'description' => "New Request",
+    'title' => "Create Request",
+    'description' => "Create Request",
     'page callback' => 'drupal_get_form',
     'page arguments' => array('mfcs_request_create_0_form'),
     'file' => 'request_create.inc',
@@ -91,8 +93,8 @@ function mfcs_hook_menu_requests_basic(&$items, $module_path) {
   );
 
   $items['requests/create-0/%'] = array(
-    'title' => "New Request",
-    'description' => "New Request",
+    'title' => "Create Request",
+    'description' => "Create Request",
     'page callback' => 'drupal_get_form',
     'page arguments' => array('mfcs_request_create_0_form', 2),
     'file' => 'request_create.inc',
@@ -941,6 +943,18 @@ function mfcs_hook_menu_management(&$items, $module_path) {
     'tab_root' => 'requests',
   );
 
+  $items['requests/email_log-0/ajax'] = array(
+    'title' => "E-mail Logs",
+    'description' => "E-mail Logs",
+    'page callback' => 'mfcs_ajax_email_log_0_list',
+    'file' => 'ajax.inc',
+    'file path' => $module_path . '/includes',
+    'access callback' => 'mfcs_page_request_access',
+    'access arguments' => array('email_log'),
+    'tab_parent' => 'requests',
+    'tab_root' => 'requests',
+  );
+
   $items['requests/email_log-0/%'] = array(
     'title' => "E-mail Logs",
     'description' => "E-mail Logs",
@@ -963,6 +977,32 @@ function mfcs_hook_menu_management(&$items, $module_path) {
     'file path' => $module_path . '/pages',
     'access callback' => 'mfcs_page_request_access',
     'access arguments' => array('email_log'),
+    'tab_parent' => 'requests/email_log-0',
+    'tab_root' => 'requests/email_log-0',
+  );
+
+  $items['requests/email_log-0/resend/%'] = array(
+    'title' => "E-mail Logs",
+    'description' => "E-mail Logs",
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('mfcs_request_email_log_0_resend_form', 3),
+    'file' => 'request_email_log.inc',
+    'file path' => $module_path . '/pages',
+    'access callback' => 'mfcs_page_request_access',
+    'access arguments' => array('email_log-resend'),
+    'tab_parent' => 'requests/email_log-0',
+    'tab_root' => 'requests/email_log-0',
+  );
+
+  $items['requests/email_log-0/resend/%/%'] = array(
+    'title' => "E-mail Logs",
+    'description' => "E-mail Logs",
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('mfcs_request_email_log_0_resend_form', 3, 4),
+    'file' => 'request_email_log.inc',
+    'file path' => $module_path . '/pages',
+    'access callback' => 'mfcs_page_request_access',
+    'access arguments' => array('email_log-resend'),
     'tab_parent' => 'requests/email_log-0',
     'tab_root' => 'requests/email_log-0',
   );
@@ -1043,6 +1083,140 @@ function mfcs_hook_menu_management(&$items, $module_path) {
     'tab_parent' => 'requests/problems-0/users',
     'tab_root' => 'requests/problems-0/users',
   );
+
+  $items['requests/problems-0/users/resynchronize/%'] = array(
+    'title' => "User Problems - Re-sync Account",
+    'description' => "Attempt to re-synchronize user account to banner database.",
+    'page callback' => 'mfcs_request_problems_0_users_resynchronize',
+    'page arguments' => array(4),
+    'file' => 'request_problems.inc',
+    'file path' => $module_path . '/pages',
+    'access callback' => 'mfcs_page_request_access',
+    'access arguments' => array('problems'),
+    'tab_parent' => 'requests/problems-0/users',
+    'tab_root' => 'requests/problems-0/users',
+  );
+}
+
+/**
+ * hook_menu() entries related to help.
+ *
+ * @param array $items
+ *   An array of menu items.
+ * @param string $module_path
+ *   The filesystem path to the module.
+ */
+function mfcs_hook_menu_help(&$items, $module_path) {
+  $items['requests/help-0'] = array(
+    'title' => "Help",
+    'description' => "Online Documentation",
+    'page callback' => 'mfcs_help_0_page',
+    'page arguments' => array(),
+    'file' => 'help.inc',
+    'file path' => $module_path . '/pages',
+    'access callback' => 'mfcs_page_request_access',
+    'access arguments' => array('help'),
+    'tab_parent' => 'requests',
+    'tab_root' => 'requests',
+  );
+
+  $items['requests/help-0/%'] = array(
+    'title' => "Help",
+    'description' => "Online Documentation",
+    'page callback' => 'mfcs_help_0_page',
+    'page arguments' => array(2),
+    'file' => 'help.inc',
+    'file path' => $module_path . '/pages',
+    'access callback' => 'mfcs_page_request_access',
+    'access arguments' => array('help'),
+    'tab_parent' => 'requests',
+    'tab_root' => 'requests',
+  );
+
+  $items['requests/help-0/%/%'] = array(
+    'title' => "Help",
+    'description' => "Online Documentation",
+    'page callback' => 'mfcs_help_0_page',
+    'page arguments' => array(2, 3),
+    'file' => 'help.inc',
+    'file path' => $module_path . '/pages',
+    'access callback' => 'mfcs_page_request_access',
+    'access arguments' => array('help'),
+    'tab_parent' => 'requests',
+    'tab_root' => 'requests',
+  );
+
+  $items['requests/help-0/%/%/%'] = array(
+    'title' => "Help",
+    'description' => "Online Documentation",
+    'page callback' => 'mfcs_help_0_page',
+    'page arguments' => array(2, 3, 4),
+    'file' => 'help.inc',
+    'file path' => $module_path . '/pages',
+    'access callback' => 'mfcs_page_request_access',
+    'access arguments' => array('help'),
+    'tab_parent' => 'requests',
+    'tab_root' => 'requests',
+  );
+
+  // @todo: provide custom pdf downloading for help pages
+  /*
+  $items['requests/pdf-0/help'] = array(
+    'title' => "Help PDF",
+    'description' => "Download Help PDF",
+    'page callback' => 'mfcs_help_0_pdf_page',
+    'page arguments' => array(),
+    'file' => 'help.inc',
+    'file path' => $module_path . '/pages',
+    'access callback' => 'mfcs_page_request_access',
+    'access arguments' => array('help'),
+    'tab_parent' => 'requests',
+    'tab_root' => 'requests',
+    'type' => MENU_CALLBACK,
+  );
+
+  $items['requests/pdf-0/help/%'] = array(
+    'title' => "Help PDF",
+    'description' => "Download Help PDF",
+    'page callback' => 'mfcs_help_0_pdf_page',
+    'page arguments' => array(3),
+    'file' => 'help.inc',
+    'file path' => $module_path . '/pages',
+    'access callback' => 'mfcs_page_request_access',
+    'access arguments' => array('help'),
+    'tab_parent' => 'requests',
+    'tab_root' => 'requests',
+    'type' => MENU_CALLBACK,
+  );
+
+  $items['requests/pdf-0/help/%/%'] = array(
+    'title' => "Help PDF",
+    'description' => "Download Help PDF",
+    'page callback' => 'mfcs_help_0_pdf_page',
+    'page arguments' => array(3, 4),
+    'file' => 'help.inc',
+    'file path' => $module_path . '/pages',
+    'access callback' => 'mfcs_page_request_access',
+    'access arguments' => array('help'),
+    'tab_parent' => 'requests',
+    'tab_root' => 'requests',
+    'type' => MENU_CALLBACK,
+  );
+
+  $items['requests/pdf-0/help/%/%/%'] = array(
+    'title' => "Help PDF",
+    'description' => "Download Help PDF",
+    'page callback' => 'mfcs_help_0_pdf_page',
+    'page arguments' => array(3, 4, 5),
+    'file' => 'help.inc',
+    'file path' => $module_path . '/pages',
+    'access callback' => 'mfcs_page_request_access',
+    'access arguments' => array('help'),
+    'tab_parent' => 'requests',
+    'tab_root' => 'requests',
+    'type' => MENU_CALLBACK,
+  );
+  */
 }
 
 /**
@@ -1093,23 +1267,23 @@ function mfcs_hook_user_login(&$edit, $account, $category) {
  * Internal function for hook_user_insert().
  */
 function mfcs_hook_user_insert(&$edit, $account, $category) {
-  $result = mfcs_sync_banner_to_local_users($account->uid);
+  // if the user does not have a valid banner id, then there is nothing to synchronize to.
+  if (empty($account->field_user_banner_id['und'][0]['value']) || !is_numeric($account->field_user_banner_id['und'][0]['value'])) {
+    return;
+  }
+
+  $result = mfcs_sync_banner_to_local_users($account->uid, $account->field_user_banner_id['und'][0]['value']);
 
   // account synchronization failed, so assign the appropriate problem flag.
   if ($result === FALSE) {
-    // if the user does not have a valid banner id, then there is nothing to syncrhonize to.
-    // do not flag this as a problem.
-    $user = user_load($account->uid);
-    if (is_object($user) && empty($user->field_user_banner_id['und'][0]['value'])) {
-      return;
-    }
-
     $mfcs_users = mfcs_load_users($account->uid);
 
     $problems = MFCS_USER_PROBLEM_NONE + MFCS_USER_PROBLEM_ACCOUNT_CREATE_BANNER_UNAVAILABLE;
     if (isset($mfcs_users[$account->uid])) {
       $problems = $mfcs_users[$account->uid]->problems;
-      $problems += MFCS_USER_PROBLEM_ACCOUNT_CREATE_BANNER_UNAVAILABLE;
+      if (($problems & MFCS_USER_PROBLEM_ACCOUNT_CREATE_BANNER_UNAVAILABLE) == 0) {
+        $problems += MFCS_USER_PROBLEM_ACCOUNT_CREATE_BANNER_UNAVAILABLE;
+      }
     }
 
     mfcs_save_user($account->uid, array('problems' => $problems));

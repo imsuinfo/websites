@@ -277,7 +277,6 @@ define('MFCS_EMAIL_MAX_DESTINATION_LENGTH', 255);
  */
 define('MFCS_NEARBY_REQUESTS_RANGE_SECONDS', 1800);
 
-
 /**
  * Defines a series of bitwise values for designating problems a particular user is having.
  */
@@ -290,6 +289,13 @@ define('MFCS_USER_PROBLEM_ACCOUNT_SYNC_BANNER_UNAVAILABLE', 8);
 define('MFCS_USER_PROBLEM_ACCOUNT_LOGIN_PROBLEMS_MULTIPLE', 16);
 define('MFCS_USER_PROBLEM_FORM_ERROR_USER', 32);
 define('MFCS_USER_PROBLEM_FORM_ERROR_SYSTEM', 64);
+
+/**
+ * Define codes that represent what the e-mail represents.
+ */
+define('MFCS_EMAIL_CODE_NORMAL', 0);
+define('MFCS_EMAIL_CODE_RESEND', 1);
+define('MFCS_EMAIL_CODE_FORWARD', 2);
 
 
 /**
@@ -404,17 +410,17 @@ function mfcs_page_request_access($operation = NULL, $request_id = NULL, $user =
 
 
   // use advanced static cache for increased performance.
-  static $mfcs_request_access;
+  static $mfcs_request_access_static;
 
-  if (!isset($mfcs_request_access)) {
-    $mfcs_request_access[$operation] = &drupal_static('mfcs_request_access');
+  if (!isset($mfcs_request_access_static)) {
+    $mfcs_request_access_static[$operation] = &drupal_static('mfcs_request_access');
   }
 
-  if (!isset($mfcs_request_access[$operation][$section][$user->uid])) {
-    $mfcs_request_access[$operation][$section][$user->uid] = array();
+  if (!isset($mfcs_request_access_static[$operation][$section][$user->uid])) {
+    $mfcs_request_access_static[$operation][$section][$user->uid] = array();
   }
 
-  $access = &$mfcs_request_access[$operation][$section][$user->uid];
+  $access = &$mfcs_request_access_static[$operation][$section][$user->uid];
 
   if (is_string($request_id) || is_numeric($request_id)) {
     if (array_key_exists($request_id, $access)) {
@@ -467,7 +473,7 @@ function mfcs_page_request_access($operation = NULL, $request_id = NULL, $user =
     'bannerless_exception' => array_search('bannerless exception', $user->roles),
   );
 
-  // Access will only be granted to administrators, managers, and requestors.
+  // Access will only be granted to administrators, managers, and requesters.
   if (!$roles['administer'] && !$roles['manager'] && !$roles['reviewer'] && !$roles['requester']) {
     return FALSE;
   }
@@ -694,6 +700,14 @@ function mfcs_page_request_access($operation = NULL, $request_id = NULL, $user =
       }
     }
   }
+  elseif ($operation == 'email_log-resend') {
+    if (is_null($request_id)) {
+      if ($roles['manager'] || $roles['administer']) {
+        $access[$request_id] = TRUE;
+        return TRUE;
+      }
+    }
+  }
   elseif ($operation == 'proxy') {
     if (is_null($request_id)) {
       if ($roles['manager'] || $roles['administer']) {
@@ -713,6 +727,14 @@ function mfcs_page_request_access($operation = NULL, $request_id = NULL, $user =
   elseif ($operation == 'problems') {
     if (is_null($request_id)) {
       if ($roles['manager'] || $roles['administer']) {
+        $access[$request_id] = TRUE;
+        return TRUE;
+      }
+    }
+  }
+  elseif ($operation == 'help') {
+    if (is_null($request_id)) {
+      if ($user->uid > 0) {
         $access[$request_id] = TRUE;
         return TRUE;
       }
@@ -739,7 +761,7 @@ function mfcs_page_request_access($operation = NULL, $request_id = NULL, $user =
  * If the request has not yet been loaded, either load it or directly call
  * mfcs_page_request_access() for access checks.
  *
- * This static caches the results in 'mfcs_request_access'.
+ * This static caches the results in 'mfcs_request_access_static'.
  *
  * @param string $operation
  *   Operation to perform access check against.
@@ -779,17 +801,17 @@ function mfcs_request_access($operation, $request, $user = NULL, $section = NULL
 
 
   // use advanced static cache for increased performance.
-  static $mfcs_request_access;
+  static $mfcs_request_access_static;
 
-  if (!isset($mfcs_request_access)) {
-    $mfcs_request_access[$operation] = &drupal_static('mfcs_request_access');
+  if (!isset($mfcs_request_access_static)) {
+    $mfcs_request_access_static[$operation] = &drupal_static('mfcs_request_access');
   }
 
-  if (!isset($mfcs_request_access[$operation][$section][$user->uid])) {
-    $mfcs_request_access[$operation][$section][$user->uid] = array();
+  if (!isset($mfcs_request_access_static[$operation][$section][$user->uid])) {
+    $mfcs_request_access_static[$operation][$section][$user->uid] = array();
   }
 
-  $access = &$mfcs_request_access[$operation][$section][$user->uid];
+  $access = &$mfcs_request_access_static[$operation][$section][$user->uid];
 
   if (empty($request['mer']['id'][0]->value)) {
     return FALSE;
@@ -829,7 +851,7 @@ function mfcs_request_access($operation, $request, $user = NULL, $section = NULL
     'bannerless_exception' => array_search('bannerless exception', $user->roles),
   );
 
-  // Access will only be granted to administrators, managers, and requestors.
+  // Access will only be granted to administrators, managers, reviewers, and requesters.
   if (!$roles['administer'] && !$roles['manager'] && !$roles['reviewer'] && !$roles['requester']) {
     return FALSE;
   }
@@ -868,38 +890,48 @@ function mfcs_request_access($operation, $request, $user = NULL, $section = NULL
     );
 
     // when quick meeting is enabled, a section is not null, then additional checks are required.
-    $is_quick_meeting = FALSE;
-    if (!is_null($request_id) && !is_null($section) && ($roles['manager'] || $roles['requester'])) {
+    if (!is_null($request_id) && !is_null($section) && ($roles['manager'] || $roles['requester'] || $roles['reviewer'])) {
       if (isset($request['information']['type'][0]->value) && $request['information']['type'][0]->value == MFCS_REQUEST_TYPE_QUICK_MEETING) {
-        $is_quick_meeting = TRUE;
-
         // deny access to sections that are not allowed to be edited for a quick meeting.
-        $allowed_sections = array(
+        $allowed_sections_quick_meeting = array(
           'request',
           'information',
           'coordinator',
           'dates',
         );
 
-        if (!in_array($section, $allowed_sections)) {
+        if (!in_array($section, $allowed_sections_quick_meeting)) {
           return FALSE;
         }
       }
     }
 
-    $valid_status = in_array($request['top']['status'][0]->value, $edit_request_status);
+    if (!in_array($request['top']['status'][0]->value, $edit_request_status)) {
+      $access[$request_id] = FALSE;
+      return FALSE;
+    }
 
     if ($roles['manager']) {
-      $access[$request_id] = $valid_status;
-      return $valid_status;
+      $access[$request_id] = TRUE;
+      return TRUE;
     }
-    elseif ($roles['requester']) {
-      if ($valid_status) {
+    elseif ($roles['requester'] || $roles['reviewer']) {
+      if ($roles['requester']) {
         if (isset($request['mer']['user_id'][0]->value) && $request['mer']['user_id'][0]->value == $user->uid) {
           $access[$request_id] = TRUE;
           return TRUE;
         }
       }
+
+      if ($roles['reviewer']) {
+        if (isset($request['venue_coordinator']['user_id'][0]->value) && $request['venue_coordinator']['user_id'][0]->value == $user->uid) {
+          $access[$request_id] = TRUE;
+          return TRUE;
+        }
+      }
+
+      $access[$request_id] = FALSE;
+      return FALSE;
     }
   }
   elseif ($operation == 'view') {
@@ -1017,39 +1049,39 @@ function mfcs_request_access($operation, $request, $user = NULL, $section = NULL
       return FALSE;
     }
 
-    $cancellable_status = array(
-      MFCS_REQUEST_STATUS_LOCKED,
-      MFCS_REQUEST_STATUS_UNLOCKED,
-      MFCS_REQUEST_STATUS_CLOSED_ACCEPTED,
+    $not_cancellable_status = array(
+      MFCS_REQUEST_STATUS_DELETED,
+      MFCS_REQUEST_STATUS_CANCELLED,
       MFCS_REQUEST_STATUS_CLOSED_DENIED,
       MFCS_REQUEST_STATUS_CLOSED_UNAVAILABLE,
-      MFCS_REQUEST_STATUS_CLOSED_DUE_TO_LOCK,
     );
 
-    if (!in_array($request['top']['status'][0]->value, $cancellable_status)) {
+    // no matter who the user is, if the request has one of these status', then do not allow cancelling.
+    if (in_array($request['top']['status'][0]->value, $not_cancellable_status)) {
       $access[$request_id] = FALSE;
       return FALSE;
     }
 
-    // do not allow cancelling requests that have no upcoming dates.
-    if (!mfcs_request_is_still_upcoming($request_id)) {
+    if ($roles['manager'] || array_key_exists($request['venue_coordinator']['user_id'][0]->value, $venue_coordinator_ids)) {
+      $access[$request_id] = TRUE;
+      return TRUE;
+    }
+
+    if ($roles['requester'] && $request['mer']['user_id'][0]->value == $user->uid) {
+      $cancellable_status = array(
+        MFCS_REQUEST_STATUS_UNLOCKED,
+        MFCS_REQUEST_STATUS_LOCKED,
+        MFCS_REQUEST_STATUS_CLOSED_DUE_TO_LOCK,
+        MFCS_REQUEST_STATUS_CLOSED_ACCEPTED,
+      );
+
+      if (in_array($request['top']['status'][0]->value, $cancellable_status)) {
+        $access[$request_id] = TRUE;
+        return TRUE;
+      }
+
       $access[$request_id] = FALSE;
       return FALSE;
-    }
-
-    // if the user is the venue coordinator, then allow them to cancel an request at any point in the process.
-    if (array_key_exists($request['venue_coordinator']['user_id'][0]->value, $venue_coordinator_ids)) {
-      $access[$request_id] = TRUE;
-      return TRUE;
-    }
-
-    if ($roles['manager']) {
-      $access[$request_id] = TRUE;
-      return TRUE;
-    }
-    elseif ($roles['requester'] && $request['mer']['user_id'][0]->value == $user->uid) {
-      $access[$request_id] = TRUE;
-      return TRUE;
     }
   }
   elseif ($operation == 'uncancel') {
@@ -1067,23 +1099,10 @@ function mfcs_request_access($operation, $request, $user = NULL, $section = NULL
       return FALSE;
     }
 
-    // do not allow uncancelling requests that have no upcoming dates.
-    if (!mfcs_request_is_still_upcoming($request_id)) {
-      $access[$request_id] = FALSE;
-      return FALSE;
-    }
-
-    // if the user is the venue coordinator, then allow them to uncancel an request at any point in the process.
-    if (array_key_exists($request['venue_coordinator']['user_id'][0]->value, $venue_coordinator_ids)) {
+    // managers and venue coordinators can uncancel an request at any point in the process.
+    if ($roles['manager'] || array_key_exists($request['venue_coordinator']['user_id'][0]->value, $venue_coordinator_ids)) {
       $access[$request_id] = TRUE;
       return TRUE;
-    }
-
-    if ($roles['manager']) {
-      if (in_array($request['top']['status'][0]->value, $uncancellable_status)) {
-        $access[$request_id] = TRUE;
-        return TRUE;
-      }
     }
   }
   elseif ($operation == 'history') {
@@ -2532,9 +2551,14 @@ function mfcs_synchronize_user_settings($user = NULL, $roles = array()) {
     $problems = $mfcs_users[$user->uid]->problems;
   }
 
+  $banner_id = NULL;
+  if (!empty($user->field_user_banner_id['und'][0]['value']) && is_numeric($user->field_user_banner_id['und'][0]['value'])) {
+    $banner_id = $user->field_user_banner_id['und'][0]['value'];
+  }
+
   // if banner was unavailable when the users account was first created, then attempt a banner sync for that user.
-  if (($problems * MFCS_USER_PROBLEM_ACCOUNT_CREATE_BANNER_UNAVAILABLE > 0)) {
-    $result = mfcs_sync_banner_to_local_users($user->uid);
+  if (($problems & MFCS_USER_PROBLEM_ACCOUNT_CREATE_BANNER_UNAVAILABLE) > 0) {
+    $result = mfcs_sync_banner_to_local_users($user->uid, $banner_id);
 
     if ($result === TRUE) {
       $problems -= MFCS_USER_PROBLEM_ACCOUNT_CREATE_BANNER_UNAVAILABLE;
@@ -2595,7 +2619,7 @@ function mfcs_synchronize_user_settings($user = NULL, $roles = array()) {
   }
 
   // only change user event roles for banner users.
-  if (isset($user->field_user_banner_id['und'][0]['value'])) {
+  if (!is_null($banner_id)) {
     $u = mfcs_load_request_user_by_user_id($user->uid);
 
     if ($u == FALSE) {
@@ -3148,18 +3172,25 @@ function mfcs_sync_banner_to_local($transaction = NULL, $user = NULL) {
  * @param null|int $user_id
  *   (optional) If not NULL, the user id of the user to sync data from.
  *   When NULL, process all local users.
+ * @param null|numeric $banner_id
+ *   (optional) If not NULL, the banner id to load.
+ *   When NULL, the banner id is auto-loaded from the user account.
  *
  * @return bool
  *   TRUE on success, FALSE otherwise.
  */
-function mfcs_sync_banner_to_local_users($user_id = NULL) {
+function mfcs_sync_banner_to_local_users($user_id = NULL, $banner_id = NULL) {
   if (!is_null($user_id) && !cf_is_integer($user_id)) {
     cf_error::invalid_integer('user_id');
     return FALSE;
   }
 
-  $banner_id = NULL;
-  if (!is_null($user_id)) {
+  if (!is_null($banner_id) && !is_numeric($banner_id)) {
+    cf_error::invalid_numeric('banner_id');
+    return FALSE;
+  }
+
+  if (!is_null($user_id) && is_null($banner_id)) {
     $user = user_load($user_id);
 
     if (!is_object($user) || !isset($user->field_user_banner_id['und'][0]['value'])) {
@@ -3171,6 +3202,8 @@ function mfcs_sync_banner_to_local_users($user_id = NULL) {
     if (empty($banner_id) || !is_numeric($banner_id)) {
       return FALSE;
     }
+
+    unset($user);
   }
 
   $instance = mfcs_instance();
@@ -3180,6 +3213,11 @@ function mfcs_sync_banner_to_local_users($user_id = NULL) {
   }
   else {
     $rows = mfcs_oracle_select('select id, role from ucs.msu_event_role where id = \'' . $banner_id . '\'');
+  }
+
+  // failed to connect to oracle database.
+  if ($rows === FALSE) {
+    return FALSE;
   }
 
   if (!empty($rows) && is_array($rows)) {
@@ -3335,7 +3373,9 @@ function mfcs_sync_banner_to_local_classes() {
     $query = db_delete('mfcs_banner_classes');
     $query->execute();
 
-    db_query('ALTER SEQUENCE {mfcs_banner_classes_id_seq} RESTART');
+    // do not restart the sequence, instead make sure the sequence has 'cycle' such that this restart can be avoided.
+    // the restart is impossible because postgresql only allows the owner to restart the sequence and providing such an owner is to be avoided.
+    #db_query('ALTER SEQUENCE {mfcs_banner_classes_id_seq} RESTART');
 
     // process all of the classes and add new reservations or remove the 'deleted' status to existing reservations.
     if (!empty($classes)) {
@@ -4045,12 +4085,17 @@ function mfcs_load_request_by_id($request_id, $reset_action = NULL, $revision_id
  *   The numeric request id.
  * @param int $timestamp
  *   Unix Timestamp representing the exact date and time to load.
- * @param int $revision_user_id
+ * @param int|null $revision_user_id
  *   The user id of the user responsible for the revision at a given timestamp.
+ *   This is ignored when nearest = TRUE and in such a case may be null.
+ *   When nearest is FALSE, this must not be NULL.
  * @param array $desired_fields
  *   (optional) An array of field names to load that match the specified date.
  *   These are nested by their table structure. When an empty array is
  *   provided, all values are used.
+ * @param bool $nearest
+ *   (optional) When TRUE, will load either the values by the specified
+ *   timestamp or the revision immediately closest to the timestamp.
  *
  * @return array|bool
  *   An array of values associated with the request, date, and fields.
@@ -4058,7 +4103,7 @@ function mfcs_load_request_by_id($request_id, $reset_action = NULL, $revision_id
  *
  * @see mfcs_table_structure()
  */
-function mfcs_load_request_by_timestamp($request_id, $timestamp, $revision_user_id, $desired_fields = array()) {
+function mfcs_load_request_by_timestamp($request_id, $timestamp, $revision_user_id, $desired_fields = array(), $nearest = FALSE) {
   if (!cf_is_integer($request_id) || $request_id < 0) {
     cf_error::invalid_integer('request_id');
     return FALSE;
@@ -4069,13 +4114,24 @@ function mfcs_load_request_by_timestamp($request_id, $timestamp, $revision_user_
     return FALSE;
   }
 
-  if (!cf_is_integer($revision_user_id)) {
+  if (!is_null($revision_user_id) && !cf_is_integer($revision_user_id)) {
     cf_error::invalid_integer('revision_user_id');
     return FALSE;
   }
 
   if (!is_array($desired_fields)) {
     cf_error::invalid_array('desired_fields');
+    return FALSE;
+  }
+
+  if (!is_bool($nearest)) {
+    cf_error::invalid_bool('nearest');
+    return FALSE;
+  }
+
+  // revision_user_id cannot be NULL when nearest is FALSE.
+  if (is_null($revision_user_id) && !$nearest) {
+    cf_error::invalid_integer('revision_user_id');
     return FALSE;
   }
 
@@ -4092,46 +4148,20 @@ function mfcs_load_request_by_timestamp($request_id, $timestamp, $revision_user_
         continue;
       }
 
-      foreach ($fields as $field_name => &$field_values) {
-        if (!array_key_exists($field_name, $desired_fields)) {
-          unset($structure[$field_name]);
-          continue;
+      // if $fields is empty, then allow all fields.
+      // otherwise, only allow fields defined in $fields.
+      if (!empty($fields)) {
+        foreach ($fields as $field_name => &$field_values) {
+          if (!in_array($field_name, $desired_fields[$table_name])) {
+            unset($structure[$table_name][$field_name]);
+            continue;
+          }
         }
       }
     }
   }
 
   try {
-    $query = db_select('mfcs_requests', 'mer');
-    $query->innerJoin('mfcs_request_revisions', 'mrv', 'mer.id = mrv.request_id');
-
-    $query->fields('mer');
-    $query->addField('mrv', 'revision', 'revision');
-    $query->addField('mrv', 'date', 'revision_date');
-    $query->addField('mrv', 'message', 'revision_message');
-
-    $query->condition('id', $request_id);
-    $query->condition('mrv.date', $timestamp);
-    $query->condition('mrv.user_id', $revision_user_id);
-
-    $query->orderBy('mrv.date');
-
-    $results = $query->execute()->fetchAll();
-
-    // manually add the request information and presentation fields.
-    $request['mer'] = array();
-    if (!empty($results)) {
-      foreach ($results as $index => $mer) {
-        foreach (array('id', 'user_id', 'created', 'updated', 'revision_date', 'revision_message') as $key) {
-          if (!isset($request['mer'][$key][$mer->revision])) {
-            $request['mer'][$key][$mer->revision] = new stdClass();
-          }
-
-          $request['mer'][$key][$mer->revision]->value = $mer->$key;
-        }
-      }
-    }
-
     $request['current'] = array();
     foreach ($structure as $table_name => &$fields) {
       if (!array_key_exists($table_name, $request)) {
@@ -4147,9 +4177,22 @@ function mfcs_load_request_by_timestamp($request_id, $timestamp, $revision_user_
 
             $query = db_select($field_table_name, 'mftf');
             $query->condition('mftf.request_id', $request_id);
-            $query->condition('mftf.date', $timestamp);
-            $query->condition('mftf.user_id', $revision_user_id);
+
+            if (!is_null($revision_user_id)) {
+              $query->condition('mftf.user_id', $revision_user_id);
+            }
+
             $query->fields('mftf');
+
+            if ($nearest) {
+              $query->condition('mftf.date', $timestamp, '<=');
+              $query->range(0, 1);
+              $query->orderby('mftf.revision', 'DESC');
+            }
+            else {
+              $query->condition('mftf.date', $timestamp);
+              $query->condition('mftf.user_id', $revision_user_id);
+            }
 
             $results = $query->execute()->fetchAll();
 
@@ -4171,9 +4214,17 @@ function mfcs_load_request_by_timestamp($request_id, $timestamp, $revision_user_
 
           $query = db_select($field_table_name, 'mftf');
           $query->condition('mftf.request_id', $request_id);
-          $query->condition('mftf.date', $timestamp);
-          $query->condition('mftf.user_id', $revision_user_id);
           $query->fields('mftf');
+
+          if ($nearest) {
+            $query->condition('mftf.date', $timestamp, '<=');
+            $query->range(0, 1);
+            $query->orderby('mftf.revision', 'DESC');
+          }
+          else {
+            $query->condition('mftf.date', $timestamp);
+            $query->condition('mftf.user_id', $revision_user_id);
+          }
 
           $results = $query->execute()->fetchAll();
 
@@ -4193,9 +4244,6 @@ function mfcs_load_request_by_timestamp($request_id, $timestamp, $revision_user_
         unset($results);
         unset($query);
       }
-
-      unset($results);
-      unset($query);
     }
   }
   catch (Exception $ex) {
@@ -5007,11 +5055,13 @@ function mfcs_get_proxy_venue_coordinators($conditions = array(), $options = arr
 }
 
 /**
- * Loads the proxy information for a single user.
+ * Loads the venue coordiantors the user can proxy as.
  *
  * This is a wrapper to mfcs_get_proxy_venue_coordinators() that will cache
  * the information. Use this for functions that cache would be a benefit to,
  * such as access control functions.
+ *
+ * Do not confuse this with mfcs_get_venue_coordinator_proxy().
  *
  * @param int $proxy_id
  *   The user id to obtain proxy information from. This is the proxy user id
@@ -5023,6 +5073,7 @@ function mfcs_get_proxy_venue_coordinators($conditions = array(), $options = arr
  *   FALSE is returned on error.
  *
  * @see mfcs_get_proxy_venue_coordinators()
+ * @see mfcs_get_venue_coordinator_proxy()
  */
 function mfcs_get_proxy_venue_coordinator($proxy_id) {
   if (!cf_is_integer($proxy_id)) {
@@ -5055,6 +5106,60 @@ function mfcs_get_proxy_venue_coordinator($proxy_id) {
   }
 
   return $proxies[$proxy_id];
+}
+
+/**
+ * Loads the users who can proxy as the venue coordinator.
+ *
+ * This is a wrapper to mfcs_get_proxy_venue_coordinators() that will cache
+ * the information. Use this for functions that cache would be a benefit to,
+ * such as access control functions.
+ *
+ * Do not confuse this with mfcs_get_proxy_venue_coordinator().
+ *
+ * @param int $venue_coordinator_id
+ *   The user id to obtain proxy information from. This is who to proxy as and
+ *   not the proxy user.
+ *
+ * @return array|bool
+ *   An array of user ids that can proxy as the venue_coordinator_id.
+ *
+ *   FALSE is returned on error.
+ *
+ * @see mfcs_get_proxy_venue_coordinators()
+ * @see mfcs_get_proxy_venue_coordinator()
+ */
+function mfcs_get_venue_coordinator_proxy($venue_coordinator_id) {
+  if (!cf_is_integer($venue_coordinator_id)) {
+    cf_error::invalid_integer('venue_coordinator_id');
+    return FALSE;
+  }
+
+  $proxies = &drupal_static(__function__, array());
+
+  if (array_key_exists($venue_coordinator_id, $proxies)) {
+    return $proxies[$venue_coordinator_id];
+  }
+
+  $proxies_returned = mfcs_get_proxy_venue_coordinators(array('mpvc.user_id' => $venue_coordinator_id, 'mpvc.disabled' => 0));
+  $proxys = FALSE;
+  if (isset($proxies_returned['results']) && is_array($proxies_returned['results'])) {
+    $proxys = $proxies_returned['results'];
+  }
+
+  if ($proxys === FALSE) {
+    return FALSE;
+  }
+
+  $proxies[$venue_coordinator_id] = array();
+
+  if (!empty($proxys)) {
+    foreach ($proxys as $proxy) {
+      $proxies[$venue_coordinator_id][$proxy->proxy_id] = $proxy->proxy_id;
+    }
+  }
+
+  return $proxies[$venue_coordinator_id];
 }
 
 /**
@@ -7737,6 +7842,7 @@ function mfcs_get_requests_current_review_decisions($request_ids, $classificatio
       $query->addField('mfrr', 'user_id', 'user_id');
 
       $query->condition('mfrr.request_id', $request_id);
+      $query->condition('mfrr.step', $step);
       if (!is_null($review_revision)) {
         $query->condition('mfrr.revision', $review_revision);
       }

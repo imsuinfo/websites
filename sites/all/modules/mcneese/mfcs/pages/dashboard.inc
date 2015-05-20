@@ -33,7 +33,7 @@ function mfcs_dashboard_page() {
   if (mfcs_dashboard_page_access() === FALSE) {
     $mfcs_users = mfcs_load_users($user->uid);
 
-    if (is_array($mfcs_users) && !empty($mfcs_users[$user->uid]) && is_object($mfcs_users[$user->uid]) && ($mfcs_users[$user->uid]->problem & MFCS_USER_PROBLEM_ACCOUNT_CREATE_BANNER_UNAVAILABLE) == MFCS_USER_PROBLEM_ACCOUNT_CREATE_BANNER_UNAVAILABLE) {
+    if (is_array($mfcs_users) && !empty($mfcs_users[$user->uid]) && is_object($mfcs_users[$user->uid]) && ($mfcs_users[$user->uid]->problem & MFCS_USER_PROBLEM_ACCOUNT_CREATE_BANNER_UNAVAILABLE) > 0) {
       $user_account_new_banner_access_problem = FALSE;
     }
     else {
@@ -57,7 +57,7 @@ function mfcs_dashboard_page() {
   $items_array_current = 1;
 
   if ($can_create) {
-    $link = '<h4 class="item-link-wrapper inline-block"><a href="' . $base_path . 'requests/create-0' . $url_arguments . '" class="item-link">New Request</a></h4>';
+    $link = '<h4 class="item-link-wrapper inline-block"><a href="' . $base_path . 'requests/create-0' . $url_arguments . '" class="item-link">Create Request</a></h4>';
     $help = '<div class="item-description inline-block">Make a request to use the facilities or host special events at McNeese State University or related facilities.</div>';
     $items_array[] = array(
       'data' => $link . '<br>' . $help,

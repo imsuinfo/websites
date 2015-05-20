@@ -24,6 +24,22 @@
  *   The HTML output representing the page.
  */
 function mfcs_request_cancel_0_form($form, &$form_state, $request_id) {
+  if (!is_array($form)) {
+    cf_error::invalid_array('form');
+
+    drupal_not_found();
+    drupal_exit();
+    return array();
+  }
+
+  if (!is_array($form_state)) {
+    cf_error::invalid_array('form_state');
+
+    drupal_not_found();
+    drupal_exit();
+    return array();
+  }
+
   $request = mfcs_load_request_by_id($request_id);
 
   if (empty($request)) {
@@ -34,6 +50,12 @@ function mfcs_request_cancel_0_form($form, &$form_state, $request_id) {
   }
 
   mfcs_add_canonical_headers('requests/cancel-0/' . $request_id);
+
+  $page_title = "Cancel Request";
+  if (!empty($request['information']['title'][0]->value)) {
+    $page_title = "Cancel Request: " . $request['information']['title'][0]->value;
+  }
+  drupal_set_title($page_title);
 
   $form = array();
 
@@ -71,7 +93,9 @@ function mfcs_request_cancel_0_form($form, &$form_state, $request_id) {
   );
   $form['message']['#markup'] .= '<h3>Are you sure wou want to cancel the request?</h3> ';
   $form['message']['#markup'] .= '<div>';
-  $form['message']['#markup'] .= 'Cancelling the form will remove your request from the queue. ';
+  $form['message']['#markup'] .= 'By cancelling this request you agree to forfeit the time slots that you have requested. You cannot undo this action. ' . "<br>\n";
+  $form['message']['#markup'] .= "<br>\n";
+  $form['message']['#markup'] .= 'Are you certain you want to cancel? ';
   $form['message']['#markup'] .= '</div>';
 
   $form['display']['submit'] = array(
@@ -198,6 +222,22 @@ function mfcs_request_cancel_0_form_submit($form, &$form_state) {
  *   The HTML output representing the page.
  */
 function mfcs_request_uncancel_0_form($form, &$form_state, $request_id) {
+  if (!is_array($form)) {
+    cf_error::invalid_array('form');
+
+    drupal_not_found();
+    drupal_exit();
+    return array();
+  }
+
+  if (!is_array($form_state)) {
+    cf_error::invalid_array('form_state');
+
+    drupal_not_found();
+    drupal_exit();
+    return array();
+  }
+
   $request = mfcs_load_request_by_id($request_id);
 
   if (empty($request)) {
@@ -208,6 +248,12 @@ function mfcs_request_uncancel_0_form($form, &$form_state, $request_id) {
   }
 
   mfcs_add_canonical_headers('requests/uncancel-0/' . $request_id);
+
+  $page_title = "Uncancel Request";
+  if (!empty($request['information']['title'][0]->value)) {
+    $page_title = "Uncancel Request: " . $request['information']['title'][0]->value;
+  }
+  drupal_set_title($page_title);
 
   $form = array();
 

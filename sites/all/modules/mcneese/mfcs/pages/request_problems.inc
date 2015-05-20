@@ -73,7 +73,21 @@ function mfcs_management_problems_page() {
  * @param array $form_state
  *   The form state array as defined by drupals form api
  */
-function mfcs_request_problems_0_users_form($form, $form_state, $page_number = 0) {
+function mfcs_request_problems_0_users_form($form, &$form_state, $page_number = 0) {
+  if (!is_array($form)) {
+    cf_error::invalid_array('form');
+
+    drupal_not_found();
+    drupal_exit();
+  }
+
+  if (!is_array($form_state)) {
+    cf_error::invalid_array('form_state');
+
+    drupal_not_found();
+    drupal_exit();
+  }
+
   global $base_path;
   global $mfcs_determined;
 
@@ -87,6 +101,10 @@ function mfcs_request_problems_0_users_form($form, $form_state, $page_number = 0
   }
 
   mfcs_add_canonical_headers('requests/problems-0/users/' . $page_number);
+
+  $page_title = "Facilities Use Problems";
+  drupal_set_title($page_title);
+
 
   $user = cf_current_user();
 
@@ -191,7 +209,7 @@ function mfcs_request_problems_0_users_form($form, $form_state, $page_number = 0
   $problems_returned = mfcs_management_search_users($conditions, $options);
 
   $problems_total = 0;
-  if (array_key_exists('count', $problems_returned)) {
+  if (is_array($problems_returned) && array_key_exists('count', $problems_returned)) {
     $problems_total = $problems_returned['count'];
   }
 
@@ -213,10 +231,15 @@ function mfcs_request_problems_0_users_form($form, $form_state, $page_number = 0
   $rows = array();
   foreach ($problems as $user_id => $problem) {
     $row = array();
+    $additional_operations = '';
 
     $problem_account = NULL;
     foreach (array(MFCS_USER_PROBLEM_ACCOUNT_CREATE_BANNER_UNAVAILABLE, MFCS_USER_PROBLEM_ACCOUNT_SYNC_BANNER_UNAVAILABLE, MFCS_USER_PROBLEM_ACCOUNT_LOGIN_PROBLEMS_MULTIPLE) as $taxonomy_id) {
       if (($problem->problems & $taxonomy_id) > 0) {
+        if ($taxonomy_id == MFCS_USER_PROBLEM_ACCOUNT_CREATE_BANNER_UNAVAILABLE || $taxonomy_id == MFCS_USER_PROBLEM_ACCOUNT_SYNC_BANNER_UNAVAILABLE) {
+          $additional_operations .= ' <a href="' . $base_path . 'requests/problems-0/users/resynchronize/' . $problem->user_id . $url_arguments . '" class="operation-link operation-link-resynchronize" title="Re-Synchronize the user\'s settings.">Re-Sync</a>';
+        }
+
         if (is_null($problem_account)) {
           $problem_account = '';
         }
@@ -299,7 +322,7 @@ function mfcs_request_problems_0_users_form($form, $form_state, $page_number = 0
     );
 
     $row['operations'] = array(
-      'data' => '<a href="' . $base_path . 'requests/problems-0/users/user/' . $problem->user_id . $url_arguments . '" class="operation-link operation-link-view">View</a>',
+      'data' => '<a href="' . $base_path . 'requests/problems-0/users/user/' . $problem->user_id . $url_arguments . '" class="operation-link operation-link-view">View</a>' . $additional_operations,
       'class' => $class_operations,
     );
 
@@ -350,7 +373,7 @@ function mfcs_request_problems_0_users_form($form, $form_state, $page_number = 0
     ),
     'processing' => TRUE,
     'serverSide' => TRUE,
-    'ajax' => "'" . $base_path . 'requests/problems-0/users/ajax' . "'",
+    'ajax' => "'" . $base_path . 'requests/problems-0/users/ajax' . $url_arguments . "'",
     'deferRender' => TRUE,
     'columns' => array(
       array('id' => 0, 'column' => 'account_id', 'name' => "Account ID", 'className' => 'column-account_id', 'sanitize' => FALSE, 'visible' => FALSE),
@@ -471,15 +494,7 @@ function mfcs_request_problems_0_users_form_submit($form, &$form_state) {
  * @param array $form_state
  *   The form state array as defined by drupals form api
  */
-function mfcs_request_problems_0_user_form($form, $form_state, $problem_user_id = NULL) {
-  global $base_path;
-  global $mfcs_determined;
-
-  $url_arguments = '';
-  if (!empty($mfcs_determined['complete'])) {
-    $url_arguments .= '?' . $mfcs_determined['complete'];
-  }
-
+function mfcs_request_problems_0_user_form($form, &$form_state, $problem_user_id = NULL) {
   if (!cf_is_integer($problem_user_id) || $problem_user_id < 0) {
     drupal_not_found();
     drupal_exit();
@@ -497,6 +512,14 @@ function mfcs_request_problems_0_user_form($form, $form_state, $problem_user_id 
   unset($mfcs_users);
   $problem_user = user_load($problem_user_id);
 
+  global $base_path;
+  global $mfcs_determined;
+
+  $url_arguments = '';
+  if (!empty($mfcs_determined['complete'])) {
+    $url_arguments .= '?' . $mfcs_determined['complete'];
+  }
+
   mfcs_add_canonical_headers('requests/problems-0/users/user/' . $problem_user_id);
 
   $user_name = $problem_user->name;
@@ -504,7 +527,9 @@ function mfcs_request_problems_0_user_form($form, $form_state, $problem_user_id 
     $user_name = $problem_user->field_user_first_name['und'][0]['safe_value'] . ' ' . $problem_user->field_user_last_name['und'][0]['safe_value'];
   }
 
-  drupal_set_title("Problems for " . $user_name . ' (id: ' . $problem_user_id . ')');
+  $page_title = "Facilities Use Problems: " . $user_name . "(id: " . $problem_user_id . ")";
+  drupal_set_title($page_title);
+
 
   $form = array();
 
@@ -542,8 +567,7 @@ function mfcs_request_problems_0_user_form($form, $form_state, $problem_user_id 
     '#tree' => TRUE,
   );
 
-  $resettable_problems = FALSE;
-
+  $do_something = FALSE;
 
   $form['values']['problem_list']['#value'] = array(
     MFCS_USER_PROBLEM_SYSTEM => array(
@@ -553,6 +577,7 @@ function mfcs_request_problems_0_user_form($form, $form_state, $problem_user_id 
         "<br>\n" .
         "This system currently does not provide the details of these problems, but in the future it may.<br>\n",
       'resettable' => TRUE,
+      'custom_action' => FALSE,
     ),
     MFCS_USER_PROBLEM_MFCS => array(
       'label' => "Generic Facilities Use Problems",
@@ -561,6 +586,7 @@ function mfcs_request_problems_0_user_form($form, $form_state, $problem_user_id 
         "<br>\n" .
         "This system currently does not provide the details of these problems, but in the future it may.<br>\n",
       'resettable' => TRUE,
+      'custom_action' => FALSE,
     ),
     MFCS_USER_PROBLEM_ACCOUNT_CREATE_BANNER_UNAVAILABLE => array(
       'label' => "Banner Unavailable During Account Creation",
@@ -571,6 +597,8 @@ function mfcs_request_problems_0_user_form($form, $form_state, $problem_user_id 
         "<br>\n" .
         "This system currently does not provide the details of these problems, but in the future it may.<br>\n",
       'resettable' => FALSE,
+      'custom_action' => TRUE,
+      'custom_action-message' => "Re-synchronize banner information for account."
     ),
     MFCS_USER_PROBLEM_ACCOUNT_SYNC_BANNER_UNAVAILABLE => array(
       'label' => "Banner Unavailable During Login Synchronizeation",
@@ -580,8 +608,9 @@ function mfcs_request_problems_0_user_form($form, $form_state, $problem_user_id 
         "<br>\n" .
         "This system currently does not provide the details of these problems, but in the future it may.<br>\n",
       'resettable' => FALSE,
+      'custom_action' => TRUE,
+      'custom_action-message' => "Re-synchronize banner information for account."
     ),
-
     MFCS_USER_PROBLEM_ACCOUNT_LOGIN_PROBLEMS_MULTIPLE => array(
       'label' => "Multiple Login Problems",
       'explanation' =>
@@ -589,6 +618,7 @@ function mfcs_request_problems_0_user_form($form, $form_state, $problem_user_id 
         "<br>\n" .
         "This system currently does not provide the details of these problems, but in the future it may.<br>\n",
       'resettable' => TRUE,
+      'custom_action' => FALSE,
     ),
     MFCS_USER_PROBLEM_FORM_ERROR_USER => array(
       'label' => "Facilities Use Form Problems",
@@ -599,6 +629,7 @@ function mfcs_request_problems_0_user_form($form, $form_state, $problem_user_id 
         "<br>\n" .
         "This system currently does not provide the details of these problems, but in the future it may.<br>\n",
       'resettable' => TRUE,
+      'custom_action' => FALSE,
     ),
     MFCS_USER_PROBLEM_FORM_ERROR_SYSTEM => array(
       'label' => "System Form Problems",
@@ -608,8 +639,15 @@ function mfcs_request_problems_0_user_form($form, $form_state, $problem_user_id 
         "<br>\n" .
         "This system currently does not provide the details of these problems, but in the future it may.<br>\n",
       'resettable' => TRUE,
+      'custom_action' => FALSE,
     ),
   );
+
+  // if the user does not have a banner id, then do not provide banner sync custom action support.
+  if (empty($form['values']['problem_user']['#value']->field_user_banner_id['und'][0]['value']) || !is_numeric($form['values']['problem_user']['#value']->field_user_banner_id['und'][0]['value'])) {
+    $form['values']['problem_list']['#value'][MFCS_USER_PROBLEM_ACCOUNT_CREATE_BANNER_UNAVAILABLE]['custom_action'] = FALSE;
+    $form['values']['problem_list']['#value'][MFCS_USER_PROBLEM_ACCOUNT_SYNC_BANNER_UNAVAILABLE]['custom_action'] = FALSE;
+  }
 
   foreach ($form['values']['problem_list']['#value'] as $problem_id => $problem_settings) {
     if (($mfcs_user->problems & $problem_id) > 0) {
@@ -629,7 +667,7 @@ function mfcs_request_problems_0_user_form($form, $form_state, $problem_user_id 
       );
 
       if ($problem_settings['resettable']) {
-        $resettable_problems = TRUE;
+        $do_something = TRUE;
 
         $form['problems'][$problem_id]['reset'] = array(
           '#id' => 'problem-field-reset-' . $problem_id,
@@ -646,20 +684,42 @@ function mfcs_request_problems_0_user_form($form, $form_state, $problem_user_id 
         );
       }
 
+      if ($problem_settings['custom_action'] && !empty($problem_settings['custom_action-message'])) {
+        $do_something = TRUE;
+
+        $form['problems'][$problem_id]['custom_action'] = array(
+          '#id' => 'problem-field-custom_action-' . $problem_id,
+          '#type' => 'checkbox',
+          '#title' => $problem_settings['custom_action-message'],
+          '#default_value' => FALSE,
+          '#required' => FALSE,
+          '#attributes' => array(
+            'class' => array(
+              'problem-field-custom_action',
+              'problem-field-custom_action-' . $problem_id,
+            ),
+          ),
+        );
+
+        if (!empty($problem_settings['custom_action-description'])) {
+          $form['problems'][$problem_id]['custom_action']['#description'] = $problem_settings['custom_action-description'];
+        }
+      }
+
       $form['problems'][$problem_id]['explanation'] = array(
         '#markup' => '<div class="problem-explanation problem-explanation-' . $problem_id . '">' . $problem_settings['explanation'] . '</div>' . "\n",
       );
     }
   }
 
-  if ($resettable_problems) {
+  if ($do_something) {
     $form['problems']['reset'] = array(
-      '#id' => 'submit-problems-reset',
+      '#id' => 'submit-problems-perform_actions',
       '#type' => 'submit',
-      '#default_value' => t("Reset Problems"),
+      '#default_value' => t("Perform Actions / Reset Problems"),
       '#attributes' => array(
         'class' => array(
-          'problem-submit-reset',
+          'problem-submit-perform_actions',
         ),
       ),
     );
@@ -684,24 +744,29 @@ function mfcs_request_problems_0_user_form_validate($form, &$form_state) {
     $clicked_id = $form_state['triggering_element']['#id'];
   }
 
-  $reset_problems = array();
+  $handle_problems = array();
   if (isset($form_state['values']['problems'])) {
-    $reset_problems = &$form_state['values']['problems'];
+    $handle_problems = &$form_state['values']['problems'];
   }
 
-  $reset_something = FALSE;
+  $do_something = FALSE;
   foreach ($form['values']['problem_list']['#value'] as $problem_id => $problem_settings) {
-    if (!$problem_settings['resettable'] || !array_key_exists($problem_id, $reset_problems) || !array_key_exists('reset', $reset_problems[$problem_id])) {
-      continue;
+    if (!$problem_settings['resettable'] && !$problem_settings['custom_action']) {
+      if (!array_key_exists($problem_id, $handle_problems)) {
+        continue;
+      }
     }
 
-    if ($reset_problems[$problem_id]['reset'] == 1) {
-      $reset_something = TRUE;
+    if (isset($handle_problems[$problem_id]['reset']) && $handle_problems[$problem_id]['reset'] == 1) {
+      $do_something = TRUE;
+    }
+    elseif (isset($handle_problems[$problem_id]['custom_action']) && $handle_problems[$problem_id]['custom_action'] == 1) {
+      $do_something = TRUE;
     }
   }
 
-  if (!$reset_something) {
-    form_set_error('', "You have not specified anything to reset.");
+  if (!$do_something) {
+    form_set_error('', "You have not specified any action to perform.");
     return;
   }
 }
@@ -730,32 +795,70 @@ function mfcs_request_problems_0_user_form_submit($form, &$form_state) {
     $clicked_id = $form_state['triggering_element']['#id'];
   }
 
-  $reset_problems = array();
+  $actions = array();
   if (isset($form_state['values']['problems'])) {
-    $reset_problems = &$form_state['values']['problems'];
+    $actions = &$form_state['values']['problems'];
   }
+
+  $perform_reset = FALSE;
+  $perform_custom_action = FALSE;
 
   $problems = $form['values']['mfcs_user']['#value']->problems;
+  $custom_actions = array();
   foreach ($form['values']['problem_list']['#value'] as $problem_id => $problem_settings) {
-    if (!$problem_settings['resettable'] || !array_key_exists($problem_id, $reset_problems) || !array_key_exists('reset', $reset_problems[$problem_id])) {
-      continue;
+    if ($problem_settings['resettable'] && array_key_exists($problem_id, $actions) && array_key_exists('reset', $actions[$problem_id])) {
+      if ($actions[$problem_id]['reset'] == 1) {
+        $problems -= $problem_id;
+        $perform_reset = TRUE;
+      }
     }
 
-    if ($reset_problems[$problem_id]['reset'] == 1) {
-      $problems -= $problem_id;
+    if ($problem_settings['custom_action'] && array_key_exists($problem_id, $actions) && array_key_exists('custom_action', $actions[$problem_id])) {
+      if ($actions[$problem_id]['custom_action'] == 1) {
+        $custom_actions[$problem_id] = TRUE;
+        $perform_custom_action = TRUE;
+      }
     }
   }
 
-  $results = mfcs_save_user($form['values']['mfcs_user']['#value']->user_id, array('problems' => $problems));
+  if ($perform_reset) {
+    $results = mfcs_save_user($form['values']['mfcs_user']['#value']->user_id, array('problems' => $problems));
 
-  if ($results === FALSE) {
-    form_set_error('form', "An error occurred while trying to reset the user problem flags. Please contact the support staff.");
-    watchdog(MFCS_WATCHDOG_ID, "An error occured while trying to reset the user problem flags, user: @user_id, problems: @problem_code.", array('@user_id' => $form['values']['mfcs_user']['#value']->user_id, $problems), WATCHDOG_ERROR);
+    if ($results === FALSE) {
+      form_set_error('form', "An error occurred while trying to reset the user problem flags. Please contact the support staff.");
+      watchdog(MFCS_WATCHDOG_ID, "An error occured while trying to reset the user problem flags, user: @user_id, problems: @problem_code.", array('@user_id' => $form['values']['mfcs_user']['#value']->user_id, $problems), WATCHDOG_ERROR);
 
-    $form_state['rebuild'] = TRUE;
-    $form_state['redirect'] = FALSE;
-    $form_state['submitted'] = FALSE;
+      $form_state['rebuild'] = TRUE;
+      $form_state['redirect'] = FALSE;
+      $form_state['submitted'] = FALSE;
 
+      return;
+    }
+  }
+
+  if ($perform_custom_action) {
+    foreach ($custom_actions as $custom_action_id => $custom_action_value) {
+      if ($custom_action_id == MFCS_USER_PROBLEM_ACCOUNT_CREATE_BANNER_UNAVAILABLE || $custom_action_id == MFCS_USER_PROBLEM_ACCOUNT_SYNC_BANNER_UNAVAILABLE) {
+        if (!empty($form['values']['problem_user']['#value']->field_user_banner_id['und'][0]['value']) && is_numeric($form['values']['problem_user']['#value']->field_user_banner_id['und'][0]['value'])) {
+          $result = mfcs_synchronize_user_settings($form['values']['problem_user']['#value']);
+          if ($result === TRUE) {
+            mfcs_save_user($form['values']['problem_user']['#value']->uid, array('problems' => ($form['values']['mfcs_user']['#value']->problems - $custom_action_id)));
+          }
+          else {
+            form_set_error('form', "An error occurred while trying to synchronize the user settings. Please contact the support staff.");
+            watchdog(MFCS_WATCHDOG_ID, "An error occurred while trying to synchronize the user settings, user: @user_id, problems: @problem_code.", array('@user_id' => $form['values']['mfcs_user']['#value']->user_id, $problems), WATCHDOG_ERROR);
+
+            $form_state['rebuild'] = TRUE;
+            $form_state['redirect'] = FALSE;
+            $form_state['submitted'] = FALSE;
+          }
+        }
+      }
+    }
+  }
+
+  // don't redirect on error.
+  if ($form_state['submitted'] === FALSE) {
     return;
   }
 
@@ -766,6 +869,57 @@ function mfcs_request_problems_0_user_form_submit($form, &$form_state) {
   else {
     $form_state['redirect'] = $form_state['values']['redirect_to'];
   }
+}
+
+/**
+ * Re-synchronize user settings for a given user page.
+ *
+ * This page auto-returns
+ *
+ * @para int $user_id
+ *   Id of the user to resynchronize
+ */
+function mfcs_request_problems_0_users_resynchronize($user_id) {
+  if (!cf_is_integer($user_id)) {
+    cf_error::invalid_integer('user_id');
+
+    drupal_not_found();
+    drupal_exit();
+  }
+
+  $user = user_load($user_id);
+  if (!is_object($user)) {
+    drupal_not_found();
+    drupal_exit();
+  }
+
+  global $base_path;
+  global $mfcs_determined;
+
+  $url_arguments = '';
+  if (!empty($mfcs_determined['complete'])) {
+    $url_arguments .= '?' . $mfcs_determined['complete'];
+  }
+
+  mfcs_add_canonical_headers('requests/problems-0/users/resynchronize/' . $user_id);
+
+  $page_title = "Facilities Use Problems - Resynchronize User";
+  drupal_set_title($page_title);
+
+  $result = mfcs_synchronize_user_settings($user);
+  if ($result === TRUE) {
+    $redirect_array = mfcs_build_redirect_array('requests/problems-0/users');
+
+    drupal_goto('requests/problems-0/users', array('query' => drupal_get_query_parameters()));
+    return '';
+  }
+
+  $markup = '<div>' . "\n";
+  $markup .= 'Failed to re-synchronize user.<br>' . "\n";
+  $markup .= 'You may go back to the <a href="' . $base_path . 'requests/problems-0/users">user problems management page</a>.' . "\n";
+  $markup .= '</div>' . "\n";
+
+  return $markup;
 }
 
 /**

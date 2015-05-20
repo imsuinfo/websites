@@ -84,6 +84,11 @@ function mfcs_pre_validate_request_fields(&$form, &$form_state, $dont_validate =
     $clicked_id = $form_state['triggering_element']['#id'];
   }
 
+  $is_new_request = NULL;
+  if (isset($form['form']['new']['#value'])) {
+    $is_new_request = $form['form']['new']['#value'];
+  }
+
   $is_quick_meeting = FALSE;
   // quick meetings can only be used by venue coordinators.
   if (isset($location_state['information']['type'][0]) && $location_state['information']['type'][0] == MFCS_REQUEST_TYPE_QUICK_MEETING) {
@@ -91,31 +96,39 @@ function mfcs_pre_validate_request_fields(&$form, &$form_state, $dont_validate =
   }
 
   if ($form_state['values']['form']['step'] == 'standard') {
-    // quick meetings can only be used by venue coordinators and their proxies.
+    // quick meetings can only be used by venue coordinators, their proxies, and managers.
     if ($clicked_id == 'submit-request-submit') {
       if ($is_quick_meeting) {
         $can_perform_quick_meetings = FALSE;
-        $venue_coordinator_ids = array();
-        if (!empty($form['form']['user']['#value']->uid)) {
-          $proxies = mfcs_get_proxy_venue_coordinator($form['form']['user']['#value']->uid);
-          if (!empty($proxies)) {
-            $venue_coordinator_ids = $proxies;
+        if (user_access('mfcs manage', $form['form']['user']['#value'])) {
+          $can_perform_quick_meetings = TRUE;
+        }
+        else {
+          $venue_coordinator_ids = array();
+          if (!empty($form['form']['user']['#value']->uid)) {
+            $proxies = mfcs_get_proxy_venue_coordinator($form['form']['user']['#value']->uid);
+            if (!empty($proxies)) {
+              $venue_coordinator_ids = $proxies;
+            }
+
+            $venue_coordinator_ids[$form['form']['user']['#value']->uid] = $form['form']['user']['#value']->uid;
+            unset($proxies);
           }
 
-          $venue_coordinator_ids[$form['form']['user']['#value']->uid] = $form['form']['user']['#value']->uid;
-          unset($proxies);
-        }
-
-        if (!empty($location_state['venue_coordinator']['user_id'][0]) && in_array($location_state['venue_coordinator']['user_id'][0], $venue_coordinator_ids)) {
-          $can_perform_quick_meetings = TRUE;
+          if (!empty($location_state['venue_coordinator']['user_id'][0]) && in_array($location_state['venue_coordinator']['user_id'][0], $venue_coordinator_ids)) {
+            $can_perform_quick_meetings = TRUE;
+          }
         }
 
         if ($can_perform_quick_meetings) {
           mfcs_assign_validation_requirement('information][adviser_approval', $location_form, FALSE);
 
-          // quick meetings are always for invited guests only.
-          $location_form['plans']['audience'][0]['#value'] = MFCS_REQUEST_AUDIENCE_GUESTS_ONLY;
-          $location_state['plans']['audience'][0] = MFCS_REQUEST_AUDIENCE_GUESTS_ONLY;
+          // quick meetings are always for invited guests only, but only if they are new requests.
+          // existing request may be converted into quick meetings, in which case leave the eisting 'audience' value alone.
+          if ($is_new_request) {
+            $location_form['plans']['audience'][0]['#value'] = MFCS_REQUEST_AUDIENCE_GUESTS_ONLY;
+            $location_state['plans']['audience'][0] = MFCS_REQUEST_AUDIENCE_GUESTS_ONLY;
+          }
         }
       }
       else {
@@ -341,19 +354,25 @@ function mfcs_validate_request_fields($form, &$form_state) {
       }
       elseif ($clicked_id == 'submit-request-submit') {
         $cannot_perform_quick_meetings = TRUE;
-        $venue_coordinator_ids = array();
-        if (!empty($form['form']['user']['#value']->uid)) {
-          $proxies = mfcs_get_proxy_venue_coordinator($form['form']['user']['#value']->uid);
-          if (!empty($proxies)) {
-            $venue_coordinator_ids = $proxies;
+
+        if (user_access('mfcs manage', $form['form']['user']['#value'])) {
+          $cannot_perform_quick_meetings = FALSE;
+        }
+        else {
+          $venue_coordinator_ids = array();
+          if (!empty($form['form']['user']['#value']->uid)) {
+            $proxies = mfcs_get_proxy_venue_coordinator($form['form']['user']['#value']->uid);
+            if (!empty($proxies)) {
+              $venue_coordinator_ids = $proxies;
+            }
+
+            $venue_coordinator_ids[$form['form']['user']['#value']->uid] = $form['form']['user']['#value']->uid;
+            unset($proxies);
           }
 
-          $venue_coordinator_ids[$form['form']['user']['#value']->uid] = $form['form']['user']['#value']->uid;
-          unset($proxies);
-        }
-
-        if (!empty($location_state['venue_coordinator']['user_id'][0]) && in_array($location_state['venue_coordinator']['user_id'][0], $venue_coordinator_ids)) {
-          $cannot_perform_quick_meetings = FALSE;
+          if (!empty($location_state['venue_coordinator']['user_id'][0]) && in_array($location_state['venue_coordinator']['user_id'][0], $venue_coordinator_ids)) {
+            $cannot_perform_quick_meetings = FALSE;
+          }
         }
 
         if ($cannot_perform_quick_meetings) {

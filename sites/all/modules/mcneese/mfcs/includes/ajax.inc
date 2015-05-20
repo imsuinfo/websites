@@ -217,7 +217,7 @@ function mfcs_ajax_reviewers_0_list($classification, $review_step) {
     $count_options['returned'] = FALSE;
     $reviewers_returned = mfcs_get_reviewers($count_conditions, $count_options);
     $reviewers_total = 0;
-    if (array_key_exists('count', $reviewers_returned)) {
+    if (is_array($reviewers_returned) && array_key_exists('count', $reviewers_returned)) {
       $reviewers_total = $reviewers_returned['count'];
     }
 
@@ -411,7 +411,7 @@ function mfcs_ajax_proxy_0_list() {
     $proxies_returned = mfcs_get_proxy_venue_coordinators($count_conditions, $count_options);
 
     $proxies_total = 0;
-    if (array_key_exists('count', $proxies_returned)) {
+    if (is_array($proxies_returned) && array_key_exists('count', $proxies_returned)) {
       $proxies_total = $proxies_returned['count'];
     }
 
@@ -428,7 +428,7 @@ function mfcs_ajax_proxy_0_list() {
     $proxies_returned = mfcs_get_proxy_venue_coordinators($conditions, $options);
 
     $proxies_total = 0;
-    if (array_key_exists('count', $proxies_returned)) {
+    if (is_array($proxies_returned) && array_key_exists('count', $proxies_returned)) {
       $proxies_total = $proxies_returned['count'];
     }
 
@@ -719,7 +719,7 @@ function mfcs_ajax_listing_0($override_options = array()) {
     $count_options['returned'] = FALSE;
     $items_returned = mfcs_request_load_listing($count_conditions, $count_options);
     $items_total = 0;
-    if (array_key_exists('count', $items_returned)) {
+    if (is_array($items_returned) && array_key_exists('count', $items_returned)) {
       $items_total = $items_returned['count'];
     }
 
@@ -915,7 +915,7 @@ function mfcs_ajax_problems_0_users_list() {
     $problems_returned = mfcs_management_search_users($count_conditions, $count_options);
 
     $problems_total = 0;
-    if (array_key_exists('count', $problems_returned)) {
+    if (is_array($problems_returned) && array_key_exists('count', $problems_returned)) {
       $problems_total = $problems_returned['count'];
     }
 
@@ -932,7 +932,7 @@ function mfcs_ajax_problems_0_users_list() {
     $problems_returned = mfcs_management_search_users($conditions, $options);
 
     $problems_total = 0;
-    if (array_key_exists('count', $problems_returned)) {
+    if (is_array($problems_returned) && array_key_exists('count', $problems_returned)) {
       $problems_total = $problems_returned['count'];
     }
 
@@ -955,6 +955,8 @@ function mfcs_ajax_problems_0_users_list() {
     foreach ($problems as $problem) {
       $row = array();
 
+      $additional_operations = '';
+
       $row[0] = '' . $problem->user_id;
       $row[1] = '<a href="' . $base_path . 'user/' . $problem->user_id . $url_arguments . '" class="user-link">' . check_plain($problem->name) . '</a>';
       $row[2] = check_plain($problem->first_name);
@@ -963,6 +965,10 @@ function mfcs_ajax_problems_0_users_list() {
       $row[4] = NULL;
       foreach (array(MFCS_USER_PROBLEM_ACCOUNT_CREATE_BANNER_UNAVAILABLE, MFCS_USER_PROBLEM_ACCOUNT_SYNC_BANNER_UNAVAILABLE, MFCS_USER_PROBLEM_ACCOUNT_LOGIN_PROBLEMS_MULTIPLE) as $taxonomy_id) {
         if (($problem->problems & $taxonomy_id) > 0) {
+          if ($taxonomy_id == MFCS_USER_PROBLEM_ACCOUNT_CREATE_BANNER_UNAVAILABLE || $taxonomy_id == MFCS_USER_PROBLEM_ACCOUNT_SYNC_BANNER_UNAVAILABLE) {
+            $additional_operations .= ' <a href="' . $base_path . 'requests/problems-0/users/resynchronize/' . $problem->user_id . $url_arguments . '" class="operation-link operation-link-resynchronize" title="Re-Synchronize the user\'s settings.">Re-Sync</a>';
+          }
+
           if (is_null($row[4])) {
             $row[4] = '';
           }
@@ -1005,7 +1011,263 @@ function mfcs_ajax_problems_0_users_list() {
       unset($taxonomy_id);
 
       $row[7] = check_plain(date("Y/m/d h:i:s a", $problem->date));
-      $row[8] = '<a href="' . $base_path . 'requests/problems-0/users/user/' . $problem->user_id . $url_arguments . '" class="operation-link operation-link-view">View</a>';
+      $row[8] = '<a href="' . $base_path . 'requests/problems-0/users/user/' . $problem->user_id . $url_arguments . '" class="operation-link operation-link-view">View</a>' . $additional_operations;
+
+      $response['data'][] = $row;
+    }
+  }
+
+  drupal_json_output($response);
+  exit();
+}
+
+/**
+ * Ajax function call for loading users problem list datatable.
+ */
+function mfcs_ajax_email_log_0_list() {
+  global $base_path;
+  global $mfcs_determined;
+
+  $url_arguments = '';
+  if (!empty($mfcs_determined['complete'])) {
+    $url_arguments .= '?' . $mfcs_determined['complete'];
+  }
+
+  $response = array();
+
+  if (function_exists('devel_menu')) {
+    $GLOBALS['devel_shutdown'] = FALSE;
+  }
+
+  mfcs_include(MFCS_INCLUDE_MANAGEMENT);
+
+  // load ajax/json request settings.
+  list($draw, $columns, $order, $options, $timestamp) = mfcs_ajax_setup_request_settings();
+
+  $search = FALSE;
+  if (isset($_GET['search']['value']) && is_string($_GET['search']['value']) && !empty($_GET['search']['value'])) {
+    $search = TRUE;
+  }
+
+  // build ajax/json response data.
+  $response = array(
+    'draw' => $draw,
+  );
+
+  $sorting = array();
+  if (!isset($order[0]['column'])) {
+    $sorting['user_id'] = 'ASC';
+  }
+  else {
+    $order_column = (int) $order[0]['column'];
+    $order_direction = isset($order[0]['dir']) && is_string($order[0]['dir']) ? strtoupper($order[0]['dir']) : 'DESC';
+
+    if ($order_column == 0) {
+      $sorting['id'] = $order_direction;
+    }
+    elseif ($order_column == 1) {
+      $sorting['user_id'] = $order_direction;
+    }
+    elseif ($order_column == 2) {
+      $sorting['name'] = $order_direction;
+    }
+    elseif ($order_column == 3) {
+      $sorting['date'] = $order_direction;
+    }
+    elseif ($order_column == 4) {
+      $sorting['destination'] = $order_direction;
+    }
+    elseif ($order_column == 5) {
+      $sorting['title'] = $order_direction;
+    }
+    elseif ($order_column == 6) {
+      $sorting['code'] = $order_direction;
+    }
+  }
+
+  // always provide the unique id in the ordering to guarantee consistency in range results.
+  if (!isset($sorting['id'])) {
+    $sorting['id'] = 'DESC';
+  }
+
+  if (!empty($sorting)) {
+    $options['sort'] = $sorting;
+  }
+
+  $options['fields'] = array(
+    'id' => 'id',
+    'destination' => 'destination',
+    'title' => 'title',
+    'user_id' => 'user_id',
+    'date' => 'date',
+    'code' => 'code',
+  );
+
+  $options['extra_fields']['users'] = array(
+    'alias' => 'u',
+    'join' => 'inner',
+    'on' => 'mle.user_id = u.uid',
+    'columns' => array(
+      'user_id' => 'uid',
+      'name' => 'name',
+    ),
+  );
+
+  $options['extra_fields2']['users'] = array(
+    'alias' => 'd_u',
+    'join' => 'left',
+    'on' => 'mle.destination = d_u.mail',
+    'columns' => array(
+      'destination_user_id' => 'uid',
+    ),
+  );
+
+  $conditions = array();
+
+  $table_name = 'mfcs_log_emails';
+  $table_alias = 'mle';
+  $primary_key = 'id';
+
+  if ($search) {
+    $regex_safe_search = preg_quote($_GET['search']['value'], '/');
+
+    $count_conditions = $conditions;
+    $count_options = $options;
+
+    $conditions['or_1'] = array();
+
+    $conditions['or_1']['value_id'] = array(
+      'field' => 'text(' . $table_alias . '.id)',
+      'operator' => MFCS_OPERATOR_LIKE,
+      'search' => $_GET['search']['value'],
+      'expression' => TRUE,
+    );
+
+    $conditions['or_1']['value_user_id'] = array(
+      'field' => 'text(mle.user_id)',
+      'operator' => MFCS_OPERATOR_LIKE,
+      'search' => $_GET['search']['value'],
+      'expression' => TRUE,
+    );
+
+    $conditions['or_1']['value_name'] = array(
+      'field' => 'u.name',
+      'operator' => MFCS_OPERATOR_LIKE,
+      'search' => $_GET['search']['value'],
+    );
+
+    // Commented out because this is confusing because the date format will not match.
+    #$conditions['or_1']['value_date'] = array(
+    #  'field' => 'text(to_timestamp(' . $table_alias . '.date))',
+    #  'operator' => MFCS_OPERATOR_LIKE,
+    #  'search' => $_GET['search']['value'],
+    #  'expression' => TRUE,
+    #);
+
+    $conditions['or_1']['value_destination'] = array(
+      'field' => $table_alias . '.destination',
+      'operator' => MFCS_OPERATOR_LIKE,
+      'search' => $_GET['search']['value'],
+    );
+
+    $conditions['or_1']['value_title'] = array(
+      'field' => $table_alias . '.title',
+      'operator' => MFCS_OPERATOR_LIKE,
+      'search' => $_GET['search']['value'],
+    );
+
+    $limit_email_codes = NULL;
+    if (preg_match('/' . $regex_safe_search . '/i', 'normal') > 0) {
+      $limit_email_codes = MFCS_EMAIL_CODE_NORMAL;
+    }
+    elseif (preg_match('/' . $regex_safe_search . '/i', 're-send') > 0) {
+      $limit_email_codes = MFCS_EMAIL_CODE_RESEND;
+    }
+    elseif (preg_match('/' . $regex_safe_search . '/i', 'forward') > 0) {
+      $limit_email_codes = MFCS_EMAIL_CODE_FORWARD;
+    }
+
+    if (!is_null($limit_email_codes)) {
+      $conditions['or_1']['value_code'] = array(
+        'field' => $table_alias . '.code',
+        'operator' => MFCS_OPERATOR_EQUAL,
+        'search' => $limit_email_codes,
+      );
+    }
+
+    $count_options['returned'] = FALSE;
+    $email_logs_returned = mfcs_management_search_table($table_name, $table_alias, $primary_key, $count_conditions, $count_options);
+
+    $email_logs_total = 0;
+    if (is_array($email_logs_returned) && array_key_exists('count', $email_logs_returned)) {
+      $email_logs_total = $email_logs_returned['count'];
+    }
+
+    $email_logs_returned = mfcs_management_search_table($table_name, $table_alias, $primary_key, $conditions, $options);
+    $email_logs = array();
+    if (isset($email_logs_returned['results']) && is_array($email_logs_returned['results'])) {
+      $email_logs = $email_logs_returned['results'];
+    }
+
+    $response['recordsTotal'] = $email_logs_total;
+    $response['recordsFiltered'] = $email_logs_returned['count'];
+  }
+  else {
+    $email_logs_returned = mfcs_management_search_table($table_name, $table_alias, $primary_key, $conditions, $options);
+
+    $email_logs_total = 0;
+    if (is_array($email_logs_returned) && array_key_exists('count', $email_logs_returned)) {
+      $email_logs_total = $email_logs_returned['count'];
+    }
+
+    $email_logs = array();
+    if (isset($email_logs_returned['results']) && is_array($email_logs_returned['results'])) {
+      $email_logs = $email_logs_returned['results'];
+    }
+
+    $response['recordsTotal'] = $email_logs_total;
+    $response['recordsFiltered'] = $email_logs_total;
+  }
+
+  if (!is_array($email_logs)) {
+    drupal_json_output($response);
+    exit();
+  }
+
+  $may_resend_log = mfcs_page_request_access('email_log-resend');
+
+  $response['data'] = array();
+  if (!empty($email_logs)) {
+    foreach ($email_logs as $email_log) {
+      $row = array();
+
+      $row[0] = '' . $email_log->id;
+      $row[1] = '' . $email_log->user_id;
+      $row[2] = '<a href="' . $base_path . 'user/' . $email_log->user_id . $url_arguments . '" class="user-link">' . check_plain($email_log->name) . '</a>';
+      $row[3] = check_plain(date("Y/m/d h:i:s a", $email_log->date));
+
+      if (empty($email_log->user_id)) {
+        $row[4] = check_plain($email_log->destination);
+      }
+      else {
+        $row[4] = '<a href="' . $base_path . 'user/' . $email_log->user_id . $url_arguments . '" class="user-link">' . check_plain($email_log->destination) . '</a>';
+      }
+
+      $row[5] = check_plain($email_log->title);
+
+      $row[6] = "Normal";
+      if ($email_log->code == MFCS_EMAIL_CODE_RESEND) {
+        $row[6] = "Re-sent";
+      }
+      elseif ($email_log->code == MFCS_EMAIL_CODE_FORWARD) {
+        $row[6] = "Forwarded";
+      }
+
+      $row[7] = '<a href="' . $base_path . 'requests/email_log-0/view/' . $email_log->id . $url_arguments . '" class="operation-link operation-link-view">View</a>';
+
+      if ($may_resend_log) {
+        $row[7] .= ' <a href="' . $base_path . 'requests/email_log-0/resend/' . $email_log->id . $url_arguments . '" class="operation-link operation-link-resend">Re-send</a>';
+      }
 
       $response['data'][] = $row;
     }
