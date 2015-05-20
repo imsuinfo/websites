@@ -807,9 +807,9 @@ if (file_exists(DRUPAL_ROOT . '/sites/default/registry-www.php')) {
 /**
  * Custom Error Pages
  */
-#$conf['error_document_file_403'] = '/var/www/error_documents/4xx/www/403.html';
-#$conf['error_document_file_404'] = '/var/www/error_documents/4xx/www/404.html';
-#$conf['error_document_file_500'] = '/var/www/error_documents/5xx/www/500.html';
+$conf['error_document_file_403'] = '/var/www/error_documents/4xx/403.html';
+$conf['error_document_file_404'] = '/var/www/error_documents/4xx/404.html';
+$conf['error_document_file_500'] = '/var/www/error_documents/5xx/500.html';
 #$conf['error_document_custom_menu_1_logged_in'] = NULL;
 #$conf['error_document_custom_menu_2_logged_in'] = NULL;
 $conf['error_document_load_blocks'] = TRUE;
