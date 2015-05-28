@@ -156,6 +156,10 @@ function mcneese_www_preprocess_page(&$vars) {
   $cf = & drupal_static('cf_theme_get_variables', array());
 
 
+  // define the bulletin default settings.
+  $vars['mcneese_bulletin_mode'] = NULL;
+
+
   foreach (array('group_image', 'document_header', 'document_outline', 'document_footer') as $key) {
     $cf['show']['page'][$key] = FALSE;
     $cf['data']['page'][$key] = array();
@@ -292,12 +296,23 @@ function mcneese_www_preprocess_page(&$vars) {
 
     // page
     if ($node->type == 'page') {
+      $type = NULL;
+      if (property_exists($node, 'field_page_theme') && !empty($node->field_page_theme['und'][0]['tid'])) {
+        $type = &$node->field_page_theme['und'][0]['tid'];
+      }
+
+      if ($type == 731) {
+        $vars['mcneese_bulletin_mode'] = 1;
+
+        if (!empty($node->field_bulletin['und'][0]['safe_value'])) {
+          $cf['page']['bulletin'] = $node->field_bulletin['und'][0]['safe_value'];
+        }
+      }
+
       // only provide styles during node view, but the only way to determine if this is a node view is to guess based on the absolute paths.
       if ((isset($cf['is']['node-view']) && $cf['is']['node-view']) || (isset($cf['is']['node-draft']) && $cf['is']['node-draft']) || (isset($cf['is']['node-view-revision']) && $cf['is']['node-view-revision'])) {
-        if (property_exists($node, 'field_page_theme') && !empty($node->field_page_theme['und'][0]['tid'])) {
-          if ($node->field_page_theme['und'][0]['tid'] == 718) {
-            mcneese_www_force_floating_regions($cf, array('help' => 'region', 'menu_tabs' => 'navigation', 'action_links' => 'navigation', 'breadcrumb' => 'navigation'));
-          }
+        if ($type == 718) {
+          mcneese_www_force_floating_regions($cf, array('help' => 'region', 'menu_tabs' => 'navigation', 'action_links' => 'navigation', 'breadcrumb' => 'navigation'));
         }
       }
     }
