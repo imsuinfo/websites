@@ -110,13 +110,7 @@ class McNeeseFeedsRssBase {
       return FALSE;
     }
 
-    $checked = check_plain($title);
-    if (empty($checked)) {
-      cf_error::invalid_variable('title', "Not a valid title.");
-      return FALSE;
-    }
-
-    $this->title = $checked;
+    $this->title = strip_tags($title);
     return TRUE;
   }
 
@@ -339,13 +333,7 @@ class McNeeseFeedsRssBase {
       return FALSE;
     }
 
-    $checked = check_plain($copyright);
-    if (empty($checked)) {
-      cf_error::invalid_variable('copyright', "Not a valid copyright.");
-      return FALSE;
-    }
-
-    $this->copyright = $checked;
+    $this->copyright = strip_tags($copyright);
     return TRUE;
   }
 
@@ -435,11 +423,7 @@ class McNeeseFeedsRssBase {
       return FALSE;
     }
 
-    $checked = check_plain($category);
-    if (empty($checked)) {
-      cf_error::invalid_variable('category', "Not a valid category.");
-      return FALSE;
-    }
+    $checked = strip_tags($category);
 
     // do not allow double quotes in category.
     $checked = str_replace('"', '', $checked);
@@ -754,13 +738,7 @@ class McNeeseFeedsRssChannel extends McNeeseFeedsRssBase {
       return FALSE;
     }
 
-    $checked = check_plain($language);
-    if (empty($checked)) {
-      cf_error::invalid_variable('language', "Not a valid title.");
-      return FALSE;
-    }
-
-    $this->language = $checked;
+    $this->language = strip_tags($language);
     return TRUE;
   }
 
@@ -964,13 +942,7 @@ class McNeeseFeedsRssChannel extends McNeeseFeedsRssBase {
       $image['title'] = NULL;
     }
     else {
-      $checked = check_plain($title);
-      if (empty($checked)) {
-        cf_error::invalid_variable('title', "Not a valid title.");
-        return FALSE;
-      }
-
-      $image['title'] = $checked;
+      $image['title'] = strip_tags($title);
     }
 
     if (is_null($link)) {
@@ -1286,21 +1258,13 @@ class McNeeseFeedsRssItem extends McNeeseFeedsRssBase {
       return FALSE;
     }
 
-    $checked = check_plain($unique_id);
-    if (empty($checked)) {
-      cf_error::invalid_variable('checked', "Not a valid unique_id.");
-      return FALSE;
-    }
-
+    $checked = strip_tags($unique_id);
     if ($permanent_link) {
       $checked = filter_var($unique_id, FILTER_SANITIZE_URL);
       if ($checked === FALSE) {
         cf_error::invalid_variable('unique_id', "Not a valid URL.");
         return FALSE;
       }
-    }
-    else {
-      $checked = check_plain($unique_id);
     }
 
     $this->unique_id = $checked;
@@ -1455,16 +1419,10 @@ class McNeeseFeedsRssItem extends McNeeseFeedsRssBase {
       cf_error::invalid_variable('url', "Not a valid URL.");
       return FALSE;
     }
+
     $enclosure['url'] = $checked;
-
     $enclosure['size'] = $length;
-
-    $checked = check_plain($type);
-    if (empty($checked)) {
-      cf_error::invalid_variable('type', "Not a valid type.");
-      return FALSE;
-    }
-    $enclosure['type'] = $checked;
+    $enclosure['type'] = strip_tags($type);
 
     $this->enclosures[] = $enclosure;
     return TRUE;
