@@ -25,8 +25,8 @@ function mcneese_feeds_www_rss_featured() {
   $output = '';
   $rows = array();
   $categories = array();
-  $feed_url = 'rss/feed/news';
-featured
+  $feed_url = 'rss/feed/featured';
+
   mcneese_feeds_process_if_none_match($feed_url);
 
   $channel = new McNeeseFeedsRssChannel();

@@ -25,8 +25,8 @@ function mcneese_feeds_www_rss_spotlight() {
   $output = '';
   $rows = array();
   $categories = array();
-  $feed_url = 'rss/feed/news';
-spotlight
+  $feed_url = 'rss/feed/spotlight';
+
   mcneese_feeds_process_if_none_match($feed_url);
 
   $channel = new McNeeseFeedsRssChannel();
