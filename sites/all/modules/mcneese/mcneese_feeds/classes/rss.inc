@@ -110,7 +110,8 @@ class McNeeseFeedsRssBase {
       return FALSE;
     }
 
-    $this->title = strip_tags($title);
+    $checked = strip_tags($title);
+    $this->title = htmlspecialchars($checked, ENT_XML1, 'UTF-8');
     return TRUE;
   }
 
@@ -333,7 +334,8 @@ class McNeeseFeedsRssBase {
       return FALSE;
     }
 
-    $this->copyright = strip_tags($copyright);
+    $checked = strip_tags($copyright);
+    $this->copyright = htmlspecialchars($checked, ENT_XML1, 'UTF-8');
     return TRUE;
   }
 
@@ -424,9 +426,7 @@ class McNeeseFeedsRssBase {
     }
 
     $checked = strip_tags($category);
-
-    // do not allow double quotes in category.
-    $checked = str_replace('"', '', $checked);
+    $checked = htmlspecialchars($category, ENT_XML1, 'UTF-8');
 
     if (!isset($this->categories[$domain])) {
       $this->categories[$domain] = array();
@@ -550,7 +550,7 @@ class McNeeseFeedsRssBase {
         }
 
         foreach ($categories as $category) {
-          $markup .= $this->tab . $tab . '<category' . $domain_attribute . '><![CDATA[' . $category . ']]></category>' . "\n";
+          $markup .= $this->tab . $tab . '<category' . $domain_attribute . '>' . $category . '</category>' . "\n";
         }
       }
     }
@@ -738,7 +738,8 @@ class McNeeseFeedsRssChannel extends McNeeseFeedsRssBase {
       return FALSE;
     }
 
-    $this->language = strip_tags($language);
+    $checked = strip_tags($language);
+    $this->language = htmlspecialchars($checked, ENT_XML1, 'UTF-8');
     return TRUE;
   }
 
@@ -942,7 +943,8 @@ class McNeeseFeedsRssChannel extends McNeeseFeedsRssBase {
       $image['title'] = NULL;
     }
     else {
-      $image['title'] = strip_tags($title);
+      $checked = strip_tags($title);
+      $image['title'] = htmlspecialchars($title, ENT_XML1, 'UTF-8');
     }
 
     if (is_null($link)) {
@@ -1259,6 +1261,7 @@ class McNeeseFeedsRssItem extends McNeeseFeedsRssBase {
     }
 
     $checked = strip_tags($unique_id);
+    $checked = htmlspecialchars($checked, ENT_XML1, 'UTF-8');
     if ($permanent_link) {
       $checked = filter_var($unique_id, FILTER_SANITIZE_URL);
       if ($checked === FALSE) {
@@ -1422,7 +1425,9 @@ class McNeeseFeedsRssItem extends McNeeseFeedsRssBase {
 
     $enclosure['url'] = $checked;
     $enclosure['size'] = $length;
-    $enclosure['type'] = strip_tags($type);
+
+    $checked = strip_tags($type);
+    $enclosure['type'] = htmlspecialchars($checked, ENT_XML1, 'UTF-8');
 
     $this->enclosures[] = $enclosure;
     return TRUE;
@@ -1553,7 +1558,7 @@ class McNeeseFeedsRssItem extends McNeeseFeedsRssBase {
       if ($this->permanent_link === FALSE) {
         global $base_url;
         global $base_path;
-        $item .= " on " . check_plain($base_url . $base_path);
+        $item .= " on " . htmlspecialchars($base_url . $base_path, ENT_XML1, 'UTF-8');
       }
 
       $item .= '</guid>' . "\n";
