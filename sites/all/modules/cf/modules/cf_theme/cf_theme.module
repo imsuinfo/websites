@@ -532,7 +532,7 @@ function cf_theme_generate_headers(array $cf) {
 
     $output .= '<link';
 
-    foreach (array('charset', 'href', 'hreflang', 'media', 'rel', 'target', 'type') as $type) {
+    foreach (array('charset', 'href', 'hreflang', 'media', 'rel', 'target', 'type', 'title') as $type) {
       if ($type == 'rel') {
         if (empty($link['rel'])) {
           if (!empty($link['rev']) && in_array($link['rev'], $supported_link_rel)) {
