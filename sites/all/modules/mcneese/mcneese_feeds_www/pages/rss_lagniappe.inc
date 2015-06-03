@@ -13,6 +13,7 @@
 
 /**
  * Output the RSS Feed "Lagniappe".
+ * Only loads "Highlight" and "Lagniappe".
  */
 function mcneese_feeds_www_rss_lagniappe() {
   global $base_url;
@@ -40,7 +41,8 @@ function mcneese_feeds_www_rss_lagniappe() {
   try {
     $query = db_select('node', 'n');
     $query->innerJoin('field_data_field_order_date', 'fdfod', 'n.nid = fdfod.entity_id and fdfod.entity_type = \'node\' and fdfod.deleted = 0');
-    $query->innerJoin('field_data_field_event', 'fdfe', 'n.nid = fdfe.entity_id and fdfe.entity_type = \'node\' and fdfe.deleted = 0 and fdfe.field_event_value = 1');
+    $query->leftJoin('field_data_field_highlight', 'fdfh', 'n.nid = fdfh.entity_id and fdfh.entity_type = \'node\' and fdfh.deleted = 0');
+    $query->leftJoin('field_data_field_event', 'fdfe', 'n.nid = fdfe.entity_id and fdfe.entity_type = \'node\' and fdfe.deleted = 0');
     $query->leftJoin('workbench_moderation_node_history', 'wmnh', 'n.nid = wmnh.nid and n.vid = wmnh.vid and wmnh.published = 1');
 
     $query->addField('n', 'nid', 'nid');
@@ -50,6 +52,11 @@ function mcneese_feeds_www_rss_lagniappe() {
 
     $query->condition('n.status', 1);
     $query->condition('n.type', 'system-page', '<>');
+
+    $or = db_or();
+    $or->condition('fdfh.field_highlight_value', 1);
+    $or->condition('fdfe.field_event_value', 1);
+    $query->condition($or);
 
     $query->orderBy('fdfod.field_order_date_value', 'desc');
     //$query->orderBy('wmnh.stamp', 'desc');

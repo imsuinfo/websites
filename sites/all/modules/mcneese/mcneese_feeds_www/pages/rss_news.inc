@@ -13,6 +13,7 @@
 
 /**
  * Output the RSS Feed "News".
+ * All news is loaded, from "Featured", "Highlight", "Lagniappe", and "Spotlight".
  */
 function mcneese_feeds_www_rss_news() {
   global $base_url;
@@ -40,8 +41,10 @@ function mcneese_feeds_www_rss_news() {
   try {
     $query = db_select('node', 'n');
     $query->innerJoin('field_data_field_order_date', 'fdfod', 'n.nid = fdfod.entity_id and fdfod.entity_type = \'node\' and fdfod.deleted = 0');
+    $query->leftJoin('field_data_field_featured', 'fdff', 'n.nid = fdff.entity_id and fdff.entity_type = \'node\' and fdff.deleted = 0');
     $query->leftJoin('field_data_field_highlight', 'fdfh', 'n.nid = fdfh.entity_id and fdfh.entity_type = \'node\' and fdfh.deleted = 0');
     $query->leftJoin('field_data_field_event', 'fdfe', 'n.nid = fdfe.entity_id and fdfe.entity_type = \'node\' and fdfe.deleted = 0');
+    $query->leftJoin('field_data_field_spotlight', 'fdfs', 'n.nid = fdfs.entity_id and fdfs.entity_type = \'node\' and fdfs.deleted = 0');
     $query->leftJoin('workbench_moderation_node_history', 'wmnh', 'n.nid = wmnh.nid and n.vid = wmnh.vid and wmnh.published = 1');
 
     $query->addField('n', 'nid', 'nid');
@@ -53,8 +56,10 @@ function mcneese_feeds_www_rss_news() {
     $query->condition('n.type', 'system-page', '<>');
 
     $or = db_or();
+    $or->condition('fdff.field_featured_value', 1);
     $or->condition('fdfh.field_highlight_value', 1);
     $or->condition('fdfe.field_event_value', 1);
+    $or->condition('fdfs.field_spotlight_value', 1);
     $query->condition($or);
 
     $query->orderBy('fdfod.field_order_date_value', 'desc');
