@@ -391,8 +391,8 @@ class McNeeseFeedsRssBase {
     $previous_categories = $this->categories[$domain];
 
     $this->categories[$domain] = array();
-    foreach ($categories[$domain] as $category) {
-      if ($this->append_category($category, $domain) === FALSE) {
+    foreach ($categories as $category_name) {
+      if ($this->append_category($category_name, $domain) === FALSE) {
         $this->categories[$domain] = $previous_categories;
         return FALSE;
       }
