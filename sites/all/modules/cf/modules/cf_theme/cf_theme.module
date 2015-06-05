@@ -184,9 +184,12 @@ function cf_theme_get_variables(array &$variables) {
               $cf['agent']['engine'] = 'gecko';
             }
             elseif ($lower_piece_1 == 'chrome') {
-              $cf['agent']['machine_name'] = 'chrome';
-              $cf['agent']['human_name'] = 'Google Chrome';
-              $cf['agent']['major_version'] = (int) preg_replace('/\..*$/i', '', $lower_piece_2);
+              // the newer internet explorer uses safari/webkit based agent names, assign chrome conditionally.
+              if ($cf['agent']['machine_name'] == 'unknown' || $cf['agent']['machine_name'] == 'safari') {
+                $cf['agent']['machine_name'] = 'chrome';
+                $cf['agent']['human_name'] = 'Google Chrome';
+                $cf['agent']['major_version'] = (int) preg_replace('/\..*$/i', '', $lower_piece_2);
+              }
             }
             elseif ($lower_piece_1 == 'chromium') {
               $cf['agent']['machine_name'] = 'chrome';
@@ -225,6 +228,12 @@ function cf_theme_get_variables(array &$variables) {
                 $cf['agent']['engine'] = 'presto';
               }
             }
+            elseif ($lower_piece_1 == 'edge') {
+              $cf['agent']['machine_name'] = 'ie';
+              $cf['agent']['human_name'] = 'Internet Explorer';
+              $cf['agent']['major_version'] = (int) preg_replace('/\..*$/i', '', $lower_piece_2);
+              $cf['agent']['is_ie_edge'] = TRUE;
+            }
           }
           elseif (isset($pieces[0])) {
             $lower_piece_1 = trim(strtolower($pieces[0]));
@@ -258,13 +267,7 @@ function cf_theme_get_variables(array &$variables) {
       $cf['agent']['machine_name'] = 'ie';
       $cf['agent']['human_name'] = 'Internet Explorer';
 
-      if ($cf['agent']['engine_version'] == 10) {
-        $cf['agent']['major_version'] = 14;
-      }
-      elseif ($cf['agent']['engine_version'] == 9) {
-        $cf['agent']['major_version'] = 13;
-      }
-      elseif ($cf['agent']['engine_version'] == 8) {
+      if (isset($cf['agent']['is_ie_edge'])) {
         $cf['agent']['major_version'] = 12;
       }
       elseif ($cf['agent']['engine_version'] == 7) {
@@ -295,13 +298,7 @@ function cf_theme_get_variables(array &$variables) {
 
       // alter the (faked) agent version to properly reflect the current browser.
       if ($cf['agent']['ie_compatibility'] && isset($cf['agent']['engine_version'])) {
-        if ($cf['agent']['engine_version'] == 10) {
-          $cf['agent']['major_version'] = 14;
-        }
-        elseif ($cf['agent']['engine_version'] == 9) {
-          $cf['agent']['major_version'] = 13;
-        }
-        elseif ($cf['agent']['engine_version'] == 8) {
+        if (isset($cf['agent']['is_ie_edge'])) {
           $cf['agent']['major_version'] = 12;
         }
         elseif ($cf['agent']['engine_version'] == 7) {
