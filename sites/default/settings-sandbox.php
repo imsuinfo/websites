@@ -806,6 +806,52 @@ if (file_exists(DRUPAL_ROOT . '/sites/default/registry-sandbox.php')) {
 
 
 /**
+ * McNeese Feeds
+ */
+$conf['feed_groups_blacklist'] = array(
+  'groups' => array(
+    428 => 'Index',
+    282 => 'About McNeese',
+    668 => 'Maps',
+    201 => 'Campus Maps',
+    703 => 'Search',
+    414 => 'Announcement',
+    699 => 'Disclaimer',
+    415 => 'News & Events',
+    246 => 'Library',
+    686 => '75th Anniversary',
+    427 => 'Documentation',
+    365 => 'FAQ',
+    713 => 'Job Opportunity',
+  ),
+  'nodes' => array(
+    NULL => array(
+    ),
+
+    // job opportunity sub-groups, ignore main pages.
+    714 => array(
+      6281,
+    ),
+    717 => array(
+      6282,
+    ),
+    716 => array(
+      6283,
+    ),
+    715 => array(
+      6284,
+    ),
+  ),
+);
+$conf['feed_all_blacklist'] = array(
+  'types' => array(
+    'poster',
+    'side_panel',
+  ),
+);
+
+
+/**
  * Custom Error Pages
  */
 $conf['error_document_file_403'] = '/var/www/error_documents/4xx/sandbox/403.html';
