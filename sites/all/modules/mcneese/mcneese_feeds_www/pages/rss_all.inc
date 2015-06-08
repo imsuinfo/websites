@@ -29,6 +29,7 @@ function mcneese_feeds_www_rss_all($type = NULL) {
   global $base_url;
   global $base_path;
   global $user;
+  global $conf;
 
   require_once(drupal_get_path('module', 'mcneese_feeds') . '/classes/rss.inc');
 
@@ -40,6 +41,21 @@ function mcneese_feeds_www_rss_all($type = NULL) {
 
   if (!is_null($type)) {
     $feed_url = 'rss/feed/all/' . $type;
+  }
+
+  $blacklist_types = array();
+  if (isset($conf['feed_all_blacklist']['types']) && is_array($conf['feed_all_blacklist']['types'])) {
+    $blacklist_types = $conf['feed_all_blacklist']['types'];
+  }
+
+  $blacklist_nodes = array();
+  if (isset($conf['feed_all_blacklist']['nodes'][NULL]) && is_array($conf['feed_all_blacklist']['nodes'][NULL])) {
+    $blacklist_nodes = $conf['feed_all_blacklist']['nodes'][NULL];
+  }
+
+  if (!is_null($type) && in_array($type, $blacklist_types)) {
+    drupal_not_found();
+    drupal_exit();
   }
 
   mcneese_feeds_process_if_none_match($feed_url);
@@ -65,7 +81,37 @@ function mcneese_feeds_www_rss_all($type = NULL) {
     $query->condition('n.status', 1);
     $query->condition('n.type', 'system-page', '<>');
 
-    if (!is_null($type)) {
+    if (isset($conf['feed_all_blacklist']['nodes']) && is_array($conf['feed_all_blacklist']['nodes'])) {
+      foreach ($types as $t) {
+        if (isset($conf['feed_all_blacklist']['nodes'][$t]) && is_array($conf['feed_all_blacklist']['nodes'][$t])) {
+          $blacklist_nodes = array_merge($blacklist_nodes, $conf['feed_all_blacklist']['nodes'][$t]);
+        }
+      }
+      unset($t);
+    }
+
+    if (!empty($blacklist_nodes)) {
+      $query->condition('n.nid', $blacklist_nodes, 'NOT IN');
+    }
+
+    if (is_null($type)) {
+      if (!empty($blacklist_types)) {
+        $query->condition('n.type', $blacklist_types, 'NOT IN');
+      }
+    }
+    else {
+      if (!empty($blacklist_types)) {
+        $types_clone = $types;
+        foreach ($types_clone as $k => $t) {
+          if (in_array($t, $blacklist_Types)) {
+            unset($types[$k]);
+          }
+        }
+        unset($types_clone);
+        unset($t);
+        unset($k);
+      }
+
       $query->condition('n.type', $types, 'IN');
 
       $query_types = db_select('node_type', 'nt');

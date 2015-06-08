@@ -27,6 +27,18 @@ function mcneese_feeds_www_rss_group($group) {
     drupal_exit();
   }
 
+  global $conf;
+
+  $blacklist_groups = array();
+  if (isset($conf['feed_groups_blacklist']['groups']) && is_array($conf['feed_groups_blacklist']['groups'])) {
+    $blacklist_groups = $conf['feed_groups_blacklist']['groups'];
+  }
+
+  $blacklist_nodes = array();
+  if (isset($conf['feed_groups_blacklist']['nodes'][NULL]) && is_array($conf['feed_groups_blacklist']['nodes'][NULL])) {
+    $blacklist_nodes = $conf['feed_groups_blacklist']['nodes'][NULL];
+  }
+
   $group_ids = array();
   $group_names = array();
 
@@ -92,6 +104,14 @@ function mcneese_feeds_www_rss_group($group) {
 
     $results_label = NULL;
     foreach ($results_taxonomy as $taxonomy) {
+      if (array_key_exists($taxonomy->tid, $blacklist_groups)) {
+        continue;
+      }
+
+      if (isset($conf['feed_groups_blacklist']['nodes'][$taxonomy->tid]) && is_array($conf['feed_groups_blacklist']['nodes'][$taxonomy->tid])) {
+        $blacklist_nodes = array_merge($blacklist_nodes, $conf['feed_groups_blacklist']['nodes'][$taxonomy->tid]);
+      }
+
       $categories[$taxonomy->tid] = $taxonomy->name;
 
       if (is_null($results_label)) {
@@ -100,6 +120,11 @@ function mcneese_feeds_www_rss_group($group) {
       }
 
       $results_label .= ', ' . $taxonomy->name;
+    }
+
+    if (empty($categories)) {
+      drupal_not_found();
+      drupal_exit();
     }
 
     $exception_case_handle_police_complaints = (bool) array_key_exists(MCNEESE_FEEDS_WWW_VOCABULARY_GROUP_POLICE, $categories);
@@ -126,6 +151,10 @@ function mcneese_feeds_www_rss_group($group) {
 
     $query->condition('n.status', 1);
     $query->condition('n.type', 'system-page', '<>');
+
+    if (!empty($blacklist_nodes)) {
+      $query->condition('n.nid', $blacklist_nodes, 'NOT IN');
+    }
 
     if ($exception_case_handle_police_complaints) {
       $or = db_or();
