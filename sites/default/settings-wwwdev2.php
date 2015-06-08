@@ -798,11 +798,12 @@ $conf['system_mail_name'] = 'McNeese State University';
 
 
 /**
- *  Static registry support
+ * Static registry support
  */
 if (file_exists(DRUPAL_ROOT . '/sites/default/registry-wwwdev2.php')) {
   include_once DRUPAL_ROOT . '/sites/default/registry-wwwdev2.php';
 }
+
 
 /**
  * Custom Error Pages
