@@ -825,6 +825,8 @@ $conf['feed_groups_blacklist'] = array(
     427 => 'Documentation',
     365 => 'FAQ',
     713 => 'Job Opportunity',
+    381 => 'Calendar',
+    400 => 'Athletics',
   ),
   'nodes' => array(
     NULL => array(
