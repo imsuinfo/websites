@@ -103,7 +103,7 @@ function mcneese_feeds_www_rss_all($type = NULL) {
       if (!empty($blacklist_types)) {
         $types_clone = $types;
         foreach ($types_clone as $k => $t) {
-          if (in_array($t, $blacklist_Types)) {
+          if (in_array($t, $blacklist_types)) {
             unset($types[$k]);
           }
         }
