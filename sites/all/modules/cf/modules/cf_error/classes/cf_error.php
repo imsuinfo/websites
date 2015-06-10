@@ -47,6 +47,9 @@ class cf_error {
    *   (optional) The severity of the message, as per RFC 3164. Possible values
    *   are WATCHDOG_ERROR, WATCHDOG_WARNING, etc.
    *
+   * @return cf_error_code
+   *   A object containing the processed error, with specified backtrace.
+   *
    * @see: watchdog()
    * @see: watchdog_severity_levels()
    */
@@ -84,6 +87,9 @@ class cf_error {
    * @deprecated
    *   invalid_string() should be used instead.
    *
+   * @return cf_error_code
+   *   A object containing the processed error, with specified backtrace.
+   *
    * @see: not_string()
    */
   public static function not_string($argument_name, $severity = WATCHDOG_ERROR) {
@@ -98,6 +104,9 @@ class cf_error {
    * @param int $severity
    *   (optional) The severity of the message, as per RFC 3164. Possible values
    *   are WATCHDOG_ERROR, WATCHDOG_WARNING, etc.
+   *
+   * @return cf_error_code
+   *   A object containing the processed error, with specified backtrace.
    *
    * @see: watchdog()
    * @see: watchdog_severity_levels()
@@ -133,6 +142,9 @@ class cf_error {
    *   (optional) The severity of the message, as per RFC 3164. Possible values
    *   are WATCHDOG_ERROR, WATCHDOG_WARNING, etc.
    *
+   * @return cf_error_code
+   *   A object containing the processed error, with specified backtrace.
+   *
    * @see: watchdog()
    * @see: watchdog_severity_levels()
    */
@@ -166,6 +178,9 @@ class cf_error {
    * @param int $severity
    *   (optional) The severity of the message, as per RFC 3164. Possible values
    *   are WATCHDOG_ERROR, WATCHDOG_WARNING, etc.
+   *
+   * @return cf_error_code
+   *   A object containing the processed error, with specified backtrace.
    *
    * @see: watchdog()
    * @see: watchdog_severity_levels()
@@ -201,6 +216,9 @@ class cf_error {
    *   (optional) The severity of the message, as per RFC 3164. Possible values
    *   are WATCHDOG_ERROR, WATCHDOG_WARNING, etc.
    *
+   * @return cf_error_code
+   *   A object containing the processed error, with specified backtrace.
+   *
    * @see: watchdog()
    * @see: watchdog_severity_levels()
    */
@@ -234,6 +252,9 @@ class cf_error {
    * @param int $severity
    *   (optional) The severity of the message, as per RFC 3164. Possible values
    *   are WATCHDOG_ERROR, WATCHDOG_WARNING, etc.
+   *
+   * @return cf_error_code
+   *   A object containing the processed error, with specified backtrace.
    *
    * @see: watchdog()
    * @see: watchdog_severity_levels()
@@ -270,6 +291,9 @@ class cf_error {
    * @param int $severity
    *   (optional) The severity of the message, as per RFC 3164. Possible values
    *   are WATCHDOG_ERROR, WATCHDOG_WARNING, etc.
+   *
+   * @return cf_error_code
+   *   A object containing the processed error, with specified backtrace.
    *
    * @see: watchdog()
    * @see: watchdog_severity_levels()
@@ -311,6 +335,9 @@ class cf_error {
    * @param int $severity
    *   (optional) The severity of the message, as per RFC 3164. Possible values
    *   are WATCHDOG_ERROR, WATCHDOG_WARNING, etc.
+   *
+   * @return cf_error_code
+   *   A object containing the processed error, with specified backtrace.
    *
    * @see: watchdog()
    * @see: watchdog_severity_levels()
@@ -361,6 +388,9 @@ class cf_error {
    * @deprecated
    *   invalid_numeric() should be used instead.
    *
+   * @return cf_error_code
+   *   A object containing the processed error, with specified backtrace.
+   *
    * @see: watchdog()
    * @see: watchdog_severity_levels()
    */
@@ -376,6 +406,9 @@ class cf_error {
    * @param int $severity
    *   (optional) The severity of the message, as per RFC 3164. Possible values
    *   are WATCHDOG_ERROR, WATCHDOG_WARNING, etc.
+   *
+   * @return cf_error_code
+   *   A object containing the processed error, with specified backtrace.
    *
    * @see: watchdog()
    * @see: watchdog_severity_levels()
@@ -410,6 +443,9 @@ class cf_error {
    * @param int $severity
    *   (optional) The severity of the message, as per RFC 3164. Possible values
    *   are WATCHDOG_ERROR, WATCHDOG_WARNING, etc.
+   *
+   * @return cf_error_code
+   *   A object containing the processed error, with specified backtrace.
    *
    * @see: watchdog()
    * @see: watchdog_severity_levels()
@@ -454,6 +490,9 @@ class cf_error {
    *   (optional) The severity of the message, as per RFC 3164. Possible values
    *   are WATCHDOG_ERROR, WATCHDOG_WARNING, etc.
    *
+   * @return cf_error_code
+   *   A object containing the processed error, with specified backtrace.
+   *
    * @see: watchdog()
    * @see: watchdog_severity_levels()
    */
@@ -493,6 +532,9 @@ class cf_error {
    *   (optional) The severity of the message, as per RFC 3164. Possible values
    *   are WATCHDOG_ERROR, WATCHDOG_WARNING, etc.
    *
+   * @return cf_error_code
+   *   A object containing the processed error, with specified backtrace.
+   *
    * @see: watchdog()
    * @see: watchdog_severity_levels()
    */
@@ -526,6 +568,9 @@ class cf_error {
    * @param int $severity
    *   (optional) The severity of the message, as per RFC 3164. Possible values
    *   are WATCHDOG_ERROR, WATCHDOG_WARNING, etc.
+   *
+   * @return cf_error_code
+   *   A object containing the processed error, with specified backtrace.
    *
    * @see: watchdog()
    * @see: watchdog_severity_levels()
@@ -561,6 +606,9 @@ class cf_error {
    *   (optional) The severity of the message, as per RFC 3164. Possible values
    *   are WATCHDOG_ERROR, WATCHDOG_WARNING, etc.
    *
+   * @return cf_error_code
+   *   A object containing the processed error, with specified backtrace.
+   *
    * @see: watchdog()
    * @see: watchdog_severity_levels()
    */
@@ -594,6 +642,9 @@ class cf_error {
    * @param int $severity
    *   (optional) The severity of the message, as per RFC 3164. Possible values
    *   are WATCHDOG_ERROR, WATCHDOG_WARNING, etc.
+   *
+   * @return cf_error_code
+   *   A object containing the processed error, with specified backtrace.
    *
    * @see: watchdog()
    * @see: watchdog_severity_levels()
@@ -629,6 +680,9 @@ class cf_error {
    *   (optional) The severity of the message, as per RFC 3164. Possible values
    *   are WATCHDOG_ERROR, WATCHDOG_WARNING, etc.
    *
+   * @return cf_error_code
+   *   A object containing the processed error, with specified backtrace.
+   *
    * @see: watchdog()
    * @see: watchdog_severity_levels()
    */
@@ -662,6 +716,9 @@ class cf_error {
    * @param int $severity
    *   (optional) The severity of the message, as per RFC 3164. Possible values
    *   are WATCHDOG_ERROR, WATCHDOG_WARNING, etc.
+   *
+   * @return cf_error_code
+   *   A object containing the processed error, with specified backtrace.
    *
    * @see: watchdog()
    * @see: watchdog_severity_levels()
@@ -697,6 +754,9 @@ class cf_error {
    *   (optional) The severity of the message, as per RFC 3164. Possible values
    *   are WATCHDOG_ERROR, WATCHDOG_WARNING, etc.
    *
+   * @return cf_error_code
+   *   A object containing the processed error, with specified backtrace.
+   *
    * @see: watchdog()
    * @see: watchdog_severity_levels()
    */
@@ -730,6 +790,9 @@ class cf_error {
    * @param int $severity
    *   (optional) The severity of the message, as per RFC 3164. Possible values
    *   are WATCHDOG_ERROR, WATCHDOG_WARNING, etc.
+   *
+   * @return cf_error_code
+   *   A object containing the processed error, with specified backtrace.
    *
    * @see: watchdog()
    * @see: watchdog_severity_levels()
@@ -765,6 +828,9 @@ class cf_error {
    *   (optional) The severity of the message, as per RFC 3164. Possible values
    *   are WATCHDOG_ERROR, WATCHDOG_WARNING, etc.
    *
+   * @return cf_error_code
+   *   A object containing the processed error, with specified backtrace.
+   *
    * @see: watchdog()
    * @see: watchdog_severity_levels()
    */
@@ -798,6 +864,9 @@ class cf_error {
    * @param int $severity
    *   (optional) The severity of the message, as per RFC 3164. Possible values
    *   are WATCHDOG_ERROR, WATCHDOG_WARNING, etc.
+   *
+   * @return cf_error_code
+   *   A object containing the processed error, with specified backtrace.
    *
    * @see: watchdog()
    * @see: watchdog_severity_levels()
@@ -833,6 +902,9 @@ class cf_error {
    *   (optional) The severity of the message, as per RFC 3164. Possible values
    *   are WATCHDOG_ERROR, WATCHDOG_WARNING, etc.
    *
+   * @return cf_error_code
+   *   A object containing the processed error, with specified backtrace.
+   *
    * @see: watchdog()
    * @see: watchdog_severity_levels()
    */
@@ -866,6 +938,9 @@ class cf_error {
    * @param int $severity
    *   (optional) The severity of the message, as per RFC 3164. Possible values
    *   are WATCHDOG_ERROR, WATCHDOG_WARNING, etc.
+   *
+   * @return cf_error_code
+   *   A object containing the processed error, with specified backtrace.
    *
    * @see: watchdog()
    * @see: watchdog_severity_levels()
@@ -901,6 +976,9 @@ class cf_error {
    *   (optional) The severity of the message, as per RFC 3164. Possible values
    *   are WATCHDOG_ERROR, WATCHDOG_WARNING, etc.
    *
+   * @return cf_error_code
+   *   A object containing the processed error, with specified backtrace.
+   *
    * @see: watchdog()
    * @see: watchdog_severity_levels()
    */
@@ -934,6 +1012,9 @@ class cf_error {
    * @param int $severity
    *   (optional) The severity of the message, as per RFC 3164. Possible values
    *   are WATCHDOG_ERROR, WATCHDOG_WARNING, etc.
+   *
+   * @return cf_error_code
+   *   A object containing the processed error, with specified backtrace.
    *
    * @see: watchdog()
    * @see: watchdog_severity_levels()
@@ -969,6 +1050,9 @@ class cf_error {
    *   (optional) The severity of the message, as per RFC 3164. Possible values
    *   are WATCHDOG_ERROR, WATCHDOG_WARNING, etc.
    *
+   * @return cf_error_code
+   *   A object containing the processed error, with specified backtrace.
+   *
    * @see: watchdog()
    * @see: watchdog_severity_levels()
    */
@@ -1002,6 +1086,9 @@ class cf_error {
    * @param int $severity
    *   (optional) The severity of the message, as per RFC 3164. Possible values
    *   are WATCHDOG_ERROR, WATCHDOG_WARNING, etc.
+   *
+   * @return cf_error_code
+   *   A object containing the processed error, with specified backtrace.
    *
    * @see: watchdog()
    * @see: watchdog_severity_levels()
@@ -1037,6 +1124,9 @@ class cf_error {
    *   (optional) The severity of the message, as per RFC 3164. Possible values
    *   are WATCHDOG_ERROR, WATCHDOG_WARNING, etc.
    *
+   * @return cf_error_code
+   *   A object containing the processed error, with specified backtrace.
+   *
    * @see: watchdog()
    * @see: watchdog_severity_levels()
    */
@@ -1070,6 +1160,9 @@ class cf_error {
    * @param int $severity
    *   (optional) The severity of the message, as per RFC 3164. Possible values
    *   are WATCHDOG_ERROR, WATCHDOG_WARNING, etc.
+   *
+   * @return cf_error_code
+   *   A object containing the processed error, with specified backtrace.
    *
    * @see: watchdog()
    * @see: watchdog_severity_levels()
