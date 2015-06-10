@@ -126,5 +126,67 @@ function mcneese_feeds_www_mcneese_feeds_rss_listing_alter(&$rss_feeds) {
 }
 
 /**
+ * Strips the HTML node header block from content.
+ *
+ * When a h1 tag exists, strip out the element-invisible header to avoid
+ * duplicate titles being displayed within the feed markup.
+ *
+ * @param string $text
+ *   The text to process.
+ *
+ * @return string
+ *   The processed text or the unprocessed text on error.
+ */
+function mcneese_feeds_www_strip_invisible_node_header_on_h1($text) {
+  $dom = new cf_dom(TRUE, TRUE, TRUE, $text);
+
+  $body = $dom->get_body();
+  if (is_null($body)) {
+    return $text;
+  }
+
+  $h1_tags = $body->getElementsByTagName('h1');
+
+  // no h1 tags detected, so no changes need to be made.
+  if (!is_object($h1_tags) || $h1_tags->length < 1) {
+    return $text;
+  }
+  unset($h1_tags);
+
+  // strip the h2 tag that has 'node-header' and 'element-invisible' as a class name, with '<section>' as a parent tag.
+  $header_tags = $body->getElementsByTagName('header');
+  $remove_tags = array();
+
+  foreach ($header_tags as $tag) {
+    if (gettype($tag) != 'DOMElement' && is_subclass_of($tag, 'DOMElement')) {
+      continue;
+    }
+
+    if (!$tag->hasAttribute('class')) {
+      continue;
+    }
+
+    $class = $tag->getAttribute('class');
+
+    $classes = explode(' ', $class);
+    if (in_array('node-header', $classes)) {
+      if (in_array('element-invisible', $classes)) {
+        $remove_tags[] = &$tag;
+      }
+    }
+  }
+
+  if (!empty($remove_tags)) {
+    foreach ($remove_tags as $tag) {
+      $removed = $dom->remove_element($tag, FALSE);
+    }
+
+    return $dom->get_markup();
+  }
+
+  return $text;
+}
+
+/**
  * @} End of '@defgroup mcneese_feeds McNeese Feeds - www.mcneese.edu'.
  */

@@ -95,6 +95,7 @@ function mcneese_feeds_www_rss_news() {
 
         // this function has a major performance impact.
         $body = drupal_render($nodes_full['nodes'][$nid]);
+        $body = mcneese_feeds_www_strip_invisible_node_header_on_h1($body);
 
         // the teaser/description, however, only needs to be built from the body and should have less of a performance impact.
         if (empty($nodes_teaser['nodes'][$nid]['body'][0]['#markup'])) {
