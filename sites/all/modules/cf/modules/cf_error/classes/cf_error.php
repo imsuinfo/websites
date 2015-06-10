@@ -250,6 +250,7 @@ class cf_error {
       }
 
       $argument_name = self::p_report_invalid_argument_string('argument_name', $backtrace);
+      unset($backtrace);
     }
 
     $error->set_severity($severity);
@@ -282,7 +283,6 @@ class cf_error {
     else {
       $backtrace = debug_backtrace();
     }
-
 
     if (empty($argument_name)) {
       $argument_name = self::p_report_invalid_argument_string('argument_name', $backtrace);
@@ -381,7 +381,7 @@ class cf_error {
    * @see: watchdog_severity_levels()
    */
   public static function invalid_numeric($argument_name, $severity = WATCHDOG_ERROR) {
-    $error = new cf_error_code();
+    $error = new cf_error_code;
 
     if (empty($argument_name)) {
       if (version_compare(PHP_VERSION, '5.4.0', '>=')) {
