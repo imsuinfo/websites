@@ -689,6 +689,10 @@ class mcneese_file_db_restricted_stream_wrapper extends mcneese_file_db_stream_w
       return 'application/octet-stream';
     }
 
+    if (empty($this->file_meta)) {
+      return 'application/octet-stream';
+    }
+
     if (empty($this->file_meta->mimetype)) {
       return 'application/octet-stream';
     }
