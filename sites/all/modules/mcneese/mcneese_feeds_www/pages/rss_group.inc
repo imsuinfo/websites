@@ -88,7 +88,13 @@ function mcneese_feeds_www_rss_group($group) {
     $query_taxonomy->addField('ttd', 'name', 'name');
 
     if (empty($group_ids)) {
-      $query_taxonomy->condition('ttd.name', $group_names, 'IN');
+      $or = db_or();
+      foreach ($group_names as $group_name) {
+        $or->condition('ttd.name', db_like($group_name), 'ILIKE');
+      }
+
+      $query_taxonomy->condition($or);
+      unset($or);
     }
     else {
       $query_taxonomy->condition('ttd.tid', $group_ids, 'IN');
@@ -160,7 +166,9 @@ function mcneese_feeds_www_rss_group($group) {
       $or = db_or();
       $or->condition('n.type', MCNEESE_FEEDS_WWW_NODE_TYPE_POLICE);
       $or->condition('fdfg.field_group_tid', array_keys($categories), 'IN');
+
       $query->condition($or);
+      unset($or);
     }
     else {
       $query->condition('fdfg.field_group_tid', array_keys($categories), 'IN');

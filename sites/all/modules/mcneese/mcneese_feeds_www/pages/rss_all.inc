@@ -24,6 +24,11 @@ function mcneese_feeds_www_rss_all($type = NULL) {
   $types = array();
   if (is_string($type)) {
     $types = explode(MCNEESE_FEEDS_GROUPING, $type);
+
+    // the database stores types as all lower case, so force all passed types to be lower case to allow for case-insensitive urls.
+    foreach ($types as &$type) {
+      $type = strtolower($type);
+    }
   }
 
   global $base_url;
