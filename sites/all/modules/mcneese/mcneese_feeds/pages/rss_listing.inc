@@ -14,6 +14,13 @@
  * Provides the main RSS feed listing page.
  */
 function mcneese_feeds_rss_listing() {
+  $user = cf_current_user();
+
+  if (!is_object($user) || $user->uid < 1) {
+    drupal_not_found();
+    drupal_exit();
+  }
+
   $output = '';
   $rows = array();
 
