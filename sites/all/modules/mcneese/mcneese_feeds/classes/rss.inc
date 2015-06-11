@@ -72,7 +72,7 @@ class McNeeseFeedsRssBase {
       }
     }
 
-    if (!is_null($publish_date)) {
+    if (!is_null($publish_date) && $publish_date > 0) {
       if (!$this->set_publish_date($publish_date)) {
         return FALSE;
       }
@@ -272,10 +272,10 @@ class McNeeseFeedsRssBase {
   /**
    * Assign a last build date to the RSS channel.
    *
-   * This is the last build date of the RSS feed.
+   * This is the publish date of the RSS feed.
    *
-   * @param string $build_date
-   *   The RSS feed channel build_date.
+   * @param string $publish_date
+   *   The RSS feed channel publish date.
    *
    * @return bool
    *   TRUE on success, FALSE otherwise.
@@ -297,7 +297,7 @@ class McNeeseFeedsRssBase {
   }
 
   /**
-   * Unassign a last build date from the RSS channel.
+   * Unassign a publish date from the RSS channel.
    *
    * @return bool
    *   TRUE on success, FALSE otherwise.
@@ -308,7 +308,7 @@ class McNeeseFeedsRssBase {
   }
 
   /**
-   * Get the value of the RSS feed publish_date.
+   * Get the value of the RSS feed publish date.
    *
    * @return null|int
    *   The value of the RSS feed publish_date.
@@ -536,7 +536,7 @@ class McNeeseFeedsRssBase {
       $markup .= $this->tab . $tab . '<content:encoded><![CDATA[' . $this->content . ']]></content:encoded>' . "\n";
     }
 
-    if (!is_null($this->publish_date)) {
+    if (!is_null($this->publish_date) && $this->publish_date > 0) {
       $markup .= $this->tab . $tab . '<pubDate>' . gmdate(DATE_RFC7231, $this->publish_date) . '</pubDate>' . "\n";
     }
 
@@ -631,7 +631,7 @@ class McNeeseFeedsRssChannel extends McNeeseFeedsRssBase {
       }
     }
 
-    if (!is_null($last_build_date)) {
+    if (!is_null($last_build_date) && $last_build_date > 0) {
       if (!$this->set_last_build_date($last_build_date)) {
         return FALSE;
       }
@@ -1117,7 +1117,7 @@ class McNeeseFeedsRssChannel extends McNeeseFeedsRssBase {
       $feed .= $tab . '<atom:link href="' . $this->source . '" rel="self" type="application/rss+xml" />' . "\n";
     }
 
-    if (!is_null($this->last_build_date)) {
+    if (!is_null($this->last_build_date) && $this->last_build_date > 0) {
       $feed .= $tab . '<lastBuildDate>' . gmdate(DATE_RFC7231, $this->last_build_date) . '</lastBuildDate>' . "\n";
     }
 
