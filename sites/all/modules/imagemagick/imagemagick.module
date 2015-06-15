@@ -350,9 +350,9 @@ function image_imagemagick_get_info(stdClass $image) {
   $data = NULL;
 
   if (file_exists($image->source)) {
-    $size = file_size($image->source);
+    $size = filesize($image->source);
 
-    if ($file_size > 0) {
+    if ($size > 0) {
       $data = @getimagesize($image->source);
     }
   }
@@ -361,9 +361,9 @@ function image_imagemagick_get_info(stdClass $image) {
     $realpath = drupal_realpath($image->source);
 
     if (file_exists($realpath)) {
-      $size = file_size($realpath);
+      $size = filesize($realpath);
 
-      if ($file_size > 0) {
+      if ($size > 0) {
         $data = @getimagesize($realpath);
       }
     }
