@@ -77,7 +77,7 @@
 		onClosed: false,
 
 		rel: function() {
-			return this.rel;
+			return $(this).attr('rel');
 		},
 		href: function() {
 			// using this.href would give the absolute url, when the href may have been inteded as a selector (e.g. '#container')
