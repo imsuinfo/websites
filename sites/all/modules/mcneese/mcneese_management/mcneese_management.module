@@ -1499,6 +1499,7 @@ function mcneese_management_template_build_form(&$form) {
   $supported_attributes[] = 'cardinality';
   $supported_attributes[] = 'cols';
   $supported_attributes[] = 'default_value';
+  $supported_attributes[] = 'default_value_replace';
   $supported_attributes[] = 'empty_value';
   $supported_attributes[] = 'empty_option';
   $supported_attributes[] = 'has_alt';
@@ -1660,6 +1661,7 @@ function mcneese_management_template_build_form(&$form) {
     $field = array();
     $fields = array('#tree' => TRUE);
     $ti_default = FALSE;
+    $ti_default_value_replace = NULL;
     $serialized = FALSE;
     $manual_cardinality = FALSE;
     $has_alt = FALSE;
@@ -1680,6 +1682,15 @@ function mcneese_management_template_build_form(&$form) {
       }
       elseif ($attribute == 'default_value') {
         $ti_default = TRUE;
+      }
+      elseif ($attribute == 'default_value_replace') {
+        $replace_tmp = $ti_tag->getAttribute('default_value_replace');
+
+        if ($replace_tmp == "current_date") {
+          $ti_default_value_replace = $replace_tmp;
+        }
+
+        unset($replace_tmp);
       }
       elseif ($attribute == 'has_alt') {
         $has_alt = $ti_tag->getAttribute('has_alt');
@@ -1712,6 +1723,16 @@ function mcneese_management_template_build_form(&$form) {
         else {
           $default_value = $ti_tag->getAttribute('default_value');
           $attribute_value = $default_value;
+
+          if ($ti_default_value_replace == 'current_date') {
+            $attribute_value = date($default_value, REQUEST_TIME);
+            if ($attribute_value === FALSE) {
+              $attribute_value = $default_value;
+            }
+            else {
+              $default_value = $attribute_value;
+            }
+          }
 
           if ($ti_type == 'text_format' || $ti_type == 'textarea') {
             $default_value =  array();

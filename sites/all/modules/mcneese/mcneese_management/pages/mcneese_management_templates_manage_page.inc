@@ -234,6 +234,8 @@ function mcneese_management_templates_manage_edit_form($form, &$form_state, $tem
   $help_input_markup .= '<li><strong>serialized</strong>: When set to "1", loads and processes the default_value as a serialized string.</li>';
   $help_input_markup .= '<li><strong>has_alt</strong>: Provide a custom alt textfield for targets that support special alt text handling.</li>';
   $help_input_markup .= '<li><strong>has_title</strong>: Provide a custom title textfield for targets that support special title text handling.</li>';
+  $help_input_markup .= '<li><strong>default_value</strong>: Provide a default value, for now forms. This is made more dynamic by default_value_replace.</li>';
+  $help_input_markup .= '<li><strong>default_value_replace</strong>: Provide custom processing for the default value, currently only current_date is supported (default_value is now treated as an argument to PHP\'s date() function).</li>';
   $help_input_markup .= '</ul>';
   $help_input_markup .= '<br>';
   $help_input_markup .= "The following Template Input types are supported:" . '<br>';
