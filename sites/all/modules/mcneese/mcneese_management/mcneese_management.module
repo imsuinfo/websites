@@ -2544,6 +2544,12 @@ function mcneese_management_template_process_template_if($form, &$form_state, $t
     if (!is_numeric($left_value)) return FALSE;
     return $left_value != $right_value;
   }
+  elseif ($type == 'true') {
+    return $right_value === TRUE || $right_value == 1;
+  }
+  elseif ($type == 'false') {
+    return $right_value === FALSE || $right_value == 0;
+  }
 
   return FALSE;
 }

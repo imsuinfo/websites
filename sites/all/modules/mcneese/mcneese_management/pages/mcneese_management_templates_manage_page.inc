@@ -316,6 +316,8 @@ function mcneese_management_templates_manage_edit_form($form, &$form_state, $tem
   $help_if_markup .= '<li><strong>&lt;=</strong>: Check if the target (and the key) is less than or equal to the contents of the value attribute.</li>';
   $help_if_markup .= '<li><strong>==</strong>: Check if the target (and the key) is equal to the contents of the value attribute.</li>';
   $help_if_markup .= '<li><strong>!=</strong>: Check if the target (and the key) is not equal to the contents of the value attribute.</li>';
+  $help_if_markup .= '<li><strong>true</strong>: Check if the target (and the key) evaluates to TRUE (as a boolean value, or as a 1).</li>';
+  $help_if_markup .= '<li><strong>false</strong>: Check if the target (and the key) evaluates to FALSE (as a boolean value, or as a 0).</li>';
   $help_if_markup .= '</ul>';
   $help_if_markup .= '<br>';
   $help_if_markup .= 'Template If conditions do not support cardinality and are not currently input type aware at this time. You must specify the appropriate data location using the key attribute.';
