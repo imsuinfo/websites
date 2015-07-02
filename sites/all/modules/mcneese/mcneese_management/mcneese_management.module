@@ -2144,7 +2144,11 @@ function mcneese_management_template_process_form_state($form, &$form_state) {
 
       if (empty($name)) continue;
 
-      $target_inputs[$name] = $found_tag;
+      if (!isset($target_inputs[$name])) {
+        $target_inputs[$name] = array();
+      }
+
+      $target_inputs[$name][] = $found_tag;
 
       if ($target_multiple) {
         // when the target tag's cardinality > 1, only a single template input is allowed.
@@ -2237,13 +2241,15 @@ function mcneese_management_template_process_form_state($form, &$form_state) {
       unset($current_start);
     }
     else {
-      foreach ($target_inputs as $input_name => &$input_tag) {
-        if ($target_cardinality == 0) {
-          $status = mcneese_management_template_process_template_input_tag($form, $form_state, $target_tag, $target_tag_key, $input_tag, $input_name, $template_fields, $template_values);
-        }
-        else {
-          for ($cardinality_count = 0; $cardinality_count < $target_cardinality; $cardinality_count++) {
-            $status = mcneese_management_template_process_template_input_tag($form, $form_state, $target_tag, $target_tag_key, $input_tag, $input_name, $template_fields, $template_values, $cardinality_count);
+      foreach ($target_inputs as $input_name => &$input_tags) {
+        foreach ($input_tags as $input_tags_key => &$input_tag) {
+          if ($target_cardinality == 0) {
+            $status = mcneese_management_template_process_template_input_tag($form, $form_state, $target_tag, $target_tag_key, $input_tag, $input_name, $template_fields, $template_values);
+          }
+          else {
+            for ($cardinality_count = 0; $cardinality_count < $target_cardinality; $cardinality_count++) {
+              $status = mcneese_management_template_process_template_input_tag($form, $form_state, $target_tag, $target_tag_key, $input_tag, $input_name, $template_fields, $template_values, $cardinality_count);
+            }
           }
         }
       }
@@ -2573,7 +2579,7 @@ function mcneese_management_template_process_template_if($form, &$form_state, $t
  *
  * @see mcneese_management_template_process_form_state()
  */
-function mcneese_management_template_process_template_input_tag($form, &$form_state, $target_tag, $target_tag_key, $input_tag, $input_name, &$template_fields, &$template_values, $location = NULL) {
+function mcneese_management_template_process_template_input_tag($form, &$form_state, $target_tag, $target_tag_key, &$input_tag, $input_name, &$template_fields, &$template_values, $location = NULL) {
   if (!is_array($form)) {
     if (class_exists('cf_error')) {
       cf_error::invalid_array('form');
@@ -2753,11 +2759,16 @@ function mcneese_management_template_process_template_input_tag($form, &$form_st
 
       $new_tag = $form['targets_dom']['#value']->get_dom()->importNode($new_dom->get_body(), TRUE);
       $parent->insertBefore($new_tag, $input_tag);
+
+      unset($new_dom);
+      unset($new_tag);
     }
     else {
       $text = new DOMText();
       $text->appendData($field_value);
       $parent->insertBefore($text, $input_tag);
+
+      unset($text);
     }
 
     $parent = $input_tag->parentNode;
