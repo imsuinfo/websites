@@ -793,8 +793,8 @@ $conf['gpg-mail'] = array(
 /**
  * e-mail specific settings.
  */
-#$conf['mail_system'] = array('default-system' => 'DefaultMailSystem');
-$conf['mail_system'] = array('default-system' => 'McNeeseMail');
+$conf['mail_system'] = array('default-system' => 'DefaultMailSystem');
+#$conf['mail_system'] = array('default-system' => 'McNeeseMail');
 $conf['system_mail_id'] = 'wwwdev.mcneese.edu';
 $conf['system_mail_name'] = 'McNeese State University';
 
