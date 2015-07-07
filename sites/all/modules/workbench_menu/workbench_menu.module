@@ -399,7 +399,6 @@ function workbench_menu_process_path($url_path, $alter_breadcrumb = FALSE) {
     unset($cached_breadcrumb);
   }
 
-
   $last_alias = FALSE;
   $menus_in_path = array();
   $path_trail = array();
@@ -451,7 +450,6 @@ function workbench_menu_process_path($url_path, $alter_breadcrumb = FALSE) {
 
     $path_string['original'] .= '/';
   }
-
 
   // if there is no menu found, try to find a menu for the last alias in the path.
   if ($last_alias && $last_alias != $path_string['alias']) {
@@ -609,6 +607,7 @@ function workbench_menu_process_path($url_path, $alter_breadcrumb = FALSE) {
  * @param bool $skip_hidden
  *   When set to TRUE (default), the hidden menus are skipped.
  *   When set to FALSE, hidden menus are built.
+ *   When an array(), menu ids defined in this array are not skipped, all others are.
  *
  * @return array
  *   An array with the following structure:
@@ -633,7 +632,7 @@ function workbench_menu_build_menus($path_string, &$menus_processed, &$breadcrum
   $built_menus['breadcrumbs'] = array('built' => array(), 'path' => array());
 
   foreach ($menus as $menu_id => &$menu) {
-    if ($skip_hidden && $menu->hidden) {
+    if ((is_bool($skip_hidden) && $skip_hidden || is_array($skip_hidden) && !in_array($menu_id, $skip_hidden)) && $menu->hidden) {
       continue;
     }
 
@@ -834,7 +833,9 @@ function workbench_menu_build_menu_item($menu, $item, &$variables) {
       return array('structure' => array(), 'settings' => array());
     }
 
+    $field_id = NULL;
     if (cf_is_integer($field)) {
+      $field_id = $field;
       $item_menus = (array) workbench_menu_get_menus(array('id' => $field), 'id');
     }
     else {
@@ -842,6 +843,7 @@ function workbench_menu_build_menu_item($menu, $item, &$variables) {
 
       if ($matched > 0) {
         if (cf_is_integer($matches[1])) {
+          $field_id = $matches[1];
           $item_menus = (array) workbench_menu_get_menus(array('id' => $matches[1]), 'id');
         }
       }
@@ -859,14 +861,13 @@ function workbench_menu_build_menu_item($menu, $item, &$variables) {
     $item_menu = current($item_menus);
 
     // prevent infinite loops, only process menus once and do not process menus that point to self.
-    if ($menu->id == $field || array_key_exists($item_menu->id, $variables['menus_processed'])) {
+    if ((!is_null($field_id) && $menu->id == $field_id) || array_key_exists($item_menu->id, $variables['menus_processed'])) {
       return array('structure' => array(), 'settings' => array());
     }
 
     $variables['menus_processed'][$item_menu->id] = NULL;
-
     $breadcrumbs_temporary = FALSE;
-    $built_menus = workbench_menu_build_menus($item_menu->path, $variables['menus_processed'], $breadcrumbs_temporary, FALSE);
+    $built_menus = workbench_menu_build_menus($item_menu->path, $variables['menus_processed'], $breadcrumbs_temporary, array($item_menu->id));
     $data = array();
 
     if (isset($built_menus['structure'][$item_menu->weight][$item_menu->id])) {
