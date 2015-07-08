@@ -977,20 +977,17 @@ function workbench_menu_build_menu_item($menu, $item, &$variables) {
 
     if ($variables['use_normal_path']) {
       $bc_path = check_plain($item_menu_item_variables['parent_path']['normal']);
-      $item_menu_item_variables['breadcrumbs']['built'][] = '<a href="' . base_path() . $bc_path . '" class="workbench_menu-breadcrumb" title="' . $item_menu->breadcrumb_name . '">' . $item_menu->breadcrumb_name . '</a>';
-      $item_menu_item_variables['breadcrumbs']['path'][] = $bc_path;
-
-      $item_settings['breadcrumbs']['built'][] = '<a href="' . base_path() . $bc_path . '" class="workbench_menu-breadcrumb" title="' . $item_menu->breadcrumb_name . '">' . $item_menu->breadcrumb_name . '</a>';
-      $item_settings['breadcrumbs']['path'][] = $bc_path;
     }
     else {
       $bc_path = check_plain($item_menu_item_variables['parent_path']['alias']);
-      $item_menu_item_variables['breadcrumbs']['built'][] = '<a href="' . base_path() . $bc_path . '" class="workbench_menu-breadcrumb" title="' . $item_menu->breadcrumb_name . '">' . $item_menu->breadcrumb_name . '</a>';
-      $item_menu_item_variables['breadcrumbs']['path'][] = $bc_path;
-
-      $item_settings['breadcrumbs']['built'][] = '<a href="' . base_path() . $bc_path . '" class="workbench_menu-breadcrumb" title="' . $item_menu->breadcrumb_name . '">' . $item_menu->breadcrumb_name . '</a>';
-      $item_settings['breadcrumbs']['path'][] = $bc_path;
     }
+
+    $item_menu_item_variables['breadcrumbs']['built'][] = '<a href="' . base_path() . $bc_path . '" class="workbench_menu-breadcrumb" title="' . $item_menu->breadcrumb_name . '">' . $item_menu->breadcrumb_name . '</a>';
+    $item_menu_item_variables['breadcrumbs']['path'][] = $bc_path;
+
+    $item_settings['breadcrumbs']['built'][] = '<a href="' . base_path() . $bc_path . '" class="workbench_menu-breadcrumb" title="' . $item_menu->breadcrumb_name . '">' . $item_menu->breadcrumb_name . '</a>';
+    $item_settings['breadcrumbs']['path'][] = $bc_path;
+
 
     $history_stack = array();
     $current_stack = array_reverse($item_menu->items['nested'], TRUE);
