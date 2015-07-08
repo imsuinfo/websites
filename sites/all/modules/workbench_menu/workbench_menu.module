@@ -605,9 +605,12 @@ function workbench_menu_process_path($url_path, $alter_breadcrumb = FALSE) {
  *   breadcrumbs relate to.
  *   If FALSE, then breadcrumbs will not be populated.
  * @param bool $skip_hidden
- *   When set to TRUE (default), the hidden menus are skipped.
+ *   (optional) When set to TRUE (default), the hidden menus are skipped.
  *   When set to FALSE, hidden menus are built.
  *   When an array(), menu ids defined in this array are not skipped, all others are.
+ * @param array|false
+ *   (optional) An array of breadcrumbs to prepend to each generated breadcrumb.
+ *   This is used for when a menu is nested within another menu.
  *
  * @return array
  *   An array with the following structure:
@@ -618,7 +621,7 @@ function workbench_menu_process_path($url_path, $alter_breadcrumb = FALSE) {
  *
  * @see drupal_set_breadcrumb()
  */
-function workbench_menu_build_menus($path_string, &$menus_processed, &$breadcrumbs, $skip_hidden = TRUE) {
+function workbench_menu_build_menus($path_string, &$menus_processed, &$breadcrumbs, $skip_hidden = TRUE, $prepend_breadcrumbs = FALSE) {
   $menus = (array) workbench_menu_get_menus(array('path' => array($path_string)), 'id');
 
   $menu_even = TRUE;
@@ -681,10 +684,24 @@ function workbench_menu_build_menus($path_string, &$menus_processed, &$breadcrum
     }
 
     $bc_path = check_plain($path_to_use);
-    $top_level = array('<a href="' . base_path() . $bc_path . '" class="workbench_menu-breadcrumb" title="' . $menu->breadcrumb_name . '">' . $menu->breadcrumb_name . '</a>');
+
+    $breadcrumb_built = array();
+    $breadcrumb_path = array();
+    if (isset($prepend_breadcrumbs['built']) && is_array($prepend_breadcrumbs['built']) && isset($prepend_breadcrumbs['path']) && is_array($prepend_breadcrumbs['path'])) {
+      $breadcrumb_built = $prepend_breadcrumbs['built'];
+      $breadcrumb_built[] = '<a href="' . base_path() . $bc_path . '" class="workbench_menu-breadcrumb" title="' . $menu->breadcrumb_name . '">' . $menu->breadcrumb_name . '</a>';
+
+      $breadcrumb_path = $prepend_breadcrumbs['path'];
+      $breadcrumb_path[] = $bc_path;
+    }
+    else {
+      $breadcrumb_built[] = '<a href="' . base_path() . $bc_path . '" class="workbench_menu-breadcrumb" title="' . $menu->breadcrumb_name . '">' . $menu->breadcrumb_name . '</a>';
+      $breadcrumb_path[] = $bc_path;
+    }
+
     $breadcrumbs[$menu_path_normal] = array();
-    $breadcrumbs[$menu_path_normal]['built'] = $top_level;
-    $breadcrumbs[$menu_path_normal]['path'] = array($bc_path);
+    $breadcrumbs[$menu_path_normal]['built'] = $breadcrumb_built;
+    $breadcrumbs[$menu_path_normal]['path'] = $breadcrumb_path;
     unset($path_to_use);
 
     if (empty($menu->items['nested'])) {
@@ -703,8 +720,8 @@ function workbench_menu_build_menus($path_string, &$menus_processed, &$breadcrum
       $variables['menu_path']['normal'] = $menu_path_normal;
       $variables['menu_path']['alias'] = $menu_path_alias;
       $variables['breadcrumbs'] = array();
-      $variables['breadcrumbs']['built'] = $top_level;
-      $variables['breadcrumbs']['path'] = array($bc_path);
+      $variables['breadcrumbs']['built'] = $breadcrumb_built;
+      $variables['breadcrumbs']['path'] = $breadcrumb_path;
 
       $data = workbench_menu_build_menu_item($menu, $item, $variables);
 
@@ -866,10 +883,10 @@ function workbench_menu_build_menu_item($menu, $item, &$variables) {
     }
 
     $variables['menus_processed'][$item_menu->id] = NULL;
-    $breadcrumbs_temporary = FALSE;
-    $built_menus = workbench_menu_build_menus($item_menu->path, $variables['menus_processed'], $breadcrumbs_temporary, array($item_menu->id));
-    $data = array();
+    $breadcrumbs_temporary = array();
+    $built_menus = workbench_menu_build_menus($item_menu->path, $variables['menus_processed'], $breadcrumbs_temporary, array($item_menu->id), $variables['breadcrumbs']);
 
+    $data = array();
     if (isset($built_menus['structure'][$item_menu->weight][$item_menu->id])) {
       $data['structure'] = $built_menus['structure'][$item_menu->weight][$item_menu->id]['structure'];
       $data['settings'] = $built_menus['structure'][$item_menu->weight][$item_menu->id]['settings'];
