@@ -77,35 +77,6 @@ function template_preprocess_media_thumbnail(&$variables) {
 }
 
 /**
- * Field formatter for displaying a file as a large icon.
- */
-function theme_media_formatter_large_icon($variables) {
-  $file = $variables['file'];
-  $icon_dir = variable_get('media_icon_base_directory', 'public://media-icons') . '/' . variable_get('media_icon_set', 'default');
-  $icon = file_icon_path($file, $icon_dir);
-  $variables['path'] = $icon;
-
-  // theme_image() requires the 'alt' attribute passed as its own variable.
-  // @see http://drupal.org/node/999338
-  if (!isset($variables['alt']) && isset($variables['attributes']['alt'])) {
-    $variables['alt'] = $variables['attributes']['alt'];
-  }
-
-  // Add image height and width for the image theme functions.
-  if ($info = image_get_info($icon)) {
-    $variables += $info;
-  }
-
-  if ($variables['style_name']) {
-    $output = theme('image_style', $variables);
-  }
-  else {
-    $output = theme('image', $variables);
-  }
-  return $output;
-}
-
-/**
  * Field formatter for displaying a file link only (similar to file_link).
  * Does not display the file icon, unlike file_link.
  */
@@ -164,6 +135,35 @@ function theme_media_formatter_link_icon_after($variables) {
   }
 
   return theme_file_link($variables);
+}
+
+/**
+ * Field formatter for displaying a file as a large icon.
+ */
+function theme_media_formatter_large_icon($variables) {
+  $file = $variables['file'];
+  $icon_dir = variable_get('media_icon_base_directory', 'public://media-icons') . '/' . variable_get('media_icon_set', 'default');
+  $icon = file_icon_path($file, $icon_dir);
+  $variables['path'] = $icon;
+
+  // theme_image() requires the 'alt' attribute passed as its own variable.
+  // @see http://drupal.org/node/999338
+  if (!isset($variables['alt']) && isset($variables['attributes']['alt'])) {
+    $variables['alt'] = $variables['attributes']['alt'];
+  }
+
+  // Add image height and width for the image theme functions.
+  if ($info = image_get_info($icon)) {
+    $variables += $info;
+  }
+
+  if ($variables['style_name']) {
+    $output = theme('image_style', $variables);
+  }
+  else {
+    $output = theme('image', $variables);
+  }
+  return $output;
 }
 
 /**
