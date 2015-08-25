@@ -221,7 +221,7 @@ function workbench_access_uninstall() {
 
   variable_del('workbench_access');
   db_delete('variable')
-    ->condition('name', 'workbench_access_%', 'LIKE')
+    ->condition('name', 'workbench_access_%', 'ILIKE')
     ->execute();
 }
 
