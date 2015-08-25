@@ -312,7 +312,13 @@ function workbench_access_section_form($form, &$form_state) {
         '#tree' => TRUE,
       );
     }
-    $string = str_repeat('-', $section['depth']) . ' ' . check_plain($section['name']);
+
+    $tid_string = '';
+    if (is_numeric($section['access_id'])) {
+      $tid_string =  ' [tid: ' . $section['access_id'] . ']';
+    }
+
+    $string = str_repeat('-', $section['depth']) . ' ' . $section['name'] . $tid_string;
     $form['sections'][$parent][$section['access_id']] = array(
       '#type' => 'checkbox',
       '#title' => $section['depth'] == 0 ? t('All of @string', array('@string' => $string)): t('@string', array('@string' => $string)),
@@ -402,11 +408,7 @@ function workbench_access_user_form($form, &$form_state, $account) {
           $collapsed = FALSE;
         }
       }
-      // Do we show inactive sections here?
-      $tid_string = '';
-      if (is_numeric($section['access_id'])) {
-        $tid_string = ' [tid:' . $section['access_id'] . ']';
-      }
+
       if (!empty($active['active'][$section['access_id']])) {
         $display = TRUE;
       }
@@ -426,13 +428,20 @@ function workbench_access_user_form($form, &$form_state, $account) {
         );
       }
     }
+
+    // Do we show inactive sections here?
+    $tid_string = '';
+    if (is_numeric($section['access_id'])) {
+      $tid_string = ' [tid: ' . $section['access_id'] . ']';
+    }
+
     // Do we show inactive sections here?
     if (isset($active['active'][$section['access_id']])) {
       if (user_access('assign workbench access') && !empty($active['active'][$section['access_id']])) {
-        $string = str_repeat('-', $section['depth']) . ' ' . check_plain($section['name']);
+        $string = str_repeat('-', $section['depth']) . ' ' . $section['name'] . $tid_string;
         $form['sections'][$parent][$section['access_id']] = array(
           '#type' => 'checkbox',
-          '#title' => $section['depth'] == 0 ? t('All of @string', array('@string' => $string . $tid_string)): t('@string', array('@string' => $string . $tid_string)),
+          '#title' => $section['depth'] == 0 ? t('All of @string', array('@string' => $string)): t('@string', array('@string' => $string)),
           '#default_value' => isset($sections[$section['access_id']]),
           # '#disabled' => empty($sections[$section['access_id']]),
         );
@@ -560,7 +569,7 @@ function workbench_access_editors($access_type = NULL, $access_type_id = NULL, $
       }
       $tid_string = '';
       if (is_numeric($section['access_id'])) {
-        $tid_string = ' [tid:' . $section['access_id'] . ']';
+        $tid_string = ' [tid: ' . $section['access_id'] . ']';
       }
       // Nest the children so the user understands the hierarchy.
       if ($section['depth'] == 0 || !isset($active['active'][$section['parent']])) {
