@@ -2270,7 +2270,8 @@ function webform_block_view($delta = '') {
         '#node' => $node,
         '#sid' => $_SESSION['webform_confirmation'][$nid]['sid'],
       );
-    } elseif (strlen(trim(strip_tags($node->webform['confirmation'])))) {
+    } 
+    elseif (strlen(trim(strip_tags($node->webform['confirmation'])))) {
       // Display confirmation link drupal status messages, but in the block.
       $message = webform_replace_tokens($node->webform['confirmation'],
                                         $node,
@@ -2418,6 +2419,12 @@ function webform_client_form($form, &$form_state, $node, $submission = FALSE, $r
   form_load_include($form_state, 'inc', 'webform', 'includes/webform.components');
   form_load_include($form_state, 'inc', 'webform', 'includes/webform.submissions');
 
+  // For ajax requests, $form_state['values']['details'] is missing. Restore
+  // from storage, if available, for multi-page forms.
+  if (empty($form_state['values']['details']) && !empty($form_state['storage']['details'])) {
+    $form_state['values']['details'] = $form_state['storage']['details'];
+  }
+
   // If in a multi-step form, a submission ID may be specified in form state.
   // Load this submission. This allows anonymous users to use auto-save.
   if (empty($submission) && !empty($form_state['values']['details']['sid'])) {
@@ -2534,6 +2541,9 @@ function webform_client_form($form, &$form_state, $node, $submission = FALSE, $r
     // Allow values from other pages to be sent to browser for conditionals.
     $form['#conditional_values'] = $input_values;
 
+    // Allow components access to most up-to-date values.
+    $form_state['#conditional_values'] = $input_values;
+
     // For resuming a previous draft, find the next page after the last
     // validated page.
     if (!isset($form_state['storage']['page_num']) && $submission && $submission->is_draft && $submission->highest_valid_page) {
@@ -2550,11 +2560,11 @@ function webform_client_form($form, &$form_state, $node, $submission = FALSE, $r
         // Force a preview to avert an unintended submission via Next.
         $form_state['webform']['preview'] = TRUE;
         $form_state['webform']['page_count']++;
-        // The form hasn't been submitted (ever) and the preview code will
-        // expect $form_state['values']['submitted'] to be set from a previous
-        // submission, so provide these values here.
-        $form_state['values']['submitted'] = $input_values;
       }
+      // The form hasn't been submitted (ever) and the preview code will
+      // expect $form_state['values']['submitted'] to be set from a previous
+      // submission, so provide these values here.
+      $form_state['values']['submitted'] = $input_values;
       $form_state['storage']['submitted'] = $input_values;
     }
 
@@ -3283,6 +3293,9 @@ function webform_client_form_submit($form, &$form_state) {
   // exist, but webform_get_submission() will not find the draft. So, make a new
   // submission.
   if ($sid && $submission = webform_get_submission($node->webform['nid'], $sid)) {
+    // Store original data on object for use in update hook.
+    $submission->original = clone $submission;
+
     // Merge with new submission data. The + operator maintains numeric keys.
     // This maintains existing data with just-submitted data when a user resumes
     // a submission previously saved as a draft.
@@ -3323,6 +3336,11 @@ function webform_client_form_submit($form, &$form_state) {
     // No sid was found thus insert it in the dataabase.
     $form_state['values']['details']['sid'] = $sid = webform_submission_insert($node, $submission);
     $form_state['values']['details']['is_new'] = TRUE;
+
+    // Save the new details in storage. When ajax calls for file upload/remove,
+    // $form_state['values']['details'] is missing. This allows the proper
+    // submission to be retrieved in webform_client_form. See #2562703.
+    $form_state['storage']['details'] = $form_state['values']['details'];
 
     // Set a cookie including the server's submission time. The cookie expires
     // in the length of the interval plus a day to compensate for timezones.
@@ -4301,6 +4319,9 @@ function webform_variable_get($variable) {
     case 'webform_csv_delimiter':
       $result = variable_get('webform_csv_delimiter', '\t');
       break;
+    case 'webform_csv_line_ending':
+      $result = variable_get('webform_csv_line_ending', "\n");
+      break;
     case 'webform_export_wordwrap':
       $result = variable_get('webform_export_wordwrap', 0);
       break;
@@ -4449,7 +4470,7 @@ function webform_format_email_address($address, $name, $node = NULL, $submission
       if (webform_component_implements($component['type'], 'options')) {
         $options = webform_component_invoke($component['type'], 'options', $component);
         foreach ($name as &$one_name) {
-          $name = isset($options[$one_name]) ? $options[$one_name] : $name;
+          $one_name = isset($options[$one_name]) ? $options[$one_name] : $one_name;
         }
         unset($one_name); // Drop PHP reference.
       }
