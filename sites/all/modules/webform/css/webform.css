@@ -19,6 +19,11 @@ html.js input.webform-calendar {
 .webform-container-inline div.form-item {
   display: inline;
 }
+.webform-component-option-inline fieldset.form-item,
+.webform-component-option-inline div,
+.webform-component-option-inline div.form-item {
+  display: inline;
+}
 .webform-container-inline div.description {
   display: block;
 }
