@@ -1753,6 +1753,11 @@ function watchdog_exception($type, Exception $exception, $message = NULL, $varia
 function watchdog($type, $message, $variables = array(), $severity = WATCHDOG_NOTICE, $link = NULL) {
   global $user, $base_root;
 
+  // prevent non-arrays from being stored in watchdog logs
+  if (!is_array($variables)) {
+    $variables = array();
+  }
+
   static $in_error_state = FALSE;
 
   // It is possible that the error handling will itself trigger an error. In that case, we could
