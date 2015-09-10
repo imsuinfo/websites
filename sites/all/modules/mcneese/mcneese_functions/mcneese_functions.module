@@ -234,7 +234,7 @@ function mcneese_functions_embed_network_services_traffic($url_path, $cache_id =
   if (empty($markup)) {
     $webpage = cf_http_get_webpage($server_name, $url_path . '/index.html');
 
-    if ($webpage['read'] === TRUE && $webpage['http_error']['error_code'] == 0){
+    if ($webpage['read'] === TRUE && $webpage['http_error']['error_code'] == 0 && $webpage['socket_error']['code'] == 0){
       $document = cf_http_split_response($webpage['document']);
       $body = $document['dom']->get_body();
       cf_http_adjust_urls($document['dom'], $server_name, $url_path);
@@ -395,6 +395,9 @@ function mcneese_functions_embed_network_services_traffic($url_path, $cache_id =
     else {
       $markup = "An error occurred while loading the page." . '<br>';
       $error_detected = TRUE;
+      $save_to_cache = FALSE;
+
+      watchdog('ns_mcneese_edu-cache', "Failed to connect to ns.mcneese.edu, http error array = :http_error_array, socket error array = :socket_error_array", array(':http_error_array' => print_r($webpage['http_error'], TRUE), ':socket_error_array' => print_r($webpage['socket_error'], TRUE)), WATCHDOG_ERROR);
 
       if (isset($webpage['http_error']['error_code']) && $webpage['http_error']['error_code'] != 0){
         $markup .= "Error Code = " . check_plain($webpage['http_error']['error_code']) . '<br>';

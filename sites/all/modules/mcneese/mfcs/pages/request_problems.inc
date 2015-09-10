@@ -234,7 +234,7 @@ function mfcs_request_problems_0_users_form($form, &$form_state, $page_number = 
     $additional_operations = '';
 
     $problem_account = NULL;
-    foreach (array(MFCS_USER_PROBLEM_ACCOUNT_CREATE_BANNER_UNAVAILABLE, MFCS_USER_PROBLEM_ACCOUNT_SYNC_BANNER_UNAVAILABLE, MFCS_USER_PROBLEM_ACCOUNT_LOGIN_PROBLEMS_MULTIPLE) as $taxonomy_id) {
+    foreach (array(MFCS_USER_PROBLEM_ACCOUNT_CREATE_BANNER_UNAVAILABLE, MFCS_USER_PROBLEM_ACCOUNT_SYNC_BANNER_UNAVAILABLE, MFCS_USER_PROBLEM_ACCOUNT_LOGIN_PROBLEMS_MULTIPLE, MFCS_USER_PROBLEM_ACCOUNT_REVIEWER_NOT_ALLOWED, MFCS_USER_PROBLEM_ACCOUNT_DUPLICATES) as $taxonomy_id) {
       if (($problem->problems & $taxonomy_id) > 0) {
         if ($taxonomy_id == MFCS_USER_PROBLEM_ACCOUNT_CREATE_BANNER_UNAVAILABLE || $taxonomy_id == MFCS_USER_PROBLEM_ACCOUNT_SYNC_BANNER_UNAVAILABLE) {
           $additional_operations .= ' <a href="' . $base_path . 'requests/problems-0/users/resynchronize/' . $problem->user_id . $url_arguments . '" class="operation-link operation-link-resynchronize" title="Re-Synchronize the user\'s settings.">Re-Sync</a>';
@@ -512,6 +512,7 @@ function mfcs_request_problems_0_user_form($form, &$form_state, $problem_user_id
   unset($mfcs_users);
   $problem_user = user_load($problem_user_id);
 
+  global $user;
   global $base_path;
   global $mfcs_determined;
 
@@ -527,8 +528,16 @@ function mfcs_request_problems_0_user_form($form, &$form_state, $problem_user_id
     $user_name = $problem_user->field_user_first_name['und'][0]['safe_value'] . ' ' . $problem_user->field_user_last_name['und'][0]['safe_value'];
   }
 
+  $banner_id = NULL;
+  if (!empty($problem_user->field_user_banner_id['und'][0]['value']) && is_numeric($problem_user->field_user_banner_id['und'][0]['value'])) {
+    $banner_id = $problem_user->field_user_banner_id['und'][0]['value'];
+  }
+
   $page_title = "Facilities Use Problems: " . $user_name . "(id: " . $problem_user_id . ")";
   drupal_set_title($page_title);
+
+  $user_is_manager = user_access('mfcs manage', $user);
+  $user_is_administer = user_access('mfcs administer', $user);
 
 
   $form = array();
@@ -617,6 +626,31 @@ function mfcs_request_problems_0_user_form($form, &$form_state, $problem_user_id
         "This flag gets set when a user has multiple problems logging in or multiple failed attempts logging in.<br>\n" .
         "<br>\n" .
         "This system currently does not provide the details of these problems, but in the future it may.<br>\n",
+      'resettable' => TRUE,
+      'custom_action' => FALSE,
+    ),
+    MFCS_USER_PROBLEM_ACCOUNT_REVIEWER_NOT_ALLOWED => array(
+      'label' => "Unable to Assign Reviewer Role",
+      'explanation' =>
+        "This flag gets set when an attempt is made to assign or unassign the reviewer role to a user when there is no reference to that use as a venue coordinator or room coordinator.<br>\n" .
+        "<br>\n" .
+        "This may be caused by the banner database cache being out of date.<br>\n" .
+        "You may need to re-synchronizing the banner cache.<br>\n" .
+        "<br>\n" .
+        "If the user is not in banner, then ask a administrator to manually grant the review role for this user.<br>\n" .
+        "<br>\n" .
+        "Administrators, managers, and users without banner ids should not get this error.<br>\n",
+      'resettable' => TRUE,
+      'custom_action' => TRUE,
+      'custom_action-message' => "Re-process Reviewer Role."
+    ),
+    MFCS_USER_PROBLEM_ACCOUNT_DUPLICATES => array(
+      'label' => "Old/Duplicate Account",
+      'explanation' =>
+        "This flag gets set when a user has logged in and the <strong>LDAP</strong> has the <strong>isDuplicate</strong> flag set to <strong>TRUE</strong> and there is no primary account (or this is not the primary account).<br>\n" .
+        "<br>\n" .
+        "A specific account must be manually assigned by an administer to designate which account is the primary account.<br>\n",
+        "Only the primary account will be allowed access to this system.<br>\n",
       'resettable' => TRUE,
       'custom_action' => FALSE,
     ),
@@ -709,6 +743,26 @@ function mfcs_request_problems_0_user_form($form, &$form_state, $problem_user_id
       $form['problems'][$problem_id]['explanation'] = array(
         '#markup' => '<div class="problem-explanation problem-explanation-' . $problem_id . '">' . $problem_settings['explanation'] . '</div>' . "\n",
       );
+
+      // jira ticket: fcs-58.
+      if ($problem_id == MFCS_USER_PROBLEM_ACCOUNT_DUPLICATES) {
+        $all_accounts = mfcs_users_load_all_users_with_banner_id($banner_id);
+        if (!empty($all_accounts)) {
+          $form['problems'][$problem_id]['explanation']['#markup'] .= "<br>\n";
+          $form['problems'][$problem_id]['explanation']['#markup'] .= "The following accounts have the same banner id";
+
+          if ($user_is_manager || $user_is_administer) {
+            $form['problems'][$problem_id]['explanation']['#markup'] .= " (<strong>" . check_plain($banner_id) . "</strong>)";
+          }
+
+          $form['problems'][$problem_id]['explanation']['#markup'] .= ":\n<ul>\n";
+
+          foreach ($all_accounts as $account_id => $account_name) {
+            $form['problems'][$problem_id]['explanation']['#markup'] .= '<li><a href="' . $base_path . 'user/' . $account_id . $url_arguments . '">' . $account_name . '</a></li>' . "\n";
+          }
+          $form['problems'][$problem_id]['explanation']['#markup'] .= "</ul>\n<br>\n";
+        }
+      }
     }
   }
 
@@ -808,7 +862,9 @@ function mfcs_request_problems_0_user_form_submit($form, &$form_state) {
   foreach ($form['values']['problem_list']['#value'] as $problem_id => $problem_settings) {
     if ($problem_settings['resettable'] && array_key_exists($problem_id, $actions) && array_key_exists('reset', $actions[$problem_id])) {
       if ($actions[$problem_id]['reset'] == 1) {
-        $problems -= $problem_id;
+        if (($problems & $problem_id) > 0) {
+          $problems -= $problem_id;
+        }
         $perform_reset = TRUE;
       }
     }
@@ -842,7 +898,10 @@ function mfcs_request_problems_0_user_form_submit($form, &$form_state) {
         if (!empty($form['values']['problem_user']['#value']->field_user_banner_id['und'][0]['value']) && is_numeric($form['values']['problem_user']['#value']->field_user_banner_id['und'][0]['value'])) {
           $result = mfcs_synchronize_user_settings($form['values']['problem_user']['#value']);
           if ($result === TRUE) {
-            mfcs_save_user($form['values']['problem_user']['#value']->uid, array('problems' => ($form['values']['mfcs_user']['#value']->problems - $custom_action_id)));
+            if (($problems & $custom_action_id) > 0) {
+              $problems -= $custom_action_id;
+              mfcs_save_user($form['values']['problem_user']['#value']->uid, array('problems' => $problems));
+            }
           }
           else {
             form_set_error('form', "An error occurred while trying to synchronize the user settings. Please contact the support staff.");
@@ -851,6 +910,67 @@ function mfcs_request_problems_0_user_form_submit($form, &$form_state) {
             $form_state['rebuild'] = TRUE;
             $form_state['redirect'] = FALSE;
             $form_state['submitted'] = FALSE;
+          }
+        }
+      }
+      elseif ($custom_action_id == MFCS_USER_PROBLEM_ACCOUNT_REVIEWER_NOT_ALLOWED) {
+        // warning: the 'reviewer', 'manager', etc.. role names are assumed to be define in the system.
+        $reviewer_role_id = user_role_load_by_name('reviewer');
+        $manager_role_id = user_role_load_by_name('manager');
+        $administrator_role_id = user_role_load_by_name('administrator');
+        $bannerless_exception_role_id = user_role_load_by_name('bannerless exception');
+
+        // do not alter reviewer role settings for users with 'manager', 'administrator', or 'bannerless_exception' roles.
+        $process_reviewer_role = TRUE;
+        if (array_key_exists($manager_role_id->rid, $system_roles)) {
+          $process_reviewer_role = FALSE;
+        }
+        elseif (array_key_exists($administrator_role_id->rid, $system_roles)) {
+          $process_reviewer_role = FALSE;
+        }
+        elseif (array_key_exists($bannerless_exception_role_id->rid, $system_roles)) {
+          $process_reviewer_role = FALSE;
+        }
+
+        $changes_made = FALSE;
+        $system_roles = (array) $form['values']['problem_user']['#value']->roles;
+
+        if ($process_reviewer_role) {
+          $all_coordinators = mfcs_load_room_coordinators(NULL, TRUE);
+          if (array_key_exists($form['values']['problem_user']['#value']->uid, $all_coordinators)) {
+            if (!array_key_exists($reviewer_role_id->rid, $system_roles)) {
+              $system_roles[$reviewer_role_id->rid] = 'reviewer';
+              $changes_made = TRUE;
+            }
+          }
+          else {
+            if (array_key_exists($reviewer_role_id->rid, $system_roles)) {
+              unset($system_roles[$reviewer_role_id->rid]);
+              $changes_made = TRUE;
+            }
+          }
+        }
+
+        if ($changes_made) {
+          if (!user_save($form['values']['problem_user']['#value'],  array('roles' => $system_roles))) {
+            form_set_error('form', "An error occurred while trying to re-assign or re-unassign the manager role. Please contact the support staff.");
+            watchdog(MFCS_WATCHDOG_ID, "An error occurred while trying to re-assign or re-unassign the manager role, user: @user_id, problems: @problem_code.", array('@user_id' => $form['values']['mfcs_user']['#value']->user_id, $problems), WATCHDOG_ERROR);
+
+            $form_state['rebuild'] = TRUE;
+            $form_state['redirect'] = FALSE;
+            $form_state['submitted'] = FALSE;
+          }
+          else {
+            if (($problems & $custom_action_id) > 0) {
+              $problems -= $custom_action_id;
+              mfcs_save_user($form['values']['problem_user']['#value']->uid, array('problems' => $problems));
+            }
+          }
+        }
+        else {
+          if (($problems & $custom_action_id) > 0) {
+            $problems -= $custom_action_id;
+            mfcs_save_user($form['values']['problem_user']['#value']->uid, array('problems' => $problems));
           }
         }
       }
@@ -920,6 +1040,33 @@ function mfcs_request_problems_0_users_resynchronize($user_id) {
   $markup .= '</div>' . "\n";
 
   return $markup;
+}
+
+/**
+ * Return an array of user names who have the given banner id.
+ *
+ * jira ticket: fcs-58.
+ *
+ * @param string $banner_id
+ *   The banner id string.
+ *
+ * @return array
+ *   An array with the user ids as the key and the user names as the value.
+ */
+function mfcs_users_load_all_users_with_banner_id($banner_id) {
+  if (!is_string($banner_id) && !is_numeric($banner_id)) {
+    return array();
+  }
+
+  $names = array();
+
+  $query = db_query('select u.uid as uid, u.name as name from field_data_field_user_banner_id fdfubi inner join users u on fdfubi.entity_id = u.uid where field_user_banner_id_value = :banner_id', array(':banner_id' => $banner_id));
+  $results = $query->fetchAll();
+  foreach ($results as $result) {
+    $names[$result->uid] = $result->name;
+  }
+
+  return $names;
 }
 
 /**
