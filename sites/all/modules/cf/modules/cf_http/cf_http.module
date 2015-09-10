@@ -620,7 +620,7 @@ function cf_http_get_webpage($server, $path, $port = 80, $headers = "Accept-Enco
 
   $result = cf_http_get_response($server, $path, $port, $headers, $timeout, $buffer);
 
-  if (isset($results['socket_error'])) {
+  if (isset($result['socket_error'])) {
     $results['socket_error'] = $result['socket_error'];
   }
 
