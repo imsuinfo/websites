@@ -126,16 +126,6 @@ function media_wysiwyg_pre_render_text_format($element) {
   // Add filter handling.
   $element['#attached']['js'][] = drupal_get_path('module', 'media_wysiwyg') . '/js/media_wysiwyg.filter.js';
 
-  // Add CKEditor-specific JS.
-  if (module_exists('ckeditor')) {
-    $element['#attached']['js'][] = array(
-      'data' => drupal_get_path('module', 'media_wysiwyg') . '/wysiwyg_plugins/media_ckeditor/library.js',
-      'type' => 'file',
-      'scope' => 'footer',
-      'weight' => -20,
-    );
-  }
-
   return $element;
 }
 
