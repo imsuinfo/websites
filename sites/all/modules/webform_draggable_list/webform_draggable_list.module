@@ -117,12 +117,12 @@ function theme_draggable_list($variables) {
   if ($form['#webform_component']['extra']['hide_toggle']) {
     drupal_add_css("#{$form['#wrapper_id']} .tabledrag-toggle-weight-wrapper { display:none !important; }", array('type' => 'inline'));
   }
-  setrawcookie(
-    'Drupal.tableDrag.showWeight',
-    rawurlencode($form['#webform_component']['extra']['show_weight']),
-    REQUEST_TIME + 31536000,
-    base_path()
-  );
+  #setrawcookie(
+  #  'Drupal.tableDrag.showWeight',
+  #  rawurlencode($form['#webform_component']['extra']['show_weight']),
+  #  REQUEST_TIME + 31536000,
+  #  base_path()
+  #);
   $rows = $form['#draggable_list_rows'];
   $draggable = $form['#draggable_list_draggable'];
   $i = 0;
