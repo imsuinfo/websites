@@ -27,7 +27,7 @@ function _webform_defaults_draggable_list() {
   $defaults =  array(
     'name' => '',
     'form_key' => NULL,
-    'mandatory' => 0,
+    'required' => 0,
     'pid' => 0,
     'weight' => 0,
     'extra' => array(
