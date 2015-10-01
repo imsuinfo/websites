@@ -222,8 +222,10 @@ function webform_submission_delete($node, $submission) {
  * @param $emails
  *   (optional) An array of specific e-mail settings to be used. If omitted, all
  *   e-mails in $node->webform['emails'] will be sent.
+ * @param $manual
+ *   (optional) Manually send e-mails and do not process conditionals.
  */
-function webform_submission_send_mail($node, $submission, $emails = NULL) {
+function webform_submission_send_mail($node, $submission, $emails = NULL, $manual = FALSE) {
   global $user;
 
   // force the conditionals to be loaded so that webform_conditional_operators() may be called below.
@@ -236,7 +238,7 @@ function webform_submission_send_mail($node, $submission, $emails = NULL) {
   $dont_emails = array();
   $operators = webform_conditional_operators();
 
-  if (!empty($node->webform['conditionals'])) {
+  if ($manual === FALSE && !empty($node->webform['conditionals'])) {
     $operators = webform_conditional_operators();
     $components = $node->webform['components'];
     foreach ($node->webform['conditionals'] as $conditional) {
@@ -318,7 +320,7 @@ function webform_submission_send_mail($node, $submission, $emails = NULL) {
       continue;
     }
 
-    if (isset($email['extra']['send_email']) && $email['extra']['send_email'] != 'always') {
+    if ($manual === FALSE && isset($email['extra']['send_email']) && $email['extra']['send_email'] != 'always') {
       if ($email['extra']['send_email'] == 'default_disabled') {
         $email_address = NULL;
         if (array_key_exists($email['email'], $send_emails) && !array_key_exists($email['email'], $dont_emails)) {
@@ -677,7 +679,7 @@ function webform_submission_resend_submit($form, &$form_state) {
       $emails[] = $form['#node']->webform['emails'][$eid];
     }
   }
-  $sent_count = webform_submission_send_mail($node, $submission, $emails);
+  $sent_count = webform_submission_send_mail($node, $submission, $emails, TRUE);
   if ($sent_count) {
     drupal_set_message(format_plural($sent_count,
       'Successfully re-sent submission #@sid to 1 recipient.',
