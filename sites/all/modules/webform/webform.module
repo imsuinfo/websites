@@ -615,6 +615,12 @@ function webform_submission_access($node, $submission, $op = 'view', $account = 
 
   $token_access = $submission && isset($_GET['token']) && $_GET['token'] == webform_get_submission_access_token($submission);
 
+  // If access is granted via a token, then allow subsequent submission access
+  // for anonymous users.
+  if (!$user->uid && $token_access) {
+    $_SESSION['webform_submission'][$submission->sid] = $node->nid;
+  }
+
   $general_access = $access_all || $access_own_submission || $access_node_submissions || $token_access;
 
   // Disable the page cache for anonymous users in this access callback,
@@ -3355,7 +3361,7 @@ function webform_client_form_submit($form, &$form_state) {
     // Save session information about this submission for anonymous users,
     // allowing them to access or edit their submissions.
     if (!$user->uid && user_access('access own webform submissions')) {
-      $_SESSION['webform_submission'][$form_state['values']['details']['sid']] = $node->nid;
+      $_SESSION['webform_submission'][$sid] = $node->nid;
     }
   }
   else {
@@ -3749,30 +3755,38 @@ function theme_webform_element($variables) {
   $prefix = isset($element['#field_prefix']) ? '<span class="field-prefix">' . webform_filter_xss($element['#field_prefix']) . '</span> ' : '';
   $suffix = isset($element['#field_suffix']) ? ' <span class="field-suffix">' . webform_filter_xss($element['#field_suffix']) . '</span>' : '';
 
+  // Generate description for above or below the field.
+  $above = !empty($element['#webform_component']['extra']['description_above']);
+  $description = array(
+    FALSE => '',
+    TRUE => !empty($element['#description']) ? ' <div class="description">' . $element['#description'] . "</div>\n" : '',
+  );
+
   switch ($element['#title_display']) {
     case 'inline':
+      $output .= $description[$above];
+      $description[$above] = '';
+      // FALL THRU.
     case 'before':
     case 'invisible':
       $output .= ' ' . theme('form_element_label', $variables);
-      $output .= ' ' . $prefix . $element['#children'] . $suffix . "\n";
+      $output .= ' ' . $prefix . $description[$above] . $element['#children'] . $suffix . "\n";
       break;
 
     case 'inline_right':
     case 'after':
-      $output .= ' ' . $prefix . $element['#children'] . $suffix;
+      $output .= ' ' . $prefix . $description[$above] . $element['#children'] . $suffix;
       $output .= ' ' . theme('form_element_label', $variables) . "\n";
       break;
 
     case 'none':
     case 'attribute':
       // Output no label and no required marker, only the children.
-      $output .= ' ' . $prefix . $element['#children'] . $suffix . "\n";
+      $output .= ' ' . $prefix . $description[$above] . $element['#children'] . $suffix . "\n";
       break;
   }
 
-  if (!empty($element['#description'])) {
-    $output .= ' <div class="description">' . $element['#description'] . "</div>\n";
-  }
+  $output .= $description[!$above];
 
   if ($wrap_with_fieldset) {
     $output .= "</fieldset>\n";
