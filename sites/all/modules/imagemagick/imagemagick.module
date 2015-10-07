@@ -422,20 +422,24 @@ function image_imagemagick_get_info(stdClass $image) {
   }
 
   if (isset($data) && is_array($data)) {
-    $extensions = array('1' => 'gif', '2' => 'jpg', '3' => 'png');
-    $extension = isset($data[2]) && isset($extensions[$data[2]]) ?  $extensions[$data[2]] : '';
+    if (empty($data['extension'])) {
+      $extensions = array('1' => 'gif', '2' => 'jpg', '3' => 'png');
+      $extension = isset($data[2]) && isset($extensions[$data[2]]) ?  $extensions[$data[2]] : '';
 
-    if (empty($extension)) {
-      $extension = strrchr(basename($image->source), '.');
-      if (!empty($extension)) {
-        $extension = str_replace('.', '', $extension);
+      if (empty($extension)) {
+        $extension = strrchr(basename($image->source), '.');
+        if (!empty($extension)) {
+          $extension = str_replace('.', '', $extension);
+        }
       }
+
+      $data['extension'] = $extension;
     }
 
     $details = array(
       'width'     => $data[0],
       'height'    => $data[1],
-      'extension' => $extension,
+      'extension' => $data['extension'],
       'mime_type' => $data['mime'],
     );
   }
