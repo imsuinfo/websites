@@ -606,13 +606,10 @@ function _imagemagick_convert_exec($command_args, &$output = NULL, &$error = NUL
         $error = t('No error message.');
       }
       // Format $error with as full message, passed by reference.
-      $error = t('ImageMagick error @code: !error', array(
+      watchdog('imagemagick', 'ImageMagick error @code: !error', array(
         '@code' => $return_code,
         '!error' => $error,
-      ));
-      // @todo Use watchdog() instead? Would hide errors from users during
-      //   normal operation, regeardless of error_level setting.
-      trigger_error($error, E_USER_ERROR);
+      ), WATCHDOG_ERROR);
       // ImageMagick exited with an error code, return it.
       return $return_code;
     }
