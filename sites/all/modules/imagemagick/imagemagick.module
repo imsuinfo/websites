@@ -394,7 +394,10 @@ function image_imagemagick_get_info(stdClass $image) {
         $filepath = drupal_tempnam('temporary://', 'imagemagick');
         if (empty($filepath)) return FALSE;
 
+        // create a tempfile with an extension so that image formats that lack headers (such as ico) can use the extension to tell the tool what file type to expect.
+        // drupal_tempnam() creates the file, so delete the file and manually create a new one under the new name.
         if (!empty($extension)) {
+          unlink($filepath);
           $filepath .= '.' . $extension;
         }
 
@@ -461,42 +464,24 @@ function _imagemagick_convert($source, $destination, $args) {
   $unlink = FALSE;
 
   if (!file_exists($source)) {
+    $extension = strrchr(basename($source_original), '.');
     $unlink = TRUE;
     $source = drupal_tempnam('temporary://', 'imagemagick');
 
+    // create a tempfile with an extension so that image formats that lack headers (such as ico) can use the extension to tell the tool what file type to expect.
+    // drupal_tempnam() creates the file, so delete the file and manually create a new one under the new name.
+    if (!empty($extension)) {
+      unlink($source);
+      $source .= '.' . $extension;
+    }
+
     if (empty($source)) {
+      $extension = '.' . $extension;
       return FALSE;
     }
 
     $source = drupal_realpath($source);
-
-    $fhr = fopen($source_original, 'rb');
-
-    if ($fhr === FALSE) {
-      return FALSE;
-    }
-
-    $fhw = fopen($source, 'w');
-
-    if ($fhr === FALSE) {
-      fclose($fhr);
-      return FALSE;
-    }
-
-    $chunk_size = 131072;
-
-    if (function_exists('stream_set_chunk_size')) {
-      stream_set_chunk_size($fhr, $chunk_size);
-      stream_set_chunk_size($fhw, $chunk_size);
-    }
-
-    while (!feof($fhr)) {
-      fwrite($fhw, fread($fhr, $chunk_size), $chunk_size);
-      fflush($fhw);
-    }
-
-    fclose($fhr);
-    fclose($fhw);
+    copy($source_original, $source);
   }
 
   $args['quality'] = '-quality ' . escapeshellarg(variable_get('imagemagick_quality', 75));
