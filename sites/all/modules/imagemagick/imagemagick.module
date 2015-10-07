@@ -357,43 +357,62 @@ function image_imagemagick_get_info(stdClass $image) {
     }
   }
 
-  if (empty($data)) {
+  if (empty($data) || !isset($data['width']) || $data['width'] == 0 || !isset($data['height']) || $data['height'] == 0) {
     $realpath = drupal_realpath($image->source);
     $stream_is_not_local = FALSE;
 
-    if (file_exists($realpath)) {
-      $size = filesize($realpath);
+    if (empty($data)) {
+      if (file_exists($realpath)) {
+        $size = filesize($realpath);
 
-      if ($size > 0) {
+        if ($size > 0) {
+          $data = @getimagesize($realpath);
+        }
+      }
+      elseif (!stream_is_local($image->source)) {
         $data = @getimagesize($realpath);
+        $stream_is_not_local = TRUE;
       }
     }
-    elseif (!stream_is_local($image->source)) {
-      $data = @getimagesize($realpath);
-      $stream_is_not_local = TRUE;
+    else {
+      if (!stream_is_local($image->source)) {
+        $stream_is_not_local = TRUE;
+      }
     }
 
+
     // Many tools may still generate invalid jpeg images, try to identify and resolve an issue with invalid jpeg images, the hard way.
-    if (empty($data)) {
+    if (empty($data) || !isset($data['width']) || $data['width'] == 0 || !isset($data['height']) || $data['height'] == 0) {
+      $extension = strrchr(basename($image->source), '.');
+      if (!empty($extension)) {
+        $extension = str_replace('.', '', $extension);
+      }
+
+      $filepath = $realpath;
+
       if ($stream_is_not_local) {
         $filepath = drupal_tempnam('temporary://', 'imagemagick');
         if (empty($filepath)) return FALSE;
 
+        if (!empty($extension)) {
+          $filepath .= '.' . $extension;
+        }
+
         $filepath = drupal_realpath($filepath);
         copy($image->source, $filepath);
-      }
-      else {
-        $filepath = $realpath;
       }
 
       $output = exec('identify ' . escapeshellarg($filepath));
       preg_match('/([0-9]*)x([0-9]*)\+[0-9]*\+[0-9]/', $output, $matches);
       if(count($matches) == 3){
-        $data = array();
+        if (empty($data)) {
+          $mimetype = $data['mime_type'];
+          $data = array();
+          $data['mime'] = $mimetype;
+          $data['extension'] = $extension;
+        }
         $data[0] = $matches[1];
         $data[1] = $matches[2];
-        $data['mime'] = '';
-        $data['extension'] = '';
       }
 
       if ($stream_is_not_local && file_exists($filepath)) {
@@ -405,6 +424,14 @@ function image_imagemagick_get_info(stdClass $image) {
   if (isset($data) && is_array($data)) {
     $extensions = array('1' => 'gif', '2' => 'jpg', '3' => 'png');
     $extension = isset($data[2]) && isset($extensions[$data[2]]) ?  $extensions[$data[2]] : '';
+
+    if (empty($extension)) {
+      $extension = strrchr(basename($image->source), '.');
+      if (!empty($extension)) {
+        $extension = str_replace('.', '', $extension);
+      }
+    }
+
     $details = array(
       'width'     => $data[0],
       'height'    => $data[1],
