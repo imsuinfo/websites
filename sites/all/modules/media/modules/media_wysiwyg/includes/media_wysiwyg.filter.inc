@@ -190,6 +190,16 @@ function media_wysiwyg_token_to_markup($match, $wysiwyg = FALSE) {
     drupal_add_js(array('mediaDataMap' => array($file->fid => $data)), 'setting');
     $element['#attributes']['data-fid'] = $file->fid;
     $element['#attributes']['data-media-element'] = '1';
+
+    if (!is_array($element['#attributes']['class'])) {
+      if (is_string($element['#attributes']['class'])) {
+        $element['#attributes']['class'] = array($element['#attributes']['class']);
+      }
+      else {
+        $element['#attributes']['class'] = array();
+      }
+    }
+
     $element['#attributes']['class'][] = 'media-element';
   }
   else {
