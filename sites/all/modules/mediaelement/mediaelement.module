@@ -123,7 +123,7 @@ function mediaelement_field_formatter_view($entity_type, $entity, $field, $insta
     $element[$delta] = array(
       '#attributes' => array(
         'src' => file_create_url($src),
-        'class' => $class,
+        'class' => array($class),
       ),
       '#settings' => $settings,
       '#attached' => array(
