@@ -860,6 +860,7 @@ $conf['feed_all_blacklist'] = array(
 $conf['error_document_file_403'] = '/var/www/error_documents/4xx/wwwdev2/403.html';
 $conf['error_document_file_404'] = '/var/www/error_documents/4xx/wwwdev2/404.html';
 $conf['error_document_file_500'] = '/var/www/error_documents/5xx/wwwdev2/500.html';
+$conf['error_document_file_503'] = '/var/www/error_documents/5xx/wwwdev2/503.html';
 #$conf['error_document_custom_menu_1_logged_in'] = NULL;
 #$conf['error_document_custom_menu_2_logged_in'] = NULL;
 $conf['error_document_load_blocks'] = TRUE;
