@@ -102,9 +102,27 @@ elseif ($arguments_count > 5 && $arguments[0] == 'files' && $arguments[1] == 'st
           $filename = $filename[0]->filename;
         }
 
-        if (strcmp($filename, rawurldecode($arguments[7])) !== 0) {
-          $filename = FALSE;
+        $argument_7 = rawurldecode($arguments[7]);
+        if (strcasecmp($filename, $argument_7) !== 0) {
+          // the filenames don't match, try checking drupals database for a match.
+          try {
+            $query = db_select('file_managed', 'fm');
+            $query->fields('fm');
+            $query->condition('fm.filename', db_like($argument_7), 'ILIKE');
+            $found = (array) $query->execute()->fetchAssoc();
+          }
+          catch (Exception $ex) {
+            drupal_bootstrap(DRUPAL_BOOTSTRAP_FULL);
+            watchdog('File DB', "Failed to select on file_managed to match the internal name :name to the requested name :argument_7", array(':name' => $filename, ':argument_7' => $argument_7), WATCHDOG_ERROR);
+            drupal_not_found();
+            drupal_exit();
+          }
+
+          if (empty($found['uri'])) {
+            $filename = FALSE;
+          }
         }
+        unset($argument_7);
       }
       else {
         $filename = FALSE;
