@@ -44,6 +44,7 @@ drupal_bootstrap(DRUPAL_BOOTSTRAP_CONFIGURATION);
 
 $uri = _drupal_root_get_uri();
 $arguments = (array) explode('/', $uri);
+$arguments_count = count($arguments);
 
 if (isset($arguments[0]) && $arguments[0] == 'f') {
   try {
@@ -64,21 +65,62 @@ if (isset($arguments[0]) && $arguments[0] == 'f') {
     throw $e;
   }
 }
-elseif (count($arguments) > 5 && $arguments[0] == 'files' && $arguments[1] == 'styles') {
+elseif ($arguments_count > 5 && $arguments[0] == 'files' && $arguments[1] == 'styles') {
+  // if the count is greater than 8, then the url is not possibly valid.
+  if ($arguments_count > 8) {
+    unset($uri);
+    unset($arguments);
+    drupal_bootstrap(DRUPAL_BOOTSTRAP_FULL);
+    drupal_not_found();
+    drupal_exit();
+  }
+
   drupal_bootstrap(DRUPAL_BOOTSTRAP_FULL);
   $dbu_or_dbr = FALSE;
+  $association = NULL;
 
   if (function_exists('mcneese_file_db_generate_image_style')) {
     if (class_exists('mcneese_file_db_unrestricted_stream_wrapper') && $arguments[3] == mcneese_file_db_unrestricted_stream_wrapper::SCHEME) {
       $dbu_or_dbr = TRUE;
+      $association = 'mcneese_file_db_unrestricted';
     }
     elseif (class_exists('mcneese_file_db_restricted_stream_wrapper') && $arguments[3] == mcneese_file_db_restricted_stream_wrapper::SCHEME) {
       $dbu_or_dbr = TRUE;
+      $association = 'mcneese_file_db_restricted';
     }
   }
 
   if ($dbu_or_dbr) {
     if ($arguments[4] == MCNEESE_FILE_DB_FILE_PATH && ($arguments[5] == MCNEESE_FILE_DB_PATH_BY_HASH || $arguments[5] == MCNEESE_FILE_DB_PATH_BY_ID || $arguments[5] == MCNEESE_FILE_DB_PATH_BY_FID)) {
+      $filename = mcneese_file_db_get_filename($arguments[6], $association, $arguments[5]);
+      if (isset($filename[0])) {
+
+        if (!empty($filename[0]->extension)) {
+          $filename = $filename[0]->filename . '.' . $filename[0]->extension;
+        }
+        else {
+          $filename = $filename[0]->filename;
+        }
+
+        if (strcmp($filename, rawurldecode($arguments[7])) !== 0) {
+          $filename = FALSE;
+        }
+      }
+      else {
+        $filename = FALSE;
+      }
+
+      if (!$filename) {
+        unset($filename);
+        unset($uri);
+        unset($arguments);
+        unset($association);
+        drupal_bootstrap(DRUPAL_BOOTSTRAP_FULL);
+        drupal_not_found();
+        drupal_exit();
+      }
+      unset($filename);
+
       mcneese_file_db_generate_image_style($arguments);
     }
     elseif ($arguments[3] == 'public') {
@@ -120,6 +162,7 @@ elseif (count($arguments) > 5 && $arguments[0] == 'files' && $arguments[1] == 's
 
   unset($uri);
   unset($arguments);
+  unset($association);
   menu_execute_active_handler();
 }
 elseif (isset($arguments[0]) && $arguments[0] == 'files' || isset($arguments[3]) && $arguments[3] == 'files') {
