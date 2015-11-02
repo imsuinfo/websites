@@ -681,8 +681,8 @@ $conf['file_temporary_path'] = '/var/www/webfiles/temporary/www';
  */
 $conf['role_php_ini'] = array();
 $conf['role_php_ini']['memory_limit'] = array('1' => '192M', '2' => '256M', '3' => '512M');
-$conf['role_php_ini']['max_execution_time'] = array('1' => '45', '2' => '60', '3' => '90');
-$conf['role_php_ini']['max_input_time'] = array('1' => '45', '2' => '60', '3' => '90');
+$conf['role_php_ini']['max_execution_time'] = array('1' => '60', '2' => '75', '3' => '105');
+$conf['role_php_ini']['max_input_time'] = array('1' => '60', '2' => '75', '3' => '105');
 $conf['role_php_ini']['include_path'] = array('1' => '/var/www/drupal/www:/usr/local/lib/php', '2' => '/var/www/drupal/www:/usr/local/lib/php');
 
 $conf['user_php_ini'] = array();

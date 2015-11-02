@@ -681,8 +681,8 @@ $conf['file_temporary_path'] = '/var/www/webfiles/temporary/wwwdev';
  */
 $conf['role_php_ini'] = array();
 $conf['role_php_ini']['memory_limit'] = array('1' => '192M', '2' => '256M', '3' => '512M');
-$conf['role_php_ini']['max_execution_time'] = array('1' => '45', '2' => '60', '3' => '90');
-$conf['role_php_ini']['max_input_time'] = array('1' => '45', '2' => '60', '3' => '90');
+$conf['role_php_ini']['max_execution_time'] = array('1' => '60', '2' => '75', '3' => '105');
+$conf['role_php_ini']['max_input_time'] = array('1' => '60', '2' => '75', '3' => '105');
 $conf['role_php_ini']['include_path'] = array('1' => '/var/www/drupal/wwwdev:/usr/local/lib/php', '2' => '/var/www/drupal/wwwdev:/usr/local/lib/php');
 
 $conf['user_php_ini'] = array();
@@ -878,3 +878,6 @@ ini_set('display_startup_errors', TRUE);
 
 // disable the front page featured region
 #$conf['disable_frontpage_featured'] = TRUE;
+
+// stop that annoying connection error
+#$conf['drupal_http_request_fails'] = FALSE;
