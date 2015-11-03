@@ -876,3 +876,7 @@ ini_set('display_startup_errors', TRUE);
 
 // disable the front page featured region
 #$conf['disable_frontpage_featured'] = TRUE;
+
+// turn off opcache for this site.
+ini_set('opcache.enable', FALSE);
+ini_set('opcache.enable_cli', FALSE);

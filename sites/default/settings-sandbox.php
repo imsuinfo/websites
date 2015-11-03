@@ -876,3 +876,7 @@ $conf['error_document_load_blocks'] = TRUE;
 
 // disable the front page featured region
 #$conf['disable_frontpage_featured'] = TRUE;
+
+// turn off opcache for this site.
+#ini_set('opcache.enable', FALSE);
+#ini_set('opcache.enable_cli', FALSE);

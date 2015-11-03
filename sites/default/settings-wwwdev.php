@@ -881,3 +881,7 @@ ini_set('display_startup_errors', TRUE);
 
 // stop that annoying connection error
 #$conf['drupal_http_request_fails'] = FALSE;
+
+// turn off opcache for this site.
+ini_set('opcache.enable', FALSE);
+ini_set('opcache.enable_cli', FALSE);
