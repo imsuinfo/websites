@@ -266,7 +266,7 @@ function mfcs_workflow_set_status($request_id, $status, $user = NULL, $extra = a
         $query->condition('id', $request_id);
         $query->condition('date', $instance);
         $query->condition('user_id', $user->uid);
-        $query->fields($mfcs_requests);
+        $query->fields($mfcs_request_revisions);
         $query->execute();
       }
     }
@@ -280,6 +280,158 @@ function mfcs_workflow_set_status($request_id, $status, $user = NULL, $extra = a
 
     $query = db_insert('mfcs_field_top_status');
     $query->fields($mfcs_field_top_status);
+    $query->execute();
+
+    $query = db_update('mfcs_current');
+    $query->condition('request_id', $request_id);
+    $query->fields($mfcs_current);
+    $query->execute();
+
+    // enforce transaction execution
+    unset($transaction);
+  }
+  catch (Exception $ex) {
+    $transaction->rollback();
+    cf_error::on_query_execution($ex);
+
+    return FALSE;
+  }
+
+  // reset the cached request object
+  mfcs_load_request_by_id($request_id, FALSE);
+
+  return TRUE;
+}
+
+/**
+ * Assign a new venue coordinator to a given request.
+ *
+ * @param int $request_id
+ *   The id of the given request.
+ * @param int $venue_coordinator_id
+ *   The new venue coordinator id to assign to the request.
+ * @param object|null $user
+ *   (optional) If specified, the user to log this change as.
+ * @param array $extra
+ *   (optional) Additional information to save. This is used for the revision
+ *   log message and signature.
+ *
+ * @return bool
+ *   TRUE on success, FALSE otherwise.
+ */
+function mfcs_workflow_set_venue_coordinator($request_id, $venue_coordinator_id, $user = NULL, $extra = array()) {
+  $request = mfcs_load_request_by_id($request_id);
+
+  if (empty($request)) {
+    return FALSE;
+  }
+
+  if (!cf_is_integer($venue_coordinator_id)) {
+    cf_error::invalid_integer('venue_coordinator_id');
+    return FALSE;
+  }
+
+  if (is_null($user)) {
+    $user = cf_current_user();
+  }
+
+  if (!is_object($user)) {
+    cf_error::invalid_object('user');
+    return FALSE;
+  }
+
+  if (!is_array($extra)) {
+    cf_error::invalid_array('extra');
+    return FALSE;
+  }
+
+  $venue_coordinator = mfcs_load_basic_user_settings_by_user_id($venue_coordinator_id);
+  if (!is_array($venue_coordinator)) {
+    watchdog(MFCS_WATCHDOG_ID, "%venue_coordinator is not a valid user id.", array('%venue_coordinator' => $venue_coordinator_id), WATCHDOG_ERROR);
+    return FALSE;
+  }
+
+  $instance = mfcs_instance();
+
+  $mfcs_requests = array(
+    'updated' => $instance,
+    'venue_coordinator' => $venue_coordinator_id,
+  );
+
+  $request_revision = mfcs_load_request_revision_number($request_id);
+  $processed_mfcs_request_revisions = &drupal_static('processed_mfcs_request_revisions_' . $instance . '_' . $user->uid . '_' . $request_id, FALSE);
+
+  if ($request_revision === FALSE) {
+    watchdog(MFCS_WATCHDOG_ID, "Failed to load revision number for request %request_id.", array('%request_id' => $request_id), WATCHDOG_ERROR);
+    return FALSE;
+  }
+  elseif (is_null($request_revision)) {
+    $request_revision_next = 0;
+  }
+  else {
+    $request_revision_next = $request_revision + 1;
+  }
+
+  $mfcs_request_revisions = array(
+    'request_id' => $request_id,
+    'date' => $instance,
+    'revision' => $request_revision_next,
+    'user_id' => $user->uid,
+  );
+
+  $revisions_has_extras = FALSE;
+  if (!empty($extra['revisions']['message'])) {
+    $mfcs_request_revisions['message'] = $extra['revisions']['message'];
+    $revisions_has_extras = TRUE;
+  }
+
+  if (!empty($extra['revisions']['signature'])) {
+    $mfcs_request_revisions['signature'] = $extra['revisions']['signature'];
+    $revisions_has_extras = TRUE;
+  }
+
+  $venue_coordinator_id_revision = $request['current']['venue_coordinator']['user_id'] + 1;
+
+  $mfcs_current = array(
+    'venue_coordinator_user_id' => $venue_coordinator_id_revision,
+  );
+
+  $mfcs_field_venue_coordinator_user_id = array(
+    'request_id' => $request_id,
+    'revision' => $venue_coordinator_id_revision,
+    'delta' => 0,
+    'user_id' => $user->uid,
+    'date' => $instance,
+    'value' => $venue_coordinator_id,
+  );
+
+  $transaction = db_transaction();
+  try {
+    $query = db_update('mfcs_requests');
+    $query->condition('id', $request_id);
+    $query->fields($mfcs_requests);
+    $query->execute();
+
+    if ($processed_mfcs_request_revisions) {
+      if ($revisions_has_extras) {
+        $query = db_update('mfcs_request_revisions');
+        $query->condition('id', $request_id);
+        $query->condition('date', $instance);
+        $query->condition('user_id', $user->uid);
+        $query->fields($mfcs_request_revisions);
+        $query->execute();
+      }
+    }
+    else {
+      $query = db_insert('mfcs_request_revisions');
+      $query->fields($mfcs_request_revisions);
+      $query->execute();
+
+      $processed_mfcs_request_revisions = TRUE;
+    }
+
+    $query = db_insert('mfcs_field_venue_coordinator_user_id');
+    $query->fields($mfcs_field_venue_coordinator_user_id);
     $query->execute();
 
     $query = db_update('mfcs_current');
@@ -344,6 +496,7 @@ function mfcs_workflow_step_review($request_id, $user, $decision, $message = "",
   $request = mfcs_load_request_by_id($request_id);
 
   if (empty($request)) {
+    watchdog(MFCS_WATCHDOG_ID, "%request_id is not a valid request id, cannot continue processing workflow changes.", array('%request_id' => $request_id), WATCHDOG_CRITICAL);
     return FALSE;
   }
 
@@ -567,7 +720,7 @@ function mfcs_workflow_step_review($request_id, $user, $decision, $message = "",
 
   if ($step == MFCS_REVIEW_STEP_REVIEW || $step == MFCS_REVIEW_STEP_REQUIREMENTS) {
     // remove classifications not allowed in these steps, unless they are for a comment or a message for the review log.
-    if ($decision != MFCS_REVIEW_DECISION_COMMENT && $decision != MFCS_REVIEW_DECISION_CANCELLED && $decision != MFCS_REVIEW_DECISION_UNCANCELLED && $decision != MFCS_REVIEW_DECISION_CLOSED) {
+    if ($decision != MFCS_REVIEW_DECISION_COMMENT && $decision != MFCS_REVIEW_DECISION_CANCELLED && $decision != MFCS_REVIEW_DECISION_UNCANCELLED && $decision != MFCS_REVIEW_DECISION_CLOSED && $decision != MFCS_REVIEW_DECISION_REASSIGNED) {
       unset($reviewer_classifications[MFCS_REVIEWER_CLASSIFICATION_VENUE_COORDINATOR]);
       unset($reviewer_classifications[MFCS_REVIEWER_CLASSIFICATION_VENUE_COORDINATOR_PROXY]);
     }
@@ -1128,6 +1281,36 @@ function mfcs_workflow_step_review($request_id, $user, $decision, $message = "",
   // forcefully clear the request cache so that it can reflect the changes.
   $request = mfcs_load_request_by_id($request_id, TRUE);
 
+  if (empty($request)) {
+    watchdog(MFCS_WATCHDOG_ID, "%request_id is not a valid request id, cannot continue processing workflow changes.", array('%request_id' => $request_id), WATCHDOG_CRITICAL);
+    return FALSE;
+  }
+
+  if (!isset($request['venue_coordinator']['user_id'][0]->value)) {
+    watchdog(MFCS_WATCHDOG_ID, "%request_id is missing the venue coordinator, cannot continue processing workflow changes.", array('%request_id' => $request_id), WATCHDOG_CRITICAL);
+    return FALSE;
+  }
+
+  if (!isset($request['request_coordinator']['classification'][0]->value)) {
+    watchdog(MFCS_WATCHDOG_ID, "%request_id is missing the coordinator classification, cannot continue processing workflow changes.", array('%request_id' => $request_id), WATCHDOG_CRITICAL);
+    return FALSE;
+  }
+
+  if (!isset($request['top']['status'][0]->value)) {
+    watchdog(MFCS_WATCHDOG_ID, "%request_id is missing the status, cannot continue processing workflow changes.", array('%request_id' => $request_id), WATCHDOG_CRITICAL);
+    return FALSE;
+  }
+
+  if (!isset($request['top']['step'][0]->value)) {
+    watchdog(MFCS_WATCHDOG_ID, "%request_id is missing the step, cannot continue processing workflow changes.", array('%request_id' => $request_id), WATCHDOG_CRITICAL);
+    return FALSE;
+  }
+
+  if (!isset($request['information']['type'][0]->value)) {
+    watchdog(MFCS_WATCHDOG_ID, "%request_id is missing the type, cannot continue processing workflow changes.", array('%request_id' => $request_id), WATCHDOG_CRITICAL);
+    return FALSE;
+  }
+
   $classification = $request['request_coordinator']['classification'][0]->value;
   $status = $request['top']['status'][0]->value;
   $step = $request['top']['step'][0]->value;
@@ -1148,7 +1331,7 @@ function mfcs_workflow_step_review($request_id, $user, $decision, $message = "",
 
     return TRUE;
   }
-  elseif ($decision == MFCS_REVIEW_DECISION_WAVE || $decision == MFCS_REVIEW_DECISION_CANCELLED || $decision == MFCS_REVIEW_DECISION_UNCANCELLED || $decision == MFCS_REVIEW_DECISION_CLOSED || ($decision == MFCS_REVIEW_DECISION_REQUIREMENT && !$insurance_provided_exception)) {
+  elseif ($decision == MFCS_REVIEW_DECISION_WAVE || $decision == MFCS_REVIEW_DECISION_CANCELLED || $decision == MFCS_REVIEW_DECISION_UNCANCELLED || $decision == MFCS_REVIEW_DECISION_CLOSED || ($decision == MFCS_REVIEW_DECISION_REQUIREMENT && !$insurance_provided_exception) || $decision == MFCS_REVIEW_DECISION_REASSIGNED) {
     // do not send an e-mail and do not progress to the next step.
     return TRUE;
   }
@@ -1394,6 +1577,10 @@ function mfcs_workflow_next_step($request_id, $type, $step, $decision, $message,
  *     cancelled.
  *   - uncancelled: A boolean representing whether or not the request is
  *     uncancelled.
+ *   - reassigned: A boolean representing whether or not the request is
+ *     re-assigned to a new venue coordinator.
+ *   - reassigned_from: user id of the old venue coordinator.
+ *   - reassigned_to: user id of the new venue coordinator.
  *   - amended: A boolean representing whether or not the request is an
  *     amendment.
  *   - insurance_provided: A boolean representing whether or not to send a
@@ -1405,8 +1592,9 @@ function mfcs_workflow_next_step($request_id, $type, $step, $decision, $message,
  *   - reminder_data: An array of values needed by a particular reminder
  *     reason.
  *
- *   The keys: 'new', 'update', 'step', 'status', 'cancelled', and
- *   'uncancelled', 'amendment', 'reminder' are mutually exclusive.
+ *   The keys: 'new', 'update', 'step', 'status', 'cancelled',
+ *   'uncancelled', 'amendment', 'reminder', and 'reassigned' are mutually
+ *   exclusive.
  *
  * @return bool
  *   TRUE on success, FALSE otherwise.
@@ -1561,6 +1749,32 @@ function mfcs_send_workflow_emails($request_id, $parameters) {
     }
   }
 
+  $is_reassigned = FALSE;
+  $reassigned_from = NULL;
+  $reassigned_to = NULL;
+  if (array_key_exists('reassigned',  $parameters)) {
+    $is_reassigned = $parameters['reassigned'];
+    if (!is_bool($is_reassigned)) {
+      cf_error::invalid_bool('parameters[reassigned]');
+      return FALSE;
+    }
+  }
+
+  if ($is_reassigned) {
+    if (!array_key_exists('reassigned_from',  $parameters) || !cf_is_integer($parameters['reassigned_from'])) {
+      cf_error::invalid_bool('parameters[reassigned_from]');
+      return FALSE;
+    }
+
+    if (!array_key_exists('reassigned_to',  $parameters) || !cf_is_integer($parameters['reassigned_to'])) {
+      cf_error::invalid_bool('parameters[reassigned_to]');
+      return FALSE;
+    }
+
+    $reassigned_from = $parameters['reassigned_from'];
+    $reassigned_to = $parameters['reassigned_to'];
+  }
+
   $is_insurance_provided = FALSE;
   if (array_key_exists('insurance_provided',  $parameters)) {
     $is_insurance_provided = $parameters['insurance_provided'];
@@ -1609,10 +1823,28 @@ function mfcs_send_workflow_emails($request_id, $parameters) {
 
   $request_view_url = $base_url . '/requests/view-0/' . $request_id;
 
-  $request_requester = user_load($request['mer']['user_id'][0]->value);
+  $request_requester = mfcs_load_basic_user_settings_by_user_id($request['mer']['user_id'][0]->value);
+  if (!is_array($request_requester)) {
+    watchdog(MFCS_WATCHDOG_ID, "%request_requester is not a valid user id.", array('%request_requester' => $request['mer']['user_id'][0]->value), WATCHDOG_ERROR);
+
+    // temporary fallback (@todo: implement proper fallback).
+    $request_requester = array(
+      'user_id' => (int) $request['mer']['user_id'][0]->value,
+      'email' => NULL,
+    );
+  }
 
   // load appropriate reviewers in their own categories.
-  $venue_coordinator = user_load($request['venue_coordinator']['user_id'][0]->value);
+  $venue_coordinator = mfcs_load_basic_user_settings_by_user_id($request['venue_coordinator']['user_id'][0]->value);
+  if (!is_array($venue_coordinator)) {
+    watchdog(MFCS_WATCHDOG_ID, "The supplied venue coordinator id for request %request_id is not a valid user id.", array('%request_id' => $request_id), WATCHDOG_ERROR);
+
+    // temporary fallback (@todo: implement proper fallback).
+    $venue_coordinator = array(
+      'user_id' => $request['venue_coordinator']['user_id'][0]->value,
+      'email' => NULL,
+    );
+  }
 
   $reviewers_returned = mfcs_get_reviewers(array('mr.request_classification' => $request['request_coordinator']['classification'][0]->value, 'mr.review_step' => MFCS_REVIEW_STEP_REVIEW, 'mr.disabled' => 0), array('join' => TRUE));
   $reviewers = array();
@@ -1662,20 +1894,26 @@ function mfcs_send_workflow_emails($request_id, $parameters) {
   $room_text = '';
   $building_text = '';
 
-  $location = mfcs_load_locations($request['top']['location'][0]->value);
+  $location = mfcs_load_locations($request['top']['location'][0]->value, TRUE);
 
   if (is_object($location)) {
     $location_text = $location->location_name;
   }
+  else {
+    watchdog(MFCS_WATCHDOG_ID, "Could not load the location for %request_id , the location value is: %value.", array('%request_id' => $request_id, '%value' => $request['top']['location'][0]->value), WATCHDOG_WARNING);
+  }
 
-  $room = mfcs_load_rooms(NULL, NULL, $request['top']['room'][0]->value);
+  $room = mfcs_load_rooms(NULL, NULL, $request['top']['room'][0]->value, TRUE);
 
   if (is_object($room)) {
     $room_text = $room->room_name;
-    $building = mfcs_load_buildings(NULL, $room->building_id);
+    $building = mfcs_load_buildings(NULL, $room->building_id, TRUE);
 
     if (is_object($building)) {
       $building_text = $building->building_name;
+    }
+    else {
+      watchdog(MFCS_WATCHDOG_ID, "Could not load the room and building information for %request_id , the room value is: %value.", array('%request_id' => $request_id, '%value' => $request['top']['room'][0]->value), WATCHDOG_WARNING);
     }
   }
 
@@ -1716,7 +1954,7 @@ function mfcs_send_workflow_emails($request_id, $parameters) {
   if ($is_new) {
     $type = $request['information']['type'][0]->value;
 
-    if ($type == MFCS_REQUEST_TYPE_QUICK_MEETING && ($venue_coordinator->uid == $request_requester->uid || user_access('mfcs manage', $request_requester))) {
+    if ($type == MFCS_REQUEST_TYPE_QUICK_MEETING && ($venue_coordinator['user_id'] == $request_requester['user_id'] || user_access('mfcs manage', $request_requester))) {
       $extra = array(
         'send_email' => FALSE,
         'requirements' => array('other' => 0, 'waived' => 0, 'university' => 1),
@@ -1740,18 +1978,18 @@ function mfcs_send_workflow_emails($request_id, $parameters) {
       $email_params['markup'] .= "For more information, view the <a href=" . '"' . $request_view_url . '/' . MFCS_VIEW_MODE_LOG . '"' . ">review log</a>.<br>\n";
       $email_params['markup'] .= $standard_markup;
 
-      if (is_object($venue_coordinator)) {
-        $email_to[$venue_coordinator->mail] = $venue_coordinator->mail;
+      if (is_array($venue_coordinator)) {
+        $email_to[$venue_coordinator['email']] = $venue_coordinator['email'];
       }
 
       // also send e-mails to the venue coordinator proxies.
-      $proxies_returned = mfcs_get_proxy_venue_coordinators(array('mpvc.user_id' => $venue_coordinator->uid, 'mpvc.disabled' => 0));
+      $proxies_returned = mfcs_get_proxy_venue_coordinators(array('mpvc.user_id' => $venue_coordinator['user_id'], 'mpvc.disabled' => 0));
       if (!empty($proxies_returned['results'])) {
         foreach ($proxies_returned['results'] as $proxy_returned) {
-          $proxy = user_load($proxy_returned->proxy_id);
+          $proxy = mfcs_load_basic_user_settings_by_user_id($proxy_returned->proxy_id);
 
-          if (is_object($proxy)) {
-            $email_to[$proxy->mail] = $proxy->mail;
+          if (is_array($proxy)) {
+            $email_to[$proxy['email']] = $proxy['email'];
           }
         }
       }
@@ -1765,18 +2003,18 @@ function mfcs_send_workflow_emails($request_id, $parameters) {
       $email_params['markup'] .= $changed_by_string . " has created this request, but the request was auto-closed due to an existing lock for the specified room, date, and time.<br>\n";
       $email_params['markup'] .= $standard_markup;
 
-      if (is_object($venue_coordinator)) {
-        $email_to[$venue_coordinator->mail] = $venue_coordinator->mail;
+      if (is_array($venue_coordinator)) {
+        $email_to[$venue_coordinator['email']] = $venue_coordinator['email'];
       }
 
       // also send e-mails to the venue coordinator proxies.
-      $proxies_returned = mfcs_get_proxy_venue_coordinators(array('mpvc.user_id' => $venue_coordinator->uid, 'mpvc.disabled' => 0));
+      $proxies_returned = mfcs_get_proxy_venue_coordinators(array('mpvc.user_id' => $venue_coordinator['user_id'], 'mpvc.disabled' => 0));
       if (!empty($proxies_returned['results'])) {
         foreach ($proxies_returned['results'] as $proxy_returned) {
-          $proxy = user_load($proxy_returned->proxy_id);
+          $proxy = mfcs_load_basic_user_settings_by_user_id($proxy_returned->proxy_id);
 
-          if (is_object($proxy)) {
-            $email_to[$proxy->mail] = $proxy->mail;
+          if (is_array($proxy)) {
+            $email_to[$proxy['email']] = $proxy['email'];
           }
         }
       }
@@ -1790,18 +2028,18 @@ function mfcs_send_workflow_emails($request_id, $parameters) {
       $email_params['markup'] .= $changed_by_string . " has created this request, but the request was auto-closed due the requested room, date, and time being already reserved.<br>\n";
       $email_params['markup'] .= $standard_markup;
 
-      if (is_object($venue_coordinator)) {
-        $email_to[$venue_coordinator->mail] = $venue_coordinator->mail;
+      if (is_array($venue_coordinator)) {
+        $email_to[$venue_coordinator['email']] = $venue_coordinator['email'];
       }
 
       // also send e-mails to the venue coordinator proxies.
-      $proxies_returned = mfcs_get_proxy_venue_coordinators(array('mpvc.user_id' => $venue_coordinator->uid, 'mpvc.disabled' => 0));
+      $proxies_returned = mfcs_get_proxy_venue_coordinators(array('mpvc.user_id' => $venue_coordinator['user_id'], 'mpvc.disabled' => 0));
       if (!empty($proxies_returned['results'])) {
         foreach ($proxies_returned['results'] as $proxy_returned) {
-          $proxy = user_load($proxy_returned->proxy_id);
+          $proxy = mfcs_load_basic_user_settings_by_user_id($proxy_returned->proxy_id);
 
-          if (is_object($proxy)) {
-            $email_to[$proxy->mail] = $proxy->mail;
+          if (is_array($proxy)) {
+            $email_to[$proxy['email']] = $proxy['email'];
           }
         }
       }
@@ -1815,18 +2053,18 @@ function mfcs_send_workflow_emails($request_id, $parameters) {
       $email_params['markup'] .= $changed_by_string . " has created this request.<br>\n";
       $email_params['markup'] .= $standard_markup;
 
-      if (is_object($venue_coordinator)) {
-        $email_to[$venue_coordinator->mail] = $venue_coordinator->mail;
+      if (is_array($venue_coordinator)) {
+        $email_to[$venue_coordinator['email']] = $venue_coordinator['email'];
       }
 
       // also send e-mails to the venue coordinator proxies.
-      $proxies_returned = mfcs_get_proxy_venue_coordinators(array('mpvc.user_id' => $venue_coordinator->uid, 'mpvc.disabled' => 0));
+      $proxies_returned = mfcs_get_proxy_venue_coordinators(array('mpvc.user_id' => $venue_coordinator['user_id'], 'mpvc.disabled' => 0));
       if (!empty($proxies_returned['results'])) {
         foreach ($proxies_returned['results'] as $proxy_returned) {
-          $proxy = user_load($proxy_returned->proxy_id);
+          $proxy = mfcs_load_basic_user_settings_by_user_id($proxy_returned->proxy_id);
 
-          if (is_object($proxy)) {
-            $email_to[$proxy->mail] = $proxy->mail;
+          if (is_array($proxy)) {
+            $email_to[$proxy['email']] = $proxy['email'];
           }
         }
       }
@@ -1843,18 +2081,18 @@ function mfcs_send_workflow_emails($request_id, $parameters) {
 
     // the update message only needs to be sent during the review process.
     if ($status == MFCS_REQUEST_STATUS_LOCKED || $status == MFCS_REQUEST_STATUS_UNLOCKED) {
-      if (is_object($venue_coordinator)) {
-        $email_to[$venue_coordinator->mail] = $venue_coordinator->mail;
+      if (is_array($venue_coordinator)) {
+        $email_to[$venue_coordinator['email']] = $venue_coordinator['email'];
       }
 
       // also send e-mails to the venue coordinator proxies.
-      $proxies_returned = mfcs_get_proxy_venue_coordinators(array('mpvc.user_id' => $venue_coordinator->uid, 'mpvc.disabled' => 0));
+      $proxies_returned = mfcs_get_proxy_venue_coordinators(array('mpvc.user_id' => $venue_coordinator['user_id'], 'mpvc.disabled' => 0));
       if (!empty($proxies_returned['results'])) {
         foreach ($proxies_returned['results'] as $proxy_returned) {
-          $proxy = user_load($proxy_returned->proxy_id);
+          $proxy = mfcs_load_basic_user_settings_by_user_id($proxy_returned->proxy_id);
 
-          if (is_object($proxy)) {
-            $email_to[$proxy->mail] = $proxy->mail;
+          if (is_array($proxy)) {
+            $email_to[$proxy['email']] = $proxy['email'];
           }
         }
       }
@@ -1885,18 +2123,18 @@ function mfcs_send_workflow_emails($request_id, $parameters) {
 
     // amendments can only happen while the request is locked.
     if ($status == MFCS_REQUEST_STATUS_LOCKED) {
-      if (is_object($venue_coordinator)) {
-        $email_to[$venue_coordinator->mail] = $venue_coordinator->mail;
+      if (is_array($venue_coordinator)) {
+        $email_to[$venue_coordinator['email']] = $venue_coordinator['email'];
       }
 
       // also send e-mails to the venue coordinator proxies.
-      $proxies_returned = mfcs_get_proxy_venue_coordinators(array('mpvc.user_id' => $venue_coordinator->uid, 'mpvc.disabled' => 0));
+      $proxies_returned = mfcs_get_proxy_venue_coordinators(array('mpvc.user_id' => $venue_coordinator['user_id'], 'mpvc.disabled' => 0));
       if (!empty($proxies_returned['results'])) {
         foreach ($proxies_returned['results'] as $proxy_returned) {
-          $proxy = user_load($proxy_returned->proxy_id);
+          $proxy = mfcs_load_basic_user_settings_by_user_id($proxy_returned->proxy_id);
 
-          if (is_object($proxy)) {
-            $email_to[$proxy->mail] = $proxy->mail;
+          if (is_array($proxy)) {
+            $email_to[$proxy['email']] = $proxy['email'];
           }
         }
       }
@@ -1923,18 +2161,18 @@ function mfcs_send_workflow_emails($request_id, $parameters) {
     $email_params['markup'] .= $message . "<br>\n";
     $email_params['markup'] .= $standard_markup;
 
-    if (is_object($venue_coordinator)) {
-      $email_to[$venue_coordinator->mail] = $venue_coordinator->mail;
+    if (is_array($venue_coordinator)) {
+      $email_to[$venue_coordinator['email']] = $venue_coordinator['email'];
     }
 
     // also send e-mails to the venue coordinator proxies.
-    $proxies_returned = mfcs_get_proxy_venue_coordinators(array('mpvc.user_id' => $venue_coordinator->uid, 'mpvc.disabled' => 0));
+    $proxies_returned = mfcs_get_proxy_venue_coordinators(array('mpvc.user_id' => $venue_coordinator['user_id'], 'mpvc.disabled' => 0));
     if (!empty($proxies_returned['results'])) {
       foreach ($proxies_returned['results'] as $proxy_returned) {
-        $proxy = user_load($proxy_returned->proxy_id);
+        $proxy = mfcs_load_basic_user_settings_by_user_id($proxy_returned->proxy_id);
 
-        if (is_object($proxy)) {
-          $email_to[$proxy->mail] = $proxy->mail;
+        if (is_array($proxy)) {
+          $email_to[$proxy['email']] = $proxy['email'];
         }
       }
     }
@@ -1986,8 +2224,8 @@ function mfcs_send_workflow_emails($request_id, $parameters) {
       return FALSE;
     }
   }
-  elseif ($is_cancelled || $is_auto_cancelled || $is_uncancelled || $is_deleted || !is_null($status)) {
-    if ($is_cancelled || $is_uncancelled || $status == MFCS_REQUEST_STATUS_CANCELLED || $status == MFCS_REQUEST_STATUS_DELETED) {
+  elseif ($is_cancelled || $is_auto_cancelled || $is_uncancelled || $is_reassigned || $is_deleted || !is_null($status)) {
+    if ($is_cancelled || $is_uncancelled || $is_reassigned || $status == MFCS_REQUEST_STATUS_CANCELLED || $status == MFCS_REQUEST_STATUS_DELETED) {
       $email_params['content'] = "";
       $email_params['markup'] = "";
 
@@ -2015,6 +2253,24 @@ function mfcs_send_workflow_emails($request_id, $parameters) {
         $email_params['content'] .= $changed_by_string . " has uncancelled the request.\n";
         $email_params['markup'] .= $changed_by_string . " has uncancelled the request.<br>\n";
       }
+      elseif ($is_reassigned) {
+        $reassigned_from_user = mfcs_load_basic_user_settings_by_user_id($reassigned_from);
+        $reassigned_to_user = mfcs_load_basic_user_settings_by_user_id($reassigned_to);
+
+        $reassigned_from_user_name = $reassigned_from_user['name'];
+        if (!empty($reassigned_from_user['first_name']) && !empty($reassigned_from_user['last_name'])) {
+          $reassigned_from_user_name = $reassigned_from_user['first_name'] . ' ' . $reassigned_from_user['last_name'];
+        }
+
+        $reassigned_to_user_name = $reassigned_to_user['name'];
+        if (!empty($reassigned_to_user['first_name']) && !empty($reassigned_to_user['last_name'])) {
+          $reassigned_to_user_name = $reassigned_to_user['first_name'] . ' ' . $reassigned_to_user['last_name'];
+        }
+
+        $email_params['title_suffix'] = "Re-Assigned";
+        $email_params['content'] .= $changed_by_string . " has re-assigned the venue coordinator from " . $reassigned_from_user_name . " [id: " . $reassigned_from . "] to " . $reassigned_to_user_name . " [id: " . $reassigned_to . "].\n";
+        $email_params['markup'] .= $changed_by_string . " has re-assigned the venue coordinator from <strong>" . $reassigned_from_user_name . "</strong> <sup>[id: " . $reassigned_from . "]</sup> to <strong>" . $reassigned_to_user_name . "</strong> <sup>[id: " . $reassigned_to . "]</sup>.<br>\n";
+      }
       elseif ($is_deleted || $status == MFCS_REQUEST_STATUS_DELETED) {
         $email_params['title_suffix'] = "Deleted";
         $email_params['content'] .= $changed_by_string . " has deleted the request.\n";
@@ -2029,20 +2285,20 @@ function mfcs_send_workflow_emails($request_id, $parameters) {
       $email_params['content'] .= $standard_content;
       $email_params['markup'] .= $standard_markup;
 
-      $email_to[$request_requester->mail] = $request_requester->mail;
+      $email_to[$request_requester['email']] = $request_requester['email'];
 
-      if (is_object($venue_coordinator)) {
-        $email_to[$venue_coordinator->mail] = $venue_coordinator->mail;
+      if (is_array($venue_coordinator)) {
+        $email_to[$venue_coordinator['email']] = $venue_coordinator['email'];
       }
 
       // also send e-mails to the venue coordinator proxies.
-      $proxies_returned = mfcs_get_proxy_venue_coordinators(array('mpvc.user_id' => $venue_coordinator->uid, 'mpvc.disabled' => 0));
+      $proxies_returned = mfcs_get_proxy_venue_coordinators(array('mpvc.user_id' => $venue_coordinator['user_id'], 'mpvc.disabled' => 0));
       if (!empty($proxies_returned['results'])) {
         foreach ($proxies_returned['results'] as $proxy_returned) {
-          $proxy = user_load($proxy_returned->proxy_id);
+          $proxy = mfcs_load_basic_user_settings_by_user_id($proxy_returned->proxy_id);
 
-          if (is_object($proxy)) {
-            $email_to[$proxy->mail] = $proxy->mail;
+          if (is_array($proxy)) {
+            $email_to[$proxy['email']] = $proxy['email'];
           }
         }
       }
@@ -2069,20 +2325,20 @@ function mfcs_send_workflow_emails($request_id, $parameters) {
       $email_params['markup'] .= "For more information, view the <a href=" . '"' . $request_view_url . '/' . MFCS_VIEW_MODE_LOG . '"' . ">review log</a>.<br>\n";
       $email_params['markup'] .= $standard_markup;
 
-      $email_to[$request_requester->mail] = $request_requester->mail;
+      $email_to[$request_requester['email']] = $request_requester['email'];
 
-      if (is_object($venue_coordinator)) {
-        $email_to[$venue_coordinator->mail] = $venue_coordinator->mail;
+      if (is_array($venue_coordinator)) {
+        $email_to[$venue_coordinator['email']] = $venue_coordinator['email'];
       }
 
       // also send e-mails to the venue coordinator proxies.
-      $proxies_returned = mfcs_get_proxy_venue_coordinators(array('mpvc.user_id' => $venue_coordinator->uid, 'mpvc.disabled' => 0));
+      $proxies_returned = mfcs_get_proxy_venue_coordinators(array('mpvc.user_id' => $venue_coordinator['user_id'], 'mpvc.disabled' => 0));
       if (!empty($proxies_returned['results'])) {
         foreach ($proxies_returned['results'] as $proxy_returned) {
-          $proxy = user_load($proxy_returned->proxy_id);
+          $proxy = mfcs_load_basic_user_settings_by_user_id($proxy_returned->proxy_id);
 
-          if (is_object($proxy)) {
-            $email_to[$proxy->mail] = $proxy->mail;
+          if (is_array($proxy)) {
+            $email_to[$proxy['email']] = $proxy['email'];
           }
         }
       }
@@ -2131,20 +2387,20 @@ function mfcs_send_workflow_emails($request_id, $parameters) {
       $email_params['markup'] .= "For more information, view the <a href=" . '"' . $request_view_url . '/' . MFCS_VIEW_MODE_LOG . '"' . ">review log</a>.<br>\n";
       $email_params['markup'] .= $standard_markup;
 
-      $email_to[$request_requester->mail] = $request_requester->mail;
+      $email_to[$request_requester['email']] = $request_requester['email'];
 
-      if (is_object($venue_coordinator)) {
-        $email_to[$venue_coordinator->mail] = $venue_coordinator->mail;
+      if (is_array($venue_coordinator)) {
+        $email_to[$venue_coordinator['email']] = $venue_coordinator['email'];
       }
 
       // also send e-mails to the venue coordinator proxies.
-      $proxies_returned = mfcs_get_proxy_venue_coordinators(array('mpvc.user_id' => $venue_coordinator->uid, 'mpvc.disabled' => 0));
+      $proxies_returned = mfcs_get_proxy_venue_coordinators(array('mpvc.user_id' => $venue_coordinator['user_id'], 'mpvc.disabled' => 0));
       if (!empty($proxies_returned['results'])) {
         foreach ($proxies_returned['results'] as $proxy_returned) {
-          $proxy = user_load($proxy_returned->proxy_id);
+          $proxy = mfcs_load_basic_user_settings_by_user_id($proxy_returned->proxy_id);
 
-          if (is_object($proxy)) {
-            $email_to[$proxy->mail] = $proxy->mail;
+          if (is_array($proxy)) {
+            $email_to[$proxy['email']] = $proxy['email'];
           }
         }
       }
@@ -2167,21 +2423,21 @@ function mfcs_send_workflow_emails($request_id, $parameters) {
       $email_params['markup'] .= "The request has been <em>denied</em> due to the requested location <em>not being available</em> for the requested time slots.<br>\n";
       $email_params['markup'] .= $standard_markup;
 
-      $email_to[$request_requester->mail] = $request_requester->mail;
+      $email_to[$request_requester['email']] = $request_requester['email'];
 
       if ($status == MFCS_REQUEST_STATUS_CLOSED_DUE_TO_LOCK) {
-        if (is_object($venue_coordinator)) {
-          $email_to[$venue_coordinator->mail] = $venue_coordinator->mail;
+        if (is_array($venue_coordinator)) {
+          $email_to[$venue_coordinator['email']] = $venue_coordinator['email'];
         }
 
         // also send e-mails to the venue coordinator proxies.
-        $proxies_returned = mfcs_get_proxy_venue_coordinators(array('mpvc.user_id' => $venue_coordinator->uid, 'mpvc.disabled' => 0));
+        $proxies_returned = mfcs_get_proxy_venue_coordinators(array('mpvc.user_id' => $venue_coordinator['user_id'], 'mpvc.disabled' => 0));
         if (!empty($proxies_returned['results'])) {
           foreach ($proxies_returned['results'] as $proxy_returned) {
-            $proxy = user_load($proxy_returned->proxy_id);
+            $proxy = mfcs_load_basic_user_settings_by_user_id($proxy_returned->proxy_id);
 
-            if (is_object($proxy)) {
-              $email_to[$proxy->mail] = $proxy->mail;
+            if (is_array($proxy)) {
+              $email_to[$proxy['email']] = $proxy['email'];
             }
           }
         }
@@ -2206,18 +2462,18 @@ function mfcs_send_workflow_emails($request_id, $parameters) {
         $email_to[$r->email] = $r->email;
       }
 
-      if (is_object($venue_coordinator)) {
-        $email_to[$venue_coordinator->mail] = $venue_coordinator->mail;
+      if (is_array($venue_coordinator)) {
+        $email_to[$venue_coordinator['email']] = $venue_coordinator['email'];
       }
 
       // also send e-mails to the venue coordinator proxies.
-      $proxies_returned = mfcs_get_proxy_venue_coordinators(array('mpvc.user_id' => $venue_coordinator->uid, 'mpvc.disabled' => 0));
+      $proxies_returned = mfcs_get_proxy_venue_coordinators(array('mpvc.user_id' => $venue_coordinator['user_id'], 'mpvc.disabled' => 0));
       if (!empty($proxies_returned['results'])) {
         foreach ($proxies_returned['results'] as $proxy_returned) {
-          $proxy = user_load($proxy_returned->proxy_id);
+          $proxy = mfcs_load_basic_user_settings_by_user_id($proxy_returned->proxy_id);
 
-          if (is_object($proxy)) {
-            $email_to[$proxy->mail] = $proxy->mail;
+          if (is_array($proxy)) {
+            $email_to[$proxy['email']] = $proxy['email'];
           }
         }
       }
@@ -2239,18 +2495,18 @@ function mfcs_send_workflow_emails($request_id, $parameters) {
         $email_to[$r->email] = $r->email;
       }
 
-      if (is_object($venue_coordinator)) {
-        $email_to[$venue_coordinator->mail] = $venue_coordinator->mail;
+      if (is_array($venue_coordinator)) {
+        $email_to[$venue_coordinator['email']] = $venue_coordinator['email'];
       }
 
       // also send e-mails to the venue coordinator proxies.
-      $proxies_returned = mfcs_get_proxy_venue_coordinators(array('mpvc.user_id' => $venue_coordinator->uid, 'mpvc.disabled' => 0));
+      $proxies_returned = mfcs_get_proxy_venue_coordinators(array('mpvc.user_id' => $venue_coordinator['user_id'], 'mpvc.disabled' => 0));
       if (!empty($proxies_returned['results'])) {
         foreach ($proxies_returned['results'] as $proxy_returned) {
-          $proxy = user_load($proxy_returned->proxy_id);
+          $proxy = mfcs_load_basic_user_settings_by_user_id($proxy_returned->proxy_id);
 
-          if (is_object($proxy)) {
-            $email_to[$proxy->mail] = $proxy->mail;
+          if (is_array($proxy)) {
+            $email_to[$proxy['email']] = $proxy['email'];
           }
         }
       }
@@ -2268,18 +2524,18 @@ function mfcs_send_workflow_emails($request_id, $parameters) {
       $email_params['markup'] .= $message . "<br>\n";
       $email_params['markup'] .= $standard_markup;
 
-      if (is_object($venue_coordinator)) {
-        $email_to[$venue_coordinator->mail] = $venue_coordinator->mail;
+      if (is_array($venue_coordinator)) {
+        $email_to[$venue_coordinator['email']] = $venue_coordinator['email'];
       }
 
       // also send e-mails to the venue coordinator proxies.
-      $proxies_returned = mfcs_get_proxy_venue_coordinators(array('mpvc.user_id' => $venue_coordinator->uid, 'mpvc.disabled' => 0));
+      $proxies_returned = mfcs_get_proxy_venue_coordinators(array('mpvc.user_id' => $venue_coordinator['user_id'], 'mpvc.disabled' => 0));
       if (!empty($proxies_returned['results'])) {
         foreach ($proxies_returned['results'] as $proxy_returned) {
-          $proxy = user_load($proxy_returned->proxy_id);
+          $proxy = mfcs_load_basic_user_settings_by_user_id($proxy_returned->proxy_id);
 
-          if (is_object($proxy)) {
-            $email_to[$proxy->mail] = $proxy->mail;
+          if (is_array($proxy)) {
+            $email_to[$proxy['email']] = $proxy['smail'];
           }
         }
       }
@@ -2298,18 +2554,18 @@ function mfcs_send_workflow_emails($request_id, $parameters) {
     $email_params['markup'] .= $message . "<br>\n";
     $email_params['markup'] .= $standard_markup;
 
-    if (is_object($venue_coordinator)) {
-      $email_to[$venue_coordinator->mail] = $venue_coordinator->mail;
+    if (is_array($venue_coordinator)) {
+      $email_to[$venue_coordinator['email']] = $venue_coordinator['email'];
     }
 
     // also send e-mails to the venue coordinator proxies.
-    $proxies_returned = mfcs_get_proxy_venue_coordinators(array('mpvc.user_id' => $venue_coordinator->uid, 'mpvc.disabled' => 0));
+    $proxies_returned = mfcs_get_proxy_venue_coordinators(array('mpvc.user_id' => $venue_coordinator['user_id'], 'mpvc.disabled' => 0));
     if (!empty($proxies_returned['results'])) {
       foreach ($proxies_returned['results'] as $proxy_returned) {
-        $proxy = user_load($proxy_returned->proxy_id);
+        $proxy = mfcs_load_basic_user_settings_by_user_id($proxy_returned->proxy_id);
 
-        if (is_object($proxy)) {
-          $email_to[$proxy->mail] = $proxy->mail;
+        if (is_array($proxy)) {
+          $email_to[$proxy['email']] = $proxy['email'];
         }
       }
     }
