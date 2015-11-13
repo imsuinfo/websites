@@ -883,5 +883,5 @@ ini_set('display_startup_errors', TRUE);
 #$conf['drupal_http_request_fails'] = FALSE;
 
 // turn off opcache for this site.
-ini_set('opcache.enable', FALSE);
-ini_set('opcache.enable_cli', FALSE);
+#ini_set('opcache.enable', FALSE);
+#ini_set('opcache.enable_cli', FALSE);
