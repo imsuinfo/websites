@@ -10,6 +10,17 @@
 * Closely modeled after views/modules/node/views_handler_field_node_link_edit.inc
 */
 class views_handler_field_node_link_clone extends views_handler_field_node_link {
+
+  /**
+   * Determine if this field can allow advanced rendering.
+   *
+   * Fields can set this to FALSE if they do not wish to allow
+   * token based rewriting or link-making.
+   */
+  function allow_advanced_render() {
+    return FALSE;
+  }
+
   /**
    * Renders the link.
    */
@@ -20,7 +31,7 @@ class views_handler_field_node_link_clone extends views_handler_field_node_link 
     }
 
     $this->options['alter']['make_link'] = TRUE;
-    $this->options['alter']['path'] = "node/{$node->nid}/clone/" . clone_token_to_arg();
+    $this->options['alter']['path'] = "node/{$node->nid}/clone/" . clone_get_token($node->nid);
     $method = variable_get('clone_method', 'prepopulate');
     $destination = drupal_get_destination();
     if ($method == 'prepopulate') {
