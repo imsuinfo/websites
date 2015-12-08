@@ -16,7 +16,7 @@ function _webform_defaults_autocomplete() {
   $defaults['extra'] += array(
     'autocomplete_items' => '',
     'autocomplete_existing' => 0,
-    'autocomplete_match_rule' => 1,
+    'autocomplete_match_rule' => WEBFORM_AUTOCOMPLETE_MATCH_CONTAINS,
     'autocomplete_restrict' => 0,
     'autocomplete_result_count' => 20,
   );
@@ -70,6 +70,14 @@ function _webform_edit_autocomplete($component) {
     '#weight' => 0,
     '#parents' => array('extra', 'width'),
   );
+  $form['display']['placeholder'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Placeholder'),
+    '#default_value' => $component['extra']['placeholder'],
+    '#description' => t('The placeholder will be shown in the field until the user starts entering a value.'),
+    '#weight' => 1,
+    '#parents' => array('extra', 'placeholder'),
+  );
   $form['display']['field_prefix'] = array(
     '#type' => 'textfield',
     '#title' => t('Label placed to the left of the textfield'),
@@ -103,9 +111,9 @@ function _webform_edit_autocomplete($component) {
     '#type' => 'select',
     '#title' => t('Match Rule'),
     '#options' => array(
-      0 => t('starts with'),
-      1 => t('contains'),
-      2 => t('ends with'),
+      WEBFORM_AUTOCOMPLETE_MATCH_BEGIN => t('starts with'),
+      WEBFORM_AUTOCOMPLETE_MATCH_CONTAINS => t('contains'),
+      WEBFORM_AUTOCOMPLETE_MATCH_END => t('ends with'),
     ),
     '#parents' => array('extra', 'autocomplete_match_rule'),
     '#default_value' => $component['extra']['autocomplete_match_rule'],
@@ -171,6 +179,10 @@ function _webform_render_autocomplete($component, $value = NULL, $filter = TRUE)
   // Autocomplete callback
   if ($node && !empty($component['cid'])) {
     $element['#autocomplete_path'] = 'webform_autocomplete/js/' . $node->nid . '/' . $component['cid'];
+  }
+  
+  if ($component['extra']['placeholder']) {
+    $element['#attributes']['placeholder'] = $component['extra']['placeholder'];
   }
 
   // Enforce uniqueness.
@@ -245,12 +257,12 @@ function webform_autocomplete_js($node, $cid, $str = '') {
       $options = preg_split('/\r\n|\r|\n/', $component['extra']['autocomplete_items']);
       foreach ($options as $val) {
         $is_match = FALSE;
-        if ($match_rule == 0) {
+        if ($match_rule == WEBFORM_AUTOCOMPLETE_MATCH_BEGIN) {
           if (strpos($val, $str, 0) === 0) {
             $is_match = TRUE;
           }
         }
-        elseif ($match_rule == 1) {
+        elseif ($match_rule == WEBFORM_AUTOCOMPLETE_MATCH_CONTAINS) {
           if (stripos($val, $str) !== FALSE) {
             $is_match = TRUE;
           }
@@ -274,10 +286,10 @@ function webform_autocomplete_js($node, $cid, $str = '') {
     // Only fire the query if we have fewer than $result_count results already
     if (!empty($component['extra']['autocomplete_existing']) && $count < $result_count) {
       $str_like = db_like($str);
-      if ($match_rule == 1 || $match_rule == 2) {
+      if ($match_rule == WEBFORM_AUTOCOMPLETE_MATCH_CONTAINS || $match_rule == WEBFORM_AUTOCOMPLETE_MATCH_END) {
         $str_like = '%' . $str_like;
       }
-      if ($match_rule == 0 || $match_rule == 1) {
+      if ($match_rule == WEBFORM_AUTOCOMPLETE_MATCH_BEGIN || $match_rule == WEBFORM_AUTOCOMPLETE_MATCH_CONTAINS) {
         $str_like = $str_like . '%';
       }
       
@@ -292,9 +304,9 @@ function webform_autocomplete_js($node, $cid, $str = '') {
     }
     // Sort php and sql results together
     natcasesort($results);
+    drupal_alter('webform_autocomplete_options', $results, $node, $cid, $str);
     drupal_json_output($results);
   }
-  exit();
 }
 
 /**

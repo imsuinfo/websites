@@ -6,6 +6,10 @@
  * @author Coleman Watts
  */
 
+define('WEBFORM_AUTOCOMPLETE_MATCH_BEGIN', 0);
+define('WEBFORM_AUTOCOMPLETE_MATCH_CONTAINS', 1);
+define('WEBFORM_AUTOCOMPLETE_MATCH_END', 2);
+
 /**
  * Implements hook_menu().
  *
@@ -81,42 +85,43 @@ function webform_autocomplete_validate_restricted($element, &$form_state) {
 }
 
 /**
- * Implements hook_form_builder_types().
+ * Implements hook_form_builder_element_types().
+ * @param string $form_type
+ * @param int $form_id
+ * @return array
  */
-function webform_autocomplete_form_builder_types() {
-  drupal_add_css(drupal_get_path('module', 'webform_autocomplete') . '/autocomplete.css');
-  $fields = array(
-    'autocomplete' => array(
-      'title' => t('Autocomplete'),
-      'weight' => -30,
-      'properties' => array(
-        'title',
-        'description',
-        'field_prefix',
-        'field_suffix',
-        'default_value',
-        'required',
-        'size',
-        'maxlength',
-        'disabled',
-        'autocomplete_items',
-        'autocomplete_existing',
-        'autocomplete_match_rule',
-        'autocomplete_restrict',
-        'unique',
+function webform_autocomplete_form_builder_element_types($form_type, $form_id) {
+  if ($form_type == 'webform') {
+    drupal_add_css(drupal_get_path('module', 'webform_autocomplete') . '/autocomplete.css');
+    $fields = array(
+      'autocomplete' => array(
+        'title' => t('Autocomplete'),
+        'weight' => -30,
+        'properties' => array(
+          'title',
+          'description',
+          'field_prefix',
+          'field_suffix',
+          'default_value',
+          'required',
+          'size',
+          'maxlength',
+          'disabled',
+          'autocomplete_items',
+          'autocomplete_existing',
+          'autocomplete_match_rule',
+          'autocomplete_restrict',
+          'unique',
+        ),
       ),
-    ),
-  );
-  if (function_exists('_form_builder_webform_default')) {
-    $fields['autocomplete']['default'] = _form_builder_webform_default('autocomplete');
-  }
-  $fields['autocomplete']['default']['#title'] = t('New autocomplete');
+    );
+    if (function_exists('_form_builder_webform_default')) {
+      $fields['autocomplete']['default'] = _form_builder_webform_default('autocomplete');
+    }
+    $fields['autocomplete']['default']['#title'] = t('New autocomplete');
 
-  // Return the array of supported fields, with a key for the form type that
-  // these fields apply to.
-  return array(
-    'webform' => $fields,
-  );
+    return $fields;
+  }
 }
 
 /**
