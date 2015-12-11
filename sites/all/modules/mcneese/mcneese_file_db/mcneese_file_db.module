@@ -711,24 +711,26 @@ function mcneese_file_db_load_file($by = '', $arg1 = '', $arg2 = '', $arg3 = '',
       @set_time_limit(259200);
 
       $in = fopen($filepath, 'rb');
+      $out = fopen('php://output', 'a');
 
       stream_set_read_buffer($in, MCNEESE_FILE_DB_BLOCK_SIZE);
+      stream_set_write_buffer($out, 0);
 
       // from php-5.4, this sets the actual read_bvuffer_size, unlike phps stream_set_read_buffer.
       if (function_exists('stream_set_chunk_size')) {
         stream_set_chunk_size($in, MCNEESE_FILE_DB_BLOCK_SIZE);
+        stream_set_chunk_size($out, MCNEESE_FILE_DB_BLOCK_SIZE);
       }
 
       if ($request_range) {
-        // @todo
+        stream_copy_to_stream($in, $out, ($request_range_end - $request_range_begin), $request_range_begin);
       }
       else {
-        while (!feof($in)) {
-          fpassthru($in);
-        }
+        stream_copy_to_stream($in, $out);
       }
 
       fclose($in);
+      fclose($out);
       exit();
     }
     else if ($by == MCNEESE_FILE_DB_PATH_BY_HASH_SUM) {
