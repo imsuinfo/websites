@@ -411,6 +411,7 @@ function mfcs_request_edit_0_form_validate($form, &$form_state) {
         }
         else {
           $room = explode('_', $form_state['values']['request']['room'][0], 3);
+          $room = (int) $room[0];
           $date = $form_state['values']['request']['dates']['date'];
           $time_start = $form_state['values']['request']['dates']['time_start'];
           $time_stop = $form_state['values']['request']['dates']['time_stop'];
@@ -453,7 +454,7 @@ function mfcs_request_edit_0_form_validate($form, &$form_state) {
           }
 
           if (!empty($date)) {
-            $requests_using_room = mfcs_check_room_availability($room[0], $date, $time_start, $time_stop, $request_id);
+            $requests_using_room = mfcs_check_room_availability($room, $date, $time_start, $time_stop, $request_id);
 
             if ($requests_using_room === FALSE) {
               form_set_error('', "An internal error occurred while checking the room for availability. Please contact the support staff.");
@@ -709,7 +710,7 @@ function mfcs_request_edit_0_form_submit($form, &$form_state) {
       }
 
       // if the request has been updated while it is in a locked status, the review log must be reset/restarted.
-      if ($status == MFCS_REQUEST_STATUS_LOCKED) {
+      if ($status === MFCS_REQUEST_STATUS_LOCKED) {
         $step_revision = $request['current']['top']['step'] + 1;
         $structure_current['top_step'] = $step_revision;
 
@@ -812,7 +813,7 @@ function mfcs_request_edit_0_form_submit($form, &$form_state) {
       mfcs_include(MFCS_INCLUDE_WORKFLOW);
 
       // send an e-mail to all reviewers that the request step has been reset.
-      if ($status == MFCS_REQUEST_STATUS_LOCKED) {
+      if ($status === MFCS_REQUEST_STATUS_LOCKED) {
         $parameters['amendment'] = TRUE;
       }
       else {

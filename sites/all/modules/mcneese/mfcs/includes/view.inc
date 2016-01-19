@@ -86,6 +86,12 @@ function mfcs_view_setup_group_path(&$form, $request_id, $group, $presentation_t
     }
   }
 
+  if ($show['cancelling']) {
+    if ($group != 'dates') {
+      $show['cancelling'] = FALSE;
+    }
+  }
+
   // create the group, using the numeric row id if available.
   if (array_key_exists('group', $presentation_tables[$group])) {
     $row = (int) $presentation_tables[$group]['group'];
@@ -147,6 +153,11 @@ function mfcs_view_setup_group_path(&$form, $request_id, $group, $presentation_t
 
         if ($show['ical']) {
           $group_path[$group]['#extra_prefix'] .= '<a href="' . base_path() . 'requests/ical-0/' . $request_id . $url_arguments . '" class="section-request-' . $request_id . '-' . $group . '-ical section-request-ical no-print" title="'. t("Download iCal of Request") . '">iCal</a>';
+        }
+
+        if ($show['cancelling']) {
+          // this cancel is exclusively for cancelling individual dates.
+          $group_path[$group]['#extra_prefix'] .= '<a href="' . base_path() . 'requests/cancelling-0/' . $request_id . $url_arguments . '" class="section-request-' . $request_id . '-' . $group . '-cancel section-request-cancel no-print" title="'. t("Cancel or Uncancel Individual Dates") . '">Cancelling</a>';
         }
       }
 
@@ -359,6 +370,7 @@ function mfcs_view_build_request_item_structure($request_id, $field_group, $fiel
  *   - 'no_suffix': If TRUE, don't show suffix.
  *   - 'print_delta_for_multiple': If TRUE, prepend the delta to the value for
  *      fields that have #multiple set to TRUE.
+ *   - 'history': If TRUE, handle specific deviations relevant to history presentation.
  *
  * @return array|bool
  *   The built array.
@@ -456,6 +468,11 @@ function mfcs_view_build_request_value_structure($request_id, $field_group, $fie
     }
   }
 
+  $options_history = FALSE;
+  if (isset($options['history']) && is_bool($options['history'])) {
+    $options_history = $options['history'];
+  }
+
   $users = array();
 
   global $base_path;
@@ -473,6 +490,8 @@ function mfcs_view_build_request_value_structure($request_id, $field_group, $fie
   $no_values = TRUE;
 
   foreach ($value_names as $value_name) {
+    $cancelled = NULL;
+
     if ($combined) {
       if (!isset($output['value']['markup']['#markup'])) {
         $output['value'] = array(
@@ -531,6 +550,29 @@ function mfcs_view_build_request_value_structure($request_id, $field_group, $fie
       $length = &$output['value']['markup']['#length'];
     }
 
+    if (property_exists($value, 'cancelled') && $value->cancelled == 1 && !array_key_exists('cancelled', $output[$value_name])) {
+      if ($options_history) {
+        $output[$value_name][] = array(
+          'cancelled' => array(
+            '#type' => 'markup',
+            '#markup' => ' <span class="item-value-instance-cancelled ' . 'item-value-instance-' . $field_group . '-' . $field_name . '-cancelled">(<strong>Cancelled</strong>)</span>',
+          ),
+        );
+
+      }
+      else {
+        $cancelled = array(
+          'cancelled' => array(
+            '#type' => 'markup',
+            '#markup' => '<span class="item-value-instance-cancelled ' . 'item-value-instance-' . $field_group . '-' . $field_name . '-cancelled">(Cancelled)</span> ',
+          ),
+        );
+
+        $output[$value_name] = array_merge($cancelled, $output[$value_name]);
+      }
+      $output[$value_name]['#attributes']['class'][] = 'item-cancelled';
+    }
+
     if (property_exists($value, $value_name) && (is_numeric($value->$value_name) || !empty($value->$value_name))) {
       if ($type[$value_name] == 'string' || $type[$value_name] == 'text') {
         $markup .= check_plain($value->$value_name);
@@ -569,7 +611,7 @@ function mfcs_view_build_request_value_structure($request_id, $field_group, $fie
           $s_month = date('F', $value->$value_name);
           $s_title = $s_month . " " . $s_year;
 
-          $markup .= '<a href="' . $base_path . 'requests/calendar-0/month/' . $s_year . '/' . $s_month . $url_arguments .'" title="' . $s_title . '">' . check_plain(date($display[$value_name], $value->$value_name)) . '</a>';
+          $markup .= '<a href="' . $base_path . 'requests/calendar-0/month/' . $s_year . '/' . $s_month . $url_arguments .'" title="' . $s_title . '" class="item-link">' . check_plain(date($display[$value_name], $value->$value_name)) . '</a>';
 
           unset($s_year);
           unset($s_month);
@@ -592,7 +634,7 @@ function mfcs_view_build_request_value_structure($request_id, $field_group, $fie
           $s_day = date('d', $value->$value_name);
           $s_title = $s_month . ", " . $s_day . ", " . $s_year;
 
-          $markup .= '<a href="' . $base_path . 'requests/calendar-0/day/' . $s_year . '/' . $s_month . '/' . $s_day . $url_arguments .'" title="' . $s_title . '">' . check_plain(date($display[$value_name], $value->$value_name)) . '</a>';
+          $markup .= '<a href="' . $base_path . 'requests/calendar-0/day/' . $s_year . '/' . $s_month . '/' . $s_day . $url_arguments .'" title="' . $s_title . '" class="item-link">' . check_plain(date($display[$value_name], $value->$value_name)) . '</a>';
 
           unset($s_year);
           unset($s_month);
@@ -619,7 +661,7 @@ function mfcs_view_build_request_value_structure($request_id, $field_group, $fie
           $s_title = $s_month . ", " . $s_day . ", " . $s_year . " at " . $s_hour . ':00' . $s_ampm;
           $s_id = 'time_slot-' . $s_hour . '_00' . $s_ampm;
 
-          $markup .= '<a href="' . $base_path . 'requests/calendar-0/day/' . $s_year . '/' . $s_month . '/' . $s_day . $url_arguments . '#' . $s_id .'" title="' . $s_title . '">' . check_plain(date($display[$value_name], $value->$value_name)) . '</a>';
+          $markup .= '<a href="' . $base_path . 'requests/calendar-0/day/' . $s_year . '/' . $s_month . '/' . $s_day . $url_arguments . '#' . $s_id .'" title="' . $s_title . '" class="item-link">' . check_plain(date($display[$value_name], $value->$value_name)) . '</a>';
 
           unset($s_year);
           unset($s_month);
@@ -667,7 +709,7 @@ function mfcs_view_build_request_value_structure($request_id, $field_group, $fie
           }
 
           if ($display[$value_name] == 'account_name') {
-            $markup .= '<a href="' . $base_path . 'user/' . $users[$value->$value_name]['user_id'] . $url_arguments . '">' . $user_name . '</a>';
+            $markup .= '<a href="' . $base_path . 'user/' . $users[$value->$value_name]['user_id'] . $url_arguments . '" class="item-link">' . $user_name . '</a>';
             $length += strlen($user_name);
           }
           elseif ($display[$value_name] != 'pass' && property_exists($user, $display)) {
@@ -1046,12 +1088,32 @@ function mfcs_view_build_reviews_log(&$form, &$form_state, $request_id, $revisio
     $reviewer_classification_options = mfcs_get_reviewer_classification_list_options();
     $type = $request['information']['type'][0]->value;
 
+    if (is_string($type)) {
+      $type = (int) $type;
+    }
+
     foreach ($reviews as $row => $review) {
       $user_id = $review->user_id;
       $review_step = $review->step;
       $decision = $review->decision;
       $message = $review->message;
       $date = $review->date;
+
+      if (is_string($user_id)) {
+        $user_id = (int) $user_id;
+      }
+
+      if (is_string($review_step)) {
+        $review_step = (int) $review_step;
+      }
+
+      if (is_string($decision)) {
+        $decision = (int) $decision;
+      }
+
+      if (is_string($date)) {
+        $date = (int) $date;
+      }
 
       $user_can_administer = mfcs_user_can_administer($user_id);
       $user_can_manage = mfcs_user_can_manage($user_id);
@@ -1061,6 +1123,10 @@ function mfcs_view_build_reviews_log(&$form, &$form_state, $request_id, $revisio
 
       if (!empty($nearest['information']['type'][0]->value)) {
         $type = $nearest['information']['type'][0]->value;
+      }
+
+      if (is_string($type)) {
+        $type = (int) $type;
       }
 
       if (!array_key_exists($user_id, $users)) {
@@ -1149,57 +1215,57 @@ function mfcs_view_build_reviews_log(&$form, &$form_state, $request_id, $revisio
       $markup .= '<div class="review-item-label">';
       $markup .= '<h3 class="review-item-label-text">' . $row_id_block . '<div class="review-item-label-text-title">';
 
-      if ($decision == MFCS_REVIEW_DECISION_AMENDMENT) {
+      if ($decision === MFCS_REVIEW_DECISION_AMENDMENT) {
         $markup .= $user_name_markup . ' ' . $user_id_markup . ' has <strong class="review-item-label-text-row-decision">' . "Amended" . '</strong> the request' . $reviewer_classification . '.';
       }
-      elseif ($review_step == MFCS_REVIEW_STEP_VENUE_AVAILABLE && $decision == MFCS_REVIEW_DECISION_APPROVE) {
-        if ($type == MFCS_REQUEST_TYPE_QUICK_MEETING) {
+      elseif ($review_step === MFCS_REVIEW_STEP_VENUE_AVAILABLE && $decision === MFCS_REVIEW_DECISION_APPROVE) {
+        if ($type === MFCS_REQUEST_TYPE_QUICK_MEETING) {
           $markup .= $user_name_markup . ' ' . $user_id_markup . ' has designated that the <strong class="review-item-label-text-row-decision">Venue is Available</strong>, <strong class="review-item-label-text-row-decision">Confirmed</strong>, and <strong class="review-item-label-text-row-decision">Reserved</strong>' . $reviewer_classification . '.';
         }
         else {
           $markup .= $user_name_markup . ' ' . $user_id_markup . ' has designated that the <strong class="review-item-label-text-row-decision">Venue is Available</strong>' . $reviewer_classification . '.';
         }
       }
-      elseif ($review_step == MFCS_REVIEW_STEP_VENUE_AVAILABLE && $decision == MFCS_REVIEW_DECISION_DENY) {
+      elseif ($review_step === MFCS_REVIEW_STEP_VENUE_AVAILABLE && $decision === MFCS_REVIEW_DECISION_DENY) {
         $markup .= $user_name_markup . ' ' . $user_id_markup . ' has designated that the <strong class="review-item-label-text-row-decision">Venue is Unavailable</strong>' . $reviewer_classification . '.';
       }
-      elseif ($review_step == MFCS_REVIEW_STEP_MAKE_DECISIONS && $decision == MFCS_REVIEW_DECISION_APPROVE) {
+      elseif ($review_step === MFCS_REVIEW_STEP_MAKE_DECISIONS && $decision === MFCS_REVIEW_DECISION_APPROVE) {
         $markup .= $user_name_markup . ' ' . $user_id_markup . ' has <strong class="review-item-label-text-row-decision">Confirmed and Reserved</strong> the request' . $reviewer_classification . "";
       }
-      elseif ($review_step == MFCS_REVIEW_STEP_MAKE_DECISIONS && $decision == MFCS_REVIEW_DECISION_DENY) {
+      elseif ($review_step === MFCS_REVIEW_STEP_MAKE_DECISIONS && $decision === MFCS_REVIEW_DECISION_DENY) {
         $markup .= $user_name_markup . ' ' . $user_id_markup . ' has <strong class="review-item-label-text-row-decision">Denied</strong> the request' . $reviewer_classification . '.';
       }
-      elseif ($decision == MFCS_REVIEW_DECISION_COMMENT) {
+      elseif ($decision === MFCS_REVIEW_DECISION_COMMENT) {
         $markup .= $user_name_markup . ' ' . $user_id_markup . ' has made a <strong class="review-item-label-text-row-decision">' . $decision_options[$decision] . '</strong>' . $reviewer_classification . '.';
       }
-      elseif (($review_step == MFCS_REVIEW_STEP_REVIEW || $review_step == MFCS_REVIEW_STEP_VENUE_AVAILABLE) && $decision == MFCS_REVIEW_DECISION_REQUIREMENT) {
+      elseif (($review_step === MFCS_REVIEW_STEP_REVIEW || $review_step === MFCS_REVIEW_STEP_VENUE_AVAILABLE) && $decision === MFCS_REVIEW_DECISION_REQUIREMENT) {
         $markup .= $user_name_markup . ' ' . $user_id_markup . ' has designated the <strong class="review-item-label-text-row-decision">' . $decision_options[$decision] . '</strong>' . $reviewer_classification . '.';
       }
-      elseif (($review_step == MFCS_REVIEW_STEP_REVIEW || $review_step == MFCS_REVIEW_STEP_VENUE_AVAILABLE) && $decision == MFCS_REVIEW_DECISION_WAVE) {
+      elseif (($review_step === MFCS_REVIEW_STEP_REVIEW || $review_step === MFCS_REVIEW_STEP_VENUE_AVAILABLE) && $decision === MFCS_REVIEW_DECISION_WAVE) {
         $markup .= $user_name_markup . ' ' . $user_id_markup . ' has waived the <strong class="review-item-label-text-row-decision">' . $decision_options[MFCS_REVIEW_DECISION_REQUIREMENT] . '</strong> ' . $reviewer_classification . '.';
       }
-      elseif ($review_step == MFCS_REVIEW_STEP_REQUIREMENTS && $decision == MFCS_REVIEW_DECISION_APPROVE) {
+      elseif ($review_step === MFCS_REVIEW_STEP_REQUIREMENTS && $decision === MFCS_REVIEW_DECISION_APPROVE) {
         $markup .= $user_name_markup . ' ' . $user_id_markup . ' has accepted the <strong class="review-item-label-text-row-decision">' . $review_step_options[$review_step] . '</strong>' . $reviewer_classification . '.';
       }
-      elseif ($review_step == MFCS_REVIEW_STEP_REQUIREMENTS && $decision == MFCS_REVIEW_DECISION_DENY) {
+      elseif ($review_step === MFCS_REVIEW_STEP_REQUIREMENTS && $decision === MFCS_REVIEW_DECISION_DENY) {
         $markup .= $user_name_markup . ' ' . $user_id_markup . ' has denied the <strong class="review-item-label-text-row-decision">' . $review_step_options[$review_step] . '</strong>' . $reviewer_classification . '.';
       }
-      elseif ($decision == MFCS_REVIEW_DECISION_REQUIREMENT) {
+      elseif ($decision === MFCS_REVIEW_DECISION_REQUIREMENT) {
         $markup .= $user_name_markup . ' ' . $user_id_markup . ' assigned the <strong class="review-item-label-text-row-decision">' . $decision_options[$decision] . '</strong> for the request' . $reviewer_classification . '.';
       }
-      elseif ($decision == MFCS_REVIEW_DECISION_APPROVE && $type == MFCS_REQUEST_TYPE_QUICK_MEETING) {
+      elseif ($decision === MFCS_REVIEW_DECISION_APPROVE && $type === MFCS_REQUEST_TYPE_QUICK_MEETING) {
         $markup .= $user_name_markup . ' ' . $user_id_markup . ' has designated that the <strong class="review-item-label-text-row-decision">Venue is Available</strong>, <strong class="review-item-label-text-row-decision">Confirmed</strong>, and <strong class="review-item-label-text-row-decision">Reserved</strong>' . $reviewer_classification . '.';
       }
-      elseif ($decision == MFCS_REVIEW_DECISION_CLOSED) {
+      elseif ($decision === MFCS_REVIEW_DECISION_CLOSED) {
         $markup .= $user_name_markup . ' ' . $user_id_markup . ' has <strong class="review-item-label-text-row-decision">Closed</strong> the request' . $reviewer_classification . '.';
       }
-      elseif ($decision == MFCS_REVIEW_DECISION_CANCELLED) {
+      elseif ($decision === MFCS_REVIEW_DECISION_CANCELLED) {
         $markup .= $user_name_markup . ' ' . $user_id_markup . ' has <strong class="review-item-label-text-row-decision">Cancelled</strong> the request' . $reviewer_classification . '.';
       }
-      elseif ($decision == MFCS_REVIEW_DECISION_UNCANCELLED) {
+      elseif ($decision === MFCS_REVIEW_DECISION_UNCANCELLED) {
         $markup .= $user_name_markup . ' ' . $user_id_markup . ' has <strong class="review-item-label-text-row-decision">Uncancelled</strong> the request' . $reviewer_classification . '.';
       }
-      elseif ($decision == MFCS_REVIEW_DECISION_REASSIGNED) {
+      elseif ($decision === MFCS_REVIEW_DECISION_REASSIGNED) {
         $markup .= $user_name_markup . ' ' . $user_id_markup . ' has <strong class="review-item-label-text-row-decision">Re-Assigned</strong> the request' . $reviewer_classification . '.';
       }
       else {
@@ -1216,7 +1282,7 @@ function mfcs_view_build_reviews_log(&$form, &$form_state, $request_id, $revisio
 
 
       // provide additional changelog information.
-      if ($decision == MFCS_REVIEW_DECISION_AMENDMENT) {
+      if ($decision === MFCS_REVIEW_DECISION_AMENDMENT) {
         $message .= '<div class="review-item-message-decision-amendment review-item-message-decision">';
         $message .= 'The review step has been reset and all prior reviews no longer apply.';
         $message .= '</div>';
@@ -1241,7 +1307,7 @@ function mfcs_view_build_reviews_log(&$form, &$form_state, $request_id, $revisio
         unset($value);
       }
 
-      if ($review_step == MFCS_REVIEW_STEP_VENUE_AVAILABLE && ($decision == MFCS_REVIEW_DECISION_REQUIREMENT || $decision == MFCS_REVIEW_DECISION_WAVE) && $type != MFCS_REQUEST_TYPE_QUICK_MEETING) {
+      if ($review_step === MFCS_REVIEW_STEP_VENUE_AVAILABLE && ($decision === MFCS_REVIEW_DECISION_REQUIREMENT || $decision === MFCS_REVIEW_DECISION_WAVE) && $type !== MFCS_REQUEST_TYPE_QUICK_MEETING) {
         if ($fees_are_not_waved && !empty($changelog['requirements']['facilities'])) {
           $message .= '<div class="review-item-message-requirements-facilities review-item-message-requirements review-item-message-requirements">';
           $message .= '<div class="item-label">Facilities Fees:</div> ';
@@ -1321,7 +1387,7 @@ function mfcs_view_build_reviews_log(&$form, &$form_state, $request_id, $revisio
         $message .= '</div>';
       }
 
-      if ($review_step == MFCS_REVIEW_STEP_VENUE_AVAILABLE && ($decision == MFCS_REVIEW_DECISION_REQUIREMENT || $decision == MFCS_REVIEW_DECISION_WAVE) || ($type == MFCS_REQUEST_TYPE_QUICK_MEETING && $decision == MFCS_REVIEW_DECISION_REQUIREMENT)) {
+      if ($review_step === MFCS_REVIEW_STEP_VENUE_AVAILABLE && ($decision === MFCS_REVIEW_DECISION_REQUIREMENT || $decision === MFCS_REVIEW_DECISION_WAVE) || ($type === MFCS_REQUEST_TYPE_QUICK_MEETING && $decision === MFCS_REVIEW_DECISION_REQUIREMENT)) {
         if ($fees_are_not_waved && !empty($changelog['requirements']['other'])) {
           $message .= '<div class="review-item-message-requirements-other review-item-message-requirements review-item-message-requirements">';
           $message .= '<div class="item-label">Other Fees:</div> ';

@@ -291,6 +291,7 @@ function mfcs_table_structure($include_mer = FALSE) {
       'storage' => 'date_popup',
       'date_popup' => array('view' => 'Y/m/d'),
       'multiple' => TRUE,
+      'cancelling' => TRUE,
     ),
     'time_start' => array(
       'path' => 'request][dates][time_start',
@@ -1211,6 +1212,7 @@ function mfcs_table_presentation($option = NULL) {
       'collate_order' => 1,
       'collate_into' => TRUE,
       'multiple' => TRUE,
+      'cancellable' => TRUE,
     ),
     'time_start' => array(
       'label' => 'Start Time',

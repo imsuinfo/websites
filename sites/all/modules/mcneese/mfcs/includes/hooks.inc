@@ -76,7 +76,7 @@ function mfcs_hook_menu_requests_basic(&$items, $module_path) {
     'file path' => $module_path . '/pages',
     'tab_parent' => '',
     'tab_root' => '',
-    'access callback' => TRUE, // prevent drupals access callback from being called.
+    'access callback' => 'mfcs_page_dashboard_access', // prevent drupals access callback from being called.
   );
 
   $items['requests/create-0'] = array(
@@ -219,7 +219,7 @@ function mfcs_hook_menu_requests_basic(&$items, $module_path) {
   );
 
   $items['requests/uncancel-0/%'] = array(
-    'title' => "Cancel Request",
+    'title' => "Uncancel Request",
     'description' => "Uncancel Request",
     'page callback' => 'drupal_get_form',
     'page arguments' => array('mfcs_request_uncancel_0_form', 2),
@@ -227,6 +227,19 @@ function mfcs_hook_menu_requests_basic(&$items, $module_path) {
     'file path' => $module_path . '/pages',
     'access callback' => 'mfcs_page_request_access',
     'access arguments' => array('uncancel', 2),
+    'tab_parent' => 'requests',
+    'tab_root' => 'requests',
+  );
+
+  $items['requests/cancelling-0/%'] = array(
+    'title' => "Cancel or Uncancel Individual Dates",
+    'description' => "Cancel or Uncancel Individual Dates",
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('mfcs_request_cancelling_0_form', 2),
+    'file' => 'request_cancel.inc',
+    'file path' => $module_path . '/pages',
+    'access callback' => 'mfcs_page_request_access',
+    'access arguments' => array('cancelling', 2),
     'tab_parent' => 'requests',
     'tab_root' => 'requests',
   );
@@ -1311,8 +1324,57 @@ function mfcs_hook_cronapi() {
 /**
  * Internal function for hook_user_login().
  */
-function mfcs_hook_user_login(&$edit, $account, $category) {
+function mfcs_hook_user_login(&$edit, $user, $category) {
+  if (!is_object($user)) {
+    return;
+  }
+
+  // if the user does not have a valid banner id, then there is nothing to synchronize to.
+  if (empty($user->field_user_banner_id['und'][0]['value']) || !is_numeric($user->field_user_banner_id['und'][0]['value'])) {
+    return;
+  }
+
+  $roles = (array) $user->roles;
+  $bannerless_exception_role_id = user_role_load_by_name('bannerless exception');
+  if (array_key_exists($bannerless_exception_role_id->rid, $roles)) {
+    // do not sync to banner for bannerless-exception.
+    return;
+  }
   mfcs_synchronize_user_settings();
+
+
+  // trigger a save update if the users roles should be changed according to mfcs_process_user_banner_roles().
+  $settings = array(
+    'banner_id' => NULL,
+    'primary' => (int) $user->uid,
+    'status' => (int) $user->status,
+  );
+
+  if (isset($user->field_user_banner_id['und'][0]) && array_key_exists('value', $user->field_user_banner_id['und'][0])) {
+    if (is_numeric($user->field_user_banner_id['und'][0]['value'])) {
+      $settings['banner_id'] = (int) $user->field_user_banner_id['und'][0]['value'];
+    }
+  }
+
+  $problems = MFCS_USER_PROBLEM_NONE;
+  $changes = mfcs_process_user_banner_roles($user, $problems, $settings);
+  if (is_array($changes)) {
+    if (count($user->roles) != count($changes['roles'])) {
+      user_save($user);
+    }
+    else {
+      $difference = array_diff($user->roles, $changes['roles']);
+      if (!empty($difference)) {
+        user_save($user);
+      }
+      else {
+        $difference = array_diff($changes['roles'], $user->roles);
+        if (!empty($difference)) {
+          user_save($user);
+        }
+      }
+    }
+  }
 }
 
 /**
@@ -1321,6 +1383,13 @@ function mfcs_hook_user_login(&$edit, $account, $category) {
 function mfcs_hook_user_insert(&$edit, $account, $category) {
   // if the user does not have a valid banner id, then there is nothing to synchronize to.
   if (empty($account->field_user_banner_id['und'][0]['value']) || !is_numeric($account->field_user_banner_id['und'][0]['value'])) {
+    return;
+  }
+
+  $roles = (array) $account->roles;
+  $bannerless_exception_role_id = user_role_load_by_name('bannerless exception');
+  if (array_key_exists($bannerless_exception_role_id->rid, $roles)) {
+    // do not sync to banner for bannerless-exception.
     return;
   }
 
@@ -1346,11 +1415,130 @@ function mfcs_hook_user_insert(&$edit, $account, $category) {
  * Internal function for hook_user_presave().
  */
 function mfcs_hook_user_presave(&$edit, $account, $category) {
-  $problems = MFCS_USER_PROBLEM_NONE;
-  $changes = mfcs_process_user_banner_roles($account, $problems);
+  $roles = array();
+  foreach ($account->roles as $role_id => $role_value) {
+    $roles[$role_id] = $role_id;
+  }
+  unset($role_id);
+  unset($role_value);
 
+  if (isset($edit['roles']) && is_array($edit['roles'])) {
+    foreach ($edit['roles'] as $role_id => $role_value) {
+      if ($role_value == 0) {
+        unset($roles[$role_id]);
+      }
+      else {
+        $roles[$role_id] = $role_id;
+      }
+    }
+    unset($role_id);
+    unset($role_value);
+  }
+
+  $bannerless_exception = user_role_load_by_name('bannerless exception');
+  if (array_key_exists($bannerless_exception->rid, $roles)) {
+    // do not sync to banner for bannerless-exception.
+    return;
+  }
+
+  $mfcs_users = mfcs_load_users($account->uid, FALSE, ($account->status == 0));
+  $problems_original = MFCS_USER_PROBLEM_NONE;
+  if (isset($mfcs_users[$account->uid])) {
+    $problems_original = $mfcs_users[$account->uid]->problems;
+  }
+  unset($mfcs_users);
+  $problems = $problems_original;
+
+  $settings = array(
+    'banner_id' => NULL,
+    'primary' => $account->uid,
+    'roles' => array(),
+  );
+
+  if (array_key_exists('status', $edit)) {
+    $settings['status'] = (int) $edit['status'];
+  }
+
+  if (!isset($edit['field_user_banner_id']['und']) && isset($account->field_user_banner_id['und'][0]) && array_key_exists('value', $account->field_user_banner_id['und'][0])) {
+    if (is_numeric($account->field_user_banner_id['und'][0]['value'])) {
+      $settings['banner_id'] = (int) $account->field_user_banner_id['und'][0]['value'];
+    }
+  }
+
+  foreach ($roles as $role_id) {
+    $loaded_role = user_role_load($role_id);
+    if (is_object($loaded_role)) {
+      $settings['roles'][$role_id] = $loaded_role->name;
+    }
+  }
+
+  if (isset($edit['field_user_banner_id']['und'][0]) && array_key_exists('value', $edit['field_user_banner_id']['und'][0])) {
+    $settings['banner_id'] = $edit['field_user_banner_id']['und'][0]['value'];
+    if (is_null($settings['banner_id']) || (is_string($settings['banner_id']) && strlen($settings['banner_id']) == 0)) {
+      $settings['banner_id'] = NULL;
+    }
+    elseif (!is_int($settings['banner_id'])) {
+      $settings['banner_id'] = (int) $settings['banner_id'];
+    }
+  }
+
+  if (is_null($settings['banner_id'])) {
+    // do not perform any banner-specific changes when banner id is not specified.
+    return;
+  }
+
+  if (isset($edit['field_user_primary_account']['und'][0]) && array_key_exists('value', $edit['field_user_primary_account']['und'][0])) {
+    $settings['primary'] = $edit['field_user_primary_account']['und'][0]['value'];
+    if (empty($settings['primary'])) {
+      unset($settings['primary']);
+    }
+    elseif (!is_int($settings['banner_id'])) {
+      $settings['primary'] = (int) $settings['banner_id'];
+    }
+  }
+
+  $changes = mfcs_process_user_banner_roles($account, $problems, $settings);
   if (is_array($changes)) {
-    $edit = array_merge($edit, $changes);
+    if (isset($changes['roles']) && is_array($changes['roles'])) {
+      $edit['roles'] = array();
+      foreach ($changes['roles'] as $role_id => $role_name) {
+        $edit['roles'][$role_id] = (int) $role_id;
+      }
+    }
+
+    $edit['field_user_event_roles'] = $changes['field_user_event_roles'];
+    if (array_key_exists('status', $changes)) {
+      $edit['status'] = $changes['status'];
+    }
+
+
+    // if status has changed, and the account is disabled, then unset all roles.
+    if (isset($edit['status'])) {
+      if ($account->status != $edit['status']) {
+        if (array_key_exists('status', $edit)) {
+          if ($edit['status'] == 0) {
+            foreach ($edit['roles'] as &$role_value) {
+              $role_value = 0;
+            }
+          }
+        }
+        elseif ($account->status == 0) {
+          foreach ($edit['roles'] as &$role_value) {
+            $role_value = 0;
+          }
+        }
+      }
+    }
+    elseif ($account->status == 0) {
+      foreach ($edit['roles'] as &$role_value) {
+        $role_value = 0;
+      }
+    }
+  }
+
+
+  if ($problems != $problems_original) {
+    mfcs_save_user($account->uid, array('problems' => $problems));
   }
 }
 
@@ -1369,7 +1557,7 @@ function mfcs_hook_user_update(&$edit, $account, $category) {
     $mfcs_users = mfcs_load_users($account->uid);
 
     $problems = MFCS_USER_PROBLEM_NONE;
-    if (isset($mfcs_users[$account->uid])) {
+    if (is_array($mfcs_users) && array_key_exists($account->uid, $mfcs_users)) {
       $problems = $mfcs_users[$account->uid]->problems;
     }
 
@@ -1380,7 +1568,7 @@ function mfcs_hook_user_update(&$edit, $account, $category) {
       }
     }
     else {
-      if (($problems & MFCS_USER_PROBLEM_ACCOUNT_DISABLED_IN_USE) > 0) {
+      if (($problems & MFCS_USER_PROBLEM_ACCOUNT_DISABLED_IN_USE) != 0) {
         $problems -= MFCS_USER_PROBLEM_ACCOUNT_DISABLED_IN_USE;
         mfcs_save_user($account->uid, array('problems' => $problems));
       }

@@ -411,6 +411,7 @@ function mfcs_request_create_0_form_validate($form, &$form_state) {
       }
       else {
         $room = explode('_', $form_state['values']['request']['room'][0], 3);
+        $room = (int) $room[0];
         $date = $form_state['values']['request']['dates']['date'];
         $time_start = $form_state['values']['request']['dates']['time_start'];
         $time_stop = $form_state['values']['request']['dates']['time_stop'];
@@ -449,7 +450,7 @@ function mfcs_request_create_0_form_validate($form, &$form_state) {
         }
 
         if (!empty($date)) {
-          $requests_using_room = mfcs_check_room_availability($room[0], $date, $time_start, $time_stop);
+          $requests_using_room = mfcs_check_room_availability($room, $date, $time_start, $time_stop);
 
           if ($requests_using_room === FALSE) {
             form_set_error('', "An internal error occurred while checking the room for availability. Please contact the support staff.");
@@ -484,20 +485,39 @@ function mfcs_request_create_0_form_validate($form, &$form_state) {
 
               if (isset($form_state['values']['request']['status'])) {
                 $form_state['room_unavailable_prior_settings']['status'] = $form_state['values']['request']['status'][0];
+
+                if (is_string($form_state['room_unavailable_prior_settings']['status'])) {
+                  $form_state['room_unavailable_prior_settings']['status'] = (int) $form_state['room_unavailable_prior_settings']['status'];
+                }
               }
 
               if (isset($form_state['values']['request']['step'])) {
                 $form_state['room_unavailable_prior_settings']['step'] = $form_state['values']['request']['step'][0];
+
+                if (is_string($form_state['room_unavailable_prior_settings']['step'])) {
+                  $form_state['room_unavailable_prior_settings']['step'] = (int) $form_state['room_unavailable_prior_settings']['step'];
+                }
               }
 
               $request_using_room = reset($requests_using_room);
-              if (isset($request_using_room->status) && $request_using_room->status == MFCS_REQUEST_STATUS_LOCKED) {
+              $request_using_room_status = NULL;
+              if (isset($request_using_room->status)) {
+                if (is_string($request_using_room->status)) {
+                  $request_using_room_status = (int) $request_using_room->status;
+                }
+                else {
+                  $request_using_room_status = $request_using_room->status;
+                }
+              }
+
+              if ($request_using_room_status === MFCS_REQUEST_STATUS_LOCKED) {
                 $form_state['values']['request']['status'][0] = MFCS_REQUEST_STATUS_CLOSED_DUE_TO_LOCK;
               }
               else {
                 $form_state['values']['request']['status'][0] = MFCS_REQUEST_STATUS_CLOSED_UNAVAILABLE;
               }
               unset($request_using_room);
+              unset($request_using_room_status);
 
               $form_state['values']['request']['step'][0] = MFCS_REVIEW_STEP_COMPLETED;
             }
@@ -507,6 +527,14 @@ function mfcs_request_create_0_form_validate($form, &$form_state) {
             if (isset($form_state['room_unavailable_prior_settings'])) {
               $form_state['values']['request']['status'][0] = $form_state['room_unavailable_prior_settings']['status'];
               $form_state['values']['request']['step'][0] = $form_state['room_unavailable_prior_settings']['step'];
+
+              if (is_string($form_state['values']['request']['status'][0])) {
+                $form_state['values']['request']['status'][0] = (int) $form_state['values']['request']['status'][0];
+              }
+
+              if (is_string($form_state['values']['request']['step'][0])) {
+                $form_state['values']['request']['step'][0] = (int) $form_state['values']['request']['step'][0];
+              }
 
               unset($form_state['room_unavailable_prior_settings']);
             }
