@@ -659,7 +659,9 @@ function mcneese_functions_build_a_to_z_listing_content($type, $filter = NULL, $
     $query->addField('fdfg', 'field_group_tid', 'field_group_tid');
     $query->addField('ttd', 'name', 'field_group_name');
 
-    $query->range($start, $limit);
+    if ($limit > 0) {
+      $query->range($start, $limit);
+    }
     $query->orderBy('n.title', 'ASC');
 
     $executed = $query->execute();
