@@ -797,10 +797,6 @@ function mcneese_functions_build_policy_content($page = 0, $limit = 15) {
 
     $query->condition('n.type', $node_type);
 
-    if (!is_null($filter) && strlen($filter) > 0) {
-      $query->condition('n.title', db_like($filter) . '%', 'ILIKE');
-    }
-
     $count_query = clone($query);
     $count_query->addExpression('count(n.nid)');
     $total = $count_query->execute()->fetchField();
@@ -818,7 +814,7 @@ function mcneese_functions_build_policy_content($page = 0, $limit = 15) {
     $executed = $query->execute();
     $all = $executed->fetchAll();
 
-    $output = '<div id="mcneese-a_to_z_listing-' . $type . '" class="a_to_z_listing-wrapper a_to_z_listing-wrapper-' . $type . '">' . "\n";
+    $output = '<div id="mcneese-policy_listing" class="mcneese-policy_listing-wrapper">' . "\n";
 
     if (empty($all)) {
       $output .= '</div>' . "\n";
@@ -829,7 +825,6 @@ function mcneese_functions_build_policy_content($page = 0, $limit = 15) {
     foreach ($all as $item) {
       $output .= '<li class="policy-item margin-bottom-5">' . "\n";
       $output .= '<a href="/node/' . $item->node_id . '" class="item-title">' . $item->title . '</a>';
-      $output .= '<div class="item-group">' . $item->field_group_name . '</div>';
       $output .= '</li>' . "\n";
     }
 
