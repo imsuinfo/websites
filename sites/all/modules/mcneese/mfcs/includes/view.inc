@@ -629,10 +629,11 @@ function mfcs_view_build_request_value_structure($request_id, $field_group, $fie
           $markup .= check_plain($value->$value_name);
         }
         else {
+          $s_day_name = date('l', $value->$value_name);
           $s_year = date('Y', $value->$value_name);
           $s_month = date('F', $value->$value_name);
           $s_day = date('d', $value->$value_name);
-          $s_title = $s_month . ", " . $s_day . ", " . $s_year;
+          $s_title = $s_day_name . ', ' . $s_month . ", " . $s_day . ", " . $s_year;
 
           $markup .= '<a href="' . $base_path . 'requests/calendar-0/day/' . $s_year . '/' . $s_month . '/' . $s_day . $url_arguments .'" title="' . $s_title . '" class="item-link">' . check_plain(date($display[$value_name], $value->$value_name)) . '</a>';
 
@@ -653,12 +654,13 @@ function mfcs_view_build_request_value_structure($request_id, $field_group, $fie
           $markup .= check_plain($value->$value_name);
         }
         else {
+          $s_day_name = date('l', $value->$value_name);
           $s_year = date('Y', $value->$value_name);
           $s_month = date('F', $value->$value_name);
           $s_day = date('d', $value->$value_name);
           $s_hour = date('h', $value->$value_name);
           $s_ampm = date('a', $value->$value_name);
-          $s_title = $s_month . ", " . $s_day . ", " . $s_year . " at " . $s_hour . ':00' . $s_ampm;
+          $s_title = $s_day_name . ', ' . $s_month . ", " . $s_day . ", " . $s_year . " at " . $s_hour . ':00' . $s_ampm;
           $s_id = 'time_slot-' . $s_hour . '_00' . $s_ampm;
 
           $markup .= '<a href="' . $base_path . 'requests/calendar-0/day/' . $s_year . '/' . $s_month . '/' . $s_day . $url_arguments . '#' . $s_id .'" title="' . $s_title . '" class="item-link">' . check_plain(date($display[$value_name], $value->$value_name)) . '</a>';
@@ -724,7 +726,13 @@ function mfcs_view_build_request_value_structure($request_id, $field_group, $fie
         $status_options = mfcs_get_request_status_list_options();
 
         if (isset($status_options[$value->$value_name])) {
-          $markup .= $status_options[$value->$value_name];
+          if ($value->$value_name == MFCS_REQUEST_STATUS_CLOSED_ACCEPTED_CANCELLED) {
+            $markup .= '<span title="The request was accepted but has since been cancelled.">' . $status_options[$value->$value_name] . '</span>';
+          }
+          else {
+            $markup .= $status_options[$value->$value_name];
+          }
+
           $length += strlen($value->$value_name);
         }
       }
@@ -1070,6 +1078,7 @@ function mfcs_view_build_reviews_log(&$form, &$form_state, $request_id, $revisio
     'university',
   );
   $changelog_fields['insurance'] = array(
+    'contractor',
     'insurance',
     'unaffiliated',
     'provided',

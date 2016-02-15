@@ -101,14 +101,14 @@ function mfcs_request_reviewers_0_page() {
  *   This is not the reviewer classification.
  * @param int $review_step
  *   Number representing the request review step.
- * @param int $page_number
+ * @param int|null $page_number
  *   (optional) When there are more than a certain number of rows,
  *   this represent the page number for a given sequence of rows.
  *
  * @return string
  *   The HTML output representing the page.
  */
-function mfcs_request_reviewers_0_form($form, &$form_state, $classification, $review_step, $page_number = 0) {
+function mfcs_request_reviewers_0_form($form, &$form_state, $classification, $review_step, $page_number = NULL) {
   if (!is_array($form)) {
     cf_error::invalid_array('form');
 
@@ -143,8 +143,18 @@ function mfcs_request_reviewers_0_form($form, &$form_state, $classification, $re
     $review_step = (int) $review_step;
   }
 
+  $auto_page_number = FALSE;
+  if (is_null($page_number)) {
+    $auto_page_number = TRUE;
+    $page_number = 0;
+  }
+
   if (is_string($page_number)) {
     $page_number = (int) $page_number;
+  }
+
+  if ($page_number < 0 || !is_int($page_number)) {
+    $page_number = 0;
   }
 
   // these are automatically the venue coordinator, therefore skip them.
@@ -154,12 +164,18 @@ function mfcs_request_reviewers_0_form($form, &$form_state, $classification, $re
     return array();
   }
 
+  global $conf;
   global $base_path;
   global $mfcs_determined;
 
   $url_arguments = '';
   if (!empty($mfcs_determined['complete'])) {
     $url_arguments .= '?' . $mfcs_determined['complete'];
+  }
+
+  $no_js_fallback = TRUE;
+  if (isset($conf['no_js_fallback']) && is_bool($conf['no_js_fallback'])) {
+    $no_js_fallback = $conf['no_js_fallback'];
   }
 
   if (!cf_is_integer($page_number) || $page_number < 0) {
@@ -267,7 +283,7 @@ function mfcs_request_reviewers_0_form($form, &$form_state, $classification, $re
     }
   }
 
-  $rows_per_page = 10;
+  $rows_per_page = 20;
   $options = array(
     'sort' => $sorting,
     'join' => TRUE,
@@ -276,6 +292,11 @@ function mfcs_request_reviewers_0_form($form, &$form_state, $classification, $re
     'count' => TRUE,
   );
 
+  // do not load listing on first pass (improves performance at cost of no support for no-js.).
+  if ($no_js_fallback === FALSE && $auto_page_number) {
+    $options['results'] = FALSE;
+  }
+
   $reviewers_returned = mfcs_get_reviewers(array('mr.request_classification' => $classification, 'mr.review_step' => $review_step, 'mr.disabled' => 0), $options);
   $reviewers = array();
   if (isset($reviewers_returned['results']) && is_array($reviewers_returned['results'])) {
@@ -283,11 +304,19 @@ function mfcs_request_reviewers_0_form($form, &$form_state, $classification, $re
   }
 
   // do not provide pages when the page number would bring the user beyond the available items.
-  if ($reviewers_returned['count'] > 0 && $options['start'] >= $reviewers_returned['count']) {
+  if ($reviewers_returned['count'] > 0 && $options['start'] >= $reviewers_returned['count'] || $reviewers_returned['count'] == 0 && $options['start'] > $reviewers_returned['count']) {
     drupal_not_found();
     drupal_exit();
     return array();
   }
+
+  // do not show count values when no fallback is available.
+  if ($no_js_fallback === FALSE && $auto_page_number) {
+    $count = 0;
+  }
+
+  // Results is needed and therefore must not be FALSE, unsetting it will default to TRUE.
+  unset($options['results']);
 
   $rows = array();
   foreach ($reviewers as $reviewer) {
@@ -303,8 +332,15 @@ function mfcs_request_reviewers_0_form($form, &$form_state, $classification, $re
       'class' => $class_classification,
     );
 
-    if (isset($reviewer_classifications[$reviewer->reviewer_classification])) {
-      $row['reviewer_classification']['data'] = $reviewer_classifications[$reviewer->reviewer_classification];
+    if (is_string($reviewer_classification = $reviewer->reviewer_classification)) {
+      $reviewer_classification = (int) $reviewer->reviewer_classification;
+    }
+    else {
+      $reviewer_classification = $reviewer->reviewer_classification;
+    }
+
+    if (isset($reviewer_classifications[$reviewer_classification])) {
+      $row['reviewer_classification']['data'] = $reviewer_classifications[$reviewer_classification];
     }
 
     $row['account_id'] = array(
@@ -334,6 +370,7 @@ function mfcs_request_reviewers_0_form($form, &$form_state, $classification, $re
 
     $rows[] = $row;
   }
+  unset($reviewer_classification);
 
   $form['form']['request_classification'] = array(
     '#type' => 'value',
@@ -427,6 +464,10 @@ function mfcs_request_reviewers_0_form($form, &$form_state, $classification, $re
 
   $navigation_start = $options['start'] + 1;
   $navigation_total = $options['start'] + $rows_per_page;
+
+  if ($navigation_total == 0) {
+    $navigation_start = 0;
+  }
 
   if ($navigation_total > $reviewers_returned['count']) {
     $navigation_total = $reviewers_returned['count'];
@@ -860,10 +901,24 @@ function mfcs_request_reviewers_0_delete_form($form, &$form_state, $id) {
   mfcs_include(MFCS_INCLUDE_LIST_OPTIONS);
 
   $request_classifications = mfcs_get_request_classification_list_options();
-
   $request_classification = '';
-  if (isset($request_classifications[$reviewer->request_classification])) {
-    $request_classification = $request_classifications[$reviewer->request_classification];
+  if (is_string($reviewer->request_classification)) {
+    $reviewer_request_classification = (int) $reviewer->request_classification;
+  }
+  else {
+    $reviewer_request_classification = $reviewer->request_classification;
+  }
+
+  if (is_string($reviewer->review_step)) {
+    $reviewer_step = (int) $reviewer->review_step;
+  }
+  else {
+    $reviewer_step = $reviewer->review_step;
+  }
+
+  $request_classification_name = "";
+  if (isset($request_classifications[$reviewer_request_classification])) {
+    $request_classification_name = $request_classifications[$reviewer_request_classification];
   }
 
   $form['form'] = array(
@@ -877,21 +932,21 @@ function mfcs_request_reviewers_0_delete_form($form, &$form_state, $id) {
 
   $form['form']['request_classification'] = array(
     '#type' => 'value',
-    '#value' => (int) $reviewer->request_classification,
+    '#value' => $reviewer_request_classification,
   );
 
   $form['form']['review_step'] = array(
     '#type' => 'value',
-    '#value' => (int) $reviewer->review_step,
+    '#value' => $reviewer_step,
   );
 
 
   if (empty($form_state['values']['redirect_to'])) {
-    if (empty($reviewer->request_classification)) {
+    if (empty($reviewer_request_classification)) {
       $destination = 'requests/reviewers-0' . $url_arguments;
     }
     else {
-      $destination = 'requests/reviewers-0/list/' . $reviewer->request_classification . $url_arguments;
+      $destination = 'requests/reviewers-0/list/' . $reviewer_request_classification . $url_arguments;
     }
   }
   else {
@@ -899,7 +954,7 @@ function mfcs_request_reviewers_0_delete_form($form, &$form_state, $id) {
   }
 
   return confirm_form($form,
-    t("Are you sure you want to delete the account %user (%id) from being a %request_classification reviewer?", array('%user' => $user_name, '%id' => $reviewer->user_id, '%request_classification' => $request_classification)),
+    t("Are you sure you want to delete the account %user (%id) from being a %request_classification_name reviewer?", array('%user' => $user_name, '%id' => $reviewer->user_id, '%request_classification_name' => $request_classification_name)),
     $destination,
     t("This action cannot be undone."),
     t("Delete"),

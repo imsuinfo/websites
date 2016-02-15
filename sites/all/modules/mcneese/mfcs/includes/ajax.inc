@@ -42,6 +42,7 @@ function mfcs_ajax_setup_request_settings() {
     'start' => 0,
     'limit' => NULL,
     'count' => TRUE,
+    'rowId' => '0',
   );
 
   if (isset($_GET['start']) && is_numeric($_GET['start'])) {
@@ -214,13 +215,14 @@ function mfcs_ajax_reviewers_0_list($classification, $review_step) {
       'value' => '%' . db_like($_GET['search']['value']) . '%',
     );
 
-    $count_options['returned'] = FALSE;
+    $count_options['results'] = FALSE;
     $reviewers_returned = mfcs_get_reviewers($count_conditions, $count_options);
     $reviewers_total = 0;
     if (is_array($reviewers_returned) && array_key_exists('count', $reviewers_returned)) {
       $reviewers_total = $reviewers_returned['count'];
     }
 
+    $options['count'] = FALSE;
     $reviewers_returned = mfcs_get_reviewers($conditions, $options);
     $reviewers = array();
     if (isset($reviewers_returned['results']) && is_array($reviewers_returned['results'])) {
@@ -407,7 +409,7 @@ function mfcs_ajax_proxy_0_list() {
       'value' => '%' . db_like($_GET['search']['value']) . '%',
     );
 
-    $count_options['returned'] = FALSE;
+    $count_options['results'] = FALSE;
     $proxies_returned = mfcs_get_proxy_venue_coordinators($count_conditions, $count_options);
 
     $proxies_total = 0;
@@ -415,6 +417,7 @@ function mfcs_ajax_proxy_0_list() {
       $proxies_total = $proxies_returned['count'];
     }
 
+    $options['count'] = FALSE;
     $proxies_returned = mfcs_get_proxy_venue_coordinators($conditions, $options);
     $proxies = array();
     if (isset($proxies_returned['results']) && is_array($proxies_returned['results'])) {
@@ -472,10 +475,42 @@ function mfcs_ajax_proxy_0_list() {
 }
 
 /**
- * Ajax function call for loading request review list datatables.
+ * Ajax function call for loading request list datatables.
+ *
+ * @param string|int $argument_1
+ *   Some string or number to send as the first argument.
  */
-function mfcs_ajax_list_0() {
-  mfcs_ajax_listing_0();
+function mfcs_ajax_list_0($argument_1 = NULL) {
+  $manager = FALSE;
+  $reviewer = FALSE;
+  $requester = FALSE;
+  if ($user_id === MFCS_USER_REQUEST) {
+    // this is a simulated user account and must be handled as a special case.
+    $requester = TRUE;
+  }
+  else {
+    $manager = user_access('mfcs manage', $user);
+    $reviewer = user_access('mfcs review', $user);
+    $requester = user_access('mfcs request', $user);
+  }
+
+  $show_my_request_only_default = FALSE;
+  if ($requester && !($manager || $reviewer)) {
+    $show_my_request_only_default = TRUE;
+  }
+
+  $options = array();
+  if ($argument_1 == 'my_requests') {
+    $options['only_requester'] = TRUE;
+  }
+  elseif ($argument_1 == 'all_requests') {
+    $options['only_requester'] = FALSE;
+  }
+  else {
+    $options['only_requester'] = $show_my_request_only_default;
+  }
+
+  mfcs_ajax_listing_0(array(), $options);
 }
 
 /**
@@ -723,13 +758,14 @@ function mfcs_ajax_listing_0($custom_conditions = array(), $override_options = a
       'search' => $_GET['search']['value'],
     );
 
-    $count_options['returned'] = FALSE;
+    $count_options['results'] = FALSE;
     $items_returned = mfcs_request_load_listing($count_conditions, $count_options);
     $items_total = 0;
     if (is_array($items_returned) && array_key_exists('count', $items_returned)) {
       $items_total = $items_returned['count'];
     }
 
+    $options['count'] = FALSE;
     $items_returned = mfcs_request_load_listing($conditions, $options);
     $items = array();
     if (isset($items_returned['results']) && is_array($items_returned['results'])) {
@@ -919,7 +955,7 @@ function mfcs_ajax_problems_0_users_list() {
     #  'expression' => TRUE,
     #);
 
-    $count_options['returned'] = FALSE;
+    $count_options['results'] = FALSE;
     $problems_returned = mfcs_management_search_users($count_conditions, $count_options);
 
     $problems_total = 0;
@@ -927,6 +963,7 @@ function mfcs_ajax_problems_0_users_list() {
       $problems_total = $problems_returned['count'];
     }
 
+    $options['count'] = FALSE;
     $problems_returned = mfcs_management_search_users($conditions, $options);
     $problems = array();
     if (isset($problems_returned['results']) && is_array($problems_returned['results'])) {
@@ -1106,6 +1143,11 @@ function mfcs_ajax_email_log_0_list() {
     $options['sort'] = $sorting;
   }
 
+  $options['distinct_id'] = TRUE;
+
+  // disable associative loading of results.
+  $options['associative'] = FALSE;
+
   $options['fields'] = array(
     'id' => 'id',
     'destination' => 'destination',
@@ -1207,7 +1249,7 @@ function mfcs_ajax_email_log_0_list() {
       );
     }
 
-    $count_options['returned'] = FALSE;
+    $count_options['results'] = FALSE;
     $email_logs_returned = mfcs_management_search_table($table_name, $table_alias, $primary_key, $count_conditions, $count_options);
 
     $email_logs_total = 0;
@@ -1215,6 +1257,7 @@ function mfcs_ajax_email_log_0_list() {
       $email_logs_total = $email_logs_returned['count'];
     }
 
+    $options['count'] = FALSE;
     $email_logs_returned = mfcs_management_search_table($table_name, $table_alias, $primary_key, $conditions, $options);
     $email_logs = array();
     if (isset($email_logs_returned['results']) && is_array($email_logs_returned['results'])) {
@@ -1258,11 +1301,11 @@ function mfcs_ajax_email_log_0_list() {
       $row[2] = '<a href="' . $base_path . 'user/' . $email_log->user_id . $url_arguments . '" class="user-link">' . check_plain($email_log->name) . '</a>';
       $row[3] = check_plain(date("Y/m/d h:i:s a", $email_log->date));
 
-      if (empty($email_log->user_id)) {
+      if (empty($email_log->destination_user_id)) {
         $row[4] = check_plain($email_log->destination);
       }
       else {
-        $row[4] = '<a href="' . $base_path . 'user/' . $email_log->user_id . $url_arguments . '" class="user-link">' . check_plain($email_log->destination) . '</a>';
+        $row[4] = '<a href="' . $base_path . 'user/' . $email_log->destination_user_id . $url_arguments . '" class="user-link">' . check_plain($email_log->destination) . '</a>';
       }
 
       $row[5] = check_plain($email_log->title);
@@ -1329,6 +1372,238 @@ function mfcs_ajax_problems_0_disabled_in_use($user_id) {
   );
 
   mfcs_ajax_listing_0($conditions, $options);
+}
+
+/**
+ * Ajax function call for loading users problem list datatable.
+ */
+function mfcs_ajax_synchronize_0_form() {
+  global $base_path;
+  global $mfcs_determined;
+
+  $url_arguments = '';
+  if (!empty($mfcs_determined['complete'])) {
+    $url_arguments .= '?' . $mfcs_determined['complete'];
+  }
+
+  $response = array();
+
+  if (function_exists('devel_menu')) {
+    $GLOBALS['devel_shutdown'] = FALSE;
+  }
+
+  mfcs_include(MFCS_INCLUDE_MANAGEMENT);
+
+  // load ajax/json request settings.
+  list($draw, $columns, $order, $options, $timestamp) = mfcs_ajax_setup_request_settings();
+
+  $search = FALSE;
+  if (isset($_GET['search']['value']) && is_string($_GET['search']['value']) && !empty($_GET['search']['value'])) {
+    $search = TRUE;
+  }
+
+  // build ajax/json response data.
+  $response = array(
+    'draw' => $draw,
+  );
+
+  $sorting = array();
+  if (!isset($order[0]['column'])) {
+    $sorting['id'] = 'ASC';
+  }
+  else {
+    $order_column = (int) $order[0]['column'];
+    $order_direction = isset($order[0]['dir']) && is_string($order[0]['dir']) ? strtoupper($order[0]['dir']) : 'DESC';
+
+    if ($order_column == 0) {
+      $sorting['id'] = $order_direction;
+    }
+    elseif ($order_column == 1) {
+      $sorting['user_id'] = $order_direction;
+    }
+    elseif ($order_column == 2) {
+      $sorting['name'] = $order_direction;
+    }
+    elseif ($order_column == 3) {
+      $sorting['created'] = $order_direction;
+    }
+    elseif ($order_column == 4) {
+      $sorting['updated'] = $order_direction;
+    }
+    elseif ($order_column == 5) {
+      $sorting['password'] = $order_direction;
+    }
+    elseif ($order_column == 6) {
+      $sorting['type'] = $order_direction;
+    }
+    elseif ($order_column == 7) {
+      $sorting['address'] = $order_direction;
+    }
+  }
+
+  // always provide the unique id in the ordering to guarantee consistency in range results.
+  if (!isset($sorting['id'])) {
+    $sorting['id'] = 'ASC';
+  }
+
+  if (!empty($sorting)) {
+    $options['sort'] = $sorting;
+  }
+
+  // disable associative loading of results.
+  $options['associative'] = FALSE;
+
+  $options['fields'] = array(
+    'id' => 'id',
+    'user_id' => 'user_id',
+    'created' => 'created',
+    'updated' => 'updated',
+    'password' => 'password',
+    'type' => 'type',
+    'address' => 'address',
+  );
+
+  $options['extra_fields']['users'] = array(
+    'alias' => 'u',
+    'join' => 'inner',
+    'on' => 'ms.user_id = u.uid',
+    'columns' => array(
+      'user_id' => 'uid',
+      'name' => 'name',
+    ),
+  );
+
+  $conditions = array();
+
+  $table_name = 'mfcs_synchronize';
+  $table_alias = 'ms';
+  $primary_key = 'id';
+
+  if ($search) {
+    $regex_safe_search = preg_quote($_GET['search']['value'], '/');
+
+    $count_conditions = $conditions;
+    $count_options = $options;
+
+    $conditions['or_1'] = array();
+    $conditions['or_1']['value_id'] = array(
+      'field' => 'text(' . $table_alias . '.id)',
+      'operator' => MFCS_OPERATOR_LIKE,
+      'search' => $_GET['search']['value'],
+      'expression' => TRUE,
+    );
+
+    $conditions['or_1']['value_user_id'] = array(
+      'field' => 'text(ms.user_id)',
+      'operator' => MFCS_OPERATOR_LIKE,
+      'search' => $_GET['search']['value'],
+      'expression' => TRUE,
+    );
+
+    $conditions['or_1']['value_name'] = array(
+      'field' => 'u.name',
+      'operator' => MFCS_OPERATOR_LIKE,
+      'search' => $_GET['search']['value'],
+    );
+
+    // Commented out because this is confusing because the date format will not match.
+    #$conditions['or_1']['value_date'] = array(
+    #  'field' => 'text(to_timestamp(' . $table_alias . '.date))',
+    #  'operator' => MFCS_OPERATOR_LIKE,
+    #  'search' => $_GET['search']['value'],
+    #  'expression' => TRUE,
+    #);
+
+    $conditions['or_1']['value_password'] = array(
+      'field' => $table_alias . '.password',
+      'operator' => MFCS_OPERATOR_LIKE,
+      'search' => $_GET['search']['value'],
+    );
+
+    $limit_types = NULL;
+    if (preg_match('/' . $regex_safe_search . '/i', 'ical') > 0) {
+      $limit_types = MFCS_SYNCHRONIZE_TYPE_ICAL;
+    }
+
+    if (!is_null($limit_types)) {
+      $conditions['or_1']['value_type'] = array(
+        'field' => $table_alias . '.type',
+        'operator' => MFCS_OPERATOR_EQUAL,
+        'search' => $limit_types,
+      );
+    }
+
+    $conditions['or_1']['value_address'] = array(
+      'field' => $table_alias . '.address',
+      'operator' => MFCS_OPERATOR_LIKE,
+      'search' => $_GET['search']['value'],
+    );
+
+    $count_options['results'] = FALSE;
+    $returned = mfcs_management_search_table($table_name, $table_alias, $primary_key, $count_conditions, $count_options);
+
+    $returned_total = 0;
+    if (is_array($returned) && array_key_exists('count', $returned)) {
+      $returned_total = $returned['count'];
+    }
+
+    $options['count'] = FALSE;
+    $returned = mfcs_management_search_table($table_name, $table_alias, $primary_key, $conditions, $options);
+    $items = array();
+    if (isset($returned['results']) && is_array($returned['results'])) {
+      $items = $returned['results'];
+    }
+
+    $response['recordsTotal'] = $returned_total;
+    $response['recordsFiltered'] = $returned['count'];
+  }
+  else {
+    $returned = mfcs_management_search_table($table_name, $table_alias, $primary_key, $conditions, $options);
+
+    $returned_total = 0;
+    if (is_array($returned) && array_key_exists('count', $returned)) {
+      $returned_total = $returned['count'];
+    }
+
+    $items = array();
+    if (isset($returned['results']) && is_array($returned['results'])) {
+      $items = $returned['results'];
+    }
+
+    $response['recordsTotal'] = $returned_total;
+    $response['recordsFiltered'] = $returned_total;
+  }
+
+  if (!is_array($items)) {
+    drupal_json_output($response);
+    exit();
+  }
+
+  $response['data'] = array();
+  if (!empty($items)) {
+    foreach ($items as $item) {
+      $row = array();
+      $row[0] = '' . $item->id;
+      $row[1] = '' . $item->user_id;
+      $row[2] = '<a href="' . $base_path . 'user/' . $item->user_id . $url_arguments . '" class="user-link">' . check_plain($item->name) . '</a>';
+      $row[3] = check_plain(date("Y/m/d h:i:s a", $item->created));
+      $row[4] = check_plain(date("Y/m/d h:i:s a", $item->updated));
+      $row[5] = check_plain($item->password);
+      $row[6] = "Unknown";
+      $row[7] = check_plain($item->address);
+      $row[8] = "";
+
+      if ($item->type == MFCS_SYNCHRONIZE_TYPE_ICAL) {
+        $row[6] = "iCal";
+        $row[8] .= ' <a href="' . $base_path . 'requests/synchronize-0/ical/' . rawurlencode($item->password) . $url_arguments . '" class="operation-link operation-link-view" title="Synchronization URL">Link</a>';
+      }
+
+      $response['data'][] = $row;
+    }
+  }
+
+  drupal_json_output($response);
+  exit();
 }
 
 /**

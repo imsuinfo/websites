@@ -61,6 +61,8 @@
  *     'distinct': Process the entire query as distinct.
  *     'distinct_id': Custom option to load mer.id as distinct. This overrides
  *                    'distinct' when TRUE.
+ *     'associative': When TRUE (default), performs a fetchAllAssoc() against the primary key.
+ *                    When FALSE, performs a fetchAll().
  *
  * @return array|false
  *   An array of objects containing the mfcs-specific user fields.
@@ -138,6 +140,11 @@ function mfcs_management_search_table($table_name, $table_alias, $primary_key, $
     }
   }
 
+  $associative = TRUE;
+  if (isset($options['associative']) && is_bool($options['associative'])) {
+    $associative = (bool) $options['associative'];
+  }
+
   $return = array(
     'results' => NULL,
     'count' => NULL,
@@ -187,7 +194,13 @@ function mfcs_management_search_table($table_name, $table_alias, $primary_key, $
     $count_query = NULL;
     if ($count) {
       $count_query = clone($query);
-      $count_query->addExpression('count(' . $table_alias . '.' . $primary_key . ')');
+
+      if ($distinct_id) {
+        $count_query->addExpression('count(distinct ' . $table_alias . '.' . $primary_key . ')');
+      }
+      else {
+        $count_query->addExpression('count(' . $table_alias . '.' . $primary_key . ')');
+      }
     }
 
     if ($distinct) {
@@ -379,7 +392,12 @@ function mfcs_management_search_table($table_name, $table_alias, $primary_key, $
     }
 
     if ($results) {
-      $return['results'] = $query->execute()->fetchAllAssoc($primary_key);
+      if ($associative) {
+        $return['results'] = $query->execute()->fetchAllAssoc($primary_key);
+      }
+      else {
+        $return['results'] = $query->execute()->fetchAll();
+      }
     }
   }
   catch (Exception $ex) {
@@ -550,7 +568,13 @@ function mfcs_management_search_users($conditions = array(), $options = array())
     $count_query = NULL;
     if ($count) {
       $count_query = clone($query);
-      $count_query->addExpression('count(mu.user_id)');
+
+      if ($distinct_id) {
+        $count_query->addExpression('count(distinct mu.user_id)');
+      }
+      else {
+        $count_query->addExpression('count(mu.user_id)');
+      }
     }
 
     if ($distinct) {

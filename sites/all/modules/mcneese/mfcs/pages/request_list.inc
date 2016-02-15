@@ -17,14 +17,14 @@
  *   The form array as defined by drupals form api.
  * @param array $form_state
  *   The form state array as defined by drupals form api
- * @param int $page_number
+ * @param int|null $page_number
  *   (optional) When there are more than a certain number of rows,
  *   this represent the page number for a given sequence of rows.
  *
  * @return array
  *   An array containing the generated form.
  */
-function mfcs_request_list_0_form($form, &$form_state, $page_number = 0) {
+function mfcs_request_list_0_form($form, &$form_state, $page_number = NULL) {
   if (!is_array($form)) {
     cf_error::invalid_array('form');
 
@@ -41,6 +41,7 @@ function mfcs_request_list_0_form($form, &$form_state, $page_number = 0) {
     return array();
   }
 
+  global $conf;
   global $base_path;
   global $mfcs_determined;
 
@@ -49,11 +50,42 @@ function mfcs_request_list_0_form($form, &$form_state, $page_number = 0) {
     $url_arguments .= '?' . $mfcs_determined['complete'];
   }
 
+  $no_js_fallback = TRUE;
+  if (isset($conf['no_js_fallback']) && is_bool($conf['no_js_fallback'])) {
+    $no_js_fallback = $conf['no_js_fallback'];
+  }
+
+  $auto_page_number = FALSE;
+  if (is_null($page_number)) {
+    $auto_page_number = TRUE;
+    $page_number = 0;
+  }
+
   if (!cf_is_integer($page_number) || $page_number < 0) {
     $page_number = 0;
   }
 
   mfcs_add_canonical_headers('requests/list-0/' . $page_number);
+
+  $user = cf_current_user();
+
+  $manager = FALSE;
+  $reviewer = FALSE;
+  $requester = FALSE;
+  if ($user->uid === MFCS_USER_REQUEST) {
+    // this is a simulated user account and must be handled as a special case.
+    $requester = TRUE;
+  }
+  else {
+    $manager = user_access('mfcs manage', $user);
+    $reviewer = user_access('mfcs review', $user);
+    $requester = user_access('mfcs request', $user);
+  }
+
+  $show_my_request_only_default = FALSE;
+  if ($requester && !($manager || $reviewer)) {
+    $show_my_request_only_default = TRUE;
+  }
 
   $page_title = "Facilities Use Requests";
   drupal_set_title($page_title);
@@ -153,10 +185,16 @@ function mfcs_request_list_0_form($form, &$form_state, $page_number = 0) {
     'start' => $page_number * $rows_per_page,
     'limit' => $rows_per_page,
     'count' => TRUE,
+    'only_requester' => $show_my_request_only_default,
   );
 
   if (!is_null($order)) {
     $options['sort'] = $sorting;
+  }
+
+  // do not load listing on first pass (improves performance at cost of no support for no-js.).
+  if ($no_js_fallback === FALSE && $auto_page_number) {
+    $options['results'] = FALSE;
   }
 
 
@@ -170,11 +208,19 @@ function mfcs_request_list_0_form($form, &$form_state, $page_number = 0) {
   }
 
   // do not provide pages when the page number would bring the user beyond the available items.
-  if ($count > 0 && $options['start'] >= $count) {
+  if ($count > 0 && $options['start'] >= $count || $count == 0 && $options['start'] > $count) {
     drupal_not_found();
     drupal_exit();
     return array();
   }
+
+  // do not show count values when no fallback is available.
+  if ($no_js_fallback === FALSE && $auto_page_number) {
+    $count = 0;
+  }
+
+  // Results is needed and therefore must not be FALSE, unsetting it will default to TRUE.
+  unset($options['results']);
 
   $options['columns'] = $columns;
   $options['columns_default'] = $columns_default;
@@ -202,6 +248,10 @@ function mfcs_request_list_0_form($form, &$form_state, $page_number = 0) {
 
   $navigation_start = $options['start'] + 1;
   $navigation_total = $options['start'] + $rows_per_page;
+
+  if ($count == 0) {
+    $navigation_start = 0;
+  }
 
   if ($navigation_total > $count) {
     $navigation_total = $count;

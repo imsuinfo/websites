@@ -25,6 +25,8 @@ class McNeeseFacilitiesUseMail implements MailSystemInterface {
     $instance = mfcs_instance();
 
     $fcs_name = variable_get('fcs_name', 'McNeese Facilities Use System');
+    $fcs_site_url = variable_get('fcs_site_url', 'fcs.mcneese.edu');
+    $reply_to = variable_get('reply_to', 'no_reply@fcs.mcneese.edu');
 
     // override any pre-defined headers.
     $message['headers']['MIME-Version'] = '1.0';
@@ -33,6 +35,10 @@ class McNeeseFacilitiesUseMail implements MailSystemInterface {
 
     $from_address = filter_var($message['from_address'], FILTER_SANITIZE_SPECIAL_CHARS, FILTER_FLAG_STRIP_LOW);
     $message['headers']['Return-Path'] = $from_address;
+
+    if (!empty($reply_to) && is_string($reply_to)) {
+      $message['headers']['Reply-To'] = $reply_to;
+    }
 
     $message['headers']['Content-Transfer-Encoding'] = '8Bit';
     #$message['headers']['Content-Transfer-Encoding'] = '7Bit';
@@ -80,6 +86,11 @@ class McNeeseFacilitiesUseMail implements MailSystemInterface {
     if (array_key_exists('files', $message) && is_array($message['files'])) {
       foreach ($message['files'] as $file) {
         if (!is_array($file) || !array_key_exists('mime', $file) || !array_key_exists('name', $file) || !array_key_exists('data', $file)) {
+          continue;
+        }
+
+        if (!isset($file['data'])) {
+          watchdog(MFCS_WATCHDOG_ID, "Error detected in file process of e-mail generation. Not sending file. File Information = %file.", array('%file' => print_r($file, TRUE)), WATCHDOG_ERROR);
           continue;
         }
 
@@ -266,6 +277,14 @@ class McNeeseFacilitiesUseMail implements MailSystemInterface {
     $user_id = 0;
     if (isset($user->uid)) {
       $user_id = $user->uid;
+    }
+
+    // When using anoynmous account, check to see if effective system id is enabled.
+    if ($user_id == 0) {
+      $system_id_enabled = mfcs_using_effective_system_id();
+      if ($system_id_enabled) {
+        $user_id = 1;
+      }
     }
 
     $fields = array(

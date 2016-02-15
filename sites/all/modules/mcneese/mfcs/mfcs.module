@@ -23,6 +23,7 @@ define('MFCS_REQUEST_STATUS_CLOSED_DENIED', 4);
 define('MFCS_REQUEST_STATUS_CLOSED_UNAVAILABLE', 5);
 define('MFCS_REQUEST_STATUS_CLOSED_DUE_TO_LOCK', 6);
 define('MFCS_REQUEST_STATUS_CANCELLED', 7);
+define('MFCS_REQUEST_STATUS_CLOSED_ACCEPTED_CANCELLED', 8);
 
 /**
  * Defines Taxonomy VIDs.
@@ -248,6 +249,7 @@ define('MFCS_INCLUDE_REQUEST_CREATE', 12);
 define('MFCS_INCLUDE_REQUEST_VIEW', 13);
 define('MFCS_INCLUDE_REQUEST_LIST', 14);
 define('MFCS_INCLUDE_REQUEST_REASSIGN', 18);
+define('MFCS_INCLUDE_REQUEST_ICAL', 19);
 define('MFCS_INCLUDE_TESTING', 15);
 define('MFCS_INCLUDE_VIEW', 16);
 define('MFCS_INCLUDE_MANAGEMENT', 17);
@@ -313,9 +315,30 @@ define('MFCS_CANCELLING_UNCANCEL', 2);
 define('MFCS_CANCELLING_UNAVAILABLE', 3);
 
 /**
+ * Define codes representing how to load a listings cancelled content.
+ */
+define('MFCS_LOAD_CANCELLED_NONE', 0);
+define('MFCS_LOAD_CANCELLED_INDIVIDUAL', 1);
+define('MFCS_LOAD_CANCELLED_REQUEST', 2);
+define('MFCS_LOAD_CANCELLED_ALL', 3);
+
+/**
  * Banner ID constants.
  */
 define('MFCS_BANNER_ID_LENGTH', 9);
+
+/**
+ * Defines synchronize types.
+ */
+define('MFCS_SYNCHRONIZE_TYPE_NONE', 0);
+define('MFCS_SYNCHRONIZE_TYPE_ICAL', 1);
+
+/**
+ * Simulated user accounts.
+ */
+define('MFCS_USER_ANONYMOUS', 0);
+define('MFCS_USER_SYSTEM', 1);
+define('MFCS_USER_REQUEST', -1);
 
 
 /**
@@ -526,6 +549,7 @@ function mfcs_page_request_access($operation = NULL, $request_id = NULL, $user =
     MFCS_REQUEST_STATUS_CLOSED_UNAVAILABLE,
     MFCS_REQUEST_STATUS_CLOSED_DUE_TO_LOCK,
     MFCS_REQUEST_STATUS_CANCELLED,
+    MFCS_REQUEST_STATUS_CLOSED_ACCEPTED_CANCELLED,
   );
 
   $roles = array(
@@ -852,6 +876,103 @@ function mfcs_page_request_access($operation = NULL, $request_id = NULL, $user =
 }
 
 /**
+ * Access callback for facilities use synchronize related operations.
+ *
+ * This is a simple access check and is not cached like the other access checks.
+ *
+ * @param int|null $type
+ *   (optional) When NULL, access to synchronize page is checked.
+ *   When not NULL, access to a specific synchronize type is checked.
+ * @param string|null $password
+ *   (optional) When NULL, this is ignored unless required by the given type.
+ *   When not NULL, a string representing the code needed to grant access to the synchronization option.
+ * @param int|null $user_id
+ *   (optional) When NULL, the id of the current user is used.
+ *   When not NULL, the provided user id is used.
+ *
+ * @param return bool
+ *   TRUE on granted, FALSE otherwise.
+ */
+function mfcs_synchronize_request_access($type = NULL, $password = NULL, $user_id = NULL) {
+  if (!is_null($type) && !cf_is_integer($type)) {
+    cf_error::invalid_integer('type');
+    return FALSE;
+  }
+
+  if (!is_null($password) && (!is_string($password) || empty($password))) {
+    cf_error::invalid_string('password');
+    return FALSE;
+  }
+
+  if (is_null($user_id)) {
+    $user = cf_current_user();
+  }
+  else {
+    $user = user_load($user_id);
+  }
+
+  if (!is_object($user)) {
+    cf_error::invalid_integer('user_id');
+    return FALSE;
+  }
+
+  if (is_null($type)) {
+    if (user_access('mfcs manage', $user)) {
+      return TRUE;
+    }
+
+    if (user_access('mfcs administer', $user)) {
+      return TRUE;
+    }
+  }
+  elseif ($type == MFCS_SYNCHRONIZE_TYPE_ICAL) {
+    if (is_null($password)) {
+      return FALSE;
+    }
+
+    if (!isset($_SERVER['REMOTE_ADDR']) || empty($_SERVER['REMOTE_ADDR'])) {
+      return FALSE;
+    }
+
+    // require HTTPS for validity.
+    if (!isset($_SERVER['HTTPS'])) {
+      return FALSE;
+    }
+
+    try {
+      $query = db_select('mfcs_synchronize', 'ms');
+      $query->addField('ms', 'address', 'address');
+      $query->condition('type', MFCS_SYNCHRONIZE_TYPE_ICAL);
+      $query->condition('password', $password);
+
+      $results = $query->execute()->fetchAll();
+
+      if (empty($results) && is_object($results)) {
+        return FALSE;
+      }
+
+      $ip_client = trim($_SERVER['REMOTE_ADDR']);
+      foreach ($results as $result) {
+        if (!isset($result->address)) {
+          continue;
+        }
+
+        $ip_valid = trim($result->address);
+        if ($ip_client == $ip_valid) {
+          return TRUE;
+        }
+      }
+    } catch (Exception $ex) {
+      cf_error::on_query_execution($ex);
+
+      return FALSE;
+    }
+  }
+
+  return FALSE;
+}
+
+/**
  * Check access for already loaded facilities use requests.
  *
  * This is used to reduce database calls for when a request is already loaded.
@@ -896,6 +1017,8 @@ function mfcs_request_access($operation, $request, $user = NULL, $section = NULL
     return FALSE;
   }
 
+  global $conf;
+
 
   // use advanced static cache for increased performance.
   static $mfcs_request_access_static;
@@ -932,6 +1055,7 @@ function mfcs_request_access($operation, $request, $user = NULL, $section = NULL
     MFCS_REQUEST_STATUS_CLOSED_UNAVAILABLE,
     MFCS_REQUEST_STATUS_CLOSED_DUE_TO_LOCK,
     MFCS_REQUEST_STATUS_CANCELLED,
+    MFCS_REQUEST_STATUS_CLOSED_ACCEPTED_CANCELLED,
   );
 
   $roles = array(
@@ -1149,6 +1273,7 @@ function mfcs_request_access($operation, $request, $user = NULL, $section = NULL
     $not_cancellable_status = array(
       MFCS_REQUEST_STATUS_DELETED,
       MFCS_REQUEST_STATUS_CANCELLED,
+      MFCS_REQUEST_STATUS_CLOSED_ACCEPTED_CANCELLED,
       MFCS_REQUEST_STATUS_CLOSED_DENIED,
       MFCS_REQUEST_STATUS_CLOSED_UNAVAILABLE,
     );
@@ -1189,6 +1314,7 @@ function mfcs_request_access($operation, $request, $user = NULL, $section = NULL
 
     $uncancellable_status = array(
       MFCS_REQUEST_STATUS_CANCELLED,
+      MFCS_REQUEST_STATUS_CLOSED_ACCEPTED_CANCELLED,
     );
 
     if (!in_array($request['top']['status'][0]->value, $uncancellable_status)) {
@@ -1214,12 +1340,42 @@ function mfcs_request_access($operation, $request, $user = NULL, $section = NULL
       return FALSE;
     }
 
+    // support manually disabling of accounts based on specific roles.
+    $disable_cancelling_for = array();
+    if (isset($conf['disable_cancelling_for']) && is_array($conf['disable_cancelling_for'])) {
+      $disable_cancelling_for = $conf['disable_cancelling_for'];
+    }
+
+    if (!isset($disable_cancelling_for['reviewer']) || !is_bool($disable_cancelling_for['reviewer'])) {
+      $disable_cancelling_for['reviewer'] = FALSE;
+    }
+
+    if (!isset($disable_cancelling_for['requester']) || !is_bool($disable_cancelling_for['requester'])) {
+      $disable_cancelling_for['requester'] = FALSE;
+    }
+
     // must be either an administer, a manager, a venue coordinator, or a requester for the specific request to perform cancelling.
-    if (!$roles['administer'] && !$roles['manager'] && !($roles['reviewer'] && array_key_exists($request['venue_coordinator']['user_id'][0]->value, $venue_coordinator_ids))) {
-      if (!$roles['requester'] || $request['mer']['user_id'][0]->value != $user->uid) {
+    if ($roles['administer'] || $roles['manager']) {
+      // no restrictions applied.
+    }
+    elseif ($roles['reviewer']) {
+      if (!array_key_exists($request['venue_coordinator']['user_id'][0]->value, $venue_coordinator_ids) || $disable_cancelling_for['reviewer']) {
+        // also check for requester access.
+        if (!$roles['requester'] || $request['mer']['user_id'][0]->value != $user->uid || $disable_cancelling_for['requester']) {
+          $access[$request_id] = FALSE;
+          return FALSE;
+        }
+      }
+    }
+    elseif ($roles['requester']) {
+      if ($request['mer']['user_id'][0]->value != $user->uid || $disable_cancelling_for['requester']) {
         $access[$request_id] = FALSE;
         return FALSE;
       }
+    }
+    else {
+      $access[$request_id] = FALSE;
+      return FALSE;
     }
 
     $instance = mfcs_instance();
@@ -1280,6 +1436,7 @@ function mfcs_request_access($operation, $request, $user = NULL, $section = NULL
       MFCS_REQUEST_STATUS_CLOSED_ACCEPTED,
       MFCS_REQUEST_STATUS_CLOSED_DENIED,
       MFCS_REQUEST_STATUS_CANCELLED,
+      MFCS_REQUEST_STATUS_CLOSED_ACCEPTED_CANCELLED,
     );
 
     if ($roles['manager'] || $roles['reviewer']) {
@@ -1377,6 +1534,7 @@ function mfcs_page_request_reviewer_access($user, $request_id, $review_restricti
     MFCS_REQUEST_STATUS_CLOSED_UNAVAILABLE,
     MFCS_REQUEST_STATUS_CLOSED_DUE_TO_LOCK,
     MFCS_REQUEST_STATUS_CANCELLED,
+    MFCS_REQUEST_STATUS_CLOSED_ACCEPTED_CANCELLED,
   );
 
   // if the reviewer is associated with the requests and the request is in one of these status, then the reviewer can review.
@@ -1404,6 +1562,7 @@ function mfcs_page_request_reviewer_access($user, $request_id, $review_restricti
   $show_status_insurance = array(
     MFCS_REQUEST_STATUS_LOCKED,
     MFCS_REQUEST_STATUS_CLOSED_ACCEPTED,
+    MFCS_REQUEST_STATUS_CLOSED_ACCEPTED_CANCELLED,
   );
 
   $proxies = mfcs_get_proxy_venue_coordinator($user->uid);
@@ -1450,17 +1609,30 @@ function mfcs_page_request_reviewer_access($user, $request_id, $review_restricti
         $query->condition('mer.step', $show_step_reviewer, 'NOT IN');
       }
       else {
-        $already_reviewed_query = db_select('mfcs_reviewers', 'mr_r');
-        $already_reviewed_query->innerJoin('mfcs_reviewed', 'mrd_r', 'mr_r.reviewer_classification = mrd_r.classification');
-        $already_reviewed_query->addField('mrd_r', 'request_id', 'request_id');
-        $already_reviewed_query->where('mr_r.request_classification = mer.classification AND mr_r.review_step = mer.step');
-        $already_reviewed_query->condition('mr_r.user_id', $user->uid);
-        $already_reviewed_query->condition('mr_r.disabled', 0);
-
         $and = db_and();
         $and->condition('mer.status', $show_status_reviewer_review, 'IN');
         $and->condition('mer.step', $show_step_reviewer, 'IN');
-        $and->condition('mer.id', $already_reviewed_query, 'NOT IN');
+
+        // check each and every single reviewer classification separately.
+        // while this is more expensive, this allows for reviewing when some (but not all) of the classifications have not yet reviewed.
+        // example:
+        // - user 1, with roles A, B and C, has reviewed request Z.
+        // - user 2, with roles B, C, and D, wants to review request Z.
+        // - user 2 should still be allowed to review as D, but not as B or C.
+        $reviewed_or = db_or();
+        foreach ($reviewer_settings['classifications'] as $reviewer_classification) {
+          $already_reviewed_query = db_select('mfcs_reviewers', 'mr_r');
+          $already_reviewed_query->innerJoin('mfcs_reviewed', 'mrd_r', 'mr_r.reviewer_classification = mrd_r.classification');
+          $already_reviewed_query->addField('mrd_r', 'request_id', 'request_id');
+          $already_reviewed_query->where('mr_r.request_classification = mer.classification AND mr_r.review_step = mer.step');
+          $already_reviewed_query->condition('mr_r.user_id', $user->uid);
+          $already_reviewed_query->condition('mr_r.disabled', 0);
+          $already_reviewed_query->condition('mrd_r.classification', $reviewer_classification);
+          $reviewed_or->condition('mer.id', $already_reviewed_query, 'NOT IN');
+          unset($already_reviewed_query);
+        }
+        $and->condition($reviewed_or);
+        unset($reviewed_or);
 
         $sub_or = db_or();
         foreach ($reviewer_settings['for_step'] as $for_step => $step_classifications) {
@@ -1514,6 +1686,9 @@ function mfcs_page_request_reviewer_access($user, $request_id, $review_restricti
       // always show accepted requests.
       $or->condition('mer.status', MFCS_REQUEST_STATUS_CLOSED_ACCEPTED);
 
+      // accepted but cancelled requests need to be visible for telling clients that the request was cancelled.
+      $or->condition('mer.status', MFCS_REQUEST_STATUS_CLOSED_ACCEPTED_CANCELLED);
+
       // always allow venue coordinator access. to view.
       $or->condition('mer.venue_coordinator', $venue_coordinator_ids, 'IN');
 
@@ -1550,6 +1725,9 @@ function mfcs_page_request_reviewer_access($user, $request_id, $review_restricti
 
       // always show completed and accepted requests when there are no restrictions.
       $or->condition('mer.status', MFCS_REQUEST_STATUS_CLOSED_ACCEPTED);
+
+      // accepted but cancelled requests need to be visible for telling clients that the request was cancelled.
+      $or->condition('mer.status', MFCS_REQUEST_STATUS_CLOSED_ACCEPTED_CANCELLED);
 
       // always allow venue coordinator access.
       $or->condition('mer.venue_coordinator', $venue_coordinator_ids, 'IN');
@@ -1765,6 +1943,9 @@ function mfcs_include($id) {
   elseif ($id == MFCS_INCLUDE_REQUEST_REASSIGN) {
     require_once($module_path . '/pages/request_reassign.inc');
   }
+  elseif ($id == MFCS_INCLUDE_REQUEST_ICAL) {
+    require_once($module_path . '/pages/request_ical.inc');
+  }
   elseif ($id == MFCS_INCLUDE_REQUEST_CREATE) {
     require_once($module_path . '/pages/request_create.inc');
   }
@@ -1773,6 +1954,9 @@ function mfcs_include($id) {
   }
   elseif ($id == MFCS_INCLUDE_REQUEST_LIST) {
     require_once($module_path . '/pages/request_list.inc');
+  }
+  elseif ($id == MFCS_INCLUDE_REQUEST_ICAL) {
+    require_once($module_path . '/pages/request_ical.inc');
   }
   elseif ($id == MFCS_INCLUDE_TESTING) {
     require_once($module_path . '/includes/testing.inc');
@@ -1869,11 +2053,13 @@ function mfcs_load_locations($location = NULL, $disabled = FALSE) {
     if (array_key_exists($location, $items)) {
       return $items[$location];
     }
-
-    return FALSE;
   }
 
-  $items = array();
+  // don't override cached items.
+  if (is_null($items)) {
+    $items = array();
+  }
+
   try {
     $query = db_select('mfcs_banner_locations', 'mbl');
 
@@ -1891,13 +2077,23 @@ function mfcs_load_locations($location = NULL, $disabled = FALSE) {
 
     $query->orderBy('mbl.human_name');
 
-    $items = $query->execute()->fetchAllAssoc('location_id');
+    $results = $query->execute()->fetchAllAssoc('location_id');
+
+    if (!empty($results)) {
+      foreach ($results as $lid => $l) {
+        $items[$lid] = $l;
+      }
+    }
 
     if (is_null($location)) {
       return $items;
     }
-    elseif (array_key_exists($location, $items)) {
+
+    if (array_key_exists($location, $items)) {
       return $items[$location];
+    }
+    else {
+      $items[$location] = FALSE;
     }
   }
   catch (Exception $ex) {
@@ -1960,11 +2156,13 @@ function mfcs_load_buildings($location = NULL, $building = NULL, $disabled = FAL
     if (array_key_exists($building, $items)) {
       return $items[$building];
     }
-
-    return FALSE;
   }
 
-  $items = array();
+  // don't override cached items.
+  if (is_null($items)) {
+    $items = array();
+  }
+
   try {
     $query = db_select('mfcs_banner_buildings', 'mbb');
 
@@ -2000,13 +2198,23 @@ function mfcs_load_buildings($location = NULL, $building = NULL, $disabled = FAL
 
     $query->orderBy('mbb.human_name');
 
-    $items = $query->execute()->fetchAllAssoc('building_id');
+    $results = $query->execute()->fetchAllAssoc('building_id');
+
+    if (!empty($results)) {
+      foreach ($results as $bid => $b) {
+        $items[$bid] = $b;
+      }
+    }
 
     if (is_null($building)) {
       return $items;
     }
-    elseif (array_key_exists($building, $items)) {
+
+    if (array_key_exists($building, $items)) {
       return $items[$building];
+    }
+    else {
+      $items[$building] = FALSE;
     }
   }
   catch (Exception $ex) {
@@ -2075,11 +2283,13 @@ function mfcs_load_rooms($location = NULL, $building = NULL, $room = NULL, $disa
     if (array_key_exists($room, $items)) {
       return $items[$room];
     }
-
-    return FALSE;
   }
 
-  $items = array();
+  // don't override cached items.
+  if (is_null($items)) {
+    $items = array();
+  }
+
   try {
     $query = db_select('mfcs_banner_rooms', 'mbr');
     $query->innerJoin('mfcs_banner_buildings', 'mbb', 'mbr.building = mbb.id');
@@ -2134,13 +2344,23 @@ function mfcs_load_rooms($location = NULL, $building = NULL, $room = NULL, $disa
     $query->orderBy('mbr.human_name');
     $query->orderBy('mbr.machine_name');
 
-    $items = $query->execute()->fetchAllAssoc('room_id');
+    $results = $query->execute()->fetchAllAssoc('room_id');
+
+    if (!empty($results)) {
+      foreach ($results as $rid => $r) {
+        $items[$rid] = $r;
+      }
+    }
 
     if (is_null($room)) {
       return $items;
     }
-    elseif (array_key_exists($room, $items)) {
+
+    if (array_key_exists($room, $items)) {
       return $items[$room];
+    }
+    else {
+      $items[$room] = FALSE;
     }
   }
   catch (Exception $ex) {
@@ -4112,6 +4332,8 @@ function mfcs_sync_banner_to_local_classes() {
  * @see mfcs_cronapi()
  */
 function mfcs_oracle_recache_cron() {
+  mfcs_set_using_effective_system_id();
+
   mfcs_sync_banner_to_local();
 }
 
@@ -4123,6 +4345,8 @@ function mfcs_oracle_recache_cron() {
  * @see mfcs_cronapi()
  */
 function mfcs_insurance_not_provided_alert_cron() {
+  mfcs_set_using_effective_system_id();
+
   mfcs_include(MFCS_INCLUDE_WORKFLOW);
 
   $system_user = user_load(1);
@@ -4193,6 +4417,7 @@ function mfcs_insurance_not_provided_alert_cron() {
     }
   }
 }
+
 /**
  * Executes the cron queue to cancel requests older than the current day.
  *
@@ -4201,6 +4426,8 @@ function mfcs_insurance_not_provided_alert_cron() {
  * @see mfcs_cronapi()
  */
 function mfcs_autocancel_old_requests_cron() {
+  mfcs_set_using_effective_system_id();
+
   $status = array(
     MFCS_REQUEST_STATUS_UNLOCKED,
     MFCS_REQUEST_STATUS_LOCKED,
@@ -4248,14 +4475,15 @@ function mfcs_autocancel_old_requests_cron() {
     $cancelled = mfcs_workflow_set_status($request_id, MFCS_REQUEST_STATUS_CANCELLED, $system_user);
 
     if ($cancelled) {
-      mfcs_workflow_step_review($request_id, $system_user, MFCS_REVIEW_DECISION_CANCELLED);
+      $message = "One or more dates associated with the request are now in the past.";
+      mfcs_workflow_step_review($request_id, $system_user, MFCS_REVIEW_DECISION_CANCELLED, $message);
 
       $parameters = array();
       $parameters['changed_by'] = $system_user->uid;
       $parameters['changed_type'] = 'user';
       $parameters['cancelled'] = TRUE;
       $parameters['auto-cancelled'] = TRUE;
-      $parameters['auto-cancelled-reason'] = "One or more dates associated with the request are now in the past.";
+      $parameters['auto-cancelled-reason'] = $message;
       mfcs_send_workflow_emails($request_id, $parameters);
     }
     else {
@@ -4273,6 +4501,8 @@ function mfcs_autocancel_old_requests_cron() {
  * @see mfcs_cronapi()
  */
 function mfcs_auto_block_accounts_cron() {
+  mfcs_set_using_effective_system_id();
+
   global $conf;
 
   $no_auto_block_accounts = array();
@@ -5369,9 +5599,9 @@ function mfcs_get_reviewers($conditions = array(), $options = array()) {
 
     if ($join) {
       $query->innerJoin('users', 'u', 'u.uid = mr.user_id');
-      $query->innerJoin('field_data_field_user_first_name', 'fdfufn', 'u.uid = fdfufn.entity_id AND fdfufn.delta = 0');
-      $query->innerJoin('field_data_field_user_last_name', 'fdfuln', 'u.uid = fdfuln.entity_id AND fdfuln.delta = 0');
-      $query->innerJoin('field_data_field_user_banner_id', 'fdfubi', 'u.uid = fdfubi.entity_id AND fdfubi.delta = 0');
+      $query->leftJoin('field_data_field_user_first_name', 'fdfufn', 'u.uid = fdfufn.entity_id AND fdfufn.delta = 0');
+      $query->leftJoin('field_data_field_user_last_name', 'fdfuln', 'u.uid = fdfuln.entity_id AND fdfuln.delta = 0');
+      $query->leftJoin('field_data_field_user_banner_id', 'fdfubi', 'u.uid = fdfubi.entity_id AND fdfubi.delta = 0');
 
       $query->innerJoin('taxonomy_term_data', 'ttd1', 'ttd1.vid = 1 AND mr.request_classification = ttd1.tid');
       $query->innerJoin('taxonomy_term_data', 'ttd2', 'ttd2.vid = 19 AND mr.review_step = ttd2.tid');
@@ -5589,14 +5819,14 @@ function mfcs_get_proxy_venue_coordinators($conditions = array(), $options = arr
 
     if ($join) {
       $query->innerJoin('users', 'u', 'mpvc.user_id = u.uid');
-      $query->innerJoin('field_data_field_user_first_name', 'fdfufn', 'u.uid = fdfufn.entity_id AND fdfufn.delta = 0');
-      $query->innerJoin('field_data_field_user_last_name', 'fdfuln', 'u.uid = fdfuln.entity_id AND fdfuln.delta = 0');
-      $query->innerJoin('field_data_field_user_banner_id', 'fdfubi', 'u.uid = fdfubi.entity_id AND fdfubi.delta = 0');
+      $query->leftJoin('field_data_field_user_first_name', 'fdfufn', 'u.uid = fdfufn.entity_id AND fdfufn.delta = 0');
+      $query->leftJoin('field_data_field_user_last_name', 'fdfuln', 'u.uid = fdfuln.entity_id AND fdfuln.delta = 0');
+      $query->leftJoin('field_data_field_user_banner_id', 'fdfubi', 'u.uid = fdfubi.entity_id AND fdfubi.delta = 0');
 
       $query->innerJoin('users', 'pu', 'mpvc.proxy_id = pu.uid');
-      $query->innerJoin('field_data_field_user_first_name', 'pfdfufn', 'pu.uid = pfdfufn.entity_id AND pfdfufn.delta = 0');
-      $query->innerJoin('field_data_field_user_last_name', 'pfdfuln', 'pu.uid = pfdfuln.entity_id AND pfdfuln.delta = 0');
-      $query->innerJoin('field_data_field_user_banner_id', 'pfdfubi', 'pu.uid = pfdfubi.entity_id AND pfdfubi.delta = 0');
+      $query->leftJoin('field_data_field_user_first_name', 'pfdfufn', 'pu.uid = pfdfufn.entity_id AND pfdfufn.delta = 0');
+      $query->leftJoin('field_data_field_user_last_name', 'pfdfuln', 'pu.uid = pfdfuln.entity_id AND pfdfuln.delta = 0');
+      $query->leftJoin('field_data_field_user_banner_id', 'pfdfubi', 'pu.uid = pfdfubi.entity_id AND pfdfubi.delta = 0');
     }
 
     if (!empty($conditions)) {
@@ -5851,9 +6081,9 @@ function mfcs_get_user_information($user_id) {
 
   try {
     $query = db_select('users', 'u');
-    $query->innerJoin('field_data_field_user_first_name', 'fdfufn', 'u.uid = fdfufn.entity_id AND fdfufn.delta = 0');
-    $query->innerJoin('field_data_field_user_last_name', 'fdfuln', 'u.uid = fdfuln.entity_id AND fdfuln.delta = 0');
-    $query->innerJoin('field_data_field_user_banner_id', 'fdfubi', 'u.uid = fdfubi.entity_id AND fdfubi.delta = 0');
+    $query->leftJoin('field_data_field_user_first_name', 'fdfufn', 'u.uid = fdfufn.entity_id AND fdfufn.delta = 0');
+    $query->leftJoin('field_data_field_user_last_name', 'fdfuln', 'u.uid = fdfuln.entity_id AND fdfuln.delta = 0');
+    $query->leftJoin('field_data_field_user_banner_id', 'fdfubi', 'u.uid = fdfubi.entity_id AND fdfubi.delta = 0');
 
     $query->addField('u', 'name', 'name');
     $query->addField('u', 'created', 'created');
@@ -5944,15 +6174,37 @@ function mfcs_get_reviewer_settings_by_user_id($user_id, $disabled = FALSE) {
   );
 
   foreach ($reviewers as $reviewer) {
-    $settings['classifications'][$reviewer->reviewer_classification] = $reviewer->reviewer_classification;
-    $settings['steps'][$reviewer->review_step] = $reviewer->review_step;
-    $settings['request_classifications'][$reviewer->request_classification] = $reviewer->request_classification;
+    if (is_string($reviewer->reviewer_classification)) {
+      $reviewer_classification = (int) $reviewer->reviewer_classification;
+    }
+    else {
+      $reviewer_classification = $reviewer->reviewer_classification;
+    }
+
+    $reviewer_review_step = NULL;
+    if (isset($reviewer->review_step) && is_string($reviewer->review_step)) {
+      $reviewer_review_step = (int) $reviewer->review_step;
+    }
+    else {
+      $reviewer_review_step = $reviewer->review_step;
+    }
+
+    if (is_string($reviewer->request_classification)) {
+      $reviewer_request_classification = (int) $reviewer->request_classification;
+    }
+    else {
+      $reviewer_request_classification = $reviewer->request_classification;
+    }
+
+    $settings['classifications'][$reviewer_classification] = $reviewer_classification;
+    $settings['steps'][$reviewer_review_step] = $reviewer_review_step;
+    $settings['request_classifications'][$reviewer_request_classification] = $reviewer_request_classification;
 
     // provides 'request classifications' (and not 'review classifications') information on a per step basis.
-    if (!array_key_exists($reviewer->review_step, $settings['for_step'])) {
-      $settings['for_step'][$reviewer->review_step] = array();
+    if (!array_key_exists($reviewer_review_step, $settings['for_step'])) {
+      $settings['for_step'][$reviewer_review_step] = array();
     }
-    $settings['for_step'][$reviewer->review_step][$reviewer->request_classification] = $reviewer->request_classification;
+    $settings['for_step'][$reviewer_review_step][$reviewer_request_classification] = $reviewer_request_classification;
   }
 
   $static_settings[$user_id] = $settings;
@@ -6244,9 +6496,12 @@ function mfcs_display_room_unavailable_message($dates) {
  *     'distinct': Process the entire query as distinct.
  *     'distinct_id': Custom option to load mer.id as distinct. This overrides
  *                    'distinct' when TRUE.
- *     'cancelled': When TRUE, individual dates that are cancelled will be shown.
- *                  This only affects requests that have not been cancelled as
- *                  a whole but whose individual dates may have been.
+ *     'cancelled': When not set or set to MFCS_LOAD_CANCELLED_NONE, no cancelled requests or individual dates are loaded.
+ *                  When MFCS_LOAD_CANCELLED_INDIVIDUAL, individual dates associated with a request are loaded.
+ *                  When MFCS_LOAD_CANCELLED_REQUEST, requests that are cancelled are loaded.
+ *                  When MFCS_LOAD_CANCELLED_ALL, both individual dates and requests that are cancelled are loaded.
+ *     'user_id': When defined and an integer, represents the user id of the user to load the listing as.
+ *     'only_requester': When defined an a boolean, represents that only requests whose requester is the current user xor the user specified by 'user_id'.
  *
  * @return array|false
  *   An array of containing the following:
@@ -6310,12 +6565,25 @@ function mfcs_request_load_listing($conditions = array(), $options = array()) {
     }
   }
 
-  $cancelled = FALSE;
-  if (isset($options['cancelled']) && is_bool($options['cancelled'])) {
-    $cancelled = (bool) $options['cancelled'];
-    if ($cancelled) {
-      $cancelled = FALSE;
+  $cancelled = MFCS_LOAD_CANCELLED_NONE;
+  if (isset($options['cancelled']) && cf_is_integer($options['cancelled'])) {
+    switch ($options['cancelled']) {
+      case MFCS_LOAD_CANCELLED_INDIVIDUAL:
+      case MFCS_LOAD_CANCELLED_REQUEST:
+      case MFCS_LOAD_CANCELLED_ALL:
+        $cancelled = (int) $options['cancelled'];
+        break;
     }
+  }
+
+  $user_id = NULL;
+  if (isset($options['user_id']) && cf_is_integer($options['user_id'])) {
+    $user_id = (int) $options['user_id'];
+  }
+
+  $only_requester = NULL;
+  if (isset($options['only_requester']) && is_bool($options['only_requester'])) {
+    $only_requester = $options['only_requester'];
   }
 
   $return = array(
@@ -6342,11 +6610,28 @@ function mfcs_request_load_listing($conditions = array(), $options = array()) {
     $extra_fields = $options['extra_fields'];
   }
 
-  $user = cf_current_user();
+  if (is_null($user_id)) {
+    $user = cf_current_user();
+  }
+  elseif ($user_id >= 0) {
+    $user = user_load($user_id);
+  }
+  else {
+    $user = user_load(0);
+  }
 
-  $manager = user_access('mfcs manage', $user);
-  $reviewer = user_access('mfcs review', $user);
-  $requester = user_access('mfcs request', $user);
+  $manager = FALSE;
+  $reviewer = FALSE;
+  $requester = FALSE;
+  if ($user_id === MFCS_USER_REQUEST) {
+    // this is a simulated user account and must be handled as a special case.
+    $requester = TRUE;
+  }
+  else {
+    $manager = user_access('mfcs manage', $user);
+    $reviewer = user_access('mfcs review', $user);
+    $requester = user_access('mfcs request', $user);
+  }
 
   $s = 'i';
   $like = 'ILIKE';
@@ -6379,7 +6664,7 @@ function mfcs_request_load_listing($conditions = array(), $options = array()) {
     MFCS_REVIEW_DECISION_DENY,
   );
 
-  if ($review_restrictions != MFCS_REVIEW_RESTRICTION_NONE) {
+  if ($review_restrictions != MFCS_REVIEW_RESTRICTION_NONE && $user_id !== MFCS_USER_REQUEST) {
     $reviewer_settings = mfcs_get_reviewer_settings_by_user_id($user->uid);
   }
   else {
@@ -6424,7 +6709,13 @@ function mfcs_request_load_listing($conditions = array(), $options = array()) {
     $count_query = NULL;
     if ($count) {
       $count_query = clone($query);
-      $count_query->addExpression('count(mer.id)');
+
+      if ($distinct_id) {
+        $count_query->addExpression('count(distinct mer.id)');
+      }
+      else {
+        $count_query->addExpression('count(mer.id)');
+      }
     }
 
     if ($distinct) {
@@ -6601,8 +6892,18 @@ function mfcs_request_load_listing($conditions = array(), $options = array()) {
 
           // always show completed and accepted requests when there are no restrictions.
           $and = db_and();
-          $and->condition('mer.status', MFCS_REQUEST_STATUS_CLOSED_ACCEPTED);
+          if ($cancelled === MFCS_LOAD_CANCELLED_REQUEST || $cancelled === MFCS_LOAD_CANCELLED_ALL) {
+            $subor = db_or();
+            $subor->condition('mer.status', MFCS_REQUEST_STATUS_CLOSED_ACCEPTED);
+            $subor->condition('mer.status', MFCS_REQUEST_STATUS_CLOSED_ACCEPTED_CANCELLED);
+            $and->condition($subor);
+            unset($subor);
+          }
+          else {
+            $and->condition('mer.status', MFCS_REQUEST_STATUS_CLOSED_ACCEPTED);
+          }
           $and->condition('mer.step', MFCS_REVIEW_STEP_COMPLETED);
+
           $or->condition($and);
 
           // process venue coordinator access.
@@ -6617,12 +6918,24 @@ function mfcs_request_load_listing($conditions = array(), $options = array()) {
           }
         }
       }
-
       // always show accepted requests when there are no restrictions.
-      if ($review_restrictions == MFCS_REVIEW_RESTRICTION_NONE) {
+      elseif ($review_restrictions == MFCS_REVIEW_RESTRICTION_NONE) {
         // if there are no conditions, then don't add any!
         if (!is_null($or)) {
-          $or->condition('mer.status', MFCS_REQUEST_STATUS_CLOSED_ACCEPTED);
+          $and = db_and();
+          if ($cancelled === MFCS_LOAD_CANCELLED_REQUEST || $cancelled === MFCS_LOAD_CANCELLED_ALL) {
+            $subor = db_or();
+            $subor->condition('mer.status', MFCS_REQUEST_STATUS_CLOSED_ACCEPTED);
+            $subor->condition('mer.status', MFCS_REQUEST_STATUS_CLOSED_ACCEPTED_CANCELLED);
+            $and->condition($subor);
+            unset($subor);
+          }
+          else {
+            $and->condition('mer.status', MFCS_REQUEST_STATUS_CLOSED_ACCEPTED);
+          }
+          $and->condition('mer.step', MFCS_REVIEW_STEP_COMPLETED);
+          $or->condition($and);
+          unset($and);
         }
       }
 
@@ -6632,13 +6945,47 @@ function mfcs_request_load_listing($conditions = array(), $options = array()) {
         }
         $outermost_and->condition($or);
       }
+
+      // only show requests for the current user xor the specified user.
+      if (is_bool($only_requester) && $only_requester) {
+        if (is_null($outermost_and)) {
+          $outermost_and = db_and();
+        }
+
+        $outermost_and->condition('mer.user_id', $user->uid);
+      }
     }
     elseif ($requester) {
+      $or = NULL;
+
       // always show accepted requests when there are no restrictions.
       if ($review_restrictions == MFCS_REVIEW_RESTRICTION_NONE) {
-        $or = db_or();
-        $or->condition('mer.status', MFCS_REQUEST_STATUS_CLOSED_ACCEPTED);
-        $or->condition('mer.user_id', $user->uid);
+        if (is_null($or)) {
+          $or = db_or();
+        }
+
+        // show cancelled requests that were once approved, if requested to do so.
+        if ($cancelled === MFCS_LOAD_CANCELLED_REQUEST || $cancelled === MFCS_LOAD_CANCELLED_ALL) {
+          if (is_null($or)) {
+            $or = db_or();
+          }
+
+          $and = db_and();
+          $and->condition('mer.status', MFCS_REQUEST_STATUS_CLOSED_ACCEPTED_CANCELLED);
+          $and->condition('mer.step', MFCS_REVIEW_STEP_COMPLETED);
+          $or->condition($and);
+          unset($and);
+        }
+
+        $and = db_and();
+        $and->condition('mer.status', MFCS_REQUEST_STATUS_CLOSED_ACCEPTED);
+        $and->condition('mer.step', MFCS_REVIEW_STEP_COMPLETED);
+        $or->condition($and);
+        unset($and);
+
+        if ($user->uid > 0) {
+          $or->condition('mer.user_id', $user->uid);
+        }
 
         if (is_null($outermost_and)) {
           $outermost_and = db_and();
@@ -6646,9 +6993,20 @@ function mfcs_request_load_listing($conditions = array(), $options = array()) {
         $outermost_and->condition($or);
       }
       else {
+        if ($user->uid > 0) {
+          if (is_null($outermost_and)) {
+            $outermost_and = db_and();
+          }
+          $outermost_and->condition('mer.user_id', $user->uid);
+        }
+      }
+
+      // only show requests for the current user xor the specified user.
+      if (is_bool($only_requester) && $only_requester) {
         if (is_null($outermost_and)) {
           $outermost_and = db_and();
         }
+
         $outermost_and->condition('mer.user_id', $user->uid);
       }
     }
@@ -6803,7 +7161,7 @@ function mfcs_request_load_listing($conditions = array(), $options = array()) {
           }
           elseif ($sort_name == 'date') {
             if (!array_key_exists('mfcs_field_dates_date', $already_joined)) {
-              if ($cancelled) {
+              if ($cancelled == MFCS_LOAD_CANCELLED_INDIVIDUAL || $cancelled == MFCS_LOAD_CANCELLED_ALL) {
                 $query->innerJoin('mfcs_field_dates_date', 'mfdd', 'mc.request_id = mfdd.request_id AND mc.dates_date = mfdd.revision');
               }
               else {
@@ -6907,10 +7265,11 @@ function mfcs_request_load_listing($conditions = array(), $options = array()) {
         $sub_query->addField('mfdts', 'value', 'time_start');
         $sub_query->addField('mfdtsp', 'value', 'time_stop');
         $sub_query->addField('mfdc', 'value', 'category');
+        $sub_query->addField('mfdd', 'cancelled', 'cancelled');
 
         $sub_query->condition('mfdd.request_id', array_keys($found), 'IN');
 
-        if (!$cancelled) {
+        if ($cancelled != MFCS_LOAD_CANCELLED_INDIVIDUAL && $cancelled != MFCS_LOAD_CANCELLED_ALL) {
           $sub_query->condition('mfdd.cancelled', 1, '<>'); // using <> for backwards compatibility where mfdd.cancelled may be NULL.
         }
 
@@ -6923,6 +7282,7 @@ function mfcs_request_load_listing($conditions = array(), $options = array()) {
             $found[$sub_result->id]->time_start = array();
             $found[$sub_result->id]->time_stop = array();
             $found[$sub_result->id]->category = array();
+            $found[$sub_result->id]->cancelled = array();
 
             $initialized_date[$sub_result->id] = $sub_result->id;
           }
@@ -6931,6 +7291,7 @@ function mfcs_request_load_listing($conditions = array(), $options = array()) {
           $found[$sub_result->id]->time_start[$sub_result->delta] = $sub_result->time_start;
           $found[$sub_result->id]->time_stop[$sub_result->delta] = $sub_result->time_stop;
           $found[$sub_result->id]->category[$sub_result->delta] = $sub_result->category;
+          $found[$sub_result->id]->cancelled[$sub_result->delta] = $sub_result->cancelled;
         }
 
         unset($sub_results);
@@ -7920,6 +8281,11 @@ function mfcs_build_request_ajax_table($items_returned, $conditions, $options, $
     ),
   );
 
+  $rowId = '0';
+  if (isset($options['rowId']) && (is_string($options['rowId']) || is_null($options['rowId']))) {
+    $rowId = $options['rowId'];
+  }
+
   if (isset($options['columns']) && is_array($options['columns'])) {
     $columns = $options['columns'];
   }
@@ -8029,6 +8395,7 @@ function mfcs_build_request_ajax_table($items_returned, $conditions, $options, $
     'pageLength' => isset($options['limit']) ? $options['limit'] : 20,
     'dom' => 'lfCrtip',
     'KeyTable' => FALSE,
+    'rowId' => '0',
     'oColVis' => array(
       'buttonText' => '"Show / Hide"',
     ),
@@ -8037,6 +8404,11 @@ function mfcs_build_request_ajax_table($items_returned, $conditions, $options, $
     ),
     'searchDelay' => 1200,
   );
+
+  // see: https://datatables.net/reference/option/rowId
+  if (!is_null($rowId)) {
+    $table['datatable_settings']['rowId'] = $rowId;
+  }
 
   foreach ($columns as $column_id => $column) {
     $table['datatable_settings']['columns'][$column_id] = $column;
@@ -8062,6 +8434,50 @@ function mfcs_build_request_ajax_table($items_returned, $conditions, $options, $
     $table['datatable_settings']['ajax'] = $options['ajax_path'];
     $table['datatable_settings']['processing'] = TRUE;
     $table['datatable_settings']['serverSide'] = TRUE;
+
+    if (isset($options['only_requester']) && is_bool($options['only_requester'])) {
+      $ajax_path = str_replace("'", '', $options['ajax_path']);
+
+      $showing_my_requests = "function (e, dt, node, config) {" . "\n";
+      $showing_my_requests .= "  var data = dt.ajax.params();" . "\n";
+      $showing_my_requests .= "  var url = dt.ajax.url();" . "\n";
+
+      $showing_my_requests .= "  if (url == '" . $ajax_path . "/my_requests') {" . "\n";
+      $showing_my_requests .= "    dt.ajax.url('" . $ajax_path . "/all_requests');" . "\n";
+      $showing_my_requests .= "    dt.buttons('.datatable-showing_requests').text('Show My Requests');" . "\n";
+      $showing_my_requests .= "  }" . "\n";
+      $showing_my_requests .= "  else if (url == '" . $ajax_path . "/all_requests') {" . "\n";
+      $showing_my_requests .= "    dt.ajax.url('" . $ajax_path . "/my_requests');" . "\n";
+      $showing_my_requests .= "    dt.buttons('.datatable-showing_requests').text('Show All Requests');" . "\n";
+      $showing_my_requests .= "  }" . "\n";
+      $showing_my_requests .= "  else {" . "\n";
+
+      if ($options['only_requester']) {
+        $showing_my_requests .= "    dt.ajax.url('" . $ajax_path . "/all_requests');" . "\n";
+        $showing_my_requests .= "    dt.buttons('.datatable-showing_requests').text('Show My Requests');" . "\n";
+      }
+      else {
+        $showing_my_requests .= "    dt.ajax.url('" . $ajax_path . "/my_requests');" . "\n";
+        $showing_my_requests .= "    dt.buttons('.datatable-showing_requests').text('Show All Requests');" . "\n";
+      }
+
+      $showing_my_requests .= "  }" . "\n";
+      $showing_my_requests .= "  dt.ajax.reload();" . "\n";
+      $showing_my_requests .= "}" . "\n";
+
+      $table['datatable_settings']['dom'] = 'lfCBrtip';
+      $table['datatable_settings']['buttons'] = array();
+      $table['datatable_settings']['buttons']['Show Requests'] = array(
+        'text' => "'Show All Requests'",
+        'action' => $showing_my_requests,
+        'className' => "'datatable-showing_requests'",
+      );
+      unset($showing_my_requests);
+
+      if ($options['only_requester'] === FALSE) {
+        $table['datatable_settings']['buttons']['Show Requests']['text'] = "'Show My Requests'";
+      }
+    }
   }
 
 
@@ -8374,8 +8790,8 @@ function mfcs_request_get_available_venue_coordinators() {
 
   try {
     $query = db_select('users', 'u');
-    $query->innerJoin('field_data_field_user_first_name', 'fdfufn', 'u.uid = fdfufn.entity_id AND u.uid = fdfufn.entity_id AND fdfufn.delta = 0');
-    $query->innerJoin('field_data_field_user_last_name', 'fdfuln', 'u.uid = fdfuln.entity_id AND u.uid = fdfuln.entity_id AND fdfufn.entity_id = fdfuln.entity_id AND fdfuln.delta = 0');
+    $query->leftJoin('field_data_field_user_first_name', 'fdfufn', 'u.uid = fdfufn.entity_id AND u.uid = fdfufn.entity_id AND fdfufn.delta = 0');
+    $query->leftJoin('field_data_field_user_last_name', 'fdfuln', 'u.uid = fdfuln.entity_id AND u.uid = fdfuln.entity_id AND fdfufn.entity_id = fdfuln.entity_id AND fdfuln.delta = 0');
 
     $query->addField('u', 'uid', 'user_id');
     $query->addField('u', 'name', 'name');
@@ -8489,17 +8905,25 @@ function mfcs_get_requests_current_review_decisions($request_ids, $classificatio
   $required_reviewers_classifications = array();
   $reviewers_by_classification = array();
   foreach ($reviewers as $reviewer) {
-    if (!array_key_exists($reviewer->reviewer_classification, $required_reviewers_classifications)) {
+    if (is_string($reviewer->reviewer_classification)) {
+      $reviewer_classification = (int) $reviewer->reviewer_classification;
+    }
+    else {
+      $reviewer_classification = $reviewer->reviewer_classification;
+    }
+
+    // regardless of classification requirements, always provide all reviewers by classification.
+    if (!isset($reviewers_by_classification[$reviewer_classification][$reviewer->user_id])) {
+      $reviewers_by_classification[$reviewer_classification][$reviewer->user_id] = $reviewer->user_id;
+    }
+
+    if (!array_key_exists($reviewer_classification, $required_reviewers_classifications)) {
       // never count venue coordinator or the proxy reviewer classifications.
-      if ($reviewer->reviewer_classification == MFCS_REVIEWER_CLASSIFICATION_VENUE_COORDINATOR || $reviewer->reviewer_classification == MFCS_REVIEWER_CLASSIFICATION_VENUE_COORDINATOR_PROXY) {
+      if (($reviewer_classification == MFCS_REVIEWER_CLASSIFICATION_VENUE_COORDINATOR) || ($reviewer_classification == MFCS_REVIEWER_CLASSIFICATION_VENUE_COORDINATOR_PROXY)) {
         continue;
       }
 
-      $required_reviewers_classifications[$reviewer->reviewer_classification] = $reviewer_classification_options[$reviewer->reviewer_classification];
-
-      if (!isset($reviewers_by_classification[$reviewer->reviewer_classification][$reviewer->user_id])) {
-        $reviewers_by_classification[$reviewer->reviewer_classification][$reviewer->user_id] = $reviewer->user_id;
-      }
+      $required_reviewers_classifications[$reviewer_classification] = $reviewer_classification_options[$reviewer_classification];
     }
   }
 
@@ -9611,6 +10035,90 @@ function mfcs_banner_id_int_to_string($banner_id) {
   }
 
   return $banner_id_string;
+}
+
+/**
+ * Enables a static variable to identify that the (effective) system account is currently operating.
+ *
+ * This is primarily used for/by cron jobs, which use the actual account of anonymous (uid = 0).
+ */
+function mfcs_set_using_effective_system_id() {
+  $static = &drupal_static('mfcs_using_effective_system_id', TRUE);
+  $static = TRUE;
+}
+
+/**
+ * Returns status of whether or not the effective system id status is enabled.
+ *
+ * @return bool
+ *   Returns TRUE if the system id is considered active, FALSE otherwise.
+ */
+function mfcs_using_effective_system_id() {
+  $static = &drupal_static('mfcs_using_effective_system_id', FALSE);
+
+  if (!is_bool($static)) {
+    $static = FALSE;
+  }
+
+  return $static;
+}
+
+/**
+ * Returns classifications that have already reviewed the request as for the given step.
+ *
+ * @param int $request_id
+ *   The integer representing the request.
+ * @param array $reviewer_classifications
+ *   An array of all reviewer classifications to check if they have been reviewed.
+ *
+ * @return array|bool
+ *   An array containing the following:
+ *   'reviewed': An array of classifications that have already been reviewed (from provided list).
+ *   'available': An array of classifications that have not yet been reviewed (from provided list).
+ *   FALSE is returned on error.
+ */
+function mfcs_get_request_already_reviewed_as_classifications($request_id, $reviewer_classifications) {
+  if (!cf_is_integer($request_id)) {
+    cf_error::invalid_integer('request_id');
+    return FALSE;
+  }
+
+  if (!is_array($reviewer_classifications) || empty($reviewer_classifications)) {
+    cf_error::invalid_array('reviewer_classifications');
+    return FALSE;
+  }
+
+  $return = array(
+    'reviewed' => array(),
+    'available' => array(),
+  );
+
+  foreach ($reviewer_classifications as $classification) {
+    $return['available'][(int) $classification] = (int) $classification;
+  }
+
+  try {
+    $query = db_select('mfcs_reviewed', 'mrd_r');
+    $query->addField('mrd_r', 'classification', 'classification');
+    $query->condition('mrd_r.request_id', $request_id);
+    $query->condition('mrd_r.classification', $return['available'], 'IN');
+
+    $results = $query->execute()->fetchAll();
+    if (!empty($results)) {
+      foreach ($results as $result) {
+        $classification = (int) $result->classification;
+        $return['reviewed'][$classification] = $classification;
+        unset($return['available'][$classification]);
+      }
+    }
+  }
+  catch (Exception $ex) {
+    cf_error::on_exception($ex);
+
+    return FALSE;
+  }
+
+  return $return;
 }
 
 /**

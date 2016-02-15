@@ -366,6 +366,34 @@ function mfcs_hook_menu_requests_basic(&$items, $module_path) {
     'tab_root' => 'requests/list-0',
     'type' => MENU_CALLBACK,
   );
+
+  $items['requests/synchronize-0/ical/%'] = array(
+    'title' => "Synchronize Requests",
+    'description' => "Perform iCal synchronization operations.",
+    'page callback' => 'mfcs_request_synchronize_0_ical_page',
+    'page arguments' => array(3),
+    'file' => 'request_synchronize.inc',
+    'file path' => $module_path . '/pages',
+    'access callback' => 'mfcs_synchronize_request_access',
+    'access arguments' => array('' . MFCS_SYNCHRONIZE_TYPE_ICAL, 3),
+    'tab_parent' => 'requests',
+    'tab_root' => 'requests',
+    'type' => MENU_CALLBACK,
+  );
+
+  $items['requests/synchronize-0/ical/%/%'] = array(
+    'title' => "Synchronize Requests",
+    'description' => "Perform iCal synchronization operations.",
+    'page callback' => 'mfcs_request_synchronize_0_ical_page',
+    'page arguments' => array(3, 4),
+    'file' => 'request_synchronize.inc',
+    'file path' => $module_path . '/pages',
+    'access callback' => 'mfcs_synchronize_request_access',
+    'access arguments' => array('' . MFCS_SYNCHRONIZE_TYPE_ICAL, 3),
+    'tab_parent' => 'requests',
+    'tab_root' => 'requests',
+    'type' => MENU_CALLBACK,
+  );
 }
 
 /**
@@ -495,6 +523,19 @@ function mfcs_hook_menu_requests_listing(&$items, $module_path) {
     'title' => "",
     'page callback' => 'mfcs_ajax_list_0',
     'page arguments' => array(),
+    'file' => 'ajax.inc',
+    'file path' => $module_path . '/includes',
+    'access callback' => 'mfcs_page_request_access',
+    'access arguments' => array('list'),
+    'type' => MENU_CALLBACK,
+    'tab_parent' => 'requests/list-0',
+    'tab_root' => 'requests/list-0',
+  );
+
+  $items['requests/list-0/ajax/%'] = array(
+    'title' => "",
+    'page callback' => 'mfcs_ajax_list_0',
+    'page arguments' => array(3),
     'file' => 'ajax.inc',
     'file path' => $module_path . '/includes',
     'access callback' => 'mfcs_page_request_access',
@@ -748,7 +789,6 @@ function mfcs_hook_menu_requests_listing(&$items, $module_path) {
  *   The filesystem path to the module.
  */
 function mfcs_hook_menu_management(&$items, $module_path) {
-
   $items['requests/management'] = array(
     'title' => "Requests Management",
     'description' => "Requests Management",
@@ -1161,6 +1201,46 @@ function mfcs_hook_menu_management(&$items, $module_path) {
     'tab_parent' => 'requests/problems-0/users',
     'tab_root' => 'requests/problems-0/users',
   );
+
+  $items['requests/synchronize-0'] = array(
+    'title' => "Synchronize Requests",
+    'description' => "The synchronize ",
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('mfcs_request_synchronize_0_form'),
+    'file' => 'request_synchronize.inc',
+    'file path' => $module_path . '/pages',
+    'access callback' => 'mfcs_synchronize_request_access',
+    'access arguments' => array(),
+    'tab_parent' => 'requests',
+    'tab_root' => 'requests',
+    'type' => MENU_CALLBACK,
+  );
+
+  $items['requests/synchronize-0/ajax'] = array(
+    'title' => "Synchronize Requests",
+    'description' => "The synchronize ",
+    'page callback' => 'mfcs_ajax_synchronize_0_form',
+    'file' => 'ajax.inc',
+    'file path' => $module_path . '/includes',
+    'access callback' => 'mfcs_synchronize_request_access',
+    'access arguments' => array(),
+    'tab_parent' => 'requests',
+    'tab_root' => 'requests',
+  );
+
+  $items['requests/synchronize-0/%'] = array(
+    'title' => "Synchronize Requests",
+    'description' => "The synchronize ",
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('mfcs_request_synchronize_0_form', 2),
+    'file' => 'request_synchronize.inc',
+    'file path' => $module_path . '/pages',
+    'access callback' => 'mfcs_synchronize_request_access',
+    'access arguments' => array(),
+    'tab_parent' => 'requests',
+    'tab_root' => 'requests',
+    'type' => MENU_CALLBACK,
+  );
 }
 
 /**
@@ -1415,6 +1495,12 @@ function mfcs_hook_user_insert(&$edit, $account, $category) {
  * Internal function for hook_user_presave().
  */
 function mfcs_hook_user_presave(&$edit, $account, $category) {
+  if (!is_object($account) && property_exists($account, 'uid')) {
+    // for new accounts, the object will not be defined and therefore no user id exist during the user presave function.
+    // nothing can be done yet.
+    return;
+  }
+
   $roles = array();
   foreach ($account->roles as $role_id => $role_value) {
     $roles[$role_id] = $role_id;

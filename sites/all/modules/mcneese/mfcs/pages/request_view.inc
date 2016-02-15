@@ -21,7 +21,7 @@
  *   The unique identifier for a request.
  * @param int $mode
  *   Specifies the mode that alters how the form is rendered.
- * @param null|int $revision_id
+ * @param null|int $use_revision
  *   (optional) When not NULL, load the request based on the revision number
  *   instead of the latest revision.
  * @param bool $contained
@@ -30,7 +30,7 @@
  * @return string
  *   The HTML output representing the page.
  */
-function mfcs_request_view_0_form($form, &$form_state, $request_id, $mode = MFCS_VIEW_MODE_NORMAL, $revision_id = NULL, $contained = FALSE) {
+function mfcs_request_view_0_form($form, &$form_state, $request_id, $mode = MFCS_VIEW_MODE_NORMAL, $use_revision = NULL, $contained = FALSE) {
   if (!is_array($form)) {
     cf_error::invalid_array('form');
 
@@ -51,7 +51,7 @@ function mfcs_request_view_0_form($form, &$form_state, $request_id, $mode = MFCS
     $mode = MFCS_VIEW_MODE_NORMAL;
   }
 
-  $request = mfcs_load_request_by_id($request_id, NULL, $revision_id);
+  $request = mfcs_load_request_by_id($request_id, NULL, $use_revision);
 
   if (empty($request)) {
     drupal_not_found();
@@ -61,7 +61,7 @@ function mfcs_request_view_0_form($form, &$form_state, $request_id, $mode = MFCS
 
   $user = cf_current_user();
 
-  if (is_null($revision_id)) {
+  if (is_null($use_revision)) {
     $can_create_request = mfcs_request_access('create', $request, $user);
     $can_edit_request = mfcs_request_access('edit', $request, $user);
     $can_log_request = mfcs_request_access('log', $request, $user);
@@ -108,7 +108,7 @@ function mfcs_request_view_0_form($form, &$form_state, $request_id, $mode = MFCS
     return array();
   }
 
-  if (is_null($revision_id)) {
+  if (is_null($use_revision)) {
     if ($mode == MFCS_VIEW_MODE_NORMAL) {
       mfcs_add_canonical_headers('requests/view-0/' . $request_id . '/' . $mode, 'requests/view-0/' . $request_id);
     }
@@ -117,7 +117,7 @@ function mfcs_request_view_0_form($form, &$form_state, $request_id, $mode = MFCS
     }
   }
   else {
-    mfcs_add_canonical_headers('requests/view-0/' . $request_id . '/' . $mode . '/' . $revision_id);
+    mfcs_add_canonical_headers('requests/view-0/' . $request_id . '/' . $mode . '/' . $use_revision);
   }
 
     if (!is_string($mode) || !($mode == MFCS_VIEW_MODE_DISPLAY || $mode == MFCS_VIEW_MODE_LOG || $mode == MFCS_VIEW_MODE_OPERATIONS)) {
@@ -216,7 +216,7 @@ function mfcs_request_view_0_form($form, &$form_state, $request_id, $mode = MFCS
     }
   }
 
-  if ($can_reassign_request && is_null($revision_id)) {
+  if ($can_reassign_request && is_null($use_revision)) {
     if ($show_display) {
       if (mfcs_disabled_users_with_active_content($request['venue_coordinator']['user_id'][0]->value)) {
         $user_venue_coordinator = mfcs_load_basic_user_settings_by_user_id($request['venue_coordinator']['user_id'][0]->value);
@@ -267,10 +267,8 @@ function mfcs_request_view_0_form($form, &$form_state, $request_id, $mode = MFCS
     $status = (int) $status;
   }
 
-  if ($can_review_request || $can_comment_request) {
-    // show review operations only if the content is reviewable by the current user.
-    $request_classification = $request['request_coordinator']['classification'][0]->value;
 
+  if ($can_review_request || $can_comment_request) {
     // only show operations for states and steps that make sense to.
     $allowed_statuses = array(
       MFCS_REQUEST_STATUS_LOCKED,
@@ -333,7 +331,7 @@ function mfcs_request_view_0_form($form, &$form_state, $request_id, $mode = MFCS
     $can['ical'] = FALSE;
     $can['cancelling'] = FALSE;
   }
-  elseif (!is_null($revision_id)) {
+  elseif (!is_null($use_revision)) {
     $can['edit'] = FALSE;
     $can['history'] = (bool) $can_history_request;
     $can['agreement'] = FALSE;
@@ -346,8 +344,12 @@ function mfcs_request_view_0_form($form, &$form_state, $request_id, $mode = MFCS
     $can['history'] = (bool) $can_history_request;
     $can['agreement'] = (bool) $can_agreement_request;
     $can['clone'] = (bool) $can_create_request;
-    $can['ical'] = $status === MFCS_REQUEST_STATUS_CLOSED_ACCEPTED && $step === MFCS_REVIEW_STEP_COMPLETED;
+    $can['ical'] = FALSE;
     $can['cancelling'] = (bool) $can_cancelling_request;
+
+    if (($status === MFCS_REQUEST_STATUS_CLOSED_ACCEPTED || $status === MFCS_REQUEST_STATUS_CLOSED_ACCEPTED_CANCELLED) && $step === MFCS_REVIEW_STEP_COMPLETED) {
+      $can['ical'] = TRUE;
+    }
 
     if ($can['cancelling'] && count($request['dates']['date']) == 1) {
       // hide/prevent cancelling when there is only one date.
@@ -368,7 +370,16 @@ function mfcs_request_view_0_form($form, &$form_state, $request_id, $mode = MFCS
 
   $form['form']['revision_id'] = array(
     '#type' => 'value',
-    '#value' => $revision_id,
+    '#value' => $use_revision,
+  );
+
+  if (is_null($use_revision)) {
+    $form['form']['revision_id']['#value'] = $request['mer']['revision'][0]->value;
+  }
+
+  $form['form']['use_revision'] = array(
+    '#type' => 'value',
+    '#value' => $use_revision,
   );
 
   $form['form']['request'] = array(
@@ -391,6 +402,11 @@ function mfcs_request_view_0_form($form, &$form_state, $request_id, $mode = MFCS
     '#value' => $user,
   );
 
+  $form['form']['already_reviewed_as'] = array(
+    '#type' => 'value',
+    '#value' => array(),
+  );
+
   if (!isset($request['information']['type'][0]->value) || !cf_is_integer($request['information']['type'][0]->value)) {
     cf_error::invalid_integer('request[information][type][0]->value');
     $form['message'] = array(
@@ -400,8 +416,16 @@ function mfcs_request_view_0_form($form, &$form_state, $request_id, $mode = MFCS
     return $form;
   }
 
+  // show review operations only if the content is reviewable by the current user.
   $request_classification = $request['request_coordinator']['classification'][0]->value;
+  if (is_string($request_classification)) {
+    $request_classification = (int) $request_classification;
+  }
+
   $request_type = $request['information']['type'][0]->value;
+  if (is_string($request_type)) {
+    $request_type = (int) $request_type;
+  }
 
   if ($show_display) {
     mfcs_include(MFCS_INCLUDE_VIEW);
@@ -464,6 +488,9 @@ function mfcs_request_view_0_form($form, &$form_state, $request_id, $mode = MFCS
 
     // pre-process special case of review decisions.
     $decision_presentation = $presentation['reviews']['decision'];
+    if (is_string($decision_presentation)) {
+      $decision_presentation = (int) $decision_presentation;
+    }
     unset($presentation['reviews']['decision']);
 
     $reviews = mfcs_get_latest_reviews($request_id, array(MFCS_REVIEW_STEP_REVIEW, MFCS_REVIEW_STEP_MAKE_DECISIONS), array(MFCS_REVIEW_DECISION_APPROVE, MFCS_REVIEW_DECISION_DENY));
@@ -481,12 +508,19 @@ function mfcs_request_view_0_form($form, &$form_state, $request_id, $mode = MFCS
 
       if (!empty($reviews_step)) {
         foreach ($reviews_step as $reviewer_classification => $reviewer_decisions) {
+          if (is_string($reviewer_classification)) {
+            $reviewer_classification = (int) $reviewer_classification;
+          }
+
           if (!isset($classification_options[$reviewer_classification])) {
             continue;
           }
 
           // the last decision made is the first item and should be the only value displayed.
           $decision = array_shift($reviewer_decisions);
+          if (is_string($decision)) {
+            $decision = (int) $decision;
+          }
           $preprocessed_decisions[$reviewer_classification] = array(0 => $decision);
         }
 
@@ -515,12 +549,19 @@ function mfcs_request_view_0_form($form, &$form_state, $request_id, $mode = MFCS
 
       if (!empty($decision_step)) {
         foreach ($decision_step as $reviewer_classification => $reviewer_decisions) {
+          if (is_string($reviewer_classification)) {
+            $reviewer_classification = (int) $reviewer_classification;
+          }
+
           if (!isset($classification_options[$reviewer_classification])) {
             continue;
           }
 
           // the last decision made is the first item and should be the only value displayed.
           $decision = array_shift($reviewer_decisions);
+          if (is_string($decision)) {
+            $decision = (int) $decision;
+          }
 
           $key_string = 'classification-final_decision';
           $presentation['reviews'][$key_string] = $decision_presentation;
@@ -855,7 +896,7 @@ function mfcs_request_view_0_form($form, &$form_state, $request_id, $mode = MFCS
         '#weight' => 1000,
       );
 
-      if ($can_cancel_request && is_null($revision_id)) {
+      if ($can_cancel_request && is_null($use_revision)) {
         $form['display']['submit']['cancel'] = array(
           '#id' => 'request-display-submit-cancel',
           '#name' => 'request-display-submit-cancel',
@@ -873,7 +914,7 @@ function mfcs_request_view_0_form($form, &$form_state, $request_id, $mode = MFCS
           ),
         );
       }
-      elseif ($can_uncancel_request && is_null($revision_id)) {
+      elseif ($can_uncancel_request && is_null($use_revision)) {
         $form['display']['submit']['uncancel'] = array(
           '#id' => 'request-display-submit-uncancel',
           '#name' => 'request-display-submit-uncancel',
@@ -924,7 +965,7 @@ function mfcs_request_view_0_form($form, &$form_state, $request_id, $mode = MFCS
         ),
       );
 
-      if ($can_reassign_request && is_null($revision_id)) {
+      if ($can_reassign_request && is_null($use_revision)) {
         $form['display']['submit']['reassign'] = array(
           '#id' => 'request-display-submit-reassign',
           '#name' => 'request-display-submit-reassign',
@@ -951,6 +992,18 @@ function mfcs_request_view_0_form($form, &$form_state, $request_id, $mode = MFCS
     $form['review'] = array(
       '#tree' => TRUE,
     );
+
+    $form['review']['revision'] = array(
+      '#type' => 'hidden',
+      '#value' => (int) $request['mer']['revision'][0]->value,
+    );
+
+    // When a form is submitted, the current data at generation time is stored in the form_state array.
+    // Read the value and if it exists assign it instead of the value from the form.
+    // This allows for detecting changes since the last time the page was loaded.
+    if (isset($form_state['input']['review']['revision'])) {
+      $form['review']['revision']['#value'] = (int) $form_state['input']['review']['revision'];
+    }
 
     mfcs_include(MFCS_INCLUDE_LIST_OPTIONS);
 
@@ -1173,7 +1226,7 @@ function mfcs_request_view_0_form($form, &$form_state, $request_id, $mode = MFCS
         '#weight' => 3,
       );
 
-      mfcs_view_build_reviews_log($form, $form_state, $request_id, $revision_id);
+      mfcs_view_build_reviews_log($form, $form_state, $request_id, $use_revision);
 
       $form['review']['log']['submit'] = array(
         '#id' => 'request-review-log-submit',
@@ -1222,7 +1275,7 @@ function mfcs_request_view_0_form($form, &$form_state, $request_id, $mode = MFCS
       );
     }
 
-    if ($show_operations && !$contained && is_null($revision_id)) {
+    if ($show_operations && !$contained && is_null($use_revision)) {
       $decision_options = mfcs_get_reviewer_decision_list_options('review_step');
       $decision_options_all = mfcs_get_reviewer_decision_list_options();
 
@@ -1290,27 +1343,63 @@ function mfcs_request_view_0_form($form, &$form_state, $request_id, $mode = MFCS
 
 
       // determine the reviewers classifications.
-      $reviewer_classification = array();
-      $reviewer_classification_all = array();
-      foreach ($reviewers as $reviewer) {
-        if (!isset($reviewer->reviewer_classification)) {
+      $reviewer_classifications = array();
+      $reviewer_classifications_all = array();
+      foreach ($reviewers as $reviewers_reviewer) {
+        // ensure that all classifications and steps are cast to integers.
+        $reviewer_classification = NULL;
+        if (property_exists($reviewers_reviewer, 'reviewer_classification')) {
+          if (is_string($reviewers_reviewer->reviewer_classification)) {
+            $reviewer_classification = (int) $reviewers_reviewer->reviewer_classification;
+          }
+          else {
+            $reviewer_classification = $reviewers_reviewer->reviewer_classification;
+          }
+        }
+
+        $reviewers_review_step = NULL;
+        if (property_exists($reviewers_reviewer, 'review_step')) {
+          if (is_string($reviewers_reviewer->review_step)) {
+            $reviewers_review_step = (int) $reviewers_reviewer->review_step;
+          }
+          else {
+            $reviewers_review_step = $reviewers_reviewer->review_step;
+          }
+        }
+
+        if (is_null($reviewer_classification)) {
           continue;
         }
 
-        if (isset($reviewer->review_step) && $reviewer->review_step === $step) {
-          $reviewer_classification[$reviewer->reviewer_classification] = $reviewer_classification_options[$reviewer->reviewer_classification];
+        if ($reviewers_review_step === $step) {
+          $reviewer_classifications[$reviewer_classification] = $reviewer_classification_options[$reviewer_classification];
         }
 
-        $reviewer_classification_all[$reviewer->reviewer_classification] = $reviewer_classification_options[$reviewer->reviewer_classification];
+        $reviewer_classifications_all[$reviewer_classification] = $reviewer_classification_options[$reviewer_classification];
+      }
+      unset($reviewers_reviewer);
+
+      // remove all classifications that may have been reviewed already.
+      if (!empty($reviewer_classifications)) {
+        $form['form']['already_reviewed_as']['#value'] = mfcs_get_request_already_reviewed_as_classifications($request_id, array_keys($reviewer_classifications));
+        if (isset($form['form']['already_reviewed_as']['#value']['reviewed'])) {
+          foreach ($form['form']['already_reviewed_as']['#value']['reviewed'] as $reviewer_classification) {
+            unset($reviewer_classifications[$reviewer_classification]);
+          }
+          unset($reviewer_classification);
+        }
+        else {
+          $form['form']['already_reviewed_as']['#value'] = array();
+        }
       }
 
       if ($can_comment_request && !$can_review_request) {
-        if (empty($reviewer_classification) && empty($venue_coordinator)) {
+        if (empty($reviewer_classifications) && empty($venue_coordinator)) {
           if ($administer) {
-            $reviewer_classification[MFCS_REVIEWER_CLASSIFICATION_SYSTEM_ADMINISTRATOR] = 'Administrator';
+            $reviewer_classifications[MFCS_REVIEWER_CLASSIFICATION_SYSTEM_ADMINISTRATOR] = 'Administrator';
           }
           elseif ($manager) {
-            $reviewer_classification[MFCS_REVIEWER_CLASSIFICATION_MANAGER] = 'Manager';
+            $reviewer_classifications[MFCS_REVIEWER_CLASSIFICATION_MANAGER] = 'Manager';
           }
         }
       }
@@ -1329,7 +1418,7 @@ function mfcs_request_view_0_form($form, &$form_state, $request_id, $mode = MFCS
       $insurance_provided_available_only = &$form['form']['insurance_provided_available_only']['#value'];
       if ($can_review_request && ($step === MFCS_REVIEW_STEP_REVIEW || $step === MFCS_REVIEW_STEP_REQUIREMENTS || $step === MFCS_REVIEW_STEP_MAKE_DECISIONS || $step === MFCS_REVIEW_STEP_COMPLETED)) {
         if ($status === MFCS_REQUEST_STATUS_LOCKED || $status === MFCS_REQUEST_STATUS_CLOSED_ACCEPTED) {
-          if (isset($reviewer_classification_all[MFCS_REVIEWER_CLASSIFICATION_PURCHASING])) {
+          if (isset($reviewer_classifications_all[MFCS_REVIEWER_CLASSIFICATION_PURCHASING])) {
             if ((isset($request['insurance']['contractor'][0]->value) && $request['insurance']['contractor'][0]->value == 1) || (isset($request['insurance']['unaffiliated'][0]->value) && $request['insurance']['unaffiliated'][0]->value == 1)) {
               if (isset($request['insurance']['provided'][0]->value) && $request['insurance']['provided'][0]->value != 1) {
                 $insurance_provided_available = TRUE;
@@ -1341,21 +1430,21 @@ function mfcs_request_view_0_form($form, &$form_state, $request_id, $mode = MFCS
 
       // the venue coordinator must be reported as venue coordinator when not reviewing.
       if ($venue_coordinator) {
-        if (empty($reviewer_classification) || ($step !== MFCS_REVIEW_STEP_REVIEW && $step !== MFCS_REVIEW_STEP_REQUIREMENTS)) {
+        if (empty($reviewer_classifications) || ($step !== MFCS_REVIEW_STEP_REVIEW && $step !== MFCS_REVIEW_STEP_REQUIREMENTS)) {
 
           if ($request['venue_coordinator']['user_id'][0]->value == $user->uid) {
-            $reviewer_classification[MFCS_REVIEWER_CLASSIFICATION_VENUE_COORDINATOR] = "Venue Coordinator";
-            $reviewer_classification_all[MFCS_REVIEWER_CLASSIFICATION_VENUE_COORDINATOR] = "Venue Coordinator";
+            $reviewer_classifications[MFCS_REVIEWER_CLASSIFICATION_VENUE_COORDINATOR] = "Venue Coordinator";
+            $reviewer_classifications_all[MFCS_REVIEWER_CLASSIFICATION_VENUE_COORDINATOR] = "Venue Coordinator";
           }
           else {
-            $reviewer_classification[MFCS_REVIEWER_CLASSIFICATION_VENUE_COORDINATOR_PROXY] = "Venue Coordinator (Proxy)";
-            $reviewer_classification_all[MFCS_REVIEWER_CLASSIFICATION_VENUE_COORDINATOR_PROXY] = "Venue Coordinator (Proxy)";
+            $reviewer_classifications[MFCS_REVIEWER_CLASSIFICATION_VENUE_COORDINATOR_PROXY] = "Venue Coordinator (Proxy)";
+            $reviewer_classifications_all[MFCS_REVIEWER_CLASSIFICATION_VENUE_COORDINATOR_PROXY] = "Venue Coordinator (Proxy)";
           }
         }
       }
 
       // if the current user has no review classifications for the current step, then do not provide the "Approve/Deny/Comment" operations appropriately.
-      if (empty($reviewer_classification)) {
+      if (empty($reviewer_classifications)) {
         unset($decision_options[MFCS_REVIEW_DECISION_APPROVE]);
         unset($decision_options[MFCS_REVIEW_DECISION_DENY]);
 
@@ -1377,17 +1466,20 @@ function mfcs_request_view_0_form($form, &$form_state, $request_id, $mode = MFCS
             $decision_options[MFCS_REVIEW_DECISION_COMMENT] = $decision_options_all[MFCS_REVIEW_DECISION_COMMENT];
           }
 
-          $reviewer_classification[MFCS_REVIEWER_CLASSIFICATION_PURCHASING] = $reviewer_classification_all[MFCS_REVIEWER_CLASSIFICATION_PURCHASING];
+          $reviewer_classifications[MFCS_REVIEWER_CLASSIFICATION_PURCHASING] = $reviewer_classifications_all[MFCS_REVIEWER_CLASSIFICATION_PURCHASING];
           $insurance_provided_available_only = TRUE;
         }
       }
       elseif ($step !== MFCS_REVIEW_STEP_VENUE_AVAILABLE && $step !== MFCS_REVIEW_STEP_REVIEW) {
         unset($decision_options[MFCS_REVIEW_DECISION_REQUIREMENT]);
       }
+      elseif (empty($reviewer_classifications)) {
+        unset($decision_options[MFCS_REVIEW_DECISION_REQUIREMENT]);
+      }
 
-      if (!empty($reviewer_classification)) {
+      if (!empty($reviewer_classifications)) {
         $form['review']['operations']['as_reviewer']['#markup'] .= '<div class="request-section-review-operations-as_reviewer-message">You are reviewing with the following classifications:</div>';
-        $form['review']['operations']['as_reviewer']['#markup'] .= theme('item_list', array('items' => $reviewer_classification, 'type' => 'ul', 'attributes' => array('class' => array('request-section-review-operations-as_reviewer-list'))));
+        $form['review']['operations']['as_reviewer']['#markup'] .= theme('item_list', array('items' => $reviewer_classifications, 'type' => 'ul', 'attributes' => array('class' => array('request-section-review-operations-as_reviewer-list'))));
       }
 
       $form['review']['operations']['as_reviewer']['#markup'] .= '</div>';
@@ -1483,28 +1575,35 @@ function mfcs_request_view_0_form($form, &$form_state, $request_id, $mode = MFCS
             $uses_as_manager['insurance'] = "Insurance Fees";
           }
 
-          foreach ($reviewers as $reviewer) {
-            if ($reviewer->reviewer_classification == MFCS_REVIEWER_CLASSIFICATION_FACILITIES_CUSTODIAL || $reviewer->reviewer_classification == MFCS_REVIEWER_CLASSIFICATION_CUSTODIAL) {
+          foreach ($reviewers as $reviewers_reviewer) {
+            if (is_string($reviewers_reviewer->reviewer_classification)) {
+              $reviewer_classification = (int) $reviewers_reviewer->reviewer_classification;
+            }
+            else {
+              $reviewer_classification = $reviewers_reviewer->reviewer_classification;
+            }
+
+            if ($reviewer_classification == MFCS_REVIEWER_CLASSIFICATION_FACILITIES_CUSTODIAL || $reviewer_classification == MFCS_REVIEWER_CLASSIFICATION_CUSTODIAL) {
               $uses['custodial'] = "Custodial";
               $form['form']['requirements-custodial']['#value'] = TRUE;
               unset($uses_as_manager['custodial']);
             }
-            elseif ($reviewer->reviewer_classification == MFCS_REVIEWER_CLASSIFICATION_MAINTENANCE) {
+            elseif ($reviewer_classification == MFCS_REVIEWER_CLASSIFICATION_MAINTENANCE) {
               $uses['maintenance'] = "Maintenance";
               $form['form']['requirements-maintenance']['#value'] = TRUE;
               unset($uses_as_manager['maintenance']);
             }
-            elseif ($reviewer->reviewer_classification == MFCS_REVIEWER_CLASSIFICATION_FACILITIES) {
+            elseif ($reviewer_classification == MFCS_REVIEWER_CLASSIFICATION_FACILITIES) {
               $uses['grounds'] = "Grounds";
               $form['form']['requirements-grounds']['#value'] = TRUE;
               unset($uses_as_manager['grounds']);
             }
-            elseif ($reviewer->reviewer_classification == MFCS_REVIEWER_CLASSIFICATION_SECURITY) {
+            elseif ($reviewer_classification == MFCS_REVIEWER_CLASSIFICATION_SECURITY) {
               $uses['security'] = "Security";
               $form['form']['requirements-security']['#value'] = TRUE;
               unset($uses_as_manager['security']);
             }
-            elseif ($reviewer->reviewer_classification == MFCS_REVIEWER_CLASSIFICATION_PURCHASING) {
+            elseif ($reviewer_classification == MFCS_REVIEWER_CLASSIFICATION_PURCHASING) {
               $insurance_requirement = TRUE;
               $form['form']['requirements-insurance']['#value'] = TRUE;
               unset($uses_as_manager['insurance']);
@@ -2013,17 +2112,19 @@ function mfcs_request_view_0_form_pre_validate(&$form, &$form_state) {
   if ($decision === MFCS_REVIEW_DECISION_REQUIREMENT) {
     if ($step === MFCS_REVIEW_STEP_VENUE_AVAILABLE) {
       $requirements_waived = FALSE;
-      if (isset($form_state['values']['review']['operations']['presidents_approval']) && $form_state['values']['review']['operations']['presidents_approval'] == 1) {
-        $requirements_waived = TRUE;
-      }
-      elseif (isset($form_state['values']['review']['operations']['university_business']) && $form_state['values']['review']['operations']['university_business'] == 1) {
-        $requirements_waived = TRUE;
-      }
-      else {
+      if (isset($form_state['values']['review']['operations']['presidents_approval']) || isset($form_state['values']['review']['operations']['presidents_approval'])) {
         if (isset($form_state['values']['review']['operations']['presidents_approval']) && $form_state['values']['review']['operations']['presidents_approval'] == 1) {
           $requirements_waived = TRUE;
         }
-        elseif (isset($form_state['values']['review']['operations']['presidents_approval']) && $form_state['values']['review']['operations']['presidents_approval'] == 1) {
+        elseif (isset($form_state['values']['review']['operations']['university_business']) && $form_state['values']['review']['operations']['university_business'] == 1) {
+          $requirements_waived = TRUE;
+        }
+      }
+      else {
+        if (isset($form['form']['request']['#value']['requirements']['waived'][0]->value) && $form['form']['request']['#value']['requirements']['waived'][0]->value == 1) {
+          $requirements_waived = TRUE;
+        }
+        elseif (isset($form['form']['request']['#value']['requirements']['university'][0]->value) && $form['form']['request']['#value']['requirements']['university'][0]->value == 1) {
           $requirements_waived = TRUE;
         }
       }
@@ -2033,10 +2134,10 @@ function mfcs_request_view_0_form_pre_validate(&$form, &$form_state) {
     else {
       $requirements_waived = FALSE;
 
-      if (isset($form_state['values']['review']['operations']['presidents_approval']) && $form_state['values']['review']['operations']['presidents_approval'] == 1) {
+      if (isset($form['form']['request']['#value']['requirements']['waived'][0]->value) && $form['form']['request']['#value']['requirements']['waived'][0]->value == 1) {
         $requirements_waived = TRUE;
       }
-      elseif (isset($form_state['values']['review']['operations']['presidents_approval']) && $form_state['values']['review']['operations']['presidents_approval'] == 1) {
+      elseif (isset($form['form']['request']['#value']['requirements']['university'][0]->value) && $form['form']['request']['#value']['requirements']['university'][0]->value == 1) {
         $requirements_waived = TRUE;
       }
 
@@ -2116,6 +2217,31 @@ function mfcs_request_view_0_form_validate($form, &$form_state) {
     $type = (int) $type;
   }
 
+  $latest_revision = (int) mfcs_load_request_revision_number($request_id);
+  if (isset($form['review']['revision']['#value']) && $form['review']['revision']['#value'] != $latest_revision) {
+    // check to see if the old revision and the new revision are on different states.
+    $request_previous = mfcs_load_request_by_id($request_id, NULL, $form['review']['revision']['#value']);
+    $request_latest = mfcs_load_request_by_id($request_id, NULL, $latest_revision);
+
+    $step_previous = $request_previous['top']['step'][0]->value;
+    $step_latest = $request_latest['top']['step'][0]->value;
+
+    if (is_string($step_previous)) {
+      $step_previous = (int) $step_previous;
+    }
+    if (is_string($step_latest)) {
+      $step_latest = (int) $step_latest;
+    }
+
+    if ($step_latest !== $step_previous) {
+      drupal_set_message("Warning: the request has changed since you last loaded this page. This page is out of date and has been reloaded. No changes have been made.", 'warning');
+      watchdog(MFCS_WATCHDOG_ID, "The user '%user_name' (%user_id) attempted to review a request using a stale page", array('%user_name' => $user->name, '%user_id' => $user->uid), WATCHDOG_WARNING);
+      return;
+    }
+  }
+  unset($previous_revision_id);
+  unset($current_revision_id);
+
   $decision = NULL;
   if (isset($form_state['values']['review']['operations']['decision'])) {
     $decision = $form_state['values']['review']['operations']['decision'];
@@ -2136,7 +2262,7 @@ function mfcs_request_view_0_form_validate($form, &$form_state) {
       form_set_error('', "This view mode does not allow cancelling.");
     }
 
-    if (!is_null($form['form']['revision_id']['#value'])) {
+    if (isset($form['form']['use_revision']['#value']) && !is_null($form['form']['use_revision']['#value'])) {
       form_set_error('', "Revisions can not be cancelled.");
     }
 
@@ -2147,7 +2273,7 @@ function mfcs_request_view_0_form_validate($form, &$form_state) {
       form_set_error('', "This view mode does not allow uncancelling.");
     }
 
-    if (!is_null($form['form']['revision_id']['#value'])) {
+    if (isset($form['form']['use_revision']['#value']) && !is_null($form['form']['use_revision']['#value'])) {
       form_set_error('', "Revisions can not be uncancelled.");
     }
 
@@ -2158,14 +2284,14 @@ function mfcs_request_view_0_form_validate($form, &$form_state) {
       form_set_error('', "This view mode does not allow re-assignment.");
     }
 
-    if (!is_null($form['form']['revision_id']['#value'])) {
+    if (isset($form['form']['use_revision']['#value']) && !is_null($form['form']['use_revision']['#value'])) {
       form_set_error('', "Revisions can not be re-assigned.");
     }
 
     $form_state['reassign_was_clicked'] = TRUE;
   }
   elseif ($clicked_id == 'request-review-operations-submit-submit') {
-    if (!is_null($form['form']['revision_id']['#value'])) {
+    if (isset($form['form']['use_revision']['#value']) && !is_null($form['form']['use_revision']['#value'])) {
       form_set_error('', "Revisions can not be changed or reviewed.");
     }
 
@@ -2386,7 +2512,7 @@ function mfcs_request_view_0_form_validate($form, &$form_state) {
     }
   }
   elseif ($clicked_id == 'request-cancel-submit-yes' || $clicked_id == 'request-cancel-submit-no') {
-    if (!is_null($form['form']['revision_id']['#value'])) {
+    if (isset($form['form']['use_revision']['#value']) && !is_null($form['form']['use_revision']['#value'])) {
       form_set_error('', "Revisions can not be cancelled.");
       return;
     }
@@ -2394,14 +2520,14 @@ function mfcs_request_view_0_form_validate($form, &$form_state) {
     $form_state['rebuild'] = FALSE;
   }
   elseif ($clicked_id == 'request-uncancel-submit-yes' || $clicked_id == 'request-uncancel-submit-no') {
-    if (!is_null($form['form']['revision_id']['#value'])) {
+    if (isset($form['form']['use_revision']['#value']) && !is_null($form['form']['use_revision']['#value'])) {
       form_set_error('', "Revisions can not be uncancelled.");
     }
 
     $form_state['rebuild'] = FALSE;
   }
   elseif ($clicked_id == 'request-reassign-submit-yes' || $clicked_id == 'request-reassign-submit-no') {
-    if (!is_null($form['form']['revision_id']['#value'])) {
+    if (isset($form['form']['use_revision']['#value']) && !is_null($form['form']['use_revision']['#value'])) {
       form_set_error('', "Revisions can not be Re-assigned.");
       return;
     }
@@ -2502,6 +2628,11 @@ function mfcs_request_view_0_form_submit($form, &$form_state) {
       $type = (int) $type;
     }
 
+    $already_reviewed_as = NULL;
+    if (!empty($form['form']['already_reviewed_as']['#value']['available']) && is_array($form['form']['already_reviewed_as']['#value']['available'])) {
+      $already_reviewed_as = $form['form']['already_reviewed_as']['#value']['available'];
+    }
+
     $insurance_provided_available = FALSE;
     if (isset($form['form']['insurance_provided_available']['#value'])) {
       $insurance_provided_available = (bool) $form['form']['insurance_provided_available']['#value'];
@@ -2562,13 +2693,13 @@ function mfcs_request_view_0_form_submit($form, &$form_state) {
           'requirements' => array('other' => 0, 'waived' => 0, 'university' => 1),
         );
 
-        $success = mfcs_workflow_step_review($request_id, $form['form']['user']['#value'], MFCS_REVIEW_DECISION_REQUIREMENT, "The system has auto-waved the fees because the request is a Quick Meeting.", $requirements_extra);
+        $success = mfcs_workflow_step_review($request_id, $form['form']['user']['#value'], MFCS_REVIEW_DECISION_REQUIREMENT, "The system has auto-waved the fees because the request is a Quick Meeting.", $requirements_extra, $already_reviewed_as);
       }
     }
     elseif ($step === MFCS_REVIEW_STEP_REVIEW) {
       if (isset($form_state['autowave']) && $form_state['autowave']) {
         // @todo: this might be a valid use of MFCS_REVIEW_DECISION_WAVE. If 'autowave' is removed, then this is no longer necessary.
-        $success = mfcs_workflow_step_review($request_id, $form['form']['user']['#value'], MFCS_REVIEW_DECISION_WAVE, "", array('send_email' => FALSE));
+        $success = mfcs_workflow_step_review($request_id, $form['form']['user']['#value'], MFCS_REVIEW_DECISION_WAVE, "", array('send_email' => FALSE), $already_reviewed_as);
       }
     }
 
@@ -2582,6 +2713,16 @@ function mfcs_request_view_0_form_submit($form, &$form_state) {
       $requirements_state = array();
       if (isset($form_state['values']['review']['operations']['requirements'])) {
         $requirements_state = $form_state['values']['review']['operations']['requirements'];
+      }
+
+      $insurance_form = array();
+      if (isset($form['review']['operations']['insurance'])) {
+        $insurance_form = $form['review']['operations']['insurance'];
+      }
+
+      $insurance_state = array();
+      if (isset($form_state['values']['review']['operations']['insurance'])) {
+        $insurance_state = $form_state['values']['review']['operations']['insurance'];
       }
 
       $operations_form = array();
@@ -2712,11 +2853,11 @@ function mfcs_request_view_0_form_submit($form, &$form_state) {
 
       // process insurance changes.
       foreach ($changes_insurance as $insurance_field => &$changes) {
-        if (!isset($requirements_form[$insurance_field]) || !isset($requirements_state[$insurance_field]) || !isset($requirements_form['insurance'][$insurance_field])) {
+        if (!isset($insurance_form[$insurance_field]) || !isset($insurance_state[$insurance_field])) {
           continue;
         }
 
-        if ($requirements_form['insurance'][$insurance_field]['#default_value'] != $requirements_state[$insurance_field]) {
+        if ($insurance_form[$insurance_field]['#default_value'] != $insurance_state[$insurance_field]) {
           $changes['detected'] = TRUE;
 
           $any_requirements_changes_made = TRUE;
@@ -2746,7 +2887,7 @@ function mfcs_request_view_0_form_submit($form, &$form_state) {
         return;
       }
 
-      $success = mfcs_workflow_step_review($request_id, $form['form']['user']['#value'], $decision, $message, $extra);
+      $success = mfcs_workflow_step_review($request_id, $form['form']['user']['#value'], $decision, $message, $extra, $already_reviewed_as);
     }
 
     if ($success) {
@@ -2847,13 +2988,17 @@ function mfcs_request_view_0_form_submit_pdf($form, &$form_state) {
   }
 
   $mode = $form['form']['mode']['#value'];
-  $revision_id = $form['form']['revision_id']['#value'];
 
-  if (is_null($revision_id)) {
+  $use_revision = NULL;
+  if (isset($form['form']['use_revision']['#value'])) {
+    $use_revision = $form['form']['use_revision']['#value'];
+  }
+
+  if (is_null($use_revision)) {
     $form_state['redirect'] = mfcs_build_redirect_array('/requests/pdf-0/' . $request_id . '/' . $mode);
   }
   else {
-    $form_state['redirect'] = mfcs_build_redirect_array('/requests/pdf-0/' . $request_id . '/' . $mode . '/' . $revision_id);
+    $form_state['redirect'] = mfcs_build_redirect_array('/requests/pdf-0/' . $request_id . '/' . $mode . '/' . $use_revision);
   }
 }
 
