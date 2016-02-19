@@ -113,6 +113,7 @@ function mfcs_ajax_reviewers_0_list($classification, $review_step) {
 
   $search = FALSE;
   $limit_reviewer_classifications = NULL;
+  $user_ids = array();
   if (isset($_GET['search']['value']) && is_string($_GET['search']['value']) && !empty($_GET['search']['value'])) {
     $search = TRUE;
 
@@ -125,6 +126,14 @@ function mfcs_ajax_reviewers_0_list($classification, $review_step) {
       if (preg_match('/' . $regex_safe_search . '/i', $value) > 0) {
         $limit_reviewer_classifications[$key] = $key;
       }
+    }
+
+    // find a list of user ids to search for to avoid additional inner joins on an already complex SQL query..
+    // Exception Case: user problems list must support disabled/deleted accounts.
+    $found_users = mfcs_search_users($_GET['search']['value'], TRUE, FALSE, TRUE);
+    if (is_array($found_users)) {
+      $user_ids = array_keys($found_users);
+      unset($found_users);
     }
   }
 
@@ -200,20 +209,13 @@ function mfcs_ajax_reviewers_0_list($classification, $review_step) {
       'expression' => TRUE,
     );
 
-    $conditions['or_1']['u.name'] = array(
-      'operator' => 'ILIKE',
-      'value' => '%' . db_like($_GET['search']['value']) . '%',
-    );
-
-    $conditions['or_1']['fdfufn.field_user_first_name_value'] = array(
-      'operator' => 'ILIKE',
-      'value' => '%' . db_like($_GET['search']['value']) . '%',
-    );
-
-    $conditions['or_1']['fdfuln.field_user_last_name_value'] = array(
-      'operator' => 'ILIKE',
-      'value' => '%' . db_like($_GET['search']['value']) . '%',
-    );
+    if (!empty($user_ids)) {
+      $conditions['or_1']['mr.user_id'] = array(
+        'operator' => 'IN',
+        'field' => 'mr.user_id',
+        'value' => $user_ids,
+      );
+    }
 
     $count_options['results'] = FALSE;
     $reviewers_returned = mfcs_get_reviewers($count_conditions, $count_options);
@@ -222,7 +224,8 @@ function mfcs_ajax_reviewers_0_list($classification, $review_step) {
       $reviewers_total = $reviewers_returned['count'];
     }
 
-    $options['count'] = FALSE;
+    // count cannot be disabled here, otherewise the recordsFiltered results would be undefined or inaccurate when an SQL limit is applied.
+    #$options['count'] = FALSE;
     $reviewers_returned = mfcs_get_reviewers($conditions, $options);
     $reviewers = array();
     if (isset($reviewers_returned['results']) && is_array($reviewers_returned['results'])) {
@@ -296,8 +299,17 @@ function mfcs_ajax_proxy_0_list() {
   list($draw, $columns, $order, $options, $timestamp) = mfcs_ajax_setup_request_settings();
 
   $search = FALSE;
+  $user_ids = array();
   if (isset($_GET['search']['value']) && is_string($_GET['search']['value']) && !empty($_GET['search']['value'])) {
     $search = TRUE;
+
+    // find a list of user ids to search for to avoid additional inner joins on an already complex SQL query..
+    // Exception Case: user problems list must support disabled/deleted accounts.
+    $found_users = mfcs_search_users($_GET['search']['value'], TRUE, FALSE, TRUE);
+    if (is_array($found_users)) {
+      $user_ids = array_keys($found_users);
+      unset($found_users);
+    }
   }
 
   // build ajax/json response data.
@@ -373,41 +385,24 @@ function mfcs_ajax_proxy_0_list() {
       'expression' => TRUE,
     );
 
-    $conditions['or_1']['pu.name'] = array(
-      'operator' => 'ILIKE',
-      'value' => '%' . db_like($_GET['search']['value']) . '%',
-    );
-
-    $conditions['or_1']['pfdfufn.field_user_first_name_value'] = array(
-      'operator' => 'ILIKE',
-      'value' => '%' . db_like($_GET['search']['value']) . '%',
-    );
-
-    $conditions['or_1']['pfdfuln.field_user_last_name_value'] = array(
-      'operator' => 'ILIKE',
-      'value' => '%' . db_like($_GET['search']['value']) . '%',
-    );
-
     $conditions['or_1']['text(mpvc.user_id)'] = array(
       'operator' => 'ILIKE',
       'value' => '%' . db_like($_GET['search']['value']) . '%',
       'expression' => TRUE,
     );
 
-    $conditions['or_1']['u.name'] = array(
-      'operator' => 'ILIKE',
-      'value' => '%' . db_like($_GET['search']['value']) . '%',
-    );
-
-    $conditions['or_1']['fdfufn.field_user_first_name_value'] = array(
-      'operator' => 'ILIKE',
-      'value' => '%' . db_like($_GET['search']['value']) . '%',
-    );
-
-    $conditions['or_1']['fdfuln.field_user_last_name_value'] = array(
-      'operator' => 'ILIKE',
-      'value' => '%' . db_like($_GET['search']['value']) . '%',
-    );
+    if (!empty($user_ids)) {
+      $conditions['or_1']['mpvc.user_id'] = array(
+        'operator' => 'IN',
+        'field' => 'mpvc.user_id',
+        'value' => $user_ids,
+      );
+      $conditions['or_1']['mpvc.proxy_id'] = array(
+        'operator' => 'IN',
+        'field' => 'mpvc.proxy_id',
+        'value' => $user_ids,
+      );
+    }
 
     $count_options['results'] = FALSE;
     $proxies_returned = mfcs_get_proxy_venue_coordinators($count_conditions, $count_options);
@@ -417,7 +412,8 @@ function mfcs_ajax_proxy_0_list() {
       $proxies_total = $proxies_returned['count'];
     }
 
-    $options['count'] = FALSE;
+    // count cannot be disabled here, otherewise the recordsFiltered results would be undefined or inaccurate when an SQL limit is applied.
+    #$options['count'] = FALSE;
     $proxies_returned = mfcs_get_proxy_venue_coordinators($conditions, $options);
     $proxies = array();
     if (isset($proxies_returned['results']) && is_array($proxies_returned['results'])) {
@@ -481,10 +477,12 @@ function mfcs_ajax_proxy_0_list() {
  *   Some string or number to send as the first argument.
  */
 function mfcs_ajax_list_0($argument_1 = NULL) {
+  $user = cf_current_user();
+
   $manager = FALSE;
   $reviewer = FALSE;
   $requester = FALSE;
-  if ($user_id === MFCS_USER_REQUEST) {
+  if ($user->uid === MFCS_USER_REQUEST) {
     // this is a simulated user account and must be handled as a special case.
     $requester = TRUE;
   }
@@ -570,6 +568,7 @@ function mfcs_ajax_listing_0($custom_conditions = array(), $override_options = a
   }
 
   $search = FALSE;
+  $user_ids = array();
   if (isset($_GET['search']['value']) && is_string($_GET['search']['value']) && !empty($_GET['search']['value'])) {
     $search = TRUE;
 
@@ -616,6 +615,13 @@ function mfcs_ajax_listing_0($custom_conditions = array(), $override_options = a
       if (preg_match('/' . $regex_safe_search . '/i', $value) > 0) {
         $limit_building[$key] = $key;
       }
+    }
+
+    // find a list of user ids to search for to avoid additional inner joins on an already complex SQL query..
+    $found_users = mfcs_search_users($_GET['search']['value']);
+    if (is_array($found_users)) {
+      $user_ids = array_keys($found_users);
+      unset($found_users);
     }
   }
 
@@ -752,11 +758,13 @@ function mfcs_ajax_listing_0($custom_conditions = array(), $override_options = a
       'expression' => TRUE,
     );
 
-    $conditions['or_1']['value_submitted_by_name'] = array(
-      'field' => 'sb_u.name',
-      'operator' => MFCS_OPERATOR_LIKE,
-      'search' => $_GET['search']['value'],
-    );
+    if (!empty($user_ids)) {
+      $conditions['or_1']['value_user_ids'] = array(
+        'field' => 'mer.user_id',
+        'operator' => MFCS_OPERATOR_IS_IN,
+        'search' => $user_ids,
+      );
+    }
 
     $count_options['results'] = FALSE;
     $items_returned = mfcs_request_load_listing($count_conditions, $count_options);
@@ -765,7 +773,8 @@ function mfcs_ajax_listing_0($custom_conditions = array(), $override_options = a
       $items_total = $items_returned['count'];
     }
 
-    $options['count'] = FALSE;
+    // count cannot be disabled here, otherewise the recordsFiltered results would be undefined or inaccurate when an SQL limit is applied.
+    #$options['count'] = FALSE;
     $items_returned = mfcs_request_load_listing($conditions, $options);
     $items = array();
     if (isset($items_returned['results']) && is_array($items_returned['results'])) {
@@ -837,8 +846,17 @@ function mfcs_ajax_problems_0_users_list() {
   list($draw, $columns, $order, $options, $timestamp) = mfcs_ajax_setup_request_settings();
 
   $search = FALSE;
+  $user_ids = array();
   if (isset($_GET['search']['value']) && is_string($_GET['search']['value']) && !empty($_GET['search']['value'])) {
     $search = TRUE;
+
+    // find a list of user ids to search for to avoid additional inner joins on an already complex SQL query..
+    // Exception Case: user problems list must support disabled/deleted accounts.
+    $found_users = mfcs_search_users($_GET['search']['value'], TRUE, FALSE, TRUE);
+    if (is_array($found_users)) {
+      $user_ids = array_keys($found_users);
+      unset($found_users);
+    }
   }
 
   // build ajax/json response data.
@@ -912,23 +930,13 @@ function mfcs_ajax_problems_0_users_list() {
       'expression' => TRUE,
     );
 
-    $conditions['or_1']['value_name'] = array(
-      'field' => 'u.name',
-      'operator' => MFCS_OPERATOR_LIKE,
-      'search' => $_GET['search']['value'],
-    );
-
-    $conditions['or_1']['value_field_user_first_name_value'] = array(
-      'field' => 'fdfufn.field_user_first_name_value',
-      'operator' => MFCS_OPERATOR_LIKE,
-      'search' => $_GET['search']['value'],
-    );
-
-    $conditions['or_1']['value_field_user_last_name_value'] = array(
-      'field' => 'fdfuln.field_user_last_name_value',
-      'operator' => MFCS_OPERATOR_LIKE,
-      'search' => $_GET['search']['value'],
-    );
+    if (!empty($user_ids)) {
+      $conditions['or_1']['value_user_ids'] = array(
+        'field' => 'mu.user_id',
+        'operator' => MFCS_OPERATOR_IS_IN,
+        'search' => $user_ids,
+      );
+    }
 
     $regex_safe_search = preg_quote($_GET['search']['value'], '/');
     foreach ($taxonomy_problems as $problem_id => $problem_label) {
@@ -963,7 +971,8 @@ function mfcs_ajax_problems_0_users_list() {
       $problems_total = $problems_returned['count'];
     }
 
-    $options['count'] = FALSE;
+    // count cannot be disabled here, otherewise the recordsFiltered results would be undefined or inaccurate when an SQL limit is applied.
+    #$options['count'] = FALSE;
     $problems_returned = mfcs_management_search_users($conditions, $options);
     $problems = array();
     if (isset($problems_returned['results']) && is_array($problems_returned['results'])) {
@@ -1008,9 +1017,9 @@ function mfcs_ajax_problems_0_users_list() {
       $row[3] = check_plain($problem->last_name);
 
       $row[4] = NULL;
-      foreach (array(MFCS_USER_PROBLEM_ACCOUNT_CREATE_BANNER_UNAVAILABLE, MFCS_USER_PROBLEM_ACCOUNT_SYNC_BANNER_UNAVAILABLE, MFCS_USER_PROBLEM_ACCOUNT_LOGIN_PROBLEMS_MULTIPLE, MFCS_USER_PROBLEM_ACCOUNT_REVIEWER_NOT_ALLOWED, MFCS_USER_PROBLEM_ACCOUNT_DUPLICATES, MFCS_USER_PROBLEM_ACCOUNT_DISABLED_IN_USE, MFCS_USER_PROBLEM_ACCOUNT_BANNER_INVALID) as $taxonomy_id) {
+      foreach (array(MFCS_USER_PROBLEM_ACCOUNT_CREATE_BANNER_UNAVAILABLE, MFCS_USER_PROBLEM_ACCOUNT_SYNC_BANNER_UNAVAILABLE, MFCS_USER_PROBLEM_ACCOUNT_LOGIN_PROBLEMS_MULTIPLE, MFCS_USER_PROBLEM_ACCOUNT_REVIEWER_NOT_ALLOWED, MFCS_USER_PROBLEM_ACCOUNT_DUPLICATES, MFCS_USER_PROBLEM_ACCOUNT_DISABLED_IN_USE, MFCS_USER_PROBLEM_ACCOUNT_BANNER_INVALID, MFCS_USER_PROBLEM_ACCOUNT_NO_ACCESS) as $taxonomy_id) {
         if (($problem->problems & $taxonomy_id) > 0) {
-          if ($taxonomy_id == MFCS_USER_PROBLEM_ACCOUNT_CREATE_BANNER_UNAVAILABLE || $taxonomy_id == MFCS_USER_PROBLEM_ACCOUNT_SYNC_BANNER_UNAVAILABLE) {
+          if ($taxonomy_id == MFCS_USER_PROBLEM_ACCOUNT_CREATE_BANNER_UNAVAILABLE || $taxonomy_id == MFCS_USER_PROBLEM_ACCOUNT_SYNC_BANNER_UNAVAILABLE || $taxonomy_id == MFCS_USER_PROBLEM_ACCOUNT_NO_ACCESS) {
             $additional_operations .= ' <a href="' . $base_path . 'requests/problems-0/users/resynchronize/' . $problem->user_id . $url_arguments . '" class="operation-link operation-link-resynchronize" title="Re-Synchronize the user\'s settings.">Re-Sync</a>';
           }
 
@@ -1094,8 +1103,16 @@ function mfcs_ajax_email_log_0_list() {
   list($draw, $columns, $order, $options, $timestamp) = mfcs_ajax_setup_request_settings();
 
   $search = FALSE;
+  $user_ids = array();
   if (isset($_GET['search']['value']) && is_string($_GET['search']['value']) && !empty($_GET['search']['value'])) {
     $search = TRUE;
+
+    // find a list of user ids to search for to avoid additional inner joins on an already complex SQL query..
+    $found_users = mfcs_search_users($_GET['search']['value']);
+    if (is_array($found_users)) {
+      $user_ids = array_keys($found_users);
+      unset($found_users);
+    }
   }
 
   // build ajax/json response data.
@@ -1204,12 +1221,6 @@ function mfcs_ajax_email_log_0_list() {
       'expression' => TRUE,
     );
 
-    $conditions['or_1']['value_name'] = array(
-      'field' => 'u.name',
-      'operator' => MFCS_OPERATOR_LIKE,
-      'search' => $_GET['search']['value'],
-    );
-
     // Commented out because this is confusing because the date format will not match.
     #$conditions['or_1']['value_date'] = array(
     #  'field' => 'text(to_timestamp(' . $table_alias . '.date))',
@@ -1229,6 +1240,14 @@ function mfcs_ajax_email_log_0_list() {
       'operator' => MFCS_OPERATOR_LIKE,
       'search' => $_GET['search']['value'],
     );
+
+    if (!empty($user_ids)) {
+      $conditions['or_1']['value_user_ids'] = array(
+        'field' => 'mle.user_id',
+        'operator' => MFCS_OPERATOR_IS_IN,
+        'search' => $user_ids,
+      );
+    }
 
     $limit_email_codes = NULL;
     if (preg_match('/' . $regex_safe_search . '/i', 'normal') > 0) {
@@ -1257,7 +1276,8 @@ function mfcs_ajax_email_log_0_list() {
       $email_logs_total = $email_logs_returned['count'];
     }
 
-    $options['count'] = FALSE;
+    // count cannot be disabled here, otherewise the recordsFiltered results would be undefined or inaccurate when an SQL limit is applied.
+    #$options['count'] = FALSE;
     $email_logs_returned = mfcs_management_search_table($table_name, $table_alias, $primary_key, $conditions, $options);
     $email_logs = array();
     if (isset($email_logs_returned['results']) && is_array($email_logs_returned['results'])) {
@@ -1398,8 +1418,16 @@ function mfcs_ajax_synchronize_0_form() {
   list($draw, $columns, $order, $options, $timestamp) = mfcs_ajax_setup_request_settings();
 
   $search = FALSE;
+  $user_ids = array();
   if (isset($_GET['search']['value']) && is_string($_GET['search']['value']) && !empty($_GET['search']['value'])) {
     $search = TRUE;
+
+    // find a list of user ids to search for to avoid additional inner joins on an already complex SQL query..
+    $found_users = mfcs_search_users($_GET['search']['value']);
+    if (is_array($found_users)) {
+      $user_ids = array_keys($found_users);
+      unset($found_users);
+    }
   }
 
   // build ajax/json response data.
@@ -1500,12 +1528,6 @@ function mfcs_ajax_synchronize_0_form() {
       'expression' => TRUE,
     );
 
-    $conditions['or_1']['value_name'] = array(
-      'field' => 'u.name',
-      'operator' => MFCS_OPERATOR_LIKE,
-      'search' => $_GET['search']['value'],
-    );
-
     // Commented out because this is confusing because the date format will not match.
     #$conditions['or_1']['value_date'] = array(
     #  'field' => 'text(to_timestamp(' . $table_alias . '.date))',
@@ -1539,6 +1561,14 @@ function mfcs_ajax_synchronize_0_form() {
       'search' => $_GET['search']['value'],
     );
 
+    if (!empty($user_ids)) {
+      $conditions['or_1']['value_user_ids'] = array(
+        'field' => 'ms.user_id',
+        'operator' => MFCS_OPERATOR_IS_IN,
+        'search' => $user_ids,
+      );
+    }
+
     $count_options['results'] = FALSE;
     $returned = mfcs_management_search_table($table_name, $table_alias, $primary_key, $count_conditions, $count_options);
 
@@ -1547,7 +1577,8 @@ function mfcs_ajax_synchronize_0_form() {
       $returned_total = $returned['count'];
     }
 
-    $options['count'] = FALSE;
+    // count cannot be disabled here, otherewise the recordsFiltered results would be undefined or inaccurate when an SQL limit is applied.
+    #$options['count'] = FALSE;
     $returned = mfcs_management_search_table($table_name, $table_alias, $primary_key, $conditions, $options);
     $items = array();
     if (isset($returned['results']) && is_array($returned['results'])) {

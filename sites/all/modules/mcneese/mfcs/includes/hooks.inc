@@ -1438,17 +1438,23 @@ function mfcs_hook_user_login(&$edit, $user, $category) {
 
   $problems = MFCS_USER_PROBLEM_NONE;
   $changes = mfcs_process_user_banner_roles($user, $problems, $settings);
+
+  $changes_roles = array();
+  if (isset($changes['roles']) && is_array($changes['roles'])) {
+    $changes_roles = array_keys($changes['roles']);
+  }
+
   if (is_array($changes)) {
-    if (count($user->roles) != count($changes['roles'])) {
+    if (count($user->roles) != count($changes_roles)) {
       user_save($user);
     }
     else {
-      $difference = array_diff($user->roles, $changes['roles']);
+      $difference = array_diff($user->roles, $changes_roles);
       if (!empty($difference)) {
         user_save($user);
       }
       else {
-        $difference = array_diff($changes['roles'], $user->roles);
+        $difference = array_diff($changes_roles, $user->roles);
         if (!empty($difference)) {
           user_save($user);
         }
@@ -1495,7 +1501,7 @@ function mfcs_hook_user_insert(&$edit, $account, $category) {
  * Internal function for hook_user_presave().
  */
 function mfcs_hook_user_presave(&$edit, $account, $category) {
-  if (!is_object($account) && property_exists($account, 'uid')) {
+  if (!is_object($account) || !property_exists($account, 'uid')) {
     // for new accounts, the object will not be defined and therefore no user id exist during the user presave function.
     // nothing can be done yet.
     return;

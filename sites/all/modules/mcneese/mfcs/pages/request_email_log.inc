@@ -355,9 +355,10 @@ function mfcs_request_email_log_0_form($form, &$form_state, $page_number = NULL)
       'buttonText' => '"Show / Hide"',
     ),
     'oLanguage' => array(
-      'sSearch' => '"Filter: "',
+      'sSearch' => '"Filter"',
     ),
     'searchDelay' => 1200,
+    'pagingType' => 'input',
   );
 
   $navigation_top = '';

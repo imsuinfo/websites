@@ -263,9 +263,9 @@ function mfcs_request_problems_0_users_form($form, &$form_state, $page_number = 
     $additional_operations = '';
 
     $problem_account = NULL;
-    foreach (array(MFCS_USER_PROBLEM_ACCOUNT_CREATE_BANNER_UNAVAILABLE, MFCS_USER_PROBLEM_ACCOUNT_SYNC_BANNER_UNAVAILABLE, MFCS_USER_PROBLEM_ACCOUNT_LOGIN_PROBLEMS_MULTIPLE, MFCS_USER_PROBLEM_ACCOUNT_REVIEWER_NOT_ALLOWED, MFCS_USER_PROBLEM_ACCOUNT_DUPLICATES, MFCS_USER_PROBLEM_ACCOUNT_DISABLED_IN_USE, MFCS_USER_PROBLEM_ACCOUNT_BANNER_INVALID) as $taxonomy_id) {
+    foreach (array(MFCS_USER_PROBLEM_ACCOUNT_CREATE_BANNER_UNAVAILABLE, MFCS_USER_PROBLEM_ACCOUNT_SYNC_BANNER_UNAVAILABLE, MFCS_USER_PROBLEM_ACCOUNT_LOGIN_PROBLEMS_MULTIPLE, MFCS_USER_PROBLEM_ACCOUNT_REVIEWER_NOT_ALLOWED, MFCS_USER_PROBLEM_ACCOUNT_DUPLICATES, MFCS_USER_PROBLEM_ACCOUNT_DISABLED_IN_USE, MFCS_USER_PROBLEM_ACCOUNT_BANNER_INVALID, MFCS_USER_PROBLEM_ACCOUNT_NO_ACCESS) as $taxonomy_id) {
       if (($problem->problems & $taxonomy_id) > 0) {
-        if ($taxonomy_id == MFCS_USER_PROBLEM_ACCOUNT_CREATE_BANNER_UNAVAILABLE || $taxonomy_id == MFCS_USER_PROBLEM_ACCOUNT_SYNC_BANNER_UNAVAILABLE) {
+        if ($taxonomy_id == MFCS_USER_PROBLEM_ACCOUNT_CREATE_BANNER_UNAVAILABLE || $taxonomy_id == MFCS_USER_PROBLEM_ACCOUNT_SYNC_BANNER_UNAVAILABLE || $taxonomy_id == MFCS_USER_PROBLEM_ACCOUNT_NO_ACCESS) {
           $additional_operations .= ' <a href="' . $base_path . 'requests/problems-0/users/resynchronize/' . $problem->user_id . $url_arguments . '" class="operation-link operation-link-resynchronize" title="Re-Synchronize the user\'s settings.">Re-Sync</a>';
         }
 
@@ -428,9 +428,10 @@ function mfcs_request_problems_0_users_form($form, &$form_state, $page_number = 
       'buttonText' => '"Show / Hide"',
     ),
     'oLanguage' => array(
-      'sSearch' => '"Filter: "',
+      'sSearch' => '"Filter"',
     ),
     'searchDelay' => 1200,
+    'pagingType' => 'input',
   );
 
   $navigation_top = '';
@@ -609,6 +610,55 @@ function mfcs_request_problems_0_user_form($form, &$form_state, $problem_user_id
     '#markup' => '<div class="problem-message">' . $message . '</div>' . "\n",
   );
 
+  $form['banner_information'] = array(
+    '#markup' => "Banner Information",
+    '#id' => 'banner_information-fieldset',
+    '#type' => 'fieldset',
+    '#title' => "Banner Information",
+    '#tree' => TRUE,
+    '#attributes' => array(
+      'class' => array(
+        'banner_information-fieldset',
+      ),
+    ),
+    '#collapsible' => TRUE,
+    '#collapsed' => TRUE,
+  );
+
+  $form['banner_information']['details'] = array(
+    '#markup' => '',
+  );
+
+  if (isset($problem_user->field_user_banner_id['und']['0']['value'])) {
+    $form['banner_information']['details']['#markup'] .= '<strong>Banner ID</strong>: ' . $problem_user->field_user_banner_id['und']['0']['safe_value'] . "<br>\n";
+
+    try {
+      $event_roles = mfcs_oracle_select('select * from ucs.msu_event_role where id = :banner_id', array('banner_id' => $problem_user->field_user_banner_id['und']['0']['value']));
+
+      if (is_array($event_roles)) {
+        $form['banner_information']['details']['#markup'] .= '<strong>Banner Roles</strong>:' . "\n";
+        $form['banner_information']['details']['#markup'] .= '<ul>' . "\n";
+
+        if (!empty($event_roles)) {
+          foreach ($event_roles as $event_role) {
+            $form['banner_information']['details']['#markup'] .= '<li>' . $event_role['role'] . '</li>' . "\n";
+          }
+        }
+
+        $form['banner_information']['details']['#markup'] .= '</ul>' . "\n";
+      }
+      else {
+        $form['banner_information']['details']['#markup'] .= 'Banner information is currently unavailable.';
+      }
+    }
+    catch (Exception $ex) {
+      $form['banner_information']['details']['#markup'] .= 'Banner information is currently unavailable.';
+    }
+  }
+  else {
+    $form['banner_information']['details']['#markup'] .= 'User has no banner id.';
+  }
+
   $form['problems'] = array(
     '#tree' => TRUE,
   );
@@ -730,6 +780,17 @@ function mfcs_request_problems_0_user_form($form, &$form_state, $problem_user_id
         "<br>\n" .
         "The user either needs to have their banner id fixed, removed, or the account should be disabled.<br>\n",
       'resettable' => FALSE,
+      'custom_action' => FALSE,
+    ),
+    MFCS_USER_PROBLEM_ACCOUNT_NO_ACCESS => array(
+      'label' => "Insufficient Banner Access",
+      'explanation' =>
+        "This flag gets set when a user logs into the system but has not been granted any banner roles to perform any actions, but the account is still technically enabled/unlocked.<br>\n" .
+        "<br>\n" .
+        "Either the account needs to be manually disabled/locked or the account needs to have its banner roles fixed.<br>\n",
+        "<br>\n" .
+        "This may also be triggered if a new user tries to login while banner is down and there is no locally cached data associated with the new account to properly assign its banner roles.<br>\n",
+      'resettable' => TRUE,
       'custom_action' => FALSE,
     ),
   );
@@ -919,7 +980,7 @@ function mfcs_request_problems_0_user_form_submit($form, &$form_state) {
   foreach ($form['values']['problem_list']['#value'] as $problem_id => $problem_settings) {
     if ($problem_settings['resettable'] && array_key_exists($problem_id, $actions) && array_key_exists('reset', $actions[$problem_id])) {
       if ($actions[$problem_id]['reset'] == 1) {
-        if (($problems & $problem_id) > 0) {
+        if (($problems & $problem_id) != 0) {
           $problems -= $problem_id;
         }
         $perform_reset = TRUE;
@@ -955,7 +1016,7 @@ function mfcs_request_problems_0_user_form_submit($form, &$form_state) {
         if (!empty($form['values']['problem_user']['#value']->field_user_banner_id['und'][0]['value']) && is_numeric($form['values']['problem_user']['#value']->field_user_banner_id['und'][0]['value'])) {
           $result = mfcs_synchronize_user_settings($form['values']['problem_user']['#value']);
           if ($result === TRUE) {
-            if (($problems & $custom_action_id) > 0) {
+            if (($problems & $custom_action_id) != 0) {
               $problems -= $custom_action_id;
               mfcs_save_user($form['values']['problem_user']['#value']->uid, array('problems' => $problems));
             }
@@ -1018,14 +1079,14 @@ function mfcs_request_problems_0_user_form_submit($form, &$form_state) {
             $form_state['submitted'] = FALSE;
           }
           else {
-            if (($problems & $custom_action_id) > 0) {
+            if (($problems & $custom_action_id) != 0) {
               $problems -= $custom_action_id;
               mfcs_save_user($form['values']['problem_user']['#value']->uid, array('problems' => $problems));
             }
           }
         }
         else {
-          if (($problems & $custom_action_id) > 0) {
+          if (($problems & $custom_action_id) != 0) {
             $problems -= $custom_action_id;
             mfcs_save_user($form['values']['problem_user']['#value']->uid, array('problems' => $problems));
           }

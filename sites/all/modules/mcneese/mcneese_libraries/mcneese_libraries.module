@@ -77,6 +77,7 @@ function mcneese_libraries_libraries_info() {
     'extensions/Buttons/js/dataTables.buttons.js',
     'extensions/KeyTable/js/dataTables.keyTable.js',
     'extensions/ColReorder/js/dataTables.colReorder.js',
+    'extensions/Pagination/js/pagination.input.js',
   );
   $libraries['datatables']['files']['css'] = array(
     'media/css/jquery.dataTables.css',
@@ -84,6 +85,7 @@ function mcneese_libraries_libraries_info() {
     'extensions/Buttons/css/buttons.dataTables.css',
     'extensions/KeyTable/css/dataTables.KeyTable.css',
     'extensions/ColReorder/css/dataTables.colReorder.css',
+    'extensions/Pagination/css/pagination.input.css',
   );
 
   // fullcalendar
@@ -200,11 +202,13 @@ function mcneese_libraries_theme_table($variables, $datatable_settings = array()
         'pageLength',
         'searchDelay',
         'tabIndex',
+        'deferLoading',
       );
 
       $inline_array_settings = array(
         'columns',
         'columnDefs',
+        'deferLoading',
       );
 
       $array_settings = array(
