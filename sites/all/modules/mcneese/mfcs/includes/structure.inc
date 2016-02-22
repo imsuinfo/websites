@@ -571,6 +571,7 @@ function mfcs_get_request_fields($form, &$form_state) {
 
   // mising: external_audio_person  // if (!$meeting_request) {
   mfcs_get_request_field_presentation_technical_equipment($form, $form_state, $fields, $request_state, $ps);
+  mfcs_get_request_field_presentation_technical_equipment_note($form, $form_state, $fields, $request_state, $ps);
   mfcs_get_request_field_presentation_technical_equipment_details($form, $form_state, $fields, $request_state, $ps);
   mfcs_get_request_field_presentation_technical_equipment_microphone($form, $form_state, $fields, $request_state, $ps);
   mfcs_get_request_field_presentation_external_audio_person($form, $form_state, $fields, $request_state, $ps);
@@ -637,10 +638,10 @@ function mfcs_get_request_fields($form, &$form_state) {
       '#markup' => '',
     );
 
-    $fields['message']['#markup'] .= '<div id="markup-request-message" class="markup-request">';
+    $fields['message']['#markup'] .= '<div id="mfcs-markup-request-message" class="markup-request">';
     $fields['message']['#markup'] .= 'Once your request has been approved appropriate campus personnel, you will be emailed with the outcome. ';
-    $fields['message']['#markup'] .= 'If the request receives approval, you will also receive an itemized detail of any and all charges that will be assessed to you. ';
-    $fields['message']['#markup'] .= 'You must agree and accept the terms offered for the venue to be reserved. ';
+    $fields['message']['#markup'] .= 'If the request receives approval, you will also receive an itemized detail of any and all charges that will be assessed to you.' . "<br>\n";
+    $fields['message']['#markup'] .= '<strong>You must agree and accept the terms offered for the venue to be reserved.</strong> ';
     $fields['message']['#markup'] .= '</div>';
   }
 
@@ -2247,7 +2248,7 @@ function mfcs_get_request_field_plans_note($form, &$form_state, &$fields, &$requ
       '#markup' => '',
     );
 
-    $fields['plans']['note'][0]['markup']['#markup'] .= '<div id="markup-request-plans-note" class="markup-request">';
+    $fields['plans']['note'][0]['markup']['#markup'] .= '<div id="mfcs-markup-request-plans-note" class="markup-request">';
     $fields['plans']['note'][0]['markup']['#markup'] .= '*Please note a specified drawing of setup requests is required to complete the reservation. ';
     $fields['plans']['note'][0]['markup']['#markup'] .= 'The reserving office will provide a venue layout form for setup submission. ';
     $fields['plans']['note'][0]['markup']['#markup'] .= '</div>';
@@ -4371,6 +4372,63 @@ function mfcs_get_request_field_presentation_technical_equipment($form, &$form_s
 /**
  * Process and build a specific form field.
  */
+function mfcs_get_request_field_presentation_technical_equipment_note($form, &$form_state, &$fields, &$request_state, $ps) {
+  $values = array(0 => NULL);
+
+  if ($form['form']['step']['#value'] == 'details' && array_key_exists('presentation', $form['form']['sections']['#value'])) {
+    $fields['presentation']['technical_equipment_note'] = array(
+      '#id' => 'field-request-presentation-technical_equipment_note',
+      '#type' => 'container',
+      '#tree' => TRUE,
+      '#attributes' => array(
+        'class' => array(
+          'form-item-wrapper',
+          'field-request-item',
+          'field-request-item-presentation-technical_equipment_note',
+        ),
+      ),
+    );
+
+    $fields['presentation']['technical_equipment_note'][0] = array(
+      '#id' => 'field-request-presentation-technical_equipment_note-0',
+      '#type' => 'container',
+      '#states' => array(
+        'visible' => array(
+          ':input[name="' . $form['form']['parents']['#value']['path'] . $ps . '[technical_equipment][0]' . '"]' => array('value' => 1),
+        ),
+        'invisible' => array(
+          'or' => array(
+            ':input[name="' . $form['form']['parents']['#value']['path'] . $ps . '[technical_equipment][0]' . '"]' => array('value' => 0),
+            ':input[name="' . $form['form']['parents']['#value']['path'] . $ps . '[technical_equipment][0]' . '"]' => array('value' => NULL),
+          ),
+        ),
+      ),
+      '#attributes' => array(
+        'class' => array(
+          'form-item-delta',
+          'form-item-delta-0',
+        ),
+      ),
+    );
+
+    $fields['presentation']['technical_equipment_note'][0]['markup'] = array(
+      '#markup' => '',
+    );
+
+    $fields['presentation']['technical_equipment_note'][0]['markup']['#markup'] .= '<div id="mfcs-markup-request-presentation-technical_equipment_note" class="markup-request">';
+    $fields['presentation']['technical_equipment_note'][0]['markup']['#markup'] .= 'The technology you requested may or may not be available for this venue. ';
+    #$fields['presentation']['technical_equipment_note'][0]['markup']['#markup'] .= '<em><a href="https://www.mcneese.edu/node/5506">You may also be required to complete an additional request form to secure the item(s).</a></em> ';
+    $fields['presentation']['technical_equipment_note'][0]['markup']['#markup'] .= '<em>You may also be required to complete an additional request form to secure the item(s).</em> ';
+    $fields['presentation']['technical_equipment_note'][0]['markup']['#markup'] .= 'Communicate with the venue coordinator to confirm your technical requests. ';
+    $fields['presentation']['technical_equipment_note'][0]['markup']['#markup'] .= '</div>';
+  }
+
+  return $values;
+}
+
+/**
+ * Process and build a specific form field.
+ */
 function mfcs_get_request_field_presentation_technical_equipment_details($form, &$form_state, &$fields, &$request_state, $ps) {
   $values = array(0 => array());
   if (!empty($request_state['presentation']['technical_equipment_details'])) {
@@ -6151,7 +6209,7 @@ function mfcs_get_request_field_services_alcohol_note($form, &$form_state, &$fie
       '#markup' => '',
     );
 
-    $fields['services']['alcohol_note'][0]['markup']['#markup'] .= '<div id="markup-request-services-alcohol_note" class="markup-request">';
+    $fields['services']['alcohol_note'][0]['markup']['#markup'] .= '<div id="mfcs-markup-request-services-alcohol_note" class="markup-request">';
     $fields['services']['alcohol_note'][0]['markup']['#markup'] .= 'A formal written request must be submitted to the President for approval of any alcohol served on campus and may require police officer presence at your request for an additional requirement. ';
     $fields['services']['alcohol_note'][0]['markup']['#markup'] .= 'Contact the President\'s Office at ext. 5556 for more information. ';
     $fields['services']['alcohol_note'][0]['markup']['#markup'] .= '</div>';
