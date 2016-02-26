@@ -1308,10 +1308,12 @@ function user_user_presave(&$edit, $account, $category) {
     elseif (!empty($edit['picture_delete'])) {
       $edit['picture'] = NULL;
     }
-    // Prepare user roles.
-    if (isset($edit['roles'])) {
-      $edit['roles'] = array_filter($edit['roles']);
-    }
+  }
+
+  // Filter out roles with empty values to avoid granting extra roles when
+  // processing custom form submissions.
+  if (isset($edit['roles'])) {
+    $edit['roles'] = array_filter($edit['roles']);
   }
 
   // Move account cancellation information into $user->data.
@@ -2239,7 +2241,8 @@ function user_login_final_validate($form, &$form_state) {
     }
     else {
       form_set_error('name', 'Sorry, unrecognized username or password.');
-      watchdog('user', 'Login attempt failed for %user.', array('%user' => $form_state['values']['name']));
+      $user_name = isset($form_state['input']['name']) ? $form_state['input']['name'] : NULL;
+      watchdog('user', 'Login attempt failed for %user.', array('%user' => $user_name));
     }
   }
   elseif (isset($form_state['flood_control_user_identifier'])) {
