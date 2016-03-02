@@ -1059,7 +1059,7 @@ function workbench_moderation_node_data($node) {
     // to maintain false-y values except for NULL, so array_filter() +
     // array_merge() wouldn't work here.
     foreach (array_keys($defaults) as $key) {
-      if (is_null($current->$key)) {
+      if (is_object($current) && (!property_exists($current, $key) || is_null($current->$key))) {
         $current->$key = $defaults[$key];
       }
     }
