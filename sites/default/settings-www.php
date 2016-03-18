@@ -864,6 +864,9 @@ $conf['error_document_file_503'] = '/var/www/error_documents/5xx/503.html';
 #$conf['error_document_custom_menu_1_logged_in'] = NULL;
 #$conf['error_document_custom_menu_2_logged_in'] = NULL;
 $conf['error_document_load_blocks'] = TRUE;
+$conf['error_document_functions'] = array(
+  'mcneese_www_process_side_panel',
+);
 
 
 // enable all errors
