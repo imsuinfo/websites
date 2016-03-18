@@ -2661,6 +2661,7 @@ function drupal_deliver_html_page($page_callback_result) {
         $error_document_custom_menu_1_logged_in = variable_get('error_document_custom_menu_1_logged_in', NULL);
         $error_document_custom_menu_2_logged_in = variable_get('error_document_custom_menu_2_logged_in', NULL);
         $error_document_load_blocks = variable_get('error_document_load_blocks', FALSE);
+        $error_document_functions = variable_get('error_document_functions', NULL);
 
         if (is_string($error_document_file_404) && file_exists($error_document_file_404)) {
           $page = array();
@@ -2681,6 +2682,23 @@ function drupal_deliver_html_page($page_callback_result) {
                 }
               }
             }
+          }
+
+          if (is_array($error_document_functions)) {
+            $cf = NULL;
+            foreach ($error_document_functions as $error_document_function) {
+              if (!is_string($error_document_function) || !function_exists($error_document_function)) {
+                continue;
+              }
+
+              $results = $error_document_function($cf);
+              if (is_string($results)) {
+                $block .= $results;
+              }
+              unset($results);
+            }
+            unset($cf);
+            unset($error_document_function);
           }
           unset($page);
 
@@ -2793,6 +2811,7 @@ function drupal_deliver_html_page($page_callback_result) {
         $error_document_custom_menu_1_logged_in = variable_get('error_document_custom_menu_1_logged_in', NULL);
         $error_document_custom_menu_2_logged_in = variable_get('error_document_custom_menu_2_logged_in', NULL);
         $error_document_load_blocks = variable_get('error_document_load_blocks', FALSE);
+        $error_document_functions = variable_get('error_document_functions', NULL);
 
         if (is_string($error_document_file_403) && file_exists($error_document_file_403)) {
           $page = array();
@@ -2813,6 +2832,23 @@ function drupal_deliver_html_page($page_callback_result) {
                 }
               }
             }
+          }
+
+          if (is_array($error_document_functions)) {
+            $cf = NULL;
+            foreach ($error_document_functions as $error_document_function) {
+              if (!is_string($error_document_function) || !function_exists($error_document_function)) {
+                continue;
+              }
+
+              $results = $error_document_function($cf);
+              if (is_string($results)) {
+                $block .= $results;
+              }
+              unset($results);
+            }
+            unset($cf);
+            unset($error_document_function);
           }
           unset($page);
 
