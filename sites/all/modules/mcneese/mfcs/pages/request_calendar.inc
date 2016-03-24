@@ -167,6 +167,50 @@ function mfcs_request_calendar_month_0_page($year = NULL, $month = NULL) {
 
   $rows = array();
   $current_date = $absolute_start;
+
+  $holidays = mfcs_get_holidays($year, $absolute_start, $absolute_stop);
+
+  // Holidays are setup on a per-year basis.
+  // If absolute_start is a previous or next year, additional function calls are required.
+  $year_start = strtotime('midnight january 1 ' . $year);
+  $year_stop = strtotime('next year', $year_start);
+  if ($absolute_start < $year_start) {
+    $holidays_previous = mfcs_get_holidays($year - 1, $absolute_start, $year_start);
+    if (is_array($holidays_previous)) {
+      foreach ($holidays_previous as $holiday_key => $holiday_value) {
+        $holidays[$holiday_key] = $holiday_value;
+      }
+    }
+  }
+  if ($absolute_stop > $year_stop) {
+    $holidays_next = mfcs_get_holidays($year + 1, $year_stop, $absolute_stop);
+    if (is_array($holidays_next)) {
+      foreach ($holidays_next as $holiday_key => $holiday_value) {
+        $holidays[$holiday_key] = $holiday_value;
+      }
+    }
+  }
+
+  foreach ($holidays as $holiday) {
+    $day = date('j', $holiday->date);
+    $month = date('n', $holiday->date);
+    $month_day = $month . '-' . $day;
+    if (!isset($rows[$month_day])) {
+      $rows[$month_day] = array();
+    }
+
+    $rows[$month_day]['holiday-' . $holiday->id] = array(
+      'is' => 'holiday',
+      'id' => $holiday->id,
+      'title' => check_plain($holiday->title),
+      'tooltip' => str_replace('"', '&quot;', check_plain($holiday->description)),
+      'year' => $year,
+      'month' => $month,
+      'day' => $day,
+      'date' => $holiday->date,
+    );
+  }
+
   while ($current_date < $absolute_stop) {
     $next_date = strtotime('+1 days', $current_date);
 
@@ -225,7 +269,8 @@ function mfcs_request_calendar_month_0_page($year = NULL, $month = NULL) {
               $month_name = date('F', $date);
               $month_name_lower = strtolower($month_name);
 
-              $rows[$month_day][$item->id] = array(
+              $rows[$month_day]['more'] = array(
+                'is' => 'more',
                 'href' => $base_path . 'requests/calendar-0/day/' . $year . '/' . $month_name_lower . '/' . $day . $url_arguments,
                 'title' => '. . .',
                 'tooltip' => 'View more requests on ' . $month_name . ' ' . $day . ', ' . $year,
@@ -248,6 +293,7 @@ function mfcs_request_calendar_month_0_page($year = NULL, $month = NULL) {
               $type = (int) $item->type;
 
               $rows[$month_day][$item->id] = array(
+                'is' => 'event',
                 'href' => $base_path . 'requests/view-0/' . $item->id . $url_arguments,
                 'title' => $item_title,
                 'tooltip' => '[' . $item->id . '] ' . $building_name . ' ' . $room_name . ': ' . $item_title,
@@ -472,6 +518,30 @@ function mfcs_request_calendar_day_0_page($year = NULL, $month = NULL, $day = NU
   }
   unset($current_time);
 
+  $holidays = mfcs_get_holidays($year, $day_start, $day_stop);
+
+  foreach ($holidays as $holiday) {
+    $date = strtotime('midnight today', $holiday->date);
+
+    if (!isset($rows['all_day'][$date])) {
+      $rows['all_day'][$date] = array();
+    }
+
+    $description = check_plain($holiday->description);
+    $rows['all_day'][$date]['holiday-' . $holiday->id] = array(
+      'is' => 'holiday',
+      'id' => $holiday->id,
+      'title' => check_plain($holiday->title),
+      'tooltip' => str_replace('"', '&quot;', $description),
+      'description' => str_replace("\n", "<br>\n", $description),
+      'year' => $year,
+      'month' => $month,
+      'day' => $day,
+      'date' => $holiday->date,
+    );
+    unset($description);
+  }
+
   $processed_items = array();
 
   if (!empty($items)) {
@@ -509,6 +579,7 @@ function mfcs_request_calendar_day_0_page($year = NULL, $month = NULL, $day = NU
           }
 
           $rows['all_day'][$date][$item->id] = array(
+            'is' => 'event',
             'id' => $item->id,
             'href' => $base_path . 'requests/view-0/' . $item->id . $url_arguments,
             'title' => $item_title,
@@ -567,6 +638,7 @@ function mfcs_request_calendar_day_0_page($year = NULL, $month = NULL, $day = NU
             $processed_items[$item->id][$time_count] = $time_slot;
 
             $rows['range'][$time_count][$time_slot][$item->id] = array(
+              'is' => 'event',
               'id' => $item->id,
               'href' => $base_path . 'requests/view-0/' . $item->id . $url_arguments,
               'title' => $item_title,

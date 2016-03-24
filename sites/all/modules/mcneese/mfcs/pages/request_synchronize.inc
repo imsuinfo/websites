@@ -41,7 +41,7 @@ function mfcs_request_synchronize_0_form($form, &$form_state, $page_number = NUL
   }
 
   // require that page number be only an integer.
-  if (!cf_is_integer($page_number)) {
+  if (!is_null($page_number) && !cf_is_integer($page_number)) {
     drupal_not_found();
     drupal_exit();
     return array();
@@ -328,7 +328,10 @@ function mfcs_request_synchronize_0_form($form, &$form_state, $page_number = NUL
     ),
     'processing' => TRUE,
     'serverSide' => TRUE,
-    'ajax' => "'" . $base_path . 'requests/synchronize-0/ajax' . $url_arguments . "'",
+    'ajax' => array(
+      'url' => "'" . $base_path . 'requests/synchronize-0/ajax' . $url_arguments . "'",
+      'type' => "'POST'",
+    ),
     'deferRender' => TRUE,
     'columns' => array(
       array('id' => 0, 'column' => 'id', 'name' => "ID", 'className' => 'column-id', 'sanitize' => FALSE),
@@ -523,7 +526,7 @@ function mfcs_request_synchronize_0_ical_page($password, $custom = NULL) {
   $content_location = $base_url . '/synchronize-0';
 
   header('HTTP/1.1 200 OK', TRUE, 200);
-  header('Content-Type: text/plain');
+  header('Content-Type: text/calendar; method="PUBLISH"; component="VEVENT"');
   header('Content-Length: ' . $ical['length']);
   header('Content-Transfer-Encoding: binary');
   #header('Content-type: text/plain; charset=utf-8');

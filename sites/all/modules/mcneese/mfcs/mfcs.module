@@ -102,6 +102,14 @@ define('MFCS_REQUEST_STATUS_CLOSED_ACCEPTED_CANCELLED', 8);
  define('MFCS_REQUEST_CLASSIFICATION_EXTERNAL', 4);
 
 /**
+ * Defines Taxonomy TIDs for user classifications.
+ */
+ define('MFCS_USER_CLASSIFICATION_STUDENT', 87);
+ define('MFCS_USER_CLASSIFICATION_CAMPS', 88);
+ define('MFCS_USER_CLASSIFICATION_FACULTY', 89);
+ define('MFCS_USER_CLASSIFICATION_EXTERNAL', 90);
+
+/**
  * Defines Taxonomy TIDs for request dates categories.
  */
  define('MFCS_REQUEST_DATES_CATEGORY_ACTUAL', 137);
@@ -270,6 +278,23 @@ define('MFCS_TROUBLESHOOT_REQUESTS_REVIEW_RECHECK', 1);
 define('MFCS_TROUBLESHOOT_MER_CACHE_SYNCHRONIZE', 2);
 define('MFCS_TROUBLESHOOT_BANNER_CACHE_SYNCHRONIZE', 3);
 define('MFCS_TROUBLESHOOT_BANNER_ROLE_SYNCHRONIZE', 4);
+define('MFCS_TROUBLESHOOT_BANNER_INFORMATION', 5);
+define('MFCS_TROUBLESHOOT_REQUESTS_PROBLEM_CHECK', 6);
+
+/**
+ * Defines problems log codes.
+ */
+define('MFCS_LOG_PROBLEMS_NONE', 0);
+define('MFCS_LOG_PROBLEMS_INSERT', 1);
+define('MFCS_LOG_PROBLEMS_UPDATE', 2);
+define('MFCS_LOG_PROBLEMS_DELETE', 3);
+define('MFCS_LOG_PROBLEMS_RESYNC', 4);
+define('MFCS_LOG_PROBLEMS_IGNORE', 5);
+define('MFCS_LOG_PROBLEMS_UNIGNORE', 6);
+define('MFCS_LOG_PROBLEMS_RECHECK', 7);
+define('MFCS_LOG_PROBLEMS_REASSIGN_VENUE_COORDINATOR', 8);
+define('MFCS_LOG_PROBLEMS_REASSIGN_REQUESTER', 9);
+define('MFCS_LOG_PROBLEMS_REASSIGN_REBUILD_CACHE', 10);
 
 /**
  * Defines some hard-limits.
@@ -299,6 +324,21 @@ define('MFCS_USER_PROBLEM_ACCOUNT_DUPLICATES', 256);
 define('MFCS_USER_PROBLEM_ACCOUNT_DISABLED_IN_USE', 512);
 define('MFCS_USER_PROBLEM_ACCOUNT_BANNER_INVALID', 1024);
 define('MFCS_USER_PROBLEM_ACCOUNT_NO_ACCESS', 2048);
+
+/**
+ * Defines a series of request problems.
+ */
+define('MFCS_REQUEST_PROBLEM_NONE', 0);
+define('MFCS_REQUEST_PROBLEM_CONFLICT', 1); // multiple requests with the same date and time.
+define('MFCS_REQUEST_PROBLEM_STALE', 2); // request is past its date and time and is considered stale (or lost).
+define('MFCS_REQUEST_PROBLEM_STUCK', 3); // the request is stuck in its current state or step and cannot continue.
+define('MFCS_REQUEST_PROBLEM_BLOCKED', 4); // the request is blocked by another request from continuing (similar to both stuck and conflict).
+define('MFCS_REQUEST_PROBLEM_COORDINATOR', 5); // coordinator no longer exists, is disabled, or is otherwise invalid.
+define('MFCS_REQUEST_PROBLEM_REQUESTER', 6); // requestor no longer exists, is disabled, or is otherwise invalid.
+define('MFCS_REQUEST_PROBLEM_ROOM', 7); // room no longer exists, is disabled, or is otherwise invalid.
+define('MFCS_REQUEST_PROBLEM_BUILDING', 8); // building no longer exists, is disabled, or is otherwise invalid.
+define('MFCS_REQUEST_PROBLEM_LOCATION', 9); // location no longer exists, is disabled, or is otherwise invalid.
+define('MFCS_REQUEST_PROBLEM_CACHE_REQUEST', 10); // The mfcs_requests caches are inconsistend with the mfcs_current data.
 
 /**
  * Define codes that represent what the e-mail represents.
@@ -965,6 +1005,87 @@ function mfcs_synchronize_request_access($type = NULL, $password = NULL, $user_i
           return TRUE;
         }
       }
+    } catch (Exception $ex) {
+      cf_error::on_query_execution($ex);
+
+      return FALSE;
+    }
+  }
+
+  return FALSE;
+}
+
+/**
+ * Access callback for facilities use holiday related operations.
+ *
+ * This is a simple access check and is not cached like the other access checks.
+ *
+ * @param int|null $type
+ *   (optional) When NULL, access to holiday management page is checked.
+ *   When not NULL, access to a specific holiday id is checked.
+ * @param int|null $user_id
+ *   (optional) When NULL, the id of the current user is used.
+ *   When not NULL, the provided user id is used.
+ * @param bool|null $enabled
+ *   (optional) When TRUE, only enabled holidays are allowed.
+ *   When FALSE, not enabled holidays are allowed.
+ *
+ * @param return bool
+ *   TRUE on granted, FALSE otherwise.
+ */
+function mfcs_holiday_request_access($id = NULL, $user_id = NULL, $enabled = TRUE) {
+  if (!is_null($id) && !cf_is_integer($id)) {
+    cf_error::invalid_integer('id');
+    return FALSE;
+  }
+
+  if (is_null($user_id)) {
+    $user = cf_current_user();
+  }
+  else {
+    $user = user_load($user_id);
+  }
+
+  if (!is_object($user)) {
+    cf_error::invalid_integer('user_id');
+    return FALSE;
+  }
+
+  if (!is_null($enabled) && !is_bool($enabled)) {
+    cf_error::invalid_bool('enabled');
+    return FALSE;
+  }
+
+  // only allow managers and administers to do anything with holidays.
+  if (!user_access('mfcs manage', $user) && !user_access('mfcs administer', $user)) {
+    return FALSE;
+  }
+
+  if (is_null($id)) {
+    return TRUE;
+  }
+  else {
+    try {
+      $query = db_select('mfcs_holiday', 'mh');
+      $query->addField('mh', 'id', 'id');
+
+      if (!is_null($id)) {
+        $query->condition('id', $id);
+      }
+
+      if ($enabled) {
+        $query->condition('enabled', 1);
+      }
+
+      // prohibit access to soft-deleted rows.
+      $query->condition('disabled', 0);
+
+      $results = $query->execute()->fetchAll();
+      if (empty($results)) {
+        return FALSE;
+      }
+
+      return TRUE;
     } catch (Exception $ex) {
       cf_error::on_query_execution($ex);
 
@@ -4663,80 +4784,70 @@ function mfcs_auto_block_accounts_cron() {
     $no_auto_block_accounts = $conf['fcs_no_auto_block_accounts'];
   }
 
-  $banner_roles = array();
-  if (isset($conf['fcs_banner_roles']) && is_array($conf['fcs_banner_roles'])) {
-    $banner_roles = $conf['fcs_banner_roles'];
-  }
-
-  // the variable should not be empty, but if it is return so that no roles ever get disabled.
-  if (empty($banner_roles)) {
-    cf_error::invalid_variable('fcs_banner_roles', "The 'fcs_banner_roles' array is not properly defined or is empty");
-    return;
-  }
-
-  // do not block administrator roles.
-  $banner_roles['administrator'] = 'administrator';
-
-  // do not block bannerless exception roles.
-  $banner_roles['bannerless exception'] = 'bannerless exception';
-
-  $transaction = db_transaction();
+  $transaction = NULL;
   try {
-    $query = db_select('users', 'u');
-    $query->addField('u', 'uid', 'user_id');
-    $query->addField('u', 'name', 'user_name');
+    // using PostgresSQL's WITH clause because it is much faster.
+    $sql = "with admin_or_exception as (select ur.uid from users_roles ur inner join role r ON ur.rid = r.rid where (r.name IN ('administrator', 'bannerless exception'))), ";
+    $sql .= "banner_user_roles as (select mberu.user_id AS user_id from mfcs_banner_event_roles_to_users mberu where mberu.disabled = 0) ";
 
-    $query->condition('u.name', $no_auto_block_accounts, 'NOT IN');
+    $sql .= "select u.uid as user_id, fdfubi.field_user_banner_id_value as banner_id, u.name AS name from users u ";
+    $sql .= "left outer join field_data_field_user_banner_id fdfubi on u.uid = fdfubi.entity_id ";
 
     // do not process anonymous
-    $query->condition('u.uid', 0, '<>');
+    $sql .= "where (u.uid <> 0) ";
 
     // do not process system admin account
-    $query->condition('u.uid', 1, '<>');
+    $sql .= "and (u.uid <> 1) ";
 
     // only check enabled accounts
-    $query->condition('u.status', 1);
+    $sql .= "and (u.status = 1) ";
 
-    $users = $query->execute()->fetchAll();
+    // ignore manually disabled accounts by name.
+    $sql .= "and (u.name not in (:no_auto_block_accounts)) ";
+
+    // the user must not have any banner roles to be auto-blocked.
+    $sql .= "and (u.uid not in (select * from banner_user_roles bur where bur.user_id = u.uid)) ";
+
+    // the user must not have any drupal administer or bannerless exception roles to be auto-blocked.
+    $sql .= "and (u.uid not in (select * from admin_or_exception aoe)) ";
+
+    $users = db_query($sql, array(':no_auto_block_accounts' => $no_auto_block_accounts))->fetchAll();
 
     if (empty($users)) return;
 
     // using user_load() is not the most efficient way, but it works and functions like mfcs_synchronize_user_settings() expect a user object.
+    $transaction = db_transaction();
     foreach ($users as $u) {
-      // first synchronize the users setting
-      $user = user_load($u->user_id);
-      if (!is_object($user)) continue;
+      watchdog(MFCS_WATCHDOG_ID, "Auto-blocking the user @user (@user_id) and removing all existing roles, reason: Not in appropriate banner groups or local admin groups.", array('@user' => $u->name, '@user_id' => $u->user_id), WATCHDOG_INFO);
 
-      mfcs_synchronize_user_settings($user);
+      $block_query = db_update('users');
+      $block_query->fields(array('status' => 0));
+      $block_query->condition('uid', $u->user_id);
+      $block_query->execute();
 
-      // once the user is synchronized, check their roles and block account as necessary.
-      $block_user = TRUE;
-      foreach ($banner_roles as $banner_role) {
-        if (array_search($banner_role, $user->roles) !== FALSE) {
-          $block_user = FALSE;
-          break;
-        }
-      }
-
-      // if the user does not have the appropriate banner roles, then block that user.
-      if ($block_user) {
-        watchdog(MFCS_WATCHDOG_ID, "Auto-blocking the user @user (@user_id) and removing all existing roles, reason: Not in appropriate banner groups or local admin groups.", array('@user' => $user->name, '@user_id' => $user->uid), WATCHDOG_INFO);
-
-        $block_query = db_update('users');
-        $block_query->fields(array('status' => 0));
-        $block_query->condition('uid', $user->uid);
-        $block_query->execute();
-
-        $delete_query = db_delete('users_roles');
-        $delete_query->condition('uid', $user->uid);
-        $delete_query->execute();
-      }
+      $delete_query = db_delete('users_roles');
+      $delete_query->condition('uid', $u->user_id);
+      $delete_query->execute();
     }
+    unset($transaction);
   }
   catch (Exception $ex) {
-    $transaction->rollback();
+    if (is_object($transaction)) $transaction->rollback();
     cf_error::on_query_execution($ex);
   }
+}
+
+/**
+ * Executes the cron queue to scan requests looking for known problem situations.
+ *
+ * @see: mfcs_cronapi()
+ * @see: mfcs_mischellaneous_check_requests_for_problems()
+ */
+function mfcs_check_for_problems_requests_cron() {
+  mfcs_set_using_effective_system_id();
+
+  mfcs_include(MFCS_INCLUDE_MISCELLANEOUS);
+  mfcs_mischellaneous_check_requests_for_problems();
 }
 
 /***
@@ -8585,7 +8696,11 @@ function mfcs_build_request_ajax_table($items_returned, $conditions, $options, $
   }
 
   if (array_key_exists('ajax_path', $options) && is_string($options['ajax_path']) && !empty($options['ajax_path'])) {
-    $table['datatable_settings']['ajax'] = $options['ajax_path'];
+    $table['datatable_settings']['ajax'] = array(
+      'url' => $options['ajax_path'],
+      'type' => "'POST'",
+    );
+
     $table['datatable_settings']['processing'] = TRUE;
     $table['datatable_settings']['serverSide'] = TRUE;
 
@@ -10287,6 +10402,185 @@ function mfcs_get_request_already_reviewed_as_classifications($request_id, $revi
   }
 
   return $return;
+}
+
+/**
+ * Returns a list of holidays for the given year, month, day.
+ *
+ * @param int $year
+ *   The year the holiday belongs under.
+ * @param int|null $timestamp_start
+ *   (optional) The timestamp start range.
+ *   If the stop range is NULL and this is an integer, then only the specific specified timestamp is loaded.
+ * @param int|null $timestamp_stop
+ *   (optional) The timestamp stop range.
+ *   If NULL, then this value is ignored.
+ * @param bool|null $enabled
+ *   (optional) When TRUE, only load holidays when the enabled column is 1.
+ *   When FALSE, only load holidays when the enabled column is 0.
+ *   When NULL, ignore this column.
+ * @param bool|null $deleted
+ *   (optional) When TRUE, only load holidays when the disabled column is 1.
+ *   When FALSE, only load holidays when the disabled column is 0.
+ *   When NULL, ignore this column.
+ *
+ * @return array|bool
+ *   An array of holidays.
+ *   FALSE is returned on error.
+ */
+function mfcs_get_holidays($year, $timestamp_start = NULL, $timestamp_stop = NULL, $enabled = TRUE, $deleted = FALSE) {
+  if (!cf_is_integer($year)) {
+    cf_error::invalid_integer('year');
+    return FALSE;
+  }
+
+  if (!is_null($timestamp_start) && !cf_is_integer($timestamp_start)) {
+    cf_error::invalid_integer('timestamp_start');
+    return FALSE;
+  }
+
+  if (!is_null($timestamp_stop) && !cf_is_integer($timestamp_stop)) {
+    cf_error::invalid_integer('timestamp_stop');
+    return FALSE;
+  }
+
+  if (!is_null($enabled) && !is_bool($enabled)) {
+    cf_error::invalid_bool('enabled');
+    return FALSE;
+  }
+
+  if (!is_null($deleted) && !is_bool($deleted)) {
+    cf_error::invalid_bool('deleted');
+    return FALSE;
+  }
+
+  try {
+    $query = db_select('mfcs_holiday', 'mh');
+    $query->addField('mh', 'id', 'id');
+    $query->addField('mh', 'date', 'date');
+    $query->addField('mh', 'title', 'title');
+    $query->addField('mh', 'description', 'description');
+    $query->addField('mh', 'enabled', 'enabled');
+    $query->addField('mh', 'disabled', 'disabled');
+    $query->addField('mh', 'created', 'created');
+    $query->addField('mh', 'updated', 'updated');
+
+    $query->condition('mh.year', $year);
+
+    if ($enabled === TRUE) {
+      $query->condition('mh.enabled', 1);
+    }
+    elseif ($enabled === FALSE) {
+      $query->condition('mh.enabled', 0);
+    }
+
+    if ($deleted === TRUE) {
+      $query->condition('mh.disabled', 1);
+    }
+    elseif ($deleted === FALSE) {
+      $query->condition('mh.disabled', 0);
+    }
+
+    if (!is_null($timestamp_start)) {
+      // only process values on a per day-to-day basis by setting the timestamps to midnight for each day.
+      $timestamp_start_midnight = strtotime('midnight today', $timestamp_start);
+
+      if (is_null($timestamp_stop)) {
+        $query->condition('mh.date', $timestamp_start_midnight);
+      }
+      else {
+        // only process values on a per day-to-day basis by setting the timestamps to midnight for each day.
+        $timestamp_stop_midnight = strtotime('midnight today', $timestamp_stop);
+
+        $query->condition('mh.date', $timestamp_start_midnight, '>=');
+        $query->condition('mh.date', $timestamp_stop_midnight, '<');
+      }
+    }
+
+    $query->orderBy('mh.date');
+
+    $results = $query->execute()->fetchAllAssoc('id');
+  }
+  catch (Exception $ex) {
+    cf_error::on_exception($ex);
+
+    return FALSE;
+  }
+
+  return $results;
+}
+
+/**
+ * Returns a list of holidays for the given year, month, day.
+ *
+ * @param int $id
+ *   The id of the holiday to load.
+ * @param bool|null $enabled
+ *   (optional) When TRUE, only load holidays when the enabled column is 1.
+ *   When FALSE, only load holidays when the enabled column is 0.
+ *   When NULL, ignore this column.
+ * @param bool|null $deleted
+ *   (optional) When TRUE, only load holidays when the disabled column is 1.
+ *   When FALSE, only load holidays when the disabled column is 0.
+ *   When NULL, ignore this column.
+ *
+ * @return array|bool
+ *   An array of holidays.
+ *   FALSE is returned on error.
+ */
+function mfcs_get_holiday($id, $enabled = TRUE, $deleted = FALSE) {
+  if (!cf_is_integer($id)) {
+    cf_error::invalid_integer('id');
+    return FALSE;
+  }
+
+  if (!is_null($enabled) && !is_bool($enabled)) {
+    cf_error::invalid_bool('enabled');
+    return FALSE;
+  }
+
+  if (!is_null($deleted) && !is_bool($deleted)) {
+    cf_error::invalid_bool('deleted');
+    return FALSE;
+  }
+
+  try {
+    $query = db_select('mfcs_holiday', 'mh');
+    $query->addField('mh', 'id', 'id');
+    $query->addField('mh', 'year', 'year');
+    $query->addField('mh', 'date', 'date');
+    $query->addField('mh', 'title', 'title');
+    $query->addField('mh', 'description', 'description');
+    $query->addField('mh', 'enabled', 'enabled');
+    $query->addField('mh', 'disabled', 'disabled');
+    $query->addField('mh', 'created', 'created');
+    $query->addField('mh', 'updated', 'updated');
+
+    $query->condition('mh.id', $id);
+
+    if ($enabled === TRUE) {
+      $query->condition('mh.enabled', 1);
+    }
+    elseif ($enabled === FALSE) {
+      $query->condition('mh.enabled', 0);
+    }
+
+    if ($deleted === TRUE) {
+      $query->condition('mh.disabled', 1);
+    }
+    elseif ($deleted === FALSE) {
+      $query->condition('mh.disabled', 0);
+    }
+
+    $results = $query->execute()->fetchObject();
+  }
+  catch (Exception $ex) {
+    cf_error::on_exception($ex);
+
+    return FALSE;
+  }
+
+  return $results;
 }
 
 /**
