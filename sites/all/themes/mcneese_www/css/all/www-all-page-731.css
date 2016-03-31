@@ -1,9 +1,7 @@
 
 
 
-/* General Overrides
-======================================== */
-
+/*** General Overrides ***/
 .mcneese.node-theme-page-731 {
     background-color: #f0f0f0;
 }
@@ -63,9 +61,9 @@
     margin-bottom: 0px !important;
 }
 
-/* Notifications 
-======================================== */
 
+
+/*** Notifications ***/
 .mcneese.node-theme-page-731 .info-red {
     background-color: #ffc3c3 !important;
     border: 1px solid #e30000 !important;
@@ -101,9 +99,9 @@
     padding: 15px 0;
 }
 
-/* Skeleton Grid Based Framework Fluid Widths
-======================================== */
 
+
+/*** Skeleton Grid Based Framework Fluid Widths ***/
 .mcneese.node-theme-page-731 .msu-column,
 .mcneese.node-theme-page-731 .msu-columns {
     width: 100%;
@@ -259,9 +257,9 @@
     margin-bottom: 20px;
 }
 
-/* Bulletin
-======================================== */
 
+
+/*** Bulletin ***/
 .mcneese.node-theme-page-731 .bulletin-wrapper {
     color: #383838;
     line-height: 1.6;
@@ -313,15 +311,15 @@
     word-wrap: break-word;
 }
 
-/* Microsite Styles
-======================================== */
 
+
+/*** Microsite Styles ***/
 .mcneese.node-theme-page-731 .featured {
     margin-bottom: 15px;
 }
 
 .mcneese.node-theme-page-731 .box {
-    background-color: #ffffff; 
+    background-color: #ffffff;
     border: 1px dashed #000;
 }
 
@@ -335,9 +333,9 @@
     line-height: 35px !important;
 }
 
-/* Accordion Styles
-======================================== */
 
+
+/*** Accordion Styles ***/
 .mcneese.node-theme-page-731 .ui-accordion .ui-accordion-header {
     font-size: 14px;
     font-weight: normal;
@@ -345,7 +343,7 @@
 }
 
 .mcneese.node-theme-page-731 .ui-accordion .ui-accordion-content {
-    padding: 0px; 
+    padding: 0px;
 }
 
 .mcneese.node-theme-page-731 .ui-state-default {
@@ -391,9 +389,9 @@
     background-color: #eee;
 }
 
-/* Side Nav Reset
-================================ */
 
+
+/*** Side Nav Reset ***/
 .mcneese.node-theme-page-731 #mcneese-page-side .workbench_menu {
     border-bottom: 0px;
 }
@@ -426,9 +424,9 @@
     padding: 0 0 0 12px;
 }
 
-/* Side Navigation Top
-================================ */
 
+
+/*** Side Navigation Top ***/
 .mcneese.node-theme-page-731 #mcneese-page-side .workbench_menu .menu_item.depth-0 {
     border: none;
 }
@@ -452,8 +450,8 @@
     color: #2d2d2d;
 }
 
-/* Side Navigation
-================================ */
+
+/*** Side Navigation ***/
 
 .mcneese.node-theme-page-731 #mcneese-page-side .workbench_menu:nth-child(1) {
     border-top: 0px;
@@ -468,9 +466,9 @@
     color: #2d2d2d;
 }
 
-/* Definition Styles
-======================================== */
 
+
+/*** Definition Styles ***/
 .mcneese.node-theme-page-731 dl {
     padding: 15px;
 }
@@ -484,9 +482,9 @@
     padding: 10px;
 }
 
-/* Zebra Stripe Checklist nth-child method
-======================================== */
 
+
+/*** Zebra Stripe Checklist nth-child method ***/
 .mcneese.node-theme-page-731 ol.checklist > li > ol,
 .mcneese.node-theme-page-731 ul.checklist > li > ul {
     list-style-type: lower-alpha;
@@ -523,9 +521,9 @@
     list-style-type: lower-alpha;
 }
 
-/* Table Styles
-======================================== */
 
+
+/*** Table Styles ***/
 .mcneese.node-theme-page-731 table:not(.no_default) {
     background-color: #ffffff;
 }
@@ -542,7 +540,7 @@
 }
 
 .mcneese.node-theme-page-731 table:not(.no_default) > tbody > tr > td {
-    padding: 20px 15px; 
+    padding: 20px 15px;
 }
 
 .mcneese.node-theme-page-731 table:not(.no_default) > tbody > tr > td:nth-child(1) {
@@ -559,11 +557,11 @@
 
 .mcneese.node-theme-page-731 table.cke_editor:not(.no_default) {
     background-color: #eaeaea;
-}    
+}
 
-/* Future Students and Current Students Page
-======================================== */
 
+
+/*** Future Students and Current Students Page ***/
 .mcneese.node-theme-page-731 .list-box {
     background: #f0f0f0;
     background: -moz-linear-gradient(top, #f0f0f0 30%, #ffffff 70%);
@@ -669,11 +667,9 @@
     clear: both;
 }
 
-/*
-====================================
-Technology Store Page Styles UPDATED: 3/17/16
-==================================== */
-  
+
+
+/*** Technology Store Page Styles UPDATED: 3/17/16 ***/
 .mcneese.node-theme-page-731 .shop > ul {
   right: 20px;
   margin: 30px 10px 0 0;
@@ -687,7 +683,7 @@ Technology Store Page Styles UPDATED: 3/17/16
   margin: 25px 0 0 0;
   position: relative;
 }
-  
+
 .mcneese.node-theme-page-731 .shop > img {
   position: absolute;
   left: 5px;
@@ -716,7 +712,7 @@ Technology Store Page Styles UPDATED: 3/17/16
 }
 
 .mcneese.node-theme-page-731 .product-specs {
-    border-top: 1px solid #d6d6d6;    
+    border-top: 1px solid #d6d6d6;
 }
 
 .mcneese.node-theme-page-731 .product-specs ul {
@@ -729,7 +725,7 @@ Technology Store Page Styles UPDATED: 3/17/16
 
 .mcneese.node-theme-page-731 .in-the-box {
     margin: 8px 0;
-    padding: 15px 0;    
+    padding: 15px 0;
 }
 
 .mcneese.node-theme-page-731 .in-the-box h6 {
@@ -740,7 +736,7 @@ Technology Store Page Styles UPDATED: 3/17/16
 .mcneese.node-theme-page-731 .in-the-box ul li {
     line-height: 1.9;
 }
- 
+
 .mcneese.node-theme-page-731 .accessories {
     margin: 8px 0;
     padding: 15px 0;
@@ -752,7 +748,7 @@ Technology Store Page Styles UPDATED: 3/17/16
 
 .mcneese.node-theme-page-731 .accessories li {
     border-bottom: 1px solid #d6d6d6;
-    padding: 22px 0px 30px 0; 
+    padding: 22px 0px 30px 0;
 }
 
 .mcneese.node-theme-page-731 .accessories ul > li {
