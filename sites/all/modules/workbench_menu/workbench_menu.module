@@ -509,10 +509,19 @@ function workbench_menu_process_path($url_path, $alter_breadcrumb = FALSE) {
     $breadcrumb_key = end($last_menu_keys);
     $bc = array();
     $bc[] = '<a href="' . base_path() . '" title="Home">' . t("Home") . '</a>';
-    $bc = array_merge($bc, $breadcrumb['built']);
-    $bc_paths = array_merge(array(''), $breadcrumb['path']);
+
+    if (isset($breadcrumb['built'])) {
+      $bc = array_merge($bc, $breadcrumb['built']);
+    }
+
+    $bc_paths = array();
+    if (isset($breadcrumb['path'])) {
+      $bc_paths = array_merge(array(''), $breadcrumb['path']);
+    }
 
     foreach ($path_trail as $key => &$pt) {
+      if (!isset($pt['normal'])) continue;
+
       $item = menu_get_item($pt['normal']);
       $last = end($bc_paths);
 
@@ -525,6 +534,8 @@ function workbench_menu_process_path($url_path, $alter_breadcrumb = FALSE) {
     }
 
     foreach ($path_trail_last_alias as $key => &$pt) {
+      if (!isset($pt['normal'])) continue;
+
       $item = menu_get_item($pt['normal']);
       $last = end($bc_paths);
 
