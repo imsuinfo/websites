@@ -636,13 +636,12 @@ function workbench_menu_build_menus($path_string, &$menus_processed, &$breadcrum
   $menus = (array) workbench_menu_get_menus(array('path' => array($path_string)), 'id');
 
   $menu_even = TRUE;
-  $menu_total = count($menus);
   $menu_current = 0;
 
   $built_menus = array();
   $built_menus['structure'] = array();
   $built_menus['menus'] = array();
-  $built_menus['total'] = $menu_total;
+  $built_menus['total'] = count($menus);
   $built_menus['breadcrumbs'] = array('built' => array(), 'path' => array());
 
   foreach ($menus as $menu_id => &$menu) {
@@ -720,7 +719,7 @@ function workbench_menu_build_menus($path_string, &$menus_processed, &$breadcrum
 
     if (empty($menu->items['nested'])) {
       $built_menus['breadcrumbs'][$menu_path_normal] = $breadcrumbs[$menu_path_normal];
-      $menu_total--;
+      $built_menus['total']--;
       continue;
     }
 
