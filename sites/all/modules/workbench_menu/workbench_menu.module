@@ -647,6 +647,9 @@ function workbench_menu_build_menus($path_string, &$menus_processed, &$breadcrum
 
   foreach ($menus as $menu_id => &$menu) {
     if ((is_bool($skip_hidden) && $skip_hidden || is_array($skip_hidden) && !in_array($menu_id, $skip_hidden)) && $menu->hidden) {
+      // do not count hidden menus.
+      $built_menus['total']--;
+
       continue;
     }
 
