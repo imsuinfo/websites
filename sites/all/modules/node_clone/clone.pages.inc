@@ -178,9 +178,6 @@ function clone_node_prepopulate($original_node) {
       $context = array('method' => 'prepopulate', 'original_node' => $original_node);
       drupal_alter('clone_node', $node, $context);
 
-      if (module_exists('rules')) {
-        rules_invoke_event('clone_node_prepare', $node, $original_node);
-      }
       // Make sure the file defining the node form is loaded.
       $form_state = array();
       $form_state['build_info']['args'] = array($node);
