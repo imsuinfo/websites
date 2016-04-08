@@ -41,15 +41,30 @@ if (!empty($data['settings'])) {
   $custom = $settings['attributes'];
   $custom['class'] = array('menu_item-text');
   $attributes = ' ' . drupal_attributes($custom);
-?>
-<li class="<?php print($classes); ?>">
-  <?php if (!empty($settings['attributes']['href'])) { ?>
-    <a<?php print($attributes); ?>><?php print($settings['prefix']); ?><?php print($settings['label'] . $data['active_text']); ?><?php print($settings['postfix']); ?></a>
-  <?php } else { ?>
-    <span<?php print($attributes); ?>><?php print($settings['prefix']); ?><?php print($settings['label'] . $data['active_text']); ?><?php print($settings['postfix']); ?></span>
-  <?php } ?>
 
-  <?php if (!empty($data['child_list'])) {
+  print('<li class="');
+  print($classes);
+  print('">');
+
+  if (!empty($settings['attributes']['href'])) {
+    print('<a');
+    print($attributes);
+    print('>');
+    print($settings['prefix']);
+    print($settings['label'] . $data['active_text']);
+    print($settings['postfix']);
+    print('</a>');
+  } else {
+    print('<span');
+    print($attributes);
+    print('>');
+    print($settings['prefix']);
+    print($settings['label'] . $data['active_text']);
+    print($settings['postfix']);
+    print('</span>');
+  }
+
+  if (!empty($data['child_list'])) {
     $list = array();
     $list['items'] = $data['child_list'];
     $list['attributes'] = array();
@@ -57,6 +72,7 @@ if (!empty($data['settings'])) {
     $list['attributes']['class'][] = 'menu_item-children';
 
     print(theme('workbench_menu_list', array('list' => $list, 'data' => $data, 'child' => TRUE)));
-  } ?>
-</li>
-<?php } ?>
+  }
+
+  print('</li>');
+}

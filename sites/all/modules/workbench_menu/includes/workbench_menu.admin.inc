@@ -492,13 +492,13 @@ function workbench_menu_admin_settings($access_type = NULL, $access_id = NULL) {
   $output .= '<p>' . t("The following menus are currently available for editing.");
 
   if ($active === FALSE) {
-    $output .= '<br>' . "\n" . workbench_access_sections_needed_message();
+    $output .= '<br>' . workbench_access_sections_needed_message();
 
     $active = array();
     $active['tree'] = array();
   }
   else if (user_access('administer workbench access')) {
-    $output .= '<br>' . "\n" . t("You may <a href=\"!url\">enable or disable sections</a>.", array('!url' => url('admin/config/workbench/access/sections')));
+    $output .= '<br>' . t("You may <a href=\"!url\">enable or disable sections</a>.", array('!url' => url('admin/config/workbench/access/sections')));
   }
 
   $output .= '</p>';

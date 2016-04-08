@@ -23,7 +23,12 @@
  *   - 'title': The title of the list.
  *   - 'attributes': The attributes applied to the list element.
  */
-?>
-<ul <?php print(drupal_attributes($list['attributes'])); ?>>
-  <?php foreach ((array) $list['items'] as $item) { print($item . "\n"); } ?>
-</ul>
+
+  print('<ul ');
+  print(drupal_attributes($list['attributes']));
+  print('>');
+
+  foreach ((array) $list['items'] as $item) {
+    print($item);
+  }
+  print('</ul>');
