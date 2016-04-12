@@ -719,7 +719,11 @@ function workbench_menu_build_menus($path_string, &$menus_processed, &$breadcrum
 
     if (empty($menu->items['nested'])) {
       $built_menus['breadcrumbs'][$menu_path_normal] = $breadcrumbs[$menu_path_normal];
-      $built_menus['total']--;
+
+      // @fixme: original code tried to decrement the total, but against an unused variable.
+      //         while trying to solve this, this was changed to use the proper variable.
+      //         this resulted in menus not appearing and the code has been commented out.
+      //$built_menus['total']--;
       continue;
     }
 
