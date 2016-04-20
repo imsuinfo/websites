@@ -155,6 +155,7 @@ function workbench_menu_edit_settings_form($form, &$form_state, $access_type, $a
   $default_weight = 0;
   $default_show_parents = TRUE;
   $default_hidden = FALSE;
+  $default_hidden_at_path = FALSE;
   $default_breadcrumb_name = '';
   $default_alias = '';
 
@@ -186,6 +187,10 @@ function workbench_menu_edit_settings_form($form, &$form_state, $access_type, $a
 
     if (property_exists($menu, 'hidden')) {
       $default_hidden = &$menu->hidden;
+    }
+
+    if (property_exists($menu, 'hidden_at_path')) {
+      $default_hidden_at_path = &$menu->hidden_at_path;
     }
 
     if (property_exists($menu, 'breadcrumb_name')) {
@@ -264,6 +269,14 @@ function workbench_menu_edit_settings_form($form, &$form_state, $access_type, $a
       t("A hidden menu may only be displayed if used as a menu item menu via another menu."),
   );
 
+  $form['advanced']['hidden_at_path'] = array(
+    '#type' => 'checkbox',
+    '#title' => t("Hidden at Path"),
+    '#default_value' => $default_hidden_at_path,
+    '#description' => t("Specify whether or not this menu should be displayed or not at the specified path.") . '<br>' .
+      t("The menu will still be displayed on child paths regardless of this setting."),
+  );
+
   $form['advanced']['breadcrumb_name'] = array(
     '#type' => 'textfield',
     '#title' => t("Breadcrumb Name"),
@@ -298,11 +311,7 @@ function workbench_menu_edit_settings_form($form, &$form_state, $access_type, $a
   if (!(user_access('change workbench menu hidden') || user_access('administer workbench menu'))) {
     // completely hide field(s) from unprivileged users.
     unset($form['advanced']['hidden']);
-  }
-
-  if (!(user_access('change workbench menu hidden') || user_access('administer workbench menu'))) {
-    // completely hide field(s) from unprivileged users.
-    unset($form['advanced']['hidden']);
+    unset($form['advanced']['hidden_at_path']);
   }
 
   if (!(user_access('change workbench menu breadcrumb') || user_access('administer workbench menu'))) {
@@ -610,6 +619,7 @@ function workbench_menu_admin_settings_form($form, &$form_state, $access_type, $
   $default_weight = 0;
   $default_show_parents = TRUE;
   $default_hidden = FALSE;
+  $default_hidden_at_path = FALSE;
   $default_breadcrumb_name = '';
   $default_alias = '';
 
@@ -641,6 +651,10 @@ function workbench_menu_admin_settings_form($form, &$form_state, $access_type, $
 
     if (property_exists($menu, 'hidden')) {
       $default_hidden = &$menu->hidden;
+    }
+
+    if (property_exists($menu, 'hidden_at_path')) {
+      $default_hidden_at_path = &$menu->hidden_at_path;
     }
 
     if (property_exists($menu, 'breadcrumb_name')) {
@@ -711,12 +725,12 @@ function workbench_menu_admin_settings_form($form, &$form_state, $access_type, $
       t("A parent menu is a menu that appears in a url path above the current path such that if the current path was '/a/b', the parent menus for '/a/b' would be at '/a'."),
   );
 
-  $form['advanced']['hidden'] = array(
+  $form['advanced']['hidden_at_path'] = array(
     '#type' => 'checkbox',
-    '#title' => t("Hidden"),
-    '#default_value' => $default_hidden,
-    '#description' => t("Specify whether or not this menu should be displayed or not.") . '<br>' .
-      t("A hidden menu may only be displayed if used as a menu item menu via another menu."),
+    '#title' => t("Hidden at Path"),
+    '#default_value' => $default_hidden_at_path,
+    '#description' => t("Specify whether or not this menu should be displayed or not at the specified path.") . '<br>' .
+      t("The menu will still be displayed on child paths regardless of this setting."),
   );
 
   $form['advanced']['breadcrumb_name'] = array(
@@ -751,6 +765,7 @@ function workbench_menu_admin_settings_form($form, &$form_state, $access_type, $
 
   if (!(user_access('change workbench menu hidden') || user_access('administer workbench menu'))) {
     $form['advanced']['hidden']['#disabled'] = TRUE;
+    $form['advanced']['hidden_at_path']['#disabled'] = TRUE;
   }
 
   if (!(user_access('change workbench menu breadcrumb') || user_access('administer workbench menu'))) {
@@ -898,6 +913,7 @@ function workbench_menu_admin_settings_form_submit($form, &$form_state) {
   $menu['weight'] = &$form_state['values']['weight'];
   $menu['show_parents'] = &$form_state['values']['show_parents'];
   $menu['hidden'] = &$form_state['values']['hidden'];
+  $menu['hidden_at_path'] = &$form_state['values']['hidden_at_path'];
   $menu['breadcrumb_name'] = &$form_state['values']['breadcrumb_name'];
   $menu['alias'] = &$form_state['values']['alias'];
   $menu['items'] = array();

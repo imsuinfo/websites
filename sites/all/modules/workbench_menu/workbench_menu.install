@@ -58,6 +58,13 @@ function workbench_menu_schema() {
         'not null' => TRUE,
         'default' => 0,
       ),
+      'hidden_at_path' => array(
+        'description' => $t("A boolean defining whether or not this menu should be displayed at the path."),
+        'type' => 'int',
+        'size' => 'tiny',
+        'not null' => TRUE,
+        'default' => 0,
+      ),
       'breadcrumb_name' => array(
         'description' => $t("An optional custom breadcrumb name to use instead of the taxonomy term name."),
         'type' => 'text',
@@ -573,6 +580,30 @@ function workbench_menu_update_7106() {
 
   try {
     db_add_field('workbench_menus', 'alias', $alias_column);
+
+    // force execution of transaction
+    unset($transaction);
+  }
+  catch (Exception $e) {
+    if (module_exists('cf_error')) {
+      cf_error::on_query_execution($e);
+    }
+
+    $transaction->rollback();
+
+    throw $e;
+  }
+}
+
+/**
+ * Add hidden at path feature to hide menu at the specified path but not the child paths.
+ */
+function workbench_menu_update_7107() {
+  $transaction = db_transaction();
+
+  try {
+    db_query('alter table {workbench_menus} add column hidden_at_path smallint default 0');
+    db_query('alter table {workbench_menus} alter hidden_at_path set not null');
 
     // force execution of transaction
     unset($transaction);

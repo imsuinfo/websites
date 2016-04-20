@@ -630,7 +630,8 @@ function workbench_menu_process_path($url_path, $alter_breadcrumb = FALSE) {
  *   - total: Number of menus found along the path.
  *   - breadcrumbs: A flat array of menu paths and their breadcrumbs.
  *
- * @see drupal_set_breadcrumb()
+ * @see: workbench_menu_render_menus()
+ * @see: drupal_set_breadcrumb()
  */
 function workbench_menu_build_menus($path_string, &$menus_processed, &$breadcrumbs, $skip_hidden = TRUE, $prepend_breadcrumbs = FALSE) {
   $menus = (array) workbench_menu_get_menus(array('path' => array($path_string)), 'id');
@@ -673,6 +674,7 @@ function workbench_menu_build_menus($path_string, &$menus_processed, &$breadcrum
     $built_menu['weight'] = $menu->weight;
     $built_menu['show_parents'] = $menu->show_parents;
     $built_menu['breadcrumb_name'] = $menu->breadcrumb_name;
+    $built_menu['hidden_at_path'] = $menu->hidden_at_path;
 
     $variables = array();
     $variables['menus_processed'] = &$menus_processed;
@@ -1560,6 +1562,12 @@ function workbench_menu_render_menus($built_menus, $path_current, &$show_parents
     $rendered[$built_menus_weight] = '';
 
     foreach ($menus as $menu_id => &$menu_data) {
+      if (isset($menu_data['hidden_at_path']) && $menu_data['hidden_at_path']) {
+        if ($path_current['alias'] == $menu_data['path']) {
+          continue;
+        }
+      }
+
       $list = array();
       $list['items'] = array();
       $list['attributes'] = array();
@@ -1603,6 +1611,10 @@ function workbench_menu_render_menus($built_menus, $path_current, &$show_parents
       $rendered[$built_menus_weight] .= theme('workbench_menu_list', array('list' => $list, 'data' => $variables));
 
       $even_menu = !$even_menu;
+    }
+
+    if (empty($rendered[$built_menus_weight])) {
+      unset($rendered[$built_menus_weight]);
     }
   }
 
@@ -2172,6 +2184,7 @@ function workbench_menu_save_menus($menus) {
       $record['weight'] = $menu['weight'];
       $record['show_parents'] = $menu['show_parents'];
       $record['hidden'] = $menu['hidden'];
+      $record['hidden_at_path'] = $menu['hidden_at_path'];
       $record['breadcrumb_name'] = $menu['breadcrumb_name'];
       $record['alias'] = $menu['alias'];
 
