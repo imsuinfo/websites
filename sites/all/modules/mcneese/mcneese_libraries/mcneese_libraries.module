@@ -42,6 +42,7 @@ function mcneese_libraries_libraries_info() {
     'jquery.cycle2.swipe.js',
     'jquery.cycle2.tile.js',
     'jquery.cycle2.video.js',
+    'jquery.easing.1.3.js',
   );
 
   // d3
