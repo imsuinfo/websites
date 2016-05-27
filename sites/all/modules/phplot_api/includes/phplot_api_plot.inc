@@ -25,7 +25,7 @@ class phplot_api_plot {
    * @param string type
    *   A machine name string of the plot type.
    */
-  public function phplot_api_plot($type) {
+  public function __construct($type) {
     $this->set_type($type);
 
     foreach ($this->settings['defaults'] as $feature => $value) {
