@@ -302,6 +302,10 @@ function _ldap_authentication_user_access() {
  */
 
 function ldap_authentication_get_valid_conf($reset = FALSE) {
+  global $user;
+  if ($user->uid == 0) {
+    return FALSE;
+  }
 
   static $auth_conf;
   if (!$reset && is_object($auth_conf)) {
