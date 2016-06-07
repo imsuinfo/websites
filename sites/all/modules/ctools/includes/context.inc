@@ -206,7 +206,7 @@ class ctools_context_optional extends ctools_context_required {
   var $required = FALSE;
   function __construct() {
     $args = func_get_args();
-    call_user_func_array(array($this, 'ctools_context_required'), $args);
+    parent::__construct(NULL);
   }
 
   /**
