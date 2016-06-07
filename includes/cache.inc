@@ -464,7 +464,7 @@ class DrupalDatabaseCache implements DrupalCacheInterface {
       db_merge($this->bin)
         ->key(array('cid' => $cid))
         ->fields($fields)
-        ->onConflictDo(Database::CONFLICT_DO_UPDATE)
+        ->onConflictDo(Database::CONFLICT_DO_UPDATE, array('cid'), array('data', 'expire', 'created', 'serialized'))
         ->execute();
     }
     catch (Exception $e) {
