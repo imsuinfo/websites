@@ -723,8 +723,36 @@ class InsertQuery extends Query {
     // Default fields are always placed first for consistency.
     $insert_fields = array_merge($this->defaultFields, $this->insertFields);
 
+    $on_conflict_target = '';
+    if ($this->on_conflict_constraint) {
+      $on_conflict_target = ' ON CONSTRAINT (' . reset($this->on_conflict_target) . ')';
+    }
+    else {
+      $on_conflict_target = ' (' . implode(', ', $this->on_conflict_target) . ')';
+    }
+
+    $on_conflict = '';
+    if ($this->on_conflict === Database::CONFLICT_DO_NOTHING) {
+      $on_conflict = "\nON CONFLICT" . $on_conflict_target . ' DO NOTHING';
+    }
+    elseif ($this->on_conflict === Database::CONFLICT_DO_UPDATE) {
+      $on_conflict_fields = NULL;
+      foreach ($this->on_conflict_action as $field_name) {
+        if (is_null($on_conflict_fields)) {
+          $on_conflict_fields  = $field_name . ' = EXCLUDED.' . $field_name;
+        }
+        else {
+          $on_conflict_fields  .= ', ' . $field_name . ' = EXCLUDED.' . $field_name;
+        }
+      }
+      unset($field_name);
+
+      $on_conflict = "\nON CONFLICT" . $on_conflict_target . ' DO UPDATE SET ' . $on_conflict_fields;
+      unset($on_conflict_fields);
+    }
+
     if (!empty($this->fromQuery)) {
-      return $comments . 'INSERT INTO {' . $this->table . '} (' . implode(', ', $insert_fields) . ') ' . $this->fromQuery;
+      return $comments . 'INSERT INTO {' . $this->table . '} (' . implode(', ', $insert_fields) . ') ' . $this->fromQuery . $on_conflict;
     }
 
     // For simplicity, we will use the $placeholders array to inject
@@ -734,7 +762,7 @@ class InsertQuery extends Query {
     $placeholders = array_pad($placeholders, count($this->defaultFields), 'default');
     $placeholders = array_pad($placeholders, count($this->insertFields), '?');
 
-    return $comments . 'INSERT INTO {' . $this->table . '} (' . implode(', ', $insert_fields) . ') VALUES (' . implode(', ', $placeholders) . ')';
+    return $comments . 'INSERT INTO {' . $this->table . '} (' . implode(', ', $insert_fields) . ') VALUES (' . implode(', ', $placeholders) . ')' . $on_conflict;
   }
 
   /**
@@ -1516,7 +1544,7 @@ class MergeQuery extends Query implements QueryConditionInterface {
     $this->on_conflict = $conflict;
     $this->on_conflict_target = array();
     $this->on_conflict_action = array();
-    $this->on_conflict_contraint = (bool) $constraint;
+    $this->on_conflict_constraint = (bool) $constraint;
 
     if (is_array($conflict_target)) {
       foreach ($conflict_target as $value) {
