@@ -583,16 +583,16 @@ function mfcs_view_build_request_value_structure($request_id, $field_group, $fie
       $output[$value_name]['#attributes']['class'][] = 'item-cancelled';
     }
 
-    if (property_exists($value, $value_name) && (is_numeric($value->$value_name) || !empty($value->$value_name))) {
+    if (property_exists($value, $value_name) && (is_numeric($value->{$value_name}) || !empty($value->{$value_name}))) {
       if ($type[$value_name] == 'string' || $type[$value_name] == 'text') {
-        $markup .= check_plain($value->$value_name);
+        $markup .= check_plain($value->{$value_name});
 
-        $length += strlen($value->$value_name);
+        $length += strlen($value->{$value_name});
       }
       elseif ($type[$value_name] == 'text_lined') {
-        $markup .= preg_replace("/\n/", "<br>\n", check_plain($value->$value_name));
+        $markup .= preg_replace("/\n/", "<br>", check_plain($value->{$value_name}));
 
-        $length += strlen($value->$value_name);
+        $length += strlen($value->{$value_name});
       }
       elseif ($type[$value_name] == 'timestamp') {
         if (!array_key_exists($value_name, $display)) {
@@ -600,13 +600,13 @@ function mfcs_view_build_request_value_structure($request_id, $field_group, $fie
         }
 
         if ($display[$value_name] == 'stamp') {
-          $markup .= check_plain($value->$value_name);
+          $markup .= check_plain($value->{$value_name});
         }
         else {
-          $markup .= check_plain(date($display[$value_name], $value->$value_name));
+          $markup .= check_plain(date($display[$value_name], $value->{$value_name}));
         }
 
-        $length += strlen($value->$value_name);
+        $length += strlen($value->{$value_name});
       }
       elseif ($type[$value_name] == 'timestamp_linked_month') {
         if (!array_key_exists($value_name, $display)) {
@@ -614,21 +614,21 @@ function mfcs_view_build_request_value_structure($request_id, $field_group, $fie
         }
 
         if ($display[$value_name] == 'stamp') {
-          $markup .= check_plain($value->$value_name);
+          $markup .= check_plain($value->{$value_name});
         }
         else {
-          $s_year = date('Y', $value->$value_name);
-          $s_month = date('F', $value->$value_name);
+          $s_year = date('Y', $value->{$value_name});
+          $s_month = date('F', $value->{$value_name});
           $s_title = $s_month . " " . $s_year;
 
-          $markup .= '<a href="' . $base_path . 'requests/calendar-0/month/' . $s_year . '/' . $s_month . $url_arguments .'" title="' . $s_title . '" class="item-link">' . check_plain(date($display[$value_name], $value->$value_name)) . '</a>';
+          $markup .= '<a href="' . $base_path . 'requests/calendar-0/month/' . $s_year . '/' . $s_month . $url_arguments .'" title="' . $s_title . '" class="item-link">' . check_plain(date($display[$value_name], $value->{$value_name})) . '</a>';
 
           unset($s_year);
           unset($s_month);
           unset($s_title);
         }
 
-        $length += strlen($value->$value_name);
+        $length += strlen($value->{$value_name});
       }
       elseif ($type[$value_name] == 'timestamp_linked_day') {
         if (!array_key_exists($value_name, $display)) {
@@ -636,16 +636,16 @@ function mfcs_view_build_request_value_structure($request_id, $field_group, $fie
         }
 
         if ($display[$value_name] == 'stamp') {
-          $markup .= check_plain($value->$value_name);
+          $markup .= check_plain($value->{$value_name});
         }
         else {
-          $s_day_name = date('l', $value->$value_name);
-          $s_year = date('Y', $value->$value_name);
-          $s_month = date('F', $value->$value_name);
-          $s_day = date('d', $value->$value_name);
+          $s_day_name = date('l', $value->{$value_name});
+          $s_year = date('Y', $value->{$value_name});
+          $s_month = date('F', $value->{$value_name});
+          $s_day = date('d', $value->{$value_name});
           $s_title = $s_day_name . ", " . $s_month . " " . $s_day . ", " . $s_year;
 
-          $markup .= '<a href="' . $base_path . 'requests/calendar-0/day/' . $s_year . '/' . $s_month . '/' . $s_day . $url_arguments .'" title="' . $s_title . '" class="item-link">' . check_plain(date($display[$value_name], $value->$value_name)) . '</a>';
+          $markup .= '<a href="' . $base_path . 'requests/calendar-0/day/' . $s_year . '/' . $s_month . '/' . $s_day . $url_arguments .'" title="' . $s_title . '" class="item-link">' . check_plain(date($display[$value_name], $value->{$value_name})) . '</a>';
 
           unset($s_year);
           unset($s_month);
@@ -653,7 +653,7 @@ function mfcs_view_build_request_value_structure($request_id, $field_group, $fie
           unset($s_title);
         }
 
-        $length += strlen($value->$value_name);
+        $length += strlen($value->{$value_name});
       }
       elseif ($type[$value_name] == 'timestamp_linked_hour') {
         if (!array_key_exists($value_name, $display)) {
@@ -661,19 +661,19 @@ function mfcs_view_build_request_value_structure($request_id, $field_group, $fie
         }
 
         if ($display[$value_name] == 'stamp') {
-          $markup .= check_plain($value->$value_name);
+          $markup .= check_plain($value->{$value_name});
         }
         else {
-          $s_day_name = date('l', $value->$value_name);
-          $s_year = date('Y', $value->$value_name);
-          $s_month = date('F', $value->$value_name);
-          $s_day = date('d', $value->$value_name);
-          $s_hour = date('h', $value->$value_name);
-          $s_ampm = date('a', $value->$value_name);
+          $s_day_name = date('l', $value->{$value_name});
+          $s_year = date('Y', $value->{$value_name});
+          $s_month = date('F', $value->{$value_name});
+          $s_day = date('d', $value->{$value_name});
+          $s_hour = date('h', $value->{$value_name});
+          $s_ampm = date('a', $value->{$value_name});
           $s_title = $s_day_name . ", " . $s_month . " " . $s_day . ", " . $s_year . " at " . $s_hour . ":00" . $s_ampm;
           $s_id = 'time_slot-' . $s_hour . '_00' . $s_ampm;
 
-          $markup .= '<a href="' . $base_path . 'requests/calendar-0/day/' . $s_year . '/' . $s_month . '/' . $s_day . $url_arguments . '#' . $s_id .'" title="' . $s_title . '" class="item-link">' . check_plain(date($display[$value_name], $value->$value_name)) . '</a>';
+          $markup .= '<a href="' . $base_path . 'requests/calendar-0/day/' . $s_year . '/' . $s_month . '/' . $s_day . $url_arguments . '#' . $s_id .'" title="' . $s_title . '" class="item-link">' . check_plain(date($display[$value_name], $value->{$value_name})) . '</a>';
 
           unset($s_year);
           unset($s_month);
@@ -684,10 +684,10 @@ function mfcs_view_build_request_value_structure($request_id, $field_group, $fie
           unset($s_id);
         }
 
-        $length += strlen($value->$value_name);
+        $length += strlen($value->{$value_name});
       }
       elseif ($type[$value_name] == 'taxonomy') {
-        $term = taxonomy_term_load($value->$value_name);
+        $term = taxonomy_term_load($value->{$value_name});
 
         if (is_object($term)) {
           $markup .= check_plain($term->name);
@@ -697,35 +697,35 @@ function mfcs_view_build_request_value_structure($request_id, $field_group, $fie
         unset($term);
       }
       elseif ($type[$value_name] == 'user_id') {
-        if (!isset($users[$value->$value_name])) {
-          $users[$value->$value_name] = mfcs_load_basic_user_settings_by_user_id($value->$value_name);
+        if (!isset($users[$value->{$value_name}])) {
+          $users[$value->{$value_name}] = mfcs_load_basic_user_settings_by_user_id($value->{$value_name});
 
-          if (!is_array($users[$value->$value_name])) {
-            unset($users[$value->$value_name]);
+          if (!is_array($users[$value->{$value_name}])) {
+            unset($users[$value->{$value_name}]);
           }
         }
 
-        if (!empty($users[$value->$value_name])){
+        if (!empty($users[$value->{$value_name}])){
           if (!array_key_exists($value_name, $display)) {
             $display[$value_name] = 'name';
           }
 
           if ($display[$value_name] == 'account_name') {
-            $user_name = check_plain($users[$value->$value_name]['name']);
-            $user_title = $user_name . ' (uid: ' . $value->$value_name . ')';
+            $user_name = check_plain($users[$value->{$value_name}]['name']);
+            $user_title = $user_name . ' (uid: ' . $value->{$value_name} . ')';
 
-            if (!empty($users[$value->$value_name]['last_name'])) {
-              $user_name = check_plain($users[$value->$value_name]['last_name']) . ', ';
+            if (!empty($users[$value->{$value_name}]['last_name'])) {
+              $user_name = check_plain($users[$value->{$value_name}]['last_name']) . ', ';
             }
 
-            if (!empty($users[$value->$value_name]['first_name'])) {
-              $user_name .= check_plain($users[$value->$value_name]['first_name']);
-              $user_title = check_plain($users[$value->$value_name]['first_name'] . ' ' . $users[$value->$value_name]['last_name']) . ' (uid: ' . $value->$value_name . ')';
+            if (!empty($users[$value->{$value_name}]['first_name'])) {
+              $user_name .= check_plain($users[$value->{$value_name}]['first_name']);
+              $user_title = check_plain($users[$value->{$value_name}]['first_name'] . ' ' . $users[$value->{$value_name}]['last_name']) . ' (uid: ' . $value->{$value_name} . ')';
             }
 
             // only show link to user account for reviewers and managers.
             if ($reviewer || $manager) {
-              $markup .= '<a href="' . $base_path . 'user/' . $users[$value->$value_name]['user_id'] . $url_arguments . '" class="item-link" title="' . $user_title . '">' . $user_name . '</a>';
+              $markup .= '<a href="' . $base_path . 'requests/users-0/view/' . $users[$value->{$value_name}]['user_id'] . $url_arguments . '" class="item-link" title="' . $user_title . '">' . $user_name . '</a>';
             }
             else {
               $markup .= $user_name;
@@ -733,8 +733,8 @@ function mfcs_view_build_request_value_structure($request_id, $field_group, $fie
             $length += strlen($user_name);
           }
           elseif ($display[$value_name] != 'pass' && property_exists($user, $display)) {
-            $markup .= check_plain($user->$display[$value_name]);
-            $length += strlen($user->$display[$value_name]);
+            $markup .= check_plain($user->{$display[$value_name]});
+            $length += strlen($user->{$display[$value_name]});
           }
         }
       }
@@ -743,15 +743,15 @@ function mfcs_view_build_request_value_structure($request_id, $field_group, $fie
 
         $status_options = mfcs_get_request_status_list_options();
 
-        if (isset($status_options[$value->$value_name])) {
-          if ($value->$value_name == MFCS_REQUEST_STATUS_CLOSED_ACCEPTED_CANCELLED) {
-            $markup .= '<span title="The request was accepted but has since been cancelled.">' . $status_options[$value->$value_name] . '</span>';
+        if (isset($status_options[$value->{$value_name}])) {
+          if ($value->{$value_name} == MFCS_REQUEST_STATUS_CLOSED_ACCEPTED_CANCELLED) {
+            $markup .= '<span title="The request was accepted but has since been cancelled.">' . $status_options[$value->{$value_name}] . '</span>';
           }
           else {
-            $markup .= $status_options[$value->$value_name];
+            $markup .= $status_options[$value->{$value_name}];
           }
 
-          $length += strlen($value->$value_name);
+          $length += strlen($value->{$value_name});
         }
       }
       elseif ($type[$value_name] == 'step') {
@@ -759,9 +759,9 @@ function mfcs_view_build_request_value_structure($request_id, $field_group, $fie
 
         $step_options = mfcs_get_request_steps_list_options();
 
-        if (isset($step_options[$value->$value_name])) {
-          $markup .= $step_options[$value->$value_name];
-          $length += strlen($step_options[$value->$value_name]);
+        if (isset($step_options[$value->{$value_name}])) {
+          $markup .= $step_options[$value->{$value_name}];
+          $length += strlen($step_options[$value->{$value_name}]);
         }
       }
       elseif ($type[$value_name] == 'location') {
@@ -769,9 +769,9 @@ function mfcs_view_build_request_value_structure($request_id, $field_group, $fie
 
         $location_options = mfcs_get_request_location_list_options(NULL, FALSE, TRUE);
 
-        if (isset($location_options[$value->$value_name])) {
-          $markup .= $location_options[$value->$value_name];
-          $length += strlen($location_options[$value->$value_name]);
+        if (isset($location_options[$value->{$value_name}])) {
+          $markup .= $location_options[$value->{$value_name}];
+          $length += strlen($location_options[$value->{$value_name}]);
         }
       }
       elseif ($type[$value_name] == 'building') {
@@ -779,9 +779,9 @@ function mfcs_view_build_request_value_structure($request_id, $field_group, $fie
 
         $building_options = mfcs_get_request_building_list_options(NULL, NULL, TRUE);
 
-        if (isset($building_options[$value->$value_name])) {
-          $markup .= $building_options[$value->$value_name];
-          $length += strlen($building_options[$value->$value_name]);
+        if (isset($building_options[$value->{$value_name}])) {
+          $markup .= $building_options[$value->{$value_name}];
+          $length += strlen($building_options[$value->{$value_name}]);
         }
       }
       elseif ($type[$value_name] == 'room') {
@@ -789,13 +789,13 @@ function mfcs_view_build_request_value_structure($request_id, $field_group, $fie
 
         $room_options = mfcs_get_request_room_list_options(NULL, NULL, TRUE);
 
-        if (isset($room_options[$value->$value_name])) {
-          $markup .= $room_options[$value->$value_name];
-          $length += strlen($room_options[$value->$value_name]);
+        if (isset($room_options[$value->{$value_name}])) {
+          $markup .= $room_options[$value->{$value_name}];
+          $length += strlen($room_options[$value->{$value_name}]);
         }
       }
       elseif ($type[$value_name] == 'currency') {
-        $currency = mfcs_convert_value_from_database_format($value->$value_name, 'currency');
+        $currency = mfcs_convert_value_from_database_format($value->{$value_name}, 'currency');
 
         if ($currency !== FALSE) {
           $processed_markup = '$' . printf('%01.2f', $currency);
@@ -804,7 +804,7 @@ function mfcs_view_build_request_value_structure($request_id, $field_group, $fie
         }
       }
       elseif ($type[$value_name] == 'boolean') {
-        $boolean = (bool) $value->$value_name;
+        $boolean = (bool) $value->{$value_name};
 
         if ($boolean) {
           $markup .= 'yes';
@@ -827,11 +827,11 @@ function mfcs_view_build_request_value_structure($request_id, $field_group, $fie
         }
       }
       elseif ($type[$value_name] == 'requirement_personnel') {
-        $markup .= ' ' . $value->$value_name . ' personnel';
-        $length += strlen($value->$value_name . ' personnel');
+        $markup .= ' ' . $value->{$value_name} . ' personnel';
+        $length += strlen($value->{$value_name} . ' personnel');
       }
       elseif ($type[$value_name] == 'requirement_hours') {
-        $hours = mfcs_convert_value_from_database_format($value->$value_name, 'currency');
+        $hours = mfcs_convert_value_from_database_format($value->{$value_name}, 'currency');
 
         if (intval($hours) == $hours) {
           $markup .= ' ' . $hours . ' hours';
@@ -843,7 +843,7 @@ function mfcs_view_build_request_value_structure($request_id, $field_group, $fie
         $length += strlen($hours . ' hours');
       }
       elseif ($type[$value_name] == 'requirement_days') {
-        $days = mfcs_convert_value_from_database_format($value->$value_name, 'currency');
+        $days = mfcs_convert_value_from_database_format($value->{$value_name}, 'currency');
 
         if (intval($days) == $days) {
           $markup .= ' ' . $days . ' days';
@@ -855,7 +855,7 @@ function mfcs_view_build_request_value_structure($request_id, $field_group, $fie
         $length += strlen($days . 'days');
       }
       elseif ($type[$value_name] == 'requirement_amount') {
-        $amount = mfcs_convert_value_from_database_format($value->$value_name, 'currency');
+        $amount = mfcs_convert_value_from_database_format($value->{$value_name}, 'currency');
 
         if ($amount !== FALSE) {
           $processed_markup = ' at $' . sprintf('%01.2f', $amount);
@@ -890,30 +890,30 @@ function mfcs_view_build_request_value_structure($request_id, $field_group, $fie
         }
       }
       elseif ($type[$value_name] == 'venue_coordinator') {
-        if (!isset($users[$value->$value_name])) {
-          $users[$value->$value_name] = mfcs_load_basic_user_settings_by_user_id($value->$value_name);
+        if (!isset($users[$value->{$value_name}])) {
+          $users[$value->{$value_name}] = mfcs_load_basic_user_settings_by_user_id($value->{$value_name});
 
-          if (!is_array($users[$value->$value_name])) {
-            unset($users[$value->$value_name]);
+          if (!is_array($users[$value->{$value_name}])) {
+            unset($users[$value->{$value_name}]);
           }
         }
 
         if ($display[$value_name] == 'name') {
-          $user_name = check_plain($users[$value->$value_name]['name']);
-          $user_title = $user_name . ' (uid: ' . $value->$value_name . ')';
+          $user_name = check_plain($users[$value->{$value_name}]['name']);
+          $user_title = $user_name . ' (uid: ' . $value->{$value_name} . ')';
 
-          if (!empty($users[$value->$value_name]['last_name'])) {
-            $user_name = check_plain($users[$value->$value_name]['last_name']) . ', ';
+          if (!empty($users[$value->{$value_name}]['last_name'])) {
+            $user_name = check_plain($users[$value->{$value_name}]['last_name']) . ', ';
           }
 
-          if (!empty($users[$value->$value_name]['first_name'])) {
-            $user_name .= check_plain($users[$value->$value_name]['first_name']);
-            $user_title = check_plain($users[$value->$value_name]['first_name'] . ' ' . $users[$value->$value_name]['last_name']) . ' (uid: ' . $value->$value_name . ')';
+          if (!empty($users[$value->{$value_name}]['first_name'])) {
+            $user_name .= check_plain($users[$value->{$value_name}]['first_name']);
+            $user_title = check_plain($users[$value->{$value_name}]['first_name'] . ' ' . $users[$value->{$value_name}]['last_name']) . ' (uid: ' . $value->{$value_name} . ')';
           }
 
           // only show link to user account for reviewers and managers.
           if ($reviewer || $manager) {
-            $markup .= '<a href="' . $base_path . 'user/' . $users[$value->$value_name]['user_id'] . $url_arguments . '" class="item-link" title="' . $user_title . '">' . $user_name . '</a>';
+            $markup .= '<a href="' . $base_path . 'requests/users-0/view/' . $users[$value->{$value_name}]['user_id'] . $url_arguments . '" class="item-link" title="' . $user_title . '">' . $user_name . '</a>';
           }
           else {
             $markup .= $user_name;
@@ -922,46 +922,54 @@ function mfcs_view_build_request_value_structure($request_id, $field_group, $fie
           $length += strlen($user_name);
         }
         elseif ($display[$value_name] == 'email') {
-          $markup .= check_plain($users[$value->$value_name]['email']);
-          $length += strlen(check_plain($users[$value->$value_name]['email']));
+          $markup .= check_plain($users[$value->{$value_name}]['email']);
+          $length += strlen(check_plain($users[$value->{$value_name}]['email']));
         }
         elseif ($display[$value_name] == 'phone') {
-          if (!empty($users[$value->$value_name]['phone_number'])) {
-            $markup .= check_plain($users[$value->$value_name]['phone_number']);
-            $length += strlen(check_plain($users[$value->$value_name]['phone_number']));
+          if (!empty($users[$value->{$value_name}]['phone_number'])) {
+            $markup .= check_plain($users[$value->{$value_name}]['phone_number']);
+            $length += strlen(check_plain($users[$value->{$value_name}]['phone_number']));
           }
         }
         elseif ($display[$value_name] == 'user_id') {
           $processed_markup = '';
 
           $first_name = FALSE;
-          if (!empty($users[$value->$value_name]['last_name'])) {
+          if (!empty($users[$value->{$value_name}]['last_name'])) {
             $first_name = TRUE;
-            $processed_markup .= check_plain($users[$value->$value_name]['last_name']);
+            $processed_markup .= check_plain($users[$value->{$value_name}]['last_name']);
           }
 
-          if (!empty($users[$value->$value_name]['first_name'])) {
+          if (!empty($users[$value->{$value_name}]['first_name'])) {
             if ($first_name) {
               $processed_markup .=  ', ';
             }
 
-            $processed_markup .= check_plain($users[$value->$value_name]['first_name']);
+            $processed_markup .= check_plain($users[$value->{$value_name}]['first_name']);
           }
 
-          $processed_markup .= ' <sup class="item-extra-user-user_id" title="User ID: ' . $value->$value_name . '">[id: ' . $value->$value_name . ']' . '</sup>';
+          $processed_markup .= ' <sup class="item-extra-user-user_id" title="User ID: ' . $value->{$value_name} . '">[id: ' . $value->{$value_name} . ']' . '</sup>';
 
           $markup .= $processed_markup;
           $length += strlen($processed_markup);
         }
       }
       elseif ($type[$value_name] == 'review_decision') {
-        if ($value->$value_name == MFCS_REVIEW_DECISION_APPROVE) {
+        if ($value->{$value_name} == MFCS_REVIEW_DECISION_APPROVE) {
           $markup .= "Approved";
           $length += strlen("Approved");
         }
-        elseif ($value->$value_name == MFCS_REVIEW_DECISION_DENY) {
+        elseif ($value->{$value_name} == MFCS_REVIEW_DECISION_DENY) {
           $markup .= "Denied";
           $length += strlen("Denied");
+        }
+        elseif ($value->{$value_name} == MFCS_REVIEW_DECISION_ISSUES) {
+          $markup .= "Issues";
+          $length += strlen("Issues");
+        }
+        elseif ($value->{$value_name} == MFCS_REVIEW_DECISION_ISSUES_NONE) {
+          $markup .= "No Issues";
+          $length += strlen("No Issues");
         }
       }
 
@@ -990,8 +998,6 @@ function mfcs_view_build_request_value_structure($request_id, $field_group, $fie
 
   return $output;
 }
-
-
 
 /**
  * Build the review log display.
@@ -1036,6 +1042,18 @@ function mfcs_view_build_reviews_log(&$form, &$form_state, $request_id, $revisio
 
   if (empty($request)) {
     return FALSE;
+  }
+
+  $user = cf_current_user();
+  $administer = FALSE;
+  $manager = FALSE;
+  $reviewer = FALSE;
+  $requester = FALSE;
+  if (is_object($user)) {
+    $administer = user_access('mfcs administer', $user);
+    $manager = user_access('mfcs manage', $user);
+    $reviewer = user_access('mfcs review', $user);
+    $requester = user_access('mfcs request', $user);
   }
 
   mfcs_include(MFCS_INCLUDE_TABLE);
@@ -1113,6 +1131,7 @@ function mfcs_view_build_reviews_log(&$form, &$form_state, $request_id, $revisio
   $users = array();
   $reviewers = array();
   $has_log = FALSE;
+  $has_viewable_entries = FALSE;
   if (is_array($reviews)) {
     $review_step_options = mfcs_get_review_step_list_options();
     $reviewer_classification_options = mfcs_get_reviewer_classification_list_options();
@@ -1126,8 +1145,11 @@ function mfcs_view_build_reviews_log(&$form, &$form_state, $request_id, $revisio
       $user_id = $review->user_id;
       $review_step = $review->step;
       $decision = $review->decision;
-      $message = $review->message;
+      $message = check_plain($review->message);
       $date = $review->date;
+      $restriction = $review->restriction;
+
+      $message = str_replace("\n", "<br>", trim($message));
 
       if (is_string($user_id)) {
         $user_id = (int) $user_id;
@@ -1145,8 +1167,36 @@ function mfcs_view_build_reviews_log(&$form, &$form_state, $request_id, $revisio
         $date = (int) $date;
       }
 
+      if (is_string($restriction)) {
+        $restriction = (int) $restriction;
+      }
+
+      if (!is_int($restriction) || $restriction < MFCS_REVIEW_RESTRICTIONS_NONE || $restriction > MFCS_REVIEW_RESTRICTIONS_MANAGERS) {
+        $restriction = MFCS_REVIEW_RESTRICTIONS_NONE;
+      }
+
+      if ($restriction === MFCS_REVIEW_RESTRICTIONS_REQUESTER) {
+        if (!($requester || $manager || $administer)) {
+          continue;
+        }
+      }
+      elseif ($restriction === MFCS_REVIEW_RESTRICTIONS_REVIEWER) {
+        if (!($reviewer || $manager || $administer)) {
+          continue;
+        }
+      }
+      elseif ($restriction === MFCS_REVIEW_RESTRICTIONS_MANAGERS) {
+        if (!($manager || $administer)) {
+          continue;
+        }
+      }
+
+      // if there are viewable entries, then the log can be displayed.
+      $has_viewable_entries = TRUE;
+
       $user_can_administer = mfcs_user_can_administer($user_id);
       $user_can_manage = mfcs_user_can_manage($user_id);
+      $user_is_requester = ($request['mer']['user_id'][0]->value == $user_id);
 
       $changelog = mfcs_load_request_by_timestamp($request_id, $date, $user_id, $changelog_fields);
       $nearest = mfcs_load_request_by_timestamp($request_id, $date, NULL, $nearest_fields, TRUE, FALSE);
@@ -1167,8 +1217,6 @@ function mfcs_view_build_reviews_log(&$form, &$form_state, $request_id, $revisio
         }
       }
 
-      $markup = '<div id="request-' . $request_id . '-section-review-log-history-item-' . $row . '" class="review-item review-item-' . $row. '">';
-
       $user_name = '';
       if (is_null($users[$user_id])) {
         watchdog(MFCS_WATCHDOG_ID, "Failed to load the user id of %user_id for request %request_id review log dated %date.", array('%user_id' => $user_id, '%request_id' => $request_id, '%date' => date("Y/m/d h:i:s a", $date)), WATCHDOG_ERROR);
@@ -1176,6 +1224,7 @@ function mfcs_view_build_reviews_log(&$form, &$form_state, $request_id, $revisio
       }
 
       $reviewer_classification = NULL;
+      $markup_class = '';
       foreach ($review->reviewer_classifications as $classification) {
         if (is_null($reviewer_classification)) {
           $reviewer_classification = '';
@@ -1199,24 +1248,36 @@ function mfcs_view_build_reviews_log(&$form, &$form_state, $request_id, $revisio
         else {
           $reviewer_classification .= $reviewer_classification_options[$classification];
         }
+
+        $markup_class .= ' classification-' . $classification;
       }
 
       if (is_null($reviewer_classification)) {
         if ($user_can_administer) {
           $reviewer_classification = "Administrator";
+          $markup_class .= ' classification-' . MFCS_REVIEWER_CLASSIFICATION_SYSTEM_ADMINISTRATOR;
         }
         elseif ($user_can_manage) {
           $reviewer_classification = "Manager";
+          $markup_class .= ' classification-' . MFCS_REVIEWER_CLASSIFICATION_MANAGER;
+        }
+        elseif ($user_is_requester) {
+          $reviewer_classification = "Requester";
+          $markup_class .= ' classification-' . MFCS_REVIEWER_CLASSIFICATION_REQUESTER;
         }
       }
 
       if (!is_null($reviewer_classification)) {
         $reviewer_classification = ' as <strong class="review-item-label-text-row-reviewer_classification">'. $reviewer_classification . '</strong>';
       }
+      else {
+        $markup_class .= ' classification-none';
+      }
 
       if ($user_id == 1) {
         $user_name .= "System";
         $reviewer_classification = "";
+        $markup_class .= ' classification-' . MFCS_REVIEWER_CLASSIFICATION_SYSTEM;
       }
       else {
         if (isset($users[$user_id]['first_name'])) {
@@ -1234,6 +1295,10 @@ function mfcs_view_build_reviews_log(&$form, &$form_state, $request_id, $revisio
         }
       }
 
+      $markup_class .= ' restriction-' . $restriction;
+
+      $markup = '<div id="request-' . $request_id . '-section-review-log-history-item-' . $row . '" class="review-item review-item-' . $row . $markup_class . '">';
+
       $user_name_markup = '<strong class="review-item-label-text-row-user">';
       $user_name_markup .= $user_name;
       $user_name_markup .= '</strong>';
@@ -1242,13 +1307,29 @@ function mfcs_view_build_reviews_log(&$form, &$form_state, $request_id, $revisio
 
       $row_id_block = '<div class="review-item-label-text-row">[' . $row . ']</div> ';
 
+      if ($restriction === MFCS_REVIEW_RESTRICTIONS_REQUESTER) {
+        $markup .= '<div class="review-item-restricted review-item-restricted-requester">';
+        $markup .= '<div class="review-item-restricted-message review-item-restricted-requester-message" title="Only requesters, managers, and administrators can view this item">' . "Restricted to Requesters" . '</div>';
+        $markup .= '</div>';
+      }
+      elseif ($restriction === MFCS_REVIEW_RESTRICTIONS_REVIEWER) {
+        $markup .= '<div class="review-item-restricted review-item-restricted-reviewer">';
+        $markup .= '<div class="review-item-restricted-message review-item-restricted-reviewer-message" title="Only reviewers, venue coordinators, managers, and administrators can view this item">' . "Restricted to Reviewers" . '</div>';
+        $markup .= '</div>';
+      }
+      elseif ($restriction === MFCS_REVIEW_RESTRICTIONS_MANAGERS) {
+        $markup .= '<div class="review-item-restricted review-item-restricted-internal">';
+        $markup .= '<div class="review-item-restricted-message review-item-restricted-internal-message" title="Only managers and administrators can view this item">' . "Restricted to Managers" . '</div>';
+        $markup .= '</div>';
+      }
+
       $markup .= '<div class="review-item-label">';
       $markup .= '<h3 class="review-item-label-text">' . $row_id_block . '<div class="review-item-label-text-title">';
 
       if ($decision === MFCS_REVIEW_DECISION_AMENDMENT) {
         $markup .= $user_name_markup . ' ' . $user_id_markup . ' has <strong class="review-item-label-text-row-decision">' . "Amended" . '</strong> the request' . $reviewer_classification . '.';
       }
-      elseif ($review_step === MFCS_REVIEW_STEP_VENUE_AVAILABLE && $decision === MFCS_REVIEW_DECISION_APPROVE) {
+      elseif ($review_step === MFCS_REVIEW_STEP_VENUE_AVAILABLE && $decision === MFCS_REVIEW_DECISION_AVAILABLE) {
         if ($type === MFCS_REQUEST_TYPE_QUICK_MEETING) {
           $markup .= $user_name_markup . ' ' . $user_id_markup . ' has designated that the <strong class="review-item-label-text-row-decision">Venue is Available</strong>, <strong class="review-item-label-text-row-decision">Confirmed</strong>, and <strong class="review-item-label-text-row-decision">Reserved</strong>' . $reviewer_classification . '.';
         }
@@ -1256,13 +1337,21 @@ function mfcs_view_build_reviews_log(&$form, &$form_state, $request_id, $revisio
           $markup .= $user_name_markup . ' ' . $user_id_markup . ' has designated that the <strong class="review-item-label-text-row-decision">Venue is Available</strong>' . $reviewer_classification . '.';
         }
       }
-      elseif ($review_step === MFCS_REVIEW_STEP_VENUE_AVAILABLE && $decision === MFCS_REVIEW_DECISION_DENY) {
+      elseif ($review_step === MFCS_REVIEW_STEP_VENUE_AVAILABLE && $decision === MFCS_REVIEW_DECISION_UNAVAILABLE) {
         $markup .= $user_name_markup . ' ' . $user_id_markup . ' has designated that the <strong class="review-item-label-text-row-decision">Venue is Unavailable</strong>' . $reviewer_classification . '.';
       }
       elseif ($review_step === MFCS_REVIEW_STEP_MAKE_DECISIONS && $decision === MFCS_REVIEW_DECISION_APPROVE) {
+        // as of fcs-79, this is provided for archival purposes in that requests prior to the change may involve this.
         $markup .= $user_name_markup . ' ' . $user_id_markup . ' has <strong class="review-item-label-text-row-decision">Confirmed and Reserved</strong> the request' . $reviewer_classification . "";
       }
       elseif ($review_step === MFCS_REVIEW_STEP_MAKE_DECISIONS && $decision === MFCS_REVIEW_DECISION_DENY) {
+        // as of fcs-79, this is provided for archival purposes in that requests prior to the change may involve this.
+        $markup .= $user_name_markup . ' ' . $user_id_markup . ' has <strong class="review-item-label-text-row-decision">Denied</strong> the request' . $reviewer_classification . '.';
+      }
+      elseif ($review_step === MFCS_REVIEW_STEP_REQUIREMENTS && $decision === MFCS_REVIEW_DECISION_APPROVE) {
+        $markup .= $user_name_markup . ' ' . $user_id_markup . ' has <strong class="review-item-label-text-row-decision">Confirmed and Reserved</strong> the request' . $reviewer_classification . "";
+      }
+      elseif ($review_step === MFCS_REVIEW_STEP_REQUIREMENTS && $decision === MFCS_REVIEW_DECISION_DENY) {
         $markup .= $user_name_markup . ' ' . $user_id_markup . ' has <strong class="review-item-label-text-row-decision">Denied</strong> the request' . $reviewer_classification . '.';
       }
       elseif ($decision === MFCS_REVIEW_DECISION_COMMENT) {
@@ -1271,19 +1360,19 @@ function mfcs_view_build_reviews_log(&$form, &$form_state, $request_id, $revisio
       elseif (($review_step === MFCS_REVIEW_STEP_REVIEW || $review_step === MFCS_REVIEW_STEP_VENUE_AVAILABLE) && $decision === MFCS_REVIEW_DECISION_REQUIREMENT) {
         $markup .= $user_name_markup . ' ' . $user_id_markup . ' has designated the <strong class="review-item-label-text-row-decision">' . $decision_options[$decision] . '</strong>' . $reviewer_classification . '.';
       }
-      elseif (($review_step === MFCS_REVIEW_STEP_REVIEW || $review_step === MFCS_REVIEW_STEP_VENUE_AVAILABLE) && $decision === MFCS_REVIEW_DECISION_WAVE) {
+      elseif (($review_step === MFCS_REVIEW_STEP_REVIEW || $review_step === MFCS_REVIEW_STEP_VENUE_AVAILABLE) && $decision === MFCS_REVIEW_DECISION_WAIVE) {
         $markup .= $user_name_markup . ' ' . $user_id_markup . ' has waived the <strong class="review-item-label-text-row-decision">' . $decision_options[MFCS_REVIEW_DECISION_REQUIREMENT] . '</strong> ' . $reviewer_classification . '.';
       }
-      elseif ($review_step === MFCS_REVIEW_STEP_REQUIREMENTS && $decision === MFCS_REVIEW_DECISION_APPROVE) {
-        $markup .= $user_name_markup . ' ' . $user_id_markup . ' has accepted the <strong class="review-item-label-text-row-decision">' . $review_step_options[$review_step] . '</strong>' . $reviewer_classification . '.';
+      elseif ($review_step === MFCS_REVIEW_STEP_REVIEW && $decision === MFCS_REVIEW_DECISION_ISSUES) {
+        $markup .= $user_name_markup . ' ' . $user_id_markup . ' has <strong class="review-item-label-text-row-decision">Issues</strong> with the request' . $reviewer_classification . '.';
       }
-      elseif ($review_step === MFCS_REVIEW_STEP_REQUIREMENTS && $decision === MFCS_REVIEW_DECISION_DENY) {
-        $markup .= $user_name_markup . ' ' . $user_id_markup . ' has denied the <strong class="review-item-label-text-row-decision">' . $review_step_options[$review_step] . '</strong>' . $reviewer_classification . '.';
+      elseif ($review_step === MFCS_REVIEW_STEP_REVIEW && $decision === MFCS_REVIEW_DECISION_ISSUES_NONE) {
+        $markup .= $user_name_markup . ' ' . $user_id_markup . ' has <strong class="review-item-label-text-row-decision">No Issues</strong> with the request' . $reviewer_classification . '.';
       }
       elseif ($decision === MFCS_REVIEW_DECISION_REQUIREMENT) {
         $markup .= $user_name_markup . ' ' . $user_id_markup . ' assigned the <strong class="review-item-label-text-row-decision">' . $decision_options[$decision] . '</strong> for the request' . $reviewer_classification . '.';
       }
-      elseif ($decision === MFCS_REVIEW_DECISION_APPROVE && $type === MFCS_REQUEST_TYPE_QUICK_MEETING) {
+      elseif ($decision === MFCS_REVIEW_DECISION_AVAILABLE && $type === MFCS_REQUEST_TYPE_QUICK_MEETING) {
         $markup .= $user_name_markup . ' ' . $user_id_markup . ' has designated that the <strong class="review-item-label-text-row-decision">Venue is Available</strong>, <strong class="review-item-label-text-row-decision">Confirmed</strong>, and <strong class="review-item-label-text-row-decision">Reserved</strong>' . $reviewer_classification . '.';
       }
       elseif ($decision === MFCS_REVIEW_DECISION_CLOSED) {
@@ -1303,7 +1392,7 @@ function mfcs_view_build_reviews_log(&$form, &$form_state, $request_id, $revisio
           $markup .= $user_name_markup . ' ' . $user_id_markup . ' chose to <strong class="review-item-label-text-row-decision">' . $decision_options[$decision] . '</strong> the request' . $reviewer_classification . '.';
         }
         else {
-          $markup .= $user_name_markup . ' ' . $user_id_markup . ' performed an <strong class="review-item-label-text-row-decision">Unknown Operation</strong> on the request' . $reviewer_classification . '.';
+          $markup .= $user_name_markup . ' ' . $user_id_markup . ' performed an <strong class="review-item-label-text-row-decision">Unknown Action / Decision</strong> on the request' . $reviewer_classification . '.';
         }
       }
       $markup .= '</div></h3>';
@@ -1320,25 +1409,32 @@ function mfcs_view_build_reviews_log(&$form, &$form_state, $request_id, $revisio
 
       // pre-process fee waving so that related changes are not displayed in the log.
       // this is done to help keep the log clean.
-      $fees_are_not_waved = TRUE;
+      $fees_are_not_waived = TRUE;
       if (!empty($changelog['requirements']['waived'])) {
         $value = reset($changelog['requirements']['waived']);
         if ($value) {
-          $fees_are_not_waved = FALSE;
+          $fees_are_not_waived = FALSE;
         }
         unset($value);
       }
 
-      if (!empty($changelog['requirements']['university'])) {
-        $value = reset($changelog['requirements']['university']);
-        if ($value) {
-          $fees_are_not_waved = FALSE;
+      $requirements_specified = FALSE;
+      if ($fees_are_not_waived && $review_step === MFCS_REVIEW_STEP_REQUIREMENTS && $decision === MFCS_REVIEW_DECISION_REQUIREMENT) {
+        $requirements_specified = TRUE;
+      }
+      else {
+        // (legacy) support old/original behavior for when use fees were not always specified during the requirements step.
+        if (!empty($changelog['requirements']['university'])) {
+          $value = reset($changelog['requirements']['university']);
+          if ($value) {
+            $fees_are_not_waived = FALSE;
+          }
+          unset($value);
         }
-        unset($value);
       }
 
-      if ($review_step === MFCS_REVIEW_STEP_VENUE_AVAILABLE && ($decision === MFCS_REVIEW_DECISION_REQUIREMENT || $decision === MFCS_REVIEW_DECISION_WAVE) && $type !== MFCS_REQUEST_TYPE_QUICK_MEETING) {
-        if ($fees_are_not_waved && !empty($changelog['requirements']['facilities'])) {
+      if ($requirements_specified || ($review_step === MFCS_REVIEW_STEP_VENUE_AVAILABLE && ($decision === MFCS_REVIEW_DECISION_REQUIREMENT || $decision === MFCS_REVIEW_DECISION_WAIVE) && $type !== MFCS_REQUEST_TYPE_QUICK_MEETING)) {
+        if ($fees_are_not_waived && !empty($changelog['requirements']['facilities'])) {
           $message .= '<div class="review-item-message-requirements-facilities review-item-message-requirements review-item-message-requirements">';
           $message .= '<div class="item-label">Facilities Fees:</div> ';
 
@@ -1351,7 +1447,7 @@ function mfcs_view_build_reviews_log(&$form, &$form_state, $request_id, $revisio
           $message .= '</div>';
         }
 
-        if ($fees_are_not_waved && !empty($changelog['requirements']['equipment'])) {
+        if ($fees_are_not_waived && !empty($changelog['requirements']['equipment'])) {
           $message .= '<div class="review-item-message-requirements-equipment review-item-message-requirements review-item-message-requirements">';
           $message .= '<div class="item-label">Additional Equipment Fees:</div> ';
 
@@ -1365,7 +1461,7 @@ function mfcs_view_build_reviews_log(&$form, &$form_state, $request_id, $revisio
         }
       }
 
-      if ($fees_are_not_waved && !empty($changelog['requirements']['security'])) {
+      if ($fees_are_not_waived && !empty($changelog['requirements']['security'])) {
         $message .= '<div class="review-item-message-requirements-security review-item-message-requirements review-item-message-requirements">';
         $message .= '<div class="item-label">Security Fees:</div> ';
 
@@ -1378,7 +1474,7 @@ function mfcs_view_build_reviews_log(&$form, &$form_state, $request_id, $revisio
         $message .= '</div>';
       }
 
-      if ($fees_are_not_waved && !empty($changelog['requirements']['custodial'])) {
+      if ($fees_are_not_waived && !empty($changelog['requirements']['custodial'])) {
         $message .= '<div class="review-item-message-requirements-custodial review-item-message-requirements review-item-message-requirements">';
         $message .= '<div class="item-label">Custodial Fees:</div> ';
 
@@ -1391,7 +1487,7 @@ function mfcs_view_build_reviews_log(&$form, &$form_state, $request_id, $revisio
         $message .= '</div>';
       }
 
-      if ($fees_are_not_waved && !empty($changelog['requirements']['maintenance'])) {
+      if ($fees_are_not_waived && !empty($changelog['requirements']['maintenance'])) {
         $message .= '<div class="review-item-message-requirements-maintenance review-item-message-requirements review-item-message-requirements">';
         $message .= '<div class="item-label">Maintenance Fees:</div> ';
 
@@ -1404,7 +1500,7 @@ function mfcs_view_build_reviews_log(&$form, &$form_state, $request_id, $revisio
         $message .= '</div>';
       }
 
-      if ($fees_are_not_waved && !empty($changelog['requirements']['grounds'])) {
+      if ($fees_are_not_waived && !empty($changelog['requirements']['grounds'])) {
         $message .= '<div class="review-item-message-requirements-grounds review-item-message-requirements review-item-message-requirements">';
         $message .= '<div class="item-label">Grounds Fees:</div> ';
 
@@ -1417,27 +1513,27 @@ function mfcs_view_build_reviews_log(&$form, &$form_state, $request_id, $revisio
         $message .= '</div>';
       }
 
-      if ($review_step === MFCS_REVIEW_STEP_VENUE_AVAILABLE && ($decision === MFCS_REVIEW_DECISION_REQUIREMENT || $decision === MFCS_REVIEW_DECISION_WAVE) || ($type === MFCS_REQUEST_TYPE_QUICK_MEETING && $decision === MFCS_REVIEW_DECISION_REQUIREMENT)) {
-        if ($fees_are_not_waved && !empty($changelog['requirements']['other'])) {
-          $message .= '<div class="review-item-message-requirements-other review-item-message-requirements review-item-message-requirements">';
-          $message .= '<div class="item-label">Other Fees:</div> ';
+      if (!empty($changelog['requirements']['other'])) {
+        $message .= '<div class="review-item-message-requirements-other review-item-message-requirements review-item-message-requirements">';
+        $message .= '<div class="item-label">Other Fees:</div> ';
 
-          // always display the boolean when displayed in the review log.
-          foreach ($presentation['requirements']['other']['display'] as &$value) {
-            if ($value == 'when_true' || $value == 'when_false') {
-              $value = 'raw';
-            }
+        // always display the boolean when displayed in the review log.
+        foreach ($presentation['requirements']['other']['display'] as &$value) {
+          if ($value == 'when_true' || $value == 'when_false') {
+            $value = 'raw';
           }
-
-          $value = reset($changelog['requirements']['other']);
-          $value_markup = mfcs_view_build_request_value_structure($request_id, 'requirements', 'other', 0, $value, $presentation['requirements']['other'], $changelog);
-
-          if ($value_markup !== FALSE && !isset($value_markup['no_values'])) {
-            $message .= drupal_render($value_markup);
-          }
-          $message .= '</div>';
         }
 
+        $value = reset($changelog['requirements']['other']);
+        $value_markup = mfcs_view_build_request_value_structure($request_id, 'requirements', 'other', 0, $value, $presentation['requirements']['other'], $changelog);
+
+        if ($value_markup !== FALSE && !isset($value_markup['no_values'])) {
+          $message .= drupal_render($value_markup);
+        }
+        $message .= '</div>';
+      }
+
+      if ($review_step === MFCS_REVIEW_STEP_VENUE_AVAILABLE && ($decision === MFCS_REVIEW_DECISION_REQUIREMENT || $decision === MFCS_REVIEW_DECISION_WAIVE) || ($type === MFCS_REQUEST_TYPE_QUICK_MEETING && $decision === MFCS_REVIEW_DECISION_REQUIREMENT)) {
         if (!empty($changelog['requirements']['waived'])) {
           $message .= '<div class="review-item-message-requirements-waived review-item-message-requirements review-item-message-requirements">';
           $message .= '<div class="item-label">Waived with Presidents Approval:</div> ';
@@ -1457,26 +1553,27 @@ function mfcs_view_build_reviews_log(&$form, &$form_state, $request_id, $revisio
           }
           $message .= '</div>';
         }
+      }
 
-        if (!empty($changelog['requirements']['university'])) {
-          $message .= '<div class="review-item-message-requirements-university review-item-message-university review-item-message-requirements">';
-          $message .= '<div class="item-label">Strictly University Business:</div> ';
+      // strictly university business
+      if (!empty($changelog['requirements']['university'])) {
+        $message .= '<div class="review-item-message-requirements-university review-item-message-university review-item-message-requirements">';
+        $message .= '<div class="item-label">Strictly University Business:</div> ';
 
-          // always display the boolean when displayed in the review log.
-          foreach ($presentation['requirements']['university']['display'] as &$value) {
-            if ($value == 'when_true' || $value == 'when_false') {
-              $value = 'raw';
-            }
+        // always display the boolean when displayed in the review log.
+        foreach ($presentation['requirements']['university']['display'] as &$value) {
+          if ($value == 'when_true' || $value == 'when_false') {
+            $value = 'raw';
           }
-
-          $value = reset($changelog['requirements']['university']);
-          $value_markup = mfcs_view_build_request_value_structure($request_id, 'requirements', 'university', 0, $value, $presentation['requirements']['university'], $changelog);
-
-          if ($value_markup !== FALSE && !isset($value_markup['no_values'])) {
-            $message .= drupal_render($value_markup);
-          }
-          $message .= '</div>';
         }
+
+        $value = reset($changelog['requirements']['university']);
+        $value_markup = mfcs_view_build_request_value_structure($request_id, 'requirements', 'university', 0, $value, $presentation['requirements']['university'], $changelog);
+
+        if ($value_markup !== FALSE && !isset($value_markup['no_values'])) {
+          $message .= drupal_render($value_markup);
+        }
+        $message .= '</div>';
       }
 
       // contractor insurance
@@ -1565,6 +1662,17 @@ function mfcs_view_build_reviews_log(&$form, &$form_state, $request_id, $revisio
     $form['review']['log']['history']['nothing'] = array(
       '#markup' => 'The review log is empty.',
     );
+  }
+
+  if (!$has_viewable_entries) {
+    if (!($reviewer || $manager || $administer)) {
+      unset($form['review']['log']);
+    }
+    elseif ($has_log) {
+      $form['review']['log']['history']['nothing'] = array(
+        '#markup' => 'The review log is empty.',
+      );
+    }
   }
 
   return TRUE;

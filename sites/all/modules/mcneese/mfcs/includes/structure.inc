@@ -640,7 +640,7 @@ function mfcs_get_request_fields($form, &$form_state) {
 
     $fields['message']['#markup'] .= '<div id="mfcs-markup-request-message" class="markup-request">';
     $fields['message']['#markup'] .= 'Once your request has been approved appropriate campus personnel, you will be emailed with the outcome. ';
-    $fields['message']['#markup'] .= 'If the request receives approval, you will also receive an itemized detail of any and all charges that will be assessed to you.' . "<br>\n";
+    $fields['message']['#markup'] .= 'If the request receives approval, you will also receive an itemized detail of any and all charges that will be assessed to you.' . "<br>";
     $fields['message']['#markup'] .= '<strong>You must agree and accept the terms offered for the venue to be reserved.</strong> ';
     $fields['message']['#markup'] .= '</div>';
   }
@@ -6566,7 +6566,7 @@ function mfcs_get_request_existing_values($request) {
                 $current[$field_object->delta][$column_id] = NULL;
 
                 if (property_exists($field_object, $column_name)) {
-                  $current[$field_object->delta][$column_id] = $field_object->$column_name;
+                  $current[$field_object->delta][$column_id] = $field_object->{$column_name};
 
                   if (array_key_exists('storage', $field_structure) && is_string($field_structure['storage']) && !empty($field_structure['storage'])) {
                     $storage_method = $field_structure['storage'];

@@ -52,9 +52,8 @@ function mfcs_request_reviewers_0_page() {
         continue;
       }
 
-      // these are automatically the venue coordinator, therefore skip them.
-      if ($review_step_id == MFCS_REVIEW_STEP_VENUE_AVAILABLE) continue;
-      if ($review_step_id == MFCS_REVIEW_STEP_MAKE_DECISIONS) continue;
+      // this only applies to two different steps.
+      if ($review_step_id != MFCS_REVIEW_STEP_REVIEW && $review_step_id != MFCS_REVIEW_STEP_REQUIREMENTS) continue;
 
       $unmatched = TRUE;
       foreach ($review_step_object->field_review_event_roles['und'] as $key => $value) {
@@ -157,8 +156,8 @@ function mfcs_request_reviewers_0_form($form, &$form_state, $classification, $re
     $page_number = 0;
   }
 
-  // these are automatically the venue coordinator, therefore skip them.
-  if ($review_step === MFCS_REVIEW_STEP_VENUE_AVAILABLE || $review_step === MFCS_REVIEW_STEP_MAKE_DECISIONS) {
+  // only the specified steps can be used.
+  if ($review_step !== MFCS_REVIEW_STEP_REVIEW && $review_step !== MFCS_REVIEW_STEP_REQUIREMENTS) {
     drupal_not_found();
     drupal_exit();
     return array();
@@ -349,7 +348,7 @@ function mfcs_request_reviewers_0_form($form, &$form_state, $classification, $re
     );
 
     $row['account'] = array(
-      'data' => '<a href="' . $base_path . 'user/' . $reviewer->user_id . $url_arguments . '" class="user-link">' . check_plain($reviewer->name) . '</a>' . ' <span class="user-id script-hidden">(id: ' .  $reviewer->user_id . ')</span>',
+      'data' => '<a href="' . $base_path . 'requests/users-0/view/' . $reviewer->user_id . $url_arguments . '" class="user-link">' . check_plain($reviewer->name) . '</a>' . ' <span class="user-id script-hidden">(id: ' .  $reviewer->user_id . ')</span>',
       'class' => $class_account,
     );
 
@@ -477,9 +476,9 @@ function mfcs_request_reviewers_0_form($form, &$form_state, $classification, $re
     $navigation_total = $reviewers_returned['count'];
   }
 
-  $navigation_bottom .= '<div class="table_listing-comment">' . "\n";
-  $navigation_bottom .= "Showing " . $navigation_start . " to " . $navigation_total . " of " . $reviewers_returned['count'] . " entries.\n";
-  $navigation_bottom .= '</div>' . "\n";
+  $navigation_bottom .= '<div class="table_listing-comment">';
+  $navigation_bottom .= "Showing " . $navigation_start . " to " . $navigation_total . " of " . $reviewers_returned['count'] . " entries.";
+  $navigation_bottom .= '</div>';
 
   if ($reviewers_returned['count'] > ($options['start'] + $rows_per_page)) {
     $next_page = $page_number + 1;
@@ -489,7 +488,7 @@ function mfcs_request_reviewers_0_form($form, &$form_state, $classification, $re
 
   $form['reviewers_list']['#markup'] = '<div class="table_listing-navigator table_listing-navigator-top no-print">' . $navigation_top . '</div>';
   $form['reviewers_list']['#markup'] .= mcneese_libraries_theme_table($reviewers_list, $datatable_settings);
-  $form['reviewers_list']['#markup'] .= '<div class="table_listing-navigator table_listing-navigator-bottom">' . $navigation_bottom . '</div>';
+  #$form['reviewers_list']['#markup'] .= '<div class="table_listing-navigator table_listing-navigator-bottom">' . $navigation_bottom . '</div>';
 
   $form['reviewer'] = array(
     '#id' => 'reviewers-reviewer',
@@ -810,7 +809,7 @@ function mfcs_request_reviewers_0_form_submit($form, &$form_state) {
 
         $message = "This request's workflow has changed as a result of a change in the reviewer management settings.";
 
-        mfcs_workflow_next_step($request_id, $classification, $step, MFCS_REVIEW_DECISION_MANAGER_RECHECK, $message, TRUE);
+        mfcs_workflow_next_step($request_id, $classification, $step, MFCS_REVIEW_DECISION_MANAGER_RECHECK, MFCS_REVIEW_RESTRICTIONS_NONE, $message, TRUE);
       }
     }
 

@@ -772,11 +772,8 @@ function mfcs_request_edit_0_form_submit($form, &$form_state) {
         $mfcs_current['requirements_custodial'] = NULL;
         $mfcs_current['requirements_security'] = NULL;
         $mfcs_current['requirements_other'] = NULL;
-        $mfcs_current['requirements_waived'] = NULL;
         $mfcs_current['requirements_university'] = NULL;
 
-        $mfcs_current['insurance_contractor'] = NULL;
-        $mfcs_current['insurance_unaffiliated'] = NULL;
         $mfcs_current['insurance_provided'] = NULL;
       }
 
@@ -832,6 +829,7 @@ function mfcs_request_edit_0_form_submit($form, &$form_state) {
         // do not send e-mail when the previous step is already set to venue available.
         if ($step !== MFCS_REVIEW_STEP_VENUE_AVAILABLE) {
           $parameters['amendment'] = TRUE;
+          $parameters['restriction'] = MFCS_REVIEW_RESTRICTIONS_NONE;
           mfcs_send_workflow_emails($request_id, $parameters);
         }
       }
