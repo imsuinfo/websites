@@ -65,6 +65,9 @@ function mfcs_request_review_0_page($form, &$form_state, $page_number = NULL) {
     $page_number = 0;
   }
 
+  $user = cf_current_user();
+  $manager = user_access('mfcs manage', $user);
+
   mfcs_add_canonical_headers('requests/review-0/' . $page_number);
 
   $page_title = "Facilities Use Reviewable Requests";
@@ -168,6 +171,11 @@ function mfcs_request_review_0_page($form, &$form_state, $page_number = NULL) {
     'review_restrictions' => MFCS_REVIEW_RESTRICTION_REVIEW,
   );
 
+  if ($manager) {
+    $options['only_reviewer'] = TRUE;
+    $options['table_caption'] = "Requests (As Reviewer)";
+  }
+
   if (!is_null($order)) {
     $options['sort'] = $sorting;
   }
@@ -236,9 +244,9 @@ function mfcs_request_review_0_page($form, &$form_state, $page_number = NULL) {
     $navigation_total = $count;
   }
 
-  $navigation_bottom .= '<div class="table_listing-comment">' . "\n";
-  $navigation_bottom .= "Showing " . $navigation_start . " to " . $navigation_total . " of " . $count . " entries.\n";
-  $navigation_bottom .= '</div>' . "\n";
+  $navigation_bottom .= '<div class="table_listing-comment">';
+  $navigation_bottom .= "Showing " . $navigation_start . " to " . $navigation_total . " of " . $count . " entries.";
+  $navigation_bottom .= '</div>';
 
   if ($count > ($options['start'] + $rows_per_page)) {
     $next_page = $page_number + 1;
@@ -248,7 +256,7 @@ function mfcs_request_review_0_page($form, &$form_state, $page_number = NULL) {
 
   $output = '<div class="table_listing-navigator table_listing-navigator-top no-print">' . $navigation_top . '</div>';
   $output .= mcneese_libraries_theme_table($table, $table['datatable_settings']);
-  $output .= '<div class="table_listing-navigator table_listing-navigator-bottom">' . $navigation_bottom . '</div>';
+  #$output .= '<div class="table_listing-navigator table_listing-navigator-bottom">' . $navigation_bottom . '</div>';
 
   return $form;
 }

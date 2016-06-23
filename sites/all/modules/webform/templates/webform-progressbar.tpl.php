@@ -20,7 +20,7 @@
  * - $percent: The percentage complete.
  */
 ?>
-<div class="webform-progressbar">
+<div class="webform-progressbar no-print">
   <?php if ($progressbar_bar): ?>
     <div class="webform-progressbar-outer">
       <div class="webform-progressbar-inner" style="width: <?php print number_format($percent, 0); ?>%">&nbsp;</div>

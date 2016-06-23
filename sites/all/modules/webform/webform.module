@@ -2627,7 +2627,7 @@ function webform_client_form($form, &$form_state, $node, $submission = FALSE, $r
       );
 
       $form['preview'] = webform_submission_render($node, $preview_submission, NULL, 'html', $node->webform['preview_excluded_components']);
-      $form['#attributes']['class'][] = 'preview';
+      $form['#attributes']['class'][] = 'preview no-print';
     }
 
     // These form details help managing data upon submission.
@@ -2676,7 +2676,7 @@ function webform_client_form($form, &$form_state, $node, $submission = FALSE, $r
         '#validate' => array('webform_client_form_prevalidate'),    // Prevalidation only; no element validation for Save Draft
         '#attributes' => array(
           'formnovalidate' => 'formnovalidate',
-          'class' => array('webform-draft'),
+          'class' => array('webform-draft', 'no-print'),
         ),
         '#pre_render' => $buttons_pre_render,
       );
@@ -2691,7 +2691,7 @@ function webform_client_form($form, &$form_state, $node, $submission = FALSE, $r
         '#validate' => array(),
         '#attributes' => array(
           'formnovalidate' => 'formnovalidate',
-          'class' => array('webform-previous'),
+          'class' => array('webform-previous', 'no-print'),
         ),
         '#pre_render' => $buttons_pre_render,
       );
@@ -2702,7 +2702,7 @@ function webform_client_form($form, &$form_state, $node, $submission = FALSE, $r
         '#value' => $submit_button_text,
         '#weight' => 10,
         '#attributes' => array(
-          'class' => array('webform-submit', 'button-primary'),
+          'class' => array('webform-submit', 'button-primary', 'no-print'),
         ),
         '#pre_render' => $buttons_pre_render,
       );
@@ -2713,7 +2713,7 @@ function webform_client_form($form, &$form_state, $node, $submission = FALSE, $r
         '#value' => $next_page_labels[$page_num],
         '#weight' => 10,
         '#attributes' => array(
-          'class' => array('webform-next', 'button-primary'),
+          'class' => array('webform-next', 'button-primary', 'no-print'),
         ),
         '#pre_render' => $buttons_pre_render,
       );

@@ -241,7 +241,7 @@ function mfcs_request_synchronize_0_form($form, &$form_state, $page_number = NUL
     );
 
     $row['account'] = array(
-      'data' => '<a href="' . $base_path . 'user/' . $item->user_id . $url_arguments . '" class="user-link">' . check_plain($item->name) . '</a>' . ' <span class="user-id script-hidden">(id: ' .  $item->user_id . ')</span>',
+      'data' => '<a href="' . $base_path . 'requests/users-0/view/' . $item->user_id . $url_arguments . '" class="user-link">' . check_plain($item->name) . '</a>' . ' <span class="user-id script-hidden">(id: ' .  $item->user_id . ')</span>',
       'class' => $class_name,
     );
 
@@ -383,9 +383,9 @@ function mfcs_request_synchronize_0_form($form, &$form_state, $page_number = NUL
     $navigation_total = $returned_total;
   }
 
-  $navigation_bottom .= '<div class="table_listing-comment">' . "\n";
-  $navigation_bottom .= "Showing " . $navigation_start . " to " . $navigation_total . " of " . $returned_total . " entries.\n";
-  $navigation_bottom .= '</div>' . "\n";
+  $navigation_bottom .= '<div class="table_listing-comment">';
+  $navigation_bottom .= "Showing " . $navigation_start . " to " . $navigation_total . " of " . $returned_total . " entries.";
+  $navigation_bottom .= '</div>';
 
   if ($returned_total > ($options['start'] + $rows_per_page)) {
     $next_page = $page_number + 1;
@@ -397,7 +397,7 @@ function mfcs_request_synchronize_0_form($form, &$form_state, $page_number = NUL
 
   $form['synchronize_list']['#markup'] = '<div class="table_listing-navigator table_listing-navigator-top no-print">' . $navigation_top . '</div>';
   $form['synchronize_list']['#markup'] .= mcneese_libraries_theme_table($synchronize_list, $datatable_settings);
-  $form['synchronize_list']['#markup'] .= '<div class="table_listing-navigator table_listing-navigator-bottom">' . $navigation_bottom . '</div>';
+  #$form['synchronize_list']['#markup'] .= '<div class="table_listing-navigator table_listing-navigator-bottom">' . $navigation_bottom . '</div>';
   $form['synchronize_list']['#markup'] .=  '<br><div>';
   $form['synchronize_list']['#markup'] .=  "The <strong>iCal</strong> synchronize process is intended to be used by <strong>zimbra calendar</strong> for processing only the approved requests from the current day forward. ";
   $form['synchronize_list']['#markup'] .=  "Other ip addresses may be added for exceptional, testing, or training purposes. ";

@@ -40,6 +40,55 @@ function _drupal_root_get_uri() {
   return substr($parsed['path'], strlen($base_path));
 }
 
+/**
+ * Provide a exception reporting via watchdog.
+ */
+function _drupal_root_exception_watchdog($ex, $severity = WATCHDOG_NOTICE) {
+  $decoded = _drupal_decode_exception($ex);
+  watchdog('php', '%type: !message in %function (line %line of %file).', $decoded, $severity);
+}
+
+/**
+ * Wrap the main drupal execution function inside of try..catch statements to handle errors.
+ *
+ * @todo: it should be possible to load a static page or a fallback page at this point as a failsafe that looks better than Internal Server Error.
+ */
+function _drupal_root_execute_handler($not_found = FALSE) {
+  try {
+    menu_execute_active_handler();
+  }
+  catch (ParseError $ex) {
+    _drupal_root_exception_watchdog($ex, WATCHDOG_CRITICAL);
+
+    if ($not_found) {
+      drupal_not_found();
+      drupal_exit();
+    }
+
+    throw $ex;
+  }
+  catch (Error $ex) {
+    _drupal_root_exception_watchdog($ex);
+
+    if ($not_found) {
+      drupal_not_found();
+      drupal_exit();
+    }
+
+    throw $ex;
+  }
+  catch (Exception $ex) {
+    _drupal_root_exception_watchdog($ex);
+
+    if ($not_found) {
+      drupal_not_found();
+      drupal_exit();
+    }
+
+    throw $ex;
+  }
+}
+
 drupal_bootstrap(DRUPAL_BOOTSTRAP_CONFIGURATION);
 
 $uri = _drupal_root_get_uri();
@@ -59,6 +108,10 @@ if (isset($arguments[0]) && $arguments[0] == 'f') {
       drupal_not_found();
       drupal_exit();
     }
+  }
+  catch (Error $e) {
+    drupal_bootstrap(DRUPAL_BOOTSTRAP_FULL);
+    throw $e;
   }
   catch (Exception $e) {
     drupal_bootstrap(DRUPAL_BOOTSTRAP_FULL);
@@ -183,7 +236,8 @@ elseif ($arguments_count > 5 && $arguments[0] == 'files' && $arguments[1] == 'st
   unset($uri);
   unset($arguments);
   unset($association);
-  menu_execute_active_handler();
+
+  _drupal_root_execute_handler();
 }
 elseif (isset($arguments[0]) && $arguments[0] == 'files' || isset($arguments[3]) && $arguments[3] == 'files') {
   drupal_bootstrap(DRUPAL_BOOTSTRAP_DATABASE);
@@ -195,8 +249,9 @@ elseif (isset($arguments[0]) && $arguments[0] == 'files' || isset($arguments[3])
   if (empty($result)) {
     unset($uri);
     unset($arguments);
+
     drupal_bootstrap(DRUPAL_BOOTSTRAP_FULL);
-    menu_execute_active_handler();
+    _drupal_root_execute_handler(TRUE);
   }
   else {
     $uri = $result;
@@ -215,9 +270,17 @@ elseif (isset($arguments[0]) && $arguments[0] == 'files' || isset($arguments[3])
         drupal_exit();
       }
     }
+    catch (Error $e) {
+      drupal_bootstrap(DRUPAL_BOOTSTRAP_FULL);
+      _drupal_root_exception_watchdog($ex, WATCHDOG_CRITICAL);
+      drupal_not_found();
+      drupal_exit();
+    }
     catch (Exception $e) {
       drupal_bootstrap(DRUPAL_BOOTSTRAP_FULL);
-      throw $e;
+      _drupal_root_exception_watchdog($ex, WATCHDOG_CRITICAL);
+      drupal_not_found();
+      drupal_exit();
     }
   }
 }
@@ -225,5 +288,5 @@ else {
   unset($uri);
   unset($arguments);
   drupal_bootstrap(DRUPAL_BOOTSTRAP_FULL);
-  menu_execute_active_handler();
+  _drupal_root_execute_handler();
 }

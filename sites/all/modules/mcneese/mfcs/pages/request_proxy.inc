@@ -217,7 +217,7 @@ function mfcs_request_proxy_0_form($form, &$form_state, $page_number = NULL) {
     );
 
     $row['proxy_account'] = array(
-      'data' => '<a href="' . $base_path . 'user/' . $proxy->proxy_id . $url_arguments . '" class="user-link">' . check_plain($proxy->proxy_name) . '</a>' . ' <span class="user-id script-hidden">(id: ' .  $proxy->proxy_id . ')</span>',
+      'data' => '<a href="' . $base_path . 'requests/users-0/view/' . $proxy->proxy_id . $url_arguments . '" class="user-link">' . check_plain($proxy->proxy_name) . '</a>' . ' <span class="user-id script-hidden">(id: ' .  $proxy->proxy_id . ')</span>',
       'class' => $class_proxy_account,
     );
 
@@ -237,7 +237,7 @@ function mfcs_request_proxy_0_form($form, &$form_state, $page_number = NULL) {
     );
 
     $row['account'] = array(
-      'data' => '<a href="' . $base_path . 'user/' . $proxy->user_id . $url_arguments . '" class="user-link">' . check_plain($proxy->name) . '</a>' . ' <span class="user-id script-hidden">(id: ' .  $proxy->user_id . ')</span>',
+      'data' => '<a href="' . $base_path . 'requests/users-0/view/' . $proxy->user_id . $url_arguments . '" class="user-link">' . check_plain($proxy->name) . '</a>' . ' <span class="user-id script-hidden">(id: ' .  $proxy->user_id . ')</span>',
       'class' => $class_account,
     );
 
@@ -360,9 +360,9 @@ function mfcs_request_proxy_0_form($form, &$form_state, $page_number = NULL) {
     $navigation_total = $proxies_total;
   }
 
-  $navigation_bottom .= '<div class="table_listing-comment">' . "\n";
-  $navigation_bottom .= "Showing " . $navigation_start . " to " . $navigation_total . " of " . $proxies_total . " entries.\n";
-  $navigation_bottom .= '</div>' . "\n";
+  $navigation_bottom .= '<div class="table_listing-comment">';
+  $navigation_bottom .= "Showing " . $navigation_start . " to " . $navigation_total . " of " . $proxies_total . " entries.";
+  $navigation_bottom .= '</div>';
 
   if ($proxies_total > ($options['start'] + $rows_per_page)) {
     $next_page = $page_number + 1;
@@ -372,7 +372,7 @@ function mfcs_request_proxy_0_form($form, &$form_state, $page_number = NULL) {
 
   $form['proxy_list']['#markup'] = '<div class="table_listing-navigator table_listing-navigator-top no-print">' . $navigation_top . '</div>';
   $form['proxy_list']['#markup'] .= mcneese_libraries_theme_table($proxy_list, $datatable_settings);
-  $form['proxy_list']['#markup'] .= '<div class="table_listing-navigator table_listing-navigator-bottom">' . $navigation_bottom . '</div>';
+  #$form['proxy_list']['#markup'] .= '<div class="table_listing-navigator table_listing-navigator-bottom">' . $navigation_bottom . '</div>';
 
   $form['proxy'] = array(
     '#id' => 'proxy',
@@ -564,13 +564,26 @@ function mfcs_request_proxy_0_form_submit($form, &$form_state) {
       $create_new_user = (bool) $form_state['values']['proxy']['new_user'];
 
       if ($create_new_user && !empty($form_state['user_name'])) {
+        $roles = array();
+        $role = user_role_load_by_name('reviewer');
+        if (is_object($role)) {
+          $roles[$role->rid] = $role->rid;
+        }
+
+        $role = user_role_load_by_name('requester');
+        if (is_object($role)) {
+          $roles[$role->rid] = $role->rid;
+        }
+        unset($role);
+
         if (preg_match('/@student\.mcneese\.edu/i', $form_state['values']['proxy']['proxy_id'])) {
-          $new_user = mfcs_ensure_user_by_email($form_state['user_name'] . '@student.mcneese.edu', array('reviewer', 'requester'));
+          $new_user = mfcs_ensure_user_by_email($form_state['user_name'] . '@student.mcneese.edu', $roles);
           watchdog(MFCS_WATCHDOG_ID, "The student account '%proxy_user' was created as a proxy for '%user_id' by '%name' ('%uid').", array('%proxy_user' => $form_state['user_name'], '%user_id' => $form_state['values']['proxy']['user_id'], '%name' => $user->name, '%uid' => $user->uid), WATCHDOG_NOTICE);
         }
         else {
-          $new_user = mfcs_ensure_user_by_email($form_state['user_name'] . '@mcneese.edu', array('reviewer', 'requester'));
+          $new_user = mfcs_ensure_user_by_email($form_state['user_name'] . '@mcneese.edu', $roles);
         }
+        unset($roles);
 
         if (!is_object($new_user)) {
           form_set_error('form', "An error occurred while trying to create the proxy user's account. Please contact the support staff.");
@@ -639,9 +652,22 @@ function mfcs_request_proxy_0_form_submit($form, &$form_state) {
         $query->execute();
       }
     }
-    catch (Exception $ex) {
+    catch (Error $e) {
       $transaction->rollback();
-      cf_error::on_query_execution($ex);
+      cf_error::on_query_execution($e);
+
+      form_set_error('form', "An error occurred while trying to add the proxy. Please contact the support staff.");
+      watchdog(MFCS_WATCHDOG_ID, "An error occured while trying to create the proxy '%proxy_id' to proxy as '%user_id'.", array('%proxy_id' => $values['proxy_id'], '%user_id' => $values['user_id']), WATCHDOG_ERROR);
+
+      $form_state['rebuild'] = TRUE;
+      $form_state['redirect'] = FALSE;
+      $form_state['submitted'] = FALSE;
+
+      return;
+    }
+    catch (Exception $e) {
+      $transaction->rollback();
+      cf_error::on_query_execution($e);
 
       form_set_error('form', "An error occurred while trying to add the proxy. Please contact the support staff.");
       watchdog(MFCS_WATCHDOG_ID, "An error occured while trying to create the proxy '%proxy_id' to proxy as '%user_id'.", array('%proxy_id' => $values['proxy_id'], '%user_id' => $values['user_id']), WATCHDOG_ERROR);
@@ -811,9 +837,22 @@ function mfcs_request_proxy_0_delete_form_submit($form, &$form_state) {
     $query->condition('id', $form['form']['id']['#value']);
     $query->execute();
   }
-  catch (Exception $ex) {
+  catch (Error $e) {
     $transaction->rollback();
-    cf_error::on_query_execution($ex);
+    cf_error::on_query_execution($e);
+
+    form_set_error('form', "An error occurred while trying to delete the proxy. Please contact the support staff.");
+    watchdog(MFCS_WATCHDOG_ID, "An error occured while trying to delete the proxy '%proxy_id'.", array('%proxy_id' => $form['form']['id']['#value']), WATCHDOG_ERROR);
+
+    $form_state['rebuild'] = TRUE;
+    $form_state['redirect'] = FALSE;
+    $form_state['submitted'] = FALSE;
+
+    return;
+  }
+  catch (Exception $e) {
+    $transaction->rollback();
+    cf_error::on_query_execution($e);
 
     form_set_error('form', "An error occurred while trying to delete the proxy. Please contact the support staff.");
     watchdog(MFCS_WATCHDOG_ID, "An error occured while trying to delete the proxy '%proxy_id'.", array('%proxy_id' => $form['form']['id']['#value']), WATCHDOG_ERROR);

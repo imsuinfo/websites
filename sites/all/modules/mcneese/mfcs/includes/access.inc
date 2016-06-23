@@ -55,7 +55,7 @@ function mfcs_page_request_access_operation_create(&$request_ids, &$processed, &
     return FALSE;
   }
 
-  if ($roles['requester']) {
+  if ($roles['requester'] || $roles['manager'] || $roles['administer']) {
     if (array_key_exists(NULL, $request_ids)) {
       $access[NULL] = TRUE;
       $processed[NULL] = TRUE;
@@ -138,7 +138,7 @@ function mfcs_page_request_access_operation_edit(&$request_ids, &$processed, &$a
     MFCS_REQUEST_STATUS_LOCKED,
   );
 
-  if ($roles['manager'] || $roles['requester'] || $roles['reviewer']) {
+  if ($roles['requester'] || $roles['reviewer'] || $roles['manager']  || $roles['administer']) {
     if (array_key_exists(NULL, $request_ids)) {
       $access[NULL] = TRUE;
       $processed[NULL] = TRUE;
@@ -158,7 +158,7 @@ function mfcs_page_request_access_operation_edit(&$request_ids, &$processed, &$a
       $query->condition('mer.id', $request_ids, 'IN');
       $query->condition('mer.status', $edit_request_status, 'IN');
 
-      if (!$roles['manager']) {
+      if (!$roles['manager'] && !$roles['administer']) {
         if ($roles['requester']) {
           if ($roles['reviewer']) {
             $or = db_or();
@@ -209,8 +209,13 @@ function mfcs_page_request_access_operation_edit(&$request_ids, &$processed, &$a
         return TRUE;
       }
     }
-    catch (Exception $ex) {
-      cf_error::on_exception($ex);
+    catch (Error $e) {
+      cf_error::on_exception($e);
+
+      return FALSE;
+    }
+    catch (Exception $e) {
+      cf_error::on_exception($e);
 
       return FALSE;
     }
@@ -286,7 +291,7 @@ function mfcs_page_request_access_operation_view(&$request_ids, &$processed, &$a
     MFCS_REQUEST_STATUS_CLOSED_ACCEPTED_CANCELLED,
   );
 
-  if ($roles['manager'] || $roles['requester']) {
+  if ($roles['requester'] || $roles['manager'] || $roles['administer']) {
     if (array_key_exists(NULL, $request_ids)) {
       $access[NULL] = TRUE;
       $processed[NULL] = TRUE;
@@ -300,7 +305,7 @@ function mfcs_page_request_access_operation_view(&$request_ids, &$processed, &$a
 
       $query->condition('mer.id', $request_ids, 'IN');
 
-      if ($roles['requester'] && !$roles['manager']) {
+      if ($roles['requester'] && !$roles['manager'] && !$roles['administer']) {
         $or = db_or();
 
         $and = db_and();
@@ -340,8 +345,13 @@ function mfcs_page_request_access_operation_view(&$request_ids, &$processed, &$a
         return TRUE;
       }
     }
-    catch (Exception $ex) {
-      cf_error::on_exception($ex);
+    catch (Error $e) {
+      cf_error::on_exception($e);
+
+      return FALSE;
+    }
+    catch (Exception $e) {
+      cf_error::on_exception($e);
 
       return FALSE;
     }
@@ -431,7 +441,7 @@ function mfcs_page_request_access_operation_review(&$request_ids, &$processed, &
     return FALSE;
   }
 
-  if ($roles['reviewer']) {
+  if ($roles['reviewer'] || $roles['manager'] || $roles['administer']) {
     if (array_key_exists(NULL, $request_ids)) {
       $access[NULL] = TRUE;
       $processed[NULL] = TRUE;
@@ -515,32 +525,39 @@ function mfcs_page_request_access_operation_comment(&$request_ids, &$processed, 
     return FALSE;
   }
 
-  if ($roles['reviewer'] || $roles['manager'] || $roles['administer']) {
+  if ($roles['requester'] || $roles['reviewer'] || $roles['manager'] || $roles['administer']) {
     if (array_key_exists(NULL, $request_ids)) {
       $access[NULL] = TRUE;
       $processed[NULL] = TRUE;
       return TRUE;
     }
 
-    // managers should always be able to comment.
+    // managers and administers should always be able to comment.
     if ($roles['manager'] || $roles['administer']) {
-      $processed[$id] = TRUE;
-      $access[$id] = TRUE;
+      foreach ($request_ids as $id) {
+        $processed[$id] = TRUE;
+        $access[$id] = TRUE;
+      }
       return TRUE;
     }
+    elseif ($roles['reviewer'] || $roles['requester']) {
+      $review_access = mfcs_page_request_reviewer_access($user, $request_ids, MFCS_REVIEW_RESTRICTION_COMMENT);
 
-    $review_access = mfcs_page_request_reviewer_access($user, $request_ids, MFCS_REVIEW_RESTRICTION_COMMENT);
+      if (is_array($review_access)) {
+        foreach ($request_ids as $id) {
+          if (array_key_exists($id, $processed)) {
+            continue;
+          }
 
-    if (is_array($review_access)) {
-      foreach ($request_ids as $id) {
-        $processed[$id] = array_key_exists($id, $review_access) && $review_access[$id];
-        $access[$id] = $processed[$id];
+          $processed[$id] = array_key_exists($id, $review_access) && $review_access[$id];
+          $access[$id] = $processed[$id];
+        }
       }
-    }
-    else {
-      foreach ($request_ids as $id) {
-        $processed[$id] = FALSE;
-        $access[$id] = FALSE;
+      else {
+        foreach ($request_ids as $id) {
+          $processed[$id] = FALSE;
+          $access[$id] = FALSE;
+        }
       }
     }
 
@@ -606,7 +623,7 @@ function mfcs_page_request_access_operation_log(&$request_ids, &$processed, &$ac
     return FALSE;
   }
 
-  if ($roles['manager']) {
+  if ($roles['manager'] || $roles['administer']) {
     if (array_key_exists(NULL, $request_ids)) {
       $access[NULL] = TRUE;
       $processed[NULL] = TRUE;
@@ -619,6 +636,36 @@ function mfcs_page_request_access_operation_log(&$request_ids, &$processed, &$ac
     }
 
     return TRUE;
+  }
+
+  if ($roles['requester']) {
+    if (array_key_exists(NULL, $request_ids)) {
+      $access[NULL] = TRUE;
+      $processed[NULL] = TRUE;
+      return TRUE;
+    }
+
+    // access is dependent on the requester, so load all requester ids for all requests.
+    $requesters = mfcs_load_requesters_of_requests($request_ids);
+
+    foreach ($request_ids as $request_id) {
+      if (isset($requesters[$request_id]) && $requesters[$request_id] == $user->uid) {
+        $access[$request_id] = TRUE;
+        $processed[$request_id] = TRUE;
+      }
+      else {
+        $access[$request_id] = FALSE;
+
+        // If the requester also has reviewer role, make sure the unapproved requests are also checked by not marking the request as processed.
+        if (!$roles['reviewer']) {
+          $processed[$request_id] = FALSE;
+        }
+      }
+    }
+
+    if (!$roles['reviewer']) {
+      return TRUE;
+    }
   }
 
   if ($roles['reviewer']) {
@@ -705,7 +752,7 @@ function mfcs_page_request_access_operation_cancel(&$request_ids, &$processed, &
     return FALSE;
   }
 
-  if ($roles['requester'] || $roles['reviewer'] || $roles['manager']) {
+  if ($roles['requester'] || $roles['reviewer'] || $roles['manager'] || $roles['administer']) {
     if (array_key_exists(NULL, $request_ids)) {
       $access[NULL] = TRUE;
       $processed[NULL] = TRUE;
@@ -721,8 +768,8 @@ function mfcs_page_request_access_operation_cancel(&$request_ids, &$processed, &
     MFCS_REQUEST_STATUS_CLOSED_UNAVAILABLE,
   );
 
-  // always grant managers cancel access.
-  if ($roles['manager']) {
+  // always grant managers and administers cancel access.
+  if ($roles['manager'] || $roles['administer']) {
     try {
       $query = db_select('mfcs_requests', 'mer');
 
@@ -754,8 +801,12 @@ function mfcs_page_request_access_operation_cancel(&$request_ids, &$processed, &
         }
       }
     }
-    catch (Exception $ex) {
-      cf_error::on_exception($ex);
+    catch (Error $e) {
+      cf_error::on_exception($e);
+      return FALSE;
+    }
+    catch (Exception $e) {
+      cf_error::on_exception($e);
       return FALSE;
     }
 
@@ -815,8 +866,12 @@ function mfcs_page_request_access_operation_cancel(&$request_ids, &$processed, &
       }
     }
   }
-  catch (Exception $ex) {
-    cf_error::on_exception($ex);
+  catch (Error $e) {
+    cf_error::on_exception($e);
+    return FALSE;
+  }
+  catch (Exception $e) {
+    cf_error::on_exception($e);
     return FALSE;
   }
 
@@ -848,8 +903,13 @@ function mfcs_page_request_access_operation_cancel(&$request_ids, &$processed, &
         return TRUE;
       }
     }
-    catch (Exception $ex) {
-      cf_error::on_exception($ex);
+    catch (Error $e) {
+      cf_error::on_exception($e);
+
+      return FALSE;
+    }
+    catch (Exception $e) {
+      cf_error::on_exception($e);
 
       return FALSE;
     }
@@ -938,7 +998,7 @@ function mfcs_page_request_access_operation_cancelling(&$request_ids, &$processe
   }
 
 
-  if ($roles['administer'] || $roles['manager']) {
+  if ($roles['manager'] || $roles['administer']) {
     if (array_key_exists(NULL, $request_ids)) {
       $access[NULL] = TRUE;
       $processed[NULL] = TRUE;
@@ -1019,7 +1079,7 @@ function mfcs_page_request_access_operation_cancelling(&$request_ids, &$processe
 
     $query->condition('mer.id', $request_ids, 'IN');
 
-    if (!$roles['administer'] && !$roles['manager']) {
+    if (!$roles['manager'] || !$roles['administer']) {
       if ($roles['requester'] && $roles['reviewer']) {
         $or = db_or();
         $or->condition('mer.user_id', $user->uid);
@@ -1074,8 +1134,12 @@ function mfcs_page_request_access_operation_cancelling(&$request_ids, &$processe
       }
     }
   }
-  catch (Exception $ex) {
-    cf_error::on_exception($ex);
+  catch (Error $e) {
+    cf_error::on_exception($e);
+    return FALSE;
+  }
+  catch (Exception $e) {
+    cf_error::on_exception($e);
     return FALSE;
   }
 
@@ -1151,8 +1215,8 @@ function mfcs_page_request_access_operation_uncancel(&$request_ids, &$processed,
     MFCS_REQUEST_STATUS_CLOSED_ACCEPTED_CANCELLED,
   );
 
-  // always grant managers uncancel access.
-  if ($roles['manager']) {
+  // always grant managers and administers uncancel access.
+  if ($roles['manager'] || $roles['administer']) {
     try {
       $query = db_select('mfcs_requests', 'mer');
 
@@ -1180,8 +1244,12 @@ function mfcs_page_request_access_operation_uncancel(&$request_ids, &$processed,
         }
       }
     }
-    catch (Exception $ex) {
-      cf_error::on_exception($ex);
+    catch (Error $e) {
+      cf_error::on_exception($e);
+      return FALSE;
+    }
+    catch (Exception $e) {
+      cf_error::on_exception($e);
       return FALSE;
     }
 
@@ -1237,8 +1305,12 @@ function mfcs_page_request_access_operation_uncancel(&$request_ids, &$processed,
       }
     }
   }
-  catch (Exception $ex) {
-    cf_error::on_exception($ex);
+  catch (Error $e) {
+    cf_error::on_exception($e);
+    return FALSE;
+  }
+  catch (Exception $e) {
+    cf_error::on_exception($e);
     return FALSE;
   }
 
@@ -1301,7 +1373,7 @@ function mfcs_page_request_access_operation_reassign(&$request_ids, &$processed,
     return FALSE;
   }
 
-  if ($roles['manager']) {
+  if ($roles['manager'] || $roles['administer']) {
     if (array_key_exists(NULL, $request_ids)) {
       $access[NULL] = TRUE;
       $processed[NULL] = TRUE;
@@ -1314,8 +1386,8 @@ function mfcs_page_request_access_operation_reassign(&$request_ids, &$processed,
     MFCS_REQUEST_STATUS_UNLOCKED,
   );
 
-  // always grant managers uncancel access.
-  if ($roles['manager']) {
+  // always grant managers and administers re-assign access.
+  if ($roles['manager'] || $roles['administer']) {
     try {
       $query = db_select('mfcs_requests', 'mer');
 
@@ -1343,8 +1415,12 @@ function mfcs_page_request_access_operation_reassign(&$request_ids, &$processed,
         }
       }
     }
-    catch (Exception $ex) {
-      cf_error::on_exception($ex);
+    catch (Error $e) {
+      cf_error::on_exception($e);
+      return FALSE;
+    }
+    catch (Exception $e) {
+      cf_error::on_exception($e);
       return FALSE;
     }
   }
@@ -1408,7 +1484,7 @@ function mfcs_page_request_access_operation_history(&$request_ids, &$processed, 
     return FALSE;
   }
 
-  if ($roles['manager']) {
+  if ($roles['manager'] || $roles['administer']) {
     if (array_key_exists(NULL, $request_ids)) {
       $access[NULL] = TRUE;
       $processed[NULL] = TRUE;
@@ -1437,8 +1513,13 @@ function mfcs_page_request_access_operation_history(&$request_ids, &$processed, 
         return TRUE;
       }
     }
-    catch (Exception $ex) {
-      cf_error::on_exception($ex);
+    catch (Error $e) {
+      cf_error::on_exception($e);
+
+      return FALSE;
+    }
+    catch (Exception $e) {
+      cf_error::on_exception($e);
 
       return FALSE;
     }
@@ -1515,16 +1596,15 @@ function mfcs_page_request_access_operation_agreement(&$request_ids, &$processed
     MFCS_REVIEW_STEP_COMPLETED,
   );
 
-  if ($roles['manager'] || $roles['reviewer']) {
+  if ($roles['manager'] || $roles['reviewer'] || $roles['administer']) {
     $agreement_request_step = array(
       MFCS_REVIEW_STEP_COMPLETED,
-      MFCS_REVIEW_STEP_MAKE_DECISIONS,
       MFCS_REVIEW_STEP_REVIEW,
       MFCS_REVIEW_STEP_REQUIREMENTS,
     );
   }
 
-  if ($roles['requester'] || $roles['reviewer'] || $roles['manager']) {
+  if ($roles['requester'] || $roles['reviewer'] || $roles['manager'] || $roles['administer']) {
     if (array_key_exists(NULL, $request_ids)) {
       $access[NULL] = TRUE;
       $processed[NULL] = TRUE;
@@ -1540,8 +1620,8 @@ function mfcs_page_request_access_operation_agreement(&$request_ids, &$processed
       $query->condition('mer.status', $agreement_request_status, 'IN');
       $query->condition('mer.step', $agreement_request_step, 'IN');
 
-      // the submitter should be the only non-manager/non-reviewer that can access the agreement.
-      if (!$roles['manager'] && !$roles['reviewer']) {
+      // the submitter should be the only non-manager/non-reviewer/non-administer that can access the agreement.
+      if (!$roles['manager'] && !$roles['reviewer'] && !$roles['administer']) {
         $query->condition('mer.user_id', $user->uid);
       }
 
@@ -1556,8 +1636,13 @@ function mfcs_page_request_access_operation_agreement(&$request_ids, &$processed
         return TRUE;
       }
     }
-    catch (Exception $ex) {
-      cf_error::on_exception($ex);
+    catch (Error $e) {
+      cf_error::on_exception($e);
+
+      return FALSE;
+    }
+    catch (Exception $e) {
+      cf_error::on_exception($e);
 
       return FALSE;
     }
@@ -1670,8 +1755,12 @@ function mfcs_page_request_access_operation_delete(&$request_ids, &$processed, &
       }
     }
   }
-  catch (Exception $ex) {
-    cf_error::on_exception($ex);
+  catch (Error $e) {
+    cf_error::on_exception($e);
+    return FALSE;
+  }
+  catch (Exception $e) {
+    cf_error::on_exception($e);
     return FALSE;
   }
 
