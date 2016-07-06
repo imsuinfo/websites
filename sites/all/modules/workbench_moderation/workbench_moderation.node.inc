@@ -82,11 +82,6 @@ function workbench_moderation_node_history_view($node) {
   // Page title.
   drupal_set_title(t('History of %title', array('%title' => $node->title)), PASS_THROUGH);
 
-  // Alert if there is no live node
-  if (!isset($node->workbench_moderation['published'])) {
-    drupal_set_message(t('Currently there is no published revision of this node.'), 'warning');
-  }
-
   // Get all of the node revisions, each with its most recent moderation.
   $query = db_select('node', 'n');
   $query->innerJoin('node_revision', 'r', 'n.nid = r.nid');
@@ -247,6 +242,14 @@ function workbench_moderation_node_history_view($node) {
     }
 
     $rows[] = $row;
+  }
+
+  // If this page is being re-loaded as a result of the revision form being
+  // submitted, it is not until this point that we can accurately check
+  // if the moderation state is published or not.
+  // Alert if there is no live node
+  if (!isset($node->workbench_moderation['published'])) {
+    drupal_set_message(t('Currently there is no published revision of this node.'), 'warning');
   }
 
   // Set the table header.

@@ -109,7 +109,6 @@ function workbench_moderation_schema() {
         'unsigned' => TRUE,
         'not null' => TRUE,
         'default' => 0,
-        'disp-width' => '10',
       ),
       'nid' => array(
         'description' => 'Node id. Foreign key to {node}',
@@ -117,7 +116,6 @@ function workbench_moderation_schema() {
         'unsigned' => TRUE,
         'not null' => TRUE,
         'default' => 0,
-        'disp-width' => '10',
       ),
       'from_state' => array(
         'description' => 'The old moderation state of the node',
@@ -137,7 +135,6 @@ function workbench_moderation_schema() {
         'unsigned' => TRUE,
         'not null' => TRUE,
         'default' => 0,
-        'disp-width' => '10',
       ),
       'stamp' => array(
         'description' => 'The timestamp of the change.',
@@ -145,7 +142,6 @@ function workbench_moderation_schema() {
         'unsigned' => TRUE,
         'not null' => TRUE,
         'default' => 0,
-        'disp-width' => '10',
       ),
       'published' => array(
         'description' => 'Indicated the live revision of a node.',
@@ -153,7 +149,6 @@ function workbench_moderation_schema() {
         'unsigned' => TRUE,
         'not null' => TRUE,
         'default' => 0,
-        'disp-width' => '10',
       ),
       'current' => array(
         'description' => 'Indicated the current revision of a node.',
@@ -161,7 +156,6 @@ function workbench_moderation_schema() {
         'unsigned' => TRUE,
         'not null' => TRUE,
         'default' => 0,
-        'disp-width' => '10',
       ),
     ),
     'primary key' => array('hid'),
