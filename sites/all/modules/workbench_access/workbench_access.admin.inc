@@ -594,20 +594,10 @@ function workbench_access_editors($access_type = NULL, $access_type_id = NULL, $
         str_repeat('-', $section['depth'] ) . ' ' . l($section['name'] . $tid_string, 'admin/config/workbench/access/' . "{$type}s/" . $active['access_scheme']['access_type'] . '/' . $access_id),
       );
       if ($type == 'editor') {
-        if (!isset($roles[DRUPAL_AUTHENTICATED_RID])) {
-          $count = db_query("SELECT COUNT(DISTINCT wau.uid) FROM {workbench_access_user} wau
-            INNER JOIN {users_roles} ur ON wau.uid = ur.uid
-            WHERE wau.access_scheme = :access_scheme AND wau.access_id = :access_id
-            AND ur.rid IN (:rids)",
-            array(':access_scheme' => $active['access_scheme']['access_type'], ':access_id' => $access_id, ':rids' => array_keys($roles))
-          )->fetchField();
-        }
-        else {
           $count = db_query("SELECT COUNT(DISTINCT wau.uid) FROM {workbench_access_user} wau
             WHERE wau.access_scheme = :access_scheme AND wau.access_id = :access_id",
             array(':access_scheme' => $active['access_scheme']['access_type'], ':access_id' => $access_id)
           )->fetchField();
-        }
         $row[] = l(format_plural($count, '1 editor', '@count editors'), 'admin/config/workbench/access/editors/' . $active['access_scheme']['access_type'] . '/' . $access_id);
       }
       else {
@@ -657,16 +647,11 @@ function workbench_access_editor_form($form, &$form_state, $access_type, $access
   $roles = workbench_access_get_roles('access workbench access by role');
 
   $query = db_select('users', 'u')
-    ->fields('u', array('uid', 'name'));
+    ->fields('u', array('uid', 'name', 'status'));
   $query->join('workbench_access_user', 'wau', 'u.uid = wau.uid');
   $query->condition('wau.access_scheme', $access_type)
     ->condition('wau.access_id', $access_type_id)
     ->extend('PagerDefault')->limit(25);
-  // If all authorized users are not allowed, JOIN to user_roles.
-  if (!isset($roles[DRUPAL_AUTHENTICATED_RID])) {
-    $query->join('users_roles', 'ur', 'u.uid = ur.uid');
-    $query->condition('ur.rid', array_keys($roles), 'IN');
-  }
   $result = $query->execute();
   $rows = array();
   $form['users']['#tree'] = TRUE;
@@ -676,6 +661,10 @@ function workbench_access_editor_form($form, &$form_state, $access_type, $access
       '#type' => 'checkbox',
       '#title' => t('Remove'),
     );
+
+    if ($account->status == 0) {
+      $form['users'][$account->uid]['name']['#markup'] .= ' <span class="disabled-account">(disabled account)</span>';
+    }
   }
   $form['add_user'] = array(
     '#type' => 'textfield',
