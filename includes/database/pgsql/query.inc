@@ -39,8 +39,8 @@ class InsertQuery_pgsql extends InsertQuery {
    * @return InsertQuery
    *   The called object.
    */
-  public function onConflictDo($conflict, $conflict_target = array(), $conflict_action = array(), $constraint = FALSE, $returning = FALSE) {
-    $this->on_conflict = (int) $conflict;
+  public function onConflictDo(int $conflict, $conflict_target = array(), $conflict_action = array(), $constraint = FALSE, $returning = FALSE) {
+    $this->on_conflict = $conflict;
     $this->on_conflict_target = array();
     $this->on_conflict_action = array();
     $this->on_conflict_contraint = (bool) $constraint;
