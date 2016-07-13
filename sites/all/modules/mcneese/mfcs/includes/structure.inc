@@ -827,8 +827,8 @@ function mfcs_get_request_field_location($form, &$form_state, &$fields, &$reques
     $fields['location'][0]['location-images'][0] = array();
     $fields['location'][0]['location-images'][1] = array();
 
-    $fields['location'][0]['location-images'][0]['#markup'] = '<img id="field-request-location-0-image-0" src="' . $base_path . $module_path . '/images/example-map.png" alt="Campus Map" class="location-image location-image-visible noscript">';
-    $fields['location'][0]['location-images'][1]['#markup'] = '<img id="field-request-location-0-image-1" src="' . $base_path . $module_path . '/images/example-seed.png" alt="Campus Map, SEED Center" class="location-image location-image-invisible noscript">';
+    $fields['location'][0]['location-images'][0]['#markup'] = '<a href="//www.mcneese.edu/node/5530" class="location-image-link" title="View Campus Map"><img id="field-request-location-0-image-0" src="' . $base_path . $module_path . '/images/example-map.png" alt="Campus Map" class="location-image location-image-visible noscript"></a>';
+    $fields['location'][0]['location-images'][1]['#markup'] = '<a href="//www.mcneese.edu/node/5530" class="location-image-link" title="View Campus Map"><img id="field-request-location-0-image-1" src="' . $base_path . $module_path . '/images/example-seed.png" alt="Campus Map, SEED Center" class="location-image location-image-invisible noscript"></a>';
 
     $limits_check['visible'] = TRUE;
   }
@@ -4417,7 +4417,7 @@ function mfcs_get_request_field_presentation_technical_equipment_note($form, &$f
 
     $fields['presentation']['technical_equipment_note'][0]['markup']['#markup'] .= '<div id="mfcs-markup-request-presentation-technical_equipment_note" class="markup-request">';
     $fields['presentation']['technical_equipment_note'][0]['markup']['#markup'] .= 'The technology you requested may or may not be available for this venue. ';
-    #$fields['presentation']['technical_equipment_note'][0]['markup']['#markup'] .= '<em><a href="https://www.mcneese.edu/node/5506">You may also be required to complete an additional request form to secure the item(s).</a></em> ';
+    #$fields['presentation']['technical_equipment_note'][0]['markup']['#markup'] .= '<em><a href="//www.mcneese.edu/node/5506">You may also be required to complete an additional request form to secure the item(s).</a></em> ';
     $fields['presentation']['technical_equipment_note'][0]['markup']['#markup'] .= '<em>You may also be required to complete an additional request form to secure the item(s).</em> ';
     $fields['presentation']['technical_equipment_note'][0]['markup']['#markup'] .= 'Communicate with the venue coordinator to confirm your technical requests. ';
     $fields['presentation']['technical_equipment_note'][0]['markup']['#markup'] .= '</div>';
