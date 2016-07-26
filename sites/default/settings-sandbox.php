@@ -241,6 +241,7 @@ $databases = array (
       'prefix' => '',
       'transactions' => TRUE,
       'sslmode' => 'disable', # disable, allow, prefer, require (prefer disable when only providing public access)
+      'connect_timeout' => 2,
     ),
   ),
   'wwwdev' =>
@@ -255,6 +256,7 @@ $databases = array (
       'driver' => 'pgsql',
       'prefix' => '',
       'transactions' => TRUE,
+      'connect_timeout' => 2,
     ),
   ),
   'wwwdev2' =>
@@ -269,6 +271,7 @@ $databases = array (
       'driver' => 'pgsql',
       'prefix' => '',
       'transactions' => TRUE,
+      'connect_timeout' => 2,
     ),
   ),
   'sandbox' =>
@@ -283,6 +286,7 @@ $databases = array (
       'driver' => 'pgsql',
       'prefix' => '',
       'transactions' => TRUE,
+      'connect_timeout' => 2,
     ),
   ),
   'www' =>
@@ -296,6 +300,7 @@ $databases = array (
       'port' => '5095',
       'driver' => 'pgsql',
       'prefix' => '',
+      'connect_timeout' => 2,
     ),
   ),
 );
