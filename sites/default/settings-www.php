@@ -300,6 +300,7 @@ $databases = array (
       'port' => '5095',
       'driver' => 'pgsql',
       'prefix' => '',
+      'transactions' => TRUE,
       'connect_timeout' => 2,
     ),
   ),
