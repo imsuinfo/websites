@@ -249,8 +249,8 @@ $databases = array (
     'default' =>
     array (
       'database' => 'wwwdev',
-      'username' => 'www_user',
-      'password' => $dbp['www_user'],
+      'username' => 'wwwdev_user',
+      'password' => $dbp['wwwdev_user'],
       'host' => '192.251.101.223',
       'port' => '5095',
       'driver' => 'pgsql',
@@ -265,7 +265,7 @@ $databases = array (
     array (
       'database' => 'wwwdev2',
       'username' => 'www_user',
-      'password' => $dbp['www_user'],
+      'password' => $dbp['wwwdev2_user'],
       'host' => '192.251.101.223',
       'port' => '5095',
       'driver' => 'pgsql',
@@ -279,8 +279,8 @@ $databases = array (
     'default' =>
     array (
       'database' => 'sandbox',
-      'username' => 'www_user',
-      'password' => $dbp['www_user'],
+      'username' => 'sandbox_user',
+      'password' => $dbp['sandbox_user'],
       'host' => '192.251.101.223',
       'port' => '5095',
       'driver' => 'pgsql',
