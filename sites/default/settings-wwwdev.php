@@ -877,6 +877,28 @@ $conf['error_document_functions'] = array(
   'mcneese_www_process_side_panel',
 );
 
+$conf['error_document_file-content_unavailable-campus_maps'] = '/var/www/error_documents/content_unavailable/www/campus_maps.html';
+$conf['error_document_file-content_unavailable-final_exams'] = '/var/www/error_documents/content_unavailable/www/final_exams.html';
+$conf['error_document_file-content_unavailable-fee_payments'] = '/var/www/error_documents/content_unavailable/www/fee_payments.html';
+$conf['error_document_file-content_unavailable-emergency_information'] = '/var/www/error_documents/content_unavailable/www/emergency_information.html';
+$conf['error_document_file-content_unavailable-emergency_information-hurricane'] = '/var/www/error_documents/content_unavailable/www/emergency_information-hurricane.html';
+$conf['error_document_file-content_unavailable-ada_information'] = '/var/www/error_documents/content_unavailable/www/ada_information.html';
+
+$conf['error_document_file-content_unavailable-final_exams-page_title'] = 'Fall 2016 Final Exam Schedule';
+$conf['error_document_file-content_unavailable-final_exams-page_class_body'] = 'path-node_6524 alias-schedule_fall2016_final_exam_schedule node-id-6524 node-path-schedule_fall2016_final_exam_schedule alias-part-1-fall2016 alias-part-2-final_exam_schedule node-theme-page-650';
+$conf['error_document_file-content_unavailable-final_exams-page_class_section'] = 'node-id-6524 node-theme-page-650 ';
+
+$conf['error_document_file-content_unavailable-fee_payments-title'] = 'Fall 2016 Registration Fees';
+$conf['error_document_file-content_unavailable-fee_payments-page_class_body'] = 'path-node_6529 alias-schedule_fall2016_fee_payment node-id-6529 node-type-page node-path-schedule_fall2016_fee_payment alias-part-0-schedule alias-part-1-fall2016 alias-part-2-fee_payment node-theme-page-650 ';
+$conf['error_document_file-content_unavailable-fee_payments-page_class_section'] = 'node-id-6529 node-theme-page-650 ';
+
+$conf['error_document_file-content_unavailable-GetAGamePlan.jpg'] = '/var/www/error_documents/content_unavailable/www/files/GetAGamePlan.jpg';
+$conf['error_document_file-content_unavailable-page_white_acrobat.png'] = '/var/www/error_documents/content_unavailable/www/files/page_white_acrobat.png';
+$conf['error_document_file-content_unavailable-EPT_Phases.pdf'] = '/var/www/error_documents/content_unavailable/www/files/EPT_Phases.pdf';
+$conf['error_document_file-content_unavailable-Hurricane_Checklist.pdf'] = '/var/www/error_documents/content_unavailable/www/files/Hurricane_Checklist.pdf';
+$conf['error_document_file-content_unavailable-Student_Disaster_Preparedness_Tips.pdf'] = '/var/www/error_documents/content_unavailable/www/files/Student_Disaster_Preparedness_Tips.pdf';
+$conf['error_document_file-content_unavailable-Hurricane_Emergency_Operations_Plan.pdf'] = '/var/www/error_documents/content_unavailable/www/files/Hurricane_Emergency_Operations_Plan.pdf';
+
 
 // enable all errors
 error_reporting(E_ALL | E_STRICT);
