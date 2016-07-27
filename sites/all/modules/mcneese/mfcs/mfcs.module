@@ -1150,18 +1150,24 @@ function mfcs_holiday_request_access($operation, $year = NULL, $holiday_id = NUL
     return FALSE;
   }
 
-  // must be a requester to gain any access.
-  $is_requester = user_access('mfcs request', $user);
-  if (!$is_requester) {
+  // user account must be able to list content before doing anything here..
+  if (!mfcs_page_request_access('list', NULL, $user)) {
     return FALSE;
   }
 
+  $is_requester = user_access('mfcs request', $user);
+  $is_reviewer = user_access('mfcs review', $user);
   $is_manager = user_access('mfcs manage', $user);
   $is_administer = user_access('mfcs administer', $user);
 
   $is_power = FALSE;
   if ($is_manager || $is_administer) {
     $is_power = TRUE;
+  }
+
+  // must be a requester, reviewer, or power to gain any access.
+  if (!$is_power && !($is_requester || $is_reviewer)) {
+    return FALSE;
   }
 
   $enabled = FALSE;
@@ -1309,18 +1315,28 @@ function mfcs_unavailability_request_access($operation, $year = NULL, $room_id =
     return FALSE;
   }
 
-  // must be a requester to gain any access.
-  $is_requester = user_access('mfcs request', $user);
-  if (!$is_requester) {
+  // user account must be able to list content before doing anything here..
+  if (!mfcs_page_request_access('list', NULL, $user)) {
     return FALSE;
   }
 
+  $is_requester = user_access('mfcs request', $user);
+  $is_reviewer = user_access('mfcs review', $user);
   $is_manager = user_access('mfcs manage', $user);
   $is_administer = user_access('mfcs administer', $user);
-  $is_reviewer = user_access('mfcs review', $user);
+
+  $is_power = FALSE;
+  if ($is_manager || $is_administer) {
+    $is_power = TRUE;
+  }
+
+  // must be a requester, reviewer, or power to gain any access.
+  if (!$is_power && !($is_requester || $is_reviewer)) {
+    return FALSE;
+  }
 
   $is_coordinator_or_proxy_or_power = FALSE;
-  if ($is_manager || $is_administer) {
+  if ($is_power) {
     $is_coordinator_or_proxy_or_power = TRUE;
   }
   elseif ($is_reviewer) {
@@ -1341,6 +1357,7 @@ function mfcs_unavailability_request_access($operation, $year = NULL, $room_id =
       }
     }
   }
+  unset($is_power);
 
   $enabled = FALSE;
   $check_year = FALSE;
@@ -2133,70 +2150,7 @@ function mfcs_page_request_reviewer_access($user, $request_id, $review_restricti
           $and = db_and();
           $and->condition('mer.status', $show_status_reviewer_review, 'IN');
           $and->condition('mer.step', $show_step_reviewer, 'IN');
-
-          // check each and every single reviewer classification separately.
-          // while this is more expensive, this allows for reviewing when some (but not all) of the classifications have not yet reviewed.
-          // example:
-          // - user 1, with roles A, B and C, has reviewed request Z.
-          // - user 2, with roles B, C, and D, wants to review request Z.
-          // - user 2 should still be allowed to review as D, but not as B or C.
-          $reviewed_or = db_or();
-          foreach ($reviewer_settings['classifications'] as $reviewer_classification) {
-            $already_reviewed_query = db_select('mfcs_reviewers', 'mr_r');
-            $already_reviewed_query->innerJoin('mfcs_reviewed', 'mrd_r', 'mr_r.reviewer_classification = mrd_r.classification');
-            $already_reviewed_query->addField('mrd_r', 'request_id', 'request_id');
-            $already_reviewed_query->where('mr_r.request_classification = mer.classification AND mr_r.review_step = mer.step');
-            $already_reviewed_query->condition('mr_r.user_id', $user->uid);
-            $already_reviewed_query->condition('mr_r.disabled', 0);
-            $already_reviewed_query->condition('mrd_r.classification', $reviewer_classification);
-            $reviewed_or->condition('mer.id', $already_reviewed_query, 'NOT IN');
-            unset($already_reviewed_query);
-          }
-          $and->condition($reviewed_or);
-          unset($reviewed_or);
-
-          $sub_or = db_or();
-          foreach ($reviewer_settings['for_step'] as $for_step => $step_classifications) {
-            $sub_and = db_and();
-            $sub_and->condition('mer.step', $for_step);
-            $sub_and->condition('mer.classification', $step_classifications, 'IN');
-
-            $sub_or->condition($sub_and);
-            unset($sub_and);
-          }
-
-          $and->condition($sub_or);
           $or->condition($and);
-
-          // special case reviewer access: insurance provided
-          if (array_key_exists(MFCS_REVIEWER_CLASSIFICATION_PURCHASING, $reviewer_settings['request_classifications'])) {
-            $has_insurance_query = db_select('mfcs_current', 'mc');
-            $has_insurance_query->leftJoin('mfcs_field_insurance_contractor', 'mfic', 'mc.request_id = mfic.request_id AND mc.insurance_contractor = mfic.revision AND mfic.delta = 0');
-            $has_insurance_query->leftJoin('mfcs_field_insurance_unaffiliated', 'mfiu', 'mc.request_id = mfiu.request_id AND mc.insurance_unaffiliated = mfiu.revision AND mfiu.delta = 0');
-            $has_insurance_query->leftJoin('mfcs_field_insurance_provided', 'mfip', 'mc.request_id = mfip.request_id AND mc.insurance_provided = mfip.revision AND mfip.delta = 0');
-
-            // $query->countQuery() does not appear to be functioning as expected, so manually count.
-            $has_insurance_query->addExpression('count(mc.request_id)');
-
-            $has_insurance_query->where('mer.id = mc.request_id');
-
-            $nand = db_and();
-            $nand->not();
-            $nand->condition('mfip.value', 1);
-            $has_insurance_query->condition($nand);
-
-            $another_or = db_or();
-            $another_or->condition('mfic.value', 1);
-            $another_or->condition('mfiu.value', 1);
-            $has_insurance_query->condition($another_or);
-
-            $and = db_and();
-            $and->condition('mer.status', $show_status_insurance, 'IN');
-            $and->condition('mer.step', $show_step_insurance, 'IN');
-            $and->condition(0, $has_insurance_query, 'NOT IN');
-
-            $or->condition($and);
-          }
         }
       }
     }
@@ -2318,10 +2272,25 @@ function mfcs_dashboard_page_access() {
  *   TRUE on access granted, FALSE otherwise.
  */
 function mfcs_management_page_access() {
+  $access = &drupal_static(__FUNCTION__, NULL);
+
+  if (is_bool($access)) {
+    return $access;
+  }
+
+  $user = cf_current_user();
+  // user account must be able to list content before doing anything here..
+  if (!mfcs_page_request_access('list', NULL, $user)) {
+    $access = FALSE;
+    return FALSE;
+  }
+
   if (user_access('mfcs request') || user_access('mfcs review') || user_access('mfcs manage') || user_access('mfcs administer')) {
+    $access = TRUE;
     return TRUE;
   }
 
+  $access = FALSE;
   return FALSE;
 }
 
@@ -7248,7 +7217,13 @@ function mfcs_check_room_availability($room, $dates, $time_start, $time_stop, $r
         foreach ($dates as $key => $value) {
           // all day requests match, they have NULL for start and stop time values.
           if (is_null($time_start[$key]) && is_null($time_stop[$key])) {
-            $matched_requests['conflicts'][] = $result;
+            $and = db_and();
+            $and->condition('mfdd.value', $value);
+            $and->condition('mfdd.cancelled', 1, '<>'); // using <> for backwards compatibility where mfdd.cancelled may be NULL.
+            $and->isNotNull('mfdts.value');
+            $and->isNotNull('mfdtsp.value');
+            $or->condition($and);
+            continue;
           }
 
           $and = db_and();
@@ -7403,13 +7378,13 @@ function mfcs_build_room_unavailable_message($availability_issues, $url_argument
     foreach ($availability_issues['conflicts'] as $request_using_room) {
       if (isset($request_using_room->date)) {
         if (isset($request_using_room->time_start)) {
-          $problematic_date_key =  '' . $request_using_room->reserved_day . '-' . $request_using_room->reserved_time_start . '-' . $request_using_room->reserved_time_stop;
+          $problematic_date_key =  '' . $request_using_room->date . '-' . $request_using_room->time_start . '-' . $request_using_room->time_stop;
           $problematic_date = '<strong>' . date('l, F j, Y', $request_using_room->date) . '</strong> from <strong>' . date('h:ia', $request_using_room->time_start) . '</strong> to <strong>' . date('h:ia', $request_using_room->time_stop) . '</strong> because of a ';
           $problematic_date .= '<strong><a href="' . $base_path . 'requests/view-0/' . $request_using_room->request_id . $url_arguments . '" title="View conflicting request.">scheduling conflict</a></strong>.';
           $problematic_dates[$problematic_date_key] = $problematic_date;
         }
         else {
-          $problematic_date_key =  '' . $request_using_room->reserved_day;
+          $problematic_date_key =  '' . $request_using_room->date;
           $problematic_date = '<strong>' . date('l, F j, Y', $request_using_room->date) . '</strong> (all day) because of a ';
           $problematic_date .= '<strong><a href="' . $base_path . 'requests/view-0/' . $request_using_room->request_id . $url_arguments . '" title="View conflicting request.">scheduling conflict</a></strong>.';
           $problematic_dates[$problematic_date_key] = $problematic_date;
