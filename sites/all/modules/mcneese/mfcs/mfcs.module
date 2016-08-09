@@ -15,6 +15,7 @@
 /**
  * Defines request status codes.
  */
+define('MFCS_REQUEST_STATUS_NONE', 0);
 define('MFCS_REQUEST_STATUS_DELETED', 0);
 define('MFCS_REQUEST_STATUS_LOCKED', 1);
 define('MFCS_REQUEST_STATUS_UNLOCKED', 2);
@@ -44,6 +45,7 @@ define('MFCS_REQUEST_STATUS_CLOSED_ACCEPTED_CANCELLED', 8);
 /**
  * Defines Taxonomy TIDs for review steps.
  */
+ define('MFCS_REVIEW_STEP_NONE', 0);
  define('MFCS_REVIEW_STEP_CHANGES_REQUIRED', 140);
  define('MFCS_REVIEW_STEP_COMPLETED', 134);
  define('MFCS_REVIEW_STEP_MAKE_DECISIONS', 117);
@@ -68,7 +70,7 @@ define('MFCS_REQUEST_STATUS_CLOSED_ACCEPTED_CANCELLED', 8);
  define('MFCS_REVIEW_DECISION_ISSUES', 150);
  define('MFCS_REVIEW_DECISION_ISSUES_NONE', 151);
 
- /**
+/**
  * Defines restrictions review decisions.
  */
  define('MFCS_RESTRICTION_DECISION_NONE', 0);
@@ -90,31 +92,31 @@ define('MFCS_REQUEST_STATUS_CLOSED_ACCEPTED_CANCELLED', 8);
 /**
  * Defines Taxonomy TIDs for review classifications.
  */
+ define('MFCS_REVIEWER_CLASSIFICATION_NONE', 0);
+ define('MFCS_REVIEWER_CLASSIFICATION_SYSTEM_ADMINISTRATOR', 1);
+ define('MFCS_REVIEWER_CLASSIFICATION_MANAGER', 2);
+ define('MFCS_REVIEWER_CLASSIFICATION_REQUESTER', 3);
+ define('MFCS_REVIEWER_CLASSIFICATION_SYSTEM', 4);
+ define('MFCS_REVIEWER_CLASSIFICATION_VENUE_COORDINATOR', 112);
+ define('MFCS_REVIEWER_CLASSIFICATION_VENUE_COORDINATOR_PROXY', 144);
  define('MFCS_REVIEWER_CLASSIFICATION_ADMINISTRATIVE_ACCOUNTING', 105);
  define('MFCS_REVIEWER_CLASSIFICATION_CUSTODIAL', 147);
- define('MFCS_REVIEWER_CLASSIFICATION_EVENT_COORDINATOR', 99);
+ define('MFCS_REVIEWER_CLASSIFICATION_UNIVERSITY_EVENTS', 99);
  define('MFCS_REVIEWER_CLASSIFICATION_FACILITIES_CUSTODIAL', 104);
  define('MFCS_REVIEWER_CLASSIFICATION_FACILITIES', 146);
- define('MFCS_REVIEWER_CLASSIFICATION_FACULTY_ADVISOR', 100);
+ define('MFCS_REVIEWER_CLASSIFICATION_FACULTY_ADVISER', 100);
  define('MFCS_REVIEWER_CLASSIFICATION_FOOD_SERVICES', 108);
  define('MFCS_REVIEWER_CLASSIFICATION_HOUSING', 107);
  define('MFCS_REVIEWER_CLASSIFICATION_MAINTENANCE', 103);
  define('MFCS_REVIEWER_CLASSIFICATION_PURCHASING', 106);
  define('MFCS_REVIEWER_CLASSIFICATION_SECURITY', 102);
- define('MFCS_REVIEWER_CLASSIFICATION_STUDENT_SERVICE_ADMINISTRATION', 145);
+ define('MFCS_REVIEWER_CLASSIFICATION_STUDENT_ACTIVITIES_ADMINISTRATION', 145);
  define('MFCS_REVIEWER_CLASSIFICATION_UNIVERSITY_SERVICES', 101);
- define('MFCS_REVIEWER_CLASSIFICATION_VENUE_COORDINATOR', 112);
- define('MFCS_REVIEWER_CLASSIFICATION_VENUE_COORDINATOR_PROXY', 144);
-
- // these are not taxonomy-created classifications, they are instead unique ids.
- define('MFCS_REVIEWER_CLASSIFICATION_SYSTEM_ADMINISTRATOR', 1);
- define('MFCS_REVIEWER_CLASSIFICATION_MANAGER', 2);
- define('MFCS_REVIEWER_CLASSIFICATION_REQUESTER', 3);
- define('MFCS_REVIEWER_CLASSIFICATION_SYSTEM', 4);
 
 /**
  * Defines Taxonomy TIDs for request classifications.
  */
+ define('MFCS_REQUEST_CLASSIFICATION_NONE', 0);
  define('MFCS_REQUEST_CLASSIFICATION_STUDENT', 1);
  define('MFCS_REQUEST_CLASSIFICATION_CAMPS', 2);
  define('MFCS_REQUEST_CLASSIFICATION_FACULTY', 3);
@@ -131,9 +133,58 @@ define('MFCS_REQUEST_STATUS_CLOSED_ACCEPTED_CANCELLED', 8);
 /**
  * Defines Taxonomy TIDs for request dates categories.
  */
+ define('MFCS_REQUEST_DATES_CATEGORY_NONE', 0);
  define('MFCS_REQUEST_DATES_CATEGORY_ACTUAL', 137);
  define('MFCS_REQUEST_DATES_CATEGORY_SETUP', 138);
  define('MFCS_REQUEST_DATES_CATEGORY_CLEANUP', 139);
+
+/**
+ * Defines Taxonomy TIDs for request revenue.
+ */
+ define('MFCS_REQUEST_REVENUE_NONE', 0);
+ define('MFCS_REQUEST_REVENUE_TICKET_SALES', 91);
+ define('MFCS_REQUEST_REVENUE_MERCHANDISE_SALES', 92);
+ define('MFCS_REQUEST_REVENUE_CONCESSION_SALES', 93);
+
+/**
+ * Defines Taxonomy TIDs for request publicity.
+ */
+ define('MFCS_REQUEST_PUBLICITY_NONE', 0);
+ define('MFCS_REQUEST_PUBLICITY_CAMPUS_DIGEST', 77);
+ define('MFCS_REQUEST_PUBLICITY_STUDENT_DIGEST', 78);
+ define('MFCS_REQUEST_PUBLICITY_WEBSITE', 79);
+ define('MFCS_REQUEST_PUBLICITY_SOCIAL_MEDIA', 80);
+ define('MFCS_REQUEST_PUBLICITY_AXIS_TVS', 81);
+ define('MFCS_REQUEST_PUBLICITY_PRESS_RELEASE', 82);
+
+/**
+ * Defines Taxonomy TIDs for request designing material.
+ */
+ define('MFCS_REQUEST_DESIGNING_MATERIALS_NONE', 0);
+ define('MFCS_REQUEST_DESIGNING_MATERIALS_PUBLIC_RELATIONS', 95);
+ define('MFCS_REQUEST_DESIGNING_MATERIALS_MARKETING', 96);
+ define('MFCS_REQUEST_DESIGNING_MATERIALS_OTHER', 97);
+
+/**
+ * Defines Taxonomy TIDs for request technical equipment.
+ */
+ define('MFCS_REQUEST_TECHNICAL_EQUIPMENT_NONE', 0);
+ define('MFCS_REQUEST_TECHNICAL_EQUIPMENT_SCREEN', 73);
+ define('MFCS_REQUEST_TECHNICAL_EQUIPMENT_COMPUTER', 74);
+ define('MFCS_REQUEST_TECHNICAL_EQUIPMENT_SOUND', 75);
+ define('MFCS_REQUEST_TECHNICAL_EQUIPMENT_MICROPHONE', 76);
+
+/**
+ * Defines Taxonomy TIDs for request step.
+ */
+ define('MFCS_REQUEST_STEP_NONE', 0);
+ define('MFCS_REQUEST_STEP_VENUE_AVAILABLE', 116);
+ define('MFCS_REQUEST_STEP_RESOLVE_CONFLICTS', 117);
+ define('MFCS_REQUEST_STEP_TENTATIVE_HOLD', 118);
+ define('MFCS_REQUEST_STEP_REVIEW', 132);
+ define('MFCS_REQUEST_STEP_REQUIREMENTS', 133);
+ define('MFCS_REQUEST_STEP_COMPLETED', 134);
+ define('MFCS_REQUEST_STEP_CHANGES_REQUIRED', 140);
 
 /**
  * Defines operator codes for building search queries.
@@ -235,6 +286,7 @@ define('MFCS_REQUEST_STATUS_CLOSED_ACCEPTED_CANCELLED', 8);
 /**
  * Defines Taxonomy TIDs for review steps.
  */
+ define('MFCS_REQUEST_TYPE_NONE', 0);
  define('MFCS_REQUEST_TYPE_ATHLETIC', 66);
  define('MFCS_REQUEST_TYPE_BANQUET', 61);
  define('MFCS_REQUEST_TYPE_CEREMONY', 64);
@@ -251,6 +303,7 @@ define('MFCS_REQUEST_STATUS_CLOSED_ACCEPTED_CANCELLED', 8);
 /**
  * Defines Taxonomy TIDs for request classifications.
  */
+ define('MFCS_REQUEST_AUDIENCE_NONE', 0);
  define('MFCS_REQUEST_AUDIENCE_FACULTY_AND_STAFF', 71);
  define('MFCS_REQUEST_AUDIENCE_GUESTS_ONLY', 68);
  define('MFCS_REQUEST_AUDIENCE_STUDENTS_AND_EMPLOYEES', 70);
@@ -476,7 +529,6 @@ function mfcs_user_update(&$edit, $account, $category) {
 
   return mfcs_hook_user_update($edit, $account, $category);
 }
-
 
 /**
  * Access callback for facilities use dashboard page.
@@ -2060,6 +2112,12 @@ function mfcs_page_request_reviewer_access($user, $request_id, $review_restricti
   // if the reviewer is associated with the requests and the request is in one of these status, then the reviewer can review.
   $show_status_reviewer_review = array(
     MFCS_REQUEST_STATUS_LOCKED,
+    MFCS_REQUEST_STATUS_CLOSED_ACCEPTED,
+    MFCS_REQUEST_STATUS_CLOSED_DENIED,
+    MFCS_REQUEST_STATUS_CLOSED_UNAVAILABLE,
+    MFCS_REQUEST_STATUS_CLOSED_DUE_TO_LOCK,
+    MFCS_REQUEST_STATUS_CANCELLED,
+    MFCS_REQUEST_STATUS_CLOSED_ACCEPTED_CANCELLED,
   );
 
   // allow comments when the request is assigned any of these status codes.
@@ -2077,6 +2135,7 @@ function mfcs_page_request_reviewer_access($user, $request_id, $review_restricti
   $show_step_reviewer = array(
     MFCS_REVIEW_STEP_REVIEW,
     MFCS_REVIEW_STEP_REQUIREMENTS,
+    MFCS_REVIEW_STEP_COMPLETED,
   );
 
   $show_step_manager = array(
@@ -2583,6 +2642,7 @@ function mfcs_load_locations($location = NULL, $disabled = FALSE) {
     }
 
     $query->addField('mbl', 'id', 'location_id');
+    $query->addField('mbl', 'machine_name', 'machine_name');
     $query->addField('mbl', 'human_name', 'location_name');
 
     if ($disabled) {
@@ -3222,70 +3282,6 @@ function mfcs_search_users($search, $wildcard = TRUE, $sensitive = FALSE, $delet
   }
 
   return FALSE;
-}
-
-/**
- * Returns an array containg mapping information for oracle.
- *
- * Use this to map drupal request role taxonomy terms with the oracle roles.
- *
- * @return array|bool
- *   An array containing the mapping information.
- *   FALSE is returned on error.
- */
-function mfcs_load_request_user_role_mapping() {
-  $cache_id = __function__;
-  $terms = &drupal_static($cache_id, array());
-  if (!empty($terms)) {
-    return $terms;
-  }
-
-  try {
-    $query = db_select('taxonomy_term_data', 'ttd');
-    $query->innerJoin('taxonomy_vocabulary', 'tv', 'tv.vid = ttd.vid');
-    $query->fields('ttd', array('tid'));
-    $query->condition('tv.machine_name', 'user_roles');
-
-    $executed = $query->execute();
-    foreach ($executed as $row) {
-      $term = taxonomy_term_load($row->tid);
-      $name = $term->field_role_oracle_name['und'][0]['value'];
-
-      $terms[$name] = array('tid' => FALSE, 'role' => FALSE, 'rid' => FALSE, 'name' => FALSE);
-
-
-      if (!empty($term->field_role_oracle_name['und'][0]['value'])) {
-        $terms[$name]['tid'] = $row->tid;
-      }
-
-      if (!empty($term->field_role_system_name['und'][0]['value'])) {
-        $role = user_role_load_by_name($term->field_role_system_name['und'][0]['value']);
-
-        if (is_object($role)) {
-          $terms[$name]['role'] = $role->name;
-          $terms[$name]['rid'] = $role->rid;
-        }
-
-        unset($role);
-      }
-
-      if (!empty($term->name)) {
-        $terms[$name]['name'] = $term->name;
-      }
-    }
-  }
-  catch (Error $e) {
-    cf_error::on_exception($e);
-
-    return FALSE;
-  }
-  catch (Exception $e) {
-    cf_error::on_exception($e);
-
-    return FALSE;
-  }
-
-  return $terms;
 }
 
 /**
@@ -4074,6 +4070,7 @@ function mfcs_process_user_banner_roles($user, &$problems, $settings = array()) 
   $bannerless_exception_role = user_role_load_by_name('bannerless exception');
   $reviewer_exception_role = user_role_load_by_name('reviewer exception');
 
+  $role_mappings = mfcs_get_drupal_to_banner_role_mappings('banner_name');
 
   $user_roles = array();
   if (isset($user->roles) && is_array($user->roles)) {
@@ -4124,21 +4121,15 @@ function mfcs_process_user_banner_roles($user, &$problems, $settings = array()) 
 
   $is_manager = array_key_exists($manager_role->rid, $processed_roles);
 
-
   // remove roles associated with banner from the user roles for non-managers.
-  $mappings = mfcs_load_request_user_role_mapping();
-  $manager_banner_roles = array();
-  foreach ($mappings as $mapping) {
-    if (array_key_exists($mapping['rid'], $processed_roles)) {
-      if ($is_manager) {
-        $manager_banner_roles[$mapping['rid']] = $mapping['tid'];
-      }
-      else {
-        unset($processed_roles[$mapping['rid']]);
+  if (!$is_manager) {
+    foreach ($role_mappings as $mapping) {
+      if (array_key_exists($mapping->role_id, $processed_roles)) {
+        unset($processed_roles[$mapping->role_id]);
       }
     }
+    unset($mapping);
   }
-  unset($mapping);
 
 
   // validate banner id, if invalid, then strip all user roles (admins are cleared before this point).
@@ -4186,30 +4177,29 @@ function mfcs_process_user_banner_roles($user, &$problems, $settings = array()) 
     $processed_roles[$requester_role->rid] = $requester_role->rid;
   }
 
+  // managers are auto-granted roles even if the roles are not supplied according to their banner access.
+  if ($is_manager) {
+    foreach ($role_mappings as $mapping) {
+      $processed_roles[$mapping->role_id] = $mapping->role_id;
+    }
+    unset($mapping);
+  }
+
   // if the (non-admin) user is a venue or room coordinator, then add/remove reviewer role as necessary.
-  $banner_roles = array();
   if (empty($user_banner['role'])) {
-    // if the user has no banner roles, is not a manager, and is not a reviewer exception, then do not allow the user to have reviewer role (bannerless exception and administrators cannot reach this point).
+    // if the user has no banner roles, is not a manager, and is not a reviewer exception, then do not allow the user to have reviewer or requester roles (bannerless exception and administrators cannot reach this point).
     if (!$is_manager && !array_key_exists($reviewer_exception_role->rid, $processed_roles)) {
       unset($processed_roles[$reviewer_role->rid]);
+      unset($processed_roles[$requester_role->rid]);
     }
   }
   else {
     foreach ($user_banner['role'] as $role) {
-      if (isset($mappings[$role]['tid'])) {
-        $banner_roles[] = array('tid' => $mappings[$role]['tid']);
-        $processed_roles[$mappings[$role]['rid']] = $mappings[$role]['rid'];
+      if (isset($role_mappings[$role])) {
+        $processed_roles[$role_mappings[$role]->role_id] = $role_mappings[$role]->role_id;
       }
     }
     unset($role);
-  }
-
-  // managers are auto-granted specified roles even if the roles are not supplied by banner.
-  if ($is_manager) {
-    foreach ($manager_banner_roles as $role_tid) {
-      $banner_roles[] = array('tid' => $role_tid);
-    }
-    unset($role_tid);
   }
 
 
@@ -4278,8 +4268,6 @@ function mfcs_process_user_banner_roles($user, &$problems, $settings = array()) 
     }
   }
 
-  // Note: the system used to refer to requests as events, but because this is a drupal field, 'event' cannot be easily changed to 'request' in this explicit case.
-  $results['field_user_event_roles'] = array('und' => $banner_roles);
   $results['roles'] = $processed_roles;
 
   if (isset($user->uid)) {
@@ -4494,7 +4482,12 @@ function mfcs_sync_banner_to_local($transaction = NULL, $user = NULL, $message_o
   }
 
   mfcs_include(MFCS_INCLUDE_LIST_OPTIONS);
-  $request_locations = mfcs_get_request_location_list_options(NULL, TRUE);
+  $locations = mfcs_load_locations(NULL, TRUE);
+
+  $locations_machine_to_human_names = array();
+  foreach ($locations as $location) {
+    $locations_machine_to_human_names[$location->machine_name] = $location->location_name;
+  }
 
   $instance = mfcs_instance();
 
@@ -4584,8 +4577,8 @@ function mfcs_sync_banner_to_local($transaction = NULL, $user = NULL, $message_o
             $location_item['human_name'] = $v;
             $location_item['disabled'] = 0;
 
-            if (array_key_exists($v, $request_locations)) {
-              $location_item['human_name'] = substr($request_locations[$v], 0, 63);
+            if (array_key_exists($v, $locations_machine_to_human_names)) {
+              $location_item['human_name'] = substr($locations_machine_to_human_names[$v], 0, 63);
             }
           }
           elseif ($key == 'room_coordinator_email') {
@@ -5279,12 +5272,19 @@ function mfcs_autocancel_old_requests_cron() {
 
     $query->innerJoin('mfcs_current', 'mc', 'mer.id = mc.request_id');
     $query->innerJoin('mfcs_field_dates_date', 'mfdd', 'mc.request_id = mfdd.request_id AND mc.dates_date = mfdd.revision');
+    $query->leftJoin('mfcs_request_locks', 'mrl', 'mer.id = mrl.request_id');
 
     $query->addField('mer', 'id', 'id');
 
     $query->condition('mer.status', $status, 'IN');
     $query->condition('mfdd.value', $date, '<');
     $query->condition('mfdd.cancelled', 1, '<>'); // using <> for backwards compatibility where mfdd.cancelled may be NULL.
+
+    // when auto-cancel lock is set to TRUE, then auto-cancel is locked/prohibited from cancelling the request.
+    $or = db_or();
+    $or->isNull('mrl.auto_cancel');
+    $or->condition('mrl.auto_cancel', 't', '<>');
+    $query->condition($or);
 
     $query->distinct();
 
@@ -5762,8 +5762,11 @@ function mfcs_load_request_by_id($request_id, $reset_action = NULL, $revision_id
 
           $query = db_select($field_table_name, 'mftf');
           $query->condition('mftf.request_id', $request_id);
-          $query->condition('mftf.revision', $current->{$current_name});
           $query->fields('mftf');
+
+          if (isset($current->{$current_name})) {
+            $query->condition('mftf.revision', $current->{$current_name});
+          }
 
           $results = $query->execute()->fetchAll();
 
@@ -7666,6 +7669,7 @@ function mfcs_request_load_listing($conditions = array(), $options = array()) {
   $show_step_reviewer = array(
     MFCS_REVIEW_STEP_REVIEW,
     MFCS_REVIEW_STEP_REQUIREMENTS,
+    MFCS_REVIEW_STEP_COMPLETED,
   );
 
   $show_step_manager = array(
@@ -8773,12 +8777,17 @@ function mfcs_request_process_query_search_array(&$query, &$count_query, &$opera
  *   (optional) Limit the results to only the provided steps.
  * @parem array $decisions
  *   (optional) An array of decisions to limit the results to.
+ * @param bool $ascend
+ *   (optional) When TRUE, the list is loaded in ascend order.
+ *   When FALSE, the list is loaded in descend order.
  *
  * @return array|bool
- *   An array of reviews by order of step, classification, and then date
- *   (with the date descending). FALSE is returned on error.
+ *   An array of reviews, keyed with the following:
+ *   'group': an array of reviews grouped by step and then classification.
+ *   'order': an array of reviews in the order in which they were submitted (favoring the revision and then delta columns).
+ *   FALSE is returned on error.
  */
-function mfcs_get_latest_reviews($request_id, $steps = array(), $decisions = array()) {
+function mfcs_get_latest_reviews($request_id, $steps = array(), $decisions = array(), $ascend = TRUE) {
   if (!cf_is_integer($request_id)) {
     cf_error::invalid_integer('request_id');
     return FALSE;
@@ -8794,7 +8803,15 @@ function mfcs_get_latest_reviews($request_id, $steps = array(), $decisions = arr
     return FALSE;
   }
 
-  $reviews = array();
+  if (!is_bool($ascend)) {
+    cf_error::invalid_bool('ascend');
+    return FALSE;
+  }
+
+  $reviews = array(
+    'group' => array(),
+    'order' => array(),
+  );
   try {
     $query = db_select('mfcs_field_review_review', 'mfrr');
 
@@ -8818,31 +8835,26 @@ function mfcs_get_latest_reviews($request_id, $steps = array(), $decisions = arr
       $query->condition('mfrr.decision', $decisions, 'IN');
     }
 
-    // some classifications are only allowed in certain steps.
-    $and = db_and();
-    $and->condition('mfrr.step', array(MFCS_REVIEW_STEP_REVIEW, MFCS_REVIEW_STEP_REQUIREMENTS), 'IN');
-    $and->condition('mrc.classification', array(MFCS_REVIEWER_CLASSIFICATION_VENUE_COORDINATOR, MFCS_REVIEWER_CLASSIFICATION_VENUE_COORDINATOR_PROXY), 'IN');
-    $and->not();
-    $query->condition($and);
-
-    $query->orderBy('mfrr.step');
-    $query->orderBy('mrc.classification');
-    $query->orderBy('mfrr.date', 'DESC');
+    if ($ascend) {
+      $query->orderBy('mfrr.revision', 'ASC');
+      $query->orderBy('mfrr.delta', 'ASC');
+      $query->orderBy('mfrr.date', 'ASC');
+    }
+    else {
+      $query->orderBy('mfrr.revision', 'DESC');
+      $query->orderBy('mfrr.delta', 'DESC');
+      $query->orderBy('mfrr.date', 'DESC');
+    }
 
     $results = $query->execute()->fetchAll();
     if (is_array($results)) {
       foreach ($results as $result) {
-
-        if (!isset($reviews[$result->step])) {
-          $reviews[$result->step] = array();
-        }
-
-        if (!isset($reviews[$result->step][$result->classification])) {
-          $reviews[$result->step][$result->classification] = array();
-        }
-
-        $reviews[$result->step][$result->classification][$result->id] = $result;
+        $reviews['group'][$result->step][$result->classification][$result->id] = $result;
+        $reviews['order'][] = $result;
       }
+    }
+    else {
+      return FALSE;
     }
   }
   catch (Error $e) {
@@ -9023,9 +9035,9 @@ function mfcs_build_request_table($items, $max_rows, $columns = NULL, $user = NU
   }
 
   $status_options = mfcs_get_request_status_list_options();
-  $step_options = mfcs_get_request_steps_list_options();
+  $step_options = mfcs_get_review_steps_list_options();
   $location_options = mfcs_get_request_location_list_options(NULL, FALSE, TRUE);
-  $room_options = mfcs_get_request_room_list_options(NULL, NULL, TRUE);
+  $room_options = mfcs_get_request_room_list_options(NULL, NULL, FALSE, TRUE);
   $building_options = array();
 
   foreach ($items as $item) {
@@ -9052,7 +9064,7 @@ function mfcs_build_request_table($items, $max_rows, $columns = NULL, $user = NU
     }
 
     if (!array_key_exists($item->location, $building_options)) {
-      $building_options[$item->location] = mfcs_get_request_building_list_options($item->location, NULL, TRUE);
+      $building_options[$item->location] = mfcs_get_request_building_list_options($item->location, NULL, FALSE, TRUE);
     }
 
     if (isset($columns['location'])) {
@@ -9699,9 +9711,9 @@ function mfcs_build_request_ajax_table_process_rows($items, $columns, $user = NU
 
   $type_options = mfcs_get_request_type_list_options();
   $status_options = mfcs_get_request_status_list_options();
-  $step_options = mfcs_get_request_steps_list_options();
+  $step_options = mfcs_get_review_steps_list_options();
   $location_options = mfcs_get_request_location_list_options(NULL, FALSE, TRUE);
-  $room_options = mfcs_get_request_room_list_options(NULL, NULL, TRUE);
+  $room_options = mfcs_get_request_room_list_options(NULL, NULL, FALSE, TRUE);
   $building_options = array();
 
 
@@ -9710,7 +9722,7 @@ function mfcs_build_request_ajax_table_process_rows($items, $columns, $user = NU
     $row = array();
 
     if (!array_key_exists($item->location, $building_options)) {
-      $building_options[$item->location] = mfcs_get_request_building_list_options($item->location, NULL, TRUE);
+      $building_options[$item->location] = mfcs_get_request_building_list_options($item->location, NULL, FALSE, TRUE);
     }
 
     foreach ($columns as $column_id => $column) {
@@ -10945,8 +10957,14 @@ function mfcs_gpg_sign($message) {
     $gpg->setsignmode(gnupg::SIG_MODE_DETACH);
     $gpg->setarmor(1);
 
-    return $gpg->sign($message);
-    #$valid = $gpg->verify($message, $signature);
+    $signature = $gpg->sign($message);
+    $valid = $gpg->verify($message, $signature);
+
+    if ($valid === FALSE) {
+      watchdog(MFCS_WATCHDOG_ID, "Signature verification failed for PGP key: @key.", array('@key' => $fingerprint), WATCHDOG_ERROR);
+    }
+
+    return $signature;
   }
   catch (Error $e) {
     watchdog(MFCS_WATCHDOG_ID, "Failed to sign PGP key: @key, reason: @reason", array('@key' => $fingerprint, '@reason' => $e->getMessage()), WATCHDOG_ERROR);
@@ -12051,6 +12069,238 @@ function mfcs_get_ldap_user_name_by_banner_id($banner_id) {
 
   if (isset($search_results[0]['uid'][0])) {
     return $search_results[0]['uid'][0];
+  }
+
+  return FALSE;
+}
+
+/**
+ * Loads all drupal role to banner role mappings.
+ *
+ * @param string|null $key
+ *   (optional) When not NULL, a string representing the column to key the returned array with.
+ *
+ * @return array|bool
+ *   An array of mappings on success, optionally keyed by $key.
+ *   FALSE is returned on error.
+ */
+function mfcs_get_drupal_to_banner_role_mappings($key = NULL) {
+  try {
+    $query = db_select('mfcs_drupal_to_banner_role_mapping', 'mdbrm');
+    $query->addField('mdbrm', 'role_id', 'role_id');
+    $query->addField('mdbrm', 'banner_id', 'banner_id');
+    $query->addField('mdbrm', 'role_name', 'role_name');
+    $query->addField('mdbrm', 'banner_name', 'banner_name');
+
+    if ($key != 'role_id' && $key != 'banner_id' && $key != 'role_name' && $key != 'banner_name') {
+      $key = NULL;
+    }
+
+    if (is_null($key)) {
+      $results = $query->execute()->fetchAllAssoc('role_id');
+    }
+    else {
+      $results = $query->execute()->fetchAllAssoc($key);
+    }
+
+    if (!is_array($results)) {
+      return FALSE;
+    }
+  }
+  catch (Error $e) {
+    cf_error::on_exception($e);
+    return FALSE;
+  }
+  catch (Exception $e) {
+    cf_error::on_exception($e);
+    return FALSE;
+  }
+
+  return $results;
+}
+
+/**
+ * Given a single fees object, calculate the use fees, totals, and related information
+ *
+ * As of fcs-79, this fee calculation logic is as follows:
+ *   Personnel, hours, and, days are calculated vs a given rate (rate may also be specified by itself).
+ *   Omitted values are ignored, such that 1 personnel at 3 hours at 0 days results in (1 * 3 * rate) and 0 personnel at 0 hours at 2 days results in (2 * rate).
+ *   Supplies is calculated as a sub-total specific to supplies, which then gets added to the grand total.
+ *   Post represents post fees (for example, cost of damages), which are also calculated as a sub-total and are added to the grand total.
+ *   The description field relates to the 'post fees'.
+ *
+ * @param object $fees
+ *   The columns/fields from a single use fees object, such as the mfcs_field_requirements_facilities_fees table.
+ *   The values are expected to not be modified and in the original database format.
+ *
+ * @return array|bool
+ *   An array representing the processed values.
+ *   Any value that may be unavailable/unspecified is defined as NULL.
+ *   All returned values are sanitized.
+ *   FALSE is returned on error.
+ */
+function mfcs_calculate_use_fees($fees) {
+  if (!is_object($fees)) {
+    cf_error::invalid_object('fees');
+    return FALSE;
+  }
+
+  $amount = array();
+  $amount['total'] = NULL;
+  $amount['personnel'] = NULL;
+  $amount['hours'] = NULL;
+  $amount['days'] = NULL;
+  $amount['rate'] = NULL;
+  $amount['supplies'] = NULL;
+  $amount['post'] = NULL;
+  $amount['description'] = NULL;
+
+  if (!empty($fees->rate)) {
+    $amount['rate'] = (float) mfcs_convert_value_from_database_format($fees->rate, 'currency');
+    $amount['total'] = $amount['rate'];
+
+    if (!empty($fees->personnel)) {
+      $amount['personnel'] = (int) $fees->personnel;
+      $amount['total'] *= $amount['personnel'];
+    }
+
+    if (!empty($fees->hours)) {
+      $amount['hours'] = (int) $fees->hours;
+      $amount['total'] *= $amount['hours'];
+    }
+
+    if (!empty($fees->days)) {
+      $amount['days'] = (int) $fees->days;
+      $amount['total'] *= $amount['days'];
+    }
+  }
+
+  if (!empty($fees->supplies)) {
+    if (is_null($amount['total'])) {
+      $amount['total'] = 1;
+    }
+
+    $amount['supplies'] = (float) mfcs_convert_value_from_database_format($fees->supplies, 'currency');
+    $amount['total'] *= $amount['supplies'];
+  }
+
+  if (!empty($fees->post)) {
+    if (is_null($amount['total'])) {
+      $amount['total'] = 1;
+    }
+
+    $amount['post'] = (float) mfcs_convert_value_from_database_format($fees->post, 'currency');
+    $amount['total'] *= $amount['post'];
+
+    if (!empty($fees->description)) {
+      $amount['description'] = check_plain($fees->description);
+    }
+  }
+
+  return $amount;
+}
+
+/**
+ * Load any locks associated with a given request.
+ *
+ * @param int $request_id
+ *   The request id to load the locks of.
+ * @param array $column_names
+ *   (optional) When not empty, load only the specified column names.
+ *   When empty, load all column names.
+ *
+ * @return object|bool
+ *   The resulting database object.
+ *   TRUE is returned when the request_id is not assigned a row in the table.
+ *   FALSE is returned on error.
+ */
+function mfcs_load_request_locks($request_id, $column_names = array()) {
+  if (!cf_is_integer($request_id)) {
+    cf_error::invalid_integer('request_id');
+    return FALSE;
+  }
+
+  if (!is_array($column_names)) {
+    cf_error::invalid_array('column_names');
+    return FALSE;
+  }
+
+  try {
+    $query = db_select('mfcs_request_locks', 'mrl');
+
+    if (empty($column_names)) {
+      $query->fields('mrl');
+    }
+    else {
+      $query->fields('mrl', $column_names);
+    }
+
+    $query->condition('mrl.request_id', $request_id);
+
+    $result = $query->execute()->fetchObject();
+
+    if ($result === FALSE) {
+      return TRUE;
+    }
+  }
+  catch (Error $e) {
+    cf_error::on_query_execution($e);
+  }
+  catch (Exception $e) {
+    cf_error::on_query_execution($e);
+  }
+
+  if (is_object($result)) {
+    return $result;
+  }
+
+  return FALSE;
+}
+
+/**
+ * Assign/Unassign any locks associated with a given request.
+ *
+ * @param int $request_id
+ *   The request id to assign/unassign the locks of.
+ * @param array $values
+ *   An array of column names and their values (either: TRUE, FALSE, or NULL).
+ *   If set to an empty array, the row associated with the request id is completely deleted.
+ *
+ * @return bool
+ *   TRUE on success, FALSE otherwise.
+ */
+function mfcs_set_request_locks($request_id, $values) {
+  if (!cf_is_integer($request_id)) {
+    cf_error::invalid_integer('request_id');
+    return FALSE;
+  }
+
+  if (!is_array($values)) {
+    cf_error::invalid_array('values');
+    return FALSE;
+  }
+
+  try {
+    if (empty($values)) {
+      $query = db_delete('mfcs_request_locks');
+      $query->condition('request_id', $request_id);
+      $result = $query->execute();
+    }
+    else {
+      $query = db_insert('mfcs_request_locks');
+      $values['request_id'] = $request_id;
+      $query->fields($values);
+      $query->onConflictDo(Database::CONFLICT_DO_UPDATE, array('request_id'), array_keys($values));
+      $query->execute();
+    }
+
+      return TRUE;
+  }
+  catch (Error $e) {
+    cf_error::on_query_execution($e);
+  }
+  catch (Exception $e) {
+    cf_error::on_query_execution($e);
   }
 
   return FALSE;

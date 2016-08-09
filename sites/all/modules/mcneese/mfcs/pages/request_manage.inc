@@ -64,6 +64,17 @@ function mfcs_request_manage_0_page($request_id) {
   $id_requester = (int) $request['mer']['user_id'][0]->value;
   $id_venue_coordinator = (int) $request['request_coordinator']['name'][0]->user_id;
 
+  $locks_auto_cancel = 'Default';
+  $request_locks = mfcs_load_request_locks($request_id);
+  if (is_object($request_locks) && isset($request_locks->auto_cancel)) {
+    if ($request_locks->auto_cancel === TRUE) {
+      $locks_auto_cancel = 'Locked';
+    }
+    else {
+      $locks_auto_cancel = 'Unlocked';
+    }
+  }
+
   $user_requester = mfcs_load_basic_user_settings_by_user_id($id_requester);
   $user_venue_coordinator = mfcs_load_basic_user_settings_by_user_id($id_venue_coordinator);
 
@@ -92,7 +103,7 @@ function mfcs_request_manage_0_page($request_id) {
   $can_uncancel_request = mfcs_request_access('uncancel', $request, $user);
 
   mfcs_include(MFCS_INCLUDE_LIST_OPTIONS);
-  $options_step = mfcs_get_request_steps_list_options();
+  $options_step = mfcs_get_review_steps_list_options();
   $options_status = mfcs_get_request_status_list_options();
   $options_room = mfcs_get_request_room_list_options($id_location);
   $options_building = mfcs_get_request_building_list_options($id_location);
@@ -142,6 +153,8 @@ function mfcs_request_manage_0_page($request_id) {
   $markup .= mfcs_request_manage_0_page_create_item_and_value('Location:',  $string_location, $class_name);
   $markup .= mfcs_request_manage_0_page_create_item_user_name('Requester:',  $user_requester, $class_name);
   $markup .= mfcs_request_manage_0_page_create_item_user_name('Venue Coordinator:',  $user_venue_coordinator, $class_name);
+  $markup .= mfcs_request_manage_0_page_create_item_and_value('Auto-Cancel Lock:',  $locks_auto_cancel, $class_name);
+
   $markup .= '</div>';
   $markup .= '</div>';
 
@@ -180,6 +193,8 @@ function mfcs_request_manage_0_page($request_id) {
   if ($can_uncancel_request) {
     $markup .= mfcs_request_manage_0_page_create_item_message('The request may be <a href="' . $base_path . 'requests/uncancel-0/' . $id_id . $url_arguments . '" class="link link-uncancel">Uncancelled</a>.', $class_name);
   }
+
+  $markup .= mfcs_request_manage_0_page_create_item_message('The <a href="' . $base_path . 'requests/manage-0/locks/' . $id_id . $url_arguments . '" class="link link-override">Request\'s Locks</a> may be manually updated.', $class_name);
 
   $markup .= '</div>';
   $markup .= '</div>';

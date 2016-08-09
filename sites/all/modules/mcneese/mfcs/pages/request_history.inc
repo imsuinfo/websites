@@ -113,7 +113,7 @@ function mfcs_request_history_0_form($form, &$form_state, $request_id, $page_num
   $presentation_tables = mfcs_table_presentation(1);
 
   $status_options = mfcs_get_request_status_list_options();
-  $step_options = mfcs_get_request_steps_list_options();
+  $step_options = mfcs_get_review_steps_list_options();
 
   // The venue coordinator user id is a 'split' structure and does not normally get displayed.
   // Manually change the behavior such that the Venue Coordinator Name will be properly presented.
@@ -283,7 +283,7 @@ function mfcs_request_history_0_form($form, &$form_state, $request_id, $page_num
 
                   if ($group_name == 'review') {
                     if ($field_name == 'review') {
-                      $step_options = mfcs_get_request_steps_list_options();
+                      $step_options = mfcs_get_review_steps_list_options();
                       $decision_options = mfcs_get_reviewer_decision_list_options();
                       $custom_message = "";
 
@@ -383,6 +383,7 @@ function mfcs_request_history_0_form($form, &$form_state, $request_id, $page_num
                         'no_suffix' => TRUE,
                         'print_delta_for_multiple' => TRUE,
                         'history' => TRUE,
+                        'combine_partial' => TRUE,
                       );
 
                       $value_array = mfcs_view_build_request_value_structure($request_id, $group_name, $field_name, $key, $value, $presentation[$group_name][$field_name], $history, $options);
@@ -441,6 +442,7 @@ function mfcs_request_history_0_form($form, &$form_state, $request_id, $page_num
                       'no_suffix' => TRUE,
                       'print_delta_for_multiple' => TRUE,
                       'history' => TRUE,
+                      'combine_partial' => TRUE,
                     );
 
                     $value_array = mfcs_view_build_request_value_structure($request_id, $group_name, $field_name, $key, $value, $presentation[$group_name][$field_name], $history, $options);
@@ -546,19 +548,22 @@ function mfcs_request_history_0_form($form, &$form_state, $request_id, $page_num
 
     $output = &$form['navigator_top']['markup']['#markup'];
 
+    // In the case of history, it makes more sense that the next/prev navigation flow in relation to the history.
+    // The code that I use to generate the current next/prev behavior is remaining unchanged and therefore the links and text are being swapped.
+    // This means that the variable $previous_page would be used with the words "Next Page".
     if ($page_number > 0) {
       if ($page_number == 1) {
-        $output .= '<a href="' . $base_path . 'requests/history-0/' . $request_id . $url_arguments . '" class="request-history-page-choice request-history-page-previous" title="Previous Page">Prev</a>';
+        $output .= '<a href="' . $base_path . 'requests/history-0/' . $request_id . $url_arguments . '" class="request-history-page-choice request-history-page-next" title="Next Page">Next</a>';
       }
       else {
         $previous_page = $page_number - 1;
-        $output .= '<a href="' . $base_path . 'requests/history-0/' . $request_id . '/' . $previous_page . $url_arguments . '" class="request-history-page-choice request-history-page-previous" title="Previous Page">Prev</a>';
+        $output .= '<a href="' . $base_path . 'requests/history-0/' . $request_id . '/' . $previous_page . $url_arguments . '" class="request-history-page-choice request-history-page-next" title="Next Page">Next</a>';
       }
     }
 
     if ($total_results > $rows_per_page) {
       $next_page = $page_number + 1;
-      $output .= '<a href="' . $base_path . 'requests/history-0/' . $request_id . '/' . $next_page . $url_arguments . '" class="request-history-page-choice request-history-page-next" title="Next Page">Next</a>';
+      $output .= '<a href="' . $base_path . 'requests/history-0/' . $request_id . '/' . $next_page . $url_arguments . '" class="request-history-page-choice request-history-page-previous" title="Previous Page">Prev</a>';
     }
 
     $form['navigator_bottom']['markup'] = $form['navigator_top']['markup'];

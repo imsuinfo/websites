@@ -69,7 +69,7 @@ function mfcs_hook_menu() {
  */
 function mfcs_hook_menu_requests_basic(&$items, $module_path) {
   $items['requests'] = array(
-    'title' => "Requests Dashboard",
+    'title' => "Dashboard",
     'description' => "Requests Dashboard",
     'page callback' => 'mfcs_dashboard_page',
     'file' => 'dashboard.inc',
@@ -266,8 +266,8 @@ function mfcs_hook_menu_requests_basic(&$items, $module_path) {
     'file path' => $module_path . '/pages',
     'access callback' => 'mfcs_page_request_access',
     'access arguments' => array('override', 3),
-    'tab_parent' => 'requests',
-    'tab_root' => 'requests',
+    'tab_parent' => 'requests/manage-0',
+    'tab_root' => 'requests/manage-0',
   );
 
   $items['requests/manage-0/reassign/%'] = array(
@@ -279,8 +279,21 @@ function mfcs_hook_menu_requests_basic(&$items, $module_path) {
     'file path' => $module_path . '/pages',
     'access callback' => 'mfcs_page_request_access',
     'access arguments' => array('reassign', 3),
-    'tab_parent' => 'requests',
-    'tab_root' => 'requests',
+    'tab_parent' => 'requests/manage-0',
+    'tab_root' => 'requests/manage-0',
+  );
+
+  $items['requests/manage-0/locks/%'] = array(
+    'title' => "Request Locks",
+    'description' => "Request Locks",
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('mfcs_request_manage_0_locks_form', 3),
+    'file' => 'request_locks.inc',
+    'file path' => $module_path . '/pages',
+    'access callback' => 'mfcs_page_request_access',
+    'access arguments' => array('manage', 3),
+    'tab_parent' => 'requests/manage-0',
+    'tab_root' => 'requests/manage-0',
   );
 
   $items['requests/view-0/%'] = array(
@@ -432,8 +445,8 @@ function mfcs_hook_menu_requests_basic(&$items, $module_path) {
  */
 function mfcs_hook_menu_requests_reviewing(&$items, $module_path) {
   $items['requests/review-0'] = array(
-    'title' => "Review Requests",
-    'description' => "Review Request",
+    'title' => "Review",
+    'description' => "Review Requests",
     'page callback' => 'drupal_get_form',
     'page arguments' => array('mfcs_request_review_0_page'),
     'file' => 'request_review.inc',
@@ -445,8 +458,8 @@ function mfcs_hook_menu_requests_reviewing(&$items, $module_path) {
   );
 
   $items['requests/review-0/%'] = array(
-    'title' => "Review Requests",
-    'description' => "Review Request",
+    'title' => "Review",
+    'description' => "Review Requests",
     'page callback' => 'drupal_get_form',
     'page arguments' => array('mfcs_request_review_0_page', 2),
     'file' => 'request_review.inc',
@@ -819,14 +832,14 @@ function mfcs_hook_menu_requests_listing(&$items, $module_path) {
  */
 function mfcs_hook_menu_management(&$items, $module_path) {
   $items['requests/management'] = array(
-    'title' => "Requests Management",
-    'description' => "Requests Management",
+    'title' => "Management",
+    'description' => "Management",
     'page callback' => 'mfcs_management_page',
     'file' => 'management.inc',
     'file path' => $module_path . '/pages',
     'access callback' => 'mfcs_management_page_access',
-    'tab_parent' => '',
-    'tab_root' => '',
+    'tab_parent' => 'requests',
+    'tab_root' => 'requests',
   );
 
   $items['requests/proxy-0'] = array(
@@ -892,7 +905,7 @@ function mfcs_hook_menu_management(&$items, $module_path) {
 
   $items['requests/reviewers-0'] = array(
     'title' => "Manage Reviewers",
-    'description' => "Review Request",
+    'description' => "Manage Reviewers",
     'page callback' => 'mfcs_request_reviewers_0_page',
     'file' => 'request_reviewers.inc',
     'file path' => $module_path . '/pages',
@@ -1132,6 +1145,19 @@ function mfcs_hook_menu_management(&$items, $module_path) {
     'description' => "A listing of locations available on the system with details.",
     'page callback' => 'mfcs_request_troubleshoot_0_locations_page',
     'page arguments' => array(3),
+    'file' => 'request_troubleshoot.inc',
+    'file path' => $module_path . '/pages',
+    'access callback' => 'mfcs_page_request_access',
+    'access arguments' => array('troubleshoot'),
+    'tab_parent' => 'requests/troubleshoot-0',
+    'tab_root' => 'requests/troubleshoot-0',
+  );
+
+  $items['requests/troubleshoot-0/locations/%/edit'] = array(
+    'title' => "Troubleshooting Tools - Edit Location Name",
+    'description' => "A listing of locations available on the system with details.",
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('mfcs_request_troubleshoot_0_locations_edit_name_form', 3),
     'file' => 'request_troubleshoot.inc',
     'file path' => $module_path . '/pages',
     'access callback' => 'mfcs_page_request_access',
@@ -2143,7 +2169,6 @@ function mfcs_hook_user_presave(&$edit, $account, $category) {
       }
     }
 
-    $edit['field_user_event_roles'] = $changes['field_user_event_roles'];
     if (array_key_exists('status', $changes)) {
       $edit['status'] = $changes['status'];
     }

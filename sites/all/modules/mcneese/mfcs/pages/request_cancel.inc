@@ -91,7 +91,7 @@ function mfcs_request_cancel_0_form($form, &$form_state, $request_id) {
   $form['message'] = array(
     '#markup' => '',
   );
-  $form['message']['#markup'] .= '<h3>Are you sure wou want to cancel the request?</h3> ';
+  $form['message']['#markup'] .= '<h3>Are you sure you want to cancel the request?</h3> ';
   $form['message']['#markup'] .= '<div>';
   $form['message']['#markup'] .= 'By cancelling this request you agree to forfeit the time slots that you have requested. You cannot undo this action. ' . '<br>';
   $form['message']['#markup'] .= '<br>';
@@ -473,6 +473,16 @@ function mfcs_request_uncancel_0_form_submit($form, &$form_state) {
     $form_state['submitted'] = FALSE;
 
     return;
+  }
+
+  // assign auto_cancel locked code.
+  $locked_object = mfcs_load_request_locks($request_id, array('auto_cancel'));
+  if ($locked_object !== FALSE) {
+    if ($locked_object === TRUE || is_null($locked_object->auto_cancel)) {
+      // when auto_cancel is set to NULL (or is not defined), set it to TRUE.
+      // once auto_cancel lock is TRUE, the auto_cancel process will no longer attempt to auto-cancel a given request.
+      mfcs_set_request_locks($request_id, array('auto_cancel' => 't'));
+    }
   }
 
   // redirect after submitting.
