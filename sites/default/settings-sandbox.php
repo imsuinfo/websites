@@ -897,6 +897,10 @@ $conf['error_document_file-content_unavailable-Hurricane_Checklist.pdf'] = '/var
 $conf['error_document_file-content_unavailable-Student_Disaster_Preparedness_Tips.pdf'] = '/var/www/error_documents/content_unavailable/www/files/Student_Disaster_Preparedness_Tips.pdf';
 $conf['error_document_file-content_unavailable-Hurricane_Emergency_Operations_Plan.pdf'] = '/var/www/error_documents/content_unavailable/www/files/Hurricane_Emergency_Operations_Plan.pdf';
 
+// static front page settings
+$conf['mcneese_static_file_frontpage'] = '/tmp/static-sandbox/frontpage.html';
+$conf['mcneese_static_file_frontpage-expires'] = '+3 hours';
+
 
 // enable all errors
 #error_reporting(E_ALL);
