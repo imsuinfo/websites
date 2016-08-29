@@ -308,7 +308,7 @@ function mfcs_testing_review_request_review($request_id, $decision = MFCS_REVIEW
 
   $request = mfcs_load_request_by_id($request_id);
 
-  if (empty($request['top']['step'][0]) || ($request['top']['step'][0]->value != MFCS_REVIEW_STEP_REVIEW && $request['top']['step'][0]->value != MFCS_REVIEW_STEP_REQUIREMENTS)) {
+  if (empty($request['top']['step'][0]) || ($request['top']['step'][0]->value != MFCS_REVIEW_STEP_REVIEW && $request['top']['step'][0]->value != MFCS_REVIEW_STEP_FINAL_DECISION)) {
     return FALSE;
   }
 
@@ -417,7 +417,7 @@ function mfcs_testing_review_request_r($request_id, $decision = MFCS_REVIEW_DECI
     return FALSE;
   }
 
-  if (empty($request['top']['step'][0]) || !is_object($request['top']['step'][0]) || $request['top']['step'][0]->value != MFCS_REVIEW_STEP_MAKE_DECISIONS) {
+  if (empty($request['top']['step'][0]) || !is_object($request['top']['step'][0]) || $request['top']['step'][0]->value != MFCS_REVIEW_STEP_FINAL_DECISION) {
     return FALSE;
   }
 
@@ -488,7 +488,7 @@ function mfcs_testing_review_request_make_decisions($request_id, $decision = MFC
     return FALSE;
   }
 
-  if (empty($request['top']['step'][0]) || !is_object($request['top']['step'][0]) || $request['top']['step'][0]->value != MFCS_REVIEW_STEP_REQUIREMENTS) {
+  if (empty($request['top']['step'][0]) || !is_object($request['top']['step'][0]) || $request['top']['step'][0]->value != MFCS_REVIEW_STEP_REVIEW) {
     return FALSE;
   }
 
@@ -612,9 +612,9 @@ function mfcs_testing_generate_dates_and_times() {
   $dates_and_times['time_stop'] = strtotime('+' . $time_stop . ' hours', $dates_and_times['time_start']);
   $dates_and_times['category'] = $category;
 
-  $dates_and_times['format_date'] = date('Y/m/d', $dates_and_times['date']);
-  $dates_and_times['format_time_start'] = date('h:ia', $dates_and_times['time_start']);
-  $dates_and_times['format_time_stop'] = date('h:ia', $dates_and_times['time_stop']);
+  $dates_and_times['format_date'] = date(MFCS_DATE_FORMAT_DATE, $dates_and_times['date']);
+  $dates_and_times['format_time_start'] = date(MFCS_DATE_FORMAT_TIME, $dates_and_times['time_start']);
+  $dates_and_times['format_time_stop'] = date(MFCS_DATE_FORMAT_TIME, $dates_and_times['time_stop']);
   $dates_and_times['format_category'] = $format_category;
 
   return $dates_and_times;

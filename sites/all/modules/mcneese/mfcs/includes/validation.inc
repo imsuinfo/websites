@@ -139,6 +139,33 @@ function mfcs_pre_validate_request_fields(&$form, &$form_state, $dont_validate =
         }
       }
     }
+
+
+    if ($clicked_id == 'submit-request-submit' || $clicked_id == 'submit-request-next') {
+      // check to see if the request coordinator's name has changed.
+      // if so, then attempt to determine the user id for that name or set to NULL on fail.
+      if (isset($location_form['request_coordinator']['name']) && is_array($location_form['request_coordinator']['name'])) {
+        foreach ($location_form['request_coordinator']['name'] as $key => $value) {
+          if (!is_numeric($key) || !is_array($value)) {
+            continue;
+          }
+
+          if (!isset($value['#default_value']) || $value['#default_value'] != $location_state['request_coordinator']['name'][$key]) {
+            $found_ids = mfcs_find_from_form_user_name($location_state['request_coordinator']['name'][$key]);
+            if (!is_array($found_ids) || count($found_ids) != 1) {
+              // unable to identify user name, so set the user id to NULL to mark it as unknown.
+              $location_state['request_coordinator']['user_id'][$key] = NULL;
+            }
+            else {
+              $location_state['request_coordinator']['user_id'][$key] = $found_ids[0];
+            }
+            unset($found_ids);
+          }
+        }
+        unset($key);
+        unset($value);
+      }
+    }
   }
   elseif ($form_state['values']['form']['step'] == 'location') {
   }
@@ -423,6 +450,7 @@ function mfcs_validate_request_fields($form, &$form_state) {
     // validate the dates.
     if ($validate_dates) {
       $dates_passed = mfcs_validate_request_fields_dates($form, $form_state, $ps_p, $location_form, $location_state, $room);
+
       $passed = $passed && $dates_passed;
       unset($dates_passed);
     }
@@ -622,7 +650,7 @@ function mfcs_validate_request_fields_dates($form, &$form_state, $path_string_pr
 
         if (!empty($holidays[$day_start])) {
           $holiday = reset($holidays[$day_start]);
-          drupal_set_message(t('Warning: <strong>@date</strong> may not available because of: <strong><a href="' . $base_path . 'requests/holiday-0/view/' . $holiday->year . '/' . $holiday->id . $url_arguments . '" title="View details about holiday.">@holiday</a></strong>.', array('@year' => date('Y', $holiday->date), '@date' => date('l, F j, Y', $holiday->date), '@holiday' => $holiday->title)), 'warning');
+          drupal_set_message(t('Warning: <strong>@date</strong> may not available because of: <strong><a href="' . $base_path . 'requests/holiday-0/view/' . $holiday->year . '/' . $holiday->id . $url_arguments . '" title="View details about holiday.">@holiday</a></strong>.', array('@year' => date('Y', $holiday->date), '@date' => date(MFCS_DATE_FORMAT_DATE, $holiday->date), '@holiday' => $holiday->title)), 'warning');
           unset($holiday);
         }
       }
@@ -641,7 +669,7 @@ function mfcs_validate_request_fields_dates($form, &$form_state, $path_string_pr
     // detect and report errors for invalid date combinations.
     foreach ($all_day as $datestamp => $key) {
       if (array_key_exists($datestamp, $partial_day)) {
-        $date_string = date("Y/m/d", $datestamp);
+        $date_string = date(MFCS_DATE_FORMAT_DATE, $datestamp);
         form_set_error($path_string_prefix . '][dates][date][' . $key . '][date', t("<strong>@date</strong> is set to all day, but there are also partial day times in use for that same day. Please use either all day or partial day times but not both.", array('@date' => $date_string)));
         $passed = FALSE;
       }
@@ -683,6 +711,14 @@ function mfcs_validate_request_fields_dates($form, &$form_state, $path_string_pr
               $passed = FALSE;
             }
             else {
+              if (!empty($location_state['dates']['time_stop'][$key])) {
+                $stop_value = strtotime($location_state['dates']['time_stop'][$key], $date_timestamp[$key]);
+
+                if ($start_timestamp[$key] == $stop_value) {
+                  form_set_error($path_string_prefix . '][dates][time_stop][' . $key, 'The start and stop times must not be the same.');
+                }
+              }
+
               $value = date($location_form['dates']['group_dates'][$key]['dates']['time_start'][$key]['#expected_format']['date'], $start_timestamp[$key]);
             }
           }
@@ -807,13 +843,13 @@ function mfcs_validate_request_fields_dates($form, &$form_state, $path_string_pr
 
       foreach ($nearby['before'] as $nearby_time => $nearby_value) {
         foreach ($nearby_value as $before_id => $before_title) {
-          drupal_set_message('<em>' . $room->building_name . " " . $room->room_name . "</em> has the following meeting within " . $minutes_range . " minutes before " . date("Y/m/d h:i a", $nearby_time) . ': <ul><li><a href="' . $base_path . 'requests/view-0/' . $before_id . '">' . $before_title . '</a></li></ul>', 'warning');
+          drupal_set_message('<em>' . $room->building_name . " " . $room->room_name . "</em> has the following meeting within " . $minutes_range . " minutes before " . date(MFCS_DATE_FORMAT_DATE_TIME, $nearby_time) . ': <ul><li><a href="' . $base_path . 'requests/view-0/' . $before_id . '">' . $before_title . '</a></li></ul>', 'warning');
         }
       }
 
       foreach ($nearby['after'] as $nearby_time => $nearby_value) {
         foreach ($nearby_value as $after_id => $after_title) {
-          drupal_set_message('<em>' . $room->building_name . " " . $room->room_name . "</em> has the following meeting within " . $minutes_range . " minutes after " . date("Y/m/d h:i a", $nearby_time) . ': <ul><li><a href="' . $base_path . 'requests/view-0/' . $after_id . '">' . $after_title . '</a></li></ul>', 'warning');
+          drupal_set_message('<em>' . $room->building_name . " " . $room->room_name . "</em> has the following meeting within " . $minutes_range . " minutes after " . date(MFCS_DATE_FORMAT_DATE_TIME, $nearby_time) . ': <ul><li><a href="' . $base_path . 'requests/view-0/' . $after_id . '">' . $after_title . '</a></li></ul>', 'warning');
         }
       }
 
@@ -823,13 +859,12 @@ function mfcs_validate_request_fields_dates($form, &$form_state, $path_string_pr
     }
 
     // check for room availability, but only if the room has been defined.
-    // @todo: add the request id if it exists.
     $room_id = (int) $room->room_id;
     $room_unavailability = mfcs_check_room_availability($room_id, $date_timestamp, $start_timestamp, $stop_timestamp, $request_id);
     if ($room_unavailability === FALSE) {
       form_set_error('', "An internal error occurred while checking the room for availability. Please contact the support staff.");
     }
-    elseif (!empty($room_unavailability['conflict']) || !empty($room_unavailability['unavailable'])) {
+    elseif (!empty($room_unavailability['conflicts']) || !empty($room_unavailability['unavailable'])) {
       $unavailable_message = '<span class="uppercase">Conflict</span>: The specified room is currently unavailable for the following dates: ';
       $unavailable_message .= mfcs_build_room_unavailable_message($room_unavailability);
       form_set_error('review][operations][decision', $unavailable_message);

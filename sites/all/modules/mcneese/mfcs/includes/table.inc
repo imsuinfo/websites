@@ -50,28 +50,28 @@ function mfcs_table_structure($include_mer = FALSE) {
         'path' => 'request][status',
         'name' => "Status",
         'type' => 'options',
-        'size' => 'small',
+        'size' => 'big',
         'manual_processing' => TRUE,
       ),
       'step' => array(
         'path' => 'request][step',
         'name' => "Step",
         'type' => 'options',
-        'size' => 'normal',
+        'size' => 'big',
         'manual_processing' => TRUE,
       ),
       'classification' => array(
         'path' => 'request][request_coordinator][classification',
         'name' => "Request Coordinator Classification",
         'type' => 'options',
-        'size' => 'normal',
+        'size' => 'big',
         'manual_processing' => TRUE,
       ),
       'type' => array(
         'path' => 'request][information][type',
         'name' => "Type",
         'type' => 'options',
-        'size' => 'normal',
+        'size' => 'big',
         'manual_processing' => TRUE,
       ),
       'location' => array(
@@ -99,7 +99,7 @@ function mfcs_table_structure($include_mer = FALSE) {
         'path' => 'request][venue_coordinator][user_id',
         'name' => "Venue Coordinator",
         'type' => 'venue_coordinator',
-        'size' => 'normal',
+        'size' => 'big',
         'manual_processing' => TRUE,
       ),
       'title' => array(
@@ -117,14 +117,14 @@ function mfcs_table_structure($include_mer = FALSE) {
       'path' => 'request][status',
       'name' => "Status",
       'type' => 'options',
-      'size' => 'small',
+      'size' => 'big',
       'hide_from_search' => TRUE,
     ),
     'step' => array(
       'path' => 'request][step',
       'name' => "Step",
       'type' => 'options',
-      'size' => 'normal',
+      'size' => 'big',
       'hide_from_search' => TRUE,
     ),
     'location' => array(
@@ -259,26 +259,26 @@ function mfcs_table_structure($include_mer = FALSE) {
     'contractor' => array(
       'path' => 'request][insurance][contractor',
       'name' => "Contractor Insurance",
-      'type' => 'bool',
-      'size' => 'tiny',
-      'manual_processing' => TRUE,
-      'allows_null' => TRUE,
+      'type' => 'int',
+      'size' => 'normal',
     ),
     'unaffiliated' => array(
       'name' => "Unaffiliated Insurance",
       'path' => 'request][insurance][unaffiliated',
-      'type' => 'bool',
-      'size' => 'tiny',
-      'manual_processing' => TRUE,
-      'allows_null' => TRUE,
+      'type' => 'int',
+      'size' => 'normal',
+    ),
+    'affiliated' => array(
+      'name' => "Affiliated Insurance",
+      'path' => 'request][insurance][affiliated',
+      'type' => 'int',
+      'size' => 'normal',
     ),
     'provided' => array(
       'name' => "Insurance Has Been Provided",
       'path' => 'request][insurance][provided',
-      'type' => 'bool',
-      'size' => 'tiny',
-      'manual_processing' => TRUE,
-      'allows_null' => TRUE,
+      'type' => 'int',
+      'size' => 'normal',
     ),
   );
 
@@ -299,7 +299,7 @@ function mfcs_table_structure($include_mer = FALSE) {
       'type' => 'time',
       'size' => 'big',
       'storage' => 'timestamp',
-      'timestamp' => array('view' => 'h:ia', 'relative_to' => 'request][dates][date'),
+      'timestamp' => array('view' => MFCS_DATE_FORMAT_TIME, 'relative_to' => 'request][dates][date'),
       'multiple' => TRUE,
     ),
     'time_stop' => array(
@@ -308,7 +308,7 @@ function mfcs_table_structure($include_mer = FALSE) {
       'type' => 'time',
       'size' => 'big',
       'storage' => 'timestamp',
-      'timestamp' => array('view' => 'h:ia', 'relative_to' => 'request][dates][date'),
+      'timestamp' => array('view' => MFCS_DATE_FORMAT_TIME, 'relative_to' => 'request][dates][date'),
       'multiple' => TRUE,
     ),
     'category' => array(
@@ -331,6 +331,14 @@ function mfcs_table_structure($include_mer = FALSE) {
   );
 
   $structure['request_coordinator'] = array(
+    'user_id' => array(
+      'path' => 'request][request_coordinator][user_id',
+      'name' => "Request Coordinator",
+      'type' => 'request_coordinator',
+      'size' => 'normal',
+      'hide_from_search' => TRUE,
+      'manual_processing' => TRUE,
+    ),
     'name' => array(
       'path' => 'request][request_coordinator][name',
       'name' => "Request Coordinator Name",
@@ -353,7 +361,7 @@ function mfcs_table_structure($include_mer = FALSE) {
       'path' => 'request][request_coordinator][classification',
       'name' => "Request Coordinator Classification",
       'type' => 'options',
-      'size' => 'normal',
+      'size' => 'big',
     ),
   );
 
@@ -375,7 +383,7 @@ function mfcs_table_structure($include_mer = FALSE) {
       'path' => 'request][information][type',
       'name' => "Type",
       'type' => 'options',
-      'size' => 'normal',
+      'size' => 'big',
       'hide_from_search' => TRUE,
     ),
     'organization' => array(
@@ -869,8 +877,23 @@ function mfcs_table_presentation($option = NULL) {
         'hide' => FALSE,
       ),
     ),
-    'user_id' => array(
+    'creator' => array(
       'label' => 'Created By',
+      'group' => 'request',
+      'weight' => 7,
+      'type' => array(
+        'value' => 'user_id',
+      ),
+      'display' => array(
+        'value' => 'account_name',
+      ),
+      'request_type' => array(
+        'show' => FALSE,
+        'hide' => TRUE,
+      ),
+    ),
+    'user_id' => array(
+      'label' => 'Requester',
       'group' => 'request',
       'weight' => 7,
       'type' => array(
@@ -1187,10 +1210,10 @@ function mfcs_table_presentation($option = NULL) {
     'contractor' => array(
       'label' => 'Contractor Insurance',
       'type' => array(
-        'value' => 'boolean',
+        'value' => 'insurance',
       ),
       'display' => array(
-        'value' => 'when_true',
+        'value' => 'insurance',
       ),
       'group' => 'requirements',
       'request_type' => array(
@@ -1201,10 +1224,24 @@ function mfcs_table_presentation($option = NULL) {
     'unaffiliated' => array(
       'label' => 'Unaffiliated Insurance',
       'type' => array(
-        'value' => 'boolean',
+        'value' => 'insurance',
       ),
       'display' => array(
-        'value' => 'when_true',
+        'value' => 'insurance',
+      ),
+      'group' => 'requirements',
+      'request_type' => array(
+        'show' => TRUE,
+        'hide' => FALSE,
+      ),
+    ),
+    'affiliated' => array(
+      'label' => 'Affiliated Insurance',
+      'type' => array(
+        'value' => 'insurance',
+      ),
+      'display' => array(
+        'value' => 'insurance',
       ),
       'group' => 'requirements',
       'request_type' => array(
@@ -1215,12 +1252,15 @@ function mfcs_table_presentation($option = NULL) {
     'provided' => array(
       'label' => 'Insurance Provided',
       'type' => array(
-        'value' => 'boolean',
+        'value' => 'insurance',
+      ),
+      'display' => array(
+        'value' => NULL,
       ),
       'group' => 'requirements',
       'request_type' => array(
-        'show' => TRUE,
-        'hide' => FALSE,
+        'show' => FALSE,
+        'hide' => TRUE,
       ),
     ),
   );
@@ -1232,7 +1272,7 @@ function mfcs_table_presentation($option = NULL) {
         'value' => 'timestamp_linked_day',
       ),
       'display' => array(
-        'value' => 'Y/m/d',
+        'value' => MFCS_DATE_FORMAT_DATE,
       ),
       'request_type' => array(
         'show' => TRUE,
@@ -1250,7 +1290,7 @@ function mfcs_table_presentation($option = NULL) {
         'value' => 'timestamp_linked_hour',
       ),
       'display' => array(
-        'value' => 'h:ia',
+        'value' => MFCS_DATE_FORMAT_TIME,
       ),
       'request_type' => array(
         'show' => TRUE,
@@ -1267,7 +1307,7 @@ function mfcs_table_presentation($option = NULL) {
         'value' => 'timestamp_linked_hour',
       ),
       'display' => array(
-        'value' => 'h:ia',
+        'value' => MFCS_DATE_FORMAT_TIME,
       ),
       'request_type' => array(
         'show' => TRUE,
@@ -1362,6 +1402,9 @@ function mfcs_table_presentation($option = NULL) {
       'label' => 'Request Coordinator Name',
       'group' => 'coordinator',
       'weight' => 4,
+      'type' => array(
+        'value' => 'request_coordinator',
+      ),
       'request_type' => array(
         'show' => TRUE,
         'hide' => FALSE,

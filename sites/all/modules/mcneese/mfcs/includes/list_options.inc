@@ -28,7 +28,6 @@
  */
 function mfcs_get_request_status_list_options($option = NULL, $hidden = FALSE, $disabled = FALSE) {
   $options = array();
-
   $options_all = array();
 
   if ($hidden) {
@@ -78,7 +77,6 @@ function mfcs_get_request_status_list_options($option = NULL, $hidden = FALSE, $
  */
 function mfcs_get_review_steps_list_options($option = NULL, $hidden = FALSE, $disabled = FALSE) {
   $options = array();
-
   $options_all = array();
 
   if ($hidden) {
@@ -86,7 +84,7 @@ function mfcs_get_review_steps_list_options($option = NULL, $hidden = FALSE, $di
   }
 
   $options_all[MFCS_REVIEW_STEP_VENUE_AVAILABLE] = 'Venue Available';
-  $options_all[MFCS_REVIEW_STEP_MAKE_DECISIONS] = 'Resolve Conflicts / Make Decisions';
+  $options_all[MFCS_REVIEW_STEP_FINAL_DECISION] = 'Final Decision';
   $options_all[MFCS_REVIEW_STEP_RELEASE_HOLD] = 'Release Tentative Hold';
   $options_all[MFCS_REVIEW_STEP_REVIEW] = 'Review';
   $options_all[MFCS_REVIEW_STEP_REQUIREMENTS] = 'Requirements';
@@ -103,6 +101,8 @@ function mfcs_get_review_steps_list_options($option = NULL, $hidden = FALSE, $di
 
   if ($option == 'search') {
     unset($options[MFCS_REVIEW_STEP_RELEASE_HOLD]);
+    unset($options[MFCS_REVIEW_STEP_REQUIREMENTS]);
+    unset($options[MFCS_REVIEW_STEP_CHANGES_REQUIRED]);
   }
 
   asort($options);
@@ -128,7 +128,6 @@ function mfcs_get_review_steps_list_options($option = NULL, $hidden = FALSE, $di
  */
 function mfcs_get_request_classification_list_options($option = NULL, $user = NULL, $hidden = FALSE, $disabled = FALSE) {
   $options = array();
-
   $options_all = array();
 
   if ($hidden) {
@@ -146,7 +145,7 @@ function mfcs_get_request_classification_list_options($option = NULL, $user = NU
 
   if (is_object($user)) {
     foreach ($options_all as $option_id => $option_name) {
-      if (in_array($option_id, $user->roles)) {
+      if (array_key_exists($option_id, $user->roles)) {
         $options[$option_id] = $option_name;
       }
     }
@@ -311,7 +310,6 @@ function mfcs_get_request_room_list_options($location = NULL, $option = NULL, $h
  */
 function mfcs_get_dates_category_list_options($option = NULL, $hidden = FALSE, $disabled = FALSE) {
   $options = array();
-
   $options_all = array();
 
   if ($hidden) {
@@ -351,7 +349,6 @@ function mfcs_get_dates_category_list_options($option = NULL, $hidden = FALSE, $
  */
 function mfcs_get_audience_list_options($option = NULL, $hidden = FALSE, $disabled = FALSE) {
   $options = array();
-
   $options_all = array();
 
   if ($hidden) {
@@ -363,8 +360,6 @@ function mfcs_get_audience_list_options($option = NULL, $hidden = FALSE, $disabl
   $options_all[MFCS_REQUEST_AUDIENCE_STUDENTS_AND_EMPLOYEES] = 'Open to all Students and Employees';
   $options_all[MFCS_REQUEST_AUDIENCE_FACULTY_AND_STAFF] = 'Faculty and Staff Only';
   $options_all[MFCS_REQUEST_AUDIENCE_PUBLIC] = 'Open to the Public';
-
-  $options_all = array();
 
   if ($option == 'select') {
     $options[''] = '- Select -';
@@ -395,7 +390,6 @@ function mfcs_get_audience_list_options($option = NULL, $hidden = FALSE, $disabl
  */
 function mfcs_get_revenue_generated_list_options($option = NULL, $hidden = FALSE, $disabled = FALSE) {
   $options = array();
-
   $options_all = array();
 
   if ($hidden) {
@@ -440,7 +434,6 @@ function mfcs_get_revenue_generated_list_options($option = NULL, $hidden = FALSE
  */
 function mfcs_get_request_type_list_options($option = NULL, $hidden = FALSE, $disabled = FALSE) {
   $options = array();
-
   $options_all = array();
 
   if ($hidden) {
@@ -489,7 +482,6 @@ function mfcs_get_request_type_list_options($option = NULL, $hidden = FALSE, $di
  */
 function mfcs_get_publicity_details_list_options($option = NULL, $hidden = FALSE, $disabled = FALSE) {
   $options = array();
-
   $options_all = array();
 
   if ($hidden) {
@@ -540,7 +532,6 @@ function mfcs_get_publicity_details_list_options($option = NULL, $hidden = FALSE
  */
 function mfcs_get_designing_material_list_options($option = NULL, $hidden = FALSE, $disabled = FALSE) {
   $options = array();
-
   $options_all = array();
 
   if ($hidden) {
@@ -585,7 +576,6 @@ function mfcs_get_designing_material_list_options($option = NULL, $hidden = FALS
  */
 function mfcs_get_technical_equipment_details_list_options($option = NULL, $hidden = FALSE, $disabled = FALSE) {
   $options = array();
-
   $options_all = array();
 
   if ($hidden) {
@@ -636,7 +626,6 @@ function mfcs_get_reviewer_classification_list_options($option = NULL, $hidden =
   }
 
   $options = array();
-
   $options_all = array();
 
   if ($hidden) {
@@ -709,20 +698,22 @@ function mfcs_get_reviewer_classification_list_options($option = NULL, $hidden =
  */
 function mfcs_get_reviewer_decision_list_options($option = NULL, $restriction = 0, $hidden = FALSE, $disabled = FALSE) {
   $options = array();
-
   $options_all = array();
 
   if ($hidden) {
-    $options_all[MFCS__NONE] = 'None';
+    $options_all[MFCS_REVIEW_DECISION_NONE] = 'None';
+    $options_all[MFCS_REVIEW_DECISION_MANAGER_RECHECK] = 'Manager Recheck';
+    $options_all[MFCS_REVIEW_DECISION_AMENDMENT] = 'Amendment';
   }
 
-  $options_all[MFCS_REVIEW_DECISION_MANAGER_RECHECK] = 'Manager Recheck';
-  $options_all[MFCS_REVIEW_DECISION_AMENDMENT] = 'Amendment';
+  if ($disabled) {
+    $options_all[MFCS_REVIEW_DECISION_WAIVE] = 'Waive';
+  }
+
   $options_all[MFCS_REVIEW_DECISION_APPROVE] = 'Approve';
   $options_all[MFCS_REVIEW_DECISION_COMMENT] = 'Comment';
   $options_all[MFCS_REVIEW_DECISION_COMMENT_ALL] = 'Comment';
   $options_all[MFCS_REVIEW_DECISION_DENY] = 'Deny';
-  $options_all[MFCS_REVIEW_DECISION_WAIVE] = 'Waive';
   $options_all[MFCS_REVIEW_DECISION_REQUIREMENT] = 'Requirement';
   $options_all[MFCS_REVIEW_DECISION_AVAILABLE] = 'Available';
   $options_all[MFCS_REVIEW_DECISION_UNAVAILABLE] = 'Unavailable';
@@ -733,7 +724,7 @@ function mfcs_get_reviewer_decision_list_options($option = NULL, $restriction = 
     $options[''] = '- Select -';
   }
 
-  if (!is_int($restriction) || $restriction < MFCS_RESTRICTION_DECISION_NONE || $restriction > MFCS_RESTRICTION_DECISION_COMMENT_ONLY) {
+  if (!is_int($restriction) || $restriction < MFCS_RESTRICTION_DECISION_NONE || $restriction > MFCS_RESTRICTION_DECISION_FINANCER) {
     $restriction = MFCS_RESTRICTION_DECISION_NONE;
   }
 
@@ -751,36 +742,58 @@ function mfcs_get_reviewer_decision_list_options($option = NULL, $restriction = 
     asort($options);
   }
   elseif ($restriction == MFCS_RESTRICTION_DECISION_REQUESTER) {
-    $options[MFCS_REVIEW_DECISION_COMMENT_ALL] = $options_all[MFCS_REVIEW_DECISION_COMMENT_ALL];
+    if (array_key_exists(MFCS_REVIEW_DECISION_COMMENT_ALL, $options_all)) {
+      $options[MFCS_REVIEW_DECISION_COMMENT_ALL] = $options_all[MFCS_REVIEW_DECISION_COMMENT_ALL];
+    }
   }
   elseif ($restriction == MFCS_RESTRICTION_DECISION_VENUE_COORDINATOR) {
-    foreach (array(MFCS_REVIEW_DECISION_AVAILABLE, MFCS_REVIEW_DECISION_UNAVAILABLE, MFCS_REVIEW_DECISION_COMMENT) as $option_id) {
-      $options[$option_id] = $options_all[$option_id];
+    foreach (array(MFCS_REVIEW_DECISION_AVAILABLE, MFCS_REVIEW_DECISION_UNAVAILABLE, MFCS_REVIEW_DECISION_COMMENT, MFCS_REVIEW_DECISION_REQUIREMENT) as $option_id) {
+      if (array_key_exists($option_id, $options_all)) {
+        $options[$option_id] = $options_all[$option_id];
+      }
     }
   }
   elseif ($restriction == MFCS_RESTRICTION_DECISION_REVIEWER) {
-    foreach (array(MFCS_REVIEW_DECISION_ISSUES, MFCS_REVIEW_DECISION_ISSUES_NONE, MFCS_REVIEW_DECISION_REQUIREMENT, MFCS_REVIEW_DECISION_COMMENT) as $option_id) {
-      $options[$option_id] = $options_all[$option_id];
+    foreach (array(MFCS_REVIEW_DECISION_ISSUES, MFCS_REVIEW_DECISION_ISSUES_NONE, MFCS_REVIEW_DECISION_COMMENT) as $option_id) {
+      if (array_key_exists($option_id, $options_all)) {
+        $options[$option_id] = $options_all[$option_id];
+      }
     }
   }
   elseif ($restriction == MFCS_RESTRICTION_DECISION_APPROVER) {
-    foreach (array(MFCS_REVIEW_DECISION_APPROVE, MFCS_REVIEW_DECISION_DENY, MFCS_REVIEW_DECISION_REQUIREMENT, MFCS_REVIEW_DECISION_COMMENT) as $option_id) {
-      $options[$option_id] = $options_all[$option_id];
+    foreach (array(MFCS_REVIEW_DECISION_APPROVE, MFCS_REVIEW_DECISION_DENY, MFCS_REVIEW_DECISION_COMMENT) as $option_id) {
+      if (array_key_exists($option_id, $options_all)) {
+        $options[$option_id] = $options_all[$option_id];
+      }
     }
   }
   elseif ($restriction == MFCS_RESTRICTION_DECISION_MANAGER) {
     foreach (array(MFCS_REVIEW_DECISION_AVAILABLE, MFCS_REVIEW_DECISION_UNAVAILABLE, MFCS_REVIEW_DECISION_APPROVE, MFCS_REVIEW_DECISION_DENY, MFCS_REVIEW_DECISION_ISSUES, MFCS_REVIEW_DECISION_ISSUES_NONE, MFCS_REVIEW_DECISION_REQUIREMENT, MFCS_REVIEW_DECISION_COMMENT) as $option_id) {
-      $options[$option_id] = $options_all[$option_id];
+      if (array_key_exists($option_id, $options_all)) {
+        $options[$option_id] = $options_all[$option_id];
+      }
     }
   }
   elseif ($restriction == MFCS_RESTRICTION_DECISION_ADMINISTER) {
     foreach (array(MFCS_REVIEW_DECISION_AVAILABLE, MFCS_REVIEW_DECISION_UNAVAILABLE, MFCS_REVIEW_DECISION_APPROVE, MFCS_REVIEW_DECISION_DENY, MFCS_REVIEW_DECISION_ISSUES, MFCS_REVIEW_DECISION_ISSUES_NONE, MFCS_REVIEW_DECISION_REQUIREMENT, MFCS_REVIEW_DECISION_COMMENT) as $option_id) {
-      $options[$option_id] = $options_all[$option_id];
+      if (array_key_exists($option_id, $options_all)) {
+        $options[$option_id] = $options_all[$option_id];
+      }
     }
   }
   elseif ($restriction == MFCS_RESTRICTION_DECISION_COMMENT_ONLY) {
-    $options[MFCS_REVIEW_DECISION_COMMENT] = $options_all[MFCS_REVIEW_DECISION_COMMENT];
+    if (array_key_exists(MFCS_REVIEW_DECISION_COMMENT, $options_all)) {
+      $options[MFCS_REVIEW_DECISION_COMMENT] = $options_all[MFCS_REVIEW_DECISION_COMMENT];
+    }
   }
+  elseif ($restriction == MFCS_RESTRICTION_DECISION_FINANCER) {
+    foreach (array(MFCS_REVIEW_DECISION_ISSUES, MFCS_REVIEW_DECISION_ISSUES_NONE, MFCS_REVIEW_DECISION_COMMENT, MFCS_REVIEW_DECISION_REQUIREMENT) as $option_id) {
+      if (array_key_exists($option_id, $options_all)) {
+        $options[$option_id] = $options_all[$option_id];
+      }
+    }
+  }
+
 
   return $options;
 }
@@ -801,7 +814,6 @@ function mfcs_get_reviewer_decision_list_options($option = NULL, $restriction = 
  */
 function mfcs_get_review_step_list_options($option = NULL, $hidden = FALSE, $disabled = FALSE) {
   $options = array();
-
   $options_all = array();
 
   if ($hidden) {
@@ -809,7 +821,7 @@ function mfcs_get_review_step_list_options($option = NULL, $hidden = FALSE, $dis
   }
 
   $options_all[MFCS_REQUEST_STEP_VENUE_AVAILABLE] = 'Venue Available';
-  $options_all[MFCS_REQUEST_STEP_RESOLVE_CONFLICTS] = 'Resolve Conflicts / Make Decisions';
+  $options_all[MFCS_REQUEST_STEP_FINAL_DECISION] = 'Final Decision';
   $options_all[MFCS_REQUEST_STEP_TENTATIVE_HOLD] = 'Release Tentative Hold';
   $options_all[MFCS_REQUEST_STEP_REVIEW] = 'Review';
   $options_all[MFCS_REQUEST_STEP_REQUIREMENTS] = 'Requirements';
@@ -830,7 +842,7 @@ function mfcs_get_review_step_list_options($option = NULL, $hidden = FALSE, $dis
     }
 
     $options_roles[MFCS_REQUEST_STEP_VENUE_AVAILABLE] = array(1, 2, 3, 4);
-    $options_roles[MFCS_REQUEST_STEP_RESOLVE_CONFLICTS] = array(1, 2, 3, 4);
+    $options_roles[MFCS_REQUEST_STEP_FINAL_DECISION] = array(1, 2, 3, 4);
     $options_roles[MFCS_REQUEST_STEP_TENTATIVE_HOLD] = array();
     $options_roles[MFCS_REQUEST_STEP_REVIEW] = array(1, 2, 3, 4);
     $options_roles[MFCS_REQUEST_STEP_REQUIREMENTS] = array(1, 2, 3, 4);
@@ -870,7 +882,6 @@ function mfcs_get_review_step_list_options($option = NULL, $hidden = FALSE, $dis
  */
 function mfcs_get_request_problems_list_options($option = NULL, $hidden = FALSE, $disabled = FALSE) {
   $options = array();
-
   $options_all = array();
 
   if ($hidden) {
@@ -887,6 +898,8 @@ function mfcs_get_request_problems_list_options($option = NULL, $hidden = FALSE,
   $options_all[MFCS_REQUEST_PROBLEM_BUILDING] = 'Building Invalid';
   $options_all[MFCS_REQUEST_PROBLEM_LOCATION] = 'Location Invalid';
   $options_all[MFCS_REQUEST_PROBLEM_CACHE_REQUEST] = 'Cache Invalid';
+  $options_all[MFCS_REQUEST_PROBLEM_HOLIDAY] = 'Holiday Conflict';
+  $options_all[MFCS_REQUEST_PROBLEM_UNAVAILABLE] = 'Room Unavailable';
 
   if ($option == 'select') {
     $options[''] = '- Select -';
@@ -920,7 +933,6 @@ function mfcs_get_request_problems_list_options($option = NULL, $hidden = FALSE,
  */
 function mfcs_get_log_problems_list_options($option = NULL, $type = NULL, $hidden = FALSE, $disabled = FALSE) {
   $options = array();
-
   $options_all = array();
 
   if ($hidden) {
@@ -960,6 +972,95 @@ function mfcs_get_log_problems_list_options($option = NULL, $type = NULL, $hidde
     foreach ($options_all as $option_id => $option_name) {
       $options[$option_id] = $option_name;
     }
+  }
+
+  asort($options);
+
+  return $options;
+}
+
+/**
+ * Returns an array of facilities use unavailability type options for populating lists.
+ *
+ * @param string|null $option
+ *   (optional) A string designating how the list will be populated.
+ * @param bool $hidden
+ *   (optional) When TRUE, will include hidden/special case types.
+ *   that are not normally exposed through the select list options.
+ * @param bool $disabled
+ *   (optional) When TRUE, load disabled options in addition to existing options.
+ *
+ * @return array
+ *   An array of options available.
+ */
+function mfcs_get_unavailability_type_list_options($option = NULL, $hidden = FALSE, $disabled = FALSE) {
+  $options = array();
+  $options_all = array();
+
+  if ($hidden) {
+    $options_all[MFCS_UNAVAILABILITY_TYPE_NONE] = 'None';
+  }
+
+  $options_all[MFCS_UNAVAILABILITY_TYPE_RENOVATION] = 'Renovation';
+  $options_all[MFCS_UNAVAILABILITY_TYPE_REPAIR] = 'Repair';
+  $options_all[MFCS_UNAVAILABILITY_TYPE_REFURBISHMENT] = 'Planned Refurbishment';
+  $options_all[MFCS_UNAVAILABILITY_TYPE_SPECIAL_EVENT] = 'Special Event';
+  $options_all[MFCS_UNAVAILABILITY_TYPE_OUTAGE] = 'Outage';
+  $options_all[MFCS_UNAVAILABILITY_TYPE_EMERGENCY] = 'Emergency';
+  $options_all[MFCS_UNAVAILABILITY_TYPE_CLASS] = 'Class';
+
+  if ($option == 'select') {
+    $options[''] = '- Select -';
+  }
+  elseif ($option == 'combined') {
+    $options_all = array();
+    $options_all[MFCS_UNAVAILABILITY_TYPE_RENOVATION] = 'Renovation / Repair';
+    $options_all[MFCS_UNAVAILABILITY_TYPE_REPAIR] = 'Renovation / Repair';
+    $options_all[MFCS_UNAVAILABILITY_TYPE_REFURBISHMENT] = 'Planned Refurbishment';
+    $options_all[MFCS_UNAVAILABILITY_TYPE_SPECIAL_EVENT] = 'Special Event';
+    $options_all[MFCS_UNAVAILABILITY_TYPE_OUTAGE] = 'Emergency / Outage';
+    $options_all[MFCS_UNAVAILABILITY_TYPE_EMERGENCY] = 'Emergency / Outage';
+    $options_all[MFCS_UNAVAILABILITY_TYPE_CLASS] = 'Class';
+  }
+
+  foreach ($options_all as $option_id => $option_name) {
+    $options[$option_id] = $option_name;
+  }
+
+  asort($options);
+
+  return $options;
+}
+
+/**
+ * Returns an array of facilities use insurance type options for populating lists.
+ *
+ * @param string|null $option
+ *   (optional) A string designating how the list will be populated.
+ * @param bool $hidden
+ *   (optional) When TRUE, will include hidden/special case types.
+ *   that are not normally exposed through the select list options.
+ * @param bool $disabled
+ *   (optional) When TRUE, load disabled options in addition to existing options.
+ *
+ * @return array
+ *   An array of options available.
+ */
+function mfcs_get_insurance_list_options($option = NULL, $hidden = FALSE, $disabled = FALSE) {
+  $options = array();
+  $options_all = array();
+
+  if ($hidden) {
+    $options_all[MFCS_INSURANCE_NONE] = 'None';
+  }
+
+  $options_all[MFCS_INSURANCE_REQUIRED_NOT] = 'Not Required';
+  $options_all[MFCS_INSURANCE_REQUIRED] = 'Required';
+  $options_all[MFCS_INSURANCE_PROVIDED] = 'Provided';
+  $options_all[MFCS_INSURANCE_PROVIDED_NOT] = 'Not Provided';
+
+  foreach ($options_all as $option_id => $option_name) {
+    $options[$option_id] = $option_name;
   }
 
   asort($options);

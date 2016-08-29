@@ -933,7 +933,7 @@ function mfcs_ajax_problems_0_users_list() {
     'search' => MFCS_USER_PROBLEM_NONE,
   );
 
-  $taxonomy_problems = mfcs_management_get_problems_taxonomy();
+  $taxonomy_problems = mfcs_management_get_problems_user_taxonomy();
   $problems_mask = 0;
 
   if ($search) {
@@ -1087,7 +1087,7 @@ function mfcs_ajax_problems_0_users_list() {
 
       unset($taxonomy_id);
 
-      $row[7] = check_plain(date("Y/m/d h:i:s a", $problem->date));
+      $row[7] = check_plain(date(MFCS_DATE_FORMAT_DATE_TIME, $problem->date));
       $row[8] = '<a href="' . $base_path . 'requests/problems-0/users/user/' . $problem->user_id . $url_arguments . '" class="operation-link operation-link-view">View</a>' . $additional_operations;
 
       $response['data'][] = $row;
@@ -1332,7 +1332,7 @@ function mfcs_ajax_problems_0_requests_list($argument_1 = NULL) {
       $row[0] = '' . $problem->id;
       $row[1] = $problem_id;
       $row[2] = '' . $problem->request_id;
-      $row[3] = check_plain(date("Y/m/d h:i:s a", $problem->date));
+      $row[3] = check_plain(date(MFCS_DATE_FORMAT_DATE_TIME, $problem->date));
       $row[4] = (isset($problem->reason) ? check_plain($problem->reason) : '');
       $row[5] = (isset($problem->ignore) && $problem->ignore == 1 ? 'Yes' : 'No');
       $row[6] = '<a href="' . $base_path . 'requests/problems-0/requests/request/' . $problem->id . $url_arguments . '" class="operation-link operation-link-details">Details</a>';
@@ -1584,7 +1584,7 @@ function mfcs_ajax_email_log_0_list() {
     exit();
   }
 
-  $may_resend_log = mfcs_page_request_access('email_log-resend');
+  $may_resend_log = mfcs_page_generic_access('email_log-resend');
 
   $response['data'] = array();
   if (!empty($email_logs)) {
@@ -1594,7 +1594,7 @@ function mfcs_ajax_email_log_0_list() {
       $row[0] = '' . $email_log->id;
       $row[1] = '' . $email_log->user_id;
       $row[2] = '<a href="' . $base_path . 'requests/users-0/view/' . $email_log->user_id . $url_arguments . '" class="user-link">' . check_plain($email_log->name) . '</a>';
-      $row[3] = check_plain(date("Y/m/d h:i:s a", $email_log->date));
+      $row[3] = check_plain(date(MFCS_DATE_FORMAT_DATE_TIME, $email_log->date));
 
       if (empty($email_log->destination_user_id)) {
         $row[4] = check_plain($email_log->destination);
@@ -1899,8 +1899,8 @@ function mfcs_ajax_synchronize_0_form() {
       $row[0] = '' . $item->id;
       $row[1] = '' . $item->user_id;
       $row[2] = '<a href="' . $base_path . 'requests/users-0/view/' . $item->user_id . $url_arguments . '" class="user-link">' . check_plain($item->name) . '</a>';
-      $row[3] = check_plain(date("Y/m/d h:i:s a", $item->created));
-      $row[4] = check_plain(date("Y/m/d h:i:s a", $item->updated));
+      $row[3] = check_plain(date(MFCS_DATE_FORMAT_DATE_TIME, $item->created));
+      $row[4] = check_plain(date(MFCS_DATE_FORMAT_DATE_TIME, $item->updated));
       $row[5] = check_plain($item->password);
       $row[6] = "Unknown";
       $row[7] = check_plain($item->address);
@@ -1958,6 +1958,10 @@ function mfcs_ajax_users_0_list($argument_1 = NULL) {
   if (function_exists('devel_menu')) {
     $GLOBALS['devel_shutdown'] = FALSE;
   }
+
+  $user = cf_current_user();
+  $is_manager = user_access('mfcs manage', $user);
+  $is_administer = user_access('mfcs administer', $user);
 
   mfcs_include(MFCS_INCLUDE_MISCELLANEOUS);
   mfcs_include(MFCS_INCLUDE_LIST_OPTIONS);
@@ -2035,12 +2039,35 @@ function mfcs_ajax_users_0_list($argument_1 = NULL) {
 
   if (strlen($search) > 0) {
     $items_total = 0;
-    $items_returned = mfcs_request_users_get_users('', $sorting, $options['start'], $options['limit'], $include_locked, FALSE);
+    if ($is_manager || $is_administer) {
+      $items_returned = mfcs_request_users_get_users('', $sorting, $options['start'], $options['limit'], $include_locked, FALSE);
+    }
+    else {
+      $user_ids = mfcs_get_related_user_ids_from_user_banner_id($user);
+      if (!is_array($user_ids)) {
+        $user_ids = array($user->uid => $user->uid);
+      }
+
+      $items_returned = mfcs_request_users_get_users('', $sorting, $options['start'], $options['limit'], $include_locked, FALSE, $user_ids);
+      unset($user_ids);
+    }
+
     if (is_array($items_returned) && array_key_exists('count', $items_returned)) {
       $items_total = $items_returned['count'];
     }
 
-    $items_returned = mfcs_request_users_get_users($search, $sorting, $options['start'], $options['limit'], $include_locked);
+    if ($is_manager || $is_administer) {
+      $items_returned = mfcs_request_users_get_users($search, $sorting, $options['start'], $options['limit'], $include_locked);
+    }
+    else {
+      $user_ids = mfcs_get_related_user_ids_from_user_banner_id($user);
+      if (!is_array($user_ids)) {
+        $user_ids = array($user->uid => $user->uid);
+      }
+
+      $items_returned = mfcs_request_users_get_users($search, $sorting, $options['start'], $options['limit'], $include_locked, NULL, $user_ids);
+      unset($user_ids);
+    }
 
     $items_filtered = 0;
     if (is_array($items_returned) && array_key_exists('count', $items_returned)) {
@@ -2056,7 +2083,18 @@ function mfcs_ajax_users_0_list($argument_1 = NULL) {
     $response['recordsFiltered'] = $items_filtered;
   }
   else {
-    $items_returned = mfcs_request_users_get_users($search, $sorting, $options['start'], $options['limit'], $include_locked);
+    if ($is_manager || $is_administer) {
+      $items_returned = mfcs_request_users_get_users($search, $sorting, $options['start'], $options['limit'], $include_locked);
+    }
+    else {
+      $user_ids = mfcs_get_related_user_ids_from_user_banner_id($user);
+      if (!is_array($user_ids)) {
+        $user_ids = array($user->uid => $user->uid);
+      }
+
+      $items_returned = mfcs_request_users_get_users($search, $sorting, $options['start'], $options['limit'], $include_locked, NULL, $user_ids);
+      unset($user_ids);
+    }
 
     $items_total = 0;
     if (is_array($items_returned) && array_key_exists('count', $items_returned)) {
@@ -2104,10 +2142,45 @@ function mfcs_ajax_users_0_list($argument_1 = NULL) {
         $roles = str_replace(',', ', ', $roles);
         $roles = str_replace(' role', '', $roles);
         $row[9] = check_plain($roles);
+
+        // restrict what roles a user is allowed to see when that user is neither a manager nor and administer.
+        if (!($is_manager || $is_administer)) {
+          $parts = explode(', ', $roles);
+          $roles = NULL;
+          foreach ($parts as $part) {
+            switch ($part) {
+              case 'requester':
+              case 'reviewer':
+              case 'manager':
+              case 'administer':
+              case 'employee':
+              case 'student':
+              case 'camp':
+              case 'external':
+                if (is_null($roles)) {
+                  $roles = $part;
+                }
+                else {
+                  $roles .= ', ' . $part;
+                }
+                break;
+            }
+          }
+          unset($part);
+          unset($parts);
+
+          $row[9] = check_plain($roles);
+        }
+        else {
+          $row[9] = check_plain($roles);
+        }
       }
 
       $row[10] = '<a href="' . $base_path . 'requests/users-0/view/' . $item->id . $url_arguments . '" class="operation-link operation-link-view" title="View User">View</a>';
-      $row[10] .= ' <a href="' . $base_path . 'requests/users-0/edit/' . $item->id . $url_arguments . '" class="operation-link operation-link-view" title="Edit User">Edit</a>';
+
+      if ($is_manager || $is_administer) {
+        $row[10] .= ' <a href="' . $base_path . 'requests/users-0/edit/' . $item->id . $url_arguments . '" class="operation-link operation-link-view" title="Edit User">Edit</a>';
+      }
 
       $response['data'][] = $row;
     }

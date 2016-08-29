@@ -291,7 +291,7 @@ function mfcs_miscellaneous_nearby_requests($timestamp_start, $timestamp_stop, $
       $nearby_events['before'] = $results;
     }
     else {
-      watchdog(MFCS_WATCHDOG_ID, "An error occured while searching for nearby requests in room @room with status @status and range of @range seconds before @time.", array('@time' => date('Y/m/d h:i:s a', $timestamp_start), '@room' => $room, '@status' => $status, '@range' => $nearby_range_seconds), WATCHDOG_WARNING);
+      watchdog(MFCS_WATCHDOG_ID, "An error occured while searching for nearby requests in room @room with status @status and range of @range seconds before @time.", array('@time' => date(MFCS_DATE_FORMAT_DATE_TIME, $timestamp_start), '@room' => $room, '@status' => $status, '@range' => $nearby_range_seconds), WATCHDOG_WARNING);
     }
 
     // the stop range must look at start values to find nearby ranges.
@@ -321,18 +321,18 @@ function mfcs_miscellaneous_nearby_requests($timestamp_start, $timestamp_stop, $
       $nearby_events['after'] = $results;
     }
     else {
-      watchdog(MFCS_WATCHDOG_ID, "An error occured while searching for nearby requests in room @room with status @status and range of @range seconds after @time.", array('@time' => date('Y/m/d h:i:s a', $timestamp_stop), '@room' => $room, '@status' => $status, '@range' => $nearby_range_seconds), WATCHDOG_WARNING);
+      watchdog(MFCS_WATCHDOG_ID, "An error occured while searching for nearby requests in room @room with status @status and range of @range seconds after @time.", array('@time' => date(MFCS_DATE_FORMAT_DATE_TIME, $timestamp_stop), '@room' => $room, '@status' => $status, '@range' => $nearby_range_seconds), WATCHDOG_WARNING);
     }
   }
   catch (Error $e) {
     cf_error::on_exception($e);
-    watchdog(MFCS_WATCHDOG_ID, "While searching for nearby requests in room @room with status @status and range of @range seconds before @before or after @after, the following error eoccured: @error.", array('@before' => date('Y/m/d h:i:s a', $timestamp_start), '@after' => date('Y/m/d h:i:s a', $timestamp_stop), '@room' => $room, '@status' => $status, '@range' => $nearby_range_seconds, '@error' => $e->getMessage()), WATCHDOG_ERROR);
+    watchdog(MFCS_WATCHDOG_ID, "While searching for nearby requests in room @room with status @status and range of @range seconds before @before or after @after, the following error eoccured: @error.", array('@before' => date(MFCS_DATE_FORMAT_DATE_TIME, $timestamp_start), '@after' => date(MFCS_DATE_FORMAT_DATE_TIME_SECONDS, $timestamp_stop), '@room' => $room, '@status' => $status, '@range' => $nearby_range_seconds, '@error' => $e->getMessage()), WATCHDOG_ERROR);
 
     return FALSE;
   }
   catch (Exception $e) {
     cf_error::on_exception($e);
-    watchdog(MFCS_WATCHDOG_ID, "While searching for nearby requests in room @room with status @status and range of @range seconds before @before or after @after, the following error eoccured: @error.", array('@before' => date('Y/m/d h:i:s a', $timestamp_start), '@after' => date('Y/m/d h:i:s a', $timestamp_stop), '@room' => $room, '@status' => $status, '@range' => $nearby_range_seconds, '@error' => $e->getMessage()), WATCHDOG_ERROR);
+    watchdog(MFCS_WATCHDOG_ID, "While searching for nearby requests in room @room with status @status and range of @range seconds before @before or after @after, the following error eoccured: @error.", array('@before' => date(MFCS_DATE_FORMAT_DATE_TIME, $timestamp_start), '@after' => date(MFCS_DATE_FORMAT_DATE_TIME_SECONDS, $timestamp_stop), '@room' => $room, '@status' => $status, '@range' => $nearby_range_seconds, '@error' => $e->getMessage()), WATCHDOG_ERROR);
 
     return FALSE;
   }
@@ -366,43 +366,48 @@ function mfcs_miscellaneous_check_requests_conflict($request_id = NULL) {
 
   // this is complex, so only check upcoming requests to reduce the resources used during this task.
   $instance = mfcs_instance();
+  $instance_day = strtotime('midnight today', $instance);
 
   try {
     // drupal api does not support WITH statements, so use a manually created query string for this test.
     $sql_with = 'with requests as (';
-    $sql_with .= 'select mer.id, mer.title, mer.location, mer.building, mer.room, mfdd.delta as delta, mfdd.value as date, mfdts.value as time_start, mfdtsp.value as time_stop';
-    $sql_with .= ', mbl.machine_name as location_code, mbl.human_name as location_name, mbl.date as location_date, mbl.disabled as location_disabled';
+    $sql_with .= 'select mer.id, mer.title, mer.building, mer.room, mfdd.delta as delta, mfdd.value as date, mfdts.value as time_start, mfdtsp.value as time_stop';
     $sql_with .= ', mbb.machine_name as building_code, mbb.human_name as building_name, mbb.date as building_date, mbb.disabled as building_disabled';
     $sql_with .= ', mbr.machine_name as room_number, mbr.human_name as room_name, mbr.date as room_date, mbr.disabled as room_disabled';
     $sql_with .= ' from mfcs_requests mer';
     $sql_with .= ' inner join mfcs_current mc on mer.id = mc.request_id inner join mfcs_field_dates_date mfdd on (mc.request_id = mfdd.request_id and mc.dates_date = mfdd.revision)';
-    $sql_with .= ' left join mfcs_field_dates_time_start mfdts on mfdd.request_id = mfdts.request_id and mfdd.revision = mfdts.revision and mfdd.delta = mfdts.delta';
-    $sql_with .= ' left join mfcs_field_dates_time_stop mfdtsp on mfdd.request_id = mfdtsp.request_id and mfdd.revision = mfdtsp.revision and mfdd.delta = mfdtsp.delta';
-    $sql_with .= ' left join mfcs_banner_locations mbl on mer.location = mbl.id';
+    $sql_with .= ' left join mfcs_field_dates_time_start mfdts on (mc.request_id = mfdts.request_id and mc.dates_time_start = mfdts.revision)';
+    $sql_with .= ' left join mfcs_field_dates_time_stop mfdtsp on (mc.request_id = mfdtsp.request_id and mc.dates_time_stop = mfdtsp.revision)';
+
     $sql_with .= ' left join mfcs_banner_buildings mbb on mer.building = mbb.id';
     $sql_with .= ' left join mfcs_banner_rooms mbr on mer.room = mbr.id';
-    $sql_with .= ' where mer.status in (:locked, :unlocked, :accepted) and (mfdd.value > :instance or (mfdts.value is not null and mfdts.value > :instance) or (mfdtsp.value is not null and mfdtsp.value > :instance))) ';
+    $sql_with .= ' where mer.status in (:locked, :unlocked, :accepted) and mfdd.value >= :instance_day and mfdd.delta = mfdts.delta and mfdd.delta = mfdtsp.delta) ';
 
-    $sql_on_1 = 'r.time_start is null and r2.time_start is null and r.date = r2.date';
-    $sql_on_2 = 'r.time_start is null and r2.time_start is not null and r.date >= r2.time_start and r.date < r2.time_stop';
-    $sql_on_3 = 'r.time_start is not null and r2.time_start is not null and ((r.time_start >= r2.time_start and r.time_start < r2.time_stop) or (r.time_stop > r2.time_start and r.time_stop <= r2.time_stop))';
-    $sql_on_4 = 'r.time_start is not null and r2.time_start is null and r2.date >= r.time_start and r2.date < r.time_stop';
+    // perform the following tests:
+    // test 1: each event date is on a per day basis, so if either r1 or r2 has an all day event, then there is a conflict between r1 and r2.
+    $sql_on_1 = 'r1.time_start is null or r2.time_start is null';
 
-    $sql_main = 'select r.*, r2.id as conflict_id, r2.title as conflict_title, r2.date as conflict_date, r2.time_start as conflict_time_start, r2.time_stop as conflict_time_stop, r2.delta as conflict_delta';
-    $sql_main .= ' from requests r';
-    $sql_main .= ' inner join requests r2 on (r.id <> r2.id and r.room = r2.room and ((' . $sql_on_1 . ') or (' . $sql_on_2 . ') or (' . $sql_on_3 . ') or (' . $sql_on_4 . ')))';
+    // test 2: if r1 is in between r2.
+    $sql_on_2 = '(r1.time_start >= r2.time_start and r1.time_start < r2.time_stop) or (r1.time_stop > r2.time_start and r1.time_stop <= r2.time_stop)';
+
+    // test 3: if r2 is in between r1.
+    $sql_on_3 = '(r2.time_start >= r1.time_start and r2.time_start < r1.time_stop) or (r2.time_stop > r1.time_start and r2.time_stop <= r1.time_stop)';
+
+    $sql_main = 'select r1.*, r2.id as conflict_id, r2.title as conflict_title, r2.date as conflict_date, r2.time_start as conflict_time_start, r2.time_stop as conflict_time_stop, r2.delta as conflict_delta';
+    $sql_main .= ' from requests r1';
+    $sql_main .= ' inner join requests r2 on (r1.id <> r2.id and r1.building = r2.building and r1.room = r2.room and r1.delta = r2.delta and r1.date = r2.date and ((' . $sql_on_1 . ') or (' . $sql_on_2 . ') or (' . $sql_on_3 . ')))';
 
     $arguments = array(
       ':locked' => MFCS_REQUEST_STATUS_LOCKED,
       ':unlocked' => MFCS_REQUEST_STATUS_UNLOCKED,
       ':accepted' => MFCS_REQUEST_STATUS_CLOSED_ACCEPTED,
-      ':instance' => $instance,
+      ':instance_day' => $instance_day,
     );
 
     if (!is_null($request_id)) {
       $arguments[':request_id'] = $request_id;
 
-      $sql_main .= ' where r.id = :request_id';
+      $sql_main .= ' where r1.id = :request_id';
     }
 
     $results = db_query($sql_with . $sql_main, $arguments)->fetchAll();
@@ -417,13 +422,6 @@ function mfcs_miscellaneous_check_requests_conflict($request_id = NULL) {
           $requests[$result->id] = array(
             'id' => $result->id,
             'title' => $result->title,
-            'location' => array(
-              'id' => $result->location,
-              'machine_name' => $result->location_code,
-              'human_name' => $result->location_name,
-              'date' => $result->location_date,
-              'disabled' => $result->location_disabled,
-            ),
             'building' => array(
               'id' => $result->building,
               'machine_name' => $result->building_code,
@@ -602,8 +600,68 @@ function mfcs_miscellaneous_check_requests_stuck($request_id = NULL) {
     return FALSE;
   }
 
-  // @todo: implement this.
-  return FALSE;
+  $requests = array();
+  $instance = mfcs_instance();
+
+  try {
+    // as of fcs-79, much of the review system's structure has been changed.
+    // the MFCS_REVIEW_STEP_REQUIREMENTS step is no longer in use.
+    // also check other steps not currently in use.
+    $steps = array(
+      MFCS_REVIEW_STEP_NONE,
+      MFCS_REVIEW_STEP_CHANGES_REQUIRED,
+      MFCS_REVIEW_STEP_RELEASE_HOLD,
+      MFCS_REVIEW_STEP_REQUIREMENTS,
+    );
+
+    // the following status to restrict search to when processing unused steps.
+    $status = array(
+      MFCS_REQUEST_STATUS_LOCKED,
+      MFCS_REQUEST_STATUS_UNLOCKED,
+    );
+
+    $query = db_select('mfcs_requests', 'mer');
+
+    $query->addField('mer', 'id', 'id');
+    $query->addField('mer', 'title', 'title');
+    $query->addField('mer', 'status', 'status');
+    $query->addField('mer', 'step', 'step');
+
+    if (!is_null($request_id)) {
+      $query->condition('mer.id', $request_id);
+    }
+
+    $query->condition('mer.status', $status, 'IN');
+    $query->condition('mer.step', $steps, 'IN');
+
+    $results = $query->execute()->fetchAll();
+    if (!is_array($results)) {
+      return FALSE;
+    }
+
+    if (!empty($results)) {
+      foreach ($results as $result) {
+        $requests[$result->id] = array(
+          'id' => $result->id,
+          'title' => $result->title,
+          'status' => $result->status,
+          'step' => $result->step,
+        );
+      }
+    }
+  }
+  catch (Error $e) {
+    cf_error::on_query_execution($e);
+
+    return FALSE;
+  }
+  catch (Exception $e) {
+    cf_error::on_query_execution($e);
+
+    return FALSE;
+  }
+
+  return $requests;
 }
 
 /**
@@ -741,6 +799,110 @@ function mfcs_miscellaneous_check_requests_coordinator($request_id = NULL) {
             'banner_id' => $result->banner_id,
             'classification' => $result->user_classification,
             'status' => $result->status,
+          ),
+        );
+      }
+    }
+  }
+  catch (Error $e) {
+    cf_error::on_query_execution($e);
+
+    return FALSE;
+  }
+  catch (Exception $e) {
+    cf_error::on_query_execution($e);
+
+    return FALSE;
+  }
+
+  return $requests;
+}
+
+/**
+ * Check for requests with outdated venue coordinator status.
+ *
+ * Look for requests where the venue coordinator is not the same as specified in banner.
+ *
+ * These requests should be considered for MFCS_REQUEST_PROBLEM_COORDINATOR.
+ *
+ * @param int|null $request_id
+ *   (optional) If specified, check for conflicts against the specified request.
+ *
+ * @return array|bool
+ *   An array containing requests that are in conflict on success.
+ *   FALSE is returned on error.
+ *
+ * @see: mfcs_requests_set_problem()
+ */
+function mfcs_miscellaneous_check_requests_coordinator_out_of_sync($request_id = NULL) {
+  if (!is_null($request_id) && !cf_is_integer($request_id)) {
+    cf_error::invalid_integer('request_id');
+    return FALSE;
+  }
+
+  $requests = array();
+
+  try {
+    $query = db_select('mfcs_requests', 'mer');
+    $query->innerJoin('mfcs_current', 'mc', 'mer.id = mc.request_id');
+    $query->innerJoin('mfcs_field_venue_coordinator_user_id', 'mfvcui', 'mc.request_id = mfvcui.request_id and mc.venue_coordinator_user_id = mfvcui.revision');
+    $query->innerJoin('users', 'u', 'mfvcui.value = u.uid');
+    $query->innerJoin('mfcs_banner_rooms', 'mbr', 'mer.room = mbr.id and mer.building = mbr.building');
+    $query->leftJoin('field_data_field_user_banner_id', 'fdfubi', 'u.uid = fdfubi.entity_id');
+    $query->leftJoin('field_data_field_user_first_name', 'fdfufn', 'u.uid = fdfufn.entity_id');
+    $query->leftJoin('field_data_field_user_last_name', 'fdfuln', 'u.uid = fdfuln.entity_id');
+
+    $query->addField('mer', 'id', 'id');
+    $query->addField('mer', 'title', 'title');
+    $query->addField('mer', 'location', 'location');
+    $query->addField('mer', 'building', 'building');
+    $query->addField('mer', 'room', 'room');
+    $query->addField('u', 'uid', 'user_id');
+    $query->addField('u', 'name', 'name');
+    $query->addField('u', 'status', 'status');
+    $query->addField('fdfubi', 'field_user_banner_id_value', 'banner_id');
+    $query->addField('fdfufn', 'field_user_first_name_value', 'first_name');
+    $query->addField('fdfuln', 'field_user_last_name_value', 'last_name');
+    $query->addField('mbr', 'coordinator_id', 'room_coordinator');
+
+    $status = array(
+      MFCS_REQUEST_STATUS_LOCKED,
+      MFCS_REQUEST_STATUS_UNLOCKED,
+    );
+
+    $query->where('mer.venue_coordinator <> mbr.coordinator_id');
+
+    $query->condition('mer.status', $status, 'IN');
+
+    if (!is_null($request_id)) {
+      $query->condition('mer.id', $request_id);
+    }
+
+    $results = $query->execute()->fetchAll();
+
+    if (!is_array($results)) {
+      return FALSE;
+    }
+
+    if (!empty($results)) {
+      foreach ($results as $result) {
+        $requests[$result->id] = array(
+          'id' => $result->id,
+          'title' => $result->title,
+          'location' => $result->location,
+          'building' => $result->building,
+          'room' => $result->room,
+          'coordinator' => array(
+            'user_id' => $result->user_id,
+            'name' => $result->name,
+            'first_name' => $result->first_name,
+            'last_name' => $result->last_name,
+            'banner_id' => $result->banner_id,
+            'classification' => NULL,
+            'status' => $result->status,
+          ),
+          'coordinator_banner' => array(
+            'user_id' => $result->room_coordinator,
           ),
         );
       }
@@ -1504,6 +1666,230 @@ function mfcs_miscellaneous_check_requests_problem_cache_requests($request_id = 
 }
 
 /**
+ * Check for requests where the request is assigned on the same day as a holiday.
+ *
+ * These requests should be considered for MFCS_REQUEST_PROBLEM_HOLIDAY.
+ *
+ * @param int|null $request_id
+ *   (optional) If specified, check for conflicts against the specified request.
+ *
+ * @return array|bool
+ *   An array containing requests that are in conflict on success.
+ *   FALSE is returned on error.
+ *
+ * @see: mfcs_requests_set_problem()
+ */
+function mfcs_miscellaneous_check_requests_problem_holiday($request_id = NULL) {
+  if (!is_null($request_id) && !cf_is_integer($request_id)) {
+    cf_error::invalid_integer('request_id');
+    return FALSE;
+  }
+
+  $requests = array();
+
+  try {
+    $query = db_select('mfcs_requests', 'mer');
+    $query->innerJoin('mfcs_current', 'mc', 'mer.id = mc.request_id');
+    $query->innerJoin('mfcs_field_dates_date', 'mfdd', 'mc.request_id = mfdd.request_id AND mc.dates_date = mfdd.revision');
+    $query->innerJoin('mfcs_holiday', 'mh', 'mfdd.value = mh.date');
+
+    $query->addField('mer', 'id', 'id');
+    $query->addField('mer', 'title', 'title');
+    $query->addField('mer', 'location', 'location_id');
+    $query->addField('mer', 'building', 'building_id');
+    $query->addField('mer', 'room', 'room_id');
+
+    $query->addField('mh', 'id', 'holiday_id');
+    $query->addField('mh', 'title', 'holiday_title');
+    $query->addField('mh', 'year', 'holiday_year');
+
+    $query->addField('mfdd', 'delta', 'delta');
+    $query->addField('mfdd', 'value', 'date');
+
+    if (!is_null($request_id)) {
+      $query->condition('mer.id', $request_id);
+    }
+
+    // don't bother with detecting conflicts that are in the past.
+    $instance = mfcs_instance();
+    $query->condition('mfdd.value', $instance, '>=');
+
+    $not_these_status = array(
+      MFCS_REQUEST_STATUS_DELETED,
+      MFCS_REQUEST_STATUS_CLOSED_DENIED,
+      MFCS_REQUEST_STATUS_CLOSED_UNAVAILABLE,
+      MFCS_REQUEST_STATUS_CLOSED_DUE_TO_LOCK,
+      MFCS_REQUEST_STATUS_CANCELLED,
+      MFCS_REQUEST_STATUS_CLOSED_ACCEPTED_CANCELLED,
+    );
+
+    $query->condition('mer.status', $not_these_status, 'NOT IN');
+    $query->condition('mh.enabled', 1);
+    $query->condition('mh.deleted', 0);
+
+    $results = $query->execute()->fetchAll();
+    if (!is_array($results)) {
+      return FALSE;
+    }
+
+    if (!empty($results)) {
+      foreach ($results as $result) {
+        if (!array_key_exists($result->id, $requests)) {
+          $requests[$result->id] = array(
+            'id' => (int) $result->id,
+            'title' => $result->title,
+            'location' => (int) $result->location_id,
+            'building' => (int) $result->building_id,
+            'room' => (int) $result->room_id,
+            'dates' => array(),
+            'holiday' => array(
+              'id' => (int) $result->holiday_id,
+              'title' => $result->holiday_title,
+              'year' => (int) $result->holiday_year,
+            ),
+          );
+        }
+
+        $requests[$result->id]['dates'][$result->delta] = $result->date;
+      }
+    }
+  }
+  catch (Error $e) {
+    cf_error::on_query_execution($e);
+
+    return FALSE;
+  }
+  catch (Exception $e) {
+    cf_error::on_query_execution($e);
+
+    return FALSE;
+  }
+
+  return $requests;
+}
+
+/**
+ * Check for requests where the request is assigned on the same day and time as an unavailability.
+ *
+ * These requests should be considered for MFCS_REQUEST_PROBLEM_UNAVAILABLE.
+ *
+ * @param int|null $request_id
+ *   (optional) If specified, check for conflicts against the specified request.
+ *
+ * @return array|bool
+ *   An array containing requests that are in conflict on success.
+ *   FALSE is returned on error.
+ *
+ * @see: mfcs_requests_set_problem()
+ */
+function mfcs_miscellaneous_check_requests_problem_unavailable($request_id = NULL) {
+  if (!is_null($request_id) && !cf_is_integer($request_id)) {
+    cf_error::invalid_integer('request_id');
+    return FALSE;
+  }
+
+  $requests = array();
+
+  try {
+    $arguments = array();
+
+    $not_these_status = array(
+      MFCS_REQUEST_STATUS_DELETED,
+      MFCS_REQUEST_STATUS_CLOSED_DENIED,
+      MFCS_REQUEST_STATUS_CLOSED_UNAVAILABLE,
+      MFCS_REQUEST_STATUS_CLOSED_DUE_TO_LOCK,
+      MFCS_REQUEST_STATUS_CANCELLED,
+      MFCS_REQUEST_STATUS_CLOSED_ACCEPTED_CANCELLED,
+    );
+
+    $arguments[':status_1'] = MFCS_REQUEST_STATUS_DELETED;
+    $arguments[':status_2'] = MFCS_REQUEST_STATUS_CLOSED_DENIED;
+    $arguments[':status_3'] = MFCS_REQUEST_STATUS_CLOSED_UNAVAILABLE;
+    $arguments[':status_4'] = MFCS_REQUEST_STATUS_CLOSED_DUE_TO_LOCK;
+    $arguments[':status_5'] = MFCS_REQUEST_STATUS_CANCELLED;
+    $arguments[':status_6'] = MFCS_REQUEST_STATUS_CLOSED_ACCEPTED_CANCELLED;
+
+
+    $query_string = 'with unavailabilities as ( ';
+    $query_string .= 'select mu.id as unavailability_id, mu.title as unavailability_title, mu.type as unavailability_type, mu.year as unavailability_year, mu.date_start as unavailability_date_start, mu.date_stop as unavailability_date_stop, mu.title, mer.id, mer.title, mer.location as location_id, mer.building as building_id, mer.room as room_id, mer.status ';
+    $query_string .= 'from mfcs_unavailability mu ';
+    $query_string .= 'inner join mfcs_requests mer on (mu.room_id = mer.room and mu.building_id = mer.building) ';
+    $query_string .= 'where mer.status not in (:status_1, :status_2, :status_3, :status_4, :status_5, :status_6) ';
+    $query_string .= 'and mu.deleted = 0 and mu.enabled = 1';
+    $query_string .= ') ';
+
+    $query_string .= 'select u.*, mfdd.delta, mfdd.value as date, mfdts.value as time_start, mfdtsp.value as time_stop from unavailabilities u ';
+    $query_string .= 'inner join mfcs_current mc on (u.id = mc.request_id) ';
+    $query_string .= 'inner join mfcs_field_dates_date mfdd on (mc.request_id = mfdd.request_id and mc.dates_date = mfdd.revision) ';
+    $query_string .= 'left join mfcs_field_dates_time_start mfdts on (mc.request_id = mfdts.request_id and mc.dates_time_start = mfdts.revision and mfdd.delta = mfdts.delta) ';
+    $query_string .= 'left join mfcs_field_dates_time_stop mfdtsp on (mc.request_id = mfdtsp.request_id and mc.dates_time_stop = mfdtsp.revision and mfdts.delta = mfdtsp.delta) ';
+
+    $query_string .= 'where (mfdts.value is null and mfdtsp.value is null and ((u.unavailability_date_start < mfdd.value and u.unavailability_date_stop > mfdts.value) or (u.unavailability_date_start >= mfdd.value and u.unavailability_date_start < (mfdd.value + 86400)))) or ';
+    $query_string .= '( not (mfdts.value is null and mfdtsp.value is null) and ( ';
+    $query_string .= '(u.unavailability_date_start < mfdts.value and u.unavailability_date_stop > mfdts.value) or (u.unavailability_date_start >= mfdts.value and u.unavailability_date_start < mfdtsp.value) ';
+    $query_string .= ') ) ';
+
+    if (!is_null($request_id)) {
+      $query_string .= 'and u.id = :request_id ';
+      $arguments[':request_id'] = $request_id;
+    }
+
+    // don't bother with detecting conflicts that are in the past.
+    $instance = mfcs_instance();
+    $query_string .= 'and mfdd.value >= :instance ';
+    $arguments[':instance'] = $instance;
+
+    $results = db_query($query_string, $arguments)->fetchAll();
+    if (!is_array($results)) {
+      return FALSE;
+    }
+
+    if (!empty($results)) {
+      foreach ($results as $result) {
+        if (!array_key_exists($result->id, $requests)) {
+          $requests[(int) $result->id] = array(
+            'id' => (int) $result->id,
+            'title' => $result->title,
+            'location' => (int) $result->location_id,
+            'building' => (int) $result->building_id,
+            'room' => (int) $result->room_id,
+            'dates' => array(),
+            'unavailabilities' => array(),
+          );
+        }
+
+        $requests[$result->id]['unavailabilities'][(int) $result->unavailability_id] = array(
+          'id' => (int) $result->unavailability_id,
+          'title' => $result->unavailability_title,
+          'year' => (int) $result->unavailability_year,
+          'type' => (int) $result->unavailability_type,
+          'date_start' => (int) $result->unavailability_date_start,
+          'date_stop' => (int) $result->unavailability_date_stop,
+        );
+
+        $requests[$result->id]['dates'][(int) $result->delta] = array(
+          'date' => $result->date,
+          'time_start' => $result->time_start,
+          'time_stop' => $result->time_stop,
+        );
+      }
+    }
+  }
+  catch (Error $e) {
+    cf_error::on_query_execution($e);
+
+    return FALSE;
+  }
+  catch (Exception $e) {
+    cf_error::on_query_execution($e);
+
+    return FALSE;
+  }
+
+  return $requests;
+}
+
+/**
  * Check requests for problems.
  *
  * @param int|null $request_id
@@ -1549,9 +1935,9 @@ function mfcs_miscellaneous_check_requests($request_id = NULL, $problem_code = N
     if (is_array($results) && !empty($results)) {
       foreach ($results as $result) {
         $reason = 'Scheduling Conflict in ';
-        $reason .= check_plain($result['room']['human_name']) . ' of ';
-        $reason .= check_plain($result['building']['human_name']) . ' for ';
-        $reason .= check_plain(date("l, F j, Y", $result['date'])) . ' with requests: ';
+        $reason .= $result['room']['human_name'] . ' of ';
+        $reason .= $result['building']['human_name'] . ' for ';
+        $reason .= date(MFCS_DATE_FORMAT_DATE, $result['date']) . ' with requests: ';
 
         $processed = FALSE;
         foreach ($result['conflict'] as $conflict_id => $conflict_data) {
@@ -1641,7 +2027,7 @@ function mfcs_miscellaneous_check_requests($request_id = NULL, $problem_code = N
       foreach ($results as $result) {
         $reason = 'The venue coordinator ';
         $reason .= $result['coordinator']['first_name'] . ' ' . $result['coordinator']['last_name'];
-        $reason .= ' [id: ' . check_plain($result['coordinator']['user_id']) . ']';
+        $reason .= ' [id: ' . $result['coordinator']['user_id'] . ']';
 
         if ($result['coordinator']['user_id']['status'] == 0) {
           $reason .= ' account is disabled.';
@@ -1652,6 +2038,39 @@ function mfcs_miscellaneous_check_requests($request_id = NULL, $problem_code = N
         else {
           $reason .= ' assignment is invalid.';
         }
+
+        $problems[] = array(
+          'request_id' => $result['id'],
+          'problem' => MFCS_REQUEST_PROBLEM_COORDINATOR,
+          'date' => $instance,
+          'reason' => $reason,
+          'details' => '',
+        );
+        unset($reason);
+      }
+      unset($result);
+    }
+    unset($results);
+
+    $results = mfcs_miscellaneous_check_requests_coordinator_out_of_sync($request_id);
+    if (is_array($results) && !empty($results)) {
+      foreach ($results as $result) {
+        $reason = 'The venue coordinator ';
+        $reason .= $result['coordinator']['first_name'] . ' ' . $result['coordinator']['last_name'];
+        $reason .= ' [id: ' . $result['coordinator']['user_id'] . ']';
+        $reason .= ' is not the most recent venue coordinator: ';
+
+        $coordinator_id = (int) $result['coordinator_banner']['user_id'];
+        $new_coordinator_user = mfcs_load_basic_user_settings_by_user_id($coordinator_id);
+        if (!empty($new_coordinator_user['name'])) {
+          if (!empty($new_coordinator_user['first_name']) && !empty($new_coordinator_user['first_name'])) {
+            $reason .= $new_coordinator_user['first_name'] . ' ' . $new_coordinator_user['last_name'];
+          }
+          else {
+            $reason .= $new_coordinator_user['name'];
+          }
+        }
+        $reason .= ' [id: ' . $coordinator_id . '].';
 
         $problems[] = array(
           'request_id' => $result['id'],
@@ -1764,7 +2183,7 @@ function mfcs_miscellaneous_check_requests($request_id = NULL, $problem_code = N
           else {
             $processed = TRUE;
           }
-          $reason .= check_plain($field_name) . ' (cache = ' . check_plain($field_data['cache']) . ' vs real = ' . check_plain($field_data['real']) . ')';
+          $reason .= $field_name . ' (cache = ' . $field_data['cache'] . ' vs real = ' . $field_data['real'] . ')';
         }
         unset($processed);
         unset($field_name);
@@ -1787,6 +2206,76 @@ function mfcs_miscellaneous_check_requests($request_id = NULL, $problem_code = N
     unset($results);
   }
 
+  if (is_null($problem_code) || $problem_code === MFCS_REQUEST_PROBLEM_HOLIDAY) {
+    $results = mfcs_miscellaneous_check_requests_problem_holiday($request_id);
+    if (is_array($results) && !empty($results)) {
+      foreach ($results as $result) {
+        $reason = 'The request is scheduled on the ' . $result['holiday']['year'] . ' holiday: ' . $result['holiday']['title'] . ' [id: ' . $result['holiday']['id'] . '].';
+
+        $details = array(
+          'location_id' => $result['location'],
+          'building_id' => $result['building'],
+          'room_id' => $result['room'],
+          'holiday' => $result['holiday'],
+          'dates' => $result['dates'],
+        );
+
+        $problems[] = array(
+          'request_id' => $result['id'],
+          'problem' => MFCS_REQUEST_PROBLEM_HOLIDAY,
+          'date' => $instance,
+          'reason' => $reason,
+          'details' => serialize($details),
+        );
+
+        unset($details);
+        unset($reason);
+      }
+      unset($result);
+    }
+    unset($results);
+  }
+
+  if (is_null($problem_code) || $problem_code === MFCS_REQUEST_PROBLEM_UNAVAILABLE) {
+    $results = mfcs_miscellaneous_check_requests_problem_unavailable($request_id);
+    if (is_array($results) && !empty($results)) {
+      foreach ($results as $result) {
+        $reason = NULL;
+        foreach ($result['unavailabilities'] as $unavailability_data) {
+          if (is_null($reason)) {
+            $reason = 'The specified room is unavailable because of: ' . $unavailability_data['title'] . ' [id: ' . $unavailability_data['id'] . ']';
+          }
+          else {
+            $reason .= ', ' . $unavailability_data['title'] . ' [id: ' . $unavailability_data['id'] . ']';
+          }
+        }
+        $reason .= '.';
+
+        $details = array(
+          'location_id' => $result['location'],
+          'building_id' => $result['building'],
+          'room_id' => $result['room'],
+          'unavailabilities' => $result['unavailabilities'],
+          'dates' => $result['dates'],
+        );
+
+        $problems[] = array(
+          'request_id' => $result['id'],
+          'problem' => MFCS_REQUEST_PROBLEM_UNAVAILABLE,
+          'date' => $instance,
+          'reason' => $reason,
+          'details' => serialize($details),
+        );
+
+        unset($details);
+        unset($reason);
+      }
+      unset($result);
+      unset($unavailability_data);
+    }
+    unset($results);
+  }
+
   return $problems;
 }
 
@@ -1798,12 +2287,15 @@ function mfcs_miscellaneous_check_requests($request_id = NULL, $problem_code = N
  * @param bool|null $include_ignored
  *   (optional) When TRUE, include ignored problems in listing.
  *   When FALSE, problems that are ignored are not including in the listing.
+ * @param bool $inner_join
+ *   (optional) When TRUE, perform an inner join on the mfcs_requests table and load some of the fields.
+ *   When FALSE, do not join the mfcs_requests table.
  *
  * @param array|bool
  *   An array of problems is returned on success.
  *   FALSE is returned on error.
  */
-function mfcs_miscellaneous_problems_request_load($problem_id = NULL, $include_ignored = FALSE) {
+function mfcs_miscellaneous_problems_request_load($problem_id = NULL, $include_ignored = FALSE, $inner_join = FALSE) {
   if (!is_null($problem_id) && !cf_is_integer($problem_id)) {
     cf_error::invalid_integer('problem_id');
     return FALSE;
@@ -1811,6 +2303,11 @@ function mfcs_miscellaneous_problems_request_load($problem_id = NULL, $include_i
 
   if (!is_bool($include_ignored)) {
     cf_error::invalid_bool('include_ignored');
+    return FALSE;
+  }
+
+  if (!is_bool($inner_join)) {
+    cf_error::invalid_bool('inner_join');
     return FALSE;
   }
 
@@ -1825,6 +2322,13 @@ function mfcs_miscellaneous_problems_request_load($problem_id = NULL, $include_i
     $query->addField('mpr', 'reason', 'reason');
     $query->addField('mpr', 'details', 'details');
     $query->addField('mpr', 'ignore', 'ignore');
+
+    if ($inner_join) {
+      $query->innerJoin('mfcs_requests', 'mer', 'mpr.request_id = mer.id');
+
+      $query->addField('mer', 'title', 'request_title');
+      $query->addField('mer', 'status', 'request_status');
+    }
 
     if (!is_null($problem_id)) {
       $query->condition('mpr.id', $problem_id);

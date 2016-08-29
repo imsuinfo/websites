@@ -112,13 +112,15 @@ function mfcs_request_history_0_form($form, &$form_state, $request_id, $page_num
   $presentation = mfcs_table_presentation();
   $presentation_tables = mfcs_table_presentation(1);
 
-  $status_options = mfcs_get_request_status_list_options();
-  $step_options = mfcs_get_review_steps_list_options();
+  $status_options = mfcs_get_request_status_list_options(NULL, TRUE, TRUE);
+  $step_options = mfcs_get_review_steps_list_options(NULL, TRUE, TRUE);
+  $decision_options = mfcs_get_reviewer_decision_list_options(NULL, 0, TRUE, TRUE);
+  $insurance_options = mfcs_get_insurance_list_options(NULL, TRUE, TRUE);
 
   // The venue coordinator user id is a 'split' structure and does not normally get displayed.
   // Manually change the behavior such that the Venue Coordinator Name will be properly presented.
   $presentation['venue_coordinator']['user_id']['group'] = 'coordinator';
-  $presentation_tables['coordinator']['label'] = "Venue Coordinator";
+  $presentation_tables['coordinator']['label'] = 'Venue Coordinator';
 
   try {
     $query = db_select('mfcs_request_revisions', 'mrv');
@@ -143,7 +145,7 @@ function mfcs_request_history_0_form($form, &$form_state, $request_id, $page_num
         }
 
         $history = mfcs_load_request_by_timestamp($request_id, $revision->date, $revision->user_id);
-        $date = date("Y/m/d h:i:s a", $revision->date);
+        $date = date(MFCS_DATE_FORMAT_DATE_TIME_SECONDS, $revision->date);
 
         $fieldset_id = 'request-' . $request_id . '-history_items-' . $revision->date . '-' . $revision_id;
         $fieldset_name = 'history_items-' . $revision->date . '-' . $revision_id;
@@ -153,7 +155,7 @@ function mfcs_request_history_0_form($form, &$form_state, $request_id, $page_num
           '#collapsible' => TRUE,
           '#collapsed' => FALSE,
           '#tree' => TRUE,
-          '#title' => '<h3 class="history_items-title">' . "Changes on " . $date . '</h3>',
+          '#title' => '<h3 class="history_items-title">' . 'Changes on ' . $date . '</h3>',
           '#attributes' => array(
             'class' => array(
               'history_items',
@@ -283,8 +285,6 @@ function mfcs_request_history_0_form($form, &$form_state, $request_id, $page_num
 
                   if ($group_name == 'review') {
                     if ($field_name == 'review') {
-                      $step_options = mfcs_get_review_steps_list_options();
-                      $decision_options = mfcs_get_reviewer_decision_list_options();
                       $custom_message = "";
 
                       if (is_string($value->decision)) {
@@ -330,9 +330,13 @@ function mfcs_request_history_0_form($form, &$form_state, $request_id, $page_num
                         $custom_message = 'During the <strong class="review-step">' . $step_options[$value->step] . ' Step</strong> ';
                         $custom_message .= ' the request was <strong class="review-decision">' . "Uncancelled" . '</strong>. ';
                       }
-                      elseif ($decision === MFCS_REVIEW_DECISION_REASSIGNED) {
+                      elseif ($decision === MFCS_REVIEW_DECISION_REASSIGNED_COORDINATOR) {
                         $custom_message = 'During the <strong class="review-step">' . $step_options[$value->step] . ' Step</strong> ';
                         $custom_message .= ' the request\'s Venue Coordinator has been manually <strong class="review-decision">' . "Re-Assigned" . '</strong>. ';
+                      }
+                      elseif ($decision === MFCS_REVIEW_DECISION_REASSIGNED_REQUESTER) {
+                        $custom_message = 'During the <strong class="review-step">' . $step_options[$value->step] . ' Step</strong> ';
+                        $custom_message .= ' the request\'s Requester has been manually <strong class="review-decision">' . "Re-Assigned" . '</strong>. ';
                       }
                       elseif ($decision === MFCS_REVIEW_DECISION_OVERRIDE) {
                         $custom_message = 'The request\'s step and/or status have been manually <strong class="review-decision">' . "Overridden" . '</strong>. ';
@@ -353,6 +357,9 @@ function mfcs_request_history_0_form($form, &$form_state, $request_id, $page_num
                         $custom_message = 'During the <strong class="review-step">' . $step_options[$value->step] . ' Step</strong> ';
                         $custom_message .= ' the reviewer has reported that they have <strong class="review-decision">' . "No Issues" . '</strong> with the request. ';
                       }
+                      elseif ($decision === MFCS_REVIEW_DECISION_MOVE) {
+                        $custom_message = 'The request has been <strong class="review-decision">' . "Moved" . '</strong> to another location, building, or room. ';
+                      }
 
                       $processed_values[$value->user_id]['fields'][$group_name][$field_name][$key] = array(
                         '#markup' => '<div class="item-value">' . $custom_message . '</div>',
@@ -361,23 +368,8 @@ function mfcs_request_history_0_form($form, &$form_state, $request_id, $page_num
                       unset($decision);
                     }
                   }
-                  elseif ($group_name == 'requirements' || $group_name == 'insurance') {
+                  elseif ($group_name == 'requirements') {
                     if (isset($presentation[$group_name][$field_name])) {
-                      // always display the boolean when displayed in the history log.
-                      if (!empty($presentation[$group_name][$field_name]['type'])) {
-                        foreach ($presentation[$group_name][$field_name]['type'] as $type_key => $type_value) {
-                          if ($type_value == 'boolean') {
-                            if (!empty($presentation[$group_name][$field_name]['display'][$type_key])) {
-                              $display_value = &$presentation[$group_name][$field_name]['display'][$type_key];
-
-                              if ($display_value == 'when_true' || $display_value == 'when_false') {
-                                $display_value = 'raw';
-                              }
-                            }
-                          }
-                        }
-                      }
-
                       $options = array(
                         'no_prefix' => TRUE,
                         'no_suffix' => TRUE,
@@ -434,6 +426,11 @@ function mfcs_request_history_0_form($form, &$form_state, $request_id, $page_num
                             }
                           }
                         }
+                        elseif ($type_value == 'insurance') {
+                          if (isset($presentation[$group_name][$field_name])) {
+                            $presentation[$group_name][$field_name]['display'][$type_key] = 'always';
+                          }
+                        }
                       }
                     }
 
@@ -446,7 +443,6 @@ function mfcs_request_history_0_form($form, &$form_state, $request_id, $page_num
                     );
 
                     $value_array = mfcs_view_build_request_value_structure($request_id, $group_name, $field_name, $key, $value, $presentation[$group_name][$field_name], $history, $options);
-
                     if (is_array($value_array) && !isset($value_array['no_values'])) {
                       $processed_values[$value->user_id]['fields'][$group_name][$field_name][$key] = $value_array;
                     }
@@ -613,12 +609,9 @@ function mfcs_request_history_0_form_build_updater_name($user_id, &$processed_va
 
     $updater_name = NULL;
     if (is_object($updater)) {
-      if (!empty($updater->field_user_first_name['und'][0]['safe_value'])) {
-        $updater_name = $updater->field_user_first_name['und'][0]['safe_value'];
-
-        if (!empty($updater->field_user_last_name['und'][0]['safe_value'])) {
-          $updater_name .= ' ' . $updater->field_user_last_name['und'][0]['safe_value'];
-        }
+      $updater_name = mfcs_generate_form_user_name($updater);
+      if ($updater_name === FALSE) {
+        $updater_name = NULL;
       }
 
       if (is_null($updater_name)) {

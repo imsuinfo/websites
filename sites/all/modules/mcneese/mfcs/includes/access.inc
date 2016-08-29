@@ -291,7 +291,22 @@ function mfcs_page_request_access_operation_view(&$request_ids, &$processed, &$a
     MFCS_REQUEST_STATUS_CLOSED_ACCEPTED_CANCELLED,
   );
 
-  if ($roles['requester'] || $roles['manager'] || $roles['administer']) {
+  if ($roles['manager'] || $roles['administer']) {
+    if (array_key_exists(NULL, $request_ids)) {
+      $access[NULL] = TRUE;
+      $processed[NULL] = TRUE;
+    }
+    else {
+      foreach ($request_ids as $request_id) {
+        $access[$request_id] = TRUE;
+        $processed[$request_id] = TRUE;
+      }
+    }
+
+    return TRUE;
+  }
+
+  if (!$roles['reviewer'] && $roles['requester']) {
     if (array_key_exists(NULL, $request_ids)) {
       $access[NULL] = TRUE;
       $processed[NULL] = TRUE;
@@ -1329,7 +1344,7 @@ function mfcs_page_request_access_operation_uncancel(&$request_ids, &$processed,
 }
 
 /**
- * Perform the access control check for the reassign operation.
+ * Perform the access control check for the reassign coordinator operation.
  *
  * @param array $request_ids
  *   The array of requests ids yet to be processed.
@@ -1347,7 +1362,7 @@ function mfcs_page_request_access_operation_uncancel(&$request_ids, &$processed,
  *   TRUE on successfull execution, FALSE otherwise.
  *   The return results do not represent the access control results.
  */
-function mfcs_page_request_access_operation_reassign(&$request_ids, &$processed, &$access, $roles, $user) {
+function mfcs_page_request_access_operation_reassign_coordinator(&$request_ids, &$processed, &$access, $roles, $user) {
   if (!is_array($request_ids)) {
     cf_error::invalid_array('request_ids');
     return FALSE;
@@ -1381,10 +1396,111 @@ function mfcs_page_request_access_operation_reassign(&$request_ids, &$processed,
     }
   }
 
-  $reassignable_status = array(
-    MFCS_REQUEST_STATUS_LOCKED,
-    MFCS_REQUEST_STATUS_UNLOCKED,
-  );
+  // always grant managers and administers re-assign access.
+  if ($roles['manager'] || $roles['administer']) {
+    try {
+      $query = db_select('mfcs_requests', 'mer');
+
+      $query->addField('mer', 'id', 'id');
+
+      $query->condition('mer.id', $request_ids, 'IN');
+      $query->condition('mer.status', MFCS_REQUEST_STATUS_DELETED, '<>');
+
+      $access_results = $query->execute()->fetchAllAssoc('id');
+
+      if (is_array($access_results)) {
+        $request_ids_copy = $request_ids;
+        foreach ($request_ids_copy as $id => $value) {
+          if (array_key_exists($id, $access_results)) {
+            $processed[$id] = TRUE;
+            $access[$id] = TRUE;
+            unset($request_ids[$id]);
+          }
+        }
+        unset($request_ids_copy);
+
+        // looks like all of the requests have been processed, so return.
+        if (empty($request_ids)) {
+          return TRUE;
+        }
+      }
+    }
+    catch (Error $e) {
+      cf_error::on_exception($e);
+      return FALSE;
+    }
+    catch (Exception $e) {
+      cf_error::on_exception($e);
+      return FALSE;
+    }
+  }
+
+  if (array_key_exists(NULL, $request_ids)) {
+    $access[NULL] = FALSE;
+    $processed[NULL] = FALSE;
+    return TRUE;
+  }
+
+  foreach ($request_ids as $request_id) {
+    $access[$request_id] = FALSE;
+    $processed[$request_id] = FALSE;
+  }
+
+  return TRUE;
+}
+
+/**
+ * Perform the access control check for the reassign requester operation.
+ *
+ * @param array $request_ids
+ *   The array of requests ids yet to be processed.
+ * @param array $processed
+ *   The array of already processed request ids and the access results.
+ * @param array $access
+ *   The static variable representing the processed array used to increase
+ *   performance.
+ * @param array roles
+ *   An array of relevant roles associated with access control for requests.
+ * @param object user
+ *   The drupal user object to check access against.
+ *
+ * @return bool
+ *   TRUE on successfull execution, FALSE otherwise.
+ *   The return results do not represent the access control results.
+ */
+function mfcs_page_request_access_operation_reassign_requester(&$request_ids, &$processed, &$access, $roles, $user) {
+  if (!is_array($request_ids)) {
+    cf_error::invalid_array('request_ids');
+    return FALSE;
+  }
+
+  if (!is_array($processed)) {
+    cf_error::invalid_array('processed');
+    return FALSE;
+  }
+
+  if (!is_array($access)) {
+    cf_error::invalid_array('access');
+    return FALSE;
+  }
+
+  if (!is_array($roles)) {
+    cf_error::invalid_array('roles');
+    return FALSE;
+  }
+
+  if (!is_object($user)) {
+    cf_error::invalid_object('user');
+    return FALSE;
+  }
+
+  if ($roles['manager'] || $roles['administer']) {
+    if (array_key_exists(NULL, $request_ids)) {
+      $access[NULL] = TRUE;
+      $processed[NULL] = TRUE;
+      return TRUE;
+    }
+  }
 
   // always grant managers and administers re-assign access.
   if ($roles['manager'] || $roles['administer']) {
@@ -1394,7 +1510,7 @@ function mfcs_page_request_access_operation_reassign(&$request_ids, &$processed,
       $query->addField('mer', 'id', 'id');
 
       $query->condition('mer.id', $request_ids, 'IN');
-      $query->condition('mer.status', $reassignable_status, 'IN');
+      $query->condition('mer.status', MFCS_REQUEST_STATUS_DELETED, '<>');
 
       $access_results = $query->execute()->fetchAllAssoc('id');
 
@@ -1644,6 +1760,108 @@ function mfcs_page_request_access_operation_override(&$request_ids, &$processed,
 }
 
 /**
+ * Perform the access control check for the move operation.
+ *
+ * @param array $request_ids
+ *   The array of requests ids yet to be processed.
+ * @param array $processed
+ *   The array of already processed request ids and the access results.
+ * @param array $access
+ *   The static variable representing the processed array used to increase
+ *   performance.
+ * @param array roles
+ *   An array of relevant roles associated with access control for requests.
+ * @param object user
+ *   The drupal user object to check access against.
+ *
+ * @return bool
+ *   TRUE on successfull execution, FALSE otherwise.
+ *   The return results do not represent the access control results.
+ */
+function mfcs_page_request_access_operation_move(&$request_ids, &$processed, &$access, $roles, $user) {
+  if (!is_array($request_ids)) {
+    cf_error::invalid_array('request_ids');
+    return FALSE;
+  }
+
+  if (!is_array($processed)) {
+    cf_error::invalid_array('processed');
+    return FALSE;
+  }
+
+  if (!is_array($access)) {
+    cf_error::invalid_array('access');
+    return FALSE;
+  }
+
+  if (!is_array($roles)) {
+    cf_error::invalid_array('roles');
+    return FALSE;
+  }
+
+  if (!is_object($user)) {
+    cf_error::invalid_object('user');
+    return FALSE;
+  }
+
+  if ($roles['manager'] || $roles['administer']) {
+    if (array_key_exists(NULL, $request_ids)) {
+      $access[NULL] = TRUE;
+      $processed[NULL] = TRUE;
+      return TRUE;
+    }
+  }
+
+  // always grant managers and administers override access.
+  if ($roles['manager'] || $roles['administer']) {
+    try {
+      $query = db_select('mfcs_requests', 'mer');
+
+      $query->addField('mer', 'id', 'id');
+
+      $query->condition('mer.id', $request_ids, 'IN');
+      $query->condition('mer.status', MFCS_REQUEST_STATUS_DELETED, '<>');
+
+      $access_results = $query->execute()->fetchAllAssoc('id');
+
+      if (is_array($access_results)) {
+        $request_ids_copy = $request_ids;
+        foreach ($request_ids_copy as $id => $value) {
+          if (array_key_exists($id, $access_results)) {
+            $processed[$id] = TRUE;
+            $access[$id] = TRUE;
+            unset($request_ids[$id]);
+          }
+        }
+        unset($request_ids_copy);
+
+        // looks like all of the requests have been processed, so return.
+        if (empty($request_ids)) {
+          return TRUE;
+        }
+      }
+    }
+    catch (Exception $ex) {
+      cf_error::on_exception($ex);
+      return FALSE;
+    }
+  }
+
+  if (array_key_exists(NULL, $request_ids)) {
+    $access[NULL] = FALSE;
+    $processed[NULL] = FALSE;
+    return TRUE;
+  }
+
+  foreach ($request_ids as $request_id) {
+    $access[$request_id] = FALSE;
+    $processed[$request_id] = FALSE;
+  }
+
+  return TRUE;
+}
+
+/**
  * Perform the access control check for the history operation.
  *
  * @param array $request_ids
@@ -1804,7 +2022,7 @@ function mfcs_page_request_access_operation_agreement(&$request_ids, &$processed
     $agreement_request_step = array(
       MFCS_REVIEW_STEP_COMPLETED,
       MFCS_REVIEW_STEP_REVIEW,
-      MFCS_REVIEW_STEP_REQUIREMENTS,
+      MFCS_REVIEW_STEP_FINAL_DECISION,
     );
   }
 

@@ -178,7 +178,7 @@ function mfcs_request_statistics_0_page($year = NULL, $month = NULL, $day = NULL
   $type_options = mfcs_get_request_type_list_options();
   $classification_options = mfcs_get_request_classification_list_options();
 
-  $now = date("Y/m/d h:i:s a");
+  $now = date(MFCS_DATE_FORMAT_DATE_TIME_SECONDS);
 
   $markup = '<div id="mfcs-statistics-page" class="statistics-page">';
 
@@ -345,7 +345,7 @@ function mfcs_request_statistics_load_counts($start, $stop) {
     $counts['step'] = array(
       'changes_required' => NULL,
       'completed' => NULL,
-      'make_decisions' => NULL,
+      'final_decision' => NULL,
       'release_hold' => NULL,
       'review' => NULL,
       'requirements' => NULL,
@@ -364,34 +364,29 @@ function mfcs_request_statistics_load_counts($start, $stop) {
     }
 
     // step (changes required)
-    $the_query = clone($query);
-    $the_query->condition('mer.step', MFCS_REVIEW_STEP_CHANGES_REQUIRED);
-    $counts['step']['changes_required'] = $the_query->execute()->fetchField();
+    #$the_query = clone($query);
+    #$the_query->condition('mer.step', MFCS_REVIEW_STEP_CHANGES_REQUIRED);
+    #$counts['step']['changes_required'] = $the_query->execute()->fetchField();
 
     // step (completed)
     $the_query = clone($query);
     $the_query->condition('mer.step', MFCS_REVIEW_STEP_COMPLETED);
     $counts['step']['completed'] = $the_query->execute()->fetchField();
 
-    // step (make decisions)
+    // step (final approval)
     $the_query = clone($query);
-    $the_query->condition('mer.step', MFCS_REVIEW_STEP_MAKE_DECISIONS);
-    $counts['step']['make_decisions'] = $the_query->execute()->fetchField();
+    $the_query->condition('mer.step', MFCS_REVIEW_STEP_FINAL_DECISION);
+    $counts['step']['final_decision'] = $the_query->execute()->fetchField();
 
     // step (release hold)
-    $the_query = clone($query);
-    $the_query->condition('mer.step', MFCS_REVIEW_STEP_RELEASE_HOLD);
-    $counts['step']['release_hold'] = $the_query->execute()->fetchField();
+    #$the_query = clone($query);
+    #$the_query->condition('mer.step', MFCS_REVIEW_STEP_RELEASE_HOLD);
+    #$counts['step']['release_hold'] = $the_query->execute()->fetchField();
 
     // step (review)
     $the_query = clone($query);
     $the_query->condition('mer.step', MFCS_REVIEW_STEP_REVIEW);
     $counts['step']['review'] = $the_query->execute()->fetchField();
-
-    // step (requirements)
-    $the_query = clone($query);
-    $the_query->condition('mer.step', MFCS_REVIEW_STEP_REQUIREMENTS);
-    $counts['step']['requirements'] = $the_query->execute()->fetchField();
 
     // step (venue available)
     $the_query = clone($query);
@@ -871,13 +866,12 @@ function mfcs_request_statistics_render_request_step($counts, $step_options) {
     'color' => '#e94a50',
   );
 
-  #$options['rows']['make_decisions'] = array(
-  #  'total' => $counts['step']['make_decisions'],
-  #  'text' => $step_options[MFCS_REVIEW_STEP_MAKE_DECISIONS],
-  #  'label' => "Resolve Conflics / ",
-  #  'label_2' => "Make Decisions",
-  #  'color' => '#6Ce94a',
-  #);
+  $options['rows']['final_decision'] = array(
+    'total' => $counts['step']['final_decision'],
+    'text' => $step_options[MFCS_REVIEW_STEP_FINAL_DECISION],
+    'label' => "Final Decision",
+    'color' => '#6Ce94a',
+  );
 
   // currently this is not used so do not expose it to the user.
   #$options['rows']['release_hold'] = array(
@@ -895,12 +889,12 @@ function mfcs_request_statistics_render_request_step($counts, $step_options) {
     'color' => '#4a54e9',
   );
 
-  $options['rows']['requirements'] = array(
-    'total' => $counts['step']['requirements'],
-    'text' => $step_options[MFCS_REVIEW_STEP_REQUIREMENTS],
-    'label' => $step_options[MFCS_REVIEW_STEP_REQUIREMENTS],
-    'color' => '#e9b64a',
-  );
+  #$options['rows']['requirements'] = array(
+  #  'total' => $counts['step']['requirements'],
+  #  'text' => $step_options[MFCS_REVIEW_STEP_REQUIREMENTS],
+  #  'label' => $step_options[MFCS_REVIEW_STEP_REQUIREMENTS],
+  #  'color' => '#e9b64a',
+  #);
 
   $options['rows']['venue_available'] = array(
     'total' => $counts['step']['venue_available'],
@@ -926,10 +920,10 @@ function mfcs_request_statistics_render_request_step($counts, $step_options) {
   $markup .= '<div class="statistics-block-text">';
   #$markup .= '<div class="statistics-block-text-item"><em>' . $counts['step']['changes_required'] . '</em> <strong>' . $step_options[MFCS_REVIEW_STEP_CHANGES_REQUIRED] . "</strong> (<em>" . $options['rows']['changes_required']['percent'] . '%</em> of requests). ' . '</div>';
   $markup .= '<div class="statistics-block-text-item"><em>' . $counts['step']['completed'] . '</em> <strong>' . $step_options[MFCS_REVIEW_STEP_COMPLETED] . "</strong> (<em>" . $options['rows']['completed']['percent'] . '%</em> of requests). ' . '</div>';
-  #$markup .= '<div class="statistics-block-text-item"><em>' . $counts['step']['make_decisions'] . '</em> <strong>' . $step_options[MFCS_REVIEW_STEP_MAKE_DECISIONS] . "</strong> (<em>" . $options['rows']['make_decisions']['percent'] . '%</em> of requests). ' . '</div>';
+  $markup .= '<div class="statistics-block-text-item"><em>' . $counts['step']['final_decision'] . '</em> <strong>' . $step_options[MFCS_REVIEW_STEP_FINAL_DECISION] . "</strong> (<em>" . $options['rows']['final_decision']['percent'] . '%</em> of requests). ' . '</div>';
   #$markup .= '<div class="statistics-block-text-item"><em>' . $counts['step']['release_hold'] . '</em> <strong>' . $step_options[MFCS_REVIEW_STEP_RELEASE_HOLD] . "</strong> (<em>" . $options['rows']['release_hold']['percent'] . '%</em> of requests). ' . '</div>';
   $markup .= '<div class="statistics-block-text-item"><em>' . $counts['step']['review'] . '</em> <strong>' . $step_options[MFCS_REVIEW_STEP_REVIEW] . "</strong> (<em>" . $options['rows']['review']['percent'] . '%</em> of requests). ' . '</div>';
-  $markup .= '<div class="statistics-block-text-item"><em>' . $counts['step']['requirements'] . '</em> <strong>' . $step_options[MFCS_REVIEW_STEP_REQUIREMENTS] . "</strong> (<em>" . $options['rows']['requirements']['percent'] . '%</em> of requests). ' . '</div>';
+  #$markup .= '<div class="statistics-block-text-item"><em>' . $counts['step']['requirements'] . '</em> <strong>' . $step_options[MFCS_REVIEW_STEP_REQUIREMENTS] . "</strong> (<em>" . $options['rows']['requirements']['percent'] . '%</em> of requests). ' . '</div>';
   $markup .= '<div class="statistics-block-text-item"><em>' . $counts['step']['venue_available'] . '</em> <strong>' . $step_options[MFCS_REVIEW_STEP_VENUE_AVAILABLE] . "</strong> (<em>" . $options['rows']['venue_available']['percent'] . '%</em> of requests). ' . '</div>';
   $markup .= '</div>'; // statistics-block-text
 

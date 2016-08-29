@@ -93,7 +93,7 @@ function mfcs_workflow_set_history($request_id, $user = NULL, $extra = array()) 
     if ($processed_mfcs_request_revisions) {
       if ($revisions_has_extras) {
         $query = db_update('mfcs_request_revisions');
-        $query->condition('id', $request_id);
+        $query->condition('request_id', $request_id);
         $query->condition('date', $instance);
         $query->condition('user_id', $user->uid);
         $query->fields($mfcs_request_revisions);
@@ -246,7 +246,7 @@ function mfcs_workflow_set_step($request_id, $step, $user = NULL, $extra = array
     if ($processed_mfcs_request_revisions) {
       if ($revisions_has_extras) {
         $query = db_update('mfcs_request_revisions');
-        $query->condition('id', $request_id);
+        $query->condition('request_id', $request_id);
         $query->condition('date', $instance);
         $query->condition('user_id', $user->uid);
         $query->fields($mfcs_request_revisions);
@@ -419,7 +419,7 @@ function mfcs_workflow_set_status($request_id, $status, $user = NULL, $extra = a
     if ($processed_mfcs_request_revisions) {
       if ($revisions_has_extras) {
         $query = db_update('mfcs_request_revisions');
-        $query->condition('id', $request_id);
+        $query->condition('request_id', $request_id);
         $query->condition('date', $instance);
         $query->condition('user_id', $user->uid);
         $query->fields($mfcs_request_revisions);
@@ -577,7 +577,7 @@ function mfcs_workflow_set_venue_coordinator($request_id, $venue_coordinator_id,
     if ($processed_mfcs_request_revisions) {
       if ($revisions_has_extras) {
         $query = db_update('mfcs_request_revisions');
-        $query->condition('id', $request_id);
+        $query->condition('request_id', $request_id);
         $query->condition('date', $instance);
         $query->condition('user_id', $user->uid);
         $query->fields($mfcs_request_revisions);
@@ -624,6 +624,140 @@ function mfcs_workflow_set_venue_coordinator($request_id, $venue_coordinator_id,
 }
 
 /**
+ * Assign a new requester to a given request.
+ *
+ * @param int $request_id
+ *   The id of the given request.
+ * @param int $requester_id
+ *   The new requester id to assign to the request.
+ * @param object|null $user
+ *   (optional) If specified, the user to log this change as.
+ * @param array $extra
+ *   (optional) Additional information to save. This is used for the revision
+ *   log message and signature.
+ *
+ * @return bool
+ *   TRUE on success, FALSE otherwise.
+ */
+function mfcs_workflow_set_requester($request_id, $requester_id, $user = NULL, $extra = array()) {
+  $request = mfcs_load_request_by_id($request_id);
+
+  if (empty($request)) {
+    return FALSE;
+  }
+
+  if (!cf_is_integer($requester_id)) {
+    cf_error::invalid_integer('requester_id');
+    return FALSE;
+  }
+
+  if (is_null($user)) {
+    $user = cf_current_user();
+  }
+
+  if (!is_object($user)) {
+    cf_error::invalid_object('user');
+    return FALSE;
+  }
+
+  if (!is_array($extra)) {
+    cf_error::invalid_array('extra');
+    return FALSE;
+  }
+
+  $requester = mfcs_load_basic_user_settings_by_user_id($requester_id);
+  if (!is_array($requester)) {
+    watchdog(MFCS_WATCHDOG_ID, "%requester is not a valid user id.", array('%requester' => $requester_id), WATCHDOG_ERROR);
+    return FALSE;
+  }
+
+  $instance = mfcs_instance();
+
+  $mfcs_requests = array(
+    'updated' => $instance,
+    'user_id' => $requester_id,
+  );
+
+  $request_revision = mfcs_load_request_revision_number($request_id);
+  $processed_mfcs_request_revisions = &drupal_static('processed_mfcs_request_revisions_' . $instance . '_' . $user->uid . '_' . $request_id, FALSE);
+
+  if ($request_revision === FALSE) {
+    watchdog(MFCS_WATCHDOG_ID, "Failed to load revision number for request %request_id.", array('%request_id' => $request_id), WATCHDOG_ERROR);
+    return FALSE;
+  }
+  elseif (is_null($request_revision)) {
+    $request_revision_next = 0;
+  }
+  else {
+    $request_revision_next = $request_revision + 1;
+  }
+
+  $mfcs_request_revisions = array(
+    'request_id' => $request_id,
+    'date' => $instance,
+    'revision' => $request_revision_next,
+    'user_id' => $user->uid,
+  );
+
+  $revisions_has_extras = FALSE;
+  if (!empty($extra['revisions']['message'])) {
+    $mfcs_request_revisions['message'] = $extra['revisions']['message'];
+    $revisions_has_extras = TRUE;
+  }
+
+  if (!empty($extra['revisions']['signature'])) {
+    $mfcs_request_revisions['signature'] = $extra['revisions']['signature'];
+    $revisions_has_extras = TRUE;
+  }
+
+  $transaction = db_transaction();
+  try {
+    $query = db_update('mfcs_requests');
+    $query->condition('id', $request_id);
+    $query->fields($mfcs_requests);
+    $query->execute();
+
+    if ($processed_mfcs_request_revisions) {
+      if ($revisions_has_extras) {
+        $query = db_update('mfcs_request_revisions');
+        $query->condition('request_id', $request_id);
+        $query->condition('date', $instance);
+        $query->condition('user_id', $user->uid);
+        $query->fields($mfcs_request_revisions);
+        $query->execute();
+      }
+    }
+    else {
+      $query = db_insert('mfcs_request_revisions');
+      $query->fields($mfcs_request_revisions);
+      $query->execute();
+
+      $processed_mfcs_request_revisions = TRUE;
+    }
+
+    // enforce transaction execution
+    unset($transaction);
+  }
+  catch (Error $e) {
+    $transaction->rollback();
+    cf_error::on_query_execution($e);
+
+    return FALSE;
+  }
+  catch (Exception $e) {
+    $transaction->rollback();
+    cf_error::on_query_execution($e);
+
+    return FALSE;
+  }
+
+  // reset the cached request object
+  mfcs_load_request_by_id($request_id, FALSE);
+
+  return TRUE;
+}
+
+/**
  * Trigger the next step.
  *
  * @param int $request_id
@@ -646,7 +780,7 @@ function mfcs_workflow_set_venue_coordinator($request_id, $venue_coordinator_id,
  * @return bool
  *   TRUE on success, FALSE otherwise.
  */
-function mfcs_workflow_step_review($request_id, $user, $decision, $restriction = MFCS_REVIEW_RESTRICTIONS_NONE, $message = "", $extra = array(), $as = NULL) {
+function mfcs_workflow_step_review($request_id, $user, $decision, $restriction = MFCS_REVIEW_RESTRICTIONS_NONE, $message = '', $extra = array(), $as = NULL) {
   if (!is_object($user)) {
     cf_error::invalid_object('user');
     return FALSE;
@@ -689,7 +823,8 @@ function mfcs_workflow_step_review($request_id, $user, $decision, $restriction =
     return FALSE;
   }
 
-  $manager = user_access('mfcs manage', $user);
+  $is_manager = user_access('mfcs manage', $user);
+  $is_administer = user_access('mfcs administer', $user);
 
   $instance = mfcs_instance();
 
@@ -769,7 +904,7 @@ function mfcs_workflow_step_review($request_id, $user, $decision, $restriction =
   }
 
   $is_quick_meeting = FALSE;
-  if ($type === MFCS_REQUEST_TYPE_QUICK_MEETING && ($is_effective_venue_coordinator || $manager)) {
+  if ($type === MFCS_REQUEST_TYPE_QUICK_MEETING && ($is_effective_venue_coordinator || $is_manager || $is_administer)) {
     $is_quick_meeting = TRUE;
   }
 
@@ -862,19 +997,18 @@ function mfcs_workflow_step_review($request_id, $user, $decision, $restriction =
     return FALSE;
   }
 
-  $insurance_requirements = FALSE;
-  $insurance_provided_exception = FALSE;
-
   $mfcs_current_insurance = array(
     'request_id' => $request_id,
     'insurance_contractor' => NULL,
     'insurance_unaffiliated' => NULL,
+    'insurance_affiliated' => NULL,
     'insurance_provided' => NULL,
   );
 
   $insurance_latest = array(
     'contractor' => NULL,
     'unaffiliated' => NULL,
+    'affiliated' => NULL,
     'provided' => NULL,
   );
 
@@ -921,9 +1055,9 @@ function mfcs_workflow_step_review($request_id, $user, $decision, $restriction =
     'restriction' => $restriction,
   );
 
-  if ($step === MFCS_REVIEW_STEP_REVIEW || $step === MFCS_REVIEW_STEP_REQUIREMENTS || $step === MFCS_REVIEW_STEP_MAKE_DECISIONS) {
+  if ($step === MFCS_REVIEW_STEP_REVIEW || $step === MFCS_REVIEW_STEP_FINAL_DECISION) {
     // remove classifications not allowed in these steps, unless they are for a comment or a message for the review log.
-    if ($decision !== MFCS_REVIEW_DECISION_COMMENT && $decision !== MFCS_REVIEW_DECISION_CANCELLED && $decision !== MFCS_REVIEW_DECISION_UNCANCELLED && $decision !== MFCS_REVIEW_DECISION_CLOSED && $decision !== MFCS_REVIEW_DECISION_REASSIGNED) {
+    if ($decision !== MFCS_REVIEW_DECISION_COMMENT && $decision !== MFCS_REVIEW_DECISION_CANCELLED && $decision !== MFCS_REVIEW_DECISION_UNCANCELLED && $decision !== MFCS_REVIEW_DECISION_CLOSED && $decision !== MFCS_REVIEW_DECISION_REASSIGNED_COORDINATOR && $decision !== MFCS_REVIEW_DECISION_REASSIGNED_REQUESTER) {
       unset($reviewer_classifications['step'][MFCS_REVIEWER_CLASSIFICATION_VENUE_COORDINATOR]);
       unset($reviewer_classifications['step'][MFCS_REVIEWER_CLASSIFICATION_VENUE_COORDINATOR_PROXY]);
     }
@@ -931,8 +1065,8 @@ function mfcs_workflow_step_review($request_id, $user, $decision, $restriction =
 
   $mfcs_field_requirements = array();
   $requirements_university_save = FALSE;
-  $perform_manager_classification_check = FALSE;
-  if (($decision === MFCS_REVIEW_DECISION_WAIVE || $decision === MFCS_REVIEW_DECISION_REQUIREMENT) && ($step === MFCS_REVIEW_STEP_VENUE_AVAILABLE || $step === MFCS_REVIEW_STEP_REVIEW || $step === MFCS_REVIEW_STEP_REQUIREMENTS || $step === MFCS_REVIEW_STEP_MAKE_DECISIONS || $step === MFCS_REVIEW_STEP_COMPLETED)) {
+  $perform_power_user_classification_check = FALSE;
+  if (($decision === MFCS_REVIEW_DECISION_WAIVE || $decision === MFCS_REVIEW_DECISION_REQUIREMENT) && ($step === MFCS_REVIEW_STEP_VENUE_AVAILABLE || $step === MFCS_REVIEW_STEP_REVIEW || $step === MFCS_REVIEW_STEP_FINAL_DECISION || $step === MFCS_REVIEW_STEP_COMPLETED)) {
     $requirements_university = NULL;
     if (isset($extra['requirements']['university'])) {
       $requirements_university = $extra['requirements']['university'];
@@ -940,7 +1074,10 @@ function mfcs_workflow_step_review($request_id, $user, $decision, $restriction =
     }
 
     if ($requirements_university_save || is_null($requirements_latest['university'])) {
-      $current_revision = $requirements_latest['university']->revision + 1;
+      $current_revision = 0;
+      if (isset($requirements_latest['university']->revision)) {
+        $current_revision = $requirements_latest['university']->revision + 1;
+      }
 
       if (is_null($requirements_latest['university'])) {
         $current_revision = 0;
@@ -970,7 +1107,7 @@ function mfcs_workflow_step_review($request_id, $user, $decision, $restriction =
     $uses['grounds_fees'] = MFCS_REVIEWER_CLASSIFICATION_FACILITIES; // @fixme: create a grounds classification
     $uses['security_fees'] = MFCS_REVIEWER_CLASSIFICATION_SECURITY;
 
-    if ($manager) {
+    if ($is_manager || $is_administer) {
       $uses_as_manager['facilities_fees'] = MFCS_REVIEWER_CLASSIFICATION_FACILITIES;
       $uses_as_manager['equipment_fees'] = MFCS_REVIEWER_CLASSIFICATION_FACILITIES;
       $uses_as_manager['custodial_fees'] = MFCS_REVIEWER_CLASSIFICATION_CUSTODIAL;
@@ -979,23 +1116,6 @@ function mfcs_workflow_step_review($request_id, $user, $decision, $restriction =
       $uses_as_manager['security_fees'] = MFCS_REVIEWER_CLASSIFICATION_SECURITY;
     }
 
-
-    if (isset($reviewer_classifications['all'][MFCS_REVIEWER_CLASSIFICATION_PURCHASING])) {
-      if ($step === MFCS_REVIEW_STEP_REQUIREMENTS) {
-        $insurance_requirements = TRUE;
-      }
-      else {
-        $insurance_provided_exception = TRUE;
-      }
-    }
-    elseif ($manager) {
-      if ($step === MFCS_REVIEW_STEP_REQUIREMENTS) {
-        $insurance_requirements = TRUE;
-      }
-      else {
-        $insurance_provided_exception = TRUE;
-      }
-    }
 
     // when assigned as "university business", automatically reset all use fees, by assigning ID as NULL to prevent them from being utilized as a reviewer_classification.
     if ($requirements_university_save && $requirements_university) {
@@ -1120,7 +1240,10 @@ function mfcs_workflow_step_review($request_id, $user, $decision, $restriction =
         continue;
       }
 
-      $current_revision = $requirements_latest[$use]->revision + 1;
+      $current_revision = 0;
+      if (isset($requirements_latest[$use]->revision)) {
+        $current_revision = $requirements_latest[$use]->revision + 1;
+      }
       if (is_null($requirements_latest[$use])) {
         $current_revision = 0;
       }
@@ -1152,126 +1275,192 @@ function mfcs_workflow_step_review($request_id, $user, $decision, $restriction =
       unset($requirements);
     }
 
-    if ($insurance_requirements) {
-      $contractor_insurance = 0;
-      $unaffiliated_insurance = 0;
+    $contractor_insurance = MFCS_INSURANCE_REQUIRED_NOT;
+    if (isset($request['insurance']['contractor'][0]->value)) {
+      $contractor_insurance = (int) $request['insurance']['contractor'][0]->value;
+    }
 
-      if (isset($extra['insurance']['contractor'])) {
-        $contractor_insurance = $extra['insurance']['contractor'];
+    $unaffiliated_insurance = MFCS_INSURANCE_REQUIRED_NOT;
+    if (isset($request['insurance']['unaffiliated'][0]->value)) {
+      $unaffiliated_insurance = (int) $request['insurance']['unaffiliated'][0]->value;
+    }
+
+    $affiliated_insurance = MFCS_INSURANCE_REQUIRED_NOT;
+    if (isset($request['insurance']['affiliated'][0]->value)) {
+      $affiliated_insurance = (int) $request['insurance']['affiliated'][0]->value;
+    }
+
+    $provided_insurance = MFCS_INSURANCE_REQUIRED_NOT;
+    if (isset($request['insurance']['provided'][0]->value)) {
+      $provided_insurance = (int) $request['insurance']['provided'][0]->value;
+    }
+
+    if (isset($extra['insurance']['contractor'])) {
+      $contractor_insurance = (int) $extra['insurance']['contractor'];
+    }
+
+    if (isset($extra['insurance']['unaffiliated'])) {
+      $unaffiliated_insurance = (int) $extra['insurance']['unaffiliated'];
+    }
+
+    if (isset($extra['insurance']['affiliated'])) {
+      $affiliated_insurance = (int) $extra['insurance']['affiliated'];
+    }
+
+    // as of fcs-79, insurance_provided table now represents whether or not contractor or unaffiliated insurance is required or provided at all.
+    // if either of the two is required, make as required.
+    // Of the ones required, if all are set to provided, then mark the insurance provided as provided.
+    // Of the ones required, if any are set to not provided, then mark the insurance provided as not provided.
+    if ($contractor_insurance === MFCS_INSURANCE_REQUIRED_NOT && $unaffiliated_insurance === MFCS_INSURANCE_REQUIRED_NOT && $affiliated_insurance === MFCS_INSURANCE_REQUIRED_NOT) {
+      $provided_insurance = MFCS_INSURANCE_PROVIDED_NOT;
+    }
+    else {
+      $provided_insurance = MFCS_INSURANCE_REQUIRED;
+      if (($contractor_insurance === MFCS_INSURANCE_REQUIRED_NOT || $contractor_insurance === MFCS_INSURANCE_PROVIDED) && ($unaffiliated_insurance === MFCS_INSURANCE_REQUIRED_NOT || $unaffiliated_insurance === MFCS_INSURANCE_PROVIDED) && ($affiliated_insurance === MFCS_INSURANCE_REQUIRED_NOT || $affiliated_insurance === MFCS_INSURANCE_PROVIDED)) {
+        $provided_insurance = MFCS_INSURANCE_PROVIDED;
       }
-
-      if (isset($extra['insurance']['unaffiliated'])) {
-        $unaffiliated_insurance = $extra['insurance']['unaffiliated'];
+      elseif ($contractor_insurance === MFCS_INSURANCE_PROVIDED_NOT || $unaffiliated_insurance === MFCS_INSURANCE_PROVIDED_NOT || $affiliated_insurance === MFCS_INSURANCE_PROVIDED_NOT) {
+        $provided_insurance = MFCS_INSURANCE_PROVIDED_NOT;
       }
+    }
 
-      $new_contractor_insurance = FALSE;
-      if (isset($request['insurance']['contractor'][0]->value)) {
-        if ($contractor_insurance != $request['insurance']['contractor'][0]->value) {
-          $new_contractor_insurance = TRUE;
-        }
+    $new_contractor_insurance = FALSE;
+    if (isset($request['insurance']['contractor'][0]->value)) {
+      $value = $request['insurance']['contractor'][0]->value;
+      if (!is_null($value)) {
+        $value = (int) $value;
+      }
+      $new_contractor_insurance = ($contractor_insurance !== $value);
+      unset($value);
+    }
+    else {
+      if (isset($extra['insurance']['contractor']) && !is_null($extra['insurance']['contractor'])) {
+        $new_contractor_insurance = TRUE;
+      }
+    }
+
+    $new_unaffiliated_insurance = FALSE;
+    if (isset($request['insurance']['unaffiliated'][0]->value)) {
+      $value = $request['insurance']['contractor'][0]->value;
+      if (!is_null($value)) {
+        $value = (int) $value;
+      }
+      $new_unaffiliated_insurance = ($unaffiliated_insurance !== $value);
+      unset($value);
+    }
+    else {
+      if (isset($extra['insurance']['unaffiliated']) && !is_null($extra['insurance']['unaffiliated'])) {
+        $new_unaffiliated_insurance = TRUE;
+      }
+    }
+
+    $new_affiliated_insurance = FALSE;
+    if (isset($request['insurance']['affiliated'][0]->value)) {
+      $value = $request['insurance']['contractor'][0]->value;
+      if (!is_null($value)) {
+        $value = (int) $value;
+      }
+      $new_affiliated_insurance = ($affiliated_insurance !== $value);
+      unset($value);
+    }
+    else {
+      if (isset($extra['insurance']['affiliated']) && !is_null($extra['insurance']['affiliated'])) {
+        $new_affiliated_insurance = TRUE;
+      }
+    }
+
+    $new_provided_insurance = FALSE;
+    if (isset($request['insurance']['provided'][0]->value)) {
+      $value = $request['insurance']['provided'][0]->value;
+      if (!is_null($value)) {
+        $value = (int) $value;
+      }
+      $new_provided_insurance = ($provided_insurance !== $value);
+      unset($value);
+    }
+
+    // contractor insurance
+    if ($new_contractor_insurance) {
+      if (is_null($insurance_latest['contractor'])) {
+        $mfcs_current_insurance['insurance_contractor'] = 0;
       }
       else {
-        if (isset($extra['insurance']['contractor']) && !is_null($extra['insurance']['contractor'])) {
-          $new_contractor_insurance = TRUE;
-        }
+        $mfcs_current_insurance['insurance_contractor'] = $insurance_latest['contractor']->revision + 1;
       }
 
-      $new_unaffiliated_insurance = FALSE;
-      if (isset($request['insurance']['unaffiliated'][0]->value)) {
-        if ($unaffiliated_insurance != $request['insurance']['unaffiliated'][0]->value) {
-          $new_unaffiliated_insurance = TRUE;
-        }
+      $mfcs_field_insurance_contractor = array(
+        'request_id' => $request_id,
+        'revision' => $mfcs_current_insurance['insurance_contractor'],
+        'delta' => 0,
+        'user_id' => $user->uid,
+        'date' => $instance,
+        'value' => $contractor_insurance,
+      );
+    }
+
+    // unaffiliated insurance
+    if ($new_unaffiliated_insurance) {
+      if (is_null($insurance_latest['unaffiliated'])) {
+        $mfcs_current_insurance['insurance_unaffiliated'] = 0;
       }
       else {
-        if (isset($extra['insurance']['unaffiliated']) && !is_null($extra['insurance']['unaffiliated'])) {
-          $new_unaffiliated_insurance = TRUE;
-        }
+        $mfcs_current_insurance['insurance_unaffiliated'] = $insurance_latest['unaffiliated']->revision + 1;
       }
 
-      // contractor insurance
-      if ($new_contractor_insurance) {
-        if (is_null($insurance_latest['contractor'])) {
-          $mfcs_current_insurance['insurance_contractor'] = 0;
-        }
-        else {
-          $mfcs_current_insurance['insurance_contractor'] = $insurance_latest['contractor']->revision + 1;
-        }
+      $mfcs_field_insurance_unaffiliated = array(
+        'request_id' => $request_id,
+        'revision' => $mfcs_current_insurance['insurance_unaffiliated'],
+        'delta' => 0,
+        'user_id' => $user->uid,
+        'date' => $instance,
+        'value' => $unaffiliated_insurance,
+      );
+    }
 
-        $mfcs_field_insurance_contractor = array(
-          'request_id' => $request_id,
-          'revision' => $mfcs_current_insurance['insurance_contractor'],
-          'delta' => 0,
-          'user_id' => $user->uid,
-          'date' => $instance,
-          'value' => $contractor_insurance,
-        );
+    // affiliated insurance
+    if ($new_affiliated_insurance) {
+      if (is_null($insurance_latest['affiliated'])) {
+        $mfcs_current_insurance['insurance_affiliated'] = 0;
+      }
+      else {
+        $mfcs_current_insurance['insurance_affiliated'] = $insurance_latest['affiliated']->revision + 1;
       }
 
-      // unaffiliated insurance
-      if ($new_unaffiliated_insurance) {
-        if (is_null($insurance_latest['unaffiliated'])) {
-          $mfcs_current_insurance['insurance_unaffiliated'] = 0;
-        }
-        else {
-          $mfcs_current_insurance['insurance_unaffiliated'] = $insurance_latest['unaffiliated']->revision + 1;
-        }
-
-        $mfcs_field_insurance_unaffiliated = array(
-          'request_id' => $request_id,
-          'revision' => $mfcs_current_insurance['insurance_unaffiliated'],
-          'delta' => 0,
-          'user_id' => $user->uid,
-          'date' => $instance,
-          'value' => $unaffiliated_insurance,
-        );
-      }
+      $mfcs_field_insurance_affiliated = array(
+        'request_id' => $request_id,
+        'revision' => $mfcs_current_insurance['insurance_affiliated'],
+        'delta' => 0,
+        'user_id' => $user->uid,
+        'date' => $instance,
+        'value' => $affiliated_insurance,
+      );
     }
 
     // provided insurance
-    if ($insurance_requirements || $insurance_provided_exception) {
-      $provided_insurance = 0;
-
-      if (isset($extra['insurance']['provided'])) {
-        $provided_insurance = $extra['insurance']['provided'];
-      }
-
-      $new_provided_insurance = FALSE;
-      if (isset($request['insurance']['provided'][0]->value)) {
-        if ($provided_insurance != $request['insurance']['provided'][0]->value) {
-          $new_provided_insurance = TRUE;
-        }
+    if ($new_provided_insurance) {
+      if (is_null($insurance_latest['provided'])) {
+        $mfcs_current_insurance['insurance_provided'] = 0;
       }
       else {
-        if (isset($extra['insurance']['provided']) && !is_null($extra['insurance']['provided'])) {
-          $new_provided_insurance = TRUE;
-        }
+        $mfcs_current_insurance['insurance_provided'] = $insurance_latest['provided']->revision + 1;
       }
 
-      if ($new_provided_insurance) {
-        if (is_null($insurance_latest['provided'])) {
-          $mfcs_current_insurance['insurance_provided'] = 0;
-        }
-        else {
-          $mfcs_current_insurance['insurance_provided'] = $insurance_latest['provided']->revision + 1;
-        }
-
-        $mfcs_field_insurance_provided = array(
-          'request_id' => $request_id,
-          'revision' => $mfcs_current_insurance['insurance_provided'],
-          'delta' => 0,
-          'user_id' => $user->uid,
-          'date' => $instance,
-          'value' => $provided_insurance,
-        );
-      }
+      $mfcs_field_insurance_provided = array(
+        'request_id' => $request_id,
+        'revision' => $mfcs_current_insurance['insurance_provided'],
+        'delta' => 0,
+        'user_id' => $user->uid,
+        'date' => $instance,
+        'value' => $provided_insurance,
+      );
     }
   }
-  elseif (($step === MFCS_REVIEW_STEP_REVIEW || $step === MFCS_REVIEW_STEP_REQUIREMENTS) && ($decision == MFCS_REVIEW_DECISION_ISSUES || $decision == MFCS_REVIEW_DECISION_ISSUES_NONE)) {
-    $perform_manager_classification_check = TRUE;
+  elseif (($step === MFCS_REVIEW_STEP_REVIEW || $step === MFCS_REVIEW_STEP_FINAL_DECISION) && ($decision == MFCS_REVIEW_DECISION_ISSUES || $decision == MFCS_REVIEW_DECISION_ISSUES_NONE)) {
+    $perform_power_user_classification_check = TRUE;
   }
 
-  if ($perform_manager_classification_check && $manager) {
-    // remove all reviewer classifications the current reviewer already reviewed as.
+  if ($perform_power_user_classification_check && ($is_manager || $is_administer)) {
+    // remove all reviewer classifications the current reviewer already reviewed as (if the reviewer is an administer or a manager).
     try {
       if (!empty($reviewer_classifications['step'])) {
         $reviewer_classifications_copy = $reviewer_classifications['step'];
@@ -1304,7 +1493,11 @@ function mfcs_workflow_step_review($request_id, $user, $decision, $restriction =
       return FALSE;
     }
 
-    if (empty($reviewer_classifications['step'])) {
+
+    if ($is_administer && empty($reviewer_classifications['step'])) {
+      $reviewer_classifications['step'][MFCS_REVIEWER_CLASSIFICATION_SYSTEM_ADMINISTRATOR] = MFCS_REVIEWER_CLASSIFICATION_SYSTEM_ADMINISTRATOR;
+    }
+    if ($is_manager && empty($reviewer_classifications['step'])) {
       $reviewer_classifications['step'][MFCS_REVIEWER_CLASSIFICATION_MANAGER] = MFCS_REVIEWER_CLASSIFICATION_MANAGER;
     }
   }
@@ -1342,7 +1535,7 @@ function mfcs_workflow_step_review($request_id, $user, $decision, $restriction =
       // the mfcs reviewed table is intended for controlling the progression of the review process.
       // it has no purpose for completed or otherwise closed requests and therefore should not be populated for approval decisions.
       if ($decision === MFCS_REVIEW_DECISION_APPROVE || $decision === MFCS_REVIEW_DECISION_DENY) {
-        if ($step !== MFCS_REVIEW_STEP_REVIEW && $step !== MFCS_REVIEW_STEP_REQUIREMENTS) {
+        if ($step !== MFCS_REVIEW_STEP_REVIEW && $step !== MFCS_REVIEW_STEP_FINAL_DECISION) {
           continue;
         }
       }
@@ -1392,7 +1585,7 @@ function mfcs_workflow_step_review($request_id, $user, $decision, $restriction =
     unset($mfcs_review_classification);
     unset($reviewer_classifications);
 
-    if (($decision === MFCS_REVIEW_DECISION_WAIVE || $decision === MFCS_REVIEW_DECISION_REQUIREMENT) && ($step === MFCS_REVIEW_STEP_VENUE_AVAILABLE || $step === MFCS_REVIEW_STEP_REVIEW  || $step === MFCS_REVIEW_STEP_REQUIREMENTS || $step === MFCS_REVIEW_STEP_MAKE_DECISIONS || $step === MFCS_REVIEW_STEP_COMPLETED)) {
+    if (($decision === MFCS_REVIEW_DECISION_WAIVE || $decision === MFCS_REVIEW_DECISION_REQUIREMENT) && ($step === MFCS_REVIEW_STEP_VENUE_AVAILABLE || $step === MFCS_REVIEW_STEP_REVIEW || $step === MFCS_REVIEW_STEP_FINAL_DECISION || $step === MFCS_REVIEW_STEP_COMPLETED)) {
       foreach ($mfcs_field_requirements as $use => $fields) {
         $query = db_insert('mfcs_field_requirements_' . $use);
         $query->fields($fields);
@@ -1404,42 +1597,38 @@ function mfcs_workflow_step_review($request_id, $user, $decision, $restriction =
       $query->fields($mfcs_current_requirements);
       $query->execute();
 
-      if ($insurance_requirements) {
-        if ($new_contractor_insurance) {
-          $query = db_insert('mfcs_field_insurance_contractor');
-          $query->fields($mfcs_field_insurance_contractor);
-          $query->execute();
-        }
-
-        if ($new_unaffiliated_insurance) {
-          $query = db_insert('mfcs_field_insurance_unaffiliated');
-          $query->fields($mfcs_field_insurance_unaffiliated);
-          $query->execute();
-        }
-      }
-
-      if ($insurance_requirements || $insurance_provided_exception) {
-        if ($new_provided_insurance) {
-          $query = db_insert('mfcs_field_insurance_provided');
-          $query->fields($mfcs_field_insurance_provided);
-          $query->execute();
-        }
-      }
-
-      if ($insurance_requirements && ($new_contractor_insurance || $new_unaffiliated_insurance)) {
-        $query = db_update('mfcs_current');
-        $query->condition('request_id', $request_id);
-        $query->fields($mfcs_current_insurance);
+      if ($new_contractor_insurance) {
+        $query = db_insert('mfcs_field_insurance_contractor');
+        $query->fields($mfcs_field_insurance_contractor);
         $query->execute();
       }
-      elseif (($insurance_requirements || $insurance_provided_exception) && $new_provided_insurance) {
+
+      if ($new_unaffiliated_insurance) {
+        $query = db_insert('mfcs_field_insurance_unaffiliated');
+        $query->fields($mfcs_field_insurance_unaffiliated);
+        $query->execute();
+      }
+
+      if ($new_affiliated_insurance) {
+        $query = db_insert('mfcs_field_insurance_affiliated');
+        $query->fields($mfcs_field_insurance_affiliated);
+        $query->execute();
+      }
+
+      if ($new_provided_insurance) {
+        $query = db_insert('mfcs_field_insurance_provided');
+        $query->fields($mfcs_field_insurance_provided);
+        $query->execute();
+      }
+
+      if ($new_contractor_insurance || $new_unaffiliated_insurance || $new_affiliated_insurance || $new_provided_insurance) {
         $query = db_update('mfcs_current');
         $query->condition('request_id', $request_id);
         $query->fields($mfcs_current_insurance);
         $query->execute();
       }
     }
-    elseif (($step === MFCS_REVIEW_STEP_VENUE_AVAILABLE || $step === MFCS_REVIEW_STEP_REQUIREMENTS) && ($decision === MFCS_REVIEW_DECISION_WAIVE || $decision === MFCS_REVIEW_DECISION_REQUIREMENT)) {
+    elseif (($step === MFCS_REVIEW_STEP_VENUE_AVAILABLE || $step === MFCS_REVIEW_STEP_REVIEW || $step === MFCS_REVIEW_STEP_FINAL_DECISION) && ($decision === MFCS_REVIEW_DECISION_WAIVE || $decision === MFCS_REVIEW_DECISION_REQUIREMENT)) {
       if ($requirements_university_save) {
         $query = db_insert('mfcs_field_requirements_university');
         $query->fields($mfcs_field_requirements['university']);
@@ -1587,7 +1776,7 @@ function mfcs_workflow_step_review($request_id, $user, $decision, $restriction =
       mfcs_send_workflow_emails($request_id, $parameters);
     }
   }
-  elseif ($decision === MFCS_REVIEW_DECISION_WAIVE || $decision === MFCS_REVIEW_DECISION_CANCELLED || $decision === MFCS_REVIEW_DECISION_UNCANCELLED || $decision === MFCS_REVIEW_DECISION_CLOSED || ($decision === MFCS_REVIEW_DECISION_REQUIREMENT && !$insurance_provided_exception) || $decision === MFCS_REVIEW_DECISION_REASSIGNED) {
+  elseif ($decision === MFCS_REVIEW_DECISION_WAIVE || $decision === MFCS_REVIEW_DECISION_CANCELLED || $decision === MFCS_REVIEW_DECISION_UNCANCELLED || $decision === MFCS_REVIEW_DECISION_CLOSED || ($decision === MFCS_REVIEW_DECISION_REQUIREMENT && $new_provided_insurance && $provided_insurance === MFCS_INSURANCE_PROVIDED) || $decision === MFCS_REVIEW_DECISION_REASSIGNED_COORDINATOR || $decision === MFCS_REVIEW_DECISION_REASSIGNED_REQUESTER) {
     if ($decision === MFCS_REVIEW_DECISION_WAIVE || $decision === MFCS_REVIEW_DECISION_REQUIREMENT) {
       // if a comment is specified then send an e-mail as a comment.
       if (strlen($message) > 0) {
@@ -1605,6 +1794,25 @@ function mfcs_workflow_step_review($request_id, $user, $decision, $restriction =
           mfcs_send_workflow_emails($request_id, $parameters);
         }
       }
+    }
+
+    // do not send any further e-mails and do not progress to the next step.
+    return TRUE;
+  }
+  elseif ($decision === MFCS_REVIEW_DECISION_MOVE) {
+    $parameters = array();
+    $parameters['changed_by'] = $user->uid;
+    $parameters['changed_type'] = 'reviewer';
+    $parameters['message'] = $message;
+    $parameters['move'] = TRUE;
+    $parameters['requester_included'] = TRUE;
+
+    if ($restriction === MFCS_REVIEW_RESTRICTIONS_REVIEWER || $restriction === MFCS_REVIEW_RESTRICTIONS_MANAGERS) {
+      $parameters['requester_included'] = FALSE;
+    }
+
+    if ($send_email) {
+      mfcs_send_workflow_emails($request_id, $parameters);
     }
 
     // do not send any further e-mails and do not progress to the next step.
@@ -1648,7 +1856,7 @@ function mfcs_workflow_step_review($request_id, $user, $decision, $restriction =
       return TRUE;
     }
   }
-  elseif ($step === MFCS_REVIEW_STEP_REQUIREMENTS) {
+  elseif ($step === MFCS_REVIEW_STEP_FINAL_DECISION) {
     $decisions = mfcs_get_requests_current_review_decisions(array($request_id => $review_revision), $classification, $step);
 
     if (is_bool($decisions)) {
@@ -1688,7 +1896,7 @@ function mfcs_workflow_step_review($request_id, $user, $decision, $restriction =
   elseif ($step === MFCS_REVIEW_STEP_VENUE_AVAILABLE && ($decision === MFCS_REVIEW_DECISION_AVAILABLE || $decision === MFCS_REVIEW_DECISION_UNAVAILABLE)) {
     $attach_message = $message;
   }
-  elseif ($insurance_provided_exception) {
+  elseif ($new_provided_insurance && $provided_insurance === MFCS_INSURANCE_PROVIDED) {
     // for all other steps, when insurance is provided, send an e-mail to alert reviewers that the insurance has been provided.
     $parameters = array();
     $parameters['changed_by'] = $user->uid;
@@ -1820,7 +2028,7 @@ function mfcs_workflow_next_step($request_id, $type, $step, $decision, $restrict
       $changed_user = $system_user;
       $changed_by = $system_user->uid;
       $changed_type = 'system';
-      $new_step = MFCS_REVIEW_STEP_REQUIREMENTS;
+      $new_step = MFCS_REVIEW_STEP_FINAL_DECISION;
     }
 
     $reviews = mfcs_get_latest_reviews($request_id, array(MFCS_REVIEW_STEP_REVIEW), array(MFCS_REVIEW_DECISION_ISSUES, MFCS_REVIEW_DECISION_ISSUES_NONE));
@@ -1867,16 +2075,8 @@ function mfcs_workflow_next_step($request_id, $type, $step, $decision, $restrict
       }
     }
   }
-  // Requirements Step
-  elseif ($step === MFCS_REVIEW_STEP_REQUIREMENTS) {
-    /*if ($decision === MFCS_REVIEW_DECISION_DENY || $decision === MFCS_REVIEW_DECISION_APPROVE || $decision === MFCS_REVIEW_DECISION_WAIVE || $decision === MFCS_REVIEW_DECISION_MANAGER_RECHECK) {
-      $changed_user = $system_user;
-      $changed_by = $system_user->uid;
-      $changed_type = 'system';
-      $new_step = MFCS_REVIEW_STEP_MAKE_DECISIONS;
-    }
-    */
-
+  // Final Decision Step
+  elseif ($step === MFCS_REVIEW_STEP_FINAL_DECISION) {
     if ($decision === MFCS_REVIEW_DECISION_APPROVE) {
       $new_status = MFCS_REQUEST_STATUS_CLOSED_ACCEPTED;
       $new_step = MFCS_REVIEW_STEP_COMPLETED;
@@ -1915,7 +2115,7 @@ function mfcs_workflow_next_step($request_id, $type, $step, $decision, $restrict
   if (!is_null($new_status) && $new_status !== MFCS_REQUEST_STATUS_LOCKED) {
     $parameters['status'] = $new_status;
   }
-  elseif ($new_step === MFCS_REVIEW_STEP_REVIEW || $new_step === MFCS_REVIEW_STEP_REQUIREMENTS || $new_step === MFCS_REVIEW_STEP_MAKE_DECISIONS) {
+  elseif ($new_step === MFCS_REVIEW_STEP_REVIEW || $new_step === MFCS_REVIEW_STEP_FINAL_DECISION) {
     $parameters['step'] = $new_step;
   }
   elseif ($new_step === MFCS_REVIEW_STEP_VENUE_AVAILABLE && $type === MFCS_REQUEST_TYPE_QUICK_MEETING && ($decision === MFCS_REVIEW_DECISION_AVAILABLE || $decision === MFCS_REVIEW_DECISION_UNAVAILABLE)) {
@@ -2052,9 +2252,10 @@ function mfcs_workflow_force_step($request_id, $step, $status, $restriction, $me
  *   - uncancelled: A boolean representing whether or not the request is
  *     uncancelled.
  *   - reassigned: A boolean representing whether or not the request is
- *     re-assigned to a new venue coordinator.
+ *     re-assigned to a new venue coordinator (or a new requester).
  *   - reassigned_from: user id of the old venue coordinator.
  *   - reassigned_to: user id of the new venue coordinator.
+ *   - reassigned_type: either 'coordinator' or 'requester'.
  *   - amended: A boolean representing whether or not the request is an
  *     amendment.
  *   - insurance_provided: A boolean representing whether or not to send a
@@ -2067,10 +2268,11 @@ function mfcs_workflow_force_step($request_id, $step, $status, $restriction, $me
  *     reason.
  *   - forced_transition: A boolean representing that the transition is
  *     adminostratively forced and is therefore not a normal transition.
+ *   - move: A boolean representing whether or not this is a move operation.
  *
  *   The keys: 'new', 'update', 'step', 'status', 'cancelling', 'cancelled',
- *   'uncancelled', 'amendment', 'reminder', and 'reassigned' are mutually
- *   exclusive.
+ *   'uncancelled', 'amendment', 'reminder', 'reassigned', 'comment' and 'move'
+ *   are mutually exclusive.
  *
  * @return bool
  *   TRUE on success, FALSE otherwise.
@@ -2221,6 +2423,15 @@ function mfcs_send_workflow_emails($request_id, $parameters) {
     }
   }
 
+  $is_move = FALSE;
+  if (array_key_exists('move',  $parameters)) {
+    $is_move = $parameters['move'];
+    if (!is_bool($is_move)) {
+      cf_error::invalid_bool('parameters[move]');
+      return FALSE;
+    }
+  }
+
   $is_cancelling = FALSE;
   if (array_key_exists('cancelling',  $parameters)) {
     if (!is_array($parameters['cancelling'])) {
@@ -2273,6 +2484,7 @@ function mfcs_send_workflow_emails($request_id, $parameters) {
   $is_reassigned = FALSE;
   $reassigned_from = NULL;
   $reassigned_to = NULL;
+  $reassigned_type = NULL;
   if (array_key_exists('reassigned',  $parameters)) {
     $is_reassigned = $parameters['reassigned'];
     if (!is_bool($is_reassigned)) {
@@ -2292,8 +2504,14 @@ function mfcs_send_workflow_emails($request_id, $parameters) {
       return FALSE;
     }
 
+    if (!array_key_exists('reassigned_type',  $parameters) || !($parameters['reassigned_type'] == 'coordinator' || $parameters['reassigned_type'] == 'requester')) {
+      cf_error::invalid_string('parameters[reassigned_type]');
+      return FALSE;
+    }
+
     $reassigned_from = $parameters['reassigned_from'];
     $reassigned_to = $parameters['reassigned_to'];
+    $reassigned_type = $parameters['reassigned_type'];
   }
 
   $is_insurance_provided = FALSE;
@@ -2394,7 +2612,7 @@ function mfcs_send_workflow_emails($request_id, $parameters) {
     }
   }
 
-  $reviewers_returned = mfcs_get_reviewers(array('mr.request_classification' => $request['request_coordinator']['classification'][0]->value, 'mr.review_step' => MFCS_REVIEW_STEP_REQUIREMENTS, 'mr.disabled' => 0), array('join' => TRUE));
+  $reviewers_returned = mfcs_get_reviewers(array('mr.request_classification' => $request['request_coordinator']['classification'][0]->value, 'mr.review_step' => MFCS_REVIEW_STEP_FINAL_DECISION, 'mr.disabled' => 0), array('join' => TRUE));
   $reviewers = array();
   if (isset($reviewers_returned['results']) && is_array($reviewers_returned['results'])) {
     $reviewers = $reviewers_returned['results'];
@@ -2473,21 +2691,21 @@ function mfcs_send_workflow_emails($request_id, $parameters) {
   $standard_markup .= "<strong>Dates</strong>:";
 
   foreach ($request['dates']['date'] as $key => $date) {
-    $standard_content .= " - " . date("Y/m/d", $date->value);
+    $standard_content .= " - " . date(MFCS_DATE_FORMAT_DATE, $date->value);
     $standard_markup .= "<ul><li>";
 
     if ($date->cancelled == 1) {
       $standard_markup .= "<strike>";
     }
 
-    $standard_markup .= date("Y/m/d", $date->value);
+    $standard_markup .= date(MFCS_DATE_FORMAT_DATE, $date->value);
 
     if (!is_null($request['dates']['time_start'][$key]->value)) {
-      $standard_content .= " " . date("h:ia", $request['dates']['time_start'][$key]->value);
-      $standard_content .= " to " . date("h:ia", $request['dates']['time_stop'][$key]->value);
+      $standard_content .= " " . date(MFCS_DATE_FORMAT_TIME, $request['dates']['time_start'][$key]->value);
+      $standard_content .= " to " . date(MFCS_DATE_FORMAT_TIME, $request['dates']['time_stop'][$key]->value);
 
-      $standard_markup .= " " . date("h:ia", $request['dates']['time_start'][$key]->value);
-      $standard_markup .= " to " . date("h:ia", $request['dates']['time_stop'][$key]->value);
+      $standard_markup .= " " . date(MFCS_DATE_FORMAT_TIME, $request['dates']['time_start'][$key]->value);
+      $standard_markup .= " to " . date(MFCS_DATE_FORMAT_TIME, $request['dates']['time_stop'][$key]->value);
     }
 
     if ($date->cancelled == 1) {
@@ -2932,9 +3150,25 @@ function mfcs_send_workflow_emails($request_id, $parameters) {
           $reassigned_to_user_name = $reassigned_to_user['first_name'] . ' ' . $reassigned_to_user['last_name'];
         }
 
-        $email_params['title_suffix'] = "Re-Assigned";
-        $email_params['content'] .= $changed_by_string . " has re-assigned the venue coordinator from " . $reassigned_from_user_name . " [id: " . $reassigned_from . "] to " . $reassigned_to_user_name . " [id: " . $reassigned_to . "].\n";
-        $email_params['markup'] .= $changed_by_markup . " has re-assigned the venue coordinator from <strong>" . $reassigned_from_user_name . "</strong> <sup>[id: " . $reassigned_from . "]</sup> to <strong>" . $reassigned_to_user_name . "</strong> <sup>[id: " . $reassigned_to . "]</sup>.<br>";
+        if ($reassigned_type == 'coordinator') {
+          $email_params['title_suffix'] = "Re-Assigned Coordinator";
+        }
+        elseif ($reassigned_type == 'requester') {
+          $email_params['title_suffix'] = "Re-Assigned Requester";
+        }
+        $email_params['content'] .= $changed_by_string . " has re-assigned the requester from " . $reassigned_from_user_name . " [id: " . $reassigned_from . "] to " . $reassigned_to_user_name . " [id: " . $reassigned_to . "].\n";
+        $email_params['markup'] .= $changed_by_markup . " has re-assigned the requester from <strong>" . $reassigned_from_user_name . "</strong> <sup>[id: " . $reassigned_from . "]</sup> to <strong>" . $reassigned_to_user_name . "</strong> <sup>[id: " . $reassigned_to . "]</sup>.<br>";
+
+        if (!empty($reassigned_from_user['email'])) {
+          $email_to[$reassigned_from_user['email']] = $reassigned_from_user['email'];
+        }
+
+        if (!empty($reassigned_to_user['email'])) {
+          $email_to[$reassigned_to_user['email']] = $reassigned_to_user['email'];
+        }
+
+        unset($reassigned_from_user);
+        unset($reassigned_to_user);
       }
       elseif ($is_deleted || $status === MFCS_REQUEST_STATUS_DELETED) {
         $email_params['title_suffix'] = "Deleted";
@@ -2976,7 +3210,7 @@ function mfcs_send_workflow_emails($request_id, $parameters) {
         }
       }
 
-      if ($status !== MFCS_REQUEST_STATUS_DELETED) {
+      if ($status !== MFCS_REQUEST_STATUS_DELETED && !$is_reassigned) {
         // send messages to all reviewers.
         foreach ($step_1_reviewers as $r) {
           $email_to[$r->email] = $r->email;
@@ -3214,10 +3448,10 @@ function mfcs_send_workflow_emails($request_id, $parameters) {
         }
       }
     }
-    elseif ($request['top']['step'][0]->value == MFCS_REVIEW_STEP_REQUIREMENTS) {
-      $email_params['title_suffix'] = "Requirements";
+    elseif ($request['top']['step'][0]->value == MFCS_REVIEW_STEP_FINAL_DECISION) {
+      $email_params['title_suffix'] = "Final Decision";
       $email_params['content'] = "";
-      $email_params['content'] .= "The request is ready to have its requirements approved or denied.\n";
+      $email_params['content'] .= "The request is ready to be approved or denied.\n";
       $email_params['content'] .= "\n";
       $email_params['content'] .= "This is where the final decision needs to be made but only after all use fees and insurance fees are either specified or waived.\n";
 
@@ -3228,7 +3462,9 @@ function mfcs_send_workflow_emails($request_id, $parameters) {
 
       $email_params['content'] .= $standard_content;
       $email_params['markup'] = "";
-      $email_params['markup'] .= "The request is ready to have its requirements <em>approved or denied</em>.<br>";
+      $email_params['markup'] .= "The request is ready to be <em>approved or denied</em>.<br>";
+      $email_params['markup'] .= "<br>";
+      $email_params['markup'] .= "This is where the final decision needs to be made but only after all use fees and insurance fees are either specified or waived.<br>";
 
       if (strlen($message) > 0) {
         $email_params['markup'] .= '<br>';
@@ -3266,7 +3502,7 @@ function mfcs_send_workflow_emails($request_id, $parameters) {
       }
     }
     /* No longer used as of ticket fcs-79.
-    elseif ($request['top']['step'][0]->value == MFCS_REVIEW_STEP_MAKE_DECISIONS) {
+    elseif ($request['top']['step'][0]->value == MFCS_REVIEW_STEP_FINAL_DECISION) {
       $email_params['title_suffix'] = "Reviewed";
       $email_params['content'] = "";
       $email_params['content'] .= "The request has been reviewed and is ready for conflict resolution / decision making / final review.\n";
@@ -3364,6 +3600,46 @@ function mfcs_send_workflow_emails($request_id, $parameters) {
     if ($requester_included_in_emails && !is_null($request_requester['email'])) {
       if (!array_key_exists($request_requester['email'], $email_to) && strlen($message) > 0) {
         $email_comment_only[$request_requester['email']] = $request_requester['email'];
+        $email_to[$request_requester['email']] = $request_requester['email'];
+      }
+    }
+  }
+  elseif ($is_move) {
+    $email_params['title_suffix'] = "Moved";
+    $email_params['content'] = "";
+    $email_params['content'] .= $changed_by_string . " has moved the request to a new location, building, or room.\n";
+    $email_params['content'] .= "\n";
+    $email_params['content'] .= $message . "\n";
+    $email_params['content'] .= $standard_content;
+    $email_params['markup'] = "";
+    $email_params['markup'] .= '<em>' . $changed_by_markup . "</em> has <em>moved</em> the request to a new location, building, or room.<br>";
+    $email_params['markup'] .= '<br>';
+    $email_params['markup'] .= str_replace("\n", '<br>', trim(check_plain($message))) . '<br>';
+    $email_params['markup'] .= $standard_markup;
+
+    foreach ($step_1_reviewers as $r) {
+      $email_to[$r->email] = $r->email;
+    }
+
+    if (is_array($venue_coordinator)) {
+      $email_to[$venue_coordinator['email']] = $venue_coordinator['email'];
+    }
+
+    // also send e-mails to the venue coordinator proxies.
+    $proxies_returned = mfcs_get_proxy_venue_coordinators(array('mpvc.user_id' => $venue_coordinator['user_id'], 'mpvc.disabled' => 0));
+    if (!empty($proxies_returned['results'])) {
+      foreach ($proxies_returned['results'] as $proxy_returned) {
+        $proxy = mfcs_load_basic_user_settings_by_user_id($proxy_returned->proxy_id);
+
+        if (is_array($proxy)) {
+          $email_to[$proxy['email']] = $proxy['email'];
+        }
+      }
+    }
+
+    // as of fcs-79, conditionally include the requester in the e-mails.
+    if ($requester_included_in_emails && !is_null($request_requester['email'])) {
+      if (!array_key_exists($request_requester['email'], $email_to) && strlen($message) > 0) {
         $email_to[$request_requester['email']] = $request_requester['email'];
       }
     }
@@ -3487,8 +3763,7 @@ function mfcs_send_workflow_emails($request_id, $parameters) {
           drupal_mail('mfcs', 'request_alert', $to, language_default(), $comment_email_params, $email_from, TRUE);
         }
         else {
-          watchdog(MFCS_WATCHDOG_ID, "Unable to send (comment only) e-mail to %to because the e-mail content was not populated for request %request_id.", array('%to' => $to, '%request_id' => $request_id), WATCHDOG_ERROR);
-          // @todo: implement a problem report id and report it to the request problems table.
+          watchdog(MFCS_WATCHDOG_ID, 'Unable to send (comment only) e-mail to %to because the e-mail content was not populated for request %request_id.', array('%to' => $to, '%request_id' => $request_id), WATCHDOG_ERROR);
         }
       }
       else {
@@ -3496,8 +3771,7 @@ function mfcs_send_workflow_emails($request_id, $parameters) {
           drupal_mail('mfcs', 'request_alert', $to, language_default(), $email_params, $email_from, TRUE);
         }
         else {
-          watchdog(MFCS_WATCHDOG_ID, "Unable to send e-mail to %to because the e-mail content was not populated for request %request_id.", array('%to' => $to, '%request_id' => $request_id), WATCHDOG_ERROR);
-          // @todo: implement a problem report id and report it to the request problems table.
+          watchdog(MFCS_WATCHDOG_ID, 'Unable to send e-mail to %to because the e-mail content was not populated for request %request_id.', array('%to' => $to, '%request_id' => $request_id), WATCHDOG_ERROR);
         }
       }
     }
@@ -3509,8 +3783,7 @@ function mfcs_send_workflow_emails($request_id, $parameters) {
           drupal_mail('mfcs', 'request_alert', $to, language_default(), $comment_email_params, $email_from, TRUE);
         }
         else {
-          watchdog(MFCS_WATCHDOG_ID, "Unable to send (comment only) e-mail to %to because the e-mail content was not populated for request %request_id.", array('%to' => $to, '%request_id' => $request_id), WATCHDOG_ERROR);
-          // @todo: implement a problem report id and report it to the request problems table.
+          watchdog(MFCS_WATCHDOG_ID, 'Unable to send (comment only) e-mail to %to because the e-mail content was not populated for request %request_id.', array('%to' => $to, '%request_id' => $request_id), WATCHDOG_ERROR);
         }
       }
       else {
@@ -3518,8 +3791,7 @@ function mfcs_send_workflow_emails($request_id, $parameters) {
           drupal_mail('mfcs', 'request_alert', $to, language_default(), $email_params, $email_from, TRUE);
         }
         else {
-          watchdog(MFCS_WATCHDOG_ID, "Unable to send e-mail to %to because the e-mail content was not populated for request %request_id.", array('%to' => $to, '%request_id' => $request_id), WATCHDOG_ERROR);
-          // @todo: implement a problem report id and report it to the request problems table.
+          watchdog(MFCS_WATCHDOG_ID, 'Unable to send e-mail to %to because the e-mail content was not populated for request %request_id.', array('%to' => $to, '%request_id' => $request_id), WATCHDOG_ERROR);
         }
       }
     }

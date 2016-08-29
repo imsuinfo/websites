@@ -67,10 +67,17 @@ function mfcs_request_users_0_form($form, &$form_state, $page_number = NULL) {
 
   mfcs_add_canonical_headers('requests/users-0/list/' . $page_number);
 
-  $page_title = "Manage Users";
-  drupal_set_title($page_title);
-
   $user = cf_current_user();
+  $is_manager = user_access('mfcs manage', $user);
+  $is_administer = user_access('mfcs administer', $user);
+
+  if ($is_manager || $is_administer) {
+    $page_title = "Manage Users";
+  }
+  else {
+    $page_title = "View Users";
+  }
+  drupal_set_title($page_title);
 
   mfcs_include(MFCS_INCLUDE_MANAGEMENT);
   mfcs_include(MFCS_INCLUDE_LIST_OPTIONS);
@@ -176,7 +183,18 @@ function mfcs_request_users_0_form($form, &$form_state, $page_number = NULL) {
     $load_results = FALSE;
   }
 
-  $items_returned = mfcs_request_users_get_users('', $sorting, $items_start, $rows_per_page, $locked, $load_results);
+  if ($is_manager || $is_administer) {
+    $items_returned = mfcs_request_users_get_users('', $sorting, $items_start, $rows_per_page, $locked, $load_results);
+  }
+  else {
+    $user_ids = mfcs_get_related_user_ids_from_user_banner_id($user);
+    if (!is_array($user_ids)) {
+      $user_ids = array($user->uid => $user->uid);
+    }
+
+    $items_returned = mfcs_request_users_get_users('', $sorting, $items_start, $rows_per_page, $locked, $load_results, $user_ids);
+    unset($user_ids);
+  }
 
   // do not provide pages when the page number would bring the user beyond the available items.
   if ($items_returned === FALSE) {
@@ -276,14 +294,24 @@ function mfcs_request_users_0_form($form, &$form_state, $page_number = NULL) {
     );
 
     $row['operations']['data'] .= '<a href="' . $base_path . 'requests/users-0/view/' . $item->id . $url_arguments . '" class="operation-link operation-link-view" title="View User">View</a> ';
-    $row['operations']['data'] .= '<a href="' . $base_path . 'requests/users-0/edit/' . $item->id . $url_arguments . '" class="operation-link operation-link-view" title="Edit User">Edit</a>' ;
+
+    if ($is_manager || $is_administer) {
+      $row['operations']['data'] .= '<a href="' . $base_path . 'requests/users-0/edit/' . $item->id . $url_arguments . '" class="operation-link operation-link-view" title="Edit User">Edit</a>' ;
+    }
 
     $rows[] = $row;
   }
 
 
   $users_list = array();
-  $users_list['caption'] = "Manage Users";
+
+  if ($is_manager || $is_administer) {
+    $users_list['caption'] = "Manage Users";
+  }
+  else {
+    $users_list['caption'] = "View Users";
+  }
+
   $users_list['header'] = array(
     'id' => array('field' => 'id', 'data' => "ID", 'align' => 'center'),
     'name' => array('field' => 'name', 'data' => "Name", 'align' => 'center'),
@@ -312,7 +340,13 @@ function mfcs_request_users_0_form($form, &$form_state, $page_number = NULL) {
   $users_list['attributes']['summary'] = 'List of users you are able to manage.';
 
   $users_list['rows'] = $rows;
-  $users_list['empty'] = t("There are no user accounts available for you to manage.");
+
+  if ($is_manager || $is_administer) {
+    $users_list['empty'] = t("There are no user accounts available for you to manage.");
+  }
+  else {
+    $users_list['empty'] = t("There are no user accounts available for you to view.");
+  }
 
   $datatable_settings = array(
     'sort' => $sort,
@@ -408,10 +442,11 @@ function mfcs_request_users_0_form($form, &$form_state, $page_number = NULL) {
   $form['manage_users_list']['#markup'] .= mcneese_libraries_theme_table($users_list, $datatable_settings);
   #$form['manage_users_list']['#markup'] .= '<div class="table_listing-navigator table_listing-navigator-bottom">' . $navigation_bottom . '</div>';
 
-
-  $form['manage_users_list']['#markup'] .= '<div class="mfcs-manage_users_form-add_user no-print">';
-  $form['manage_users_list']['#markup'] .= '<a href="' . $base_path . 'requests/users-0/add" title="Add new user">Add User</a>';
-  $form['manage_users_list']['#markup'] .= '</div>';
+  if ($is_manager || $is_administer) {
+    $form['manage_users_list']['#markup'] .= '<div class="mfcs-manage_users_form-add_user no-print">';
+    $form['manage_users_list']['#markup'] .= '<a href="' . $base_path . 'requests/users-0/add" title="Add new user">Add User</a>';
+    $form['manage_users_list']['#markup'] .= '</div>';
+  }
 
   return $form;
 }
@@ -440,8 +475,8 @@ function mfcs_request_users_0_view_page($user_id) {
   }
 
   $user = cf_current_user();
-  $manager = user_access('mfcs manage', $user);
-  $administer = user_access('mfcs administer', $user);
+  $is_manager = user_access('mfcs manage', $user);
+  $is_administer = user_access('mfcs administer', $user);
 
   global $base_path;
   global $mfcs_determined;
@@ -534,15 +569,15 @@ function mfcs_request_users_0_view_page($user_id) {
     $special = '<div class="view_user-item view_user-item-roles-special"><span class="item-information item-information-roles-special">No roles assigned</span></div>';
   }
 
-  $administer = NULL;
+  $administer_text = NULL;
   foreach ($roles_administer as $role_id => $role) {
     if (array_key_exists($role_id, $account->roles)) {
-      $administer .= '<div class="view_user-item view_user-item-roles-administer"><span class="item-information item-information-roles-administer">' . $role . '</span></div>';
+      $administer_text .= '<div class="view_user-item view_user-item-roles-administer"><span class="item-information item-information-roles-administer">' . $role . '</span></div>';
     }
   }
   unset($role);
-  if (is_null($administer)) {
-    $administer = '<div class="view_user-item view_user-item-roles-administer"><span class="item-information item-information-roles-administer">No roles assigned</span></div>';
+  if (is_null($administer_text)) {
+    $administer_text = '<div class="view_user-item view_user-item-roles-administer"><span class="item-information item-information-roles-administer">No roles assigned</span></div>';
   }
 
   $primary = 'This is the <strong>Primary</strong> account.';
@@ -598,6 +633,75 @@ function mfcs_request_users_0_view_page($user_id) {
     $banner_information = '<div class="view_user-item view_user-item-roles-no_banner_id">No Banner ID assigned to this account.</div>';
   }
 
+  $proxy_information = NULL;
+  $proxy_accounts = mfcs_get_proxy_venue_coordinators(array('mpvc.proxy_id' => $account->uid));
+  if (!empty($proxy_accounts['results'])) {
+    $name_information = NULL;
+    foreach ($proxy_accounts['results'] as $proxy_account) {
+      if (!isset($proxy_account->user_id)) continue;
+      $proxy_user = user_load($proxy_account->user_id);
+
+      if (is_object($proxy_user)) {
+        $generated_name = mfcs_generate_form_user_name($proxy_user);
+
+        if ($is_manager || $is_administer) {
+          $name_information .= '<div class="view_user-item-proxy-item view_user-item-proxy-as-item"><a href="' . $base_path . 'requests/users-0/view/' . $proxy_user->uid . $url_arguments . '" class="view_user-item-proxy-as-item no_print_links_as_link" title="View user information">' . $generated_name . '</a></div>';
+        }
+        else {
+          $name_information .= '<div class="view_user-item-proxy-item view_user-item-proxy-as-item">' . $generated_name . '</div>';
+        }
+      }
+    }
+    unset($proxy_account);
+    unset($proxy_user);
+
+    if (!is_null($name_information)) {
+      $proxy_information .= '<div class="view_user-item view_user-item-proxy-as">';
+      $proxy_information .= '<div class="view_user-item-label view_user-item-proxy-as-label">May Proxy As:</div>';
+      $proxy_information .= $name_information;
+      $proxy_information .= '</div>';
+    }
+    unset($name_information);
+  }
+
+  $proxy_accounts = mfcs_get_proxy_venue_coordinators(array('mpvc.user_id' => $account->uid));
+  if (!empty($proxy_accounts['results'])) {
+    $name_information = NULL;
+    foreach ($proxy_accounts['results'] as $proxy_account) {
+      if (!isset($proxy_account->proxy_id)) continue;
+      $proxy_user = user_load($proxy_account->proxy_id);
+
+      if (is_object($proxy_user)) {
+        $generated_name = mfcs_generate_form_user_name($proxy_user);
+
+        if ($is_manager || $is_administer) {
+          $name_information .= '<div class="view_user-item-proxy-item view_user-item-proxy-by-item"><a href="' . $base_path . 'requests/users-0/view/' . $proxy_user->uid . $url_arguments . '" class="view_user-item-proxy-by-item no_print_links_as_link" title="View user information">' . $generated_name . '</a></div>';
+        }
+        else {
+          $name_information .= '<div class="view_user-item-proxy-item view_user-item-proxy-by-item">' . $generated_name . '</div>';
+        }
+      }
+    }
+    unset($proxy_account);
+    unset($proxy_user);
+
+    if (!is_null($name_information)) {
+      if (!is_null($proxy_information)) {
+        $proxy_information .= '<br>';
+      }
+
+      $proxy_information .= '<div class="view_user-item view_user-item-proxy-by">';
+      $proxy_information .= '<div class="view_user-item-label view_user-item-proxy-by-label">Is Proxied By:</div>';
+      $proxy_information .= $name_information;
+      $proxy_information .= '</div>';
+    }
+    unset($name_information);
+  }
+
+  if (is_null($proxy_information)) {
+    $proxy_information = '<div class="view_user-item view_user-item-proxy-none">Not a proxy and has no proxies.</div>';
+  }
+
   // drupal only stores the account creation, so a custom field has been added to store when the account was last changed.
   // because it is non-standard, fallback to the account creation date in case the update data is not present.
   $updated = $account->created;
@@ -617,7 +721,7 @@ function mfcs_request_users_0_view_page($user_id) {
   $markup .= '<div class="view_user-item view_user-item-email"><span class="item-label item-label-email strong">E-mail:</span> <span class="item-value item-value-email">' . $email . '</span></div>';
   $markup .= '<div class="view_user-item view_user-item-banner_id"><span class="item-label item-label-banner_id strong">Banner ID:</span> <span class="item-value item-value-banner_id">' . $banner_id . '</span></div>';
   $markup .= '<div class="view_user-item view_user-item-phone"><span class="item-label item-label-phone strong">Phone:</span> <span class="item-value item-value-phone">' . $phone . '</span></div>';
-  $markup .= '<div class="view_user-item view_user-item-updated_on"><span class="item-label item-label-updated_on strong">Updated On:</span> <span class="item-value item-value-updated_on">' . date('Y/m/d h:i:s a', $updated) . '</span></div>';
+  $markup .= '<div class="view_user-item view_user-item-updated_on"><span class="item-label item-label-updated_on strong">Updated On:</span> <span class="item-value item-value-updated_on">' . date(MFCS_DATE_FORMAT_DATE_TIME_SECONDS, $updated) . '</span></div>';
   $markup .= '</div>';
 
   $markup .= '<div class="view_user-group view_user-group-status">';
@@ -629,15 +733,22 @@ function mfcs_request_users_0_view_page($user_id) {
     $markup .= '<div class="view_user-item view_user-item-duplicate"><span class="item-information item-information-duplicate">' . $duplicate . '</span></div>';
   }
 
-  if ($administer) {
+  if ($is_administer) {
     $markup .= '<div class="view_user-item view_user-item-view_profile no-print"><span class="item-information item-information-view_profile"><a href="' . $base_path . 'user/' . $account->uid . '">' . "View User Profile" . '</a></span></div>';
   }
 
   $markup .= '</div>';
 
-  $markup .= '<div class="view_user-group view_user-group-banner_information">';
-  $markup .= '<h3 class="view_user-group-header view_user-group-header-banner_information">Banner Information</h3>';
-  $markup .= $banner_information;
+  if ($is_manager || $is_administer) {
+    $markup .= '<div class="view_user-group view_user-group-banner_information">';
+    $markup .= '<h3 class="view_user-group-header view_user-group-header-banner_information">Banner Information</h3>';
+    $markup .= $banner_information;
+    $markup .= '</div>';
+  }
+
+  $markup .= '<div class="view_user-group view_user-group-proxy_information">';
+  $markup .= '<h3 class="view_user-group-header view_user-group-header-proxy_information">Proxy Information</h3>';
+  $markup .= $proxy_information;
   $markup .= '</div>';
 
   $markup .= '<br>';
@@ -652,26 +763,50 @@ function mfcs_request_users_0_view_page($user_id) {
   $markup .= $venue;
   $markup .= '</div>';
 
-  $markup .= '<div class="view_user-group view_user-group-roles-special">';
-  $markup .= '<h3 class="view_user-group-header view_user-group-header-roles-special">Special/Exceptional Roles</h3>';
-  $markup .= $special;
-  $markup .= '</div>';
+  if ($is_manager || $is_administer) {
+    $markup .= '<div class="view_user-group view_user-group-roles-special">';
+    $markup .= '<h3 class="view_user-group-header view_user-group-header-roles-special">Special/Exceptional Roles</h3>';
+    $markup .= $special;
+    $markup .= '</div>';
 
-  $markup .= '<div class="view_user-group view_user-group-roles-administer">';
-  $markup .= '<h3 class="view_user-group-header view_user-group-header-roles-administer">Administration Roles</h3>';
-  $markup .= $administer;
-  $markup .= '</div>';
+    $markup .= '<div class="view_user-group view_user-group-roles-administer">';
+    $markup .= '<h3 class="view_user-group-header view_user-group-header-roles-administer">Administration Roles</h3>';
+    $markup .= $administer_text;
+    $markup .= '</div>';
 
-  if ($manager || $administer) {
+    // load any problems associated with the given user.
+    $problems_detected = NULL;
+
+    $mfcs_users = mfcs_load_users($account->uid, FALSE, TRUE);
+    if (is_array($mfcs_users) && array_key_exists($account->uid, $mfcs_users) && !empty($mfcs_users[$account->uid])) {
+      mfcs_include(MFCS_INCLUDE_MANAGEMENT);
+      $problems_list = mfcs_management_get_problems_user_taxonomy();
+
+      foreach ($problems_list as $problem_id => $problem_text) {
+        if (($mfcs_users[$account->uid]->problems & $problem_id) != 0) {
+          $problems_detected .= '<div class="view_user-item view_user-item-problems"><a href="' . $base_path . 'requests/problems-0/users/user/' . $account->uid . $url_arguments . '" class="problem problem-' . ((int) $problem_id) . ' no_print_links_as_link">' . $problem_text . '</a></div>';
+        }
+      }
+      unset($problem_text);
+      unset($problem_id);
+    }
+    unset($mfcs_users);
+
+    if (!is_null($problems_detected)) {
+      $markup .= '<br>';
+      $markup .= '<div class="view_user-group view_user-group-problems">';
+      $markup .= '<h3 class="view_user-group-header view_user-group-header-problems">Problems Detected</h3>';
+      $markup .= $problems_detected;
+      $markup .= '</div>';
+    }
+    unset($problems_detected);
+
     $markup .= '<div class="view_user-buttons">';
     $markup .= '<a href="' . $base_path . 'requests/users-0/edit/' . $user_id . $url_arguments . '" class="view_user-button view_user-edit">Edit</a>' ;
     $markup .= '</div>';
   }
 
   $markup .= '</div>';
-
-
-
 
   return $markup;
 }
@@ -1596,12 +1731,15 @@ function mfcs_request_users_0_add_or_edit_form_submit($form, &$form_state, $edit
  *   (optional) When NULL both result and count queries are performed.
  *   When FALSE only count query is performed.
  *   When TRUE only result query is performed.
+ * @param array $users
+ *   (optional) An array of user ids to limit the search by.
+ *   This is intended for non-admin users such that a smaller list is filtered from in addition to the $search argument.
  *
  * @param array|bool
  *   An array containing all rows (each row is an object).
  *   FALSE is returned on error.
  */
-function mfcs_request_users_get_users($search = '', $order_by = array(), $offset = 0, $limit = 40, $locked = FALSE, $results = NULL) {
+function mfcs_request_users_get_users($search = '', $order_by = array(), $offset = 0, $limit = 40, $locked = FALSE, $results = NULL, $users = array()) {
   if (!is_string($search) && !is_int($search)) {
     cf_error::invalid_string('search');
 
@@ -1638,7 +1776,12 @@ function mfcs_request_users_get_users($search = '', $order_by = array(), $offset
     return FALSE;
   }
 
-  $users = array();
+  if (!is_array($users)) {
+    cf_error::invalid_array('users');
+
+    return FALSE;
+  }
+
 
   // do not load the administer role (@fixme: role id is hardcoded).
   $role_administer = 3;
@@ -1677,6 +1820,30 @@ function mfcs_request_users_get_users($search = '', $order_by = array(), $offset
   // prohibit loading the system accounts.
   $where_string .= 'and not u.uid < 2 ';
 
+  // limit list to the specified user ids.
+  if (!empty($users)) {
+    $users_list = NULL;
+    foreach ($users as $u) {
+      if (!is_numeric($u)) {
+        continue;
+      }
+
+      if (is_null($users_list)) {
+        $users_list = '' . (int) $u;
+      }
+      else {
+        $users_list .= ', ' . (int) $u;
+      }
+    }
+    unset($u);
+
+    if (!is_null($users_list)) {
+      $where_string .= 'and u.uid in (' . $users_list . ') ';
+    }
+    unset($users_list);
+  }
+
+  // restrict based on locked status.
   if ($locked === TRUE) {
     $where_string .= 'and u.status = 0 ';
   }
@@ -1933,7 +2100,7 @@ function mfcs_request_users_get_roles($standard = TRUE, $venue = TRUE, $special 
   $roles = array();
 
   if ($standard) {
-    foreach (array('reviewer', 'manager', 'requester') as $role_name) {
+    foreach (array('reviewer', 'manager', 'requester', 'financer') as $role_name) {
       $role = user_role_load_by_name($role_name);
       if (is_object($role)) {
         $roles[$role->rid] = $role->name;
