@@ -222,6 +222,7 @@ function webform_conditionals_form_validate($form, &$form_state) {
                                    '%target' => $components[$action['target']['#value']]['name'])));
           }
           $component_type = $node->webform['components'][$action['target']['#value']]['type'];
+
           if ($action['action']['#value'] == 'email' || $action['action']['#value'] == 'no_email') {
             if (is_null($email_action)) {
               $email_action = 'conditionals][' . $conditional_key . '][actions][' . $action_key . '][target';
@@ -230,6 +231,7 @@ function webform_conditionals_form_validate($form, &$form_state) {
           elseif (is_null($other_action)) {
             $other_action = 'conditionals][' . $conditional_key . '][actions][' . $action_key . '][action';
           }
+
           if (!webform_conditional_action_able($component_type, $action['action']['#value'])) {
             form_set_error('conditionals][' . $conditional_key . '][actions][' . $action_key . '][action',
                            t('A component of type %type can\'t be %action. (%target)',
@@ -1420,11 +1422,6 @@ function webform_conditional_prepare_javascript($node, $submission_data, $page_n
     );
     foreach ($conditional['actions'] as $action) {
       if ($action['target_type'] == 'component') {
-        // skip email conditionals, they do not get processed here.
-        if ($action['action'] == 'email' || $action['action'] == 'no_email') {
-          continue 2;
-        }
-
         $target_component = $components[$action['target']];
         $target_parents = webform_component_parent_keys($node, $target_component);
         $aid_key = 'aid_' . $action['aid'];
