@@ -861,6 +861,34 @@ $conf['feed_all_blacklist'] = array(
 
 
 /**
+ * Ldap blacklisting.
+ */
+$conf['ldap_user_blacklist']['mcneese_ldap']= array(
+  'names' => array(
+    'admin',
+    'administer',
+    'administrator',
+    'anonymous',
+    'person',
+    'adapless',
+    'kdapless',
+    'pdapless',
+    'ldapless',
+    'unknown',
+    'primary_system_control',
+  ),
+  'regex' => array(
+    '/^(other|test|oth|om)-.*$/i',
+  ),
+  #'attribute' => array(
+  #),
+  #'no-attribute' => array(
+  #  'employeenumber',
+  #),
+);
+
+
+/**
  * Custom Error Pages
  */
 $conf['error_document_file_403'] = '/var/www/error_documents/4xx/403.html';
