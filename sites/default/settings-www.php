@@ -220,6 +220,10 @@ if (!defined('DRUPAL_ROOT')) {
 if (defined('DO_NOT_INCLUDE_PASSWORDS')) {
   $dbp = array(
     'www_user' => NULL,
+    'www_user_new' => NULL,
+    'wwwdev_user' => NULL,
+    'wwwdev2_user' => NULL,
+    'sandbox_user' => NULL,
   );
   $dhs = NULL;
 }
