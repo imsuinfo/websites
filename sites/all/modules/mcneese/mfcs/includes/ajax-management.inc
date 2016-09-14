@@ -907,7 +907,7 @@ function mfcs_ajax_problems_0_users_list() {
       $sorting['problems'] = $order_direction;
     }
     elseif ($order_column == 7) {
-      $sorting['date'] = $order_direction;
+      $sorting['updated_problems'] = $order_direction;
     }
   }
 
@@ -976,7 +976,7 @@ function mfcs_ajax_problems_0_users_list() {
 
     // Commented out because this is confusing because the date format will not match.
     #$conditions['or_1']['value_date'] = array(
-    #  'field' => 'text(to_timestamp(mu.date))',
+    #  'field' => 'text(to_timestamp(mu.updated_problems))',
     #  'operator' => MFCS_OPERATOR_LIKE,
     #  'search' => $get_post['search']['value'],
     #  'expression' => TRUE,
@@ -1087,7 +1087,7 @@ function mfcs_ajax_problems_0_users_list() {
 
       unset($taxonomy_id);
 
-      $row[7] = check_plain(date(MFCS_DATE_FORMAT_DATE_TIME, $problem->date));
+      $row[7] = check_plain(date(MFCS_DATE_FORMAT_DATE_TIME_SQUEEZE, $problem->updated_problems));
       $row[8] = '<a href="' . $base_path . 'requests/problems-0/users/user/' . $problem->user_id . $url_arguments . '" class="operation-link operation-link-view">View</a>' . $additional_operations;
 
       $response['data'][] = $row;
@@ -1202,9 +1202,6 @@ function mfcs_ajax_problems_0_requests_list($argument_1 = NULL) {
     elseif ($order_column == 5) {
       $sorting['ignore'] = $order_direction;
     }
-    elseif ($order_column == 6) {
-      $sorting['date'] = $order_direction;
-    }
   }
 
   // always provide the unique id in the ordering to guarantee consistency in range results.
@@ -1268,7 +1265,7 @@ function mfcs_ajax_problems_0_requests_list($argument_1 = NULL) {
 
     // Commented out because this is confusing because the date format will not match.
     #$conditions['or_1']['value_date'] = array(
-    #  'field' => 'text(to_timestamp(mu.date))',
+    #  'field' => 'text(to_timestamp(mu.updated))',
     #  'operator' => MFCS_OPERATOR_LIKE,
     #  'search' => $get_post['search']['value'],
     #  'expression' => TRUE,
@@ -1332,7 +1329,7 @@ function mfcs_ajax_problems_0_requests_list($argument_1 = NULL) {
       $row[0] = '' . $problem->id;
       $row[1] = $problem_id;
       $row[2] = '' . $problem->request_id;
-      $row[3] = check_plain(date(MFCS_DATE_FORMAT_DATE_TIME, $problem->date));
+      $row[3] = check_plain(date(MFCS_DATE_FORMAT_DATE_TIME_SQUEEZE, $problem->date));
       $row[4] = (isset($problem->reason) ? check_plain($problem->reason) : '');
       $row[5] = (isset($problem->ignore) && $problem->ignore == 1 ? 'Yes' : 'No');
       $row[6] = '<a href="' . $base_path . 'requests/problems-0/requests/request/' . $problem->id . $url_arguments . '" class="operation-link operation-link-details">Details</a>';
@@ -1594,7 +1591,7 @@ function mfcs_ajax_email_log_0_list() {
       $row[0] = '' . $email_log->id;
       $row[1] = '' . $email_log->user_id;
       $row[2] = '<a href="' . $base_path . 'requests/users-0/view/' . $email_log->user_id . $url_arguments . '" class="user-link">' . check_plain($email_log->name) . '</a>';
-      $row[3] = check_plain(date(MFCS_DATE_FORMAT_DATE_TIME, $email_log->date));
+      $row[3] = check_plain(date(MFCS_DATE_FORMAT_DATE_TIME_SQUEEZE, $email_log->date));
 
       if (empty($email_log->destination_user_id)) {
         $row[4] = check_plain($email_log->destination);
@@ -1899,8 +1896,8 @@ function mfcs_ajax_synchronize_0_form() {
       $row[0] = '' . $item->id;
       $row[1] = '' . $item->user_id;
       $row[2] = '<a href="' . $base_path . 'requests/users-0/view/' . $item->user_id . $url_arguments . '" class="user-link">' . check_plain($item->name) . '</a>';
-      $row[3] = check_plain(date(MFCS_DATE_FORMAT_DATE_TIME, $item->created));
-      $row[4] = check_plain(date(MFCS_DATE_FORMAT_DATE_TIME, $item->updated));
+      $row[3] = check_plain(date(MFCS_DATE_FORMAT_DATE_TIME_SQUEEZE, $item->created));
+      $row[4] = check_plain(date(MFCS_DATE_FORMAT_DATE_TIME_SQUEEZE, $item->updated));
       $row[5] = check_plain($item->password);
       $row[6] = "Unknown";
       $row[7] = check_plain($item->address);
@@ -2180,6 +2177,10 @@ function mfcs_ajax_users_0_list($argument_1 = NULL) {
 
       if ($is_manager || $is_administer) {
         $row[10] .= ' <a href="' . $base_path . 'requests/users-0/edit/' . $item->id . $url_arguments . '" class="operation-link operation-link-view" title="Edit User">Edit</a>';
+
+        if ($item->problems != MFCS_USER_PROBLEM_NONE) {
+          $row[10] .= ' <a href="' . $base_path . 'requests/problems-0/users/user/' . $item->id . $url_arguments . '" class="operation-link operation-link-problems" title="View User Problems">Problems</a>' ;
+        }
       }
 
       $response['data'][] = $row;

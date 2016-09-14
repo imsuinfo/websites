@@ -11,6 +11,92 @@
  */
 
 /**
+ * Defines restrictions review decisions.
+ */
+ define('MFCS_RESTRICTION_DECISION_NONE', 0);
+ define('MFCS_RESTRICTION_DECISION_REQUESTER', 1);
+ define('MFCS_RESTRICTION_DECISION_VENUE_COORDINATOR', 2);
+ define('MFCS_RESTRICTION_DECISION_REVIEWER', 3);
+ define('MFCS_RESTRICTION_DECISION_APPROVER', 4);
+ define('MFCS_RESTRICTION_DECISION_MANAGER', 5);
+ define('MFCS_RESTRICTION_DECISION_ADMINISTER', 6);
+ define('MFCS_RESTRICTION_DECISION_COMMENT_ONLY', 7);
+ define('MFCS_RESTRICTION_DECISION_FINANCER', 8);
+
+/**
+ * Defines Taxonomy TIDs for request revenue.
+ */
+ define('MFCS_REQUEST_REVENUE_NONE', 0);
+ define('MFCS_REQUEST_REVENUE_TICKET_SALES', 1);
+ define('MFCS_REQUEST_REVENUE_MERCHANDISE_SALES', 2);
+ define('MFCS_REQUEST_REVENUE_CONCESSION_SALES', 3);
+
+/**
+ * Defines Taxonomy TIDs for request publicity.
+ */
+ define('MFCS_REQUEST_PUBLICITY_NONE', 0);
+ define('MFCS_REQUEST_PUBLICITY_CAMPUS_DIGEST', 1);
+ define('MFCS_REQUEST_PUBLICITY_STUDENT_DIGEST', 2);
+ define('MFCS_REQUEST_PUBLICITY_WEBSITE', 3);
+ define('MFCS_REQUEST_PUBLICITY_SOCIAL_MEDIA', 4);
+ define('MFCS_REQUEST_PUBLICITY_AXIS_TVS', 5);
+ define('MFCS_REQUEST_PUBLICITY_PRESS_RELEASE', 6);
+
+/**
+ * Defines Taxonomy TIDs for request designing material.
+ */
+ define('MFCS_REQUEST_DESIGNING_MATERIALS_NONE', 0);
+ define('MFCS_REQUEST_DESIGNING_MATERIALS_PUBLIC_RELATIONS', 1);
+ define('MFCS_REQUEST_DESIGNING_MATERIALS_MARKETING', 2);
+ define('MFCS_REQUEST_DESIGNING_MATERIALS_OTHER', 3);
+
+/**
+ * Defines Taxonomy TIDs for request technical equipment.
+ */
+ define('MFCS_REQUEST_TECHNICAL_EQUIPMENT_NONE', 0);
+ define('MFCS_REQUEST_TECHNICAL_EQUIPMENT_SCREEN', 1);
+ define('MFCS_REQUEST_TECHNICAL_EQUIPMENT_COMPUTER', 2);
+ define('MFCS_REQUEST_TECHNICAL_EQUIPMENT_SOUND', 3);
+ define('MFCS_REQUEST_TECHNICAL_EQUIPMENT_MICROPHONE', 4);
+
+/**
+ * Defines Taxonomy TIDs for request classifications.
+ */
+ define('MFCS_REQUEST_AUDIENCE_NONE', 0);
+ define('MFCS_REQUEST_AUDIENCE_FACULTY_AND_STAFF', 1);
+ define('MFCS_REQUEST_AUDIENCE_GUESTS_ONLY', 2);
+ define('MFCS_REQUEST_AUDIENCE_PUBLIC', 3);
+ define('MFCS_REQUEST_AUDIENCE_STUDENTS_AND_EMPLOYEES', 4);
+ define('MFCS_REQUEST_AUDIENCE_STUDENTS_ONLY', 5);
+
+/**
+ * Defines problems log codes.
+ */
+define('MFCS_LOG_PROBLEMS_NONE', 0);
+define('MFCS_LOG_PROBLEMS_INSERT', 1);
+define('MFCS_LOG_PROBLEMS_UPDATE', 2);
+define('MFCS_LOG_PROBLEMS_DELETE', 3);
+define('MFCS_LOG_PROBLEMS_RESYNC', 4);
+define('MFCS_LOG_PROBLEMS_IGNORE', 5);
+define('MFCS_LOG_PROBLEMS_UNIGNORE', 6);
+define('MFCS_LOG_PROBLEMS_RECHECK', 7);
+define('MFCS_LOG_PROBLEMS_REASSIGN_VENUE_COORDINATOR', 8);
+define('MFCS_LOG_PROBLEMS_REASSIGN_REQUESTER', 9);
+define('MFCS_LOG_PROBLEMS_REASSIGN_REBUILD_CACHE', 10);
+
+/**
+ * Unavailability Types
+ */
+define('MFCS_UNAVAILABILITY_TYPE_NONE', 0);
+define('MFCS_UNAVAILABILITY_TYPE_RENOVATION', 1);
+define('MFCS_UNAVAILABILITY_TYPE_REPAIR', 2);
+define('MFCS_UNAVAILABILITY_TYPE_REFURBISHMENT', 3);
+define('MFCS_UNAVAILABILITY_TYPE_SPECIAL_EVENT', 4);
+define('MFCS_UNAVAILABILITY_TYPE_OUTAGE', 5);
+define('MFCS_UNAVAILABILITY_TYPE_EMERGENCY', 6);
+define('MFCS_UNAVAILABILITY_TYPE_CLASS', 7);
+
+/**
  * Returns an array of facilities use status options for populating lists.
  *
  * @fixme: status currently has deleted set to 0 and therefore none and deleted conflict.
@@ -136,7 +222,7 @@ function mfcs_get_request_classification_list_options($option = NULL, $user = NU
 
   $options_all[MFCS_REQUEST_CLASSIFICATION_STUDENT] = 'Student Organization';
   $options_all[MFCS_REQUEST_CLASSIFICATION_CAMPS] = 'Camps';
-  $options_all[MFCS_REQUEST_CLASSIFICATION_FACULTY] = 'Faculty / Staff / Athletics';
+  $options_all[MFCS_REQUEST_CLASSIFICATION_FACULTY] = 'Faculty, Staff, Athletics';
   $options_all[MFCS_REQUEST_CLASSIFICATION_EXTERNAL] = 'Externals';
 
   if ($option == 'select') {
@@ -317,7 +403,7 @@ function mfcs_get_dates_category_list_options($option = NULL, $hidden = FALSE, $
   }
 
   $options_all[MFCS_REQUEST_DATES_CATEGORY_ACTUAL] = 'Event / Meeting';
-  $options_all[MFCS_REQUEST_DATES_CATEGORY_SETUP] = 'Rehearsel / Setup';
+  $options_all[MFCS_REQUEST_DATES_CATEGORY_SETUP] = 'Rehearsal / Setup';
   $options_all[MFCS_REQUEST_DATES_CATEGORY_CLEANUP] = 'Cleanup / Breakdown';
 
   if ($option == 'select') {
@@ -446,9 +532,9 @@ function mfcs_get_request_type_list_options($option = NULL, $hidden = FALSE, $di
   $options_all[MFCS_REQUEST_TYPE_RECEPTION] = 'Reception';
   $options_all[MFCS_REQUEST_TYPE_BANQUET] = 'Banquet';
   $options_all[MFCS_REQUEST_TYPE_WORKSHOP] = 'Workshop';
-  $options_all[MFCS_REQUEST_TYPE_TALENT] = 'Talent';
-  $options_all[MFCS_REQUEST_TYPE_CEREMONY] = 'Ceremony';
-  $options_all[MFCS_REQUEST_TYPE_FAIR] = 'Fair';
+  $options_all[MFCS_REQUEST_TYPE_TALENT] = 'Talent / Variety Show';
+  $options_all[MFCS_REQUEST_TYPE_CEREMONY] = 'Ceremony / Presentation';
+  $options_all[MFCS_REQUEST_TYPE_FAIR] = 'Fair / Expo';
   $options_all[MFCS_REQUEST_TYPE_ATHLETIC] = 'Athletic';
   $options_all[MFCS_REQUEST_TYPE_OTHER] = 'Other';
   $options_all[MFCS_REQUEST_TYPE_QUICK_MEETING] = 'Quick Meeting';
@@ -594,7 +680,7 @@ function mfcs_get_technical_equipment_details_list_options($option = NULL, $hidd
     $options_all[MFCS_REQUEST_TECHNICAL_EQUIPMENT_SCREEN] = 'screen';
     $options_all[MFCS_REQUEST_TECHNICAL_EQUIPMENT_COMPUTER] = 'computer';
     $options_all[MFCS_REQUEST_TECHNICAL_EQUIPMENT_SOUND] = 'sound';
-    $options_all[MFCS_REQUEST_TECHNICAL_EQUIPMENT_MICROPHONE] = 'equipment';
+    $options_all[MFCS_REQUEST_TECHNICAL_EQUIPMENT_MICROPHONE] = 'microphone';
   }
 
   foreach ($options_all as $option_id => $option_name) {
@@ -702,6 +788,13 @@ function mfcs_get_reviewer_decision_list_options($option = NULL, $restriction = 
 
   if ($hidden) {
     $options_all[MFCS_REVIEW_DECISION_NONE] = 'None';
+    $options_all[MFCS_REVIEW_DECISION_CLOSE] = 'Close';
+    $options_all[MFCS_REVIEW_DECISION_CANCEL] = 'Cancel';
+    $options_all[MFCS_REVIEW_DECISION_UNCANCEL] = 'Uncancel';
+    $options_all[MFCS_REVIEW_DECISION_REASSIGN_COORDINATOR] = 'Re-Assign Venue Coordinator';
+    $options_all[MFCS_REVIEW_DECISION_OVERRIDE] = 'Override';
+    $options_all[MFCS_REVIEW_DECISION_MOVE] = 'Move';
+    $options_all[MFCS_REVIEW_DECISION_REASSIGN_REQUESTER] = 'Re-Assign Requester';
     $options_all[MFCS_REVIEW_DECISION_MANAGER_RECHECK] = 'Manager Recheck';
     $options_all[MFCS_REVIEW_DECISION_AMENDMENT] = 'Amendment';
   }
@@ -724,7 +817,7 @@ function mfcs_get_reviewer_decision_list_options($option = NULL, $restriction = 
     $options[''] = '- Select -';
   }
 
-  if (!is_int($restriction) || $restriction < MFCS_RESTRICTION_DECISION_NONE || $restriction > MFCS_RESTRICTION_DECISION_FINANCER) {
+  if (!is_int($restriction)) {
     $restriction = MFCS_RESTRICTION_DECISION_NONE;
   }
 
@@ -817,37 +910,35 @@ function mfcs_get_review_step_list_options($option = NULL, $hidden = FALSE, $dis
   $options_all = array();
 
   if ($hidden) {
-    $options_all[MFCS_REQUEST_STEP_NONE] = 'None';
+    $options_all[MFCS_REVIEW_STEP_NONE] = 'None';
   }
 
-  $options_all[MFCS_REQUEST_STEP_VENUE_AVAILABLE] = 'Venue Available';
-  $options_all[MFCS_REQUEST_STEP_FINAL_DECISION] = 'Final Decision';
-  $options_all[MFCS_REQUEST_STEP_TENTATIVE_HOLD] = 'Release Tentative Hold';
-  $options_all[MFCS_REQUEST_STEP_REVIEW] = 'Review';
-  $options_all[MFCS_REQUEST_STEP_REQUIREMENTS] = 'Requirements';
-  $options_all[MFCS_REQUEST_STEP_COMPLETED] = 'Completed';
-  $options_all[MFCS_REQUEST_STEP_CHANGES_REQUIRED] = 'Changes Required';
+  $options_all[MFCS_REVIEW_STEP_VENUE_AVAILABLE] = 'Venue Available';
+  $options_all[MFCS_REVIEW_STEP_FINAL_DECISION] = 'Final Decision';
+  $options_all[MFCS_REVIEW_STEP_RELEASE_HOLD] = 'Release Tentative Hold';
+  $options_all[MFCS_REVIEW_STEP_REVIEW] = 'Review';
+  $options_all[MFCS_REVIEW_STEP_REQUIREMENTS] = 'Requirements';
+  $options_all[MFCS_REVIEW_STEP_COMPLETED] = 'Completed';
+  $options_all[MFCS_REVIEW_STEP_CHANGES_REQUIRED] = 'Changes Required';
 
   if ($option == 'select') {
     $options[''] = '- Select -';
   }
 
-  $options_tree = taxonomy_get_tree(MFCS_VID_REQUEST_STEPS, 0, NULL, TRUE);
-
   if ($option == 'roles') {
     asort($options_all);
 
     if ($hidden) {
-      $options_roles[MFCS_REQUEST_STEP_NONE] = array();
+      $options_roles[MFCS_REVIEW_STEP_NONE] = array();
     }
 
-    $options_roles[MFCS_REQUEST_STEP_VENUE_AVAILABLE] = array(1, 2, 3, 4);
-    $options_roles[MFCS_REQUEST_STEP_FINAL_DECISION] = array(1, 2, 3, 4);
-    $options_roles[MFCS_REQUEST_STEP_TENTATIVE_HOLD] = array();
-    $options_roles[MFCS_REQUEST_STEP_REVIEW] = array(1, 2, 3, 4);
-    $options_roles[MFCS_REQUEST_STEP_REQUIREMENTS] = array(1, 2, 3, 4);
-    $options_roles[MFCS_REQUEST_STEP_COMPLETED] = array();
-    $options_roles[MFCS_REQUEST_STEP_CHANGES_REQUIRED] = array();
+    $options_roles[MFCS_REVIEW_STEP_VENUE_AVAILABLE] = array(1, 2, 3, 4);
+    $options_roles[MFCS_REVIEW_STEP_FINAL_DECISION] = array(1, 2, 3, 4);
+    $options_roles[MFCS_REVIEW_STEP_RELEASE_HOLD] = array();
+    $options_roles[MFCS_REVIEW_STEP_REVIEW] = array(1, 2, 3, 4);
+    $options_roles[MFCS_REVIEW_STEP_REQUIREMENTS] = array(1, 2, 3, 4);
+    $options_roles[MFCS_REVIEW_STEP_COMPLETED] = array();
+    $options_roles[MFCS_REVIEW_STEP_CHANGES_REQUIRED] = array();
 
     foreach ($options_all as $option_id => $option_name) {
       $options[$option_id] = array();
