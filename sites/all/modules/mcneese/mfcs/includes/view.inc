@@ -776,14 +776,30 @@ function mfcs_view_build_request_value_structure($request_id, $field_group, $fie
         $length += strlen($value->{$value_name});
       }
       elseif ($type[$value_name] == 'taxonomy') {
-        $term = taxonomy_term_load($value->{$value_name});
+        if (function_exists('taxonomy_term_load')) {
+          $term = taxonomy_term_load($value->{$value_name});
 
-        if (is_object($term)) {
-          $markup .= check_plain($term->name);
-          $length += strlen($term->name);
+          if (is_object($term)) {
+            $markup .= check_plain($term->name);
+            $length += strlen($term->name);
+          }
+
+          unset($term);
         }
+      }
+      elseif ($type[$value_name] == 'mfcs_taxonomy') {
+        if (isset($presentation['taxonomy_function'][$value_name]) && function_exists($presentation['taxonomy_function'][$value_name])) {
+          $function_name = $presentation['taxonomy_function'][$value_name];
+          $terms = $function_name();
 
-        unset($term);
+          if (array_key_exists($value->{$value_name}, $terms)) {
+            $markup .= check_plain($terms[$value->{$value_name}]);
+            $length += strlen($terms[$value->{$value_name}]);
+          }
+
+          unset($terms);
+          unset($function_name);
+        }
       }
       elseif ($type[$value_name] == 'user_id') {
         if (!isset($users[$value->{$value_name}])) {
@@ -1521,19 +1537,19 @@ function mfcs_view_build_reviews_log(&$form, &$form_state, $request_id, $revisio
       elseif ($decision === MFCS_REVIEW_DECISION_AVAILABLE && $type === MFCS_REQUEST_TYPE_QUICK_MEETING) {
         $markup .= $user_name_markup . ' ' . $user_id_markup . ' has designated that the <strong class="review-item-label-text-row-decision">Venue is Available</strong>, <strong class="review-item-label-text-row-decision">Confirmed</strong>, and <strong class="review-item-label-text-row-decision">Reserved</strong>' . $reviewer_classification . '.';
       }
-      elseif ($decision === MFCS_REVIEW_DECISION_CLOSED) {
+      elseif ($decision === MFCS_REVIEW_DECISION_CLOSE) {
         $markup .= $user_name_markup . ' ' . $user_id_markup . ' has <strong class="review-item-label-text-row-decision">Closed</strong> the request' . $reviewer_classification . '.';
       }
-      elseif ($decision === MFCS_REVIEW_DECISION_CANCELLED) {
+      elseif ($decision === MFCS_REVIEW_DECISION_CANCEL) {
         $markup .= $user_name_markup . ' ' . $user_id_markup . ' has <strong class="review-item-label-text-row-decision">Cancelled</strong> the request' . $reviewer_classification . '.';
       }
-      elseif ($decision === MFCS_REVIEW_DECISION_UNCANCELLED) {
+      elseif ($decision === MFCS_REVIEW_DECISION_UNCANCEL) {
         $markup .= $user_name_markup . ' ' . $user_id_markup . ' has <strong class="review-item-label-text-row-decision">Uncancelled</strong> the request' . $reviewer_classification . '.';
       }
-      elseif ($decision === MFCS_REVIEW_DECISION_REASSIGNED_COORDINATOR) {
+      elseif ($decision === MFCS_REVIEW_DECISION_REASSIGN_COORDINATOR) {
         $markup .= $user_name_markup . ' ' . $user_id_markup . ' has <strong class="review-item-label-text-row-decision">Re-Assigned</strong> the coordinator' . $reviewer_classification . '.';
       }
-      elseif ($decision === MFCS_REVIEW_DECISION_REASSIGNED_REQUESTER) {
+      elseif ($decision === MFCS_REVIEW_DECISION_REASSIGN_REQUESTER) {
         $markup .= $user_name_markup . ' ' . $user_id_markup . ' has <strong class="review-item-label-text-row-decision">Re-Assigned</strong> the requester' . $reviewer_classification . '.';
       }
       elseif ($decision === MFCS_REVIEW_DECISION_OVERRIDE) {
@@ -1551,7 +1567,7 @@ function mfcs_view_build_reviews_log(&$form, &$form_state, $request_id, $revisio
         }
       }
       $markup .= '</div></h3>';
-      $markup .= '<div class="review-item-label-date">' . date(MFCS_DATE_FORMAT_DATE_TIME, $date) . '</div>';
+      $markup .= '<div class="review-item-label-date">' . date(MFCS_DATE_FORMAT_DATE_TIME_SQUEEZE, $date) . '</div>';
       $markup .= '</div>';
 
 

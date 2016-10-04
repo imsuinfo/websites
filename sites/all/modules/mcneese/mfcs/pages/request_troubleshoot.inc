@@ -11,6 +11,18 @@
  */
 
 /**
+ * Defines troubleshoot codes.
+ */
+define('MFCS_TROUBLESHOOT_NONE', 0);
+define('MFCS_TROUBLESHOOT_REQUESTS_REVIEW_RECHECK', 1);
+define('MFCS_TROUBLESHOOT_MER_CACHE_SYNCHRONIZE', 2);
+define('MFCS_TROUBLESHOOT_BANNER_CACHE_SYNCHRONIZE', 3);
+define('MFCS_TROUBLESHOOT_BANNER_ROLE_SYNCHRONIZE', 4);
+define('MFCS_TROUBLESHOOT_BANNER_INFORMATION', 5);
+define('MFCS_TROUBLESHOOT_REQUESTS_PROBLEM_CHECK', 6);
+define('MFCS_TROUBLESHOOT_USERS_PROBLEM_CHECK', 7);
+
+/**
  * Provides the facilities use request troubleshoot page.
  *
  * @param array $form
@@ -301,7 +313,7 @@ function mfcs_request_troubleshoot_0_form($form, &$form_state, $request_id = NUL
   );
 
 
-  // Requests Review Recheck
+  // Requests Problems Check
   $code = 'code_' . MFCS_TROUBLESHOOT_REQUESTS_PROBLEM_CHECK;
   $form['form'][$code] = array(
     '#id' => 'field-troubleshoot-' . $code,
@@ -332,7 +344,53 @@ function mfcs_request_troubleshoot_0_form($form, &$form_state, $request_id = NUL
     '#id' => 'troubleshoot-' . $code . '-submit',
     '#name' => 'troubleshoot-' . $code . '-submit',
     '#type' => 'submit',
-    '#default_value' => t("Check Requests for Problems"),
+    '#default_value' => 'Check Requests for Problems',
+    '#attributes' => array(
+      'class' => array(
+        'no-print',
+      ),
+    ),
+  );
+
+  $markup = '<hr class="code-separator">';
+  $form['form'][$code]['post_markup'] = array(
+    '#type' => 'markup',
+    '#markup' => $markup,
+  );
+
+
+  // Users Problems Check
+  $code = 'code_' . MFCS_TROUBLESHOOT_USERS_PROBLEM_CHECK;
+  $form['form'][$code] = array(
+    '#id' => 'field-troubleshoot-' . $code,
+    '#type' => 'container',
+    '#tree' => TRUE,
+    '#attributes' => array(
+      'class' => array(
+        'form-item-wrapper',
+        'troubleshoot-code',
+        'troubleshoot-' . $code,
+      ),
+    ),
+  );
+
+  $markup = '<h2 class="code-title">#' . MFCS_TROUBLESHOOT_USERS_PROBLEM_CHECK . ': Users Problem Check</h2>';
+  $markup .= '<div class="code-description">';
+  $markup .= 'Users are periodically checked for problems, generally when they log into the system.' . '<br>';
+  $markup .= '<br>';
+  $markup .= 'Using this troubleshoot will perform integrity checks on users.' . '<br>';
+  $markup .= 'Problems are displaed under the <a href="' . $base_path . 'requests/problems-0/users">Manage User Problems</a> page.' . '<br>';
+  $markup .= '</div>';
+  $form['form'][$code]['pre_markup'] = array(
+    '#type' => 'markup',
+    '#markup' => $markup,
+  );
+
+  $form['form'][$code]['button'] = array(
+    '#id' => 'troubleshoot-' . $code . '-submit',
+    '#name' => 'troubleshoot-' . $code . '-submit',
+    '#type' => 'submit',
+    '#default_value' => 'Check Users for Problems',
     '#attributes' => array(
       'class' => array(
         'no-print',
@@ -381,8 +439,11 @@ function mfcs_request_troubleshoot_0_form_validate($form, &$form_state) {
   elseif ($clicked_id == 'troubleshoot-code_' . MFCS_TROUBLESHOOT_REQUESTS_PROBLEM_CHECK . '-submit') {
     // no validation necessary
   }
+  elseif ($clicked_id == 'troubleshoot-code_' . MFCS_TROUBLESHOOT_USERS_PROBLEM_CHECK . '-submit') {
+    // no validation necessary
+  }
   else {
-    form_set_error('', "Unknown submit process detected.");
+    form_set_error('', 'Unknown submit process detected.');
   }
 }
 
@@ -418,6 +479,9 @@ function mfcs_request_troubleshoot_0_form_submit($form, &$form_state) {
   elseif ($clicked_id == 'troubleshoot-code_' . MFCS_TROUBLESHOOT_REQUESTS_PROBLEM_CHECK . '-submit') {
     $code = MFCS_TROUBLESHOOT_REQUESTS_PROBLEM_CHECK;
   }
+  elseif ($clicked_id == 'troubleshoot-code_' . MFCS_TROUBLESHOOT_USERS_PROBLEM_CHECK . '-submit') {
+    $code = MFCS_TROUBLESHOOT_USERS_PROBLEM_CHECK;
+  }
   else {
     // do nothing for invalid submits.
     return;
@@ -441,30 +505,39 @@ function mfcs_request_troubleshoot_0_form_submit($form, &$form_state) {
 
     $result = FALSE;
     $time_start = microtime(TRUE);
-    $label = "Unknown";
+    $label = 'Unknown';
 
     if ($code == MFCS_TROUBLESHOOT_REQUESTS_REVIEW_RECHECK) {
-      $label = "Requests review re-check";
+      $label = 'Requests review re-check';
       $result = mfcs_request_troubleshoot_0_request_review_recheck($transaction, $user);
     }
     elseif ($code == MFCS_TROUBLESHOOT_MER_CACHE_SYNCHRONIZE) {
-      $label = "Re-synchronize requests cache";
+      $label = 'Re-synchronize requests cache';
       $result = mfcs_request_troubleshoot_0_mer_cache_synchronize($transaction, $user);
     }
     elseif ($code == MFCS_TROUBLESHOOT_BANNER_CACHE_SYNCHRONIZE) {
-      $label = "Re-synchronize banner cache";
+      $label = 'Re-synchronize banner cache';
       $result = mfcs_sync_banner_to_local($transaction, $user, TRUE);
     }
     elseif ($code == MFCS_TROUBLESHOOT_BANNER_ROLE_SYNCHRONIZE) {
-      $label = "Re-synchronize banner role cache";
+      $label = 'Re-synchronize banner role cache';
       $result = mfcs_sync_banner_to_local_users(NULL, NULL, TRUE);
     }
     elseif ($code == MFCS_TROUBLESHOOT_REQUESTS_PROBLEM_CHECK) {
       mfcs_include(MFCS_INCLUDE_MISCELLANEOUS);
 
-      $label = "Check requests for problems";
+      $label = 'Check requests for problems';
       $result = mfcs_mischellaneous_check_requests_for_problems();
     }
+    elseif ($code == MFCS_TROUBLESHOOT_USERS_PROBLEM_CHECK) {
+      mfcs_include(MFCS_INCLUDE_MISCELLANEOUS);
+
+      $label = 'Check users for problems';
+      $result = mfcs_mischellaneous_check_users_for_problems();
+    }
+
+    // force transaction execution.
+    unset($transaction);
 
 
     $time_stop = microtime(TRUE);
@@ -501,15 +574,15 @@ function mfcs_request_troubleshoot_0_form_submit($form, &$form_state) {
 
       $arguments['@user'] = $user->name;
       $arguments['@user_id'] = $user->uid;
-      watchdog(MFCS_WATCHDOG_ID, $label . 'started by @user (@user_id) completed with errors ' . $time_text . '.', $arguments . '.', $arguments, WATCHDOG_WARNING);
+      watchdog(MFCS_WATCHDOG_ID, $label . 'started by @user (@user_id) completed with errors ' . $time_text . '.', $arguments, WATCHDOG_WARNING);
     }
   }
   catch (Error $e) {
-    $transaction->rollback();
+    if (isset($transaction)) $transaction->rollback();
     cf_error::on_exception($e);
   }
   catch (Exception $e) {
-    $transaction->rollback();
+    if (isset($transaction)) $transaction->rollback();
     cf_error::on_exception($e);
   }
 }
@@ -892,8 +965,6 @@ function mfcs_request_troubleshoot_0_locations_page($location_id = NULL) {
 
   try {
     $query = db_select('mfcs_banner_locations', 'mbl');
-    $query->innerJoin('field_data_field_column_venue_category', 'fdfcvc', 'mbl.machine_name = fdfcvc.field_column_venue_category_value');
-    $query->innerJoin('taxonomy_term_data', 'ttd', 'fdfcvc.entity_id = ttd.tid');
 
     if (!is_null($location_id)) {
       $query->condition('mbl.id', $location_id);
@@ -902,11 +973,8 @@ function mfcs_request_troubleshoot_0_locations_page($location_id = NULL) {
     $query->addField('mbl', 'id', 'location_id');
     $query->addField('mbl', 'machine_name', 'machine_name');
     $query->addField('mbl', 'human_name', 'human_name');
-    $query->addField('ttd', 'tid', 'term_id');
     $query->addField('mbl', 'date', 'date');
     $query->addField('mbl', 'disabled', 'disabled');
-
-    $query->condition('ttd.vid', MFCS_VID_REQUEST_LOCATION);
 
     $query->orderBy('mbl.disabled');
     $query->orderBy('mbl.machine_name');
@@ -945,17 +1013,13 @@ function mfcs_request_troubleshoot_0_locations_page($location_id = NULL) {
       $target_markup .= '      <div class="information_page-entry-list-item-name">Location Name:</div> ';
       $target_markup .= '      <div class="information_page-entry-list-item-value"><a href="' . $base_path . 'requests/troubleshoot-0/locations/' . $entry->location_id . '/edit' . $url_arguments . '" class="information_page-entry-list-item-value-link">' . $entry->human_name . '</a></div>';
       $target_markup .= '    </li>';
-      $target_markup .= '    <li class="information_page-entry-list-item information_page-entry-list-item-term_id even">';
-      $target_markup .= '      <div class="information_page-entry-list-item-name">Term ID:</div> ';
-      $target_markup .= '      <div class="information_page-entry-list-item-value">' . $entry->term_id . '</div>';
-      $target_markup .= '    </li>';
       $target_markup .= '    <li class="information_page-entry-list-item information_page-entry-list-item-date odd">';
       $target_markup .= '      <div class="information_page-entry-list-item-name">Last Updated:</div> ';
       $target_markup .= '      <div class="information_page-entry-list-item-value">' . date('l, F j Y h:i:s a', $entry->date) . '</div>';
       $target_markup .= '    </li>';
       $target_markup .= '    <li class="information_page-entry-list-item information_page-entry-list-item-disabled even">';
       $target_markup .= '      <div class="information_page-entry-list-item-name">Disabled / Deleted:</div> ';
-      $target_markup .= '      <div class="information_page-entry-list-item-value">' . ($entry->disabled == 0 ? "No" : "Yes") . '</div>';
+      $target_markup .= '      <div class="information_page-entry-list-item-value">' . ($entry->disabled == 0 ? 'No' : 'Yes') . '</div>';
       $target_markup .= '    </li>';
       $target_markup .= '  </ul>';
       $target_markup .= '</div>';
@@ -1322,7 +1386,7 @@ function mfcs_request_troubleshoot_0_buildings_page($building_id = NULL) {
       $target_markup .= '    </li>';
       $target_markup .= '    <li class="information_page-entry-list-item information_page-entry-list-item-location_id even">';
       $target_markup .= '      <div class="information_page-entry-list-item-name">Location ID:</div> ';
-      $target_markup .= '      <div class="information_page-entry-list-item-value"><a href="' . $base_path . 'requests/troubleshoot-0/locations#mfcs-troubleshoot_0-locations-page-entry-' . $entry->location_id . $url_arguments . '" class="no_print_links_as_link">' . $entry->location_id . '</a></div>';
+      $target_markup .= '      <div class="information_page-entry-list-item-value"><a href="' . $base_path . 'requests/troubleshoot-0/locations/' . $entry->location_id . $url_arguments . '" class="no_print_links_as_link">' . $entry->location_id . '</a></div>';
       $target_markup .= '    </li>';
       $target_markup .= '    <li class="information_page-entry-list-item information_page-entry-list-item-location_code odd">';
       $target_markup .= '      <div class="information_page-entry-list-item-name">Location Code:</div> ';
@@ -1504,7 +1568,7 @@ function mfcs_request_troubleshoot_0_rooms_page($room_id = NULL) {
       $target_markup .= '    </li>';
       $target_markup .= '    <li class="information_page-entry-list-item information_page-entry-list-item-building_id odd">';
       $target_markup .= '      <div class="information_page-entry-list-item-name">Building ID:</div> ';
-      $target_markup .= '      <div class="information_page-entry-list-item-value"><a href="' . $base_path . 'requests/troubleshoot-0/buildings#mfcs-troubleshoot_0-buildings-page-entry-' . $entry->building_id . $url_arguments . '" class="no_print_links_as_link">' . $entry->building_id . '</a></div>';
+      $target_markup .= '      <div class="information_page-entry-list-item-value"><a href="' . $base_path . 'requests/troubleshoot-0/buildings/' . $entry->building_id . $url_arguments . '" class="no_print_links_as_link">' . $entry->building_id . '</a></div>';
       $target_markup .= '    </li>';
       $target_markup .= '    <li class="information_page-entry-list-item information_page-entry-list-item-building_code even">';
       $target_markup .= '      <div class="information_page-entry-list-item-name">Building Code:</div> ';
@@ -1524,7 +1588,7 @@ function mfcs_request_troubleshoot_0_rooms_page($room_id = NULL) {
       $target_markup .= '    </li>';
       $target_markup .= '    <li class="information_page-entry-list-item information_page-entry-list-item-location_id even">';
       $target_markup .= '      <div class="information_page-entry-list-item-name">Location ID:</div> ';
-      $target_markup .= '      <div class="information_page-entry-list-item-value"><a href="' . $base_path . 'requests/troubleshoot-0/locations#mfcs-troubleshoot_0-locations-page-entry-' . $entry->location_id . $url_arguments . '" class="no_print_links_as_link">' . $entry->location_id . '</a></div>';
+      $target_markup .= '      <div class="information_page-entry-list-item-value"><a href="' . $base_path . 'requests/troubleshoot-0/locations/' . $entry->location_id . $url_arguments . '" class="no_print_links_as_link">' . $entry->location_id . '</a></div>';
       $target_markup .= '    </li>';
       $target_markup .= '    <li class="information_page-entry-list-item information_page-entry-list-item-location_code odd">';
       $target_markup .= '      <div class="information_page-entry-list-item-name">Location Machine Name:</div> ';
