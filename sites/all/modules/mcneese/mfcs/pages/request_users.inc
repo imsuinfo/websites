@@ -486,6 +486,7 @@ function mfcs_request_users_0_view_page($user_id) {
 
   global $base_path;
   global $mfcs_determined;
+  global $mfcs_oracle_is_not_available;
 
   $url_arguments = '';
   if (!empty($mfcs_determined['complete'])) {
@@ -596,31 +597,53 @@ function mfcs_request_users_0_view_page($user_id) {
     $locked = 'Account is <strong>Locked</strong>.';
   }
 
+  $total_users = 1;
+  if (is_int($banner_id)) {
+    $total_users = mfcs_request_users_get_total_users($banner_id);
+
+    if (!is_int($total_users) || $total_users < 1) {
+      $total_users = 1;
+    }
+  }
+
   $duplicate = NULL;
-  if (isset($account->mfcs['ldap_duplicate']) && $account->mfcs['ldap_duplicate']) {
+  if ((isset($account->mfcs['ldap_duplicate']) && $account->mfcs['ldap_duplicate']) || $total_users > 1) {
     $duplicate = 'There <strong>Duplicate</strong> accounts for this user.';
+    $duplicate_accounts_in_system = FALSE;
+    $duplicate_accounts = 'There are <strong>Duplicate</strong> accounts:<ul class="item-information-list item-information-duplicate-list">';
+    $duplicate_accounts_processed = array();
 
-    if (isset($account->mfcs['banner_id'])) {
-      $associated_users = mfcs_users_load_banner_id_to_user_id($account->mfcs['banner_id']);
-      if (!empty($associated_users['user']) && count($associated_users['user']) > 1) {
-        $duplicate = 'There are <strong>Duplicate</strong> ldap accounts:<ul class="item-information-list item-information-duplicate-list">';
-
-        foreach ($associated_users['user'] as $associated_user) {
+    if (is_int($banner_id)) {
+      $associated_users = mfcs_users_load_banner_id_to_user_id($banner_id);
+      if (isset($associated_users['banner'][$banner_id]['all']) && is_array($associated_users['banner'][$banner_id]['all'])) {
+        foreach ($associated_users['banner'][$banner_id]['all'] as $associated_user) {
           if ($account->uid == $associated_user['user_id']) {
             continue;
           }
+          if (array_key_exists($associated_user['user_id'], $duplicate_accounts_processed)) {
+            continue;
+          }
+
+          $duplicate_accounts_in_system = TRUE;
+          $duplicate_accounts_processed[$associated_user['user_id']] = $associated_user['user_id'];
 
           $associated_name = $associated_user['name'];
           if (!empty($associated_user['first_name']) && !empty($associated_user['last_name'])) {
             $associated_name = $associated_user['first_name'] . ' ' . $associated_user['last_name'];
           }
 
-          $duplicate .= '<li class="item-information-list-item item-information-duplicate-list-item"><a href="' . $base_path . 'requests/users-0/view/' . $associated_user['user_id'] . $url_arguments . '" class="item-information-list-item-link item-information-duplicate-list-item-link">' . $associated_name . '</a> <sup>[id: ' . $associated_user['user_id'] . ']</sup></li>';
+          $duplicate_accounts .= '<li class="item-information-list-item item-information-duplicate-list-item"><a href="' . $base_path . 'requests/users-0/view/' . $associated_user['user_id'] . $url_arguments . '" class="item-information-list-item-link item-information-duplicate-list-item-link">' . $associated_name . '</a> <sup>[id: ' . $associated_user['user_id'] . ']</sup></li>';
         }
-
-        $duplicate .= '</ul>';
+        unset($associated_user);
       }
     }
+
+    $duplicate_accounts .= '</ul>';
+    if ($duplicate_accounts_in_system) {
+      $duplicate = $duplicate_accounts;
+    }
+    unset($duplicate_accounts_in_system);
+    unset($duplicate_accounts);
   }
 
   $email = NULL;
@@ -629,9 +652,12 @@ function mfcs_request_users_0_view_page($user_id) {
   }
 
   $banner_information = '';
-  if (isset($account->mfcs['banner_id'])) {
+  if (isset($mfcs_oracle_is_not_available) && $mfcs_oracle_is_not_available === TRUE) {
+    $banner_information = '<div class="view_user-item view_user-item-roles-unavailable">Banner is currently unavailable.</div>';
+  }
+  elseif (is_int($banner_id)) {
     try {
-      $banner_id_string = mfcs_banner_id_int_to_string($account->mfcs['banner_id']);
+      $banner_id_string = mfcs_banner_id_int_to_string($banner_id);
       $event_roles = mfcs_oracle_select('select role from ucs.msu_event_role where id = :banner_id', array('banner_id' => $banner_id_string));
 
       if (is_array($event_roles)) {
@@ -646,19 +672,43 @@ function mfcs_request_users_0_view_page($user_id) {
         }
       }
       else {
-        $banner_information = '<div class="view_user-item view_user-item-roles-unavailable">Banner information is currently unavailable.</div>';
+        $banner_information = '<div class="view_user-item view_user-item-roles-unavailable">Banner is currently unavailable.</div>';
       }
     }
     catch (Error $e) {
-      $banner_information = '<div class="view_user-item view_user-item-roles-unavailable">Banner information is currently unavailable.</div>';
+      $banner_information = '<div class="view_user-item view_user-item-roles-unavailable">Banner is currently unavailable.</div>';
     }
     catch (Exception $e) {
-      $banner_information = '<div class="view_user-item view_user-item-roles-unavailable">Banner information is currently unavailable.</div>';
+      $banner_information = '<div class="view_user-item view_user-item-roles-unavailable">Banner is currently unavailable.</div>';
     }
 
-    $coordinator_rooms = mfcs_load_coordinator_rooms($account->uid);
-    if (is_array($coordinator_rooms) && !empty($coordinator_rooms)) {
-      $banner_information .= '<div class="view_user-item view_user-item-room_coordinator"><span class="item-information item-information-room_coordinator">Is Room Coordinator</span></div>';
+    if (!isset($mfcs_oracle_is_not_available)) {
+      $coordinator_rooms = mfcs_load_coordinator_rooms_from_banner($banner_id);
+      if (is_array($coordinator_rooms) && !empty($coordinator_rooms)) {
+        $is_room_coordinator = FALSE;
+        $is_venue_coordinator = FALSE;
+        foreach ($coordinator_rooms as $coordinator_room) {
+          if ($coordinator_room['room_coordinator_id'] == $banner_id_string) {
+            $is_room_coordinator = TRUE;
+          }
+
+          if ($coordinator_room['venue_coordinator_id'] == $banner_id_string) {
+            $is_venue_coordinator = TRUE;
+          }
+
+          if ($is_room_coordinator && $is_venue_coordinator) {
+            break;
+          }
+        }
+
+        if ($is_room_coordinator) {
+          $banner_information .= '<div class="view_user-item view_user-item-room_coordinator"><span class="item-information item-information-room_coordinator">Is Room Coordinator</span></div>';
+        }
+
+        if ($is_venue_coordinator) {
+          $banner_information .= '<div class="view_user-item view_user-item-venue_coordinator"><span class="item-information item-information-venue_coordinator">Is Venue Coordinator</span></div>';
+        }
+      }
     }
   }
   else {
@@ -666,7 +716,7 @@ function mfcs_request_users_0_view_page($user_id) {
   }
 
   $proxy_information = NULL;
-  $proxy_accounts = mfcs_get_proxy_venue_coordinators(array('mpvc.proxy_id' => $account->uid));
+  $proxy_accounts = mfcs_get_proxy_venue_coordinators(array('mpvc.proxy_id' => $account->uid, 'mpvc.disabled' => 0));
   if (!empty($proxy_accounts['results'])) {
     $name_information = NULL;
     foreach ($proxy_accounts['results'] as $proxy_account) {
@@ -696,7 +746,7 @@ function mfcs_request_users_0_view_page($user_id) {
     unset($name_information);
   }
 
-  $proxy_accounts = mfcs_get_proxy_venue_coordinators(array('mpvc.user_id' => $account->uid));
+  $proxy_accounts = mfcs_get_proxy_venue_coordinators(array('mpvc.user_id' => $account->uid, 'mpvc.disabled' => 0));
   if (!empty($proxy_accounts['results'])) {
     $name_information = NULL;
     foreach ($proxy_accounts['results'] as $proxy_account) {
@@ -751,7 +801,7 @@ function mfcs_request_users_0_view_page($user_id) {
   $markup .= '<div class="view_user-item view_user-item-account"><span class="item-label item-label-account strong">Account:</span> <span class="item-value item-value-account">' . $account->name . '</span></div>';
   $markup .= '<div class="view_user-item view_user-item-name"><span class="item-label item-label-name strong">Name:</span> <span class="item-value item-value-name">' . $name . '</span></div>';
   $markup .= '<div class="view_user-item view_user-item-email"><span class="item-label item-label-email strong">E-mail:</span> <span class="item-value item-value-email">' . $email . '</span></div>';
-  $markup .= '<div class="view_user-item view_user-item-banner_id"><span class="item-label item-label-banner_id strong">Banner ID:</span> <span class="item-value item-value-banner_id">' . $banner_id . '</span></div>';
+  $markup .= '<div class="view_user-item view_user-item-banner_id"><span class="item-label item-label-banner_id strong">Banner ID:</span> <span class="item-value item-value-banner_id">' . $account->mfcs['banner_id'] . '</span></div>';
   $markup .= '<div class="view_user-item view_user-item-phone"><span class="item-label item-label-phone strong">Phone:</span> <span class="item-value item-value-phone">' . $phone . '</span></div>';
   $markup .= '<div class="view_user-item view_user-item-updated_on"><span class="item-label item-label-updated_on strong">Updated On:</span> <span class="item-value item-value-updated_on">' . date(MFCS_DATE_FORMAT_DATE_TIME_SECONDS_SQUEEZE, $updated) . '</span></div>';
   $markup .= '</div>';
@@ -766,7 +816,7 @@ function mfcs_request_users_0_view_page($user_id) {
   }
 
   if ($is_manager || $is_administer || ($user->uid == $account->uid && ($is_requester || $is_reviewer))) {
-    $markup .= '<div class="view_user-item view_user-item-view_profile no-print"><span class="item-information item-information-view_profile"><a href="' . $base_path . 'user/' . $account->uid . '">View User Profile</a></span></div>';
+    $markup .= '<div class="view_user-item view_user-item-view_profile no-print"><span class="item-information item-information-view_profile"><a href="' . $base_path . 'user/' . $account->uid . $url_arguments . '">View User Profile</a></span></div>';
   }
 
   $markup .= '</div>';
@@ -1549,8 +1599,12 @@ function mfcs_request_users_0_add_or_edit_form_validate($form, &$form_state, $ed
  *   The form array as defined by drupals form api.
  * @param array $form_state
  *   The form state array as defined by drupals form api
+ * @param bool $edit
+ *   (optional) When TRUE, this is processed as an edit action.
+ *   When FALSE, this is processed as an add action.
  *
  * @see: mfcs_request_users_0_add_or_edit_form()
+ * @see: mfcs_save_user()
  */
 function mfcs_request_users_0_add_or_edit_form_submit($form, &$form_state, $edit = FALSE) {
   global $mfcs_determined;
@@ -1580,12 +1634,9 @@ function mfcs_request_users_0_add_or_edit_form_submit($form, &$form_state, $edit
     $new_account->mail = $form_state['values']['form']['personal']['email'];
     $new_account->roles = array();
 
-    $mfcs_settings = array(
-      'updated' => mfcs_instance(),
-      'problems' => MFCS_USER_PROBLEM_NONE,
-    );
+    $mfcs_settings = array();
 
-    if (isset($form['user']['#value']) && is_object($form['user']['#value']) && isset($form['user']['#value']->mfcs['problems']) && is_numeric($form['user']['#value']->mfcs['problems'])) {
+    if (isset($form['user']['#value']->mfcs['problems']) && is_numeric($form['user']['#value']->mfcs['problems'])) {
       $mfcs_settings['problems'] = (int) $form['user']['#value']->mfcs['problems'];
     }
 
@@ -1689,6 +1740,11 @@ function mfcs_request_users_0_add_or_edit_form_submit($form, &$form_state, $edit
 
         $updates = (array) $new_account;
 
+        // pass mfcs settings to the $updates array because user_save() will call mfcs_save_user().
+        if (!empty($mfcs_settings)) {
+          $updates['mfcs'] = $mfcs_settings;
+        }
+
         unset($updates['name']);
 
         if ($new_account->status == $form['user']['#value']->status) {
@@ -1700,11 +1756,13 @@ function mfcs_request_users_0_add_or_edit_form_submit($form, &$form_state, $edit
         }
 
         $saved_account = user_save($form['user']['#value'], $updates);
-
-        mfcs_save_user($form['user']['#value']->uid, $mfcs_settings);
       }
     }
     else {
+      if (!isset($mfcs_settings['problems'])) {
+        $mfcs_settings['problems'] = MFCS_USER_PROBLEM_NONE;
+      }
+
       $saved_account = user_save($new_account);
 
       // new accounts need to be manually synchronized.
@@ -1738,7 +1796,7 @@ function mfcs_request_users_0_add_or_edit_form_submit($form, &$form_state, $edit
   }
 
   // synchronize user settings to identify any problems (without syncing banner)
-  mfcs_synchronize_user_settings($form['user']['#value']->uid, array(), TRUE, FALSE);
+  mfcs_synchronize_user_settings($saved_account->uid, array(), TRUE, FALSE);
 
   // redirect after submitting.
   if (empty($form_state['values']['redirect_to'])) {
@@ -2153,7 +2211,7 @@ function mfcs_request_users_get_roles($standard = TRUE, $venue = TRUE, $special 
   $roles = array();
 
   if ($standard) {
-    foreach (array('reviewer', 'manager', 'requester', 'financer') as $role_name) {
+    foreach (array('reviewer', 'manager', 'requester', 'financer', 'insurer') as $role_name) {
       $role = user_role_load_by_name($role_name);
       if (is_object($role)) {
         $roles[$role->rid] = $role->name;
@@ -2250,6 +2308,53 @@ function mfcs_request_users_0_check_page($user_id) {
   $redirect_array = mfcs_build_redirect_array('requests/problems-0/users');
 
   drupal_goto('requests/users-0/view/' . $user_id, array('query' => drupal_get_query_parameters()));
+}
+
+/**
+ * Returns user's the total number of users with the given banner id.
+ *
+ * @param int $banner_id
+ *   The numeric banner id string uniquely representing some user.
+ *
+ * @return int|bool
+ *   Total number of users with specified banner id.
+ *   FALSE is returned on error.
+ */
+function mfcs_request_users_get_total_users($banner_id) {
+  if (!cf_is_integer($banner_id)) {
+    cf_error::invalid_integer('banner_id');
+
+    return FALSE;
+  }
+
+  $transaction = db_transaction();
+  try {
+    $query = db_select('users', 'u');
+    $query->leftJoin('mfcs_users', 'mu', 'u.uid = mu.user_id');
+
+    $query->condition('mu.banner_id', $banner_id);
+
+    $query->addExpression('count(u.uid)');
+
+    $total = $query->execute()->fetchField();
+    if (is_numeric($total)) {
+      return (int) $total;
+    }
+  }
+  catch (Error $e) {
+    $transaction->rollback();
+    cf_error::on_exception($e);
+
+    return FALSE;
+  }
+  catch (Exception $e) {
+    $transaction->rollback();
+    cf_error::on_exception($e);
+
+    return FALSE;
+  }
+
+  return FALSE;
 }
 
 /**

@@ -72,8 +72,8 @@ function mfcs_request_manage_0_reassign_coordinator_form($form, &$form_state, $r
 
   if (isset($request['top']['room'][0]->value)) {
     $room_information = mfcs_load_rooms(NULL, NULL, $request['top']['room'][0]->value);
-    if (isset($room_information->coordinator_id)) {
-      $new_coordinator_id = $room_information->coordinator_id;
+    if (isset($room_information->room_coordinator_id)) {
+      $new_coordinator_id = $room_information->room_coordinator_id;
     }
   }
 
@@ -285,6 +285,11 @@ function mfcs_request_manage_0_reassign_coordinator_form_submit($form, &$form_st
   $reassigned = mfcs_workflow_set_venue_coordinator($request_id, $form['form']['new_coordinator_id']['#value'], NULL, $extra);
 
   if ($reassigned) {
+    $review_extra = array(
+      'never_requester' => TRUE,
+      'never_coordinator' => TRUE,
+    );
+
     mfcs_workflow_step_review($request_id, $user, MFCS_REVIEW_DECISION_REASSIGN_COORDINATOR, MFCS_REVIEW_RESTRICTIONS_MANAGERS, $extra['revisions']['message']);
 
     $parameters = array();
@@ -604,7 +609,12 @@ function mfcs_request_manage_0_reassign_requester_form_submit($form, &$form_stat
   $reassigned = mfcs_workflow_set_requester($request_id, $user_id, NULL, $extra);
 
   if ($reassigned) {
-    mfcs_workflow_step_review($request_id, $user, MFCS_REVIEW_DECISION_REASSIGN_REQUESTER, MFCS_REVIEW_RESTRICTIONS_MANAGERS, $extra['revisions']['message']);
+    $review_extra = array(
+      'never_requester' => TRUE,
+      'never_coordinator' => TRUE,
+    );
+
+    mfcs_workflow_step_review($request_id, $user, MFCS_REVIEW_DECISION_REASSIGN_REQUESTER, MFCS_REVIEW_RESTRICTIONS_MANAGERS, $extra['revisions']['message'], $review_extra);
 
     $parameters = array();
     $parameters['changed_by'] = $user->uid;

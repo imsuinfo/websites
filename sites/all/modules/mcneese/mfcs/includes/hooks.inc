@@ -38,6 +38,11 @@ function mfcs_hook_permission() {
     'description' => t('Grants permissions to perform financial related activity with requests (a privileged subset of mfcs review).'),
   );
 
+  $permissions['mfcs insure'] = array(
+    'title' => t('Insurance Facilities Use Requests'),
+    'description' => t('Grants permissions to perform insurance related activity with requests (a privileged subset of mfcs review).'),
+  );
+
   $permissions['mfcs manage'] = array(
     'title' => t('Manage Facilities Use Requests'),
     'description' => t('Grants permissions to manage requests.'),
@@ -1971,6 +1976,13 @@ function mfcs_hook_cronapi() {
     'enabled' => FALSE,
   );
 
+  $items['mfcs_unreviewed_request_alert'] = array(
+    'title' => t('Unreviewed Request Alert'),
+    'callback' => 'mfcs_unreviewed_request_alert_alert_cron',
+    'callback arguments' => array(),
+    'enabled' => FALSE,
+  );
+
   $items['mfcs_autocancel_old_requests'] = array(
     'title' => t('Auto-Cancel Old Reqests'),
     'callback' => 'mfcs_autocancel_old_requests_cron',
@@ -2091,6 +2103,7 @@ function mfcs_hook_user_login(&$edit, $user, $category) {
   $problems_original = $problems;
 
   $changes = mfcs_hook_process_user_banner_roles($user, $problems, $settings);
+  unset($settings);
 
   // save problems in the problems database.
   $reset_user = FALSE;
@@ -2099,13 +2112,9 @@ function mfcs_hook_user_login(&$edit, $user, $category) {
     $reset_user = TRUE;
   }
 
-  if (is_array($changes)) {
+  if (isset($changes['roles']) && is_array($changes['roles'])) {
     $user_roles = array_keys($user->roles);
-
-    $changes_roles = array();
-    if (isset($changes['roles']) && is_array($changes['roles'])) {
-      $changes_roles = array_keys($changes['roles']);
-    }
+    $changes_roles = array_keys($changes['roles']);
 
     if (count($user_roles) != count($changes_roles)) {
       user_save($user);
@@ -2268,10 +2277,29 @@ function mfcs_hook_user_presave(&$edit, $account, $category) {
   $edit['mfcs']['updated'] = mfcs_instance();
 
 
+  // bannerless exception can be present on the original account or added via the edit.
+  // drupal sometimes sets values to 0 to designate that they are to be removed.
+  $bannerless_exception = FALSE;
+  $bannerless_exception_role_id = user_role_load_by_name('bannerless exception');
+  if (isset($account->roles) && is_array($account->roles) && array_key_exists($bannerless_exception_role_id->rid, $account->roles)) {
+    if ($account->roles[$bannerless_exception_role_id->rid] != 0) {
+      $bannerless_exception = TRUE;
+    }
+  }
+
+  if (isset($edit['roles']) && is_array($edit['roles']) && array_key_exists($bannerless_exception_role_id->rid, $edit['roles'])) {
+    if ($edit['roles'][$bannerless_exception_role_id->rid] == 0) {
+      $bannerless_exception = FALSE;
+    }
+    else {
+      $bannerless_exception = TRUE;
+    }
+  }
+
+
   // enforce banner information if the account is not a bannerless exception.
   if (isset($account->uid) && isset($account->mfcs)) {
-    $bannerless_exception_role_id = user_role_load_by_name('bannerless exception');
-    if (!isset($account->roles) || !is_array($account->roles) || !array_key_exists($bannerless_exception_role_id->rid, $account->roles)) {
+    if (!$bannerless_exception) {
       $ldap_information = mfcs_get_ldap_information($account);
       if (is_array($ldap_information) && !empty($ldap_information)) {
         if (isset($edit['mail'])) {
@@ -2334,14 +2362,16 @@ function mfcs_hook_user_presave(&$edit, $account, $category) {
   }
 
   // re-synchronize account information following change.
-  if (isset($edit['mfcs']) && array_key_exists('banner_id', $edit['mfcs'])) {
-    if (!empty($edit['mfcs']['banner_id'])) {
-      $result = mfcs_sync_banner_to_local_users($account->uid, $edit['mfcs']['banner_id']);
+  if (!$bannerless_exception) {
+    if (isset($edit['mfcs']) && array_key_exists('banner_id', $edit['mfcs'])) {
+      if (!empty($edit['mfcs']['banner_id'])) {
+        $result = mfcs_sync_banner_to_local_users($account->uid, $edit['mfcs']['banner_id']);
+      }
     }
-  }
-  elseif (isset($account->mfcs) && array_key_exists('banner_id', $account->mfcs)) {
-    if (!empty($account->mfcs['banner_id'])) {
-      $result = mfcs_sync_banner_to_local_users($account->uid, $account->mfcs['banner_id']);
+    elseif (isset($account->mfcs) && array_key_exists('banner_id', $account->mfcs)) {
+      if (!empty($account->mfcs['banner_id'])) {
+        $result = mfcs_sync_banner_to_local_users($account->uid, $account->mfcs['banner_id']);
+      }
     }
   }
 
@@ -2380,9 +2410,14 @@ function mfcs_hook_user_presave(&$edit, $account, $category) {
   }
 
   $changes = NULL;
-  if (!empty($settings)) {
+  if (!empty($settings) && !$bannerless_exception) {
     $changes = mfcs_hook_process_user_banner_roles($account, $problems, $settings);
+
+    if ($problems != $problems_original) {
+      $edit['mfcs']['problems'] = $problems;
+    }
   }
+  unset($settings);
 
   if (is_array($changes)) {
     if (isset($changes['roles']) && is_array($changes['roles'])) {
@@ -2458,7 +2493,7 @@ function mfcs_hook_user_update(&$edit, $account, $category) {
     }
 
     if (isset($edit['mfcs']['problems']) && is_numeric($edit['mfcs']['problems'])) {
-      $problems = (int) $edit->mfcs['problems'];
+      $problems = (int) $edit['mfcs']['problems'];
     }
     $problems_original = $problems;
 
@@ -2528,7 +2563,9 @@ function mfcs_hook_user_update(&$edit, $account, $category) {
   }
 
   // save operations are always recorded because the 'updated' field must accurately reflect every update.
-  mfcs_save_user($account->uid, $edit['mfcs']);
+  if (!empty($edit['mfcs'])) {
+    mfcs_save_user($account->uid, $edit['mfcs']);
+  }
 }
 
 /**
@@ -2651,13 +2688,8 @@ function mfcs_hook_process_user_banner_roles($user, &$problems, $changes = array
   $primary_account_id = (int) $user->uid;
   if (!is_null($mfcs_user_settings['banner_id']) && $mfcs_user_settings['primary_account'] === FALSE) {
     $associated_users = mfcs_users_load_banner_id_to_user_id($mfcs_user_settings['banner_id']);
-    if (isset($associated_users['user']) && is_array($associated_users['user'])) {
-      foreach ($associated_users['user'] as $associated_user_id => $associated_user_settings) {
-        if (isset($associated_user_settings['primary']) && $associated_user_settings['primary'] == 1) {
-          $primary_account_id = (int) $associated_user_id;
-          break;
-        }
-      }
+    if (isset($associated_users['banner'][$mfcs_user_settings['banner_id']]['primary']['user_id'])) {
+      $primary_account_id = (int) $associated_users['banner'][$mfcs_user_settings['banner_id']]['primary']['user_id'];
     }
     unset($associated_users);
   }
@@ -2666,6 +2698,7 @@ function mfcs_hook_process_user_banner_roles($user, &$problems, $changes = array
   $requester_role = user_role_load_by_name('requester');
   $reviewer_role = user_role_load_by_name('reviewer');
   $financer_role = user_role_load_by_name('financer');
+  $insurer_role = user_role_load_by_name('insurer');
   $manager_role = user_role_load_by_name('manager');
   $administrator_role = user_role_load_by_name('administrator');
   $bannerless_exception_role = user_role_load_by_name('bannerless exception');
@@ -2687,6 +2720,11 @@ function mfcs_hook_process_user_banner_roles($user, &$problems, $changes = array
   // force array to be populated with role ids and not role names.
   $processed_roles = array();
   foreach ($user_roles as $role_id => $role_name) {
+    // drupal's edit will set role_name to 0 for removing roles under certain conditions (while for others will use a role name to simply specify that the roles are assigned).
+    if (is_numeric($role_name) && $role_name == 0) {
+      continue;
+    }
+
     $processed_roles[(int) $role_id] = (int) $role_id;
   }
   unset($role_id);
@@ -2730,6 +2768,7 @@ function mfcs_hook_process_user_banner_roles($user, &$problems, $changes = array
     unset($processed_roles[$reviewer_role->rid]);
     unset($processed_roles[$requester_role->rid]);
     unset($processed_roles[$financer_role->rid]);
+    unset($processed_roles[$insurer_role->rid]);
 
     $results = array();
     $results['roles'] = $processed_roles;
@@ -2768,6 +2807,7 @@ function mfcs_hook_process_user_banner_roles($user, &$problems, $changes = array
       unset($processed_roles[$reviewer_role->rid]);
       unset($processed_roles[$requester_role->rid]);
       unset($processed_roles[$financer_role->rid]);
+      unset($processed_roles[$insurer_role->rid]);
 
       $results = array();
       $results['roles'] = $processed_roles;
@@ -2822,11 +2862,12 @@ function mfcs_hook_process_user_banner_roles($user, &$problems, $changes = array
 
   // if the (non-admin) user is a venue or room coordinator, then add/remove reviewer role as necessary.
   if (empty($user_banner['role'])) {
-    // if the user has no banner roles, is not a manager, and is not a reviewer exception, then do not allow the user to have reviewer, financer, or requester roles (bannerless exception and administrators cannot reach this point).
+    // if the user has no banner roles, is not a manager, and is not a reviewer exception, then do not allow the user to have reviewer, financer, insurer, or requester roles (bannerless exception and administrators cannot reach this point).
     if (!$is_manager && !$reviewer_exception) {
       unset($processed_roles[$reviewer_role->rid]);
       unset($processed_roles[$requester_role->rid]);
       unset($processed_roles[$financer_role->rid]);
+      unset($processed_roles[$insurer_role->rid]);
     }
   }
   else {
@@ -2838,11 +2879,10 @@ function mfcs_hook_process_user_banner_roles($user, &$problems, $changes = array
     unset($role);
   }
 
-
   // if the user can proxy as another account, then they need the reviewer role (but make no changes if the user is a manager or is a reviewer exception).
   if (!$is_manager && !$reviewer_exception) {
     $can_review = FALSE;
-    $proxy_accounts = mfcs_get_proxy_venue_coordinators(array('mpvc.proxy_id' => $primary_account_id));
+    $proxy_accounts = mfcs_get_proxy_venue_coordinators(array('mpvc.proxy_id' => $primary_account_id, 'mpvc.disabled' => 0));
     if (!empty($proxy_accounts['results'])) {
       $processed_roles[$reviewer_role->rid] = $reviewer_role->rid;
       $can_review = TRUE;
@@ -2863,17 +2903,25 @@ function mfcs_hook_process_user_banner_roles($user, &$problems, $changes = array
 
     if ($can_review) {
       $processed_roles[$reviewer_role->rid] = $reviewer_role->rid;
+
+      // make sure that if the reviewer can now review, to get rid of the reviewer not allowed problem flag.
+      if (($problems & MFCS_USER_PROBLEM_ACCOUNT_REVIEWER_NOT_ALLOWED) != 0) {
+        $problems -= MFCS_USER_PROBLEM_ACCOUNT_REVIEWER_NOT_ALLOWED;
+      }
     }
     else {
       if (array_key_exists($reviewer_role->rid, $processed_roles)) {
         unset($processed_roles[$reviewer_role->rid]);
         unset($processed_roles[$financer_role->rid]);
+        unset($processed_roles[$insurer_role->rid]);
 
         // the function arguments are trying to assign 'proxy' role to a user who has no venue or room to review.
         // do not allow this and provide a watchdog warning for reference.
-        watchdog(MFCS_WATCHDOG_ID, 'The user \'%user_name\' (%user_id, %primary_id) is not being granted reviewer access as requested because the user is not assigned as either a venue or room coordinator in the banner database and is not a venue coordinator proxy.', array('%user_name' => $user->name, '%user_id' => isset($user->uid) ? $user->uid : 'undefined', '%primary_id' => $primary_account_id), WATCHDOG_WARNING);
+        watchdog(MFCS_WATCHDOG_ID, 'The user \'%user_name\' (%user_id, %primary_id) is not being granted reviewer access as requested because the user is not assigned as either a venue or room coordinator in the banner database and is not a venue coordinator proxy.', array('%user_name' => isset($user->name) ? $user->name : 'undefined', '%user_id' => isset($user->uid) ? $user->uid : 'undefined', '%primary_id' => $primary_account_id), WATCHDOG_WARNING);
 
-        $problems = $problems | MFCS_USER_PROBLEM_ACCOUNT_REVIEWER_NOT_ALLOWED;
+        if (($problems & MFCS_USER_PROBLEM_ACCOUNT_REVIEWER_NOT_ALLOWED) == 0) {
+          $problems = $problems | MFCS_USER_PROBLEM_ACCOUNT_REVIEWER_NOT_ALLOWED;
+        }
       }
     }
   }

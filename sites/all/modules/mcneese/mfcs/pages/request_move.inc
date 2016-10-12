@@ -52,9 +52,9 @@ function mfcs_request_manage_0_move_form($form, &$form_state, $request_id) {
 
   mfcs_add_canonical_headers('requests/manage-0/move/' . $request_id);
 
-  $page_title = "Move Request";
+  $page_title = 'Move Request';
   if (!empty($request['information']['title'][0]->value)) {
-    $page_title = "Move Request: " . $request['information']['title'][0]->value;
+    $page_title = 'Move Request: ' . $request['information']['title'][0]->value;
   }
   drupal_set_title($page_title);
 
@@ -85,6 +85,11 @@ function mfcs_request_manage_0_move_form($form, &$form_state, $request_id) {
   $form['form']['step'] = array(
     '#type' => 'value',
     '#value' => 'location',
+  );
+
+  $form['form']['operation'] = array(
+    '#type' => 'value',
+    '#value' => 'move',
   );
 
   $form['form']['sections'] = array(
@@ -475,7 +480,11 @@ function mfcs_request_manage_0_move_form_validate($form, &$form_state) {
           $all_time_start[$date_delta] = $form['form']['request']['#value']['dates']['time_start'][$date_delta]->value;
           $all_time_stop[$date_delta] = $form['form']['request']['#value']['dates']['time_stop'][$date_delta]->value;
 
-          $all_holidays = mfcs_get_holidays((int) date('Y', $form['form']['request']['#value']['dates']['date'][$date_delta]->value), $form['form']['request']['#value']['dates']['date'][$date_delta]->value);
+          $holidays = mfcs_get_holidays((int) date('Y', $form['form']['request']['#value']['dates']['date'][$date_delta]->value), $form['form']['request']['#value']['dates']['date'][$date_delta]->value);
+          if (is_array($holidays)) {
+            $all_holidays = array_merge($all_holidays, $holidays);
+          }
+          unset($holidays);
         }
 
         $room_unavailability = mfcs_check_room_availability($room_id, $all_dates, $all_time_start, $all_time_stop, $form['form']['request_id']['#value']);
@@ -616,8 +625,13 @@ function mfcs_request_manage_0_move_form_submit($form, &$form_state) {
     // forcefully clear the request cache so that it can reflect the changes.
     mfcs_load_request_by_id($request_id, FALSE);
 
+    $review_extra = array(
+      'never_requester' => TRUE,
+      'never_coordinator' => TRUE,
+    );
+
     mfcs_include(MFCS_INCLUDE_WORKFLOW);
-    mfcs_workflow_step_review($request_id, $user, MFCS_REVIEW_DECISION_MOVE, MFCS_REVIEW_RESTRICTIONS_REQUESTER, $log_message);
+    mfcs_workflow_step_review($request_id, $user, MFCS_REVIEW_DECISION_MOVE, MFCS_REVIEW_RESTRICTIONS_NONE, $log_message, $review_extra);
   }
 
   // redirect after submitting.

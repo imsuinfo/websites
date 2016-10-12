@@ -22,6 +22,7 @@
  define('MFCS_RESTRICTION_DECISION_ADMINISTER', 6);
  define('MFCS_RESTRICTION_DECISION_COMMENT_ONLY', 7);
  define('MFCS_RESTRICTION_DECISION_FINANCER', 8);
+ define('MFCS_RESTRICTION_DECISION_INSURER', 9);
 
 /**
  * Defines Taxonomy TIDs for request revenue.
@@ -215,6 +216,7 @@ function mfcs_get_review_steps_list_options($option = NULL, $hidden = FALSE, $di
 function mfcs_get_request_classification_list_options($option = NULL, $user = NULL, $hidden = FALSE, $disabled = FALSE) {
   $options = array();
   $options_all = array();
+  $options_to_roles = array();
 
   if ($hidden) {
     $options_all[MFCS_REQUEST_CLASSIFICATION_NONE] = 'None';
@@ -225,14 +227,47 @@ function mfcs_get_request_classification_list_options($option = NULL, $user = NU
   $options_all[MFCS_REQUEST_CLASSIFICATION_FACULTY] = 'Faculty, Staff, Athletics';
   $options_all[MFCS_REQUEST_CLASSIFICATION_EXTERNAL] = 'Externals';
 
+  $role = user_role_load_by_name('student role');
+  if (is_object($role)) {
+    $options_to_roles[$role->rid] = MFCS_REQUEST_CLASSIFICATION_STUDENT;
+  }
+  unset($role);
+
+  $role = user_role_load_by_name('camp role');
+  if (is_object($role)) {
+    $options_to_roles[$role->rid] = MFCS_REQUEST_CLASSIFICATION_CAMPS;
+  }
+  unset($role);
+
+  $role = user_role_load_by_name('employee role');
+  if (is_object($role)) {
+    $options_to_roles[$role->rid] = MFCS_REQUEST_CLASSIFICATION_FACULTY;
+  }
+  unset($role);
+
+  $role = user_role_load_by_name('external role');
+  if (is_object($role)) {
+    $options_to_roles[$role->rid] = MFCS_REQUEST_CLASSIFICATION_EXTERNAL;
+  }
+  unset($role);
+
   if ($option == 'select') {
     $options[''] = '- Select -';
   }
 
   if (is_object($user)) {
-    foreach ($options_all as $option_id => $option_name) {
-      if (array_key_exists($option_id, $user->roles)) {
+    $is_manager = user_access('mfcs manager', $user);
+    $is_administer = user_access('mfcs administer', $user);
+
+    if ($is_manager || $is_administer) {
+      foreach ($options_all as $option_id => $option_name) {
         $options[$option_id] = $option_name;
+      }
+    }
+
+    foreach ($options_to_roles as $role_id => $classification_id) {
+      if (array_key_exists($role_id, $user->roles) && array_key_exists($classification_id, $options_all)) {
+        $options[$classification_id] = $options_all[$classification_id];
       }
     }
   }
@@ -365,6 +400,19 @@ function mfcs_get_request_room_list_options($location = NULL, $option = NULL, $h
         $room_name = check_plain($room->room_name);
       }
       $title .= '<div class="room_description"><span class="room_description-label"></span> <span class="room_description-data">' . $room_name . '</span></div>';
+
+      $options[$room->room_id] = $title;
+    }
+  }
+  elseif ($option == 'room_with_building') {
+    foreach ($rooms as $room) {
+      $title = '(' . $room->building_code . ') ';
+      if (empty($room->room_name) || is_numeric($room->room_number)) {
+        $title .= $room->room_number;
+      }
+      else {
+        $title .= $room->room_name;
+      }
 
       $options[$room->room_id] = $title;
     }
@@ -538,6 +586,7 @@ function mfcs_get_request_type_list_options($option = NULL, $hidden = FALSE, $di
   $options_all[MFCS_REQUEST_TYPE_ATHLETIC] = 'Athletic';
   $options_all[MFCS_REQUEST_TYPE_OTHER] = 'Other';
   $options_all[MFCS_REQUEST_TYPE_QUICK_MEETING] = 'Quick Meeting';
+  $options_all[MFCS_REQUEST_TYPE_CLUB_MEETING] = 'Club Meeting';
 
   if ($option == 'select') {
     $options[''] = '- Select -';
@@ -737,6 +786,11 @@ function mfcs_get_reviewer_classification_list_options($option = NULL, $hidden =
   $options_all[MFCS_REVIEWER_CLASSIFICATION_SECURITY] = 'Security / University Police';
   $options_all[MFCS_REVIEWER_CLASSIFICATION_STUDENT_ACTIVITIES_ADMINISTRATION] = 'Student Activities Administration';
   $options_all[MFCS_REVIEWER_CLASSIFICATION_UNIVERSITY_SERVICES] = 'University Services';
+  $options_all[MFCS_REVIEWER_CLASSIFICATION_GROUNDS] = 'Grounds';
+  $options_all[MFCS_REVIEWER_CLASSIFICATION_FINANCIAL] = 'Financial';
+  $options_all[MFCS_REVIEWER_CLASSIFICATION_INSURANCE] = 'Insurance';
+
+
 
   if ($option == 'select') {
     $options[''] = '- Select -';
@@ -880,6 +934,13 @@ function mfcs_get_reviewer_decision_list_options($option = NULL, $restriction = 
     }
   }
   elseif ($restriction == MFCS_RESTRICTION_DECISION_FINANCER) {
+    foreach (array(MFCS_REVIEW_DECISION_ISSUES, MFCS_REVIEW_DECISION_ISSUES_NONE, MFCS_REVIEW_DECISION_COMMENT, MFCS_REVIEW_DECISION_REQUIREMENT) as $option_id) {
+      if (array_key_exists($option_id, $options_all)) {
+        $options[$option_id] = $options_all[$option_id];
+      }
+    }
+  }
+  elseif ($restriction == MFCS_RESTRICTION_DECISION_INSURER) {
     foreach (array(MFCS_REVIEW_DECISION_ISSUES, MFCS_REVIEW_DECISION_ISSUES_NONE, MFCS_REVIEW_DECISION_COMMENT, MFCS_REVIEW_DECISION_REQUIREMENT) as $option_id) {
       if (array_key_exists($option_id, $options_all)) {
         $options[$option_id] = $options_all[$option_id];

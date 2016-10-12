@@ -294,7 +294,7 @@ function mfcs_request_problems_0_users_form($form, &$form_state, $page_number = 
         }
 
         if ($taxonomy_id == MFCS_USER_PROBLEM_ACCOUNT_DISABLED_IN_USE) {
-          $additional_operations .= " <a href=\"" . $base_path . 'requests/problems-0/users/disabled_in_use/' . $problem->user_id . "\">Requests</a>";
+          $additional_operations .= ' <a href="' . $base_path . 'requests/problems-0/users/disabled_in_use/' . $problem->user_id . '">Requests</a>';
         }
 
         if (is_null($problem_account)) {
@@ -749,9 +749,9 @@ function mfcs_request_problems_0_user_form($form, &$form_state, $problem_user_id
       'custom_action' => FALSE,
     ),
     MFCS_USER_PROBLEM_ACCOUNT_REVIEWER_NOT_ALLOWED => array(
-      'label' => 'Unable to Assign Reviewer/Venue-Coordinator Role',
+      'label' => 'Reviewer/Venue-Coordinator Role Not Allowed',
       'explanation' =>
-        'This flag gets set when an attempt is made to assign or unassign the reviewer role to a user when there is no reference to that use as a venue coordinator or room coordinator.<br>' .
+        'This flag gets set when an attempt is made to assign or unassign the reviewer role to a user when there is no reference to that user as a venue coordinator or a room coordinator.<br>' .
         '<br>' .
         'This may be caused by the banner database cache being out of date.<br>' .
         'You may need to re-synchronizing the banner cache.<br>' .
@@ -764,7 +764,7 @@ function mfcs_request_problems_0_user_form($form, &$form_state, $problem_user_id
       'custom_action-message' => 'Re-process Reviewer/Venue-Coordinator Role.',
     ),
     MFCS_USER_PROBLEM_ACCOUNT_DUPLICATES => array(
-      'label' => "Old/Duplicate Account",
+      'label' => 'Old/Duplicate Account',
       'explanation' =>
         'This flag gets set when a user has logged in and the <strong>LDAP</strong> has the <strong>isDuplicate</strong> flag set to <strong>TRUE</strong> and there is no primary account (or this is not the primary account).<br>' .
         '<br>' .
@@ -812,7 +812,8 @@ function mfcs_request_problems_0_user_form($form, &$form_state, $problem_user_id
         '<br>' .
         'The user either needs to have their banner id fixed, removed, or the account should be locked.<br>',
       'resettable' => FALSE,
-      'custom_action' => FALSE,
+      'custom_action' => TRUE,
+      'custom_action-message' => 'Lock the user account.',
     ),
     MFCS_USER_PROBLEM_ACCOUNT_NO_ACCESS => array(
       'label' => 'Insufficient Banner Access',
@@ -1107,8 +1108,8 @@ function mfcs_request_problems_0_user_form_submit($form, &$form_state) {
 
         if ($changes_made) {
           if (!user_save($form['values']['problem_user']['#value'],  array('roles' => $system_roles))) {
-            form_set_error('form', "An error occurred while trying to re-assign or re-unassign the manager role. Please contact the support staff.");
-            watchdog(MFCS_WATCHDOG_ID, "An error occurred while trying to re-assign or re-unassign the manager role, user: @user_id, problems: @problems.", array('@user_id' => $form['values']['mfcs_user']['#value']['user_id'], '@problems' => print_r($problems, TRUE)), WATCHDOG_ERROR);
+            form_set_error('form', 'An error occurred while trying to re-assign or re-unassign the manager role. Please contact the support staff.');
+            watchdog(MFCS_WATCHDOG_ID, 'An error occurred while trying to re-assign or re-unassign the manager role, user: @user_id, problems: @problems.', array('@user_id' => $form['values']['mfcs_user']['#value']['user_id'], '@problems' => print_r($problems, TRUE)), WATCHDOG_ERROR);
 
             $form_state['rebuild'] = TRUE;
             $form_state['redirect'] = FALSE;
@@ -1120,6 +1121,16 @@ function mfcs_request_problems_0_user_form_submit($form, &$form_state) {
               mfcs_save_user($form['values']['problem_user']['#value']->uid, array('problems' => $problems));
             }
           }
+        }
+      }
+      elseif ($custom_action_id == MFCS_USER_PROBLEM_ACCOUNT_BANNER_INVALID) {
+        if (!user_save($form['values']['problem_user']['#value'],  array('status' => 0))) {
+          form_set_error('form', 'An error occurred while trying to lock the user account. Please contact the support staff.');
+          watchdog(MFCS_WATCHDOG_ID, 'An error occurred while trying to lock the user account, user: @user_id, problems: @problems.', array('@user_id' => $form['values']['mfcs_user']['#value']['user_id'], '@problems' => print_r($problems, TRUE)), WATCHDOG_ERROR);
+
+          $form_state['rebuild'] = TRUE;
+          $form_state['redirect'] = FALSE;
+          $form_state['submitted'] = FALSE;
         }
         else {
           if (($problems & $custom_action_id) != 0) {
@@ -1177,7 +1188,7 @@ function mfcs_request_problems_0_users_resynchronize($user_id) {
 
   mfcs_add_canonical_headers('requests/problems-0/users/resynchronize/' . $user_id);
 
-  $page_title = "Facilities Use Problems - Resynchronize User";
+  $page_title = 'Facilities Use Problems - Resynchronize User';
   drupal_set_title($page_title);
 
   $result = mfcs_synchronize_user_settings($user);
@@ -1999,11 +2010,11 @@ function mfcs_request_problems_0_request_form($form, &$form_state, $problem_id) 
 
   $form['actions']['action'] = array(
     '#type' => 'select',
-    '#title' => "Actions",
+    '#title' => 'Actions',
     '#default_value' => NULL,
     '#options' => array(
-      NULL => "- Select Action -",
-      'recheck' => "Re-Check Problem",
+      NULL => '- Select Action -',
+      'recheck' => 'Re-Check Problem',
     ),
     '#required' => FALSE,
     '#attributes' => array(
@@ -2029,7 +2040,7 @@ function mfcs_request_problems_0_request_form($form, &$form_state, $problem_id) 
     '#id' => 'request_problems-submit-back',
     '#name' => 'request_problems-submit-back',
     '#type' => 'submit',
-    '#default_value' => t("Back"),
+    '#default_value' => 'Back',
     '#attributes' => array(
       'class' => array(
         'no-print',
@@ -2042,7 +2053,7 @@ function mfcs_request_problems_0_request_form($form, &$form_state, $problem_id) 
     '#id' => 'request_problems-submit-submit',
     '#name' => 'request_problems-submit-submit',
     '#type' => 'submit',
-    '#default_value' => t("Submit"),
+    '#default_value' => 'Submit',
     '#attributes' => array(
       'class' => array(
         'no-print',
@@ -2052,22 +2063,22 @@ function mfcs_request_problems_0_request_form($form, &$form_state, $problem_id) 
   );
 
   if ($problem->ignore == 1) {
-    $form['actions']['action']['#options']['unignore'] = "Unignore Problem";
+    $form['actions']['action']['#options']['unignore'] = 'Unignore Problem';
   }
   else {
-    $form['actions']['action']['#options']['ignore'] = "Ignore Problem";
+    $form['actions']['action']['#options']['ignore'] = 'Ignore Problem';
   }
 
 
   $form['markup']['#markup'] .= '<div class="request_problem-summary">';
   $form['markup']['#markup'] .= '  <div class="request_problem-summary_row"><span class="request_problem-summary_row-label label-id">Problem ID:</span> <span class="request_problem-summary_row-value value-id">' . $problem_id . '</span></div>';
-  $form['markup']['#markup'] .= '  <div class="request_problem-summary_row"><span class="request_problem-summary_row-label label-request_id">Request ID:</span> <span class="request_problem-summary_row-value value-request_id">' . $problem->request_id . '</span></div>';
-  $form['markup']['#markup'] .= '  <div class="request_problem-summary_row"><span class="request_problem-summary_row-label label-request_title">Request Title:</span> <span class="request_problem-summary_row-value value-request_title"><a href="' . $base_path . 'requests/view-0/' . $problem->request_id . $url_arguments . '" class="operation-link operation-link-request">' . $problem->request_title . '</a></span></div>';
+  $form['markup']['#markup'] .= '  <div class="request_problem-summary_row"><span class="request_problem-summary_row-label label-request_id">Request ID:</span> <span class="request_problem-summary_row-value value-request_id">' . (int) $problem->request_id . '</span></div>';
+  $form['markup']['#markup'] .= '  <div class="request_problem-summary_row"><span class="request_problem-summary_row-label label-request_title">Request Title:</span> <span class="request_problem-summary_row-value value-request_title"><a href="' . $base_path . 'requests/view-0/' . (int) $problem->request_id . $url_arguments . '" class="operation-link operation-link-request">' . check_plain($problem->request_title) . '</a></span></div>';
   $form['markup']['#markup'] .= '  <div class="request_problem-summary_row"><span class="request_problem-summary_row-label label-request_title">Request Status:</span> <span class="request_problem-summary_row-value value-request_status">' . (array_key_exists($problem->request_status, $status_options) ? $status_options[$problem->request_status] : 'Unknown') . '</span></div>';
   $form['markup']['#markup'] .= '  <div class="request_problem-summary_row"><span class="request_problem-summary_row-label label-problem">Problem:</span> <span class="request_problem-summary_row-value value-problem">' . $problem_code_name . '</span></div>';
   $form['markup']['#markup'] .= '  <div class="request_problem-summary_row"><span class="request_problem-summary_row-label label-date_detected">Date Detected:</span> <span class="request_problem-summary_row-value value-date_detected">' . date('l, F j, Y h:i:s a', $problem->date) . '</span></div>';
   $form['markup']['#markup'] .= '  <div class="request_problem-summary_row"><span class="request_problem-summary_row-label label-ignored">Ignored:</span> <span class="request_problem-summary_row-value value-ignored">' . (isset($problem->ignore) && $problem->ignore == 1 ? 'Yes' : 'No') . '</span></div>';
-  $form['markup']['#markup'] .= '  <div class="request_problem-summary_row"><span class="request_problem-summary_row-label label-reason">Reason:</span> <span class="request_problem-summary_row-value value-reason">' . (isset($problem->reason) ? $problem->reason : '') . '</span></div>';
+  $form['markup']['#markup'] .= '  <div class="request_problem-summary_row"><span class="request_problem-summary_row-label label-reason">Reason:</span> <span class="request_problem-summary_row-value value-reason">' . (isset($problem->reason) ? check_plain($problem->reason) : '') . '</span></div>';
   $form['markup']['#markup'] .= '</div>';
 
   $form['markup']['#markup'] .= '<br>';
@@ -2081,7 +2092,7 @@ function mfcs_request_problems_0_request_form($form, &$form_state, $problem_id) 
 
     $details = unserialize($problem->details);
 
-    $form['markup']['#markup'] .= '<a href="' . $base_path . 'requests/view-0/' . $problem->request_id . $url_arguments . '" class="request_problem-extra-conflict-link" title="View Request ' . $problem->request_id . '">Request ' . $problem->request_id . '</a> is in conflict with the following requests:';
+    $form['markup']['#markup'] .= '<a href="' . $base_path . 'requests/view-0/' . (int) $problem->request_id . $url_arguments . '" class="request_problem-extra-conflict-link" title="View Request ' . (int) $problem->request_id . '">Request ' . (int) $problem->request_id . '</a> is in conflict with the following requests:';
     $form['markup']['#markup'] .= '<ul class="request_problem-extra-conflict-items">';
     foreach ($details as $detail) {
       $form['markup']['#markup'] .= '<li class="request_problem-extra-conflict-item"><a href="' . $base_path . 'requests/view-0/' . $detail . $url_arguments . '" class="request_problem-extra-conflict-item-link" title="View Request ' . $detail . '">Request ' . $detail . '</a></li>';
@@ -2090,8 +2101,8 @@ function mfcs_request_problems_0_request_form($form, &$form_state, $problem_id) 
     $form['markup']['#markup'] .= '<br>';
   }
   elseif ($problem->problem == MFCS_REQUEST_PROBLEM_STALE) {
-    $form['markup']['#markup'] .= 'A <strong>' . $problem_code_name . '</strong> problem is a problem where a request has all of its scheduled dates in the past but is still open for review.' . '<br>';
-    $form['markup']['#markup'] .= 'Stale requests should likely be cancelled.' . '<br>';
+    $form['markup']['#markup'] .= 'A <strong>' . $problem_code_name . '</strong> problem is a problem where a request has one or more of its scheduled dates in the past but is still open for review.' . '<br>';
+    $form['markup']['#markup'] .= 'This is primarily informative, but some stale requests may need to be cancelled.' . '<br>';
     $form['markup']['#markup'] .= '<br>';
   }
   elseif ($problem->problem == MFCS_REQUEST_PROBLEM_STUCK) {
@@ -2107,41 +2118,102 @@ function mfcs_request_problems_0_request_form($form, &$form_state, $problem_id) 
     $form['markup']['#markup'] .= '<br>';
   }
   elseif ($problem->problem == MFCS_REQUEST_PROBLEM_COORDINATOR) {
-    $form['actions']['action']['#options']['reassign_venue_coordinator'] = "Re-Assign Venue Coordinator";
+    $form['actions']['action']['#options']['reassign_venue_coordinator'] = 'Re-Assign Venue Coordinator';
 
     $form['markup']['#markup'] .= 'A <strong>' . $problem_code_name . '</strong> problem is a problem where the venue coordinator assigned to a request no longer exists, is disabled, or is otherwise invalid.' . '<br>';
     $form['markup']['#markup'] .= '<br>';
 
     $form['markup']['#markup'] .= 'The <strong>' . $form['actions']['action']['#options']['reassign_venue_coordinator'] . ' </strong> action will attempt to auto-reassign the venue coordinator.' . '<br>';
-    $form['markup']['#markup'] .= "The re-assigmment functionality only refreshes the banner information.<br>";
-    $form['markup']['#markup'] .= "If that information has not changed for the venue coordinator, then this will do nothing.<br>";
+    $form['markup']['#markup'] .= 'The re-assigmment functionality only refreshes the banner information.<br>';
+    $form['markup']['#markup'] .= 'If that information has not changed for the venue coordinator, then this will do nothing.<br>';
     $form['markup']['#markup'] .= '<br>';
+
+    $details = unserialize($problem->details);
+
+    if (isset($details['coordinator'])) {
+      $form['markup']['#markup'] .= '<strong>Coordinator ID:</strong> ' . (int) $details['coordinator']['id'] . '<br>';
+      $form['markup']['#markup'] .= '<strong>Coordinator Account:</strong> <a href="' . $base_path . 'requests/users-0/view/' . (int) $details['coordinator']['id'] . $url_arguments . '">' . check_plain($details['coordinator']['name']) . '</a><br>';
+      $form['markup']['#markup'] .= '<strong>Coordinator First Name:</strong> ' . check_plain($details['coordinator']['first_name']) . '<br>';
+      $form['markup']['#markup'] .= '<strong>Coordinator Last Name:</strong> ' . check_plain($details['coordinator']['last_name']) . '<br>';
+    }
+    elseif (isset($details['current_coordinator']) && isset($details['new_coordinator'])) {
+      $form['markup']['#markup'] .= '<strong>Old Coordinator ID:</strong> ' . (int) $details['current_coordinator']['id'] . '<br>';
+      $form['markup']['#markup'] .= '<strong>Old Coordinator Account:</strong> <a href="' . $base_path . 'requests/users-0/view/' . (int) $details['current_coordinator']['id'] . $url_arguments . '">' . check_plain($details['current_coordinator']['name']) . '</a><br>';
+      $form['markup']['#markup'] .= '<strong>Old Coordinator First Name:</strong> ' . check_plain($details['current_coordinator']['first_name']) . '<br>';
+      $form['markup']['#markup'] .= '<strong>Old Coordinator Last Name:</strong> ' . check_plain($details['current_coordinator']['last_name']) . '<br>';
+
+      $form['markup']['#markup'] .= '<br>';
+
+      $form['markup']['#markup'] .= '<strong>New Coordinator ID:</strong> ' . (int) $details['new_coordinator']['id'] . '<br>';
+      $form['markup']['#markup'] .= '<strong>New Coordinator Account:</strong> <a href="' . $base_path . 'requests/users-0/view/' . (int) $details['new_coordinator']['id'] . $url_arguments . '">' . check_plain($details['new_coordinator']['name']) . '</a><br>';
+      $form['markup']['#markup'] .= '<strong>New Coordinator First Name:</strong> ' . check_plain($details['new_coordinator']['first_name']) . '<br>';
+      $form['markup']['#markup'] .= '<strong>New Coordinator Last Name:</strong> ' . check_plain($details['new_coordinator']['last_name']) . '<br>';
+    }
+
+    unset($details);
   }
   elseif ($problem->problem == MFCS_REQUEST_PROBLEM_REQUESTER) {
     $form['markup']['#markup'] .= 'A <strong>' . $problem_code_name . '</strong> problem is a problem where the requester assigned to a request no longer exists, is disabled, or is otherwise invalid.' . '<br>';
     $form['markup']['#markup'] .= 'The requester is the account used to create the request and is viewable under the <em>created by</em> section of the request.' . '<br>';
     $form['markup']['#markup'] .= '<br>';
+
+    $details = unserialize($problem->details);
+
+    if (isset($details['requester'])) {
+      $form['markup']['#markup'] .= '<strong>Requester ID:</strong> ' . (int) $details['requester']['user_id'] . '<br>';
+      $form['markup']['#markup'] .= '<strong>Requester Account:</strong> <a href="' . $base_path . 'requests/users-0/view/' . (int) $details['requester']['user_id'] . $url_arguments . '">' . check_plain($details['requester']['name']) . '</a><br>';
+      $form['markup']['#markup'] .= '<strong>Requester First Name:</strong> ' . check_plain($details['requester']['first_name']) . '<br>';
+      $form['markup']['#markup'] .= '<strong>Requester Last Name:</strong> ' . check_plain($details['requester']['last_name']) . '<br>';
+    }
+
+    unset($details);
   }
   elseif ($problem->problem == MFCS_REQUEST_PROBLEM_ROOM) {
     $form['markup']['#markup'] .= 'A <strong>' . $problem_code_name . '</strong> problem is a problem where the room assigned to a request no longer exists, is disabled, or is otherwise invalid.' . '<br>';
     $form['markup']['#markup'] .= '<br>';
     $form['markup']['#markup'] .= 'You can may want to <a href="' . $base_path . 'requests/troubleshoot-0/rooms' . $url_arguments . '">look at the listing of rooms according to the local banner information</a>.' . '<br>';
     $form['markup']['#markup'] .= '<br>';
+
+    $details = unserialize($problem->details);
+
+    if (isset($details['room']) && isset($details['building'])) {
+      $form['markup']['#markup'] .= '<strong>Room Unavailabilities:</strong> <a href="' . $base_path . 'requests/unavailable-0/' . (int) $details['room']['id'] . $url_arguments . '">' . check_plain($details['building']['machine_name']) . ' ' . check_plain($details['room']['machine_name']) . '</a><br>';
+      $form['markup']['#markup'] .= '<strong>Room Information:</strong> <a href="' . $base_path . 'requests/troubleshoot-0/rooms/' . (int) $details['room']['id'] . $url_arguments . '">' . check_plain($details['room']['human_name']) . '</a><br>';
+      $form['markup']['#markup'] .= '<strong>Building Information:</strong> <a href="' . $base_path . 'requests/troubleshoot-0/buildings/' . (int) $details['building']['id'] . $url_arguments . '">' . check_plain($details['building']['human_name']) . '</a><br>';
+    }
+
+    unset($details);
   }
   elseif ($problem->problem == MFCS_REQUEST_PROBLEM_BUILDING) {
     $form['markup']['#markup'] .= 'A <strong>' . $problem_code_name . '</strong> problem is a problem where the building assigned to a request no longer exists, is disabled, or is otherwise invalid.' . '<br>';
     $form['markup']['#markup'] .= '<br>';
     $form['markup']['#markup'] .= 'You can may want to <a href="' . $base_path . 'requests/troubleshoot-0/buildings' . $url_arguments . '">look at the listing of buildings according to the local banner information</a>.' . '<br>';
     $form['markup']['#markup'] .= '<br>';
+
+    $details = unserialize($problem->details);
+
+    if (isset($details['building'])) {
+      $form['markup']['#markup'] .= '<strong>Building Information:</strong> <a href="' . $base_path . 'requests/troubleshoot-0/buildings/' . $details['building']['id'] . $url_arguments . '">' . check_plain($details['building']['human_name']) . '</a><br>';
+    }
+
+    unset($details);
   }
   elseif ($problem->problem == MFCS_REQUEST_PROBLEM_LOCATION) {
     $form['markup']['#markup'] .= 'A <strong>' . $problem_code_name . '</strong> problem is a problem where the location assigned to a request no longer exists, is disabled, or is otherwise invalid.' . '<br>';
     $form['markup']['#markup'] .= '<br>';
     $form['markup']['#markup'] .= 'You can may want to <a href="' . $base_path . 'requests/troubleshoot-0/locations' . $url_arguments . '">look at the listing of locations according to the local banner information</a>.' . '<br>';
     $form['markup']['#markup'] .= '<br>';
+
+    $details = unserialize($problem->details);
+
+    if (isset($details['location'])) {
+      $form['markup']['#markup'] .= '<strong>Location Information:</strong> <a href="' . $base_path . 'requests/troubleshoot-0/locations/' . $details['location']['id'] . $url_arguments . '">' . check_plain($details['location']['human_name']) . '</a><br>';
+    }
+
+    unset($details);
   }
   elseif ($problem->problem == MFCS_REQUEST_PROBLEM_CACHE_REQUEST) {
-    $form['actions']['action']['#options']['rebuild_request_cache'] = "Rebuild Request Cache";
+    $form['actions']['action']['#options']['rebuild_request_cache'] = 'Rebuild Request Cache';
 
     $form['markup']['#markup'] .= 'A <strong>' . $problem_code_name . '</strong> problem is a problem where internal database cache is inconsistent with the stored values.' . '<br>';
     $form['markup']['#markup'] .= 'This issue will cause inconsistencies with the values associated with the request.' . '<br>';
@@ -2155,10 +2227,14 @@ function mfcs_request_problems_0_request_form($form, &$form_state, $problem_id) 
     $form['markup']['#markup'] .= '<br>';
 
     $details = unserialize($problem->details);
-    $holiday_date = reset($details['dates']);
-    $form['markup']['#markup'] .= '<strong>Holiday:</strong> <a href="' . $base_path . 'requests/holiday-0/view/' . $details['holiday']['year'] . '/' . $details['holiday']['id'] . $url_arguments . '">' . check_plain($details['holiday']['title']) . '</a><br>';
-    $form['markup']['#markup'] .= '<strong>Date of Holiday:</strong> ' . check_plain(date(MFCS_DATE_FORMAT_DATE, $holiday_date)) . '<br>';
-    unset($holiday_date);
+
+    if (isset($details['holiday'])) {
+      $holiday_date = reset($details['dates']);
+      $form['markup']['#markup'] .= '<strong>Holiday:</strong> <a href="' . $base_path . 'requests/holiday-0/view/' . (int) $details['holiday']['year'] . '/' . (int) $details['holiday']['id'] . $url_arguments . '">' . check_plain($details['holiday']['title']) . '</a><br>';
+      $form['markup']['#markup'] .= '<strong>Date of Holiday:</strong> ' . check_plain(date(MFCS_DATE_FORMAT_DATE, $holiday_date)) . '<br>';
+      unset($holiday_date);
+    }
+
     unset($details);
   }
   elseif ($problem->problem == MFCS_REQUEST_PROBLEM_UNAVAILABLE) {
@@ -2167,25 +2243,28 @@ function mfcs_request_problems_0_request_form($form, &$form_state, $problem_id) 
 
     $details = unserialize($problem->details);
 
-    $form['markup']['#markup'] .= '<strong>Unavailability:</strong><ul>';
-    foreach ($details['unavailabilities'] as $unavailability) {
-      $unavailability_date_start = $unavailability['date_start'];
-      $unavailability_date_stop = $unavailability['date_stop'];
+    if (isset($details['unavailabilities'])) {
+      $form['markup']['#markup'] .= '<strong>Unavailability:</strong><ul>';
+      foreach ($details['unavailabilities'] as $unavailability) {
+        $unavailability_date_start = $unavailability['date_start'];
+        $unavailability_date_stop = $unavailability['date_stop'];
 
-      $date_string = 'Unknown';
-      if ($unavailability_date_start == strtotime('midnight today', $unavailability_date_start) && $unavailability_date_stop == strtotime('midnight tomorrow', $unavailability_date_start)) {
-        $date_string = check_plain(date(MFCS_DATE_FORMAT_DATE, $unavailability_date_start));
-      }
-      else {
-        $date_string = check_plain(date(MFCS_DATE_FORMAT_DATE_TIME, $unavailability_date_start)) . ' to ' . check_plain(date(MFCS_DATE_FORMAT_DATE_TIME, $unavailability_date_stop));
-      }
-      unset($unavailability_date_start);
-      unset($unavailability_date_stop);
+        $date_string = 'Unknown';
+        if ($unavailability_date_start == strtotime('midnight today', $unavailability_date_start) && $unavailability_date_stop == strtotime('midnight tomorrow', $unavailability_date_start)) {
+          $date_string = check_plain(date(MFCS_DATE_FORMAT_DATE, $unavailability_date_start));
+        }
+        else {
+          $date_string = check_plain(date(MFCS_DATE_FORMAT_DATE_TIME, $unavailability_date_start)) . ' to ' . check_plain(date(MFCS_DATE_FORMAT_DATE_TIME, $unavailability_date_stop));
+        }
+        unset($unavailability_date_start);
+        unset($unavailability_date_stop);
 
-      $form['markup']['#markup'] .= '<li><a href="' . $base_path . 'requests/unavailable-0/view/' . $unavailability['year'] . '/' . $details['room_id']  . '/' . $unavailability['id'] . $url_arguments . '">' . check_plain($unavailability['title']) . '</a> (' . $date_string .')</li>';
+        $form['markup']['#markup'] .= '<li><a href="' . $base_path . 'requests/unavailable-0/view/' . $unavailability['year'] . '/' . $details['room_id']  . '/' . $unavailability['id'] . $url_arguments . '">' . check_plain($unavailability['title']) . '</a> (' . $date_string .')</li>';
+      }
+      $form['markup']['#markup'] .= '</ul>';
+      unset($date_string);
     }
-    $form['markup']['#markup'] .= '</ul>';
-    unset($date_string);
+
     unset($details);
   }
 
@@ -2248,7 +2327,7 @@ function mfcs_request_problems_0_request_form_validate($form, &$form_state) {
           mfcs_include(MFCS_INCLUDE_WORKFLOW);
 
           if (empty($conf['fcs_failsafe_coordinator']) || !is_integer($conf['fcs_failsafe_coordinator'])) {
-            watchdog(MFCS_WATCHDOG_ID, "Failed to load 'fcs_failsafe_coordinator' settings. Your settings.php does not contain the failsafe coordinator user id.", array(), WATCHDOG_CRITICAL);
+            watchdog(MFCS_WATCHDOG_ID, 'Failed to load \'fcs_failsafe_coordinator\' settings. Your settings.php does not contain the failsafe coordinator user id.', array(), WATCHDOG_CRITICAL);
             $new_coordinator_id = 1; // as a last resort fall back to the default drupal admin account.
           }
           else {
@@ -2258,17 +2337,17 @@ function mfcs_request_problems_0_request_form_validate($form, &$form_state) {
           $extra_text = '';
           if (isset($request['top']['room'][0]->value)) {
             $room_information = mfcs_load_rooms(NULL, NULL, $request['top']['room'][0]->value);
-            if (isset($room_information->coordinator_id)) {
-              $new_coordinator_id = $room_information->coordinator_id;
+            if (isset($room_information->room_coordinator_id)) {
+              $new_coordinator_id = $room_information->room_coordinator_id;
             }
-            $extra_text .= " Room Information: " . $room_information->room_name . " (" . $room_information->room_number . "). Building Information: " . $room_information->building_name . " (" . $room_information->building_code . ").";
+            $extra_text .= ' Room Information: ' . $room_information->room_name . ' (' . $room_information->room_number . '). Building Information: ' . $room_information->building_name . ' (' . $room_information->building_code . ').';
           }
 
-          $coordinator = user_load($room_information->coordinator_id);
-          $extra_text .= ' Coordinator Information: <a href="' . $base_path . 'requests/users-0/view/' . $room_information->coordinator_id . '" title="View user account">' . check_plain($coordinator->mfcs['first_name']) . ' ' . check_plain($coordinator->mfcs['last_name']) . '</a>.';
+          $coordinator = user_load($room_information->room_coordinator_id);
+          $extra_text .= ' Coordinator Information: <a href="' . $base_path . 'requests/users-0/view/' . $room_information->room_coordinator_id . '" title="View user account">' . check_plain($coordinator->mfcs['first_name']) . ' ' . check_plain($coordinator->mfcs['last_name']) . '</a>.';
 
           if ($new_coordinator_id == $request['venue_coordinator']['user_id'][0]->value) {
-            form_set_error('actions][action', "Unable to re-assign venue coordinator, the banner information remains the same." . $extra_text);
+            form_set_error('actions][action', 'Unable to re-assign room/venue coordinator, the banner information remains the same.' . $extra_text);
           }
         }
       }
@@ -2277,12 +2356,12 @@ function mfcs_request_problems_0_request_form_validate($form, &$form_state) {
           $do_something = TRUE;
         }
         else {
-          form_set_error('actions][action', "Cache will only be re-built for a problem with a cache request problem code." . $extra_text);
+          form_set_error('actions][action', 'Cache will only be re-built for a problem with a cache request problem code.' . $extra_text);
         }
       }
       elseif ($form_state['values']['actions']['action'] == 'ignore') {
         if ($form['form']['problem']['#value']->ignore == 1) {
-          form_set_error('actions][action', "This request is already being ignored.");
+          form_set_error('actions][action', 'This request is already being ignored.');
         }
         else {
           $do_something = TRUE;
@@ -2290,7 +2369,7 @@ function mfcs_request_problems_0_request_form_validate($form, &$form_state) {
       }
       elseif ($form_state['values']['actions']['action'] == 'unignore') {
         if ($form['form']['problem']['#value']->ignore == 0) {
-          form_set_error('actions][action', "This request is already not being ignored.");
+          form_set_error('actions][action', 'This request is already not being ignored.');
         }
         else {
           $do_something = TRUE;
@@ -2298,13 +2377,13 @@ function mfcs_request_problems_0_request_form_validate($form, &$form_state) {
       }
     }
     else {
-      form_set_error('', "An invalid problem code was specified, cannot continue.");
-      watchdog(MFCS_WATCHDOG_ID, "Unable to submit request problems form because the problem code invalid, user: @user_id, problem_id: @problem_id, problem: @problem.", array('@user_id' => $user->uid, $form['form']['problem_id'], '@problem' => $form['form']['problem']['#value']->problem), WATCHDOG_ERROR);
+      form_set_error('', 'An invalid problem code was specified, cannot continue.');
+      watchdog(MFCS_WATCHDOG_ID, 'Unable to submit request problems form because the problem code invalid, user: @user_id, problem_id: @problem_id, problem: @problem.', array('@user_id' => $user->uid, $form['form']['problem_id'], '@problem' => $form['form']['problem']['#value']->problem), WATCHDOG_ERROR);
     }
   }
 
   if (!$do_something) {
-    form_set_error('', "You have not specified any action to perform.");
+    form_set_error('', 'You have not specified any action to perform.');
     return;
   }
 }
@@ -2370,8 +2449,8 @@ function mfcs_request_problems_0_request_form_submit($form, &$form_state) {
 
       $room_id = (int) $request['top']['room'][0]->value;
       $room_information = mfcs_load_rooms(NULL, NULL, $room_id, TRUE);
-      if (isset($room_information->coordinator_id)) {
-        $new_coordinator_id = $room_information->coordinator_id;
+      if (isset($room_information->room_coordinator_id)) {
+        $new_coordinator_id = $room_information->room_coordinator_id;
       }
 
       $old_coordinator_user = mfcs_load_basic_user_settings_by_user_id($old_coordinator_id);
@@ -2443,7 +2522,12 @@ function mfcs_request_problems_0_request_form_submit($form, &$form_state) {
     else {
       $return_to_problem_page = FALSE;
 
-      mfcs_workflow_step_review($request_id, $user, MFCS_REVIEW_DECISION_REASSIGN_COORDINATOR, MFCS_REVIEW_RESTRICTIONS_MANAGERS, $extra['revisions']['message']);
+      $review_extra = array(
+        'never_requester' => TRUE,
+        'never_coordinator' => TRUE,
+      );
+
+      mfcs_workflow_step_review($request_id, $user, MFCS_REVIEW_DECISION_REASSIGN_COORDINATOR, MFCS_REVIEW_RESTRICTIONS_MANAGERS, $extra['revisions']['message'], $review_extra);
 
       $parameters = array();
       $parameters['changed_by'] = $user->uid;

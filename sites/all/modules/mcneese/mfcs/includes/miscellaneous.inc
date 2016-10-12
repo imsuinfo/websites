@@ -864,14 +864,16 @@ function mfcs_miscellaneous_check_requests_coordinator_out_of_sync($request_id =
     $query->addField('mu', 'banner_id', 'banner_id');
     $query->addField('mu', 'first_name', 'first_name');
     $query->addField('mu', 'last_name', 'last_name');
-    $query->addField('mbr', 'coordinator_id', 'room_coordinator');
+    $query->addField('mbr', 'room_coordinator_id', 'room_coordinator');
+    $query->addField('mbr', 'venue_coordinator_id', 'venue_coordinator');
 
     $status = array(
       MFCS_REQUEST_STATUS_LOCKED,
       MFCS_REQUEST_STATUS_UNLOCKED,
     );
 
-    $query->where('mer.venue_coordinator <> mbr.coordinator_id');
+    // only check room coordinator as the room coordinator is who is assigned to the request, the venue coordinator can be the 'room' coordinator but the room coordinator does not have to be the venue coordinator.
+    $query->where('mer.venue_coordinator <> mbr.room_coordinator_id');
 
     $query->condition('mer.status', $status, 'IN');
 
@@ -904,6 +906,9 @@ function mfcs_miscellaneous_check_requests_coordinator_out_of_sync($request_id =
           ),
           'coordinator_banner' => array(
             'user_id' => $result->room_coordinator,
+          ),
+          'coordinator_venue' => array(
+            'user_id' => $result->venue_coordinator,
           ),
         );
       }
@@ -1102,7 +1107,8 @@ function mfcs_miscellaneous_check_requests_room($request_id = NULL) {
     $query->addField('mbr', 'human_name', 'room_name');
     $query->addField('mbr', 'date', 'room_date');
     $query->addField('mbr', 'disabled', 'room_disabled');
-    $query->addField('mbr', 'coordinator_id', 'room_coordinator_id');
+    $query->addField('mbr', 'room_coordinator_id', 'room_coordinator_id');
+    $query->addField('mbr', 'venue_coordinator_id', 'venue_coordinator_id');
 
     $status = array(
       MFCS_REQUEST_STATUS_LOCKED,
@@ -1597,7 +1603,8 @@ function mfcs_miscellaneous_check_requests_problem_cache_requests($request_id = 
       $query->addField('mbr', 'human_name', 'room_name');
       $query->addField('mbr', 'date', 'room_date');
       $query->addField('mbr', 'disabled', 'room_disabled');
-      $query->addField('mbr', 'coordinator_id', 'room_coordinator_id');
+      $query->addField('mbr', 'room_coordinator_id', 'room_coordinator_id');
+      $query->addField('mbr', 'venue_coordinator_id', 'venue_coordinator_id');
 
       $query->addField('mer', $cache_name, 'cache');
       $query->addField($uncached['alias'], 'value', 'real');
@@ -2043,14 +2050,24 @@ function mfcs_miscellaneous_check_requests($request_id = NULL, $problem_code = N
           $reason .= ' assignment is invalid.';
         }
 
+        $details = array();
+        $details['coordinator'] = array(
+          'id' => $result['coordinator']['user_id'],
+          'name' => $result['coordinator']['name'],
+          'first_name' => $result['coordinator']['first_name'],
+          'last_name' => $result['coordinator']['last_name'],
+        );
+
         $problems[] = array(
           'request_id' => $result['id'],
           'problem' => MFCS_REQUEST_PROBLEM_COORDINATOR,
           'date' => $instance,
           'reason' => $reason,
-          'details' => '',
+          'details' => serialize($details),
         );
+
         unset($reason);
+        unset($details);
       }
       unset($result);
     }
@@ -2064,11 +2081,30 @@ function mfcs_miscellaneous_check_requests($request_id = NULL, $problem_code = N
         $reason .= ' [id: ' . $result['coordinator']['user_id'] . ']';
         $reason .= ' is not the most recent venue coordinator: ';
 
+        $details = array();
+        $details['current_coordinator'] = array(
+          'id' => $result['coordinator']['user_id'],
+          'name' => $result['coordinator']['name'],
+          'first_name' => $result['coordinator']['first_name'],
+          'last_name' => $result['coordinator']['last_name'],
+        );
+
         $coordinator_id = (int) $result['coordinator_banner']['user_id'];
+        $details['new_coordinator'] = array(
+          'id' => $coordinator_id,
+          'name' => NULL,
+          'first_name' => NULL,
+          'last_name' => NULL,
+        );
+
         $new_coordinator_user = mfcs_load_basic_user_settings_by_user_id($coordinator_id);
         if (!empty($new_coordinator_user['name'])) {
+          $details['new_coordinator']['name'] = $new_coordinator_user['name'];
           if (!empty($new_coordinator_user['first_name']) && !empty($new_coordinator_user['first_name'])) {
             $reason .= $new_coordinator_user['first_name'] . ' ' . $new_coordinator_user['last_name'];
+
+            $details['new_coordinator']['first_name'] = $new_coordinator_user['first_name'];
+            $details['new_coordinator']['last_name'] = $new_coordinator_user['last_name'];
           }
           else {
             $reason .= $new_coordinator_user['name'];
@@ -2081,9 +2117,11 @@ function mfcs_miscellaneous_check_requests($request_id = NULL, $problem_code = N
           'problem' => MFCS_REQUEST_PROBLEM_COORDINATOR,
           'date' => $instance,
           'reason' => $reason,
-          'details' => '',
+          'details' => serialize($details),
         );
+
         unset($reason);
+        unset($details);
       }
       unset($result);
     }
@@ -2113,8 +2151,9 @@ function mfcs_miscellaneous_check_requests($request_id = NULL, $problem_code = N
           'problem' => MFCS_REQUEST_PROBLEM_REQUESTER,
           'date' => $instance,
           'reason' => $reason,
-          'details' => '',
+          'details' => serialize(array('requester' => $result['requester'])),
         );
+
         unset($reason);
       }
       unset($result);
@@ -2131,7 +2170,7 @@ function mfcs_miscellaneous_check_requests($request_id = NULL, $problem_code = N
           'problem' => MFCS_REQUEST_PROBLEM_ROOM,
           'date' => $instance,
           'reason' => 'The room ' . $result['room']['human_name'] . ' of ' . $result['building']['human_name'] . ' is unavailable, deleted, or otherwise invalid.',
-          'details' => '',
+          'details' => serialize(array('room' => $result['room'], 'building' => $result['building'], 'location' => $result['location'])),
         );
       }
       unset($result);
@@ -2148,7 +2187,7 @@ function mfcs_miscellaneous_check_requests($request_id = NULL, $problem_code = N
           'problem' => MFCS_REQUEST_PROBLEM_BUILDING,
           'date' => $instance,
           'reason' => 'The building ' . $result['building']['human_name'] . ' is unavailable, deleted, or otherwise invalid.',
-          'details' => '',
+          'details' => serialize(array('building' => $result['building'], 'location' => $result['location'])),
         );
       }
       unset($result);
@@ -2165,7 +2204,7 @@ function mfcs_miscellaneous_check_requests($request_id = NULL, $problem_code = N
           'problem' => MFCS_REQUEST_PROBLEM_LOCATION,
           'date' => $instance,
           'reason' => 'The location ' . $result['location']['human_name'] . ' is unavailable, deleted, or otherwise invalid.',
-          'details' => '',
+          'details' => serialize(array('location' => $result['location'])),
         );
       }
       unset($result);
@@ -2671,7 +2710,7 @@ function mfcs_miscellaneous_problems_request_search($conditions = array(), $opti
  *
  * @see: mfcs_miscellaneous_check_requests()
  */
-function mfcs_mischellaneous_check_requests_for_problems($request_id = NULL) {
+function mfcs_miscellaneous_check_requests_for_problems($request_id = NULL) {
   if (!is_null($request_id) && !cf_is_integer($request_id)) {
     cf_error::invalid_integer('request_id');
     return FALSE;
@@ -2777,7 +2816,7 @@ function mfcs_mischellaneous_check_requests_for_problems($request_id = NULL) {
  * @return bool
  *   TRUE on success, FALSE otherwise.
  */
-function mfcs_mischellaneous_check_users_for_problems($user_id = NULL) {
+function mfcs_miscellaneous_check_users_for_problems($user_id = NULL) {
   if (!is_null($user_id) && !cf_is_integer($user_id)) {
     cf_error::invalid_integer('user_id');
     return FALSE;
@@ -2822,6 +2861,69 @@ function mfcs_mischellaneous_check_users_for_problems($user_id = NULL) {
   unset($all_users);
 
   return TRUE;
+}
+
+/**
+ * Delete all user related problems, restart any sequences, and check for problems.
+ *
+ * This should ideally be called after calling a function such as mfcs_defragment_defrag_user_ids().
+ *
+ * @return bool
+ *   TRUE on success, FALSE otherwise.
+ *
+ * @see mfcs_defragment_defrag_user_ids()
+ */
+function mfcs_miscellaneous_reset_user_problems() {
+  $transaction = db_transaction();
+  try {
+    db_query('update {mfcs_users} set problems = 0');
+    db_query('update {mfcs_users} set updated_problems = :instance', array(':instance' => mfcs_instance()));
+  }
+  catch (Error $e) {
+    unset($transaction);
+    cf_error::on_query_execution($e);
+
+    return FALSE;
+  }
+  catch (Exception $e) {
+    unset($transaction);
+    cf_error::on_query_execution($e);
+
+    return FALSE;
+  }
+
+  return mfcs_miscellaneous_check_users_for_problems();
+}
+
+/**
+ * Delete all request related problems, restart any sequences, and check for problems.
+ *
+ * Warning: current privileges may prevent this function from executing.
+ * In such a case, just run the commands as the database root user.
+ *
+ * @return bool
+ *   TRUE on success, FALSE otherwise.
+ */
+function mfcs_miscellaneous_reset_request_problems() {
+  $transaction = db_transaction();
+  try {
+    db_query('delete from {mfcs_problems_requests}');
+    db_query('alter sequence mfcs_problems_requests_id_seq restart');
+  }
+  catch (Error $e) {
+    unset($transaction);
+    cf_error::on_query_execution($e);
+
+    return FALSE;
+  }
+  catch (Exception $e) {
+    unset($transaction);
+    cf_error::on_query_execution($e);
+
+    return FALSE;
+  }
+
+  return mfcs_miscellaneous_check_requests_for_problems();
 }
 
 /**

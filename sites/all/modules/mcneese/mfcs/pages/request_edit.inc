@@ -57,7 +57,7 @@ function mfcs_request_edit_0_form($form, &$form_state, $request_id, $target_sect
   $request = mfcs_load_request_by_id($request_id);
 
   if (empty($request)) {
-    watchdog(MFCS_WATCHDOG_ID, "Unable to find request with id of @id.", array('@id' => $request_id), WATCHDOG_ERROR);
+    watchdog(MFCS_WATCHDOG_ID, 'Unable to find request with id of @id.', array('@id' => $request_id), WATCHDOG_ERROR);
     drupal_not_found();
     drupal_exit();
   }
@@ -67,7 +67,7 @@ function mfcs_request_edit_0_form($form, &$form_state, $request_id, $target_sect
   $section_information = mfcs_get_request_section_information();
 
   if (empty($section_information[$target_section]['steps'])) {
-    watchdog(MFCS_WATCHDOG_ID, "The section @target_section does not exist or has no steps.", array('@target_section' => $target_section), WATCHDOG_ERROR);
+    watchdog(MFCS_WATCHDOG_ID, 'The section @target_section does not exist or has no steps.', array('@target_section' => $target_section), WATCHDOG_ERROR);
     drupal_not_found();
     drupal_exit();
   }
@@ -79,9 +79,9 @@ function mfcs_request_edit_0_form($form, &$form_state, $request_id, $target_sect
     mfcs_add_canonical_headers('requests/edit-0/' . $request_id . '/' . $target_section);
   }
 
-  $page_title = "Edit Request";
+  $page_title = 'Edit Request';
   if (!empty($request['information']['title'][0]->value)) {
-    $page_title = "Edit Request: " . $request['information']['title'][0]->value;
+    $page_title = 'Edit Request: ' . $request['information']['title'][0]->value;
   }
   drupal_set_title($page_title);
 
@@ -112,6 +112,11 @@ function mfcs_request_edit_0_form($form, &$form_state, $request_id, $target_sect
     '#id' => 'field-form-step',
     '#type' => 'value',
     '#value' => $step,
+  );
+
+  $form['form']['operation'] = array(
+    '#type' => 'value',
+    '#value' => 'edit',
   );
 
   $form['form']['new'] = array(
@@ -176,7 +181,7 @@ function mfcs_request_edit_0_form($form, &$form_state, $request_id, $target_sect
         '#id' => 'submit-request-cancel',
         '#name' => 'submit-request-cancel',
         '#type' => 'submit',
-        '#default_value' => t("Cancel"),
+        '#default_value' => 'Cancel',
       );
     }
     else {
@@ -184,7 +189,7 @@ function mfcs_request_edit_0_form($form, &$form_state, $request_id, $target_sect
         '#id' => 'submit-request-prev',
         '#name' => 'submit-request-prev',
         '#type' => 'submit',
-        '#default_value' => t("Back"),
+        '#default_value' => 'Back',
       );
     }
 
@@ -193,7 +198,7 @@ function mfcs_request_edit_0_form($form, &$form_state, $request_id, $target_sect
         '#id' => 'submit-request-next',
         '#name' => 'submit-request-next',
         '#type' => 'submit',
-        '#default_value' => t("Continue"),
+        '#default_value' => 'Continue',
         '#states' => array(
           'invisible' => array(
             ':input[name="' . $form['form']['parents']['#value']['path'] . 'information][type][0]' . '"]' => array('value' => MFCS_REQUEST_TYPE_QUICK_MEETING),
@@ -205,7 +210,7 @@ function mfcs_request_edit_0_form($form, &$form_state, $request_id, $target_sect
         '#id' => 'submit-request-submit',
         '#name' => 'submit-request-submit',
         '#type' => 'submit',
-        '#default_value' => t("Submit"),
+        '#default_value' => 'Submit',
         '#states' => array(
           'visible' => array(
             ':input[name="' . $form['form']['parents']['#value']['path'] . 'information][type][0]' . '"]' => array('value' => MFCS_REQUEST_TYPE_QUICK_MEETING),
@@ -218,7 +223,7 @@ function mfcs_request_edit_0_form($form, &$form_state, $request_id, $target_sect
         '#id' => 'submit-request-submit',
         '#name' => 'submit-request-submit',
         '#type' => 'submit',
-        '#default_value' => t("Submit"),
+        '#default_value' => 'Submit',
       );
     }
     else {
@@ -226,7 +231,7 @@ function mfcs_request_edit_0_form($form, &$form_state, $request_id, $target_sect
         '#id' => 'submit-request-next',
         '#name' => 'submit-request-next',
         '#type' => 'submit',
-        '#default_value' => t("Continue"),
+        '#default_value' => 'Continue',
       );
     }
   }
@@ -235,14 +240,14 @@ function mfcs_request_edit_0_form($form, &$form_state, $request_id, $target_sect
       '#id' => 'submit-request-cancel',
       '#name' => 'submit-request-cancel',
       '#type' => 'submit',
-      '#default_value' => t("Cancel"),
+      '#default_value' => 'Cancel',
     );
 
     $form['request']['submit'] = array(
       '#id' => 'submit-request-submit',
       '#name' => 'submit-request-submit',
       '#type' => 'submit',
-      '#default_value' => t("Submit"),
+      '#default_value' => 'Submit',
     );
   }
 
@@ -337,7 +342,7 @@ function mfcs_request_edit_0_form_validate($form, &$form_state) {
   $can_edit_request = mfcs_request_access('edit', $request, $user);
 
   if (!$can_edit_request) {
-    form_set_error('', "Illegal operation detected. Unauthorized access attempt.");
+    form_set_error('', 'Illegal operation detected. Unauthorized access attempt.');
     $no_problems = FALSE;
   }
 
@@ -360,7 +365,7 @@ function mfcs_request_edit_0_form_validate($form, &$form_state) {
   }
 
   if (empty($form_state['values']['form']['step'])) {
-    form_set_error('form][step', "An internal error occured. Form Step is not defined. Please contact the support staff.");
+    form_set_error('form][step', 'An internal error occured. Form Step is not defined. Please contact the support staff.');
   }
 
   // do not perform validation when not going backwards or adding fields.
@@ -400,7 +405,7 @@ function mfcs_request_edit_0_form_validate($form, &$form_state) {
           $form_state['values']['form']['step'] = 'rooms';
         }
         elseif ($clicked_id == 'submit-request-add-date') {
-          $next_date = count($form_state['values']['request']['dates']['date']);
+          $next_date = mfcs_get_next_delta(array_keys($form_state['values']['request']['dates']['date']));
           $form_state['values']['request']['dates']['date'][$next_date] = NULL;
           $form_state['values']['request']['dates']['time_start'][$next_date] = NULL;
           $form_state['values']['request']['dates']['time_stop'][$next_date] = NULL;
@@ -456,25 +461,6 @@ function mfcs_request_edit_0_form_validate($form, &$form_state) {
             unset($v);
           }
 
-          if (!empty($date)) {
-            $room_unavailability = mfcs_check_room_availability($room, $date, $time_start, $time_stop, $request_id);
-            if ($room_unavailability === FALSE) {
-              form_set_error('', 'An internal error occurred while checking the room for availability. Please contact the support staff.');
-            }
-            elseif (!empty($room_unavailability['conflicts']) || !empty($room_unavailability['unavailable'])) {
-              $unavailable_message = '<span class="uppercase">Warning</span>: The specified room is currently unavailable for the following dates: ';
-              $unavailable_message .= mfcs_build_room_unavailable_message($room_unavailability);
-              drupal_set_message($unavailable_message, 'warning');
-              unset($unavailable_message);
-            }
-          }
-          unset($room);
-          unset($date);
-          unset($time_start);
-          unset($time_stop);
-          unset($category);
-          unset($room_unavailability);
-
           if (empty($form_state['values']['request']['information']['type'][0])) {
             form_set_error('request][information][type][0', 'The <strong>' . $form['request']['information']['type'][0]['#title'] . '</strong> is required.');
           }
@@ -502,7 +488,7 @@ function mfcs_request_edit_0_form_validate($form, &$form_state) {
         $form_state['rebuild'] = FALSE;
       }
       elseif ($clicked_id == 'submit-request-add-date') {
-        $next_date = count($form_state['values']['request']['dates']['date']);
+        $next_date = mfcs_get_next_delta(array_keys($form_state['values']['request']['dates']['date']));
         $form_state['values']['request']['dates']['date'][$next_date] = NULL;
         $form_state['values']['request']['dates']['time_start'][$next_date] = NULL;
         $form_state['values']['request']['dates']['time_stop'][$next_date] = NULL;
@@ -584,7 +570,7 @@ function mfcs_request_edit_0_form_submit($form, &$form_state) {
 
   $prepared = mfcs_prepare_request_values($request, $changes);
   if ($prepared === FALSE) {
-    form_set_error('form', "An error occurred while trying to save the request. Please contact the support staff.");
+    form_set_error('form', 'An error occurred while trying to save the request. Please contact the support staff.');
 
     $form_state['rebuild'] = TRUE;
     $form_state['redirect'] = FALSE;
@@ -623,18 +609,26 @@ function mfcs_request_edit_0_form_submit($form, &$form_state) {
       }
     }
 
-    if ($status === MFCS_REQUEST_STATUS_LOCKED) {
+    if ($status === MFCS_REQUEST_STATUS_LOCKED || $status === MFCS_REQUEST_STATUS_CLOSED_ACCEPTED || $status === MFCS_REQUEST_STATUS_CLOSED_ACCEPTED_CANCELLED) {
+      $loaded_request = mfcs_load_request_by_id($request_id);
+
+      $revision_id = NULL;
+      if (isset($loaded_request['mer']['revision'][0]->value) && is_numeric($loaded_request['mer']['revision'][0]->value)) {
+        $revision_id = (int) $loaded_request['mer']['revision'][0]->value;
+      }
+
       // do not send e-mail when the previous step is already set to venue available.
-      if ($step !== MFCS_REVIEW_STEP_VENUE_AVAILABLE) {
+      if ($step !== MFCS_REVIEW_STEP_VENUE_AVAILABLE && !is_null($revision_id)) {
         $parameters['amendment'] = TRUE;
-        $parameters['restriction'] = MFCS_REVIEW_RESTRICTIONS_NONE;
+        $parameters['message'] = mfcs_request_edit_0_form_build_revision_history_message($request_id, $revision_id);
+        $parameters['restriction'] = MFCS_REVIEW_RESTRICTIONS_COORDINATOR;
+
+        if (is_bool($parameters['message'])) {
+          unset($parameters['message']);
+        }
+
         mfcs_send_workflow_emails($request_id, $parameters);
       }
-    }
-    elseif ($status === MFCS_REQUEST_STATUS_UNLOCKED) {
-      // send emails when the request has been updated.
-      $parameters['update'] = TRUE;
-      mfcs_send_workflow_emails($request_id, $parameters);
     }
   }
 
@@ -651,6 +645,198 @@ function mfcs_request_edit_0_form_submit($form, &$form_state) {
   else {
     $form_state['redirect'] = $form_state['values']['redirect_to'];
   }
+}
+
+/**
+ * Builds the revision history message for use in amendment messages.
+ *
+ * This does not build HTML, instead it builds plain text.
+ *
+ * @param int $request_id
+ *   The request ID.
+ * @param int $revision_id
+ *   The request's revision ID.
+ *
+ * @return bool|string
+ *   A string containing a message about the changes on success.
+ *   FALSE otherwise.
+ */
+function mfcs_request_edit_0_form_build_revision_history_message($request_id, $revision_id) {
+  if (!cf_is_integer($request_id)) {
+    cf_error::invalid_integer('request_id');
+    return FALSE;
+  }
+
+  if (!cf_is_integer($revision_id)) {
+    cf_error::invalid_integer('revision_id');
+    return FALSE;
+  }
+
+  mfcs_include(MFCS_INCLUDE_TABLE);
+  mfcs_include(MFCS_INCLUDE_LIST_OPTIONS);
+  mfcs_include(MFCS_INCLUDE_VIEW);
+
+  $structure = mfcs_table_structure();
+  $presentation = mfcs_table_presentation();
+  $presentation_tables = mfcs_table_presentation(1);
+
+  // The venue coordinator user id is a 'split' structure and does not normally get displayed.
+  // Manually change the behavior such that the Venue Coordinator Name will be properly presented.
+  $presentation['venue_coordinator']['user_id']['group'] = 'coordinator';
+  $presentation_tables['coordinator']['label'] = 'Venue Coordinator';
+
+  try {
+    $query = db_select('mfcs_request_revisions', 'mrv');
+
+    $query->addField('mrv', 'revision', 'revision');
+    $query->addField('mrv', 'user_id', 'user_id');
+    $query->addField('mrv', 'date', 'date');
+    $query->condition('mrv.request_id', $request_id);
+    $query->condition('mrv.revision', $revision_id);
+
+    $revision = $query->execute()->fetchObject();
+
+    if (is_object($revision)) {
+      $revision_date = (int) $revision->date;
+      $revision_user_id = (int) $revision->user_id;
+    }
+    unset($revision);
+
+    $history = mfcs_load_request_by_timestamp($request_id, $revision_date, $revision_user_id);
+
+    $processed_values = array();
+    foreach ($history as $group_name => $group_values) {
+      if ($group_name == 'current') {
+        continue;
+      }
+
+      if ($group_name == 'mer') {
+        continue;
+      }
+
+      if (empty($group_values)) {
+        continue;
+      }
+
+      foreach ($group_values as $field_name => $field_values) {
+        if (empty($field_values)) {
+          continue;
+        }
+
+        $manual_processing = FALSE;
+        if (isset($structure[$group_name][$field_name]) && array_key_exists('manual_processing', $structure[$group_name][$field_name])) {
+          $manual_processing = $structure[$group_name][$field_name]['manual_processing'];
+        }
+
+        if ($manual_processing) {
+          continue;
+        }
+
+        foreach ($field_values as $key => $value) {
+          if (!is_object($value)) {
+            continue;
+          }
+
+          if (!isset($processed_values[$value->user_id]['fields'][$group_name])) {
+            $processed_values[$value->user_id]['fields'][$group_name] = array(
+              $field_name => array(),
+            );
+          }
+
+          if (!isset($processed_values[$value->user_id]['fields'][$group_name][$field_name])) {
+            $processed_values[$value->user_id]['fields'][$group_name][$field_name] = array();
+          }
+
+          if (isset($presentation[$group_name][$field_name])) {
+            // always display the boolean when displayed in the history log.
+            if (!empty($presentation[$group_name][$field_name]['type'])) {
+              foreach ($presentation[$group_name][$field_name]['type'] as $type_key => $type_value) {
+                if ($type_value == 'boolean') {
+                  if (!empty($presentation[$group_name][$field_name]['display'][$type_key])) {
+                    $display_value = &$presentation[$group_name][$field_name]['display'][$type_key];
+
+                    if ($display_value == 'when_true' || $display_value == 'when_false') {
+                      $display_value = 'raw';
+                    }
+                  }
+                }
+                elseif ($type_value == 'insurance') {
+                  if (isset($presentation[$group_name][$field_name])) {
+                    $presentation[$group_name][$field_name]['display'][$type_key] = 'always';
+                  }
+                }
+              }
+            }
+
+            $options = array(
+              'no_prefix' => TRUE,
+              'no_suffix' => TRUE,
+              'print_delta_for_multiple' => TRUE,
+              'history' => TRUE,
+              'combine_partial' => TRUE,
+              'combine_partial_separator' => FALSE,
+            );
+
+            $value_array = mfcs_view_build_request_value_structure($request_id, $group_name, $field_name, $key, $value, $presentation[$group_name][$field_name], $history, $options);
+            if (is_array($value_array) && !isset($value_array['no_values'])) {
+              $processed_values[$value->user_id]['fields'][$group_name][$field_name][$key] = $value_array;
+            }
+          }
+        }
+      }
+    }
+
+    if (empty($processed_values)) {
+      return '';
+    }
+
+    $message = '';
+    foreach ($processed_values as $user_id => $processed_value) {
+      foreach ($processed_value['fields'] as $group_name => $group_values) {
+        foreach ($group_values as $field_name => $field_values) {
+          $presentation_group = $group_name;
+          if (!empty($presentation[$group_name][$field_name]['group'])) {
+            $presentation_group = $presentation[$group_name][$field_name]['group'];
+          }
+
+          $group_label = '';
+          if (array_key_exists($presentation_group, $presentation_tables)) {
+            $group_label = $presentation_tables[$presentation_group]['label'];
+          }
+
+          $field_label = $field_name;
+          if (!empty($presentation[$group_name][$field_name]['label'])) {
+            $field_label = $presentation[$group_name][$field_name]['label'];
+          }
+
+          if (!empty($field_values)) {
+            if (count($field_values) > 1 || !array_key_exists(0, $field_values)) {
+              $message .= '(' . $group_label . ') ' . $field_label . ' has been set to:' . "\n";
+              foreach ($field_values as $field_key => $field_value) {
+                if (isset($field_value['value']['markup']['#markup'])) {
+                  $message .= ' ' . strip_tags($field_value['value']['markup']['#markup']) . "\n";
+                }
+                else {
+                  $message .= ' [' . $field_key . '] has been altered.' . "\n";
+                }
+              }
+            }
+            else {
+              $message .= '(' . $group_label . ') ' . $field_label . ' has been set to: ' . strip_tags($field_values[0]['value']['markup']['#markup']) . ".\n";
+            }
+          }
+        }
+      }
+    }
+  }
+  catch (Error $e) {
+    cf_error::on_query_execution($e);
+  }
+  catch (Exception $e) {
+    cf_error::on_query_execution($e);
+  }
+
+  return $message;
 }
 
 /**

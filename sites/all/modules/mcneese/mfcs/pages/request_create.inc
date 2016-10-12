@@ -17,14 +17,14 @@
  *   The form array as defined by drupals form api.
  * @param array $form_state
  *   The form state array as defined by drupals form api
- * @param int $clone_request
- *   (optional) When specified, will clone an existing request in which the
+ * @param int $copy_request
+ *   (optional) When specified, will copy an existing request in which the
  *   current user has appropriate access to view and edit.
  *
  * @return array $form
  *   An array containing the generated form.
  */
-function mfcs_request_create_0_form($form, &$form_state, $clone_request = NULL) {
+function mfcs_request_create_0_form($form, &$form_state, $copy_request = NULL) {
   if (!is_array($form)) {
     cf_error::invalid_array('form');
 
@@ -44,34 +44,34 @@ function mfcs_request_create_0_form($form, &$form_state, $clone_request = NULL) 
   $form = array();
 
   $request = NULL;
-  if (!is_null($clone_request)) {
-    if (!cf_is_integer($clone_request)) {
-      cf_error::invalid_integer('clone_request');
+  if (!is_null($copy_request)) {
+    if (!cf_is_integer($copy_request)) {
+      cf_error::invalid_integer('copy_request');
       drupal_not_found();
       drupal_exit();
     }
 
-    $request = mfcs_load_request_by_id($clone_request);
+    $request = mfcs_load_request_by_id($copy_request);
 
-    $can_clone = mfcs_page_request_access('create', $clone_request);
+    $can_copy = mfcs_page_request_access('create', $copy_request);
 
     // if the request does not exist or the user cannot access the request to copy, fallback to a normal create.
-    if (empty($request) || !$can_clone) {
+    if (empty($request) || !$can_copy) {
       $request = NULL;
-      $clone_request = NULL;
+      $copy_request = NULL;
     }
   }
 
-  if (is_null($clone_request)) {
+  if (is_null($copy_request)) {
     mfcs_add_canonical_headers('requests/create-0');
   }
   else {
-    mfcs_add_canonical_headers('requests/create-0/' . $clone_request);
+    mfcs_add_canonical_headers('requests/create-0/' . $copy_request);
   }
 
-  $page_title = "Create Request";
+  $page_title = 'Create Request';
   if (!empty($request['information']['title'][0]->value)) {
-    $page_title = "Copy Request: " . $request['information']['title'][0]->value;
+    $page_title = 'Copy Request: ' . $request['information']['title'][0]->value;
   }
   drupal_set_title($page_title);
 
@@ -110,10 +110,21 @@ function mfcs_request_create_0_form($form, &$form_state, $clone_request = NULL) 
     '#value' => $step,
   );
 
+  $form['form']['operation'] = array(
+    '#type' => 'value',
+    '#value' => 'create',
+  );
+
   $form['form']['new'] = array(
     '#id' => 'field-form-new',
     '#type' => 'value',
     '#value' => TRUE,
+  );
+
+  $form['form']['copy'] = array(
+    '#id' => 'field-form-copy',
+    '#type' => 'value',
+    '#value' => $copy_request,
   );
 
   $form['form']['existing'] = array(
@@ -141,7 +152,7 @@ function mfcs_request_create_0_form($form, &$form_state, $clone_request = NULL) 
     $form['form']['existing']['#value'] = mfcs_get_request_existing_values($request);
     $request_fields = &$form['form']['existing']['#value']['request'];
 
-    // Reset fields that should not be copied by the clone process.
+    // Reset fields that should not be copied by the copy process.
     unset($request_fields['status']);
     unset($request_fields['step']);
     unset($request_fields['review']);
@@ -180,7 +191,7 @@ function mfcs_request_create_0_form($form, &$form_state, $clone_request = NULL) 
       '#id' => 'submit-agreement',
       '#name' => 'submit-agreement',
       '#type' => 'submit',
-      '#default_value' => t("Continue"),
+      '#default_value' => 'Continue',
     );
 
     $form['request'] = array(
@@ -198,7 +209,7 @@ function mfcs_request_create_0_form($form, &$form_state, $clone_request = NULL) 
         '#id' => 'submit-request-prev',
         '#name' => 'submit-request-prev',
         '#type' => 'submit',
-        '#default_value' => t("Back"),
+        '#default_value' => 'Back',
       );
     }
 
@@ -207,7 +218,7 @@ function mfcs_request_create_0_form($form, &$form_state, $clone_request = NULL) 
         '#id' => 'submit-request-next',
         '#name' => 'submit-request-next',
         '#type' => 'submit',
-        '#default_value' => t("Continue"),
+        '#default_value' => 'Continue',
         '#states' => array(
           'invisible' => array(
             ':input[name="' . $form['form']['parents']['#value']['path'] . 'information][type][0]' . '"]' => array('value' => MFCS_REQUEST_TYPE_QUICK_MEETING),
@@ -219,7 +230,7 @@ function mfcs_request_create_0_form($form, &$form_state, $clone_request = NULL) 
         '#id' => 'submit-request-submit',
         '#name' => 'submit-request-submit',
         '#type' => 'submit',
-        '#default_value' => t("Submit"),
+        '#default_value' => 'Submit',
         '#states' => array(
           'visible' => array(
             ':input[name="' . $form['form']['parents']['#value']['path'] . 'information][type][0]' . '"]' => array('value' => MFCS_REQUEST_TYPE_QUICK_MEETING),
@@ -232,7 +243,7 @@ function mfcs_request_create_0_form($form, &$form_state, $clone_request = NULL) 
         '#id' => 'submit-request-submit',
         '#name' => 'submit-request-submit',
         '#type' => 'submit',
-        '#default_value' => t("Submit"),
+        '#default_value' => 'Submit',
       );
     }
     else {
@@ -240,7 +251,7 @@ function mfcs_request_create_0_form($form, &$form_state, $clone_request = NULL) 
         '#id' => 'submit-request-next',
         '#name' => 'submit-request-next',
         '#type' => 'submit',
-        '#default_value' => t("Continue"),
+        '#default_value' => 'Continue',
       );
     }
   }
@@ -321,7 +332,7 @@ function mfcs_request_create_0_form_validate($form, &$form_state) {
   $request_type_options = mfcs_get_request_type_list_options();
 
   if (empty($form_state['values']['form']['step'])) {
-    form_set_error('form][step', "An internal error occured. Form Step is not defined. Please contact the System Administrator.");
+    form_set_error('form][step', 'An internal error occured. Form Step is not defined. Please contact the System Administrator.');
   }
 
   // do not perform validation when not going backwards or adding fields.
@@ -346,10 +357,16 @@ function mfcs_request_create_0_form_validate($form, &$form_state) {
   if ($no_problems) {
     if ($form_state['values']['form']['step'] == 'agreement') {
       if ($form_state['values']['agreement']['agree']) {
-        $form_state['values']['form']['step'] = 'location';
+        // when copying a request, skip the location/building/room because their use should be expected.
+        if (isset($form['form']['copy']['#value']) && is_numeric($form['form']['copy']['#value'])) {
+          $form_state['values']['form']['step'] = 'standard';
+        }
+        else {
+          $form_state['values']['form']['step'] = 'location';
+        }
       }
       else {
-        form_set_error('agreement][agree', "You must agree to the terms to continue.");
+        form_set_error('agreement][agree', 'You must agree to the terms to continue.');
       }
     }
     elseif ($form_state['values']['form']['step'] == 'location') {
@@ -368,7 +385,7 @@ function mfcs_request_create_0_form_validate($form, &$form_state) {
         $form_state['values']['form']['step'] = 'rooms';
       }
       elseif ($clicked_id == 'submit-request-add-date') {
-        $next_date = count($form_state['values']['request']['dates']['date']);
+        $next_date = mfcs_get_next_delta(array_keys($form_state['values']['request']['dates']['date']));
         $form_state['values']['request']['dates']['date'][$next_date] = NULL;
         $form_state['values']['request']['dates']['time_start'][$next_date] = NULL;
         $form_state['values']['request']['dates']['time_stop'][$next_date] = NULL;
@@ -397,7 +414,7 @@ function mfcs_request_create_0_form_validate($form, &$form_state) {
             else {
               $proxies_returned = mfcs_get_proxy_venue_coordinators(array('mpvc.user_id' => $form_state['values']['request']['venue_coordinator']['user_id'][0], 'mpvc.disabled' => 0));
               if (empty($proxies_returned['results'])) {
-                form_set_error('request][information][type][0', "You are not authorized to create a quick meeting.");
+                form_set_error('request][information][type][0', 'You are not authorized to create a quick meeting.');
               }
               else {
                 $form_state['values']['request']['status'][0] = MFCS_REQUEST_STATUS_CLOSED_ACCEPTED;
@@ -407,13 +424,13 @@ function mfcs_request_create_0_form_validate($form, &$form_state) {
             }
           }
           else {
-            form_set_error('request][information][type][0', "An internal error occured while trying to validating the submit process for a quick meeting. Please contact the support staff.");
+            form_set_error('request][information][type][0', 'An internal error occured while trying to validating the submit process for a quick meeting. Please contact the support staff.');
           }
         }
 
         // this can happen when the coordinators classifications change while the user is using the form.
         if (empty($form_state['values']['request']['request_coordinator']['classification'][0]) || !is_numeric($form_state['values']['request']['request_coordinator']['classification'][0])) {
-          form_set_error('request][request_coordinator][classification][0', "No request coordinator classification has been specified.");
+          form_set_error('request][request_coordinator][classification][0', 'No request coordinator classification has been specified.');
         }
 
         if ($clicked_id == 'submit-request-next') {
@@ -463,7 +480,7 @@ function mfcs_request_create_0_form_validate($form, &$form_state) {
             $room_unavailability = mfcs_check_room_availability($room, $date, $time_start, $time_stop);
 
             if ($room_unavailability === FALSE) {
-              form_set_error('', "An internal error occurred while checking the room for availability. Please contact the support staff.");
+              form_set_error('', 'An internal error occurred while checking the room for availability. Please contact the support staff.');
             }
             elseif (!empty($room_unavailability['conflicts']) || !empty($room_unavailability['unavailable'])) {
               $unavailable_message = '<span class="uppercase">Warning</span>: The specified room is currently unavailable for the following dates: ';
@@ -581,7 +598,7 @@ function mfcs_request_create_0_form_validate($form, &$form_state) {
         $form_state['rebuild'] = FALSE;
       }
     }
-    elseif ($form_state['values']['form']['step'] == 'clone') {
+    elseif ($form_state['values']['form']['step'] == 'copy') {
       $form_state['rebuild'] = FALSE;
     }
   }
