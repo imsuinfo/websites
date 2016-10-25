@@ -1,0 +1,544 @@
+<?php
+
+/**
+ * Global Flags.
+ */
+define('KILLFILE_FAKE_DELETE', 1);
+
+
+/**
+ * Implements hook_node_operations().
+ */
+function killfile_node_operations() {
+  $operations = array(
+    'killfile_operation_delete' => array(
+      'label' => t("Killfile selected content"),
+      'callback' => 'killfile_operation_update',
+      'callback arguments' => array('updates' => array('operation' => KILLFILE_FAKE_DELETE)),
+    ),
+  );
+
+  return $operations;
+}
+
+/**
+ * Implements hook_form_FORM_ID_alter() for the node type form.
+ */
+function killfile_form_node_type_form_alter(&$form, &$form_state, $form_id) {
+  if (!is_array($form)) {
+    if (class_exists('cf_error')) {
+      cf_error::invalid_array('form');
+    }
+
+    return;
+  }
+
+  if (cf_is_not_form_state('form_state', $form_state, WATCHDOG_ERROR)) {
+    return;
+  }
+
+  $node_type_settings_object = FALSE;
+  $node_type_settings_array  = array('type' => NULL);
+
+  if (!empty($form['#node_type']->type)){
+    $node_type_settings_objects = killfile_get_node_type_settings(array($form['#node_type']));
+
+    if (!empty($node_type_settings_objects)){
+      $node_type_settings_object = $node_type_settings_objects['0'];
+    }
+  }
+
+  if (is_object($node_type_settings_object)){
+    $node_type_settings_array['type'] = 'type';
+  }
+
+  $form['killfile'] = array(
+    '#type' => 'fieldset',
+    '#title' => t("Killfile"),
+    '#collapsible' => FALSE,
+    '#group' => 'additional_settings',
+    '#tree' => TRUE,
+  );
+
+  $form['killfile']['setting_options'] = array(
+    '#type' => 'checkboxes',
+    '#title' => t("Killfile Settings"),
+    '#default_value' => $node_type_settings_array,
+    '#options' => array(
+      'type' => t("Enable Killfile for this Node Type"),
+    ),
+  );
+
+  $form['#validate'][] = 'killfile_node_type_form_validate';
+  $form['#submit'][] = 'killfile_node_type_form_submit';
+}
+
+/**
+ * Implements hook_form_alter().
+ */
+function killfile_form_alter(&$form, &$form_state, $form_id) {
+  if (!is_array($form)){
+    if (class_exists('cf_error')) {
+      cf_error::invalid_array('form');
+    }
+    return;
+  }
+
+  if (cf_is_not_form_state('form_state', $form_state, WATCHDOG_ERROR)){
+    return;
+  }
+
+  if (cf_is_empty_or_non_string('form_id', $form_id, WATCHDOG_ERROR)){
+    return;
+  }
+
+  if ($form_id == 'node_delete_confirm'){
+    if (!array_key_exists('#node', $form) || !is_object($form['#node']) || !killfile_is_enabled($form['#node']->type)){
+      return;
+    }
+
+    // Override node_delete_confirm_submit() submit handler
+    $form['#submit'][0] = 'killfile_node_delete_confirm_submit';
+
+    // users can still manually go to /node/edit/[nid]/delete
+    // already deleted content cannot be deleted again so if the user does not have permanent delete access, let them know that the content is already deleted
+    // the form submit buttons and actions will be removed in this case
+    $results = killfile_get_node_delete_settings(array($form['#node']));
+
+    if (!empty($results)){
+      drupal_set_message(t("This content is already deleted, you are not authorized to permanently delete this content."), 'warning');
+
+      unset($form['#submit']);
+      unset($form['actions']['submit']);
+    }
+  }
+}
+
+/**
+ * Change any number of nodes.
+ *
+ * @param $nodes_or_nids
+ *   An array of node objects or node ids
+ * @param $updates
+ *   An array of operations to perform for each node id in the nodes_or_nids parameter
+ */
+function killfile_operation_update($nodes_or_nids, $updates) {
+  if (!is_array($updates)) {
+    if (class_exists('cf_error')) {
+      cf_error::invalid_array('updates');
+    }
+
+    return;
+  }
+
+  if (!is_array($nodes_or_nids)) {
+    if (class_exists('cf_error')) {
+      cf_error::invalid_array('nodes_or_nids');
+    }
+
+    return;
+  }
+
+  if (count($nodes_or_nids) == 0){
+    return;
+  }
+
+  if (!array_key_exists('operation', $updates)) {
+    if (class_exists('cf_error')) {
+      cf_error::missing_array_key('updates', 'operation');
+    }
+
+    return;
+  }
+
+  if ($updates['operation'] == KILLFILE_FAKE_DELETE){
+    $nodes = array();
+
+    foreach ($nodes_or_nids as $key => $nid){
+      if (is_object($nid)){
+        $nodes[] = $nid;
+        unset($nodes_or_nids[$key]);
+      }
+    }
+
+    if (count($nodes_or_nids) > 0){
+      $nodes += node_load_multiple($nodes_or_nids);
+    }
+
+    $node_type_settings_objects = killfile_get_node_type_settings($nodes);
+    $node_type_settings_types = array();
+
+    foreach ($node_type_settings_objects as $node_type_settings_object){
+      if (is_object($node_type_settings_object)){
+        $node_type_settings_types[] = $node_type_settings_object->type;
+      }
+    }
+
+    foreach ($nodes as $key => $node){
+      if (is_object($node)){
+        if (!in_array($node->type, $node_type_settings_types)){
+          // @todo: present some sort of watchdog message about not being able to killfile or unkillfile a node because the content type does not have killfile enabled
+          unset($nodes[$key]);
+        }
+      }
+    }
+
+    $result = TRUE;
+
+    if ($updates['operation'] == KILLFILE_FAKE_DELETE){
+      $result = killfile_fake_delete_nodes($nodes, NULL);
+    }
+
+    if ($result){
+      drupal_set_message(t("The update has been performed."));
+    }
+    else {
+      drupal_set_message(t("The update has failed."), 'error');
+    }
+  }
+}
+
+/**
+ * Provides a delete submit confirmation page handles soft and hard deletes.
+ *
+ * @param $form
+ *   A form array
+ * @param $form_state
+ *   A form state
+ */
+function killfile_node_delete_confirm_submit($form, &$form_state){
+  if (!is_array($form)) {
+    if (class_exists('cf_error')) {
+      cf_error::invalid_array('form');
+    }
+
+    return;
+  }
+
+  if (cf_is_not_form_state('form_state', $form_state)) {
+    return;
+  }
+
+  if (!array_key_exists('confirm', $form_state['values'])) {
+    if (class_exists('cf_error')) {
+      cf_error::missing_array_key('form_state[\'values\']', 'confirm');
+    }
+    return;
+  }
+
+  $redirect_to = '<front>';
+
+  if (!empty($form_state['values']['confirm'])){
+    killfile_fake_delete_nodes(array($form['#node']), NULL);
+  }
+
+  $form_state['redirect'] = $redirect_to;
+}
+
+/**
+ * Handles submitting the killfile specific node type settings into the database.
+ *
+ * @param $form
+ *   A form array
+ * @param $form_state
+ *   A form state
+ */
+function killfile_node_type_form_validate($form, &$form_state) {
+  if (cf_is_not_form_state('form_state', $form_state, WATCHDOG_ERROR)) {
+    return;
+  }
+
+  if (!isset($form_state['values']['killfile']) || !cf_has_array_key('setting_options', $form_state['values']['killfile'])){
+    if (class_exists('cf_error')) {
+      cf_error::missing_array_key('form_state[\'values\'][\'killfile\']', 'setting_options');
+    }
+
+    return;
+  }
+
+  if (cf_has_array_key('type', $form_state['values']['killfile']['setting_options']) && $form_state['values']['killfile']['setting_options']['type'] === 0){
+    $has_error = FALSE;
+
+    foreach ($form_state['values']['killfile']['setting_options'] as $key => $value){
+      if ($key === 'type') continue;
+
+      if ($value !== 0) $has_error = TRUE;
+    }
+
+    if ($has_error){
+      form_set_error('killfile][setting_options', t("'Enable Killfile for this Node Type' must be enabled for any killfile setting to be enabled."));
+    }
+  }
+}
+
+/**
+ * Handles submitting the killfile specific node type settings into the database.
+ *
+ * @param $form
+ *   A form array
+ * @param $form_state
+ *   A form state
+ */
+function killfile_node_type_form_submit($form, &$form_state) {
+  if (cf_is_not_form_state('form_state', $form_state, WATCHDOG_ERROR)) {
+    return;
+  }
+
+  if (!cf_has_array_key('setting_options', $form_state['values']['killfile'])) {
+    if (class_exists('cf_error')) {
+      cf_error::missing_array_key('form_state[\'values\'][\'killfile\']', 'setting_options');
+    }
+
+    return;
+  }
+
+  $node_type_settings_objects = killfile_get_node_type_settings(array($form_state['values']['type']));
+  $node_type_settings_object = FALSE;
+
+  if (!empty($node_type_settings_objects)) {
+    $node_type_settings_object = $node_type_settings_objects['0'];
+  }
+
+  if ($form_state['values']['killfile']['setting_options']['type'] === 'type') {
+    $record = array();
+    $record['type'] = $form_state['values']['type'];
+
+    if (is_object($node_type_settings_object)){
+      $primary_keys = array('type');
+      $results = drupal_write_record('killfile_node_types', $record, $primary_keys);
+    }
+    else {
+      $results = drupal_write_record('killfile_node_types', $record);
+    }
+  }
+  else if (is_object($node_type_settings_object)) {
+    db_delete('killfile_node_types')
+      ->condition('type', $form['#node_type']->type)
+      ->execute();
+  }
+}
+
+/**
+ * Loads the node type settings table data for the given node type.
+ *
+ * @param $node_types
+ *   An array of node type strings or node objects
+ *
+ * @return
+ *   A prepared statement object, already executed.
+ */
+function killfile_get_node_type_settings($node_types) {
+  if (!is_array($node_types)) {
+    if (class_exists('cf_error')) {
+      cf_error::invalid_array('node_types');
+    }
+
+    return array();
+  }
+
+  if (count($node_types) == 0){
+    return array();
+  }
+
+  $query = db_select('killfile_node_types', 'knt');
+
+  $query->fields('knt');
+  $query->orderBy('knt.type', 'ASC');
+
+  $or = NULL;
+
+  foreach ($node_types as $node_type){
+    if (is_null($or)) $or = db_or();
+
+    if (is_object($node_type)){
+      $or->condition('type', $node_type->type, '=');
+    }
+    else {
+      $or->condition('type', $node_type, '=');
+    }
+  }
+
+  if (is_object($or)){
+    $query->condition($or);
+  }
+
+  return $query->execute()->fetchAll();
+}
+
+/**
+ * Loads the killfiled node settings table data for the given node ids or nodes.
+ *
+ * @param $nodes_or_nids
+ *   An array of node objects or node ids
+ *
+ * @return
+ *   An array of node delete settings.
+ */
+function killfile_get_node_delete_settings($nodes_or_nids) {
+  if (!is_array($nodes_or_nids)) {
+    if (class_exists('cf_error')) {
+      cf_error::invalid_array('nodes_or_nids');
+    }
+    return array();
+  }
+
+  if (count($nodes_or_nids) == 0){
+    return array();
+  }
+
+  $query = db_select('killfile_nodes', 'kn');
+
+  $query->fields('kn');
+  $query->orderBy('kn.nid', 'ASC');
+
+  $or = NULL;
+
+  foreach ($nodes_or_nids as $node_or_nid){
+    if (is_null($or)) $or = db_or();
+
+    if (is_object($node_or_nid)){
+      $or->condition('nid', $node_or_nid->nid, '=');
+    }
+    else {
+      $or->condition('nid', $node_or_nid, '=');
+    }
+  }
+
+  if (is_object($or)){
+    $query->condition($or);
+  }
+
+  return $query->execute()->fetchAll();
+}
+
+/**
+ * Killfiles an array of nodes.
+ *
+ * @param $nodes_or_nids
+ *   An array of node objects or node ids
+ * @param $account
+ *   (optional) A user object of the user who is performing this operation
+ *
+ * @return
+ *   An array of booleans representing whether or not that node or nid was successfully deleted.
+ *   FALSE is returned if there was a problem with one of the parameters.
+ */
+function killfile_fake_delete_nodes($nodes_or_nids, $account = NULL) {
+  if (!is_array($nodes_or_nids)) {
+    if (class_exists('cf_error')) {
+      cf_error::invalid_array('nodes_or_nids');
+    }
+
+    return FALSE;
+  }
+
+  $results = array();
+
+  if (!is_object($account)){
+    $acting_user = cf_current_user();
+  }
+  else {
+    $acting_user = $account;
+  }
+
+  foreach ($nodes_or_nids as $key => $node_or_nid){
+    if (is_object($node_or_nid)){
+      $node = $node_or_nid;
+    }
+    else if (is_numeric($node_or_nid)){
+      $node = node_load($node_or_nid);
+
+      if (!is_object($node)){
+        if (class_exists('cf_error')) {
+          cf_error::invalid_object('node');
+        }
+
+        $results[$key] = FALSE;
+        continue;
+      }
+    }
+    else {
+      if (class_exists('cf_error')) {
+        cf_error::invalid_variable('node_or_nid', "Must be either a node object or a number");
+      }
+
+      $results[$key] = FALSE;
+      continue;
+    }
+
+    // Make sure the node is not already killfiled
+    $setting_results = killfile_get_node_delete_settings(array($node));
+
+    if (count($setting_results) > 0){
+      $results[$key] = TRUE;
+      continue;
+    }
+
+    // first unpublish the node
+    $node->status = NODE_NOT_PUBLISHED;
+    $node->revision = TRUE;
+    $node->log = t("Deleted by %username.", array('%username' => $acting_user->name));
+
+    // last register the node as killfiled
+    $record = array();
+    $record['nid'] = $node->nid;
+    $record['vid'] = $node->vid;
+    $record['uid'] = $acting_user->uid;
+    $record['timestamp'] = time();
+
+    $node->deleted = $record;
+
+    $transaction = db_transaction();
+    try {
+      node_save($node);
+
+      $results[$key] = drupal_write_record('killfile_nodes', $record);
+
+      db_query("insert into node_deleted select * from node where nid = :nid", array(':nid' => $node->nid));
+      db_query("delete from node where nid = :nid", array(':nid' => $node->nid));
+
+      db_query("insert into node_revision_deleted select * from node_revision where nid = :nid", array(':nid' => $node->nid));
+      db_query("delete from node_revision where nid = :nid", array(':nid' => $node->nid));
+
+      // enforce transaction execution.
+      unset($transaction);
+    }
+    catch (Exception $ex) {
+      $transaction->rollback();
+      if (class_exists('cf_error')) {
+        cf_error::on_query_execution($ex);
+      }
+    }
+
+    if ($results[$key]){
+      if (module_exists('rules')){
+        rules_invoke_event('killfile_after_deleting', $node);
+      }
+    }
+  }
+
+  return $results;
+}
+
+/**
+ * Returns TRUE if killfile functionality is enabled for the given node type.
+ *
+ * @param $node_type
+ *   A node type string
+ *
+ * @return
+ *   TRUE or FALSE depending on whether or not killfile functionality is enabled for the given node type.
+ */
+function killfile_is_enabled($node_type){
+  if (cf_is_empty_or_non_string('node_type', $node_type)){
+    return FALSE;
+  }
+
+  $node_type_settings_objects = killfile_get_node_type_settings(array($node_type));
+
+  if (!empty($node_type_settings_objects) && is_object($node_type_settings_objects['0'])){
+    return TRUE;
+  }
+
+  return FALSE;
+}

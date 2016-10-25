@@ -1,0 +1,14 @@
+# Ignore configuration files that may contain sensitive information.
+sites/default/passwords.php
+sites/default/settings.php
+
+# ignore .gitignore files inside of drupal subdirectories
+sites/all/*/*/.gitignore
+
+# Custom ignores
+*.swp
+
+# Ignore Mac Files
+._*
+.apdisk
+.DS_Store

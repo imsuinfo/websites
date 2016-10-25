@@ -1,0 +1,17 @@
+
+
+
+/*** Common ***/
+.mcneese.node-theme-webform-617 #mcneese-header {
+  display: none;
+}
+
+.mcneese.node-theme-webform-617 #mcneese-www-footer {
+  display: none;
+}
+
+.mcneese.node-theme-webform-617 #mcneese-page {
+  min-height: 0px;
+
+  border-radius: 0px 0px 10px 10px;
+}

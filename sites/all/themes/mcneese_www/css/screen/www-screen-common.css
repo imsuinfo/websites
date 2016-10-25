@@ -1,0 +1,768 @@
+
+
+
+/*** Common ***/
+.mcneese.is-fixed_width #mcneese-www-footer {
+  width: 960px;
+  min-width: 960px;
+  max-width: 960px;
+
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.mcneese #mcneese-top {
+  padding: 0px 5px;
+}
+
+.mcneese #mcneese-page {
+  overflow-x: auto;
+  padding: 0px 5px 5px 5px;
+
+  border-bottom-left-radius: 0px;
+  border-bottom-right-radius: 0px;
+}
+
+.mcneese #mcneese-www-footer {
+  font-size: 11px;
+  line-height: 15px;
+
+  color: #303030;
+  background-color: #c5ceda;
+
+  background-image: url(../../images/footer-full.png);
+  background-repeat: no-repeat;
+  background-position: bottom right;
+
+  height: 188px;
+  min-height: 188px;
+  max-height: 188px;
+
+  border-top: 1px solid #e2edfa;
+  padding: 0px 5px 5px 5px;
+
+  overflow: hidden;
+
+  border-bottom-left-radius: 10px;
+  border-bottom-right-radius: 10px;
+}
+
+.mcneese #mcneese-www-footer > .columns {
+  display: block;
+  vertical-align: top;
+
+  margin: 20px 10px 0px 10px;
+}
+
+
+.mcneese #mcneese-www-footer > .columns-right {
+  margin: 20px 10px 0px 10px;
+}
+
+.mcneese #mcneese-www-footer > .columns-left {
+  min-height: 109px;
+}
+
+.mcneese #mcneese-www-footer > .columns-right {
+  float: right;
+
+  margin-right: 30px;
+}
+
+.mcneese #mcneese-www-footer > .columns > .column > .column-heading > .column-header {
+  font-size: 12px;
+  line-height: 16px;
+
+  margin-bottom: 5px;
+}
+
+.mcneese #mcneese-www-footer > .columns > .column {
+  display: inline-block;
+  vertical-align: top;
+
+  margin: 0px 12px;
+}
+
+.mcneese #mcneese-www-footer > .columns > .column > ul {
+  display: block;
+
+  margin: 0px;
+  padding: 0px;
+}
+
+.mcneese #mcneese-www-footer > .columns > .column > ul > li {
+  display: block;
+
+  margin: 2px 0px;
+  padding: 0px;
+}
+
+.mcneese #mcneese-www-footer > .columns-left > .column-4 > ul > li {
+  display: inline-block;
+
+  margin: 2px 3px;
+}
+
+.mcneese #mcneese-www-footer > .columns-left > .column-4 > ul > li > a > img {
+  width: 21px;
+  min-width: 21px;
+  max-width: 21px;
+
+  height: 21px;
+  min-height: 21px;
+  max-height: 21px;
+}
+
+.mcneese #mcneese-www-footer > .columns-right > .column-1 {
+  margin: 0px 2px;
+}
+
+.mcneese #mcneese-www-footer > .copyright {
+  clear: left;
+
+  height: 53px;
+  min-height: 53px;
+  max-height: 53px;
+
+  overflow: hidden;
+}
+
+.mcneese #mcneese-www-footer > .copyright > .copyright-logo {
+  display: block;
+  float: left;
+
+  margin: 0px 10px;
+}
+
+.mcneese #mcneese-www-footer > .copyright > .copyright-menus {
+  display: block;
+
+  margin: 10px 0px 0px 0px;
+}
+
+.mcneese #mcneese-www-footer > .copyright > .copyright-menus > .copyright-menu {
+  display: block;
+
+  margin: 0px 0px 0px 10px;
+  padding: 0px;
+}
+
+.mcneese #mcneese-www-footer > .copyright > .copyright-menus > .copyright-menu > li {
+  display: inline-block;
+
+  margin: 0px;
+  padding: 0px;
+}
+
+.mcneese #mcneese-www-footer a,
+.mcneese #mcneese-www-footer a:visited {
+  color: #303030;
+  text-decoration: none;
+}
+
+.mcneese #mcneese-www-footer a:focus,
+.mcneese #mcneese-www-footer a:active,
+.mcneese #mcneese-www-footer a:hover {
+  color: #00477f;
+
+  text-decoration: underline;
+}
+
+.mcneese.is-flex_width #mcneese-www-footer {
+  width: inherit;
+  min-width: inherit;
+  max-width: inherit;
+
+  margin: 0px 64px;
+}
+
+.mcneese.is-overlay #mcneese-www-footer {
+  display: none;
+
+  width: 0px;
+  height: 0px;
+
+  margin: 0px;
+  padding: 0px;
+
+  overflow: hidden;
+}
+
+.mcneese > .dev-query,
+.mcneese.is-admin_path > .dev-query {
+  margin-bottom: 10px;
+}
+
+.mcneese .mcneese-content > .group_image,
+.mcneese .mcneese-content > .column-2 > .group_image {
+  display: block;
+  margin: 0px auto;
+}
+
+.mcneese.alias-part-0-future_students #mcneese-header > .header-top > .header-menu-1 > .html_tag-nav > .navigation_list > li.menu_link-future_students > a,
+.mcneese.alias-part-0-future_students #mcneese-header > .header-top > .header-menu-1 > .html_tag-nav > .navigation_list > li.menu_link-future_students > a:visited,
+.mcneese.alias-part-0-current_students #mcneese-header > .header-top > .header-menu-1 > .html_tag-nav > .navigation_list > li.menu_link-current_students > a,
+.mcneese.alias-part-0-current_students #mcneese-header > .header-top > .header-menu-1 > .html_tag-nav > .navigation_list > li.menu_link-current_students > a:visited,
+.mcneese.alias-part-0-online #mcneese-header > .header-top > .header-menu-1 > .html_tag-nav > .navigation_list > li.menu_link-online_learning > a,
+.mcneese.alias-part-0-online #mcneese-header > .header-top > .header-menu-1 > .html_tag-nav > .navigation_list > li.menu_link-online_learning > a:visited,
+.mcneese.alias-part-0-faculty_staff #mcneese-header > .header-top > .header-menu-1 > .html_tag-nav > .navigation_list > li.menu_link-faculty_staff > a,
+.mcneese.alias-part-0-faculty_staff #mcneese-header > .header-top > .header-menu-1 > .html_tag-nav > .navigation_list > li.menu_link-faculty_staff > a:visited,
+.mcneese.alias-part-0-alumni_friends #mcneese-header > .header-top > .header-menu-1 > .html_tag-nav > .navigation_list > li.menu_link-alumni_friends > a,
+.mcneese.alias-part-0-alumni_friends #mcneese-header > .header-top > .header-menu-1 > .html_tag-nav > .navigation_list > li.menu_link-alumni_friends > a:visited {
+  color: #00477f;
+  background-color: #fad703;
+}
+
+
+
+/*** Calendar Specific ***/
+.mcneese #mcneese-page .view .calendar > .contents > .event-item,
+.mcneese #mcneese-page .view .calendar > .contents > .views-field > .field-content > .event-item {
+  color: #ffffff;
+  background-color: #00588f;
+
+  font-size: 10px;
+
+  padding: 3px 4px;
+}
+
+.mcneese #mcneese-page .view .calendar > .contents > .event-item > a,
+.mcneese #mcneese-page .view .calendar > .contents > .views-field > .field-content > .event-item > a {
+  font-size: 11px;
+  font-weight: normal;
+}
+
+.mcneese #mcneese-page .view .calendar > .contents > .event-item > a,
+.mcneese #mcneese-page .view .calendar > .contents > .event-item > a:visited,
+.mcneese #mcneese-page .view .calendar > .contents > .views-field > .field-content > .event-item > a,
+.mcneese #mcneese-page .view .calendar > .contents > .views-field > .field-content > .event-item > a:visited {
+  color: #ffffff;
+}
+
+.mcneese #mcneese-page .view .calendar > .contents > .event-item > a:focus,
+.mcneese #mcneese-page .view .calendar > .contents > .event-item > a:active,
+.mcneese #mcneese-page .view .calendar > .contents > .event-item > a:hover,
+.mcneese #mcneese-page .view .calendar > .contents > .views-field > .field-content > .event-item > a:focus,
+.mcneese #mcneese-page .view .calendar > .contents > .views-field > .field-content > .event-item > a:active,
+.mcneese #mcneese-page .view .calendar > .contents > .views-field > .field-content > .event-item > a:hover {
+  color: #ffff00;
+}
+
+.mcneese #mcneese-page .view .calendar > .contents > .event-item.event-250,
+.mcneese #mcneese-page .view .calendar > .contents > .event-item.event-256,
+.mcneese #mcneese-page .view .calendar > .contents > .views-field > .field-content > .event-item.event-250,
+.mcneese #mcneese-page .view .calendar > .contents > .views-field > .field-content > .event-item.event-256 {
+  color: #ffffff;
+  background-color: #713936;
+}
+
+.mcneese #mcneese-page .view .calendar > .contents > .event-item.event-650 > a,
+.mcneese #mcneese-page .view .calendar > .contents > .event-item.event-650 > a:visited,
+.mcneese #mcneese-page .view .calendar > .contents > .views-field > .field-content > .event-item.event-650 > a,
+.mcneese #mcneese-page .view .calendar > .contents > .views-field > .field-content > .event-item.event-650 > a:visited {
+  color: #00477f;
+}
+
+.mcneese #mcneese-page .view .calendar > .contents > .event-item.event-292,
+.mcneese #mcneese-page .view .calendar > .contents > .views-field > .field-content > .event-item.event-292 {
+  color: #ffffff;
+  background-color: #325c3f;
+}
+
+.mcneese #mcneese-page .view .calendar > .contents > .event-item.event-292 > a,
+.mcneese #mcneese-page .view .calendar > .contents > .event-item.event-292 > a:visited,
+.mcneese #mcneese-page .view .calendar > .contents > .views-field > .field-content > .event-item.event-292 > a,
+.mcneese #mcneese-page .view .calendar > .contents > .views-field > .field-content > .event-item.event-292 > a:visited {
+  color: #ffffff;
+}
+
+.mcneese #mcneese-page .view .calendar > .contents > .event-item.event-292 > a:focus,
+.mcneese #mcneese-page .view .calendar > .contents > .event-item.event-292 > a:active,
+.mcneese #mcneese-page .view .calendar > .contents > .event-item.event-292 > a:hover,
+.mcneese #mcneese-page .view .calendar > .contents > .views-field > .field-content > .event-item.event-292 > a:focus,
+.mcneese #mcneese-page .view .calendar > .contents > .views-field > .field-content > .event-item.event-292 > a:active,
+.mcneese #mcneese-page .view .calendar > .contents > .views-field > .field-content > .event-item.event-292 > a:hover {
+  color: #fff89a;
+}
+
+.mcneese #mcneese-page .view .calendar > .contents > .event-item.event-399,
+.mcneese #mcneese-page .view .calendar > .contents > .views-field > .field-content > .event-item.event-399 {
+  color: #ffffff;
+  background-color: #794700;
+}
+
+.mcneese #mcneese-page .view .calendar > .contents > .event-item.event-399 > a,
+.mcneese #mcneese-page .view .calendar > .contents > .event-item.event-399 > a:visited,
+.mcneese #mcneese-page .view .calendar > .contents > .views-field > .field-content > .event-item.event-399 > a,
+.mcneese #mcneese-page .view .calendar > .contents > .views-field > .field-content > .event-item.event-399 > a:visited {
+  color: #ffffff;
+}
+
+.mcneese #mcneese-page .view .calendar > .contents > .event-item.event-251,
+.mcneese #mcneese-page .view .calendar > .contents > .event-item.event-253,
+.mcneese #mcneese-page .view .calendar > .contents > .event-item.event-257,
+.mcneese #mcneese-page .view .calendar > .contents > .event-item.event-258,
+.mcneese #mcneese-page .view .calendar > .contents > .event-item.event-259,
+.mcneese #mcneese-page .view .calendar > .contents > .views-field > .field-content > .event-item.event-251,
+.mcneese #mcneese-page .view .calendar > .contents > .views-field > .field-content > .event-item.event-253,
+.mcneese #mcneese-page .view .calendar > .contents > .views-field > .field-content > .event-item.event-257,
+.mcneese #mcneese-page .view .calendar > .contents > .views-field > .field-content > .event-item.event-258,
+.mcneese #mcneese-page .view .calendar > .contents > .views-field > .field-content > .event-item.event-259 {
+  color: #ffffff;
+  background-color: #673c6b;
+}
+
+.mcneese #mcneese-page .view .calendar > .contents > .event-item.event-251 > a,
+.mcneese #mcneese-page .view .calendar > .contents > .event-item.event-254 > a,
+.mcneese #mcneese-page .view .calendar > .contents > .event-item.event-257 > a,
+.mcneese #mcneese-page .view .calendar > .contents > .event-item.event-258 > a,
+.mcneese #mcneese-page .view .calendar > .contents > .event-item.event-259 > a,
+.mcneese #mcneese-page .view .calendar > .contents > .event-item.event-251 > a:visited,
+.mcneese #mcneese-page .view .calendar > .contents > .event-item.event-254 > a:visited,
+.mcneese #mcneese-page .view .calendar > .contents > .event-item.event-257 > a:visited,
+.mcneese #mcneese-page .view .calendar > .contents > .event-item.event-258 > a:visited,
+.mcneese #mcneese-page .view .calendar > .contents > .event-item.event-259 > a:visited,
+.mcneese #mcneese-page .view .calendar > .contents > .views-field > .field-content > .event-item.event-251 > a,
+.mcneese #mcneese-page .view .calendar > .contents > .views-field > .field-content > .event-item.event-253 > a,
+.mcneese #mcneese-page .view .calendar > .contents > .views-field > .field-content > .event-item.event-257 > a,
+.mcneese #mcneese-page .view .calendar > .contents > .views-field > .field-content > .event-item.event-258 > a,
+.mcneese #mcneese-page .view .calendar > .contents > .views-field > .field-content > .event-item.event-259 > a,
+.mcneese #mcneese-page .view .calendar > .contents > .views-field > .field-content > .event-item.event-251 > a:visited,
+.mcneese #mcneese-page .view .calendar > .contents > .views-field > .field-content > .event-item.event-253 > a:visited,
+.mcneese #mcneese-page .view .calendar > .contents > .views-field > .field-content > .event-item.event-257 > a:visited,
+.mcneese #mcneese-page .view .calendar > .contents > .views-field > .field-content > .event-item.event-258 > a:visited,
+.mcneese #mcneese-page .view .calendar > .contents > .views-field > .field-content > .event-item.event-259 > a:visited {
+  color: #ffffff;
+}
+
+.mcneese #mcneese-page .view .calendar > .contents > .event-item.event-654,
+.mcneese #mcneese-page .view .calendar > .contents > .views-field > .field-content > .event-item.event-654 {
+  color: #ffffff;
+  background-color: #335a5f;
+}
+
+.mcneese #mcneese-page .view .calendar > .contents > .event-item.event-654 > a,
+.mcneese #mcneese-page .view .calendar > .contents > .event-item.event-654 > a:visited,
+.mcneese #mcneese-page .view .calendar > .contents > .views-field > .field-content > .event-item.event-654 > a,
+.mcneese #mcneese-page .view .calendar > .contents > .views-field > .field-content > .event-item.event-654 > a:visited {
+  color: #ffffff;
+}
+
+.mcneese #mcneese-page .view .calendar > .contents > .event-item.event-654 > a:focus,
+.mcneese #mcneese-page .view .calendar > .contents > .event-item.event-654 > a:active,
+.mcneese #mcneese-page .view .calendar > .contents > .event-item.event-654 > a:hover,
+.mcneese #mcneese-page .view .calendar > .contents > .views-field > .field-content > .event-item.event-654 > a:focus,
+.mcneese #mcneese-page .view .calendar > .contents > .views-field > .field-content > .event-item.event-654 > a:active,
+.mcneese #mcneese-page .view .calendar > .contents > .views-field > .field-content > .event-item.event-654 > a:hover {
+  color: #fffab9;
+}
+
+.mcneese #mcneese-page .view .calendar > .contents > .event-item.event-249,
+.mcneese #mcneese-page .view .calendar > .contents > .event-item.event-252,
+.mcneese #mcneese-page .view .calendar > .contents > .event-item.event-255,
+.mcneese #mcneese-page .view .calendar > .contents > .views-field > .field-content > .event-item.event-249,
+.mcneese #mcneese-page .view .calendar > .contents > .views-field > .field-content > .event-item.event-252,
+.mcneese #mcneese-page .view .calendar > .contents > .views-field > .field-content > .event-item.event-255 {
+  color: #054b80;
+  background-color: #e6e993;
+}
+
+.mcneese #mcneese-page .view .calendar > .contents > .event-item.event-249 > a,
+.mcneese #mcneese-page .view .calendar > .contents > .event-item.event-252 > a,
+.mcneese #mcneese-page .view .calendar > .contents > .event-item.event-255 > a,
+.mcneese #mcneese-page .view .calendar > .contents > .event-item.event-249 > a:visited,
+.mcneese #mcneese-page .view .calendar > .contents > .event-item.event-252 > a:visited,
+.mcneese #mcneese-page .view .calendar > .contents > .event-item.event-255 > a:visited,
+.mcneese #mcneese-page .view .calendar > .contents > .views-field > .field-content > .event-item.event-249 > a,
+.mcneese #mcneese-page .view .calendar > .contents > .views-field > .field-content > .event-item.event-252 > a,
+.mcneese #mcneese-page .view .calendar > .contents > .views-field > .field-content > .event-item.event-255 > a,
+.mcneese #mcneese-page .view .calendar > .contents > .views-field > .field-content > .event-item.event-249 > a:visited,
+.mcneese #mcneese-page .view .calendar > .contents > .views-field > .field-content > .event-item.event-252 > a:visited,
+.mcneese #mcneese-page .view .calendar > .contents > .views-field > .field-content > .event-item.event-255 > a:visited {
+  color: #054b80;
+}
+
+.mcneese #mcneese-page .view .calendar > .contents > .event-item.event-249 > a:focus,
+.mcneese #mcneese-page .view .calendar > .contents > .event-item.event-252 > a:focus,
+.mcneese #mcneese-page .view .calendar > .contents > .event-item.event-255 > a:focus,
+.mcneese #mcneese-page .view .calendar > .contents > .event-item.event-249 > a:active,
+.mcneese #mcneese-page .view .calendar > .contents > .event-item.event-252 > a:active,
+.mcneese #mcneese-page .view .calendar > .contents > .event-item.event-255 > a:active,
+.mcneese #mcneese-page .view .calendar > .contents > .event-item.event-249 > a:hover,
+.mcneese #mcneese-page .view .calendar > .contents > .event-item.event-252 > a:hover,
+.mcneese #mcneese-page .view .calendar > .contents > .event-item.event-255 > a:hover,
+.mcneese #mcneese-page .view .calendar > .contents > .views-field > .field-content > .event-item.event-249 > a:focus,
+.mcneese #mcneese-page .view .calendar > .contents > .views-field > .field-content > .event-item.event-252 > a:focus,
+.mcneese #mcneese-page .view .calendar > .contents > .views-field > .field-content > .event-item.event-255 > a:focus,
+.mcneese #mcneese-page .view .calendar > .contents > .views-field > .field-content > .event-item.event-249 > a:active,
+.mcneese #mcneese-page .view .calendar > .contents > .views-field > .field-content > .event-item.event-252 > a:active,
+.mcneese #mcneese-page .view .calendar > .contents > .views-field > .field-content > .event-item.event-255 > a:active,
+.mcneese #mcneese-page .view .calendar > .contents > .views-field > .field-content > .event-item.event-249 > a:hover,
+.mcneese #mcneese-page .view .calendar > .contents > .views-field > .field-content > .event-item.event-252 > a:hover,
+.mcneese #mcneese-page .view .calendar > .contents > .views-field > .field-content > .event-item.event-255 > a:hover {
+  color: #950000;
+}
+
+.mcneese #mcneese-page .view .calendar > .contents > .event-item.event-725,
+.mcneese #mcneese-page .view .calendar > .contents > .views-field > .field-content > .event-item.event-725 {
+  color: #ffffff;
+  background-color: #003354;
+}
+
+.mcneese #mcneese-page .view .calendar > .contents > .event-item.event-726,
+.mcneese #mcneese-page .view .calendar > .contents > .views-field > .field-content > .event-item.event-726 {
+  color: #ffffff;
+  background-color: #7f008f;
+}
+
+.mcneese #mcneese-page .view .calendar > .contents > .event-item.event-727,
+.mcneese #mcneese-page .view .calendar > .contents > .views-field > .field-content > .event-item.event-727 {
+  color: #ffffff;
+  background-color: #8f3700;
+}
+
+.mcneese #mcneese-page .view .calendar > .contents > .event-item.event-728,
+.mcneese #mcneese-page .view .calendar > .contents > .views-field > .field-content > .event-item.event-728 {
+  color: #ffffff;
+  background-color: #095000;
+}
+
+.mcneese #mcneese-page .view .calendar > .contents > .event-item.event-737,
+.mcneese #mcneese-page .view .calendar > .contents > .views-field > .field-content > .event-item.event-737 {
+  color: #ffffff;
+  background-color: #970038;
+}
+
+.mcneese #mcneese-page .view .calendar > .contents > .event-item.event-725 > a,
+.mcneese #mcneese-page .view .calendar > .contents > .event-item.event-726 > a,
+.mcneese #mcneese-page .view .calendar > .contents > .event-item.event-727 > a,
+.mcneese #mcneese-page .view .calendar > .contents > .event-item.event-728 > a,
+.mcneese #mcneese-page .view .calendar > .contents > .event-item.event-737 > a,
+.mcneese #mcneese-page .view .calendar > .contents > .event-item.event-725 > a:visited,
+.mcneese #mcneese-page .view .calendar > .contents > .event-item.event-726 > a:visited,
+.mcneese #mcneese-page .view .calendar > .contents > .event-item.event-727 > a:visited,
+.mcneese #mcneese-page .view .calendar > .contents > .event-item.event-728 > a:visited,
+.mcneese #mcneese-page .view .calendar > .contents > .event-item.event-737 > a:visited,
+.mcneese #mcneese-page .view .calendar > .contents > .views-field > .field-content > .event-item.event-725 > a,
+.mcneese #mcneese-page .view .calendar > .contents > .views-field > .field-content > .event-item.event-726 > a,
+.mcneese #mcneese-page .view .calendar > .contents > .views-field > .field-content > .event-item.event-727 > a,
+.mcneese #mcneese-page .view .calendar > .contents > .views-field > .field-content > .event-item.event-728 > a,
+.mcneese #mcneese-page .view .calendar > .contents > .views-field > .field-content > .event-item.event-737 > a,
+.mcneese #mcneese-page .view .calendar > .contents > .views-field > .field-content > .event-item.event-725 > a:visited
+.mcneese #mcneese-page .view .calendar > .contents > .views-field > .field-content > .event-item.event-726 > a:visited
+.mcneese #mcneese-page .view .calendar > .contents > .views-field > .field-content > .event-item.event-727 > a:visited
+.mcneese #mcneese-page .view .calendar > .contents > .views-field > .field-content > .event-item.event-728 > a:visited
+.mcneese #mcneese-page .view .calendar > .contents > .views-field > .field-content > .event-item.event-737 > a:visited {
+  color: #ffffff;
+}
+
+.mcneese #mcneese-page .view .calendar > .contents > .event-item.event-725 > a:focus,
+.mcneese #mcneese-page .view .calendar > .contents > .event-item.event-726 > a:focus,
+.mcneese #mcneese-page .view .calendar > .contents > .event-item.event-727 > a:focus,
+.mcneese #mcneese-page .view .calendar > .contents > .event-item.event-728 > a:focus,
+.mcneese #mcneese-page .view .calendar > .contents > .event-item.event-737 > a:focus,
+.mcneese #mcneese-page .view .calendar > .contents > .event-item.event-725 > a:active,
+.mcneese #mcneese-page .view .calendar > .contents > .event-item.event-726 > a:active,
+.mcneese #mcneese-page .view .calendar > .contents > .event-item.event-727 > a:active,
+.mcneese #mcneese-page .view .calendar > .contents > .event-item.event-728 > a:active,
+.mcneese #mcneese-page .view .calendar > .contents > .event-item.event-737 > a:active,
+.mcneese #mcneese-page .view .calendar > .contents > .event-item.event-725 > a:hover,
+.mcneese #mcneese-page .view .calendar > .contents > .event-item.event-726 > a:hover,
+.mcneese #mcneese-page .view .calendar > .contents > .event-item.event-727 > a:hover,
+.mcneese #mcneese-page .view .calendar > .contents > .event-item.event-728 > a:hover,
+.mcneese #mcneese-page .view .calendar > .contents > .event-item.event-737 > a:hover,
+.mcneese #mcneese-page .view .calendar > .contents > .views-field > .field-content > .event-item.event-725 > a:focus,
+.mcneese #mcneese-page .view .calendar > .contents > .views-field > .field-content > .event-item.event-726 > a:focus,
+.mcneese #mcneese-page .view .calendar > .contents > .views-field > .field-content > .event-item.event-727 > a:focus,
+.mcneese #mcneese-page .view .calendar > .contents > .views-field > .field-content > .event-item.event-728 > a:focus,
+.mcneese #mcneese-page .view .calendar > .contents > .views-field > .field-content > .event-item.event-737 > a:focus,
+.mcneese #mcneese-page .view .calendar > .contents > .views-field > .field-content > .event-item.event-725 > a:active,
+.mcneese #mcneese-page .view .calendar > .contents > .views-field > .field-content > .event-item.event-726 > a:active,
+.mcneese #mcneese-page .view .calendar > .contents > .views-field > .field-content > .event-item.event-727 > a:active,
+.mcneese #mcneese-page .view .calendar > .contents > .views-field > .field-content > .event-item.event-728 > a:active,
+.mcneese #mcneese-page .view .calendar > .contents > .views-field > .field-content > .event-item.event-737 > a:active,
+.mcneese #mcneese-page .view .calendar > .contents > .views-field > .field-content > .event-item.event-725 > a:hover,
+.mcneese #mcneese-page .view .calendar > .contents > .views-field > .field-content > .event-item.event-726 > a:hover,
+.mcneese #mcneese-page .view .calendar > .contents > .views-field > .field-content > .event-item.event-727 > a:hover,
+.mcneese #mcneese-page .view .calendar > .contents > .views-field > .field-content > .event-item.event-728 > a:hover,
+.mcneese #mcneese-page .view .calendar > .contents > .views-field > .field-content > .event-item.event-737 > a:hover {
+  color: #fffab9;
+}
+
+/*** wwwdev.mcneese.edu-specific ***/
+.mcneese.at-wwwdev_mcneese_edu,
+.mcneese.at-wwwdev {
+  color: #ffffff;
+  background-color: #000000;
+}
+
+.mcneese.at-wwwdev_mcneese_edu #cboxLoadedContent,
+.mcneese.at-wwwdev #cboxLoadedContent {
+  color: #000000;
+}
+
+.mcneese.at-wwwdev_mcneese_edu #mcneese-messages.fixed.collapsed,
+.mcneese.at-wwwdev #mcneese-messages.fixed.collapsed {
+  background-image: url(../../images/messages-alt.png);
+
+  background-color: #000000;
+}
+
+.mcneese.at-wwwdev_mcneese_edu #mcneese-help.fixed.collapsed,
+.mcneese.at-wwwdev #mcneese-help.fixed.collapsed {
+  background-color: #000000;
+}
+
+.mcneese.at-wwwdev_mcneese_edu #mcneese-information.fixed.collapsed,
+.mcneese.at-wwwdev #mcneese-information.fixed.collapsed {
+  background-image: url(../../images/information-alt.png);
+
+  background-color: #000000;
+}
+
+.mcneese.at-wwwdev_mcneese_edu #mcneese-tabs.fixed.collapsed,
+.mcneese.at-wwwdev #mcneese-tabs.fixed.collapsed {
+  background-color: #000000;
+}
+
+.mcneese.at-wwwdev_mcneese_edu #mcneese-action_links.fixed.collapsed,
+.mcneese.at-wwwdev #mcneese-action_links.fixed.collapsed {
+  background-color: #000000;
+}
+
+.mcneese.at-wwwdev_mcneese_edu #mcneese-breadcrumb.fixed.collapsed,
+.mcneese.at-wwwdev #mcneese-breadcrumb.fixed.collapsed {
+  background-color: #000000;
+}
+
+.mcneese.at-wwwdev_mcneese_edu #mcneese-page-side.fixed.collapsed,
+.mcneese.at-wwwdev #mcneese-page-side.fixed.collapsed {
+  background-image: url(../../images/side-alt.png);
+
+  background-color: #000000;
+}
+
+.mcneese.at-wwwdev_mcneese_edu #mcneese-page-document-outline.fixed.collapsed,
+.mcneese.at-wwwdev #mcneese-page-document-outline.fixed.collapsed {
+  background-color: #000000;
+}
+
+.mcneese.at-wwwdev_mcneese_edu #mcneese-messages.fixed.collapsed:hover,
+.mcneese.at-wwwdev_mcneese_edu #mcneese-messages.fixed.collapsed:active,
+.mcneese.at-wwwdev_mcneese_edu #mcneese-messages.fixed.collapsed:focus,
+.mcneese.at-wwwdev #mcneese-messages.fixed.collapsed:hover,
+.mcneese.at-wwwdev #mcneese-messages.fixed.collapsed:active,
+.mcneese.at-wwwdev #mcneese-messages.fixed.collapsed:focus {
+  background-image: url(../../images/messages.png);
+  background-color: #fffff0;
+}
+
+.mcneese.at-wwwdev_mcneese_edu #mcneese-help.fixed.collapsed:hover,
+.mcneese.at-wwwdev_mcneese_edu #mcneese-help.fixed.collapsed:active,
+.mcneese.at-wwwdev_mcneese_edu #mcneese-help.fixed.collapsed:focus,
+.mcneese.at-wwwdev #mcneese-help.fixed.collapsed:hover,
+.mcneese.at-wwwdev #mcneese-help.fixed.collapsed:active,
+.mcneese.at-wwwdev #mcneese-help.fixed.collapsed:focus {
+  background-color: #fff0fb;
+}
+
+.mcneese.at-wwwdev_mcneese_edu #mcneese-information.fixed.collapsed:hover,
+.mcneese.at-wwwdev_mcneese_edu #mcneese-information.fixed.collapsed:active,
+.mcneese.at-wwwdev_mcneese_edu #mcneese-information.fixed.collapsed:focus,
+.mcneese.at-wwwdev #mcneese-information.fixed.collapsed:hover,
+.mcneese.at-wwwdev #mcneese-information.fixed.collapsed:active,
+.mcneese.at-wwwdev #mcneese-information.fixed.collapsed:focus {
+  background-image: url(../../images/information.png);
+  background-color: #eff0d6;
+}
+
+.mcneese.at-wwwdev_mcneese_edu #mcneese-tabs.fixed.collapsed:hover,
+.mcneese.at-wwwdev_mcneese_edu #mcneese-tabs.fixed.collapsed:active,
+.mcneese.at-wwwdev_mcneese_edu #mcneese-tabs.fixed.collapsed:focus,
+.mcneese.at-wwwdev #mcneese-tabs.fixed.collapsed:hover,
+.mcneese.at-wwwdev #mcneese-tabs.fixed.collapsed:active,
+.mcneese.at-wwwdev #mcneese-tabs.fixed.collapsed:focus {
+  background-color: transparent;
+}
+
+.mcneese.at-wwwdev_mcneese_edu #mcneese-action_links.fixed.collapsed:hover,
+.mcneese.at-wwwdev_mcneese_edu #mcneese-action_links.fixed.collapsed:active,
+.mcneese.at-wwwdev_mcneese_edu #mcneese-action_links.fixed.collapsed:focus,
+.mcneese.at-wwwdev #mcneese-action_links.fixed.collapsed:hover,
+.mcneese.at-wwwdev #mcneese-action_links.fixed.collapsed:active,
+.mcneese.at-wwwdev #mcneese-action_links.fixed.collapsed:focus {
+  background-color: transparent;
+}
+
+.mcneese.at-wwwdev_mcneese_edu #mcneese-breadcrumb.fixed.collapsed:hover,
+.mcneese.at-wwwdev_mcneese_edu #mcneese-breadcrumb.fixed.collapsed:active,
+.mcneese.at-wwwdev_mcneese_edu #mcneese-breadcrumb.fixed.collapsed:focus,
+.mcneese.at-wwwdev #mcneese-breadcrumb.fixed.collapsed:hover,
+.mcneese.at-wwwdev #mcneese-breadcrumb.fixed.collapsed:active,
+.mcneese.at-wwwdev #mcneese-breadcrumb.fixed.collapsed:focus {
+  background-color: transparent;
+}
+
+.mcneese.at-wwwdev_mcneese_edu #mcneese-page-side.fixed.collapsed:hover,
+.mcneese.at-wwwdev_mcneese_edu #mcneese-page-side.fixed.collapsed:active,
+.mcneese.at-wwwdev_mcneese_edu #mcneese-page-side.fixed.collapsed:focus,
+.mcneese.at-wwwdev #mcneese-page-side.fixed.collapsed:hover,
+.mcneese.at-wwwdev #mcneese-page-side.fixed.collapsed:active,
+.mcneese.at-wwwdev #mcneese-page-side.fixed.collapsed:focus {
+  background-color: #ffffff;
+  background-image: url(../../images/side.png);
+}
+
+.mcneese.at-wwwdev_mcneese_edu #mcneese-page-watermarks-pre,
+.mcneese.at-wwwdev #mcneese-page-watermarks-pre,
+.mcneese.at-wwwdev_mcneese_edu #mcneese-page-watermarks-post,
+.mcneese.at-wwwdev #mcneese-page-watermarks-post {
+  color: #ffffff;
+  background-color: transparent;
+}
+
+.mcneese.at-wwwdev_mcneese_edu #mcneese-header #mcneese-site-logo > .site-logo,
+.mcneese.at-wwwdev #mcneese-header #mcneese-site-logo > .site-logo,
+.mcneese.at-wwwdev2 #mcneese-header #mcneese-site-logo > .site-logo {
+  background-image: url(../../images/development.png);
+}
+
+.mcneese.at-wwwdev_mcneese_edu #mcneese-page-document-outline.fixed.collapsed:hover,
+.mcneese.at-wwwdev_mcneese_edu #mcneese-page-document-outline.fixed.collapsed:active,
+.mcneese.at-wwwdev_mcneese_edu #mcneese-page-document-outline.fixed.collapsed:focus,
+.mcneese.at-wwwdev #mcneese-page-document-outline.fixed.collapsed:hover,
+.mcneese.at-wwwdev #mcneese-page-document-outline.fixed.collapsed:active,
+.mcneese.at-wwwdev #mcneese-page-document-outline.fixed.collapsed:focus {
+  background-color: #e4f2ff;
+}
+
+
+
+/*** sandbox.mcneese.edu-specific ***/
+.mcneese.at-sandbox_mcneese_edu #mcneese-header #mcneese-site-logo > .site-logo,
+.mcneese.at-sandbox #mcneese-header #mcneese-site-logo > .site-logo {
+  background-image: url(../../images/sandbox.png);
+}
+
+
+
+/*** Search Box Links ***/
+.mcneese #mcneese-search-box > .search_box-links > .navigation_list > .search_form-top_box_links-ada {
+  width: 30px;
+}
+
+.mcneese #mcneese-search-box > .search_box-links > .navigation_list > .search_form-top_box_links-staff {
+  width: 115px;
+}
+
+.mcneese #mcneese-search-box > .search_box-links > .navigation_list > .search_form-top_box_links-index {
+  width: 50px;
+}
+
+.mcneese #mcneese-search-box > .search_box-links > .navigation_list > .search_form-top_box_links-bar {
+  width: 4px;
+}
+
+
+
+/*** Fix/Reduce form problems ***/
+.mcneese .mcneese-content-main > form.node-form .vertical-tabs > .vertical-tabs-panes .form-item-workbench-access-id > select,
+.mcneese .mcneese-content-main > form.node-form .vertical-tabs > .vertical-tabs-panes .form-item > .image-widget > .image-preview > img {
+  max-width: 100%;
+}
+
+
+
+/*** Media Browser ***/
+.mcneese.path-media_browser > #mcneese-www-footer {
+  display: none;
+}
+
+
+
+/*** Apply Now Adjustments ***/
+.mcneese #mcneese-header > .header-top > .header-menu-1 > .html_tag-nav > .navigation_list > .menu_link-apply-now > a {
+  font-size: 14px;
+  font-weight: bold;
+  text-align: center;
+
+  width: 87px;
+  min-width: 87px;
+  max-width: 87px;
+
+  line-height: 29px;
+
+  height: 29px;
+  min-height: 29px;
+  max-height: 29px;
+}
+
+.mcneese.is-maintenance #mcneese-header > .header-top > .header-menu-1 > .html_tag-nav > .navigation_list > .menu_link-apply-now > a,
+.mcneese.is-front #mcneese-header > .header-top > .header-menu-1 > .html_tag-nav > .navigation_list > .menu_link-apply-now > a {
+  color: #00477f;
+  background-color: #fad703;
+}
+
+.mcneese.is-maintenance #mcneese-header > .header-top > .header-menu-1 > .html_tag-nav > .navigation_list > .menu_link-apply-now > a:hover,
+.mcneese.is-maintenance #mcneese-header > .header-top > .header-menu-1 > .html_tag-nav > .navigation_list > .menu_link-apply-now > a:active,
+.mcneese.is-maintenance #mcneese-header > .header-top > .header-menu-1 > .html_tag-nav > .navigation_list > .menu_link-apply-now > a:focus,
+.mcneese.is-front #mcneese-header > .header-top > .header-menu-1 > .html_tag-nav > .navigation_list > .menu_link-apply-now > a:hover,
+.mcneese.is-front #mcneese-header > .header-top > .header-menu-1 > .html_tag-nav > .navigation_list > .menu_link-apply-now > a:active,
+.mcneese.is-front #mcneese-header > .header-top > .header-menu-1 > .html_tag-nav > .navigation_list > .menu_link-apply-now > a:focus {
+  color: #ffffff;
+  background-color: #00234b;
+}
+
+.mcneese.at-sandbox_mcneese_edu #mcneese-header > .header-top > .header-menu-1 > .html_tag-nav > .navigation_list > .menu_link-apply-now > a:hover,
+.mcneese.at-wwwdev_mcneese_edu #mcneese-header > .header-top > .header-menu-1 > .html_tag-nav > .navigation_list > .menu_link-apply-now > a:hover,
+.mcneese.at-sandbox_mcneese_edu #mcneese-header > .header-top > .header-menu-1 > .html_tag-nav > .navigation_list > .menu_link-apply-now > a:active,
+.mcneese.at-wwwdev_mcneese_edu #mcneese-header > .header-top > .header-menu-1 > .html_tag-nav > .navigation_list > .menu_link-apply-now > a:active,
+.mcneese.at-sandbox_mcneese_edu #mcneese-header > .header-top > .header-menu-1 > .html_tag-nav > .navigation_list > .menu_link-apply-now > a:focus,
+.mcneese.at-wwwdev_mcneese_edu #mcneese-header > .header-top > .header-menu-1 > .html_tag-nav > .navigation_list > .menu_link-apply-now > a:focus {
+  color: #00477f;
+}
+
+.mcneese.is-front.at-sandbox_mcneese_edu #mcneese-header > .header-top > .header-menu-1 > .html_tag-nav > .navigation_list > .menu_link-apply-now > a:hover,
+.mcneese.is-front.at-wwwdev_mcneese_edu #mcneese-header > .header-top > .header-menu-1 > .html_tag-nav > .navigation_list > .menu_link-apply-now > a:hover,
+.mcneese.is-front.at-sandbox_mcneese_edu #mcneese-header > .header-top > .header-menu-1 > .html_tag-nav > .navigation_list > .menu_link-apply-now > a:active,
+.mcneese.is-front.at-wwwdev_mcneese_edu #mcneese-header > .header-top > .header-menu-1 > .html_tag-nav > .navigation_list > .menu_link-apply-now > a:active,
+.mcneese.is-front.at-sandbox_mcneese_edu #mcneese-header > .header-top > .header-menu-1 > .html_tag-nav > .navigation_list > .menu_link-apply-now > a:focus,
+.mcneese.is-front.at-wwwdev_mcneese_edu #mcneese-header > .header-top > .header-menu-1 > .html_tag-nav > .navigation_list > .menu_link-apply-now > a:focus {
+  color: #ffffff;
+  background-image: none;
+}
+
+
+
+/*** JQ Maphilight ***/
+.mcneese #mcneese-page-content div.group_image.jq_maphilight {
+  background-repeat: no-repeat !important;
+  background-position: 0 0 !important;
+
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.mcneese #mcneese-page-content div.group_image-large.jq_maphilight {
+  width: 960px !important;
+  height: 200px !important;
+}
+
+.mcneese #mcneese-page-content div.group_image-small.jq_maphilight {
+  width: 755px !important;
+  height: 200px !important;
+}
+
+
+
+
+/*** Registrar Semester Calendar Specific ***/
+.mcneese #mcneese-page-content .view-display-id-semester_calendar_block_list > .view-content > .views-table > tbody > tr > .views-field-field-event-datetime-1 {
+  width: 160px;
+  min-width: 160px;
+  max-width: 160px;
+}
+
+
+
+/*** Gainfull Employment Disclosure ***/

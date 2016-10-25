@@ -1,0 +1,5 @@
+name = Menu Link Theme
+description = "This is an alternate version of the drupal core 'menu_link_theme()' function, this adds appropriate class styles."
+core = 7.x
+package = Menu
+files[] = menu_link_theme.module

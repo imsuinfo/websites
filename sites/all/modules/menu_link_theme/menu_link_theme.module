@@ -1,0 +1,53 @@
+<?php
+
+function menu_link_theme_theme_registry_alter(&$theme_registry) {
+  if (isset($theme_registry['menu_link']) && is_array($theme_registry['menu_link'])){
+    $theme_registry['menu_link']['function'] = 'menu_link_theme_menu_link';
+    $theme_registry['menu_link']['path'] = drupal_get_path('module', 'menu_link_theme');
+  }
+}
+
+
+/**
+ * Returns HTML for a menu link and submenu.
+ * This is an alternate version of the drupal core 'menu_link_theme()' function, this adds appropriate class styles.
+ * This helps make it easier to use CSS theming on individual items.
+ *
+ * @param $variables
+ *   An associative array containing:
+ *   - element: Structured array data for a menu link.
+ *
+ * @ingroup themeable
+ */
+function menu_link_theme_menu_link(array $variables) {
+  $element = $variables['element'];
+  $sub_menu = '';
+
+  $menu_link_name = '';
+  $menu_link_id = '';
+  $menu_link_id_name = '';
+
+  if (!isset($element['#attributes']['class']) || !is_array($element['#attributes']['class'])){
+    $element['#attributes']['class'] = array();
+  }
+
+  if (isset($variables['element']['#original_link']['menu_name'])){
+    $menu_link_name = $variables['element']['#original_link']['menu_name'];
+    $element['#attributes']['class'][] = 'menu-link-name-' . $menu_link_name;
+  }
+
+  if (isset($variables['element']['#original_link']['mlid'])){
+    $menu_link_id = $variables['element']['#original_link']['mlid'];
+    $element['#attributes']['class'][] = 'menu-link-mlid-' . $menu_link_id;
+  }
+
+  if (!empty($menu_link_name) && !empty($menu_link_id)){
+    $element['#attributes']['class'][] = 'id-menu-link-' . $menu_link_name . '-' . $menu_link_id;
+  }
+
+  if ($element['#below']) {
+    $sub_menu = drupal_render($element['#below']);
+  }
+  $output = l($element['#title'], $element['#href'], $element['#localized_options']);
+  return '<li' . drupal_attributes($element['#attributes']) . '>' . $output . $sub_menu . "</li>\n";
+}

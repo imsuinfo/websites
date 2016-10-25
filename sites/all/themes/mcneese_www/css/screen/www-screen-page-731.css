@@ -1,0 +1,13 @@
+
+
+
+/*** General Tweaks ***/
+.mcneese.node-theme-page-731 #mcneese-breadcrumb.relative > .navigation_list > .crumb > .link-home {
+  background-image: url(../../images/home-blue.png);
+}
+
+.mcneese.node-theme-page-731 #mcneese-breadcrumb.relative > .navigation_list > .crumb > .link-home:active,
+.mcneese.node-theme-page-731 #mcneese-breadcrumb.relative > .navigation_list > .crumb > .link-home:hover,
+.mcneese.node-theme-page-731 #mcneese-breadcrumb.relative > .navigation_list > .crumb > .link-home:focus {
+  background-image: url(../../images/home-gray.png);
+}

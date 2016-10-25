@@ -1,0 +1,206 @@
+/**
+ * @file
+ * Styles for the media library.
+ *
+ * The display and layout of the Media browser assumes Drupal's Seven theme as
+ * the theme active when this is displayed.
+ */
+
+/* jQuery UI Resets */
+#media-format-form .ui-tabs,
+#media-browser-page .ui-tabs {
+  padding: 0;
+}
+
+.ui-dialog.media-wrapper .ui-dialog-content {
+  padding: 0;
+}
+
+body > .ui-dialog.media-wrapper .ui-dialog-buttonpane {
+  display: none;
+}
+
+#media-browser-tabset .ui-widget-header {
+  background: none;
+}
+
+/* Remove the default border */
+body > .ui-dialog.media-wrapper .ui-widget-content {
+
+  border: none;
+}
+
+/* *********************************************************** */
+/* Browser layout themeing */
+
+/* Size the branding header appropriately */
+#media-browser-tabset #branding {
+  padding: 10px 10px 0px 10px;
+}
+
+#media-browser-tabset #branding h1 {
+  float: left;
+  height: 16px;
+  margin-top: 0px;
+}
+
+/* Float the tabs right to keep the UI consistent across themes */
+#media-tabs-wrapper {
+  float: right;
+}
+
+#media-tabs-wrapper > .tabs {
+  background: inherit;
+}
+
+#media-browser-tabset ul.tabs {
+  padding: 0;
+  border: none;
+}
+
+/* Reset the height to match the browser */
+#media-browser-tabset ul.tabs.primary li a:link {
+  font-weight: bold;
+  margin-right: 0;
+}
+
+#media-browser-tabset {
+  border: none;
+}
+
+/* *********************************************************** */
+/* Media item display */
+
+#media-format-form .media-item,
+#media-browser-page .media-item {
+  display: block;
+
+  background: #eee;
+  border: 1px solid #CCCCCC;
+  box-shadow: inset 0 0 15px rgba(0,0,0,.1), inset 0 0 0 1px rgba(0,0,0,.05);
+  display: inline-block;
+  padding: 5px;
+}
+
+#media-format-form .media-item img,
+#file-entity-admin-files.media-item img,
+#media-browser-page.media-item img {
+  display: block;
+}
+
+#media-format-form .media-item > .media-thumbnail,
+#file-entity-admin-files .media-item > .media-thumbnail,
+#media-browser-page .media-item > .media-thumbnail {
+  display: inline-block;
+
+  width: 100px;
+  min-width: 100px;
+  max-width: 100px;
+}
+
+#media-format-form .media-item > .media-thumbnail > a > .file > img,
+#file-entity-admin-files .media-item > .media-thumbnail > a > .file > img,
+#media-browser-page .media-item > .media-thumbnail > a > .file > img {
+  display: inline-block;
+
+  width: 100px;
+  min-width: 100px;
+  max-width: 100px;
+
+  height: 100px;
+  min-height: 100px;
+  max-height: 100px;
+}
+
+#media-format-form .media-item > .media-thumbnail > .label-wrapper,
+#file-entity-admin-files .media-item > .media-thumbnail > .label-wrapper,
+#media-browser-page .media-item > .media-thumbnail > .label-wrapper {
+  text-align: center;
+  margin-left: auto;
+  margin-right: auto;
+  width: 95%;
+}
+
+#media-format-form .media-item .label-wrapper label,
+#file-entity-admin-files .media-item .label-wrapper label,
+#media-browser-page .media-item .label-wrapper label {
+  font-size: 10px;
+  padding: 5px 10px;
+}
+
+/* Media Item Url */
+#media-format-form .media-item-url,
+#file-entity-admin-files .media-item-url,
+#media-browser-library-list .media-item-url {
+  display: inline-block;
+  margin: 4px;
+
+  width: 12px;
+  height: 12px;
+
+  background-image: url(../images/icons/default/link-external.png);
+  background-repeat: none;
+  background-position: center;
+
+  float: right;
+}
+
+/* Media item lists */
+
+#media-browser-library-list {
+  margin: 0;
+  padding: 0;
+}
+
+#media-browser-library-list.media-list-thumbnails li {
+  display: inline-block;
+
+  font-size: 12px;
+  list-style: none;
+  margin: 0px 10px 25px 0px;
+
+  vertical-align: top;
+}
+
+#media-browser-library-list.media-list-thumbnails li a {
+  text-decoration: none;
+}
+
+#media-browser-library-list.media-list-thumbnails .media-item.selected {
+  background: #F4ECC7;
+  border-color: #058AC5;
+}
+
+#media-browser-library-list.media-list-thumbnails .media-item:hover {
+  border-color: #058AC5;
+  cursor: pointer;
+}
+
+#media-browser-library-list.media-list-thumbnails .media-item .label-wrapper label {
+  color: #058AC5;
+
+  word-wrap: break-word;
+  word-break: break-word;
+
+  width: 100px;
+  min-width: 100px;
+  max-width: 100px;
+}
+
+#media-browser-library-list.media-list-thumbnails .media-item .label-wrapper label:hover {
+  cursor: pointer;
+}
+
+#media-browser-library-list.media-list-thumbnails .form-type-checkbox {
+  display: inline-block;
+  margin: 0;
+  padding: 0;
+}
+
+/* File field */
+
+#media-format-form .media-widget .preview {
+  display: inline-block;
+  margin-right: 10px;
+  vertical-align: middle;
+}

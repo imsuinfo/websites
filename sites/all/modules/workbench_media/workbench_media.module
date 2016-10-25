@@ -1,0 +1,137 @@
+<?php
+
+/**
+ * @file
+ * Workbench Media module file for workbench-specific media features.
+ */
+
+/**
+ * Implements hook_menu().
+ *
+ * Provide a UI for uploading media.
+ */
+function workbench_media_menu() {
+  $items = array();
+
+  $items['admin/workbench/media/add'] = array(
+    'title' => 'Add Media',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('file_entity_add_upload'),
+    'access arguments' => array('use workbench_media add form'),
+    'file' => 'file_entity.pages.inc',
+    'file path' => drupal_get_path('module', 'file_entity'),
+    'type' => MENU_VISIBLE_IN_BREADCRUMB,
+  );
+
+  return $items;
+}
+
+/**
+ * Implements hook_permission().
+ */
+function workbench_media_permission() {
+  return array(
+    'use workbench_media add form' => array(
+      'title' => t('Use the media add form'),
+    ),
+  );
+}
+
+/**
+ * Implements hook_workbench_create_alter().
+ *
+ * Add a media creation section to the workbench "Create Content" tab.
+ */
+function workbench_media_workbench_create_alter(&$output) {
+  if (user_access('use workbench_media add form')) {
+    $url = l("Upload Media", 'admin/workbench/media/add', array('query' => drupal_get_destination()));
+
+    $markup = '<dl class="node-type-list">';
+    $markup .= '<dt>' . $url . '</dt>';
+    $markup .= '<dd>' . t('Add photos, videos, audio, or other files to the site.') . '</dd>';
+    $markup .= '</dl>';
+
+    $output['field_workbench_create_media'] = array(
+      '#title' => t('Create Media'),
+      '#markup' => $markup,
+      '#theme' => 'workbench_element',
+      '#weight' => -1,
+    );
+  }
+}
+
+/**
+ * Implementation of hook_views_api().
+ */
+function workbench_media_views_api() {
+  return array(
+    'api' => 3,
+  );
+}
+
+/**
+ * Implementation of hook_views_default_views().
+ */
+function workbench_media_views_default_views() {
+  return workbench_load_all_exports('workbench_media', 'views', 'view.inc', 'view');
+}
+
+/**
+ * Implementation of hook_preprocess_views_view_table().
+ *
+ * This is done to convert the "type" field to a thumbnail for image files.
+ */
+function workbench_media_preprocess_views_view_table(&$vars) {
+  if ($vars['view']->name != 'workbench_files') return;
+
+  global $base_url;
+  global $base_path;
+
+  $wrappers = array();
+
+  foreach ($vars['rows'] as $id => &$row) {
+    $uri = & $vars['result'][$id]->file_managed_uri;
+    $file_path = $base_path . 'file/' . $vars['result'][$id]->fid;
+
+    if (preg_match('@^image/@i', $row['filemime'])) {
+      $row['filemime'] = theme('image_style', array(
+        'path' => $uri,
+        'style_name' => 'thumbnail',
+      ));
+    }
+    else {
+      $fake_file = (object) array('filemime' => $row['filemime']);
+      $row['filemime'] = theme('file_icon', array('file' => $fake_file));
+    }
+
+    $scheme = file_uri_scheme($uri);
+    $wrapper_class = file_stream_wrapper_get_class($scheme);
+
+    if (class_exists($wrapper_class)) {
+      if (!isset($wrappers[$wrapper_class])) {
+        $wrappers[$wrapper_class] = new $wrapper_class();
+      }
+
+      $wrappers[$wrapper_class]->setUri($uri);
+
+      $external_url = $wrappers[$wrapper_class]->getExternalUrl();
+
+      if ($scheme == 'dbu') {
+        $fp = '/f/f/' . $vars['result'][$id]->fid;
+        $row['uri'] = '<strong>Unique Path:</strong><br>';
+        $row['uri'] .= '<a href="' . $base_url . $external_url . '">' . $external_url . '</a>';
+        $row['uri'] .= '<br><br><strong>ID Path</strong>:<br>';
+        $row['uri'] .= '<a href="' . $base_url . $fp . '">' . $fp . '</a>';
+        $view_path = $base_url . $fp;
+      }
+      else {
+        $row['uri'] = '<strong>File Path:</strong><br>';
+        $row['uri'] .= '<a href="' . $base_url . '/' . $external_url . '">' . $external_url . '</a>';
+        $view_path = $base_url . '/' . $external_url;
+      }
+    }
+
+    $row['filename'] = '<a href="' . $view_path . '">' . $row['filename'] . '</a>';
+    $row['fid'] = '<a href="' . $file_path . '/edit' . '">' . $vars['result'][$id]->fid. '</a>';
+  }
+}

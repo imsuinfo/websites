@@ -1,0 +1,57 @@
+
+
+
+/*** Alias: future_students ***/
+.mcneese.alias-part-0-future_students .tour-banner {
+    background: url(/f/c/5eaaac6d ) no-repeat center right;
+    background-color: #00477f;
+    height: 104px !important;
+    margin: 5px 0;
+    width: 960px !important;
+}
+
+/*FIXED - PE 09/04/15 */
+.mcneese.alias-part-0-future_students .tour-banner img {
+    float: left;
+    padding: 10px;
+}
+
+.mcneese.alias-part-0-future_students h3.banner {
+    color: #ffffff;
+    display: inline-block !important;
+    font-family: sans-serif;
+    margin:0;
+    padding: 38px 20px 0 20px;
+}
+
+.mcneese.alias-part-0-future_students .tour {
+    font-family: sans-serif;
+    padding: 10px;
+}
+
+.mcneese.alias-part-0-future_students a.tour {
+    color: #ffffff !important;
+    border: 2px solid #fad703;
+    text-decoration: none;
+}
+
+.mcneese.alias-part-0-future_students a.tour:hover {
+    color: #ffffff !important;
+    border: 2px solid #ffffff;
+    text-decoration: underline;
+}
+
+
+
+/*** Alias: videos ***/
+.mcneese.alias-part-0-videos .campus-tours {
+  width: 100%;
+}
+
+.mcneese.alias-part-0-videos .campus-tours h1 {
+  text-align: center;
+}
+
+.mcneese.alias-part-0-videos .campus-tours iframe {
+  text-align: center;
+}
