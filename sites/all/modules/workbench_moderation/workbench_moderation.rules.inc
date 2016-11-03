@@ -26,16 +26,6 @@ function workbench_moderation_rules_condition_info() {
     'access callback' => 'rules_node_integration_access',
   );
 
-  $items['content_is_current_revision'] = array(
-    'group' => t("Node"),
-    'label' => t("Content is current revision"),
-    'base' => 'workbench_moderation_rules_condition_content_is_current_revision',
-    'parameter' => array(
-      'node' => array('type' => 'node', 'label' => t("Content")),
-    ),
-    'access callback' => 'rules_node_integration_access',
-  );
-
   $items['content_is_live_revision'] = array(
     'group' => t("Node"),
     'label' => t("Content is live revision"),
@@ -57,6 +47,7 @@ function workbench_moderation_rules_condition_info() {
         'label' => t("Workbench moderation state"),
         'options list' => 'workbench_moderation_state_labels',
         'restriction' => 'input',
+        'save' => TRUE,
       ),
     ),
     'access callback' => 'rules_node_integration_access',
@@ -73,6 +64,7 @@ function workbench_moderation_rules_condition_info() {
         'label' => t("Workbench moderation state"),
         'options list' => 'workbench_moderation_state_labels',
         'restriction' => 'input',
+        'save' => TRUE,
       ),
     ),
     'access callback' => 'rules_node_integration_access',
@@ -123,6 +115,25 @@ function workbench_moderation_rules_event_info() {
  */
 function workbench_moderation_rules_action_info() {
   $items = array();
+
+  $items['workbench_moderation_set_state_during_save'] = array(
+    'label' => t("Set moderation state during save"),
+    'group' => t("Node"),
+    'base' => 'workbench_moderation_set_state_during_save_rules_action',
+
+    'parameter' => array(
+      'node' => array(
+        'type' => 'node',
+        'label' => t("Content"),
+      ),
+      'moderation_state' => array(
+        'type' => 'text',
+        'label' => t("Workbench moderation state"),
+        'options list' => 'workbench_moderation_state_labels',
+        'restriction' => 'input',
+      ),
+    ),
+  );
 
   $items['workbench_moderation_set_state'] = array(
     'label' => t("Set moderation state"),
@@ -186,25 +197,6 @@ function workbench_moderation_rules_action_info() {
     ),
   );
 
-  $items['workbench_moderation_load_current_revision_author'] = array(
-    'label' => t("Load current node revision author"),
-    'group' => t("Node"),
-    'base' => 'workbench_moderation_load_current_revision_author_rules_action',
-
-    'parameter' => array(
-      'node' => array(
-        'type' => 'node',
-        'label' => t("Content"),
-      ),
-    ),
-    'provides' => array(
-      'node_revision_author' => array(
-        'type' => 'user',
-        'label' => t("Current node revision author"),
-      ),
-    ),
-  );
-
   return $items;
 }
 
@@ -226,23 +218,6 @@ function workbench_access_rules_condition_content_is_using_workbench_moderation(
 }
 
 /**
- * Condition: Check if the content is current revision
- *
- * @param $node
- *   A node object
- *
- * @return
- *   TRUE/FALSE depending on if the content is current revision.
- */
-function workbench_moderation_rules_condition_content_is_current_revision($node) {
-  if (!is_object($node)) {
-    return FALSE;
-  }
-
-  return workbench_moderation_node_is_current($node);
-}
-
-/**
  * Condition: Check if the content is live revision
  *
  * @param $node
@@ -256,7 +231,7 @@ function workbench_moderation_rules_condition_content_is_live_revision($node) {
     return FALSE;
   }
 
-  return workbench_moderation_node_is_live($node);
+  return workbench_moderation_node_is_current($node);
 }
 
 /**
@@ -321,11 +296,37 @@ function workbench_moderation_rules_condition_contents_previous_state($node, $mo
  * $param $force_transition
  *   If set to TRUE, then the transition change will be allowed regardless of permissions and allowed transition flow.
  *   If set to FALSE, then the transition only changes if all transition change requirements are met.
+ *
+ * @return
+ *   An array containing the node object stored in the key called 'node'.
  */
 function workbench_moderation_set_state_rules_action($node, $moderation_state, $force_transition) {
   if (is_object($node) && !empty($moderation_state)){
     actions_do('workbench_moderation_set_state_action', $node, array('state' => $moderation_state, 'force_transition' => $force_transition));
   }
+
+  return array('node' => $node);
+}
+
+/**
+ * Action: Set the moderation state on a node object.
+ *
+ * This should only be used in a process where this node object will later be saved.
+ *
+ * $param $node
+ *   A node object
+ *
+ * $param $moderation_state
+ *   The desired moderation state to assign.
+ *
+ * @return
+ *   An array containing the node object stored in the key called 'node'.
+ */
+function workbench_moderation_set_state_during_save_rules_action($node, $moderation_state) {
+
+  $node->workbench_moderation_state_new = $moderation_state;
+
+  return array('node' => $node);
 }
 
 /**
@@ -335,7 +336,7 @@ function workbench_moderation_set_state_rules_action($node, $moderation_state, $
  *   A node object
  *
  * @return
- *   An array containing the access control states for the given node.
+ *   An array containing the node object stored in the key called 'node' and an array containing the access control states for the given node.
  */
 function workbench_moderation_load_current_state_rules_action($node) {
   $state = '';
@@ -344,7 +345,7 @@ function workbench_moderation_load_current_state_rules_action($node) {
     $state = $node->workbench_moderation['current'];
   }
 
-  return array('workbench_moderation_state' => $state);
+  return array('node' => $node, 'workbench_moderation_state' => $state);
 }
 
 /**
@@ -358,20 +359,5 @@ function workbench_moderation_load_current_state_rules_action($node) {
  */
 function workbench_moderation_load_current_revision_rules_action($node) {
   $node_revision = workbench_moderation_node_current_load($node);
-  return array('node_revision' => $node_revision);
-}
-
-/**
- * Action: Loads the current node revision author.
- *
- * $param $node
- *   A node object
- *
- * @return
- *   A loaded node revision author.
- */
-function workbench_moderation_load_current_revision_author_rules_action($node) {
-  $node_revision = workbench_moderation_node_current_load($node);
-  $author = user_load($node_revision->workbench_moderation['current']->uid);
-  return array('node_revision_author' => $author);
+  return array('node' => $node, 'node_revision' => $node_revision);
 }

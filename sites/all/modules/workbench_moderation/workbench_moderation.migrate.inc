@@ -12,7 +12,7 @@ class WorkbenchModerationMigrateDestinationHandler extends MigrateDestinationHan
      $fields = array();
 
     if (workbench_moderation_node_type_moderated($bundle_type)) {
-      $fields['workbench_moderation_state_new'] = t('Workflow State');
+      $fields['workbench_moderation_state_new'] = t('Moderation state');
     }
     return $fields;
   }
