@@ -21,3 +21,7 @@ form.workbench-moderation-moderate-form label {
 #workbench-moderation-admin-transitions-form table {
   min-width: 380px;
 }
+
+#workbench_moderation-workflow_table > tbody > tr.revision > td > .item-list > ul {
+  padding: 0px;
+}

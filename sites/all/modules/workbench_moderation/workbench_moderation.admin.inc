@@ -140,7 +140,7 @@ function workbench_moderation_admin_states_form_submit($form, &$form_state) {
   foreach ($form_state['values']['states'] as $key => $info) {
     if (!empty($info['delete'])) {
       workbench_moderation_state_delete($info['state']);
-      drupal_set_message(t('Moderation state %label (%name) has been deleted.', array('%label' => $info['label'], '%name' => $info['name'])));
+      drupal_set_message(t('Workflow State %label (%name) has been deleted.', array('%label' => $info['label'], '%name' => $info['name'])));
     }
     elseif (!empty($info['name'])) {
       $state = (object) array(
