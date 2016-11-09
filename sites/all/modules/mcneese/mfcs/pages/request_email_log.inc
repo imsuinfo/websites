@@ -67,7 +67,7 @@ function mfcs_request_email_log_0_form($form, &$form_state, $page_number = NULL)
 
   mfcs_add_canonical_headers('requests/email_log-0/' . $page_number);
 
-  $page_title = "E-mail Log";
+  $page_title = 'E-mail Log';
   drupal_set_title($page_title);
 
   $user = cf_current_user();
@@ -96,6 +96,7 @@ function mfcs_request_email_log_0_form($form, &$form_state, $page_number = NULL)
   $class_destination = '';
   $class_title = '';
   $class_code = '';
+  $class_type = '';
   $class_operations = 'no-print ';
 
 
@@ -141,6 +142,11 @@ function mfcs_request_email_log_0_form($form, &$form_state, $page_number = NULL)
       $order_column = array(6 => strtolower($sorting[$order]));
       $class_code .= 'sorting_1 ';
     }
+    elseif ($order == 'type') {
+      $sorting['type'] = is_null($sort) ? 'DESC' : $sort;
+      $order_column = array(7 => strtolower($sorting[$order]));
+      $class_type .= 'sorting_1 ';
+    }
     else {
       $sorting['id'] = 'DESC';
       $order_column = array(0 => strtolower($sorting['id']));
@@ -182,6 +188,15 @@ function mfcs_request_email_log_0_form($form, &$form_state, $page_number = NULL)
     'on' => 'mle.destination = d_u.mail',
     'columns' => array(
       'destination_user_id' => 'uid',
+    ),
+  );
+
+  $options['extra_fields2']['mfcs_taxonomy_email_type'] = array(
+    'alias' => 'mtet',
+    'join' => 'inner',
+    'on' => 'mle.type = mtet.id',
+    'columns' => array(
+      'type_name' => 'human_name',
     ),
   );
 
@@ -268,16 +283,21 @@ function mfcs_request_email_log_0_form($form, &$form_state, $page_number = NULL)
     );
 
     $row['code'] = array(
-      'data' => "Normal",
+      'data' => 'Normal',
       'class' => $class_code,
     );
 
     if ($email_log->code == MFCS_EMAIL_CODE_RESEND) {
-      $row['code']['data'] = "Re-sent";
+      $row['code']['data'] = 'Re-sent';
     }
     elseif ($email_log->code == MFCS_EMAIL_CODE_FORWARD) {
-      $row['code']['data'] = "Forwarded";
+      $row['code']['data'] = 'Forwarded';
     }
+
+    $row['type'] = array(
+      'data' => check_plain($email_log->type_name),
+      'class' => $class_type,
+    );
 
     $row['operations'] = array(
       'data' => '<a href="' . $base_path . 'requests/email_log-0/view/' . $email_log->id . $url_arguments . '" class="operation-link operation-link-view">View</a>',
@@ -293,16 +313,17 @@ function mfcs_request_email_log_0_form($form, &$form_state, $page_number = NULL)
 
 
   $email_log_list = array();
-  $email_log_list['caption'] = t("E-mail Log");
+  $email_log_list['caption'] = 'E-mail Log';
   $email_log_list['header'] = array(
-    'id' => array('field' => 'id', 'data' => "ID", 'align' => 'center'),
-    'account_id' => array('field' => 'user_id', 'data' => "Account ID", 'align' => 'center', 'class' => array('script-hidden')),
-    'account' => array('field' => 'name', 'data' => "Account", 'align' => 'center', 'class' => array('script-hidden')),
-    'date' => array('field' => 'date', 'data' => "Date", 'align' => 'center'),
-    'destination' => array('field' => 'destination', 'data' => "Destination", 'align' => 'center'),
-    'title' => array('field' => 'title', 'data' => "Title", 'align' => 'center'),
-    'code' => array('field' => 'code', 'data' => "Code", 'align' => 'center'),
-    'operations' => array('data' => "Operations", 'align' => 'center', 'class' => array('no-print')),
+    'id' => array('field' => 'id', 'data' => 'ID', 'align' => 'center'),
+    'account_id' => array('field' => 'user_id', 'data' => 'Account ID', 'align' => 'center', 'class' => array('script-hidden')),
+    'account' => array('field' => 'name', 'data' => 'Account', 'align' => 'center', 'class' => array('script-hidden')),
+    'date' => array('field' => 'date', 'data' => 'Date', 'align' => 'center'),
+    'destination' => array('field' => 'destination', 'data' => 'Destination', 'align' => 'center'),
+    'title' => array('field' => 'title', 'data' => 'Title', 'align' => 'center'),
+    'code' => array('field' => 'code', 'data' => 'Code', 'align' => 'center'),
+    'type' => array('field' => 'type', 'data' => 'Type', 'align' => 'center'),
+    'operations' => array('data' => 'Operations', 'align' => 'center', 'class' => array('no-print')),
   );
 
   $email_log_list['attributes'] = array();
@@ -319,7 +340,7 @@ function mfcs_request_email_log_0_form($form, &$form_state, $page_number = NULL)
   $email_log_list['attributes']['summary'] = 'Log of e-mails sent out by the system.';
 
   $email_log_list['rows'] = $rows;
-  $email_log_list['empty'] = t("This system has sent no e-mails.");
+  $email_log_list['empty'] = 'This system has sent no e-mails.';
 
   $datatable_settings = array(
     'sort' => strtolower($sort),
@@ -336,19 +357,20 @@ function mfcs_request_email_log_0_form($form, &$form_state, $page_number = NULL)
     'processing' => TRUE,
     'serverSide' => TRUE,
     'ajax' => array(
-      'url' => "'" . $base_path . 'requests/email_log-0/ajax' . $url_arguments . "'",
-      'type' => "'POST'",
+      'url' => '\'' . $base_path . 'requests/email_log-0/ajax' . $url_arguments . '\'',
+      'type' => '\'POST\'',
     ),
     'deferRender' => TRUE,
     'columns' => array(
-      array('id' => 0, 'column' => 'id', 'name' => "ID", 'className' => 'column-id', 'sanitize' => FALSE),
-      array('id' => 1, 'column' => 'account_id', 'name' => "Account ID", 'className' => 'column-account_id', 'sanitize' => FALSE, 'visible' => FALSE),
-      array('id' => 2, 'column' => 'account', 'name' => "Account", 'className' => 'column-account', 'visible' => FALSE),
-      array('id' => 3, 'column' => 'date', 'name' => "Date", 'className' => 'column-date'),
-      array('id' => 4, 'column' => 'destination', 'name' => "Destination", 'className' => 'column-destination'),
-      array('id' => 5, 'column' => 'title', 'name' => "Title", 'className' => 'column-title'),
-      array('id' => 6, 'column' => 'code', 'name' => "Code", 'className' => 'column-code'),
-      array('id' => 7, 'column' => NULL, 'name' => "Operations", 'className' => 'column-operations no-print', 'searchable' => FALSE, 'orderable' => FALSE),
+      array('id' => 0, 'column' => 'id', 'name' => 'ID', 'className' => 'column-id', 'sanitize' => FALSE),
+      array('id' => 1, 'column' => 'account_id', 'name' => 'Account ID', 'className' => 'column-account_id', 'sanitize' => FALSE, 'visible' => FALSE),
+      array('id' => 2, 'column' => 'account', 'name' => 'Account', 'className' => 'column-account', 'visible' => FALSE),
+      array('id' => 3, 'column' => 'date', 'name' => 'Date', 'className' => 'column-date'),
+      array('id' => 4, 'column' => 'destination', 'name' => 'Destination', 'className' => 'column-destination'),
+      array('id' => 5, 'column' => 'title', 'name' => 'Title', 'className' => 'column-title'),
+      array('id' => 6, 'column' => 'code', 'name' => 'Code', 'className' => 'column-code'),
+      array('id' => 7, 'column' => 'code', 'name' => 'Type', 'className' => 'column-type'),
+      array('id' => 7, 'column' => NULL, 'name' => 'Operations', 'className' => 'column-operations no-print', 'searchable' => FALSE, 'orderable' => FALSE),
     ),
     'displayStart' => $options['start'],
     'pageLength' => $rows_per_page,
@@ -457,6 +479,9 @@ function mfcs_request_email_log_0_view_page($id) {
     $query->addField('mle', 'title', 'title');
     $query->addField('mle', 'headers', 'headers');
     $query->addField('mle', 'body', 'body');
+    $query->addField('mle', 'code', 'code');
+    $query->addField('mle', 'type', 'type');
+    $query->addField('mle', 'destination_user_id', 'destination_user_id');
     $query->condition('mle.id', $id);
 
     $log = $query->execute()->fetchObject();
@@ -480,6 +505,13 @@ function mfcs_request_email_log_0_view_page($id) {
     drupal_exit();
   }
 
+  mfcs_include(MFCS_INCLUDE_LIST_OPTIONS);
+
+  $valid_destination = TRUE;
+  if (strpos($log->destination, '@') === FALSE) {
+    $valid_destination = FALSE;
+  }
+
   $markup = '<div id="mfcs-request-email_log-0-page" class="email_log">';
 
   $markup .= '<div class="email_log-title-wrapper">';
@@ -491,9 +523,70 @@ function mfcs_request_email_log_0_view_page($id) {
   $markup .= '<div class="email_log-date"><strong>Submitted On</strong>: ' . date(MFCS_DATE_FORMAT_DATE_TIME_SECONDS_TIMEZONE, $log->date) . '.</div>';
   $markup .= '</div>'; // email_log-date-wrapper
 
-  $markup .= '<div class="email_log-date-wrapper">';
-  $markup .= '<div class="email_log-date"><strong>Sent To</strong>: <code>' . check_plain($log->destination) . '</code>.</div>';
-  $markup .= '</div>'; // email_log-date-wrapper
+  $markup .= '<div class="email_log-destination-wrapper">';
+  if ($valid_destination) {
+    $markup .= '<div class="email_log-destination"><strong>Sent To</strong>: <code>' . check_plain($log->destination) . '</code>.</div>';
+  }
+  else {
+    $markup .= '<div class="email_log-destination"><strong>Sent To</strong>: <span class="email_log-destination-invalid">(Warning: Invalid e-mail detected)</span> <code>' . check_plain($log->destination) . '</code>.</div>';
+  }
+  $markup .= '</div>'; // email_log-destination-wrapper
+
+  if ($valid_destination && !empty($log->destination_user_id) && is_numeric($log->destination_user_id)) {
+    $destination_users = mfcs_load_basic_user_settings_by_user_id((int) $log->destination_user_id);
+
+    if (!empty($destination_users)) {
+      $user_name = NULL;
+      if (!empty($destination_users['last_name'])) {
+        $user_name .= $destination_users['last_name'];
+      }
+
+      if (!empty($destination_users['first_name'])) {
+        if (!empty($user_name)) {
+          $user_name .=  ', ';
+        }
+
+        $user_name .= $destination_users['first_name'];
+      }
+
+      if (empty($user_name)) {
+        $user_name = $destination_users['name'];
+      }
+
+      $markup .= '<div class="email_log-destination_user-wrapper">';
+      $markup .= '<div class="email_log-destination_user"><strong>Sent To User</strong>: <a href="' . $base_path . 'requests/users-0/view/' . $log->destination_user_id . $url_arguments . '" class="email_log-destination_user-link">' . check_plain($user_name) . '</a> <sup class="email_log-destination_user-user_id">[id: ' . ((int) $log->destination_user_id) . ']</sup>.</div>';
+      $markup .= '</div>'; // email_log-destination_user-wrapper
+
+      unset($user_name);
+    }
+
+    unset($destination_users);
+  }
+
+  $email_code = 'Normal';
+  if ($log->code == MFCS_EMAIL_CODE_RESEND) {
+    $email_code = 'Re-sent';
+  }
+  elseif ($log->code == MFCS_EMAIL_CODE_FORWARD) {
+    $email_code = 'Forwarded';
+  }
+
+  $markup .= '<div class="email_log-code-wrapper">';
+  $markup .= '<div class="email_log-code"><strong>Code</strong>: ' . $email_code . '.</div>';
+  $markup .= '</div>'; // email_log-code-wrapper
+  unset($email_code);
+
+  $email_type = 'None';
+  $email_type_options = mfcs_get_email_type_list_options(NULL, TRUE, TRUE);
+  if (isset($log->type) && array_key_exists($log->type, $email_type_options)) {
+    $email_type = $email_type_options[$log->type];
+  }
+
+  $markup .= '<div class="email_log-type-wrapper">';
+  $markup .= '<div class="email_log-type"><strong>Type</strong>: ' . $email_type . '.</div>';
+  $markup .= '</div>'; // email_log-type-wrapper
+  unset($email_type);
+
   $markup .= '</div>'; // email_log-section-top
 
 
@@ -503,7 +596,7 @@ function mfcs_request_email_log_0_view_page($id) {
     '#type' => 'fieldset',
     '#collapsible' => TRUE,
     '#collapsed' => TRUE,
-    '#title' => '<h4 class="email_log-fieldset-title">' . "E-mail Headers" . '</h4>',
+    '#title' => '<h4 class="email_log-fieldset-title">E-mail Headers</h4>',
     '#parents' => array(),
     '#children' => '',
     '#attributes' => array(
@@ -543,7 +636,7 @@ function mfcs_request_email_log_0_view_page($id) {
     '#type' => 'fieldset',
     '#collapsible' => TRUE,
     '#collapsed' => TRUE,
-    '#title' => '<h4 class="email_log-fieldset-title">' . "E-mail Body (Raw)" . '</h4>',
+    '#title' => '<h4 class="email_log-fieldset-title">E-mail Body (Raw)</h4>',
     '#parents' => array(),
     '#children' => '',
     '#attributes' => array(
@@ -762,7 +855,7 @@ function mfcs_request_email_log_0_view_page($id) {
       '#type' => 'fieldset',
       '#collapsible' => TRUE,
       '#collapsed' => FALSE,
-      '#title' => '<h4 class="email_log-fieldset-title">' . "Operations" . '</h4>',
+      '#title' => '<h4 class="email_log-fieldset-title">Operations</h4>',
       '#parents' => array(),
       '#children' => '',
       '#attributes' => array(
@@ -773,7 +866,7 @@ function mfcs_request_email_log_0_view_page($id) {
     $fieldset['#children'] .= '<div class="email_log-operations">';
     $fieldset['#children'] .= '<div class="email_log-operations-operation"><a href="' . $base_path . 'requests/email_log-0' . $url_arguments . '">Back to Log Listing</a></div>';
 
-    if (is_string($text_html)) {
+    if (is_string($text_html) && $valid_destination) {
       $fieldset['#children'] .= '<div class="email_log-operations-operation"><a href="' . $base_path . 'requests/email_log-0/resend/' . $id . $url_arguments . '">Re-send E-mail</a></div>';
     }
     $fieldset['#children'] .= '</div>';
@@ -929,11 +1022,11 @@ function mfcs_request_email_log_0_resend_form($form, &$form_state, $id, $extra_a
   }
 
   return confirm_form($form,
-    t("Please confirm re-sending the e-mail to %destination", array('%destination' => $log->destination)),
+    t('Please confirm re-sending the e-mail to %destination', array('%destination' => $log->destination)),
     $destination,
-    t("The e-mail <strong>%title</strong> will be sent to <strong>%destination</strong>?", array('%title' => $log->title, '%destination' => $log->destination)),
-    t("Re-send E-Mail"),
-    t("Cancel")
+    t('The e-mail <strong>%title</strong> will be sent to <strong>%destination</strong>?', array('%title' => $log->title, '%destination' => $log->destination)),
+    t('Re-send E-Mail'),
+    t('Cancel')
   );
 }
 
@@ -971,6 +1064,7 @@ function mfcs_request_email_log_0_resend_form_submit($form, &$form_state) {
     $query->addField('mle', 'title', 'title');
     $query->addField('mle', 'headers', 'headers');
     $query->addField('mle', 'body', 'body');
+    $query->addField('mle', 'type', 'type');
     $query->condition('mle.id', $form['form']['id']['#value']);
 
     $log = $query->execute()->fetchObject();
@@ -987,7 +1081,21 @@ function mfcs_request_email_log_0_resend_form_submit($form, &$form_state) {
   }
 
   if (!is_object($log)) {
-    drupal_set_message(t("Failed to load log with id of @id.", array('@id' => $form['form']['id']['#value'])), 'error');
+    drupal_set_message(t('Failed to load log with id of @id.', array('@id' => $form['form']['id']['#value'])), 'error');
+
+    $form_state['rebuild'] = TRUE;
+    $form_state['redirect'] = FALSE;
+    $form_state['submitted'] = FALSE;
+
+    return;
+  }
+
+  // it is possible for e-mails to have no destination in the database.
+  // this is incorrect, but there was some bug in the past that saved the entries.
+  // prevent sending of e-mails with no valid destination address.
+  if (strpos($log->destination, '@') === FALSE) {
+    drupal_set_message(t('Canno re-send e-mail [id: @id] because no valid destination address exists.', array('@id' => $form['form']['id']['#value'])), 'error');
+    watchdog(MFCS_WATCHDOG_ID, 'Cannot re-send e-mail [id: @id] because no valid destination address exists.', array('@id' => $form['form']['id']['#value']), WATCHDOG_ERROR);
 
     $form_state['rebuild'] = TRUE;
     $form_state['redirect'] = FALSE;
@@ -1043,7 +1151,7 @@ function mfcs_request_email_log_0_resend_form_submit($form, &$form_state) {
 
     foreach ($destinations as $to) {
       if (!in_array($to, $email_whitelist) && !in_array($to, $debug_accounts)) {
-        drupal_set_message(t("Warning: not sending mail to @to while testing the system.", array('@to' => $to)), 'warning');
+        drupal_set_message(t('Warning: not sending mail to @to while testing the system.', array('@to' => $to)), 'warning');
         #watchdog('debug', "Warning: not sending mail to @to while testing the system.", array('@to' => $to), WATCHDOG_WARNING);
         unset($destinations[$to]);
       }
@@ -1051,7 +1159,7 @@ function mfcs_request_email_log_0_resend_form_submit($form, &$form_state) {
   }
 
   if (empty($destinations)) {
-    drupal_set_message("There is no e-mail to re-send to. Perhaps e-mail debugging is enabled and no accounts are setup to receive e-mails.", 'warning');
+    drupal_set_message('There is no e-mail to re-send to. Perhaps e-mail debugging is enabled and no accounts are setup to receive e-mails.', 'warning');
 
     $form_state['rebuild'] = TRUE;
     $form_state['redirect'] = FALSE;
@@ -1094,8 +1202,15 @@ function mfcs_request_email_log_0_resend_form_submit($form, &$form_state) {
       'body' => $log->body,
       'code' => MFCS_EMAIL_CODE_RESEND,
       'user_id' => $user_id,
-      'date' => $instance
+      'date' => $instance,
+      'type' => $log->type,
     );
+
+    $destination_user = mfcs_get_user_by_email($destination);
+    if (is_object($destination_user)) {
+      $fields['destination_user_id'] = $destination_user->uid;
+    }
+    unset($destination_user);
 
     $transaction = db_transaction();
 
@@ -1152,10 +1267,10 @@ function mfcs_request_email_log_0_resend_form_submit($form, &$form_state) {
   }
 
   if ($success) {
-    drupal_set_message(t("E-mail has been re-sent to the following addresses: @emails", array('@emails' => implode(', ', $destinations))));
+    drupal_set_message(t('E-mail has been re-sent to the following addresses: @emails', array('@emails' => implode(', ', $destinations))));
   }
   else {
-    drupal_set_message(t("Failed to re-send e-mail to the following addresses: @emails", array('@emails' => implode(', ', $destinations))), 'error');
+    drupal_set_message(t('Failed to re-send e-mail to the following addresses: @emails', array('@emails' => implode(', ', $destinations))), 'error');
 
     $form_state['rebuild'] = TRUE;
     $form_state['redirect'] = FALSE;

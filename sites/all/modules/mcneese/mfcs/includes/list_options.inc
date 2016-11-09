@@ -98,9 +98,37 @@ define('MFCS_UNAVAILABILITY_TYPE_EMERGENCY', 6);
 define('MFCS_UNAVAILABILITY_TYPE_CLASS', 7);
 
 /**
+ * E-Mail Types
+ */
+define('MFCS_EMAIL_TYPE_NONE', 0);
+define('MFCS_EMAIL_TYPE_AMENDED', 1);
+define('MFCS_EMAIL_TYPE_APPROVED', 2);
+define('MFCS_EMAIL_TYPE_CANCELLED', 3);
+define('MFCS_EMAIL_TYPE_CANCELLING', 4);
+define('MFCS_EMAIL_TYPE_COMMENT', 5);
+define('MFCS_EMAIL_TYPE_DELETED', 6);
+define('MFCS_EMAIL_TYPE_DENIED', 7);
+define('MFCS_EMAIL_TYPE_FINAL_DECISION', 8);
+define('MFCS_EMAIL_TYPE_FORCED', 9);
+define('MFCS_EMAIL_TYPE_INSURANCE_PROVIDED', 10);
+define('MFCS_EMAIL_TYPE_INSURANCE_REQUIRED', 11);
+define('MFCS_EMAIL_TYPE_ISSUES', 12);
+define('MFCS_EMAIL_TYPE_MODIFIED', 13);
+define('MFCS_EMAIL_TYPE_MOVED', 14);
+define('MFCS_EMAIL_TYPE_NEEDS_REVIEW', 15);
+define('MFCS_EMAIL_TYPE_ISSUES_NONE', 16);
+define('MFCS_EMAIL_TYPE_REASSIGN_COORDINATOR', 17);
+define('MFCS_EMAIL_TYPE_REASSIGN_REQUESTER', 18);
+define('MFCS_EMAIL_TYPE_REQUESTED', 19);
+define('MFCS_EMAIL_TYPE_REQUIREMENTS', 20);
+define('MFCS_EMAIL_TYPE_REVIEWED', 21);
+define('MFCS_EMAIL_TYPE_UNAVAILABLE', 22);
+define('MFCS_EMAIL_TYPE_UNAVAILABLE_LOCKED', 23);
+define('MFCS_EMAIL_TYPE_UNCANCELLED', 24);
+define('MFCS_EMAIL_TYPE_UNREVIEWED_REQUEST', 25);
+
+/**
  * Returns an array of facilities use status options for populating lists.
- *
- * @fixme: status currently has deleted set to 0 and therefore none and deleted conflict.
  *
  * @param string|null $option
  *   (optional) A string designating how the list will be populated.
@@ -387,31 +415,100 @@ function mfcs_get_request_room_list_options($location = NULL, $option = NULL, $h
   $rooms = mfcs_load_rooms($location, NULL, NULL, $disabled);
 
   if ($option == 'special') {
+    global $base_path;
+    $module_path = drupal_get_path('module', 'mfcs');
+
     foreach ($rooms as $room) {
-      $title = '<div class="building_desc">' . check_plain($room->building_name) . '</div>';
-      $title .= ' <div class="room_number"><span class="room_number-label">Room</span> <span class="room_number-data">' . check_plain($room->room_number) . '</span></div>';
+      // to simplify the design and to avoid having to alter the code later on, use the building and room ids as the name of the file.
+      $image_file_name = $room->building_id . '-';
+      $image_file_path = NULL;
+      $image_alt_text = NULL;
+
+      // first look for generic building-specific images.
+      if (file_exists(DRUPAL_ROOT . '/sites/all/modules/mcneese/mfcs/images/rooms/' . $image_file_name . '.png')) {
+        $image_file_path = $base_path . $module_path . '/images/rooms/' . $image_file_name . '.png';
+        $image_alt_text = FALSE;
+      }
+      elseif (file_exists(DRUPAL_ROOT . '/sites/all/modules/mcneese/mfcs/images/rooms/' . $image_file_name . '.jpg')) {
+        $image_file_path = $base_path . $module_path . '/images/rooms/' . $image_file_name . '.jpg';
+        $image_alt_text = FALSE;
+      }
+
+      // then look for room-specific images.
+      $image_file_name .= $room->room_id;
+      if (file_exists(DRUPAL_ROOT . '/sites/all/modules/mcneese/mfcs/images/rooms/' . $image_file_name . '.png')) {
+        $image_file_path = $base_path . $module_path . '/images/rooms/' . $image_file_name . '.png';
+        $image_alt_text = TRUE;
+      }
+      elseif (file_exists(DRUPAL_ROOT . '/sites/all/modules/mcneese/mfcs/images/rooms/' . $image_file_name . '.jpg')) {
+        $image_file_path = $base_path . $module_path . '/images/rooms/' . $image_file_name . '.jpg';
+        $image_alt_text = TRUE;
+      }
+      unset($image_file_name);
+
+      $room_name = NULL;
+      if (!empty($room->room_name)) {
+        $room_name = check_plain($room->room_name);
+      }
+
+      $building_name = NULL;
+      if (!empty($room->building_name)) {
+        $building_name = check_plain($room->building_name);
+      }
+
+      $room_number = NULL;
+      if (!empty($room->room_number)) {
+        $room_number = mcneese_fcs_text_capitalization($room->room_number);
+        $room_number = check_plain($room_number);
+      }
+
+      $title = '';
+
+      if (!is_null($image_file_path)) {
+        if ($image_alt_text) {
+          $image_alt_text = trim($building_name . ' ' . $room_name);
+        }
+        elseif ($image_alt_text === FALSE) {
+          $image_alt_text = trim($building_name);
+        }
+
+        $title .= '<img src="' . $image_file_path . '" alt="' . $image_alt_text . '" width="65" class="room_image">';
+      }
+      unset($image_alt_text);
+
+      $title .= '<div class="room_notes">';
+      $title .= '<div class="room_number"><span class="room_number-label">Room:</span> <span class="room_number-data">' . $room_number . '</span></div>';
 
       if (!empty($room->capacity_normal)) {
         $title .= '<div class="room_capacity"><span class="capacity-label">Capacity:</span> <span class="capacity-data">' . check_plain($room->capacity_normal) . '</span></div>';
       }
+      $title .= '</div>';
 
-      $room_name = 'No information available.';
-      if (!empty($room->room_name)) {
-        $room_name = check_plain($room->room_name);
+      $title .= '<div class="building_desc">' . $building_name . '</div>';
+
+      if (is_null($room_name)) {
+        $room_name = 'No information available.';
       }
+
       $title .= '<div class="room_description"><span class="room_description-label"></span> <span class="room_description-data">' . $room_name . '</span></div>';
 
       $options[$room->room_id] = $title;
     }
+
+    // return now to avoid custom sorting.
+    return $options;
   }
   elseif ($option == 'room_with_building') {
     foreach ($rooms as $room) {
       $title = '(' . $room->building_code . ') ';
       if (empty($room->room_name) || is_numeric($room->room_number)) {
-        $title .= $room->room_number;
+        $room_number = mcneese_fcs_text_capitalization($room->room_number);
+
+        $title .= $room_number;
+        unset($room_number);
       }
       else {
-        $title .= $room->room_name;
+        $title .= mcneese_fcs_text_capitalization($room->room_name);
       }
 
       $options[$room->room_id] = $title;
@@ -419,7 +516,15 @@ function mfcs_get_request_room_list_options($location = NULL, $option = NULL, $h
   }
   else {
     foreach ($rooms as $room) {
-      $options[$room->room_id] = empty($room->room_name) ? $room->room_number : $room->room_name;
+      if (empty($room->room_name) || is_numeric($room->room_number)) {
+        $room_number = mcneese_fcs_text_capitalization($room->room_number);
+
+        $options[$room->room_id] = $room_number;
+        unset($room_number);
+      }
+      else {
+        $options[$room->room_id] = $room->room_name;
+      }
     }
   }
 
@@ -1220,6 +1325,69 @@ function mfcs_get_insurance_list_options($option = NULL, $hidden = FALSE, $disab
   return $options;
 }
 
+/**
+ * Returns an array of e-mail types.
+ *
+ * @param string|null $option
+ *   (optional) A string designating how the list will be populated.
+ * @param bool $hidden
+ *   (optional) When TRUE, will include hidden/special case classifications
+ *   that are not normally exposed through the select list options.
+ * @param bool $disabled
+ *   (optional) When TRUE, load disabled options in addition to existing options.
+ *
+ * @return array
+ *   An array of options available.
+ */
+function mfcs_get_email_type_list_options($option = NULL, $hidden = FALSE, $disabled = FALSE) {
+  $options = array();
+  $options_all = array();
+
+  if ($hidden) {
+    $options_all[MFCS_EMAIL_TYPE_NONE] = 'None';
+  }
+
+  $options_all[MFCS_EMAIL_TYPE_AMENDED] = 'Amended';
+  $options_all[MFCS_EMAIL_TYPE_APPROVED] = 'Approved';
+  $options_all[MFCS_EMAIL_TYPE_CANCELLED] = 'Cancelled';
+  $options_all[MFCS_EMAIL_TYPE_CANCELLING] = 'Cancelling';
+  $options_all[MFCS_EMAIL_TYPE_COMMENT] = 'Comment';
+  $options_all[MFCS_EMAIL_TYPE_DELETED] = 'Deleted';
+  $options_all[MFCS_EMAIL_TYPE_DENIED] = 'Denied';
+  $options_all[MFCS_EMAIL_TYPE_FINAL_DECISION] = 'Final Decision';
+  $options_all[MFCS_EMAIL_TYPE_FORCED] = 'Forced';
+  $options_all[MFCS_EMAIL_TYPE_INSURANCE_PROVIDED] = 'Insurance Provided';
+  $options_all[MFCS_EMAIL_TYPE_INSURANCE_REQUIRED] = 'Insurance Required';
+  $options_all[MFCS_EMAIL_TYPE_ISSUES] = 'Issues';
+  $options_all[MFCS_EMAIL_TYPE_MODIFIED] = 'Modified';
+  $options_all[MFCS_EMAIL_TYPE_MOVED] = 'Moved';
+  $options_all[MFCS_EMAIL_TYPE_NEEDS_REVIEW] = 'Needs Review';
+  $options_all[MFCS_EMAIL_TYPE_ISSUES_NONE] = 'No Issues';
+  $options_all[MFCS_EMAIL_TYPE_REASSIGN_COORDINATOR] = 'Re-Assign Coordinator';
+  $options_all[MFCS_EMAIL_TYPE_REASSIGN_REQUESTER] = 'Re-Assign Requester';
+  $options_all[MFCS_EMAIL_TYPE_REQUESTED] = 'Requested';
+  $options_all[MFCS_EMAIL_TYPE_UNAVAILABLE] = 'Unavailable';
+  $options_all[MFCS_EMAIL_TYPE_UNAVAILABLE_LOCKED] = 'Unavailable (Due to Lock)';
+  $options_all[MFCS_EMAIL_TYPE_UNCANCELLED] = 'Uncancelled';
+  $options_all[MFCS_EMAIL_TYPE_UNREVIEWED_REQUEST] = 'Unreviewed Request';
+
+  if ($disabled) {
+    $options_all[MFCS_EMAIL_TYPE_REQUIREMENTS] = 'Requirements';
+    $options_all[MFCS_EMAIL_TYPE_REVIEWED] = 'Reviewed';
+  }
+
+  if ($option == 'select') {
+    $options[''] = '- Select -';
+  }
+
+  foreach ($options_all as $option_id => $option_name) {
+    $options[$option_id] = $option_name;
+  }
+
+  asort($options);
+
+  return $options;
+}
 /**
  * @} End of '@addtogroup mfcs'.
  */

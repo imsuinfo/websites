@@ -161,7 +161,7 @@ function mfcs_request_create_0_form($form, &$form_state, $copy_request = NULL) {
     unset($request_fields['request_coordinator']);
   }
 
-  $statement_markup = 'McNeese State University is happy to provide facilities and resources to our Students, Employees, and the Community to further educational, cultural, and recreational initiatives through requests held on campus.' . '<br>';
+  $statement_markup = 'McNeese State University is happy to provide facilities and resources to our Students, Employees, and the Community to further educational, cultural, and recreational initiatives through events held on campus.' . '<br>';
   $statement_markup .= '<br>';
   $statement_markup .= 'All activities, meetings, or requests, excluding scheduled academic classes, must be scheduled through the Facilities Use and Special Event Request form. The following questionnaire assists campus officials in not only scheduling campus facilities or maintaining a master calendar; it allows better service through inter-departmental communication and collaboration enhancing the excellence of McNeese.' . '<br>';
   $statement_markup .= '<br>';
@@ -170,6 +170,8 @@ function mfcs_request_create_0_form($form, &$form_state, $copy_request = NULL) {
   $statement_markup .= '<strong>All requests should be made <a href="//www.mcneese.edu/node/3217#3_week_requirement" target="_blank">a minimum of three weeks in advance</a> of the event or of expected start date of publicity for the event, whichever comes first.</strong>' . '<br>';
   $statement_markup .= '<br>';
   $statement_markup .= 'If you are only making a request for a <em>Table Reservation</em> in the <em>New Ranch</em> or in the <em>Quad</em>, then you should instead use the <a href="//www.mcneese.edu/studentunion/student_union_reservations">Table Request Form</a>.' . '<br>';
+  $statement_markup .= '<br>';
+  $statement_markup .= 'La. R.S. 14:133 (A) provides that "<em>Filing false public records is the filing or depositing for record in any public office or with any public official, or the maintaining as required by law, regulation, or rule, with knowledge of its falsity, any of the following: (1) Any forged document. (2) Any wrongfully altered document. (3) Any document containing a false statement or false representation of a material fact.</em>"' . '<br>';
   $statement_markup .= '<br>';
   $statement_markup .= 'Confirmation and approval of the submitted request must be received before any publicity is scheduled.';
   $statement_markup .= '<br>';
@@ -484,7 +486,7 @@ function mfcs_request_create_0_form_validate($form, &$form_state) {
             }
             elseif (!empty($room_unavailability['conflicts']) || !empty($room_unavailability['unavailable'])) {
               $unavailable_message = '<span class="uppercase">Warning</span>: The specified room is currently unavailable for the following dates: ';
-              $unavailable_message .= mfcs_build_room_unavailable_message($room_unavailability);
+              $unavailable_message .= mfcs_build_room_unavailable_message($room_unavailability, TRUE);
               $unavailable_message .= 'You may still submit this request and your request attempt will still be logged (but your request will be auto-closed). ';
               drupal_set_message($unavailable_message, 'warning');
               unset($unavailable_message);

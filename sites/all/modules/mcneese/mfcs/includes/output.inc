@@ -251,6 +251,7 @@ function mfcs_build_calendar_month_markup($items, $month_start, $month_stop, $ab
 
   $markup .= '<div class="links_and_filters links_and_filters-group group-1">';
   $markup .= mfcs_build_calendar_ical_links_markup($month_start, TRUE, TRUE, FALSE);
+  $markup .= mfcs_build_calendar_openpgp_links_markup();
   $markup .= '</div>'; // filter-group-1
 
   $markup .= mfcs_build_determined_filters_markup();
@@ -368,8 +369,8 @@ function mfcs_build_calendar_day_markup($items, $day_start, $day_stop, $title, $
 
   // prepare the inline CSS markup
   $css_screen = '';
-  $css_portrait = "@media (orientation:portrait) {\n";
-  $css_landscape = "@media (orientation:landscape) {\n";
+  $css_portrait = '@media (orientation:portrait) {' . "\n";
+  $css_landscape = '@media (orientation:landscape) {' . "\n";
 
   // begin wrappers (main)
   $markup = '<div' . $id_string . ' class="calendar-day-wrapper">';
@@ -413,7 +414,7 @@ function mfcs_build_calendar_day_markup($items, $day_start, $day_stop, $title, $
   // header (All Day)
   $markup .= '<div class="calendar-header-wrapper calendar-all_day"><div class="calendar-header">';
   $markup .= '<div class="calendar-day-wrapper"><div class="calendar-day">';
-  $markup .= "All Day";
+  $markup .= 'All Day';
   $markup .= '</div></div></div></div>';
 
 
@@ -422,7 +423,7 @@ function mfcs_build_calendar_day_markup($items, $day_start, $day_stop, $title, $
 
   if (empty($items['all_day'])) {
     $markup .= '<div class="calendar-item-wrapper even row-0"><div class="calendar-item">';
-    $markup .= "No requests found.";
+    $markup .= 'No requests found.';
     $markup .= '</div></div>';
   }
   else {
@@ -625,11 +626,11 @@ function mfcs_build_calendar_day_markup($items, $day_start, $day_stop, $title, $
       $markup .= '<div class="calendar-time_slot-links-wrapper no-print">';
 
       if ($display_prev) {
-        $markup .= '<a href="' . $page_url . ($page_number - 1) . $url_arguments . '#' . $row_id . '" class="calendar-time_slot-link calendar-time_slot-links-previous" title="There are more requests on the previous page for this time slot."><< Previous</a>';
+        $markup .= '<a href="' . $page_url . ($page_number - 1) . $url_arguments . '#' . $row_id . '" class="calendar-time_slot-link calendar-time_slot-links-previous" title="There are more requests on the previous page for this time slot.">&laquo; Previous</a>';
       }
 
       if ($display_next) {
-        $markup .= '<a href="' . $page_url . ($page_number + 1) . $url_arguments . '#' . $row_id . '" class="calendar-time_slot-link calendar-time_slot-links-next" title="There are more requests on the next page for this time slot.">Next >></a>';
+        $markup .= '<a href="' . $page_url . ($page_number + 1) . $url_arguments . '#' . $row_id . '" class="calendar-time_slot-link calendar-time_slot-links-next" title="There are more requests on the next page for this time slot.">Next &raquo;</a>';
       }
 
       $markup .= '</div>';
@@ -686,7 +687,7 @@ function mfcs_build_calendar_day_markup($items, $day_start, $day_stop, $title, $
           'margin-top' => 'margin-top: 0px;',
           'margin-bottom' => 'margin-bottom: 0px;',
           'margin-right' => 'margin-right: 3px;',
-          'z-index' => 'z-index: 0;',
+          'z-index' => 'z-index: 2;',
         );
 
         $item_style_screen = $item_style;
@@ -838,7 +839,7 @@ function mfcs_build_calendar_day_markup($items, $day_start, $day_stop, $title, $
               }
             }
 
-            $item_times = date(MFCS_DATE_FORMAT_TIME, $item['time_start']) . " to " . date(MFCS_DATE_FORMAT_TIME, $item['time_stop']);
+            $item_times = date(MFCS_DATE_FORMAT_TIME, $item['time_start']) . ' to ' . date(MFCS_DATE_FORMAT_TIME, $item['time_stop']);
 
             $item_text .= '<div class="calendar-item-link-wrapper"><a class="calendar-item-link" href="' . $item['href'] . '" title="' . $item['tooltip'] . '">' . $item['title'] . '</a></div>';
             $item_text .= '<div class="calendar-item-time-wrapper"><div class="calendar-item-time" title="Time: ' . $item_times . '">' . $item_times . '</div></div>';
@@ -904,18 +905,18 @@ function mfcs_build_calendar_day_markup($items, $day_start, $day_stop, $title, $
       $css_landscape .= "\n" . $id_string_css_name . ' #' . $row_id . ' #' . $item_id_string . " {\n  " . implode("\n  ", $item_style_landscape) . "\n}\n";
 
       if (!empty($location_style_screen)) {
-        $css_screen .= "\n" . $id_string_css_name . ' #' . $row_id . ' #' . $item_id_string . " > .calendar-item > .calendar-item-location-wrapper,\n";
-        $css_screen .= "\n" . $id_string_css_name . ' #' . $row_id . ' #' . $item_id_string . " > .calendar-item > .calendar-item-location-wrapper > .calendar-item-location {\n  " . implode("\n  ", $location_style_screen) . "\n}\n";
+        $css_screen .= "\n" . $id_string_css_name . ' #' . $row_id . ' #' . $item_id_string . ' > .calendar-item > .calendar-item-location-wrapper,' . "\n";
+        $css_screen .= "\n" . $id_string_css_name . ' #' . $row_id . ' #' . $item_id_string . ' > .calendar-item > .calendar-item-location-wrapper > .calendar-item-location {' . "\n  " . implode("\n  ", $location_style_screen) . "\n}\n";
       }
 
       if (!empty($location_style_portrait)) {
-        $css_portrait .= "\n" . $id_string_css_name . ' #' . $row_id . ' #' . $item_id_string . " > .calendar-item > .calendar-item-location-wrapper,\n";
-        $css_portrait .= "\n" . $id_string_css_name . ' #' . $row_id . ' #' . $item_id_string . " > .calendar-item > .calendar-item-location-wrapper > .calendar-item-location {\n  " . implode("\n  ", $location_style_portrait) . "\n}\n";
+        $css_portrait .= "\n" . $id_string_css_name . ' #' . $row_id . ' #' . $item_id_string . ' > .calendar-item > .calendar-item-location-wrapper,' . "\n";
+        $css_portrait .= "\n" . $id_string_css_name . ' #' . $row_id . ' #' . $item_id_string . ' > .calendar-item > .calendar-item-location-wrapper > .calendar-item-location {' . "\n  " . implode("\n  ", $location_style_portrait) . "\n}\n";
       }
 
       if (!empty($location_style_landscape)) {
-        $css_landscape .= "\n" . $id_string_css_name . ' #' . $row_id . ' #' . $item_id_string . " > .calendar-item > .calendar-item-location-wrapper,\n";
-        $css_landscape .= "\n" . $id_string_css_name . ' #' . $row_id . ' #' . $item_id_string . " > .calendar-item > .calendar-item-location-wrapper > .calendar-item-location {\n  " . implode("\n  ", $location_style_landscape) . "\n}\n";
+        $css_landscape .= "\n" . $id_string_css_name . ' #' . $row_id . ' #' . $item_id_string . ' > .calendar-item > .calendar-item-location-wrapper,' . "\n";
+        $css_landscape .= "\n" . $id_string_css_name . ' #' . $row_id . ' #' . $item_id_string . ' > .calendar-item > .calendar-item-location-wrapper > .calendar-item-location {' . "\n  " . implode("\n  ", $location_style_landscape) . "\n}\n";
       }
     }
 
@@ -938,6 +939,7 @@ function mfcs_build_calendar_day_markup($items, $day_start, $day_stop, $title, $
   $markup .= '<div id="mfcs-links_and_filters" class="links_and_filters-wrapper no-print">';
   $markup .= '<div class="links_and_filters links_and_filters-group group-1">';
   $markup .= mfcs_build_calendar_ical_links_markup($day_start);
+  $markup .= mfcs_build_calendar_openpgp_links_markup();
   $markup .= '</div>';
 
   $markup .= mfcs_build_determined_filters_markup();
@@ -1014,7 +1016,7 @@ function mfcs_build_calendar_ical_links_markup($date_start, $year = TRUE, $month
   }
 
   $markup = '<div' . $id . ' class="links_and_filters ical">';
-  $markup .= '<h3 class="links_and_filters-title ical">iCal Download Options</h3>';
+  $markup .= '<h3 class="links_and_filters-title ical">iCalendar Download Options</h3>';
   $markup .= '<ul class="links_and_filters-list ical">';
 
   if ($year) {
@@ -1028,21 +1030,65 @@ function mfcs_build_calendar_ical_links_markup($date_start, $year = TRUE, $month
 
         $markup .= '<li class="links_and_filters-list-item item-day ical">';
         $markup .= '<div class="links_and_filters-list-item-label item-day item-label ical">Day:</div> ';
-        $markup .= '<a href="' . $base_path . 'requests/ical-0/day/' . $year . '/' . $month . '/' . $day . $url_arguments . '" title="Download iCal for ' . $month . ' ' . $day . ', ' . $year . '" class="links_and_filters-list-item-link item-day ical item-link">' . $month . ' ' . $day . ', ' . $year . '</a>';
+        $markup .= '<a href="' . $base_path . 'requests/ical-0/day/' . $year . '/' . $month . '/' . $day . $url_arguments . '" title="Download iCalendar for ' . $month . ' ' . $day . ', ' . $year . '" class="links_and_filters-list-item-link item-day ical item-link">' . $month . ' ' . $day . ', ' . $year . '</a>';
         $markup .= '</li>';
       }
 
       $markup .= '<li class="links_and_filters-list-item item-month ical">';
       $markup .= '<div class="links_and_filters-list-item-label item-month item-label ical">Month:</div> ';
-      $markup .= '<a href="' . $base_path . 'requests/ical-0/month/' . $year . '/' . $month . $url_arguments . '" title="Download iCal for the month of ' . $month . ' ' . $year . '" class="links_and_filters-list-item-link item-month ical item-link">' . $month . ' ' . $year . '</a>';
+      $markup .= '<a href="' . $base_path . 'requests/ical-0/month/' . $year . '/' . $month . $url_arguments . '" title="Download iCalendar for the month of ' . $month . ' ' . $year . '" class="links_and_filters-list-item-link item-month ical item-link">' . $month . ' ' . $year . '</a>';
       $markup .= '</li>';
     }
 
     $markup .= '<li class="links_and_filters-list-item item-year ical">';
     $markup .= '<div class="links_and_filters-list-item-label item-year item-label ical">Year:</div> ';
-    $markup .= '<a href="' . $base_path . 'requests/ical-0/year/' . $year . $url_arguments . '" title="Download iCal for the year ' . $year . '" class="links_and_filters-list-item-link item-year ical item-link">' . $year . '</a>';
+    $markup .= '<a href="' . $base_path . 'requests/ical-0/year/' . $year . $url_arguments . '" title="Download iCalendar for the year ' . $year . '" class="links_and_filters-list-item-link item-year ical item-link">' . $year . '</a>';
     $markup .= '</li>';
   }
+
+  $markup .= '</ul>';
+  $markup .= '</div>';
+
+  return $markup;
+}
+
+/**
+ * Build a list of links that contain the available openpgp public keys for this system.
+ *
+ * @param string|null $id
+ *   (optional) The HTML id attribute to use.
+ *
+ * @return string|bool
+ *   The generate HTML markup or FALSE on error.
+ */
+function mfcs_build_calendar_openpgp_links_markup($id = NULL) {
+  if (!is_null($id) && !is_string($id)) {
+    cf_error::invalid_string('id');
+    return FALSE;
+  }
+
+  global $base_path;
+  global $mfcs_determined;
+
+  $url_arguments = '';
+  if (!empty($mfcs_determined['complete'])) {
+    $url_arguments .= '?' . $mfcs_determined['complete'];
+  }
+
+  $module_path = drupal_get_path('module', 'mfcs');
+
+  if (!empty($id)) {
+    $id = ' id="' . $id . '"';
+  }
+
+  $markup = '<div' . $id . ' class="links_and_filters openpgp">';
+  $markup .= '<h3 class="links_and_filters-title openpgp">OpenPGP Download Options</h3>';
+  $markup .= '<ul class="links_and_filters-list openpgp">';
+
+  $markup .= '<li class="links_and_filters-list-item item-public_key openpgp">';
+  $markup .= '<div class="links_and_filters-list-item-label item-public_key item-label openpgp">Public Key:</div> ';
+  $markup .= '<a href="' . $module_path . '/keys/fcs-public-2014_to_2020.pgp' . $url_arguments . '" title="Download OpenPGP public key for the years 2014 to 2020." class="links_and_filters-list-item-link item-public_key openpgp item-link">2014 to 2020</a>';
+  $markup .= '</li>';
 
   $markup .= '</ul>';
   $markup .= '</div>';
@@ -1425,6 +1471,7 @@ function mfcs_output_print_page_view($html, $parameters = array()) {
     return FALSE;
   }
 
+  global $base_url;
   global $base_path;
 
   // determine the number of directories in the base path so that they can be stripped out properly.
@@ -1532,7 +1579,12 @@ function mfcs_output_print_page_view($html, $parameters = array()) {
 
   // title tags
   if (empty($parameters['page_title'])) {
-    $page_title = "Facilities Use Request";
+    if ($parameters['page_title'] === FALSE) {
+      $page_title = FALSE;
+    }
+    else {
+      $page_title = 'Facilities Use Request';
+    }
   }
   else {
     $page_title = $parameters['page_title'];
@@ -1569,16 +1621,25 @@ function mfcs_output_print_page_view($html, $parameters = array()) {
   $html .= '<body class="' . $body_class . '">';
   $html .= '  <div id="mcneese-page" class="mcneese-page">';
   $html .= '    <div id="mcneese-page-content" class="mcneese-content full" role="main">';
-  $html .= '    <header class="page-title html_tag-header">';
-  $html .= '      <hgroup class="html_tag-hgroup">';
-  $html .= '        <h1 class="page-title html_tag-heading" role="main">' . $page_title . '</h1>';
-  $html .= '      </hgroup>';
-  $html .= '    </header>';
+
+  if ($page_title !== FALSE) {
+    $html .= '    <header class="page-title html_tag-header">';
+    $html .= '      <hgroup class="html_tag-hgroup">';
+    $html .= '        <h1 class="page-title html_tag-heading" role="main">' . $page_title . '</h1>';
+    $html .= '      </hgroup>';
+    $html .= '    </header>';
+  }
+
   $html .= '    ' . $body_markup;
   $html .= '    </div>';
   $html .= '  </div>';
   $html .= '</body>';
   $html .= '</html>';
+
+  // Workaround: relative paths are not always working so change them to absolute paths.
+  $html = preg_replace('|<img([^>]*) src="/fcs/|i', '<img$1 src="' . $base_url . '/', $html);
+  $html = preg_replace('|<a([^>]*) href="/fcs/|i', '<a$1 href="' . $base_url . '/', $html);
+  $html = preg_replace('|<link([^>]*) href="/fcs/|i', '<link$1 href="' . $base_url . '/', $html);
 
   return $html;
 }
@@ -1605,7 +1666,7 @@ function mfcs_output_print_page_view($html, $parameters = array()) {
  * @see: mfcs_output_print_page_view()
  */
 function mfcs_request_pdf_0_page_using_wkhtmltopdf($request_id, $revision_id, $html, $local = FALSE, $type = MFCS_PDF_TYPE_REQUEST) {
-  if (!cf_is_integer($request_id)) {
+  if (!is_null($request_id) && !cf_is_integer($request_id)) {
     cf_error::invalid_integer('request_id');
     return FALSE;
   }
@@ -1655,7 +1716,11 @@ function mfcs_request_pdf_0_page_using_wkhtmltopdf($request_id, $revision_id, $h
 
   $wkpdf->addPage($html);
 
-  $filename = mfcs_build_filename($request_id, $revision_id, 0, $type);
+  if (is_null($request_id)) {
+  }
+  else {
+    $filename = mfcs_build_filename($request_id, $revision_id, 0, $type);
+  }
 
   if ($local) {
     // save the file, locally.
@@ -1675,7 +1740,90 @@ function mfcs_request_pdf_0_page_using_wkhtmltopdf($request_id, $revision_id, $h
   }
 
   if (!$result) {
-    watchdog(MFCS_WATCHDOG_ID, "Error occured while generating the PDF of request @id: @error", array('@id' => $request_id, '@error' => $wkpdf->getError()), WATCHDOG_ERROR);
+    watchdog(MFCS_WATCHDOG_ID, 'Error occured while generating the PDF of request @id: @error', array('@id' => $request_id, '@error' => $wkpdf->getError()), WATCHDOG_ERROR);
+    return FALSE;
+  }
+
+  return TRUE;
+}
+
+/**
+ * Renders a PDF of a given request using the wkhtmltopdf library.
+ *
+ * @param string $filename
+ *   The name of the file to use.
+ * @param string $html
+ *   The HTML markup to convert to a PDF. Recommend converting the markup
+ *   using mfcs_output_print_page_view().
+ * @param bool $local
+ *   (optional) If TRUE, then the file is saved to the local disk.
+ *   If FALSE, then the file is print to stdout.
+ *
+ * @return bool
+ *   TRUE on success, FALSE otherwise.
+ *
+ * @see: mfcs_output_print_page_view()
+ */
+function mfcs_request_pdf_0_page_using_wkhtmltopdf_generic($filename, $html, $local = FALSE) {
+  if (!is_string($filename) && strlen($filename) > 0) {
+    cf_error::invalid_string('filename');
+    return FALSE;
+  }
+
+  if (!is_string($html)) {
+    cf_error::invalid_string('html');
+    return FALSE;
+  }
+
+  if (!is_bool($local)) {
+    cf_error::invalid_bool('local');
+    return FALSE;
+  }
+
+  $library = libraries_load('phpwkhtmltopdf');
+  if ($library === FALSE || empty($library['loaded'])) {
+    return FALSE;
+  }
+
+  $wkpdf = new WkHtmlToPdf();
+
+  $wk_options = array();
+
+  $wk_options['binPath'] = '/usr/local/bin/wkhtmltopdf';
+  $wk_options['binName'] = 'wkhtmltopdf';
+
+  // when not ignored, the PDF does not get generated.
+  $wk_options['ignoreWarnings'] = TRUE;
+
+  $wrapper = file_stream_wrapper_get_instance_by_scheme('temporary');
+  if (is_object($wrapper)) {
+    $wk_options['tmp'] = $wrapper->getDirectoryPath();
+  }
+
+  // setup the default options
+  $wkpdf->setOptions($wk_options);
+
+  $wkpdf->addPage($html);
+
+  if ($local) {
+    // save the file, locally.
+    $temporary_name = drupal_tempnam('temporary://', 'file');
+    $wkpdf->saveAs($temporary_name);
+
+    file_unmanaged_move($temporary_name, 'private://requests/local/' . $filename, FILE_EXISTS_REPLACE);
+  }
+  else {
+    drupal_send_headers();
+
+    // send to the browser
+    #$result = $wkpdf->send($filename, TRUE);
+
+    // send as a download
+    $result = $wkpdf->send($filename, FALSE);
+  }
+
+  if (!$result) {
+    watchdog(MFCS_WATCHDOG_ID, 'Error occured while generating the PDF of @filename: @error', array('@filename' => $filename, '@error' => $wkpdf->getError()), WATCHDOG_ERROR);
     return FALSE;
   }
 
@@ -1731,6 +1879,9 @@ function mfcs_build_filename($request_id, $revision_id = NULL, $mode = MFCS_VIEW
   elseif ($type === MFCS_PDF_TYPE_AGREEMENT) {
     $name = 'agreement';
   }
+  elseif ($type === MFCS_PDF_TYPE_CALENDAR) {
+    $name = 'calendar';
+  }
 
   $fixed_title = preg_replace('/\W/i', '_', $request['information']['title'][0]->value);
   $fixed_title = preg_replace('/_+/i', '_', $fixed_title);
@@ -1759,7 +1910,7 @@ function mfcs_build_filename($request_id, $revision_id = NULL, $mode = MFCS_VIEW
     $extra .= '-revision-' . $revision_id;
   }
 
-  return sprintf("%'010s", $request_id) . '-' . $name . '-' . $fixed_title . $extra . '.pdf';
+  return sprintf('%\'010s', $request_id) . '-' . $name . '-' . $fixed_title . $extra . '.pdf';
 }
 
 /**

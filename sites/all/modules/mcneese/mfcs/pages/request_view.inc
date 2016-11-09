@@ -1144,7 +1144,7 @@ function mfcs_request_view_0_form($form, &$form_state, $request_id, $mode = MFCS
                   $yet_to_review_markup_prefix = '';
                   $yet_to_review_markup_suffix = '';
                   if ($is_manager || $is_administer) {
-                    $yet_to_review_markup_prefix = '<a href="' . $base_path . 'requests/users-0/view/' . $user_id . $url_arguments . '" class="details_list-user_name-link no_print_as_link">';
+                    $yet_to_review_markup_prefix = '<a href="' . $base_path . 'requests/users-0/view/' . $user_id . $url_arguments . '" class="details_list-user_name-link no_print_links_as_link">';
                     $yet_to_review_markup_suffix = '</a>';
                   }
 
@@ -1177,7 +1177,7 @@ function mfcs_request_view_0_form($form, &$form_state, $request_id, $mode = MFCS
             $yet_to_review_markup_prefix = '';
             $yet_to_review_markup_suffix = '';
             if ($is_manager || $is_administer) {
-              $yet_to_review_markup_prefix = '<a href="' . $base_path . 'requests/users-0/view/' . $request['venue_coordinator']['user_id'][0]->value . $url_arguments . '" class="details_list-user_name-link no_print_as_link">';
+              $yet_to_review_markup_prefix = '<a href="' . $base_path . 'requests/users-0/view/' . $request['venue_coordinator']['user_id'][0]->value . $url_arguments . '" class="details_list-user_name-link no_print_links_as_link">';
               $yet_to_review_markup_suffix = '</a>';
             }
 
@@ -1238,7 +1238,7 @@ function mfcs_request_view_0_form($form, &$form_state, $request_id, $mode = MFCS
                 $yet_to_review_markup_prefix = '';
                 $yet_to_review_markup_suffix = '';
                 if ($is_manager || $is_administer) {
-                  $yet_to_review_markup_prefix = '<a href="' . $base_path . 'requests/users-0/view/' . $proxy_id . $url_arguments . '" class="details_list-user_name-link no_print_as_link">';
+                  $yet_to_review_markup_prefix = '<a href="' . $base_path . 'requests/users-0/view/' . $proxy_id . $url_arguments . '" class="details_list-user_name-link no_print_links_as_link">';
                   $yet_to_review_markup_suffix = '</a>';
                 }
 
@@ -1473,6 +1473,10 @@ function mfcs_request_view_0_form($form, &$form_state, $request_id, $mode = MFCS
           $reviewer_classifications[MFCS_REVIEWER_CLASSIFICATION_VENUE_COORDINATOR_PROXY] = 'Venue Coordinator (Proxy)';
           $reviewer_classifications_all[MFCS_REVIEWER_CLASSIFICATION_VENUE_COORDINATOR_PROXY] = 'Venue Coordinator (Proxy)';
         }
+
+        // If the user is a venue coordinator but has no reviewer classifications (or the current step is venue available), then they should not be able to specify issues/no-issues.
+        unset($decision_options[MFCS_REVIEW_DECISION_ISSUES]);
+        unset($decision_options[MFCS_REVIEW_DECISION_ISSUES_NONE]);
       }
 
       if (!empty($reviewer_classifications)) {
@@ -1489,6 +1493,18 @@ function mfcs_request_view_0_form($form, &$form_state, $request_id, $mode = MFCS
         $decision_options = array();
         if ($can_comment_request) {
           $decision_options[MFCS_REVIEW_DECISION_COMMENT] = $decision_options_all[MFCS_REVIEW_DECISION_COMMENT];
+        }
+      }
+
+      // only allow comments for a cancelled request.
+      if ($status === MFCS_REQUEST_STATUS_CANCELLED || $status === MFCS_REQUEST_STATUS_CLOSED_ACCEPTED_CANCELLED) {
+        if (array_key_exists(MFCS_REVIEW_DECISION_COMMENT, $decision_options)) {
+          $decision_options = array(
+            MFCS_REVIEW_DECISION_COMMENT => $decision_options_all[MFCS_REVIEW_DECISION_COMMENT],
+          );
+        }
+        else {
+          $decision_options = array();
         }
       }
 
@@ -1579,7 +1595,7 @@ function mfcs_request_view_0_form($form, &$form_state, $request_id, $mode = MFCS
       );
 
       if (count($decision_options) == 1 && array_key_exists(MFCS_REVIEW_DECISION_COMMENT, $decision_options)) {
-        $form['review']['operations']['decision']['#title'] = "Action / Decision";
+        $form['review']['operations']['decision']['#title'] = 'Action / Decision';
         $form['review']['operations']['decision']['#default_value'] = MFCS_REVIEW_DECISION_COMMENT;
       }
 
@@ -2584,11 +2600,11 @@ function mfcs_request_view_0_form_submit($form, &$form_state) {
       $extra['never_coordinator'] = TRUE;
     }
 
+    $is_new_request = NULL;
     if ($decision === MFCS_REVIEW_DECISION_COMMENT) {
       // comments do not need to be processed on a per step basis, so skip the $step conditions below.
     }
     elseif ($step === MFCS_REVIEW_STEP_VENUE_AVAILABLE) {
-      $is_new_request = NULL;
       if (isset($form['form']['new']['#value'])) {
         $is_new_request = $form['form']['new']['#value'];
       }
@@ -3139,10 +3155,10 @@ function mfcs_request_view_0_form_submit_pdf($form, &$form_state) {
   }
 
   if (is_null($use_revision)) {
-    $form_state['redirect'] = mfcs_build_redirect_array('/requests/pdf-0/' . $request_id . '/' . $mode);
+    $form_state['redirect'] = mfcs_build_redirect_array('/pdf-0/' . $request_id . '/' . $mode);
   }
   else {
-    $form_state['redirect'] = mfcs_build_redirect_array('/requests/pdf-0/' . $request_id . '/' . $mode . '/' . $use_revision);
+    $form_state['redirect'] = mfcs_build_redirect_array('/pdf-0/' . $request_id . '/' . $mode . '/' . $use_revision);
   }
 }
 
@@ -3162,7 +3178,7 @@ function mfcs_request_view_0_form_submit_pdf($form, &$form_state) {
  *   This function should not return.
  */
 function mfcs_request_pdf_0_page($request_id, $mode, $revision_id = NULL) {
-  $page_title = "Facilities Use Request";
+  $page_title = 'Facilities Use Request';
   drupal_set_title($page_title);
 
   if (!is_null($revision_id) && !cf_is_integer($revision_id)) {
@@ -3192,18 +3208,18 @@ function mfcs_request_pdf_0_page($request_id, $mode, $revision_id = NULL) {
 
   if (is_null($revision_id)) {
     if ($mode == MFCS_VIEW_MODE_NORMAL) {
-      mfcs_add_canonical_headers('requests/pdf-0/' . $request_id . '/' . $mode, 'requests/pdf-0/' . $request_id);
+      mfcs_add_canonical_headers('pdf-0/' . $request_id . '/' . $mode, 'pdf-0/' . $request_id);
     }
     else {
-      mfcs_add_canonical_headers('requests/pdf-0/' . $request_id . '/' . $mode);
+      mfcs_add_canonical_headers('pdf-0/' . $request_id . '/' . $mode);
     }
   }
   else {
-    mfcs_add_canonical_headers('requests/pdf-0/' . $request_id . '/' . $mode . '/' . $revision_id);
+    mfcs_add_canonical_headers('pdf-0/' . $request_id . '/' . $mode . '/' . $revision_id);
   }
 
   if (!empty($request['information']['title'][0]->value)) {
-    $page_title = "Facilities Use Request: " . $request['information']['title'][0]->value;
+    $page_title = 'Facilities Use Request: ' . $request['information']['title'][0]->value;
 
     drupal_set_title($page_title);
   }
@@ -3232,7 +3248,7 @@ function mfcs_request_pdf_0_page($request_id, $mode, $revision_id = NULL) {
   mfcs_include(MFCS_INCLUDE_OUTPUT);
 
   $parameters = array(
-    'page_title' => "Facilities Use Request: " . $request['information']['title'][0]->value,
+    'page_title' => 'Facilities Use Request: ' . $request['information']['title'][0]->value,
     'title' => 'Request #' . $request_id . ': ' . $request['information']['title'][0]->value,
   );
 
@@ -3269,7 +3285,7 @@ function mfcs_request_pdf_0_page($request_id, $mode, $revision_id = NULL) {
  *   This function should not return.
  */
 function mfcs_request_print_0_page($request_id, $mode, $revision_id = NULL) {
-  $page_title = "Facilities Use Request";
+  $page_title = 'Facilities Use Request';
   drupal_set_title($page_title);
 
   if (!is_null($revision_id) && !cf_is_integer($revision_id)) {
@@ -3309,7 +3325,7 @@ function mfcs_request_print_0_page($request_id, $mode, $revision_id = NULL) {
   }
 
   if (!empty($request['information']['title'][0]->value)) {
-    $page_title = "Facilities Use Request: " . $request['information']['title'][0]->value;
+    $page_title = 'Facilities Use Request: ' . $request['information']['title'][0]->value;
 
     drupal_set_title($page_title);
   }
@@ -3338,7 +3354,7 @@ function mfcs_request_print_0_page($request_id, $mode, $revision_id = NULL) {
   mfcs_include(MFCS_INCLUDE_OUTPUT);
 
   $parameters = array(
-    'page_title' => "Facilities Use Request: " . $request['information']['title'][0]->value,
+    'page_title' => 'Facilities Use Request: ' . $request['information']['title'][0]->value,
     'title' => 'Request #' . $request_id . ': ' . $request['information']['title'][0]->value,
     'all_media' => TRUE,
   );

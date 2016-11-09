@@ -370,43 +370,43 @@ function mfcs_hook_menu_requests_basic(&$items, $module_path) {
     'tab_root' => 'requests/list-0',
   );
 
-  $items['requests/pdf-0/%'] = array(
+  $items['pdf-0/%'] = array(
     'title' => 'Request PDF',
     'description' => 'Download Request PDF',
     'page callback' => 'mfcs_request_pdf_0_page',
-    'page arguments' => array(2),
+    'page arguments' => array(1),
     'file' => 'request_view.inc',
     'file path' => $module_path . '/pages',
     'access callback' => 'mfcs_page_request_access',
-    'access arguments' => array('view', 2),
+    'access arguments' => array('view', 1),
     'tab_parent' => 'requests/list-0',
     'tab_root' => 'requests/list-0',
     'type' => MENU_CALLBACK,
   );
 
-  $items['requests/pdf-0/%/%'] = array(
+  $items['pdf-0/%/%'] = array(
     'title' => 'Request PDF',
     'description' => 'Download Request PDF',
     'page callback' => 'mfcs_request_pdf_0_page',
-    'page arguments' => array(2, 3),
+    'page arguments' => array(1, 2),
     'file' => 'request_view.inc',
     'file path' => $module_path . '/pages',
     'access callback' => 'mfcs_page_request_access',
-    'access arguments' => array('view', 2),
+    'access arguments' => array('view', 1),
     'tab_parent' => 'requests/list-0',
     'tab_root' => 'requests/list-0',
     'type' => MENU_CALLBACK,
   );
 
-  $items['requests/pdf-0/%/%/%'] = array(
+  $items['pdf-0/%/%/%'] = array(
     'title' => 'Request PDF',
     'description' => 'Download Request PDF',
     'page callback' => 'mfcs_request_pdf_0_page',
-    'page arguments' => array(2, 3, 4),
+    'page arguments' => array(1, 2, 3),
     'file' => 'request_view.inc',
     'file path' => $module_path . '/pages',
     'access callback' => 'mfcs_page_request_access',
-    'access arguments' => array('view', 2),
+    'access arguments' => array('view', 1),
     'tab_parent' => 'requests/list-0',
     'tab_root' => 'requests/list-0',
     'type' => MENU_CALLBACK,
@@ -456,7 +456,7 @@ function mfcs_hook_menu_requests_basic(&$items, $module_path) {
 
   $items['requests/synchronize-0/ical/%'] = array(
     'title' => 'Synchronize Requests',
-    'description' => 'Perform iCal synchronization operations.',
+    'description' => 'Perform iCalendar synchronization operations.',
     'page callback' => 'mfcs_request_synchronize_0_ical_page',
     'page arguments' => array(3),
     'file' => 'request_synchronize.inc',
@@ -470,7 +470,7 @@ function mfcs_hook_menu_requests_basic(&$items, $module_path) {
 
   $items['requests/synchronize-0/ical/%/%'] = array(
     'title' => 'Synchronize Requests',
-    'description' => 'Perform iCal synchronization operations.',
+    'description' => 'Perform iCalendar synchronization operations.',
     'page callback' => 'mfcs_request_synchronize_0_ical_page',
     'page arguments' => array(3, 4),
     'file' => 'request_synchronize.inc',
@@ -737,8 +737,8 @@ function mfcs_hook_menu_requests_listing(&$items, $module_path) {
   );
 
   $items['requests/ical-0/%'] = array(
-    'title' => 'Request iCal',
-    'description' => 'Request iCal',
+    'title' => 'Request iCalendar',
+    'description' => 'Request iCalendar',
     'page callback' => 'mfcs_request_ical_request_0_page',
     'page arguments' => array(2),
     'file' => 'request_ical.inc',
@@ -750,8 +750,8 @@ function mfcs_hook_menu_requests_listing(&$items, $module_path) {
   );
 
   $items['requests/ical-0/year'] = array(
-    'title' => 'Request iCal',
-    'description' => 'Request iCal - Year',
+    'title' => 'Request iCalendar',
+    'description' => 'Request iCalendar - Year',
     'page callback' => 'mfcs_request_ical_year_0_page',
     'page arguments' => array(NULL, NULL),
     'file' => 'request_ical.inc',
@@ -763,8 +763,8 @@ function mfcs_hook_menu_requests_listing(&$items, $module_path) {
   );
 
   $items['requests/ical-0/year/%'] = array(
-    'title' => 'Request iCal',
-    'description' => 'Requests iCal - Year',
+    'title' => 'Request iCalendar',
+    'description' => 'Requests iCalendar - Year',
     'page callback' => 'mfcs_request_ical_year_0_page',
     'page arguments' => array(3, 4),
     'file' => 'request_ical.inc',
@@ -776,8 +776,8 @@ function mfcs_hook_menu_requests_listing(&$items, $module_path) {
   );
 
   $items['requests/ical-0/month'] = array(
-    'title' => 'Request iCal',
-    'description' => 'Request iCal - Month',
+    'title' => 'Request iCalendar',
+    'description' => 'Request iCalendar - Month',
     'page callback' => 'mfcs_request_ical_month_0_page',
     'page arguments' => array(NULL, NULL),
     'file' => 'request_ical.inc',
@@ -789,8 +789,8 @@ function mfcs_hook_menu_requests_listing(&$items, $module_path) {
   );
 
   $items['requests/ical-0/month/%/%'] = array(
-    'title' => 'Request iCal',
-    'description' => 'Requests iCal - Month',
+    'title' => 'Request iCalendar',
+    'description' => 'Requests iCalendar - Month',
     'page callback' => 'mfcs_request_ical_month_0_page',
     'page arguments' => array(3, 4),
     'file' => 'request_ical.inc',
@@ -802,8 +802,8 @@ function mfcs_hook_menu_requests_listing(&$items, $module_path) {
   );
 
   $items['requests/ical-0/day'] = array(
-    'title' => 'Request iCal',
-    'description' => 'Requests iCal - Day',
+    'title' => 'Request iCalendar',
+    'description' => 'Requests iCalendar - Day',
     'page callback' => 'mfcs_request_ical_day_0_page',
     'page arguments' => array(),
     'file' => 'request_ical.inc',
@@ -815,8 +815,8 @@ function mfcs_hook_menu_requests_listing(&$items, $module_path) {
   );
 
   $items['requests/ical-0/day/%/%/%'] = array(
-    'title' => 'Request iCal',
-    'description' => 'Requests iCal - Day',
+    'title' => 'Request iCalendar',
+    'description' => 'Requests iCalendar - Day',
     'page callback' => 'mfcs_request_ical_day_0_page',
     'page arguments' => array(3, 4, 5),
     'file' => 'request_ical.inc',
@@ -868,6 +868,32 @@ function mfcs_hook_menu_requests_listing(&$items, $module_path) {
     'tab_root' => 'requests/search-0',
   );
   */
+
+  $items['pdf-0/calendar/%/%'] = array(
+    'title' => 'PDF of Monthly Calendar',
+    'description' => 'PDF of monthly calendar.',
+    'page callback' => 'mfcs_request_calendar_month_0_page_pdf',
+    'page arguments' => array(2, 3),
+    'file' => 'request_calendar.inc',
+    'file path' => $module_path . '/pages',
+    'access callback' => 'mfcs_page_request_access',
+    'access arguments' => array('list'),
+    'tab_parent' => 'requests',
+    'tab_root' => 'requests',
+  );
+
+  $items['pdf-0/calendar/%/%/%/%'] = array(
+    'title' => 'PDF of Daily Calendar',
+    'description' => 'PDF of daily calendar.',
+    'page callback' => 'mfcs_request_calendar_day_0_page_pdf',
+    'page arguments' => array(2, 3, 4, 5),
+    'file' => 'request_calendar.inc',
+    'file path' => $module_path . '/pages',
+    'access callback' => 'mfcs_page_request_access',
+    'access arguments' => array('list'),
+    'tab_parent' => 'requests',
+    'tab_root' => 'requests',
+  );
 }
 
 /**
@@ -1844,7 +1870,7 @@ function mfcs_hook_menu_management(&$items, $module_path) {
  *   The filesystem path to the module.
  */
 function mfcs_hook_menu_help(&$items, $module_path) {
-  $items['requests/help-0'] = array(
+  $items['help-0'] = array(
     'title' => 'Help',
     'description' => 'Online Documentation',
     'page callback' => 'mfcs_help_0_page',
@@ -1857,10 +1883,49 @@ function mfcs_hook_menu_help(&$items, $module_path) {
     'tab_root' => 'requests',
   );
 
-  $items['requests/help-0/%'] = array(
+  $items['help-0/%'] = array(
     'title' => 'Help',
     'description' => 'Online Documentation',
     'page callback' => 'mfcs_help_0_page',
+    'page arguments' => array(1),
+    'file' => 'help.inc',
+    'file path' => $module_path . '/pages',
+    'access callback' => 'mfcs_page_generic_access',
+    'access arguments' => array('help'),
+    'tab_parent' => 'requests',
+    'tab_root' => 'requests',
+  );
+
+  $items['help-0/%/%'] = array(
+    'title' => 'Help',
+    'description' => 'Online Documentation',
+    'page callback' => 'mfcs_help_0_page',
+    'page arguments' => array(1, 2),
+    'file' => 'help.inc',
+    'file path' => $module_path . '/pages',
+    'access callback' => 'mfcs_page_generic_access',
+    'access arguments' => array('help'),
+    'tab_parent' => 'requests',
+    'tab_root' => 'requests',
+  );
+
+  $items['help-0/%/%/%'] = array(
+    'title' => 'Help',
+    'description' => 'Online Documentation',
+    'page callback' => 'mfcs_help_0_page',
+    'page arguments' => array(1, 2, 3),
+    'file' => 'help.inc',
+    'file path' => $module_path . '/pages',
+    'access callback' => 'mfcs_page_generic_access',
+    'access arguments' => array('help'),
+    'tab_parent' => 'requests',
+    'tab_root' => 'requests',
+  );
+
+  $items['help-0/presentation/%'] = array(
+    'title' => 'Help',
+    'description' => 'Online Documentation',
+    'page callback' => 'mfcs_help_0_page_presentation',
     'page arguments' => array(2),
     'file' => 'help.inc',
     'file path' => $module_path . '/pages',
@@ -1870,10 +1935,10 @@ function mfcs_hook_menu_help(&$items, $module_path) {
     'tab_root' => 'requests',
   );
 
-  $items['requests/help-0/%/%'] = array(
+  $items['help-0/presentation/%/%'] = array(
     'title' => 'Help',
     'description' => 'Online Documentation',
-    'page callback' => 'mfcs_help_0_page',
+    'page callback' => 'mfcs_help_0_page_presentation',
     'page arguments' => array(2, 3),
     'file' => 'help.inc',
     'file path' => $module_path . '/pages',
@@ -1883,11 +1948,24 @@ function mfcs_hook_menu_help(&$items, $module_path) {
     'tab_root' => 'requests',
   );
 
-  $items['requests/help-0/%/%/%'] = array(
+  $items['help-0/presentation/%/%/%'] = array(
     'title' => 'Help',
     'description' => 'Online Documentation',
-    'page callback' => 'mfcs_help_0_page',
+    'page callback' => 'mfcs_help_0_page_presentation',
     'page arguments' => array(2, 3, 4),
+    'file' => 'help.inc',
+    'file path' => $module_path . '/pages',
+    'access callback' => 'mfcs_page_generic_access',
+    'access arguments' => array('help'),
+    'tab_parent' => 'requests',
+    'tab_root' => 'requests',
+  );
+
+  $items['help-0/presentation/%/%/%/%'] = array(
+    'title' => 'Help',
+    'description' => 'Online Documentation',
+    'page callback' => 'mfcs_help_0_page_presentation',
+    'page arguments' => array(2, 3, 4, 5),
     'file' => 'help.inc',
     'file path' => $module_path . '/pages',
     'access callback' => 'mfcs_page_generic_access',
@@ -1898,7 +1976,7 @@ function mfcs_hook_menu_help(&$items, $module_path) {
 
   // @todo: provide custom pdf downloading for help pages
   /*
-  $items['requests/pdf-0/help'] = array(
+  $items['pdf-0/help'] = array(
     'title' => 'Help PDF',
     'description' => 'Download Help PDF',
     'page callback' => 'mfcs_help_0_pdf_page',
@@ -1912,11 +1990,11 @@ function mfcs_hook_menu_help(&$items, $module_path) {
     'type' => MENU_CALLBACK,
   );
 
-  $items['requests/pdf-0/help/%'] = array(
+  $items['pdf-0/help/%'] = array(
     'title' => 'Help PDF',
     'description' => 'Download Help PDF',
     'page callback' => 'mfcs_help_0_pdf_page',
-    'page arguments' => array(3),
+    'page arguments' => array(2),
     'file' => 'help.inc',
     'file path' => $module_path . '/pages',
     'access callback' => 'mfcs_page_generic_access',
@@ -1926,11 +2004,11 @@ function mfcs_hook_menu_help(&$items, $module_path) {
     'type' => MENU_CALLBACK,
   );
 
-  $items['requests/pdf-0/help/%/%'] = array(
+  $items['pdf-0/help/%/%'] = array(
     'title' => 'Help PDF',
     'description' => 'Download Help PDF',
     'page callback' => 'mfcs_help_0_pdf_page',
-    'page arguments' => array(3, 4),
+    'page arguments' => array(2, 3),
     'file' => 'help.inc',
     'file path' => $module_path . '/pages',
     'access callback' => 'mfcs_page_generic_access',
@@ -1940,11 +2018,11 @@ function mfcs_hook_menu_help(&$items, $module_path) {
     'type' => MENU_CALLBACK,
   );
 
-  $items['requests/pdf-0/help/%/%/%'] = array(
+  $items['pdf-0/help/%/%/%'] = array(
     'title' => 'Help PDF',
     'description' => 'Download Help PDF',
     'page callback' => 'mfcs_help_0_pdf_page',
-    'page arguments' => array(3, 4, 5),
+    'page arguments' => array(2, 3, 4),
     'file' => 'help.inc',
     'file path' => $module_path . '/pages',
     'access callback' => 'mfcs_page_generic_access',
