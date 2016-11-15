@@ -774,7 +774,12 @@ function webform_conditional_element_add($form, &$form_state) {
                       );
 
   if (empty($button['#subconditional'])) {
-    $new[0] = $parent_values[$rid]['source_type'] == 'component' ? $parent_values[$rid] : $default_rule;
+    if (isset($parent_values[$rid]['source_type']) && $parent_values[$rid]['source_type'] == 'component') {
+      $new[0] = $parent_values[$rid];
+    }
+    else {
+      $new[0] = $default_rule;
+    }
   }
   else {
     // The default andor operator is opposite of current subconditional's
@@ -813,13 +818,16 @@ function webform_conditional_element_remove($form, &$form_state) {
       $parent_values = &$parent_values[$key];
     }
   }
-  switch ($parent_values[$rid]['source_type']) {
-    case 'conditional_start':
-      unset($parent_values[_webform_conditional_find_end($parent_values, $rid)]);
-      break;
-    case 'conditional_end':
-      unset($parent_values[_webform_conditional_find_start($parent_values, $rid)]);
-      break;
+
+  if (isset($parent_values[$rid]['source_type'])) {
+    switch ($parent_values[$rid]['source_type']) {
+      case 'conditional_start':
+        unset($parent_values[_webform_conditional_find_end($parent_values, $rid)]);
+        break;
+      case 'conditional_end':
+        unset($parent_values[_webform_conditional_find_start($parent_values, $rid)]);
+        break;
+    }
   }
   // Remove this rule or action from the list of conditionals.
   unset($parent_values[$rid]);
