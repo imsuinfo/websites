@@ -933,6 +933,7 @@ $conf['error_document_file-content_unavailable-Hurricane_Emergency_Operations_Pl
 
 // static front page settings
 $conf['mcneese_static_file_frontpage'] = '/tmp/static-wwwdev/frontpage.html';
+$conf['mcneese_static_file_frontpage-https'] = '/tmp/static-wwwdev/frontpage-https.html';
 $conf['mcneese_static_file_frontpage-expires'] = '+3 hours';
 
 
