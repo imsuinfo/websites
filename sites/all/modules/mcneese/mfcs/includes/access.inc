@@ -1107,7 +1107,7 @@ function mfcs_page_request_access_operation_cancelling(&$request_ids, &$processe
 
     $query->condition('mer.id', $request_ids, 'IN');
 
-    if (!$roles['manager'] || !$roles['administer']) {
+    if (!$roles['manager'] && !$roles['administer']) {
       if ($roles['requester'] && $roles['reviewer']) {
         $or = db_or();
         $or->condition('mer.user_id', $user->uid);
@@ -1945,8 +1945,10 @@ function mfcs_page_request_access_operation_history(&$request_ids, &$processed, 
 
       $query->condition('mer.id', $request_ids, 'IN');
 
-      if (!is_null($venue_coordinator_ids)) {
-        $query->condition('mer.venue_coordinator', $venue_coordinator_ids, 'IN');
+      if (!$roles['administer'] && !$roles['manager']) {
+        if (!is_null($venue_coordinator_ids)) {
+          $query->condition('mer.venue_coordinator', $venue_coordinator_ids, 'IN');
+        }
       }
 
       if (!$roles['administer']) {

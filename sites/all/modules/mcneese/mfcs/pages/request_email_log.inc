@@ -381,6 +381,7 @@ function mfcs_request_email_log_0_form($form, &$form_state, $page_number = NULL)
     ),
     'searchDelay' => 1200,
     'pagingType' => 'input',
+    'responsive' => TRUE,
   );
 
   $navigation_top = '';
@@ -978,9 +979,9 @@ function mfcs_request_email_log_0_resend_form($form, &$form_state, $id, $extra_a
 
   mfcs_add_canonical_headers('requests/email_log-0/resend/' . $id);
 
-  $page_title = "Re-send E-mail";
+  $page_title = 'Re-send E-mail';
   if (!empty($log->title)) {
-    $page_title = "Re-send E-mail: " . $log->title;
+    $page_title = 'Re-send E-mail: ' . $log->title;
   }
   drupal_set_title($page_title);
 
