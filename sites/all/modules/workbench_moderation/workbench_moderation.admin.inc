@@ -140,7 +140,7 @@ function workbench_moderation_admin_states_form_submit($form, &$form_state) {
   foreach ($form_state['values']['states'] as $key => $info) {
     if (!empty($info['delete'])) {
       workbench_moderation_state_delete($info['state']);
-      drupal_set_message(t('Workflow State %label (%name) has been deleted.', array('%label' => $info['label'], '%name' => $info['name'])));
+      drupal_set_message(t('Workflow state %label (%name) has been deleted.', array('%label' => $info['label'], '%name' => $info['name'])));
     }
     elseif (!empty($info['name'])) {
       $state = (object) array(
@@ -150,10 +150,6 @@ function workbench_moderation_admin_states_form_submit($form, &$form_state) {
         'weight' => $info['weight'],
       );
       workbench_moderation_state_save($state);
-      if (module_exists('i18n_string')) {
-        i18n_string_update(array('workbench_moderation', 'moderation_state', $info['name'], 'label'), $info['label']);
-        i18n_string_update(array('workbench_moderation', 'moderation_state', $info['name'], 'description'), $info['description']);
-      }
     }
   }
 
@@ -184,9 +180,6 @@ function workbench_moderation_admin_transitions_form($form, &$form_state) {
       '#type' => 'value',
       '#value' => $transition,
     );
-    $element['name'] = array(
-      '#markup' => check_plain($transition->name),
-    );
     $element['from_name'] = array(
       '#markup' => check_plain(workbench_moderation_state_label($transition->from_name)),
     );
@@ -208,11 +201,6 @@ function workbench_moderation_admin_transitions_form($form, &$form_state) {
 
   array_unshift($options, t('- Choose state -'));
   $element = array();
-  $element['name'] = array(
-    '#type' => 'textfield',
-    '#title' => t('Transition Name'),
-    '#size' => '35'
-  );
   $element['from_name'] = array(
     '#type' => 'select',
     '#title' => t('New transition'),
@@ -240,7 +228,6 @@ function theme_workbench_moderation_admin_transitions_form($variables) {
   $form = $variables['form'];
 
   $header = array(
-    t('Name'),
     t('From'),
     '',
     t('To'),
@@ -251,7 +238,6 @@ function theme_workbench_moderation_admin_transitions_form($variables) {
   foreach (element_children($form['transitions']) as $key) {
     $element = &$form['transitions'][$key];
     $row = array('data' => array());
-    $row['data']['name'] = drupal_render($element['name']);
     $row['data']['from'] = drupal_render($element['from_name']);
     $row['data'][] = '--&gt;';
     $row['data']['to'] = drupal_render($element['to_name']);
@@ -295,14 +281,13 @@ function workbench_moderation_admin_transitions_form_submit($form, &$form_state)
       workbench_moderation_transition_delete($transition['transition']);
       drupal_set_message(t('%from --&gt; %to has been deleted.', array('%from' => workbench_moderation_state_label($transition['transition']->from_name), '%to' => workbench_moderation_state_label($transition['transition']->to_name))));
     }
-    elseif (!empty($transition['name']) && !empty($transition['from_name']) && !empty($transition['to_name'])) {
+    elseif (!empty($transition['from_name']) && !empty($transition['to_name'])) {
       $new_transition = (object) array(
-        'name' => $transition['name'],
         'from_name' => $transition['from_name'],
         'to_name' => $transition['to_name'],
       );
       workbench_moderation_transition_save($new_transition);
-      drupal_set_message(t('%name: %from --&gt; %to has been created.',array('%name' => $new_transition->name, '%from' => workbench_moderation_state_label($new_transition->from_name), '%to' => workbench_moderation_state_label($new_transition->to_name))));
+      drupal_set_message(t('%from --&gt; %to has been created.',array('%from' => workbench_moderation_state_label($new_transition->from_name), '%to' => workbench_moderation_state_label($new_transition->to_name))));
     }
   }
 }
