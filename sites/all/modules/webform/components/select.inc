@@ -866,15 +866,16 @@ function _webform_action_set_select($component, &$element, &$form_state, $value)
   // Set the value as an array for multiple select or single value otherwise.
   if ($element['#type'] == 'checkboxes') {
     $checkbox_values = $element['#options'];
-    array_walk($checkbox_values, function(&$value, $key) use($value) {
-      $value = (int)(strval($key) === $value);
-    });
+    foreach ($checkbox_values as $checkbox_key => &$checkbox_value) {
+       $checkbox_value = (int)(strval($chekcbox_key) === $checkbox_value);
+    }
+    $processed_value = $checkbox_values;
   }
   else {
-    $value = $component['extra']['multiple'] ? array($value) : $value;
+    $processed_value = $component['extra']['multiple'] ? array($value) : $value;
   }
-  $element['#value'] = $value;
-  form_set_value($element, $value, $form_state);
+  $element['#value'] = $processed_value;
+  form_set_value($element, $processed_value, $form_state);
 }
 
 /**
