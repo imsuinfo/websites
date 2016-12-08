@@ -500,6 +500,11 @@ function mfcs_request_users_0_view_page($user_id) {
   }
   mfcs_add_canonical_headers('users-0/view/' . ((int) $user_id));
 
+  // load custom list options.
+  mfcs_include(MFCS_INCLUDE_LIST_OPTIONS);
+  $calendar_options = mfcs_get_user_calendar_list_options(NULL, TRUE);
+  $calendar_options[MFCS_USER_CALENDAR_NONE] = 'Default'; // display 'default' instead of 'none'.
+
 
   $name = $account->name;
   if (!empty($account->mfcs['first_name'])) {
@@ -798,6 +803,53 @@ function mfcs_request_users_0_view_page($user_id) {
   }
 
 
+  // customization markup.
+  $calendar_text = 'Unknown';
+  if (array_key_exists($account->mfcs['calendar'], $calendar_options)) {
+    $calendar_text = $calendar_options[$account->mfcs['calendar']];
+  }
+
+  $calendar_holidays = 'Visible';
+  if (array_key_exists('calendar_holidays', $account->mfcs) && $account->mfcs['calendar_holidays'] === FALSE) {
+    $calendar_holidays = 'Hidden';
+  }
+
+  $calendar_unavailabilities = 'Visible';
+  if (array_key_exists('calendar_unavailabilities', $account->mfcs) && $account->mfcs['calendar_unavailabilities'] === FALSE) {
+    $calendar_unavailabilities = 'Hidden';
+  }
+
+  $filters_active = NULL;
+  if (array_key_exists('filter_by_classification', $account->mfcs) && is_array($account->mfcs['filter_by_classification']) && !empty($account->mfcs['filter_by_classification'])) {
+    if (!is_null($filters_active)) {
+      $filters_active .= ', ';
+    }
+    $filters_active .= 'Request Classifications';
+  }
+  if (array_key_exists('filter_by_type', $account->mfcs) && is_array($account->mfcs['filter_by_type']) && !empty($account->mfcs['filter_by_type'])) {
+    if (!is_null($filters_active)) {
+      $filters_active .= ', ';
+    }
+    $filters_active .= 'Request Types';
+  }
+  if (array_key_exists('filter_by_building', $account->mfcs) && is_array($account->mfcs['filter_by_building']) && !empty($account->mfcs['filter_by_building'])) {
+    if (!is_null($filters_active)) {
+      $filters_active .= ', ';
+    }
+    $filters_active .= 'Buildings';
+  }
+
+  if (is_null($filters_active)) {
+    $filters_active = 'No Active Filters';
+  }
+
+  $customization = '';
+  $customization .= '<div class="view_user-item view_user-item-calendar"><span class="item-label item-label-calendar strong">Calendar:</span> <span class="item-value item-value-calendar">' . $calendar_text . '</span></div>';
+  $customization .= '<div class="view_user-item view_user-item-calendar_holidays"><span class="item-label item-label-calendar_holidays strong">Holidays:</span> <span class="item-value item-value-calendar_holidays">' . $calendar_holidays . '</span></div>';
+  $customization .= '<div class="view_user-item view_user-item-calendar_unavailabilities"><span class="item-label item-label-calendar_unavailabilities strong">Unavailabilities:</span> <span class="item-value item-value-calendar_unavailabilities">' . $calendar_unavailabilities . '</span></div>';
+  $customization .= '<div class="view_user-item view_user-item-filters_active"><span class="item-label item-label-filters_active strong">Active Filters:</span> <span class="item-value item-value-filters_active">' . $filters_active . '</span></div>';
+
+
   // build presentation.
   $markup = '<div id="mfcs-request-users-view-page" class="manage-users_0-view">';
 
@@ -851,6 +903,7 @@ function mfcs_request_users_0_view_page($user_id) {
   $markup .= $venue;
   $markup .= '</div>';
 
+  $buttons = '';
   if ($is_manager || $is_administer) {
     $markup .= '<div class="view_user-group view_user-group-roles-special">';
     $markup .= '<h3 class="view_user-group-header view_user-group-header-roles-special">Special/Exceptional Roles</h3>';
@@ -878,7 +931,6 @@ function mfcs_request_users_0_view_page($user_id) {
       unset($problem_text);
       unset($problem_id);
     }
-    unset($mfcs_users);
 
     if (!is_null($problems_detected)) {
       $markup .= '<br>';
@@ -889,18 +941,29 @@ function mfcs_request_users_0_view_page($user_id) {
     }
     unset($problems_detected);
 
-    $markup .= '<div class="view_user-buttons">';
-    $markup .= '<a href="' . $base_path . 'users-0/edit/' . $user_id . $url_arguments . '" class="view_user-button view_user-edit">Edit</a>' ;
-    $markup .= '<a href="' . $base_path . 'users-0/customize/' . $user_id . $url_arguments . '" class="view_user-button view_user-customize">Customize</a>' ;
-    $markup .= '<a href="' . $base_path . 'users-0/check/' . $user_id . $url_arguments . '" class="view_user-button view_user-check">Check for Problems</a>' ;
-    $markup .= '</div>';
+    $buttons .= '<div class="view_user-buttons">';
+    $buttons .= '<a href="' . $base_path . 'users-0/edit/' . $user_id . $url_arguments . '" class="view_user-button view_user-edit">Edit</a>' ;
+    $buttons .= '<a href="' . $base_path . 'users-0/customize/' . $user_id . $url_arguments . '" class="view_user-button view_user-customize">Customize</a>' ;
+    $buttons .= '<a href="' . $base_path . 'users-0/check/' . $user_id . $url_arguments . '" class="view_user-button view_user-check">Check for Problems</a>' ;
+    $buttons .= '</div>';
+
+    // add a break so that the customization options are on another line.
+    // this is done here because managers/administers have additional role management options which should take up the second line.
+    // all other users don't need this and can consider the second line to be just additional options (to save screen space).
+    $markup .= '<br>';
   }
   elseif ($user->uid == $user_id && ($is_requester || $is_reviewer)) {
-    $markup .= '<div class="view_user-buttons">';
-    $markup .= '<a href="' . $base_path . 'users-0/customize/' . $user_id . $url_arguments . '" class="view_user-button view_user-customize">Customize</a>' ;
-    $markup .= '</div>';
+    $buttons .= '<div class="view_user-buttons">';
+    $buttons .= '<a href="' . $base_path . 'users-0/customize/' . $user_id . $url_arguments . '" class="view_user-button view_user-customize">Customize</a>' ;
+    $buttons .= '</div>';
   }
 
+  $markup .= '<div class="view_user-group view_user-group-customization">';
+  $markup .= '<h3 class="view_user-group-header view_user-group-header-customization">Customization Information</h3>';
+  $markup .= $customization;
+  $markup .= '</div>';
+
+  $markup .= $buttons;
   $markup .= '</div>';
 
   return $markup;
@@ -1912,6 +1975,24 @@ function mfcs_request_users_0_customize_form($form, &$form_state, $user_id) {
 
   drupal_set_title('Customize User: ' . $user_name);
 
+  // load custom list options.
+  mfcs_include(MFCS_INCLUDE_LIST_OPTIONS);
+  $calendar_options = mfcs_get_user_calendar_list_options(NULL, TRUE);
+  $request_type_options = mfcs_get_request_type_list_options();
+  $request_classification_options = mfcs_get_request_classification_list_options();
+  $building_list_options = mfcs_get_request_building_list_options();
+
+  // display 'default' instead of 'none', and make it the first option.
+  unset($calendar_options[0]);
+  $calendar_options_temp = array(MFCS_USER_CALENDAR_NONE => 'Default');
+  foreach ($calendar_options as $calendar_options_key => $calendar_options_value) {
+    $calendar_options_temp[$calendar_options_key] = $calendar_options_value;
+  }
+  unset($calendar_options_key);
+  unset($calendar_options_value);
+  $calendar_options = $calendar_options_temp;
+  unset($calendar_options_temp);
+
 
   $toggle_options = array(
     'always' => 'Enabled (always)',
@@ -2056,6 +2137,116 @@ function mfcs_request_users_0_customize_form($form, &$form_state, $user_id) {
   );
 
 
+  // calendar settings
+  $form['form']['settings_calendar'] = array(
+    '#id' => 'manage-users_0-customize-settings_calendar',
+    '#type' => 'fieldset',
+    '#collapsible' => TRUE,
+    '#collapsed' => TRUE,
+    '#title' => 'Calendar Settings',
+    '#attributes' => array(
+      'class' => array(
+        'manage-users_0-customize-settings_calendar',
+        'fieldset_print_as_div',
+      ),
+    ),
+    '#tree' => TRUE,
+  );
+
+  $form['form']['settings_calendar']['calendar_theme'] = array(
+    '#type' => 'select',
+    '#title' => 'Select a calendar theme to use.',
+    '#default_value' => MFCS_USER_CALENDAR_NONE,
+    '#options' => $calendar_options,
+    '#description' => 'Changes how the calendars are presented. The original calendar is a simple and very stable calendar but it is rather limited in functionality. The full calendar is more experimental but has a lot more functionality and is in many ways easier to use. ',
+  );
+
+  $form['form']['settings_calendar']['calendar_holidays'] = array(
+    '#type' => 'select',
+    '#title' => 'Calendar Holidays',
+    '#default_value' => 'visible',
+    '#options' => array('visible' => 'Visible', 'hidden' => 'Hidden'),
+    '#description' => 'When visible, holidays are shown on both the monthly and daily calendars. This does not affect the display of holidays for requests due to conflicts and related warnings. ',
+  );
+
+  $form['form']['settings_calendar']['calendar_unavailabilities'] = array(
+    '#type' => 'select',
+    '#title' => 'Calendar Unavailabilities',
+    '#default_value' => 'visible',
+    '#options' => array('visible' => 'Visible', 'hidden' => 'Hidden'),
+    '#description' => 'When visible, room unavailabilities are shown on both the monthly and daily calendars. This does not affect the display of unavailabilities for requests due to conflicts and related warnings. ',
+  );
+
+  $form['form']['settings_calendar']['filter_by_classification_wrapper'] = array(
+    '#id' => 'manage-users_0-customize-filter_by_classification_wrapper',
+    '#type' => 'fieldset',
+    '#collapsible' => TRUE,
+    '#collapsed' => TRUE,
+    '#title' => 'Filter by Request Classification',
+    '#attributes' => array(
+      'class' => array(
+        'manage-users_0-customize-filter_by_classification_wrapper',
+        'fieldset_print_as_div',
+      ),
+    ),
+    '#tree' => TRUE,
+  );
+
+  $form['form']['settings_calendar']['filter_by_classification_wrapper']['filter_by_classification'] = array(
+    '#type' => 'checkboxes',
+    '#title' => 'Request Classifications to Filter By',
+    '#default_value' => array(),
+    '#options' => $request_classification_options,
+    '#description' => 'Select all classification to filter by. When no classifications are selected, then no filtering is applied otherwise only the selected classifications are loaded on calendars. ',
+  );
+
+  $form['form']['settings_calendar']['filter_by_type_wrapper'] = array(
+    '#id' => 'manage-users_0-customize-filter_by_type_wrapper',
+    '#type' => 'fieldset',
+    '#collapsible' => TRUE,
+    '#collapsed' => TRUE,
+    '#title' => 'Filter by Request Type',
+    '#attributes' => array(
+      'class' => array(
+        'manage-users_0-customize-filter_by_type_wrapper',
+        'fieldset_print_as_div',
+      ),
+    ),
+    '#tree' => TRUE,
+  );
+
+  $form['form']['settings_calendar']['filter_by_type_wrapper']['filter_by_type'] = array(
+    '#type' => 'checkboxes',
+    '#title' => 'Request Types to Filter By',
+    '#default_value' => array(),
+    '#options' => $request_type_options,
+    '#description' => 'Select all type to filter by. When no types are selected, then no filtering is applied otherwise only the selected types are loaded on calendars. ',
+  );
+
+  $form['form']['settings_calendar']['filter_by_building_wrapper'] = array(
+    '#id' => 'manage-users_0-customize-filter_by_building_wrapper',
+    '#type' => 'fieldset',
+    '#collapsible' => TRUE,
+    '#collapsed' => TRUE,
+    '#title' => 'Filter by Building',
+    '#attributes' => array(
+      'class' => array(
+        'manage-users_0-customize-filter_by_building_wrapper',
+        'fieldset_print_as_div',
+      ),
+    ),
+    '#tree' => TRUE,
+  );
+
+  $form['form']['settings_calendar']['filter_by_building_wrapper']['filter_by_building'] = array(
+    '#type' => 'checkboxes',
+    '#title' => 'Buildings to Filter By',
+    '#default_value' => array(),
+    '#options' => $building_list_options,
+    '#description' => 'Select all building to filter by. When no buildings are selected, then no filtering is applied otherwise only the selected buildings are loaded on calendars. ',
+  );
+
+
   // load and assign existing settings.
   if (isset($account->data['mcneese_settings'])) {
     // style settings
@@ -2091,6 +2282,42 @@ function mfcs_request_users_0_customize_form($form, &$form_state, $user_id) {
 
     if (isset($account->data['mcneese_settings']['navigation']['toolbar']['sticky']) && is_numeric($account->data['mcneese_settings']['navigation']['toolbar']['sticky'])) {
       $form['form']['settings_navigation']['sticky_toolbar']['#default_value'] = ($account->data['mcneese_settings']['navigation']['toolbar']['sticky'] == 1);
+    }
+  }
+
+  if (isset($account->mfcs)) {
+    // calendar settings
+    if (isset($account->mfcs['calendar']) && is_numeric($account->mfcs['calendar'])) {
+      $form['form']['settings_calendar']['calendar_theme']['#default_value'] = (int) $account->mfcs['calendar'];
+    }
+
+    if (isset($account->mfcs['calendar_holidays']) && is_bool($account->mfcs['calendar_holidays'])) {
+      $form['form']['settings_calendar']['calendar_holidays']['#default_value'] = $account->mfcs['calendar_holidays'] ? 'visible' : 'hidden';
+    }
+
+    if (isset($account->mfcs['calendar_unavailabilities']) && is_bool($account->mfcs['calendar_unavailabilities'])) {
+      $form['form']['settings_calendar']['calendar_unavailabilities']['#default_value'] = $account->mfcs['calendar_unavailabilities'] ? 'visible' : 'hidden';
+    }
+
+    if (isset($account->mfcs['filter_by_classification']) && is_array($account->mfcs['filter_by_classification'])) {
+      foreach ($account->mfcs['filter_by_classification'] as $filter) {
+        $form['form']['settings_calendar']['filter_by_classification_wrapper']['filter_by_classification']['#default_value'][$filter] = $filter;
+      }
+      unset($filter);
+    }
+
+    if (isset($account->mfcs['filter_by_type']) && is_array($account->mfcs['filter_by_type'])) {
+      foreach ($account->mfcs['filter_by_type'] as $filter) {
+        $form['form']['settings_calendar']['filter_by_type_wrapper']['filter_by_type']['#default_value'][$filter] = $filter;
+      }
+      unset($filter);
+    }
+
+    if (isset($account->mfcs['filter_by_building']) && is_array($account->mfcs['filter_by_building'])) {
+      foreach ($account->mfcs['filter_by_building'] as $filter) {
+        $form['form']['settings_calendar']['filter_by_building_wrapper']['filter_by_building']['#default_value'][$filter] = $filter;
+      }
+      unset($filter);
     }
   }
 
@@ -2205,17 +2432,131 @@ function mfcs_request_users_0_customize_form_submit($form, &$form_state) {
       $changes['data']['mcneese_settings']['navigation']['toolbar']['sticky'] = $form_state['values']['form']['settings_navigation']['sticky_toolbar'];
     }
 
-    $saved_account = user_save($form['user']['#value'], $changes);
-
-    if (is_object($saved_account)) {
-      drupal_set_message('Successfully customized settings for user <a href="' . $base_path . 'users-0/view/' . $saved_account->uid . '">' . $saved_account->name . '</a>.');
+    $success = NULL;
+    if (!empty($changes)) {
+      $saved_account = user_save($form['user']['#value'], $changes);
+      if (is_object($saved_account)) {
+        $saved_account = TRUE;
+      }
+      else {
+        $success = FALSE;
+      }
+      unset($saved_account);
     }
-    else {
+
+    if ($success !== FALSE) {
+      $calendar_settings_changes = array();
+      if (isset($form_state['values']['form']['settings_calendar']['calendar_theme']) && is_numeric($form_state['values']['form']['settings_calendar']['calendar_theme'])) {
+        $calendar_settings_changes['calendar'] = (int) $form_state['values']['form']['settings_calendar']['calendar_theme'];
+      }
+
+      if (isset($form_state['values']['form']['settings_calendar']['calendar_holidays'])) {
+        if ($form_state['values']['form']['settings_calendar']['calendar_holidays'] == 'visible') {
+          $calendar_settings_changes['calendar_holidays'] = TRUE;
+        }
+        elseif ($form_state['values']['form']['settings_calendar']['calendar_holidays'] == 'hidden') {
+          $calendar_settings_changes['calendar_holidays'] = FALSE;
+        }
+      }
+
+      if (isset($form_state['values']['form']['settings_calendar']['calendar_unavailabilities'])) {
+        if ($form_state['values']['form']['settings_calendar']['calendar_unavailabilities'] == 'visible') {
+          $calendar_settings_changes['calendar_unavailabilities'] = TRUE;
+        }
+        elseif ($form_state['values']['form']['settings_calendar']['calendar_unavailabilities'] == 'hidden') {
+          $calendar_settings_changes['calendar_unavailabilities'] = FALSE;
+        }
+      }
+
+      if (isset($form_state['values']['form']['settings_calendar']['filter_by_classification_wrapper']['filter_by_classification']) && is_array($form_state['values']['form']['settings_calendar']['filter_by_classification_wrapper']['filter_by_classification'])) {
+        // drupal stores checkbox decisions as 0 (for false) or as value.
+        // this is unwanted (especially if 0 is a valid value), so convert it to an array of only the selected choices to pass to mfcs_save_user().
+        $filters = array();
+        foreach ($form_state['values']['form']['settings_calendar']['filter_by_classification_wrapper']['filter_by_classification'] as $filter_key => $filter_value) {
+          if ($filter_value == 0) {
+            continue;
+          }
+
+          $filters[] = $filter_key;
+        }
+        unset($filter_key);
+        unset($filter_value);
+
+        if (empty($filters)) {
+          $calendar_settings_changes['filter_by_classification'] = NULL;
+        }
+        else {
+          $calendar_settings_changes['filter_by_classification'] = $filters;
+        }
+        unset($filters);
+      }
+
+      if (isset($form_state['values']['form']['settings_calendar']['filter_by_type_wrapper']['filter_by_type']) && is_array($form_state['values']['form']['settings_calendar']['filter_by_type_wrapper']['filter_by_type'])) {
+        // drupal stores checkbox decisions as 0 (for false) or as value.
+        // this is unwanted (especially if 0 is a valid value), so convert it to an array of only the selected choices to pass to mfcs_save_user().
+        $filters = array();
+        foreach ($form_state['values']['form']['settings_calendar']['filter_by_type_wrapper']['filter_by_type'] as $filter_key => $filter_value) {
+          if ($filter_value == 0) {
+            continue;
+          }
+
+          $filters[] = $filter_key;
+        }
+        unset($filter_key);
+        unset($filter_value);
+
+        if (empty($filters)) {
+          $calendar_settings_changes['filter_by_type'] = NULL;
+        }
+        else {
+          $calendar_settings_changes['filter_by_type'] = $filters;
+        }
+        unset($filters);
+      }
+
+      if (isset($form_state['values']['form']['settings_calendar']['filter_by_building_wrapper']['filter_by_building']) && is_array($form_state['values']['form']['settings_calendar']['filter_by_building_wrapper']['filter_by_building'])) {
+        // drupal stores checkbox decisions as 0 (for false) or as value.
+        // this is unwanted (especially if 0 is a valid value), so convert it to an array of only the selected choices to pass to mfcs_save_user().
+        $filters = array();
+        foreach ($form_state['values']['form']['settings_calendar']['filter_by_building_wrapper']['filter_by_building'] as $filter_key => $filter_value) {
+          if ($filter_value == 0) {
+            continue;
+          }
+
+          $filters[] = $filter_key;
+        }
+        unset($filter_key);
+        unset($filter_value);
+
+        if (empty($filters)) {
+          $calendar_settings_changes['filter_by_building'] = NULL;
+        }
+        else {
+          $calendar_settings_changes['filter_by_building'] = $filters;
+        }
+        unset($filters);
+      }
+
+      if (!empty($calendar_settings_changes)) {
+        $saved = mfcs_save_user($customized_account->uid, $calendar_settings_changes);
+        unset($calendar_settings_changes);
+
+        if ($saved === FALSE) {
+          $success = FALSE;
+        }
+        unset($saved);
+      }
+    }
+
+    if ($success === FALSE) {
       form_set_error('', 'Failed to customize settings for user \'' . $customized_account->name . '\'.');
       $form_state['rebuild'] = TRUE;
       $form_state['redirect'] = FALSE;
       $form_state['submitted'] = FALSE;
       return;
+    }
+    else {
+      drupal_set_message('Successfully customized settings for user <a href="' . $base_path . 'users-0/view/' . $customized_account->uid . '">' . $customized_account->name . '</a>.');
     }
   }
 

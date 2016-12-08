@@ -291,8 +291,6 @@ function mfcs_request_troubleshoot_0_form($form, &$form_state, $request_id = NUL
   $markup = '<h2 class="code-title">#' . MFCS_TROUBLESHOOT_BANNER_INFORMATION . ': Banner Information</h2>';
   $markup .= '<div class="code-description">';
   $markup .= 'The following links provide locally stored information regarding banner data.' . '<br>';
-  $markup .= '<br>';
-  $markup .= 'Using this troubleshoot will force a re-synchronization of <strong>only</strong> the banner role cache data, if the system can connect to the banner database.' . '<br>';
   $markup .= '</div>';
   $markup .= '<div class="code-links">';
   $markup .= '  <ul class="code-links-list">';
@@ -333,7 +331,7 @@ function mfcs_request_troubleshoot_0_form($form, &$form_state, $request_id = NUL
   $markup .= 'Requests are periodically checked for problems, such as date conflicts or deleted rooms.' . '<br>';
   $markup .= '<br>';
   $markup .= 'Using this troubleshoot will perform integrity checks on requests.' . '<br>';
-  $markup .= 'Problems are displaed under the <a href="' . $base_path . 'requests/problems-0/requests">Manage Request Problems</a> page.' . '<br>';
+  $markup .= 'Problems are displayed under the <a href="' . $base_path . 'requests/problems-0/requests">Manage Request Problems</a> page.' . '<br>';
   $markup .= '</div>';
   $form['form'][$code]['pre_markup'] = array(
     '#type' => 'markup',
@@ -379,7 +377,7 @@ function mfcs_request_troubleshoot_0_form($form, &$form_state, $request_id = NUL
   $markup .= 'Users are periodically checked for problems, generally when they log into the system.' . '<br>';
   $markup .= '<br>';
   $markup .= 'Using this troubleshoot will perform integrity checks on users.' . '<br>';
-  $markup .= 'Problems are displaed under the <a href="' . $base_path . 'requests/problems-0/users">Manage User Problems</a> page.' . '<br>';
+  $markup .= 'Problems are displayed under the <a href="' . $base_path . 'requests/problems-0/users">Manage User Problems</a> page.' . '<br>';
   $markup .= '</div>';
   $form['form'][$code]['pre_markup'] = array(
     '#type' => 'markup',

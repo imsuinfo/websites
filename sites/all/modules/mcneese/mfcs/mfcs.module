@@ -382,6 +382,14 @@ define('MFCS_INSURANCE_PROVIDED', 3);
 define('MFCS_INSURANCE_PROVIDED_NOT', 4);
 
 /**
+ * Defines custom calendar settings.
+ * In this case, setting it to none is synonymous with default.
+ */
+define('MFCS_USER_CALENDAR_NONE', 0);
+define('MFCS_USER_CALENDAR_ORIGINAL', 1);
+define('MFCS_USER_CALENDAR_FULL', 2);
+
+/**
  * Implements hook_init().
  */
 function mfcs_init() {
@@ -390,6 +398,19 @@ function mfcs_init() {
 
   drupal_add_js($module_path . '/js/printing-fieldsets.js', array('type' => 'file', 'group' => JS_DEFAULT, 'preprocess' => TRUE));
   #drupal_add_js($module_path . '/js/small_width-detection.js', array('type' => 'file', 'group' => JS_DEFAULT, 'preprocess' => TRUE));
+
+  // load the qtip library.
+  $qtip_library_loaded = libraries_load('qtip');
+  if (isset($qtip_library_loaded['error'])) {
+    watchdog(MFCS_WATCHDOG_ID, 'Unable to load qtip library, reason: @reason.', array('@reason' => $qtip_library_loaded['error']), WATCHDOG_ERROR);
+  }
+  elseif (empty($qtip_library_loaded['loaded'])) {
+    watchdog(MFCS_WATCHDOG_ID, 'Unable to load qtip library, reason: unknown.', array(), WATCHDOG_ERROR);
+  }
+  else {
+    drupal_add_js($module_path . '/js/qtip_tooltip.js', array('type' => 'file', 'group' => JS_THEME, 'preprocess' => TRUE));
+  }
+  unset($qtip_library_loaded);
 
   mfcs_determine_url_arguments();
 }
@@ -3055,7 +3076,9 @@ function mfcs_load_buildings($location = NULL, $building = NULL, $disabled = FAL
       $query->innerJoin('mfcs_banner_building_to_location', 'mbbl', 'mbb.id = mbbl.building');
       $query->innerJoin('mfcs_banner_locations', 'mbl', 'mbbl.location = mbl.id');
 
-      $query->condition('mbl.id', $location);
+      if ($location !== TRUE) {
+        $query->condition('mbl.id', $location);
+      }
 
       $query->addField('mbl', 'id', 'location_id');
       $query->addField('mbl', 'machine_name', 'location_code');
@@ -3359,6 +3382,12 @@ function mfcs_load_users($user_ids, $join = FALSE, $deleted = FALSE) {
     $query->addField('mu', 'phone_number', 'phone_number');
     $query->addField('mu', 'ldap_duplicate', 'ldap_duplicate');
     $query->addField('mu', 'primary_account', 'primary_account');
+    $query->addField('mu', 'calendar', 'calendar');
+    $query->addField('mu', 'calendar_holidays', 'calendar_holidays');
+    $query->addField('mu', 'calendar_unavailabilities', 'calendar_unavailabilities');
+    $query->addField('mu', 'filter_by_classification', 'filter_by_classification');
+    $query->addField('mu', 'filter_by_type', 'filter_by_type');
+    $query->addField('mu', 'filter_by_building', 'filter_by_building');
     $query->addField('mu', 'problems', 'problems');
     $query->addField('mu', 'updated', 'updated');
     $query->addField('mu', 'updated_problems', 'updated_problems');
@@ -3456,6 +3485,120 @@ function mfcs_save_user($user_id, $data) {
     elseif ($data['ldap_duplicate'] === FALSE) {
       $data['ldap_duplicate'] = 'FALSE';
     }
+  }
+
+  if (array_key_exists('calendar', $data)) {
+    if (!cf_is_integer($data['calendar'])) {
+      unset($data['calendar']);
+    }
+  }
+
+  if (array_key_exists('calendar_holidays', $data)) {
+    if ($data['calendar_holidays'] === TRUE) {
+      $data['calendar_holidays'] = 'TRUE';
+    }
+    elseif ($data['calendar_holidays'] === FALSE) {
+      $data['calendar_holidays'] = 'FALSE';
+    }
+  }
+
+  if (array_key_exists('calendar_unavailabilities', $data)) {
+    if ($data['calendar_unavailabilities'] === TRUE) {
+      $data['calendar_unavailabilities'] = 'TRUE';
+    }
+    elseif ($data['calendar_unavailabilities'] === FALSE) {
+      $data['calendar_unavailabilities'] = 'FALSE';
+    }
+  }
+
+  if (array_key_exists('filter_by_classification', $data)) {
+    // the filter array has to be converted to a postgresql array string (given that drupal api does not know how to process postgresql arrays).
+    $filters = array();
+    if (is_array($data['filter_by_classification'])) {
+      $filters = $data['filter_by_classification'];
+    }
+
+    $data['filter_by_classification'] = NULL;
+    if (!empty($filters)) {
+      $data['filter_by_classification'] = NULL;
+      foreach ($filters as $filter) {
+        if (!is_numeric($filter)) {
+          continue;
+        }
+
+        if (is_null($data['filter_by_classification'])) {
+          $data['filter_by_classification'] = '{';
+        }
+        else {
+          $data['filter_by_classification'] .= ',';
+        }
+
+        $data['filter_by_classification'] .= (int) $filter;
+      }
+      unset($filter);
+      $data['filter_by_classification'] .= '}';
+    }
+    unset($filters);
+  }
+
+  if (array_key_exists('filter_by_type', $data)) {
+    // the filter array has to be converted to a postgresql array string (given that drupal api does not know how to process postgresql arrays).
+    $filters = array();
+    if (is_array($data['filter_by_type'])) {
+      $filters = $data['filter_by_type'];
+    }
+
+    $data['filter_by_type'] = NULL;
+    if (!empty($filters)) {
+      $data['filter_by_type'] = NULL;
+      foreach ($filters as $filter) {
+        if (!is_numeric($filter)) {
+          continue;
+        }
+
+        if (is_null($data['filter_by_type'])) {
+          $data['filter_by_type'] = '{';
+        }
+        else {
+          $data['filter_by_type'] .= ',';
+        }
+
+        $data['filter_by_type'] .= (int) $filter;
+      }
+      unset($filter);
+      $data['filter_by_type'] .= '}';
+    }
+    unset($filters);
+  }
+
+  if (array_key_exists('filter_by_building', $data)) {
+    // the filter array has to be converted to a postgresql array string (given that drupal api does not know how to process postgresql arrays).
+    $filters = array();
+    if (is_array($data['filter_by_building'])) {
+      $filters = $data['filter_by_building'];
+    }
+
+    $data['filter_by_building'] = NULL;
+    if (!empty($filters)) {
+      $data['filter_by_building'] = NULL;
+      foreach ($filters as $filter) {
+        if (!is_numeric($filter)) {
+          continue;
+        }
+
+        if (is_null($data['filter_by_building'])) {
+          $data['filter_by_building'] = '{';
+        }
+        else {
+          $data['filter_by_building'] .= ',';
+        }
+
+        $data['filter_by_building'] .= (int) $filter;
+      }
+      unset($filter);
+      $data['filter_by_building'] .= '}';
+    }
+    unset($filters);
   }
 
   $instance = mfcs_instance();
@@ -3641,6 +3784,17 @@ function mfcs_search_users($search, $wildcard = TRUE, $sensitive = FALSE, $delet
  * - 'last_name': user's last name (custom field).
  * - 'banner_id': user's banner id (custom field).
  * - 'phone_number': user's phone number (custom field).
+ * - 'ldap_duplicate': user's ldap duplicate setting (custom field).
+ * - 'primary_account': user's primary account setting (custom field).
+ * - 'calendar': user's calendar setting (custom field).
+ * - 'calendar_holidays': user's calendar setting for showing/hiding holidays (custom field).
+ * - 'calendar_unavailabilities': user's calendar setting for showing/hiding unavailabilities (custom field).
+ * - 'filter_by_classification': user's calendar setting for filtering by classification (custom field).
+ * - 'filter_by_type': user's calendar setting for filtering by type (custom field).
+ * - 'filter_by_building': user's calendar setting for filtering by building (custom field).
+ * - 'problems': user's calendar setting (custom field).
+ * - 'updated': timestamp of when the user information was last updated (custom field).
+ * - 'updated_problems': timestamp of when the user problems flag was last updated (custom field).
  *
  * @param integer $user_id
  *   The user id number uniquely representing some user.
@@ -3680,6 +3834,12 @@ function mfcs_load_basic_user_settings_by_user_id($user_id) {
     $query->addField('mu', 'phone_number', 'phone_number');
     $query->addField('mu', 'ldap_duplicate', 'ldap_duplicate');
     $query->addField('mu', 'primary_account', 'primary_account');
+    $query->addField('mu', 'calendar', 'calendar');
+    $query->addField('mu', 'calendar_holidays', 'calendar_holidays');
+    $query->addField('mu', 'calendar_unavailabilities', 'calendar_unavailabilities');
+    $query->addField('mu', 'filter_by_classification', 'filter_by_classification');
+    $query->addField('mu', 'filter_by_type', 'filter_by_type');
+    $query->addField('mu', 'filter_by_building', 'filter_by_building');
     $query->addField('mu', 'problems', 'problems');
     $query->addField('mu', 'updated', 'updated');
     $query->addField('mu', 'updated_problems', 'updated_problems');
@@ -3702,6 +3862,12 @@ function mfcs_load_basic_user_settings_by_user_id($user_id) {
         'phone_number' => '',
         'ldap_duplicate' => FALSE,
         'primary_account' => TRUE,
+        'calendar' => MFCS_USER_CALENDAR_NONE,
+        'calendar_holidays' => TRUE,
+        'calendar_unavailabilities' => TRUE,
+        'filter_by_classification' => array(),
+        'filter_by_type' => array(),
+        'filter_by_building' => array(),
         'problems' => MFCS_USER_PROBLEM_NONE,
         'updated' => NULL,
         'updated_problems' => NULL,
@@ -3742,6 +3908,69 @@ function mfcs_load_basic_user_settings_by_user_id($user_id) {
 
         if (property_exists($row, 'primary_account') && !is_null($row->primary_account)) {
           $user[$user_id]['primary_account'] = (bool) $row->primary_account;
+        }
+
+        if (property_exists($row, 'calendar') && !is_null($row->calendar)) {
+          $user[$user_id]['calendar'] = (int) $row->calendar;
+        }
+
+        if (property_exists($row, 'calendar_holidays') && !is_null($row->calendar_holidays)) {
+          $user[$user_id]['calendar_holidays'] = (int) $row->calendar_holidays;
+        }
+
+        if (property_exists($row, 'calendar_unavailabilities') && !is_null($row->calendar_unavailabilities)) {
+          $user[$user_id]['calendar_unavailabilities'] = (int) $row->calendar_unavailabilities;
+        }
+
+        if (property_exists($row, 'filter_by_classification')) {
+          $user[$user_id]['filter_by_classification'] = array();
+
+          $filters = preg_replace('/(^{|}$)/i', '', $row->filter_by_building);
+          $filters = explode(',', $filters);
+
+          if (is_array($filters) && !empty($filters)) {
+            foreach ($filters as $filter) {
+              if (is_numeric($filter)) {
+                $user[$user_id]['filter_by_classification']->mfcs['filter_by_classification'][(int) $filter] = (int) $filter;
+              }
+            }
+            unset($filter);
+          }
+          unset($filters);
+        }
+
+        if (property_exists($row, 'filter_by_type')) {
+          $user[$user_id]['filter_by_type'] = array();
+
+          $filters = preg_replace('/(^{|}$)/i', '', $row->filter_by_type);
+          $filters = explode(',', $filters);
+
+          if (is_array($filters) && !empty($filters)) {
+            foreach ($filters as $filter) {
+              if (is_numeric($filter)) {
+                $user[$user_id]['filter_by_type']->mfcs['filter_by_type'][(int) $filter] = (int) $filter;
+              }
+            }
+            unset($filter);
+          }
+          unset($filters);
+        }
+
+        if (property_exists($row, 'filter_by_building')) {
+          $user[$user_id]['filter_by_building'] = array();
+
+          $filters = preg_replace('/(^{|}$)/i', '', $row->filter_by_building);
+          $filters = explode(',', $filters);
+
+          if (is_array($filters) && !empty($filters)) {
+            foreach ($filters as $filter) {
+              if (is_numeric($filter)) {
+                $user[$user_id]['filter_by_building']->mfcs['filter_by_building'][(int) $filter] = (int) $filter;
+              }
+            }
+            unset($filter);
+          }
+          unset($filters);
         }
 
         if (property_exists($row, 'problems') && !is_null($row->problems)) {
@@ -6960,68 +7189,6 @@ function mfcs_load_request_revision_number($request_id, $table_field_name = NULL
 }
 
 /**
- * Loads a system user by its Banner ID.
- *
- * @param int $banner_id
- *   The numeric banner id.
- * @param bool $reset
- *   (optional) If TRUE, the cache for the specified user is reset.
- *
- * @return object|null|bool
- *   The
- *   FALSE is returned on error.
- *   An empty array is returned when there is no request by that id.
- */
-function mfcs_load_user_by_banner_id($banner_id, $reset = FALSE) {
-  if (!cf_is_integer($banner_id)) {
-    cf_error::invalid_integer('banner_id');
-    return FALSE;
-  }
-
-  $cache_id = __function__;
-  $cached_user = &drupal_static($cache_id, NULL);
-  if (!$reset && is_array($cached_user) && array_key_exists($banner_id, $cached_user)) {
-    return $cached_user[$banner_id];
-  }
-
-  try {
-    $query = db_select('users', 'u');
-
-    $query->innerJoin('mfcs_users', 'mu', 'u.uid = mu.user_id');
-
-    $query->addField('u', 'uid', 'user_id');
-    $query->addField('u', 'name', 'name');
-    $query->addField('u', 'created', 'created');
-    $query->addField('u', 'status', 'status');
-    $query->addField('u', 'mail', 'email');
-
-    $query->addField('mu', 'first_name', 'first_name');
-    $query->addField('mu', 'last_name', 'last_name');
-    $query->addField('mu', 'banner_id', 'banner_id');
-
-    $query->condition('mu.banner_id', $banner_id);
-
-    $results = $query->execute()->fetchAll();
-  }
-  catch (Error $e) {
-    cf_error::on_exception($e);
-    return FALSE;
-  }
-  catch (Exception $e) {
-    cf_error::on_exception($e);
-    return FALSE;
-  }
-
-  if (empty($results)) {
-    return NULL;
-  }
-
-  $cached_user[$banner_id] = array_pop($results);
-
-  return $cached_user[$banner_id];
-}
-
-/**
  * Returns the reviewers.
  *
  * @param array $conditions
@@ -7607,63 +7774,6 @@ function mfcs_get_venue_coordinator_proxy($venue_coordinator_id) {
 }
 
 /**
- * A simple user loading function that only loads specific database information.
- *
- * @param int $user_id
- *   The user id to load.
- *
- * @return object|bool
- *   A user object or FALSE on error.
- */
-function mfcs_get_user_information($user_id) {
-  if (!cf_is_integer($user_id)) {
-    cf_error::invalid_integer('user_id');
-    return FALSE;
-  }
-
-  $users = &drupal_static(__function__, array());
-  if (array_key_exists($user_id, $users)) {
-    return $users[$user_id];
-  }
-
-  try {
-    $query = db_select('users', 'u');
-    $query->leftJoin('mfcs_users', 'mu', 'u.uid = mu.user_id');
-
-    $query->addField('u', 'name', 'name');
-    $query->addField('u', 'created', 'created');
-    $query->addField('u', 'status', 'status');
-    $query->addField('u', 'mail', 'email');
-
-    $query->addField('mu', 'first_name', 'first_name');
-    $query->addField('mu', 'last_name', 'last_name');
-    $query->addField('mu', 'banner_id', 'banner_id');
-
-    $query->condition('u.uid', $user_id);
-
-    $result = $query->execute()->fetchObject();
-
-    if (is_object($result)) {
-      $users[$user_id] = $result;
-
-      return $result;
-    }
-  }
-  catch (Error $e) {
-    cf_error::on_query_execution($e);
-
-    return FALSE;
-  }
-  catch (Exception $e) {
-    cf_error::on_query_execution($e);
-
-    return FALSE;
-  }
-
-  return FALSE;
-}
-
-/**
  * Returns the reviewer settings for the given drupal user.
  *
  * @param int $user_id
@@ -7977,7 +8087,7 @@ function mfcs_check_room_availability($room, $dates, $time_start, $time_stop, $r
       continue;
     }
 
-    $unavailabilities = mfcs_get_unavailabilities($year, $room, $start_time, $stop_time);
+    $unavailabilities = mfcs_get_unavailabilities($year, $room, NULL, $start_time, $stop_time);
     if (is_array($unavailabilities)) {
       foreach ($unavailabilities as $unavailability) {
         $matched_requests['unavailable'][$unavailability->id] = $unavailability;
@@ -10201,6 +10311,27 @@ function mfcs_build_request_ajax_table($items_returned, $conditions, $options, $
     $table['datatable_settings']['rowId'] = $rowId;
   }
 
+  // enable qtip support
+  $table['datatable_settings']['fnRowCallback'] = 'function( nRow, aData, iDisplayIndex, iDisplayIndexFull ) {' . "\n";
+  $table['datatable_settings']['fnRowCallback'] .= '  $(\'.mfcs-qtip-datatable_tooltip\', nRow).each(function(context) {' . "\n";
+  $table['datatable_settings']['fnRowCallback'] .= '    var qtip_element = $(this);' . "\n";
+  $table['datatable_settings']['fnRowCallback'] .= '    $(qtip_element).qtip({' . "\n";
+  $table['datatable_settings']['fnRowCallback'] .= '      id: $(qtip_element).attr(\'qtip_tooltip-id\'),' . "\n";
+  $table['datatable_settings']['fnRowCallback'] .= '      content: {' . "\n";
+  $table['datatable_settings']['fnRowCallback'] .= '        title: $(qtip_element).attr(\'qtip_tooltip-title\'),' . "\n";
+  $table['datatable_settings']['fnRowCallback'] .= '        text: $(qtip_element).attr(\'qtip_tooltip-text\')' . "\n";
+  $table['datatable_settings']['fnRowCallback'] .= '      },' . "\n";
+  $table['datatable_settings']['fnRowCallback'] .= '      style: {' . "\n";
+  $table['datatable_settings']['fnRowCallback'] .= '        classes: $(qtip_element).attr(\'qtip_tooltip-class\')' . "\n";
+  $table['datatable_settings']['fnRowCallback'] .= '      },' . "\n";
+  $table['datatable_settings']['fnRowCallback'] .= '      position: {' . "\n";
+  $table['datatable_settings']['fnRowCallback'] .= '        my: \'top center\',' . "\n";
+  $table['datatable_settings']['fnRowCallback'] .= '        at: \'bottom center\'' . "\n";
+  $table['datatable_settings']['fnRowCallback'] .= '      }' . "\n";
+  $table['datatable_settings']['fnRowCallback'] .= '    });' . "\n";
+  $table['datatable_settings']['fnRowCallback'] .= '  });' . "\n";
+  $table['datatable_settings']['fnRowCallback'] .= '}' . "\n";
+
   foreach ($columns as $column_id => $column) {
     $table['datatable_settings']['columns'][$column_id] = $column;
 
@@ -10472,21 +10603,20 @@ function mfcs_build_request_ajax_table_process_rows($items, $columns, $user = NU
     $can_delete_requests = array();
   }
 
+  mfcs_include(MFCS_INCLUDE_LIST_OPTIONS);
+
   $type_options = mfcs_get_request_type_list_options();
   $status_options = mfcs_get_request_status_list_options();
   $step_options = mfcs_get_review_steps_list_options();
   $location_options = mfcs_get_request_location_list_options(NULL, FALSE, TRUE);
+  $building_options = mfcs_get_request_building_list_options(NULL, NULL, FALSE, TRUE);
+  $building_options_special = mfcs_get_request_building_list_options(NULL, 'special', TRUE, TRUE);
   $room_options = mfcs_get_request_room_list_options(NULL, NULL, FALSE, TRUE);
-  $building_options = array();
-
+  $room_options_special = mfcs_get_request_room_list_options(NULL, 'special', TRUE, TRUE);
 
   $rows = array();
   foreach ($items as $item) {
     $row = array();
-
-    if (!array_key_exists($item->location, $building_options)) {
-      $building_options[$item->location] = mfcs_get_request_building_list_options($item->location, NULL, FALSE, TRUE);
-    }
 
     foreach ($columns as $column_id => $column) {
       if (is_null($column['column'])) {
@@ -10546,15 +10676,49 @@ function mfcs_build_request_ajax_table_process_rows($items, $columns, $user = NU
         }
         elseif ($column['column'] == 'building') {
           if (!empty($item->building)) {
-            if (isset($building_options[$item->location][$item->building])) {
-              $data = '<div class="column-item item-building item-building-0">' . check_plain($building_options[$item->location][$item->building]) . '</div>';
+            if (isset($building_options[$item->building])) {
+              $tooltip = '';
+              $extra_class = '';
+
+              if (isset($building_options_special[$item->building])) {
+                $tooltip_attributes = array(
+                  'qtip_tooltip-title' => 'Building',
+                  'qtip_tooltip-text' => $building_options_special[$item->building],
+                  'qtip_tooltip-class' => 'item-tooltip request_item-tooltip-building',
+                );
+
+                $extra_class = ' mfcs-qtip-datatable_tooltip';
+                $tooltip = ' ' . drupal_attributes($tooltip_attributes);
+                unset($tooltip_attributes);
+              }
+
+              $data = '<div class="column-item item-building item-building-0' . $extra_class . '"' . $tooltip . '>' . check_plain($building_options[$item->building]) . '</div>';
+              unset($extra_class);
+              unset($tooltip);
             }
           }
         }
         elseif ($column['column'] == 'room') {
           if (!empty($item->room)) {
             if (isset($room_options[$item->room])) {
-              $data = '<div class="column-item item-room item-room-0">' . check_plain($room_options[$item->room]) . '</div>';
+              $tooltip = '';
+              $extra_class = '';
+
+              if (isset($room_options_special[$item->room])) {
+                $tooltip_attributes = array(
+                  'qtip_tooltip-title' => 'Room',
+                  'qtip_tooltip-text' => $room_options_special[$item->room],
+                  'qtip_tooltip-class' => 'item-tooltip request_item-tooltip-room',
+                );
+
+                $extra_class = ' mfcs-qtip-datatable_tooltip';
+                $tooltip = ' ' . drupal_attributes($tooltip_attributes);
+                unset($tooltip_attributes);
+              }
+
+              $data = '<div class="column-item item-room item-room-0' . $extra_class . '"' . $tooltip . '>' . check_plain($room_options[$item->room]) . '</div>';
+              unset($extra_class);
+              unset($tooltip);
             }
           }
         }
@@ -11538,8 +11702,9 @@ function mfcs_instance($reset = FALSE) {
  * The arguments are processed and stored in the global $mfcs_determined.
  */
 function mfcs_determine_url_arguments() {
-  global $user;
   global $mfcs_determined;
+
+  $user = cf_current_user();
 
   $mfcs_determined = array(
     'get' => array(),
@@ -11553,6 +11718,43 @@ function mfcs_determine_url_arguments() {
   // deny access to this functionality to the anonymous user.
   if ($user->uid == 0) {
     return;
+  }
+
+  // pre-load user customization of filters.
+  if (isset($user->mfcs['filter_by_classification']) && is_array($user->mfcs['filter_by_classification']) && !empty($user->mfcs['filter_by_classification'])) {
+    $target_field_name = 'field_request_coordinator-classification-0';
+    $mfcs_determined['filters'][$target_field_name]['group_name'] = 'request_coordinator';
+    $mfcs_determined['filters'][$target_field_name]['field_name'] = 'classification';
+    $mfcs_determined['filters'][$target_field_name]['column'] = 'value';
+    $mfcs_determined['filters'][$target_field_name]['search'] = $user->mfcs['filter_by_classification'];
+    $mfcs_determined['filters'][$target_field_name]['classification'] = 'number';
+    $mfcs_determined['filters'][$target_field_name]['multiple'] = FALSE;
+    $mfcs_determined['filters'][$target_field_name]['operator'] = MFCS_OPERATOR_IS_IN;
+    unset($target_field_name);
+  }
+
+  if (isset($user->mfcs['filter_by_type']) && is_array($user->mfcs['filter_by_type']) && !empty($user->mfcs['filter_by_type'])) {
+    $target_field_name = 'field_information-type-0';
+    $mfcs_determined['filters'][$target_field_name]['group_name'] = 'information';
+    $mfcs_determined['filters'][$target_field_name]['field_name'] = 'type';
+    $mfcs_determined['filters'][$target_field_name]['column'] = 'value';
+    $mfcs_determined['filters'][$target_field_name]['search'] = $user->mfcs['filter_by_type'];
+    $mfcs_determined['filters'][$target_field_name]['type'] = 'number';
+    $mfcs_determined['filters'][$target_field_name]['multiple'] = FALSE;
+    $mfcs_determined['filters'][$target_field_name]['operator'] = MFCS_OPERATOR_IS_IN;
+    unset($target_field_name);
+  }
+
+  if (isset($user->mfcs['filter_by_building']) && is_array($user->mfcs['filter_by_building']) && !empty($user->mfcs['filter_by_building'])) {
+    $target_field_name = 'field_top-building-0';
+    $mfcs_determined['filters'][$target_field_name]['group_name'] = 'mer';
+    $mfcs_determined['filters'][$target_field_name]['field_name'] = 'building';
+    $mfcs_determined['filters'][$target_field_name]['column'] = 'value';
+    $mfcs_determined['filters'][$target_field_name]['search'] = $user->mfcs['filter_by_building'];
+    $mfcs_determined['filters'][$target_field_name]['building'] = 'number';
+    $mfcs_determined['filters'][$target_field_name]['multiple'] = FALSE;
+    $mfcs_determined['filters'][$target_field_name]['operator'] = MFCS_OPERATOR_IS_IN;
+    unset($target_field_name);
   }
 
   if (!empty($_GET)) {
@@ -11575,22 +11777,47 @@ function mfcs_determine_url_arguments() {
         $mfcs_determined['combined'] .= $lower_name . '=' . $lower_value;
 
         $types = array();
+        $types_positive = array();
+        if (isset($user->mfcs['filter_by_type']) && is_array($user->mfcs['filter_by_type']) && !empty($user->mfcs['filter_by_type'])) {
+          $types = $user->mfcs['filter_by_type'];
+          $types_positive = $user->mfcs['filter_by_type'];
+        }
+
         foreach ($types_array as $type) {
           if (cf_is_integer($type)) {
             $types[$type] = $type;
+
+            if ($type < 0) {
+              $to_positive = $type * -1;
+              unset($types[$to_positive]);
+              unset($types_positive[$to_positive]);
+              unset($to_positive);
+            }
+            else {
+              $types_positive[$type] = $type;
+            }
           }
         }
         unset($types_array);
         $mfcs_determined['get']['types'] = $types;
 
-        $target_field_name = 'field_information-type-0';
-        $mfcs_determined['filters'][$target_field_name]['group_name'] = 'information';
-        $mfcs_determined['filters'][$target_field_name]['field_name'] = 'type';
-        $mfcs_determined['filters'][$target_field_name]['column'] = 'value';
-        $mfcs_determined['filters'][$target_field_name]['search'] = $types;
-        $mfcs_determined['filters'][$target_field_name]['type'] = 'number';
-        $mfcs_determined['filters'][$target_field_name]['multiple'] = FALSE;
-        $mfcs_determined['filters'][$target_field_name]['operator'] = MFCS_OPERATOR_IS_IN;
+        if (empty($types_positive)) {
+          // prevent pre-load from being used if the types were removed via negative values.
+          $target_field_name = 'field_top-type-0';
+          if (!empty($mfcs_determined['filters'][$target_field_name]['search'])) {
+            unset($mfcs_determined['filters'][$target_field_name]);
+          }
+        }
+        else {
+          $target_field_name = 'field_information-type-0';
+          $mfcs_determined['filters'][$target_field_name]['group_name'] = 'information';
+          $mfcs_determined['filters'][$target_field_name]['field_name'] = 'type';
+          $mfcs_determined['filters'][$target_field_name]['column'] = 'value';
+          $mfcs_determined['filters'][$target_field_name]['search'] = $types;
+          $mfcs_determined['filters'][$target_field_name]['type'] = 'number';
+          $mfcs_determined['filters'][$target_field_name]['multiple'] = FALSE;
+          $mfcs_determined['filters'][$target_field_name]['operator'] = MFCS_OPERATOR_IS_IN;
+        }
       }
       elseif ($lower_name == 'classifications') {
         $mfcs_determined['redirect'][$lower_name] = $request_value;
@@ -11607,22 +11834,47 @@ function mfcs_determine_url_arguments() {
         $mfcs_determined['combined'] .= $lower_name . '=' . $lower_value;
 
         $classifications = array();
+        $classifications_positive = array();
+        if (isset($user->mfcs['filter_by_classification']) && is_array($user->mfcs['filter_by_classification']) && !empty($user->mfcs['filter_by_classification'])) {
+          $classifications = $user->mfcs['filter_by_classification'];
+          $classifications_positive = $user->mfcs['filter_by_classification'];
+        }
+
         foreach ($classifications_array as $classification) {
           if (cf_is_integer($classification)) {
             $classifications[$classification] = $classification;
+
+            if ($classification < 0) {
+              $to_positive = $classification * -1;
+              unset($classifications[$to_positive]);
+              unset($classifications_positive[$to_positive]);
+              unset($to_positive);
+            }
+            else {
+              $classifications_positive[$classification] = $classification;
+            }
           }
         }
         unset($classifications_array);
         $mfcs_determined['get']['classifications'] = $classifications;
 
-        $target_field_name = 'field_request_coordinator-classification-0';
-        $mfcs_determined['filters'][$target_field_name]['group_name'] = 'request_coordinator';
-        $mfcs_determined['filters'][$target_field_name]['field_name'] = 'classification';
-        $mfcs_determined['filters'][$target_field_name]['column'] = 'value';
-        $mfcs_determined['filters'][$target_field_name]['search'] = $classifications;
-        $mfcs_determined['filters'][$target_field_name]['type'] = 'number';
-        $mfcs_determined['filters'][$target_field_name]['multiple'] = FALSE;
-        $mfcs_determined['filters'][$target_field_name]['operator'] = MFCS_OPERATOR_IS_IN;
+        if (empty($classifications_positive)) {
+          // prevent pre-load from being used if the classifications were removed via negative values.
+          $target_field_name = 'field_top-classification-0';
+          if (!empty($mfcs_determined['filters'][$target_field_name]['search'])) {
+            unset($mfcs_determined['filters'][$target_field_name]);
+          }
+        }
+        else {
+          $target_field_name = 'field_request_coordinator-classification-0';
+          $mfcs_determined['filters'][$target_field_name]['group_name'] = 'request_coordinator';
+          $mfcs_determined['filters'][$target_field_name]['field_name'] = 'classification';
+          $mfcs_determined['filters'][$target_field_name]['column'] = 'value';
+          $mfcs_determined['filters'][$target_field_name]['search'] = $classifications;
+          $mfcs_determined['filters'][$target_field_name]['type'] = 'number';
+          $mfcs_determined['filters'][$target_field_name]['multiple'] = FALSE;
+          $mfcs_determined['filters'][$target_field_name]['operator'] = MFCS_OPERATOR_IS_IN;
+        }
       }
       elseif ($lower_name == 'buildings') {
         $mfcs_determined['redirect'][$lower_name] = $request_value;
@@ -11639,22 +11891,47 @@ function mfcs_determine_url_arguments() {
         $mfcs_determined['combined'] .= $lower_name . '=' . $lower_value;
 
         $buildings = array();
+        $buildings_positive = array();
+        if (isset($user->mfcs['filter_by_building']) && is_array($user->mfcs['filter_by_building']) && !empty($user->mfcs['filter_by_building'])) {
+          $buildings = $user->mfcs['filter_by_building'];
+          $buildings_positive = $user->mfcs['filter_by_building'];
+        }
+
         foreach ($buildings_array as $building) {
           if (cf_is_integer($building)) {
             $buildings[$building] = $building;
+
+            if ($building < 0) {
+              $to_positive = $building * -1;
+              unset($buildings[$to_positive]);
+              unset($buildings_positive[$to_positive]);
+              unset($to_positive);
+            }
+            else {
+              $buildings_positive[$building] = $building;
+            }
           }
         }
         unset($buildings_array);
         $mfcs_determined['get']['buildings'] = $buildings;
 
-        $target_field_name = 'field_top-building-0';
-        $mfcs_determined['filters'][$target_field_name]['group_name'] = 'mer';
-        $mfcs_determined['filters'][$target_field_name]['field_name'] = 'building';
-        $mfcs_determined['filters'][$target_field_name]['column'] = 'value';
-        $mfcs_determined['filters'][$target_field_name]['search'] = $buildings;
-        $mfcs_determined['filters'][$target_field_name]['type'] = 'number';
-        $mfcs_determined['filters'][$target_field_name]['multiple'] = FALSE;
-        $mfcs_determined['filters'][$target_field_name]['operator'] = MFCS_OPERATOR_IS_IN;
+        if (empty($buildings_positive)) {
+          // prevent pre-load from being used if the buildings were removed via negative values.
+          $target_field_name = 'field_top-building-0';
+          if (!empty($mfcs_determined['filters'][$target_field_name]['search'])) {
+            unset($mfcs_determined['filters'][$target_field_name]);
+          }
+        }
+        else {
+          $target_field_name = 'field_top-building-0';
+          $mfcs_determined['filters'][$target_field_name]['group_name'] = 'mer';
+          $mfcs_determined['filters'][$target_field_name]['field_name'] = 'building';
+          $mfcs_determined['filters'][$target_field_name]['column'] = 'value';
+          $mfcs_determined['filters'][$target_field_name]['search'] = $buildings_positive;
+          $mfcs_determined['filters'][$target_field_name]['type'] = 'number';
+          $mfcs_determined['filters'][$target_field_name]['multiple'] = FALSE;
+          $mfcs_determined['filters'][$target_field_name]['operator'] = MFCS_OPERATOR_IS_IN;
+        }
       }
       elseif ($lower_name == 'q') {
         // drupal uses 'q' for the url path, so ignore it.
@@ -12771,6 +13048,10 @@ function mfcs_get_holiday($id, $enabled = TRUE, $deleted = FALSE) {
  *   (optional) The ID of the room to load.
  *   May be an array of room IDS to load by multiple rooms.
  *   If NULL, then all rooms for the given year are loaded.
+ * @param array|int|null $building_id
+ *   (optional) The ID of the building to load.
+ *   May be an array of building IDS to load by multiple building.
+ *   If NULL, then all buildings for the given year are loaded.
  * @param int|null $timestamp_start
  *   (optional) The timestamp start range.
  * @param int|null $timestamp_stop
@@ -12792,7 +13073,7 @@ function mfcs_get_holiday($id, $enabled = TRUE, $deleted = FALSE) {
  *   An array of unavailabilities.
  *   FALSE is returned on error.
  */
-function mfcs_get_unavailabilities($year, $room_id = NULL, $timestamp_start = NULL, $timestamp_stop = NULL, $enabled = TRUE, $deleted = FALSE, $inner_joins = FALSE) {
+function mfcs_get_unavailabilities($year, $room_id = NULL, $building_id = NULL, $timestamp_start = NULL, $timestamp_stop = NULL, $enabled = TRUE, $deleted = FALSE, $inner_joins = FALSE) {
   if (!cf_is_integer($year)) {
     cf_error::invalid_integer('year');
     return FALSE;
@@ -12800,6 +13081,11 @@ function mfcs_get_unavailabilities($year, $room_id = NULL, $timestamp_start = NU
 
   if (!is_null($room_id) && !cf_is_integer($room_id) && !is_array($room_id)) {
     cf_error::invalid_integer('room_id');
+    return FALSE;
+  }
+
+  if (!is_null($building_id) && !cf_is_integer($building_id) && !is_array($building_id)) {
+    cf_error::invalid_integer('building_id');
     return FALSE;
   }
 
@@ -12876,6 +13162,15 @@ function mfcs_get_unavailabilities($year, $room_id = NULL, $timestamp_start = NU
       }
     }
 
+    if (!is_null($building_id)) {
+      if (is_array($building_id)) {
+        $query->condition('mu.building_id', $building_id, 'IN');
+      }
+      else {
+        $query->condition('mu.building_id', $building_id);
+      }
+    }
+
     if ($enabled === TRUE) {
       $query->condition('mu.enabled', 1);
     }
@@ -12898,10 +13193,6 @@ function mfcs_get_unavailabilities($year, $room_id = NULL, $timestamp_start = NU
       else {
         $or = db_or();
 
-        // [B] [DS] [E] [DF] ~ B <= DS && E > DS | DS < E && DF >= E
-        // [B] [DS] [DF] [E] ~ B <= DS && E > DF | DS >= B && DF < E
-        // [DS] [B] [DF] [E] ~ B >= DS && B < DF | DS <= B && DF > B
-
         $and = db_and();
         $and->condition('mu.date_start', $timestamp_stop, '<');
         $and->condition('mu.date_stop', $timestamp_stop, '>=');
@@ -12918,10 +13209,6 @@ function mfcs_get_unavailabilities($year, $room_id = NULL, $timestamp_start = NU
         $or->condition($and);
 
         $query->condition($or);
-
-    #( (mu.date_start >= 1469077200) AND (mu.date_start < 1469163600) )
-    #OR                  1468389600
-    #( (mu.date_stop > 1469077200) AND (mu.date_stop <= 1469163600) )
       }
     }
 
@@ -13976,7 +14263,6 @@ function mcneese_fcs_text_capitalization($text) {
 
   return implode(' ', $fixed);
 }
-
 
 /**
  * @} End of '@defgroup mfcs McNeese Facilities Use'.

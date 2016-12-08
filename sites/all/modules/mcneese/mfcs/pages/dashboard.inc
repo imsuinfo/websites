@@ -31,8 +31,7 @@ function mfcs_dashboard_page() {
   // access check is performed here instead of via the hook_menu() so that different responses may be provided based on access control situations.
   $user_account_new_banner_access_problem = FALSE;
   if (mfcs_dashboard_page_access() === FALSE) {
-    $mfcs_users = mfcs_load_users($user->uid);
-    if (is_array($mfcs_users) && !empty($mfcs_users[$user->uid]) && is_object($mfcs_users[$user->uid]) && property_exists($mfcs_users[$user->uid], 'problems') && ($mfcs_users[$user->uid]->problems & MFCS_USER_PROBLEM_ACCOUNT_CREATE_BANNER_UNAVAILABLE) != 0) {
+    if (!empty($user->mfcs) && is_array($user->mfcs) && array_key_exists('problems', $user->mfcs) && ($user->mfcs['problems'] & MFCS_USER_PROBLEM_ACCOUNT_CREATE_BANNER_UNAVAILABLE) != 0) {
       $user_account_new_banner_access_problem = TRUE;
     }
   }
@@ -142,7 +141,7 @@ function mfcs_dashboard_page() {
   $markup = '<div id="mfcs-dashboard_page-choices" class="mfcs-dashboard_page-choices">';
 
   if (!$can_create && !$can_list && !$can_search && !$can_review) {
-    watchdog('insufficient access', "The user :user_name (:user_id) does not have sufficient access to use the system.", array(':user_name' => $user->name, ':user_id' => $user->uid), WATCHDOG_NOTICE);
+    watchdog('insufficient access', 'The user :user_name (:user_id) does not have sufficient access to use the system.', array(':user_name' => $user->name, ':user_id' => $user->uid), WATCHDOG_NOTICE);
     $markup .= '<h3 class="mfcs-dashboard_page-choices-header">Insufficient Access</h3>';
 
     $markup .= '<div>';
@@ -167,17 +166,17 @@ function mfcs_dashboard_page() {
     $markup .= '</div>';
 
     if ($user->status != 0) {
-      $mfcs_users = mfcs_load_users($user->uid);
-      if (is_array($mfcs_users) && !empty($mfcs_users[$user->uid]) && is_object($mfcs_users[$user->uid]) && property_exists($mfcs_users[$user->uid], 'problems')) {
+      if (!empty($user->mfcs) && is_array($user->mfcs) && array_key_exists('problems', $user->mfcs)) {
 
         // only assign no access problem flag when the user account has not been flagged as unable to sync with banner.
-        if (($mfcs_users[$user->uid]->problems & MFCS_USER_PROBLEM_ACCOUNT_CREATE_BANNER_UNAVAILABLE) == 0 && ($mfcs_users[$user->uid]->problems & MFCS_USER_PROBLEM_ACCOUNT_SYNC_BANNER_UNAVAILABLE) == 0 && ($mfcs_users[$user->uid]->problems & MFCS_USER_PROBLEM_ACCOUNT_BANNER_INVALID) == 0) {
-          $mfcs_users[$user->uid]->problems = $mfcs_users[$user->uid]->problems | MFCS_USER_PROBLEM_ACCOUNT_NO_ACCESS;
-          mfcs_save_user($user->uid, array('problems' => $mfcs_users[$user->uid]->problems));
+        if (($user->mfcs['problems'] & MFCS_USER_PROBLEM_ACCOUNT_CREATE_BANNER_UNAVAILABLE) == 0 && ($user->mfcs['problems'] & MFCS_USER_PROBLEM_ACCOUNT_SYNC_BANNER_UNAVAILABLE) == 0 && ($user->mfcs['problems'] & MFCS_USER_PROBLEM_ACCOUNT_BANNER_INVALID) == 0) {
+          $user->mfcs['problems'] = $user->mfcs['problems'] | MFCS_USER_PROBLEM_ACCOUNT_NO_ACCESS;
+          mfcs_save_user($user->uid, array('problems' => $user->mfcs['problems']));
         }
       }
       else {
         mfcs_save_user($user->uid, array('problems' => MFCS_USER_PROBLEM_ACCOUNT_NO_ACCESS));
+        $user->mfcs['problems'] = MFCS_USER_PROBLEM_ACCOUNT_NO_ACCESS;
       }
     }
   }
@@ -205,6 +204,8 @@ function mfcs_dashboard_page() {
     mfcs_include(MFCS_INCLUDE_MISCELLANEOUS);
 
     $instance = mfcs_instance();
+
+    $year = date('Y', $instance);
 
     $month_start = strtotime('midnight first day of', $instance);
     $month_end = strtotime('midnight last day of', $instance);
@@ -261,7 +262,272 @@ function mfcs_dashboard_page() {
       $buildings = array();
     }
 
+    $search_building_ids = NULL;
+    if (!empty($mfcs_determined['filters']['field_top-building-0']['search'])) {
+      $search_building_ids = $mfcs_determined['filters']['field_top-building-0']['search'];
+    }
+
+
+    // conditionally load holidays.
+    $holidays = NULL;
+    $show_holidays = TRUE;
+    if (isset($user->mfcs['calendar_holidays']) && $user->mfcs['calendar_holidays'] === FALSE) {
+      $show_holidays = FALSE;
+    }
+
+    if ($show_holidays) {
+      $holidays = mfcs_get_holidays($year, $absolute_start, $absolute_stop);
+    }
+
+    if (!is_array($holidays)) {
+      $holidays = array();
+    }
+
+
+    // conditionally load unavailabilities.
+    $unavailabilities = NULL;
+    $show_unavailabilities = TRUE;
+    if (isset($user->mfcs['calendar_unavailabilities']) && $user->mfcs['calendar_unavailabilities'] === FALSE) {
+      $show_unavailabilities = FALSE;
+    }
+
+    if ($show_unavailabilities) {
+      $unavailabilities = mfcs_get_unavailabilities($year, NULL, $search_building_ids, $absolute_start, $absolute_stop, TRUE, FALSE, TRUE);
+    }
+
+    if (!is_array($unavailabilities)) {
+      $unavailabilities = array();
+    }
+
+
+    $unavailability_type_options = mfcs_get_unavailability_type_list_options('combined', TRUE);
+
+    // Holidays and Unavailabilities are setup on a per-year basis.
+    // If absolute_start is a previous or next year, additional function calls are required.
+    $year_start = strtotime('midnight january 1 ' . $year);
+    $year_stop = strtotime('next year', $year_start);
+    if ($absolute_start < $year_start) {
+      if ($show_holidays) {
+        $holidays_previous = mfcs_get_holidays($year - 1, $absolute_start, $year_start);
+        if (is_array($holidays_previous)) {
+          foreach ($holidays_previous as $holiday_key => $holiday_value) {
+            $holidays[$holiday_key] = $holiday_value;
+          }
+        }
+        unset($holiday_key);
+        unset($holiday_value);
+        unset($holidays_previous);
+      }
+
+      if ($show_unavailabilities) {
+        $unavailabilities = mfcs_get_unavailabilities($year - 1, $search_building_ids, NULL, $absolute_start, $year_start, TRUE, FALSE, TRUE);
+        if (is_array($unavailabilities_previous)) {
+          foreach ($unavailabilities_previous as $unavailabilities_key => $unavailabilities_value) {
+            $holidays[$unavailabilities_key] = $unavailabilities_value;
+          }
+        }
+        unset($unavailabilities_key);
+        unset($unavailabilities_value);
+      }
+    }
+
+    if ($absolute_stop > $year_stop) {
+      if ($show_holidays) {
+        $holidays_next = mfcs_get_holidays($year + 1, $year_stop, $absolute_stop);
+        if (is_array($holidays_next)) {
+          foreach ($holidays_next as $holiday_key => $holiday_value) {
+            $holidays[$holiday_key] = $holiday_value;
+          }
+        }
+        unset($holiday_key);
+        unset($holiday_value);
+        unset($holidays_next);
+      }
+
+      if ($show_unavailabilities) {
+        $unavailabilities = mfcs_get_unavailabilities($year + 1, NULL, $search_building_ids, $year_stop, $absolute_stop, TRUE, FALSE, TRUE);
+        if (is_array($unavailabilities_next)) {
+          foreach ($unavailabilities_next as $unavailabilities_key => $unavailabilities_value) {
+            $holidays[$unavailabilities_key] = $unavailabilities_value;
+          }
+        }
+        unset($unavailabilities_key);
+        unset($unavailabilities_value);
+      }
+    }
+
     $rows = array();
+    foreach ($holidays as $holiday) {
+      $day = date('j', $holiday->date);
+      $month = date('n', $holiday->date);
+      $month_day = $month . '-' . $day;
+      if (!isset($rows[$month_day])) {
+        $rows[$month_day] = array();
+      }
+
+      $rows[$month_day]['holiday-' . $holiday->id] = array(
+        'is' => 'holiday',
+        'id' => $holiday->id,
+        'title' => check_plain($holiday->title),
+        'title-raw' => $holiday->title,
+        'tooltip' => str_replace('"', '&quot;', check_plain($holiday->description)),
+        'year' => $year,
+        'month' => $month,
+        'day' => $day,
+        'date' => $holiday->date,
+      );
+    }
+    unset($holiday);
+    unset($holidays);
+
+    // dashboard assigns a separate theme for the original theme, however the full calander can and should display all unavailabilities.
+    $calendar = MFCS_USER_CALENDAR_ORIGINAL;
+    if (isset($user->mfcs['calendar']) && is_numeric($user->mfcs['calendar'])) {
+      $calendar = (int) $user->mfcs['calendar'];
+    }
+
+    if ($calendar == MFCS_USER_CALENDAR_ORIGINAL || $calendar == MFCS_USER_CALENDAR_NONE) {
+      foreach ($unavailabilities as $unavailability) {
+        if ($unavailability->date_start == $unavailability->date_stop) {
+          $day = date('j', $unavailability->date_start);
+          $month = date('n', $unavailability->date_start);
+          $month_day = $month . '-' . $day;
+          if (!isset($rows[$month_day])) {
+            $rows[$month_day] = array();
+          }
+
+          $rows[$month_day]['unavailability-all'] = array(
+            'is' => 'unavailable',
+            'id' => 'unavailability-all',
+            'title' => 'Some rooms are unavailable.',
+            'title-raw' => 'Some rooms are unavailable.',
+            'tooltip' => 'View the current day to see all room unavailabilities',
+            'year' => $year,
+            'month' => $month,
+            'day' => $day,
+            'date' => $unavailability->date_start,
+            'type' => NULL,
+          );
+        }
+        else {
+          $date_current = $unavailability->date_start;
+          while ($date_current < $unavailability->date_stop) {
+            $day = date('j', $date_current);
+            $month = date('n', $date_current);
+            $month_day = $month . '-' . $day;
+            if (!isset($rows[$month_day])) {
+              $rows[$month_day] = array();
+            }
+
+            $rows[$month_day]['unavailability-all'] = array(
+              'is' => 'unavailable',
+              'id' => 'unavailability-all',
+              'title' => 'Some rooms are unavailable.',
+              'title-raw' => 'Some rooms are unavailable.',
+              'tooltip' => 'View the current day to see all room unavailabilities',
+              'year' => $year,
+              'month' => $month,
+              'day' => $day,
+              'date' => $unavailability->date_start,
+              'type' => NULL,
+            );
+
+            $date_current = strtotime('midnight tomorrow', $date_current);
+          }
+        }
+        unset($date_current);
+      }
+    }
+    else {
+      foreach ($unavailabilities as $unavailability) {
+        $building_code = check_plain($unavailability->building_code);
+        $building_name = check_plain($unavailability->building_name);
+        $room_number = check_plain($unavailability->room_number);
+        $room_name = check_plain($unavailability->room_name);
+        $description = check_plain($unavailability->description);
+        $tooltip = $building_code . ' ' . $room_number . ': ' . $description;
+
+        if ($unavailability->type == MFCS_UNAVAILABILITY_TYPE_CLASS) {
+          $tooltip = $building_code . ' ' . $room_number . ': unavailable due to class ' . check_plain($unavailability->title) . '.';
+        }
+
+        if ($unavailability->date_start == $unavailability->date_stop) {
+          $day = date('j', $unavailability->date_start);
+          $month = date('n', $unavailability->date_start);
+          $month_day = $month . '-' . $day;
+          if (!isset($rows[$month_day])) {
+            $rows[$month_day] = array();
+          }
+
+          $rows[$month_day]['unavailability-' . $unavailability->id] = array(
+            'is' => 'unavailable',
+            'id' => 'unavailability-' . ((int) $unavailability->id),
+            'href' => $base_path . 'requests/unavailable-0/view/' . $year . '/' . $unavailability->room_id . '/' . $unavailability->id,
+            'title' => check_plain($unavailability->title),
+            'title-raw' => $unavailability->title,
+            'tooltip' => str_replace('"', '&quot;', $tooltip),
+            'description' => str_replace("\n", '<br>', $description),
+            'year' => $year,
+            'month' => $month,
+            'day' => $day,
+            'date' => $unavailability->date_start,
+            'building' => $unavailability->building_id,
+            'room' => $unavailability->room_id,
+            'building_code' => $building_code,
+            'building_name' => $building_name,
+            'room_number' => $room_number,
+            'room_name' => $room_name,
+            'type' => $unavailability->type,
+            'type_name' => isset($unavailability_type_options[$unavailability->type]) ? $unavailability_type_options[$unavailability->type] : 'Unknown',
+          );
+        }
+        else {
+          $date_current = $unavailability->date_start;
+          while ($date_current < $unavailability->date_stop) {
+            $day = date('j', $date_current);
+            $month = date('n', $date_current);
+            $month_day = $month . '-' . $day;
+            if (!isset($rows[$month_day])) {
+              $rows[$month_day] = array();
+            }
+
+            $rows[$month_day]['unavailability-' . $unavailability->id] = array(
+              'is' => 'unavailable',
+              'id' => 'unavailability-' . ((int) $unavailability->id),
+              'href' => $base_path . 'requests/unavailable-0/view/' . $year . '/' . $unavailability->room_id . '/' . $unavailability->id,
+              'title' => check_plain($unavailability->title),
+              'title-raw' => $unavailability->title,
+              'tooltip' => str_replace('"', '&quot;', $tooltip),
+              'description' => str_replace("\n", '<br>', $description),
+              'year' => $year,
+              'month' => $month,
+              'day' => $day,
+              'date' => $date_current,
+              'date_range_start' => $unavailability->date_start,
+              'date_range_stop' => $unavailability->date_stop,
+              'building' => $unavailability->building_id,
+              'room' => $unavailability->room_id,
+              'building_code' => $building_code,
+              'building_name' => $building_name,
+              'room_number' => $room_number,
+              'room_name' => $room_name,
+              'type' => $unavailability->type,
+              'type_name' => isset($unavailability_type_options[$unavailability->type]) ? $unavailability_type_options[$unavailability->type] : 'Unknown',
+            );
+
+            $date_current = strtotime('midnight tomorrow', $date_current);
+          }
+        }
+        unset($date_current);
+        unset($building_code);
+        unset($building_name);
+        unset($room_number);
+        unset($room_name);
+        unset($description);
+        unset($tooltip);
+      }
+    }
+
     $current_date = $absolute_start;
     while ($current_date < $absolute_stop) {
       $next_date = strtotime('+1 days', $current_date);
@@ -298,7 +564,8 @@ function mfcs_dashboard_page() {
             }
 
             if (isset($rows[$month_day][$item->id])) {
-              $rows[$month_day][$item->id]['time_start'][] = array('start' => $item->time_start, 'stop' => $item->time_stop);
+              $rows[$month_day][$item->id]['times'][$delta]['start'] = $item->time_start[$delta];
+              $rows[$month_day][$item->id]['times'][$delta]['stop'] = $item->time_stop[$delta];
             }
             else {
               $room_name = '';
@@ -318,14 +585,19 @@ function mfcs_dashboard_page() {
                 $month_name_lower = strtolower($month_name);
 
                 $rows[$month_day][$item->id] = array(
+                  'is' => 'more',
                   'href' => $base_path . 'requests/calendar-0/day/' . $year . '/' . $month_name_lower . '/' . $day . $url_arguments,
                   'title' => '. . .',
+                  'title-raw' => '. . .',
                   'tooltip' => 'View more requests on ' . $month_name . ' ' . $day . ', ' . $year,
                   'date' => $date,
                   'month' => $month,
                   'day' => $day,
-                  'times' => NULL,
+                  'times' => FALSE,
                 );
+
+                $rows[$month_day][$item->id]['times'][$delta]['start'] = $item->time_start[$delta];
+                $rows[$month_day][$item->id]['times'][$delta]['stop'] = $item->time_stop[$delta];
 
                 unset($year);
                 unset($month_name);
@@ -340,8 +612,10 @@ function mfcs_dashboard_page() {
                 $type = (int) $item->type;
 
                 $rows[$month_day][$item->id] = array(
+                  'is' => 'event',
                   'href' => $base_path . 'requests/view-0/' . $item->id . $url_arguments,
                   'title' => $item_title,
+                  'title-raw' => $item->title,
                   'tooltip' => '[' . $item->id . '] ' . $building_name . ' ' . $room_name . ': ' . $item_title,
                   'date' => $date,
                   'year' => $year,
@@ -353,7 +627,12 @@ function mfcs_dashboard_page() {
                   'type' => $type,
                   'building_name' => $building_name,
                   'room_name' => $room_name,
+                  'times' => array(),
                 );
+
+                $rows[$month_day][$item->id]['times'][$delta]['start'] = $item->time_start[$delta];
+                $rows[$month_day][$item->id]['times'][$delta]['stop'] = $item->time_stop[$delta];
+
                 unset($item_title);
               }
             }
@@ -366,7 +645,7 @@ function mfcs_dashboard_page() {
 
     mfcs_include(MFCS_INCLUDE_OUTPUT);
 
-    $title = '<h3><a href="' . $base_path . 'requests/calendar-0/month' . $url_arguments . '">' . "Requests for " . date("F, Y", $month_start) . '</a></h3>';
+    $title = '<h3><a href="' . $base_path . 'requests/calendar-0/month' . $url_arguments . '">Requests for ' . date('F, Y', $month_start) . '</a></h3>';
     $result = mfcs_build_calendar_month_markup($rows, $month_start, $month_stop, $absolute_start, $absolute_stop, $title, 'mfcs-calendar-0-month', 3);
     if ($result !== FALSE) {
       $markup .= $result;

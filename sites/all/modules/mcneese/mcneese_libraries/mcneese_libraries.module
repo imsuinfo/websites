@@ -100,16 +100,47 @@ function mcneese_libraries_libraries_info() {
   $libraries['fullcalendar']['download url'] = 'http://fullcalendar.io/download/';
 
   // hard-code the version number.
-  $libraries['fullcalendar']['version'] = 2;
+  $libraries['fullcalendar']['version'] = 3;
 
   $libraries['fullcalendar']['files'] = array();
   $libraries['fullcalendar']['files']['js'] = array(
-    'lib/moment.min.js',
     'fullcalendar.js',
   );
   $libraries['fullcalendar']['files']['css'] = array(
     'fullcalendar.css',
-    'fullcalendar.print.css',
+    #'fullcalendar.print.css',
+  );
+
+  // moment
+  $libraries['moment'] = array();
+  $libraries['moment']['name'] = "Moment";
+  $libraries['moment']['vendor url '] = 'https://momentjs.com/';
+  $libraries['moment']['download url'] = 'https://momentjs.com/';
+
+  // hard-code the version number.
+  $libraries['moment']['version'] = 2;
+
+  $libraries['moment']['files'] = array();
+  $libraries['moment']['files']['js'] = array(
+    #'moment.js',
+    'moment-with-locales.js',
+  );
+
+  // qtip
+  $libraries['qtip'] = array();
+  $libraries['qtip']['name'] = "QTip";
+  $libraries['qtip']['vendor url '] = 'https://qtip2.com/';
+  $libraries['qtip']['download url'] = 'https://qtip2.com/';
+
+  // hard-code the version number.
+  $libraries['qtip']['version'] = 3;
+
+  $libraries['qtip']['files'] = array();
+  $libraries['qtip']['files']['js'] = array(
+    'jquery.qtip.js',
+  );
+  $libraries['qtip']['files']['css'] = array(
+    'jquery.qtip.css',
   );
 
   return $libraries;
@@ -206,6 +237,23 @@ function mcneese_libraries_theme_table($variables, $datatable_settings = array()
         'visible',
         'targets',
         'createdRow',
+        'fnCookieCallback',
+        'fnCreatedRow',
+        'fnDrawCallback',
+        'fnFooterCallback',
+        'fnFormatNumber',
+        'fnHeaderCallback',
+        'fnInfoCallback',
+        'fnInitComplete',
+        'fnPreDrawCallback',
+        'fnRowCallback',
+        'fnServerData',
+        'fnServerParams',
+        'fnStateLoad',
+        'fnStateLoadParams',
+        'fnStateLoaded',
+        'fnStateSave',
+        'fnStateSaveParams',
       );
 
       $integer_settings = array(
