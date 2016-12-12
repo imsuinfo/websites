@@ -204,6 +204,7 @@ function mfcs_request_calendar_month_0_page($year = NULL, $month = NULL) {
 
   if ($show_holidays) {
     $holidays = mfcs_get_holidays($year, $absolute_start, $absolute_stop);
+    $holiday_types = mfcs_get_holiday_type_list_options(NULL, TRUE, TRUE);
   }
 
   if (!is_array($holidays)) {
@@ -247,7 +248,7 @@ function mfcs_request_calendar_month_0_page($year = NULL, $month = NULL) {
     }
 
     if ($show_unavailabilities) {
-      $unavailabilities = mfcs_get_unavailabilities($year - 1, NULL, $search_building_ids, $absolute_start, $year_start, TRUE, FALSE, TRUE);
+      $unavailabilities_previous = mfcs_get_unavailabilities($year - 1, NULL, $search_building_ids, $absolute_start, $year_start, TRUE, FALSE, TRUE);
       if (is_array($unavailabilities_previous)) {
         foreach ($unavailabilities_previous as $unavailabilities_key => $unavailabilities_value) {
           $holidays[$unavailabilities_key] = $unavailabilities_value;
@@ -255,6 +256,7 @@ function mfcs_request_calendar_month_0_page($year = NULL, $month = NULL) {
       }
       unset($unavailabilities_key);
       unset($unavailabilities_value);
+      unset($unavailabilities_previous);
     }
   }
 
@@ -272,7 +274,7 @@ function mfcs_request_calendar_month_0_page($year = NULL, $month = NULL) {
     }
 
     if ($show_unavailabilities) {
-      $unavailabilities = mfcs_get_unavailabilities($year + 1, NULL, $search_building_ids, $year_stop, $absolute_stop, TRUE, FALSE, TRUE);
+      $unavailabilities_next = mfcs_get_unavailabilities($year + 1, NULL, $search_building_ids, $year_stop, $absolute_stop, TRUE, FALSE, TRUE);
       if (is_array($unavailabilities_next)) {
         foreach ($unavailabilities_next as $unavailabilities_key => $unavailabilities_value) {
           $holidays[$unavailabilities_key] = $unavailabilities_value;
@@ -280,6 +282,7 @@ function mfcs_request_calendar_month_0_page($year = NULL, $month = NULL) {
       }
       unset($unavailabilities_key);
       unset($unavailabilities_value);
+      unset($unavailabilities_next);
     }
   }
 
@@ -296,6 +299,8 @@ function mfcs_request_calendar_month_0_page($year = NULL, $month = NULL) {
       'id' => 'holiday-' . $holiday->id,
       'title' => check_plain($holiday->title),
       'title-raw' => $holiday->title,
+      'type' => $holiday->type,
+      'type_name' => $holiday_types[$holiday->type],
       'tooltip' => str_replace('"', '&quot;', check_plain($holiday->description)),
       'year' => $year,
       'month' => $month,
@@ -871,6 +876,7 @@ function mfcs_request_calendar_day_0_page($year = NULL, $month = NULL, $day = NU
 
   if ($show_holidays) {
     $holidays = mfcs_get_holidays($year, $day_start, $day_stop);
+    $holiday_types = mfcs_get_holiday_type_list_options(NULL, TRUE, TRUE);
   }
 
   if (!is_array($holidays)) {
@@ -890,6 +896,8 @@ function mfcs_request_calendar_day_0_page($year = NULL, $month = NULL, $day = NU
       'id' => 'holiday-' . $holiday->id,
       'title' => check_plain($holiday->title),
       'title-raw' => $holiday->title,
+      'type' => $holiday->type,
+      'type_name' => $holiday_types[$holiday->type],
       'tooltip' => str_replace('"', '&quot;', $description),
       'description' => str_replace("\n", '<br>', $description),
       'year' => $year,
