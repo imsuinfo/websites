@@ -54,7 +54,7 @@ function webform_submission_data($node, $submitted) {
  */
 function webform_submission_create($node, $account, $form_state, $is_preview = FALSE, $prototype = NULL) {
   $data = webform_submission_data($node, $form_state['values']['submitted']);
-  if ($prototype) {
+  if (is_object($prototype)) {
     $submission = clone $prototype;
     $submission->preview = $is_preview;
     $submission->data = $data;
@@ -754,9 +754,13 @@ function webform_submission_render($node, $submission, $email, $format, $exclude
     if (!empty($email['exclude_empty'])) {
       foreach ($submission->data as $cid => $data) {
         // Caution. Grids store their data in an array index by question key.
-        if (implode($data) == '') {
-          unset($components[$cid]);
+        foreach ($data as $value) {
+          if ($value != '') {
+            // This component has a non-empty value. Continue the outer loop.
+            continue 2;
+          }
         }
+        unset($components[$cid]);
       }
     }
   }
