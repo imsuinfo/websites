@@ -245,7 +245,7 @@ function theme_webform_number($variables) {
   }
 
   // Step property *must* be a full number with 0 prefix if a decimal.
-  if (!empty($element['#step']) && !is_int($element['#step'] * 1)) {
+  if (!empty($element['#step']) && !is_int($element['#step'])) {
     $decimals = strlen($element['#step']) - strrpos($element['#step'], '.') - 1;
     $element['#step'] = sprintf('%1.' . $decimals . 'F', $element['#step']);
   }
@@ -315,7 +315,7 @@ function _webform_render_number($component, $value = NULL, $filter = TRUE, $subm
   }
 
   // Ensure #step starts with a zero if a decimal.
-  if (!is_int($element['#step'] * 1)) {
+  if (!is_int($element['#step'])) {
     $decimals = strlen($element['#step']) - strrpos($element['#step'], '.') - 1;
     $element['#step'] = sprintf('%1.' . $decimals . 'F', $element['#step']);
   }
