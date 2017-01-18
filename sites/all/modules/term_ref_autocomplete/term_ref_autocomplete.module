@@ -231,6 +231,10 @@ function term_ref_autocomplete_field_widget_form(&$form, &$form_state, $field, $
             $tmp_tag = '"' . str_replace('"', '""', $tmp_tag) . '"';
           }
 
+          if (!isset($element['names']['#default_value']) || !is_array($element['names']['#default_value'])) {
+            $element['names']['#default_value'] = array();
+          }
+
           $element['names']['#default_value'][] = $tmp_tag . ' [tid:' . $key . ']';
           break;
         }
