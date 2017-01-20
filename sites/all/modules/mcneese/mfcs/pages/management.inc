@@ -181,7 +181,7 @@ function mfcs_management_page() {
       $items_array = &$items_1;
     }
 
-    $link = '<h4 class="item-link-wrapper inline-block"><a href="' . $base_path . 'requests/problems-0' . $url_arguments . '" class="item-link">Manage Problems</a></h4>';
+    $link = '<h4 class="item-link-wrapper inline-block"><a href="' . $base_path . 'problems-0' . $url_arguments . '" class="item-link">Manage Problems</a></h4>';
     $help = '<div class="item-description inline-block">Manage and troubleshoot problems that have been detected by the system.</div>';
     $items_array[] = array(
       'data' => $link . '<br>' . $help,
@@ -204,11 +204,11 @@ function mfcs_management_page() {
     }
 
     if ($manager || $administer) {
-      $link = '<h4 class="item-link-wrapper inline-block"><a href="' . $base_path . 'requests/holiday-0' . $url_arguments . '" class="item-link">Manage Holidays</a></h4>';
+      $link = '<h4 class="item-link-wrapper inline-block"><a href="' . $base_path . 'holiday-0' . $url_arguments . '" class="item-link">Manage Holidays</a></h4>';
       $help = '<div class="item-description inline-block">View and manage the list of holidays.</div>';
     }
     else {
-      $link = '<h4 class="item-link-wrapper inline-block"><a href="' . $base_path . 'requests/holiday-0' . $url_arguments . '" class="item-link">View Holidays</a></h4>';
+      $link = '<h4 class="item-link-wrapper inline-block"><a href="' . $base_path . 'holiday-0' . $url_arguments . '" class="item-link">View Holidays</a></h4>';
       $help = '<div class="item-description inline-block">View the list of holidays.</div>';
     }
 
@@ -233,11 +233,11 @@ function mfcs_management_page() {
     }
 
     if ($reviewer || $manager || $administer) {
-      $link = '<h4 class="item-link-wrapper inline-block"><a href="' . $base_path . 'requests/unavailable-0' . $url_arguments . '" class="item-link">Room Unavailability</a></h4>';
+      $link = '<h4 class="item-link-wrapper inline-block"><a href="' . $base_path . 'unavailable-0' . $url_arguments . '" class="item-link">Room Unavailability</a></h4>';
       $help = '<div class="item-description inline-block">Manage unavailability dates for specific rooms.</div>';
     }
     else {
-      $link = '<h4 class="item-link-wrapper inline-block"><a href="' . $base_path . 'requests/unavailable-0' . $url_arguments . '" class="item-link">Room Unavailability</a></h4>';
+      $link = '<h4 class="item-link-wrapper inline-block"><a href="' . $base_path . 'unavailable-0' . $url_arguments . '" class="item-link">Room Unavailability</a></h4>';
       $help = '<div class="item-description inline-block">View unavailability dates for specific rooms.</div>';
     }
 

@@ -4890,13 +4890,13 @@ function mfcs_help_topic_manage_section_problems($allowed_topics, $section_infor
   $markup .= '<li class="list-item">';
   $markup .= '<strong class="bold">Core System Form Errors</strong>: ';
   $markup .= '<br>';
-  $markup .= 'An technical problems detected while filling out a form on the system are assigned this flag. ';
+  $markup .= 'Any technical problems detected while filling out a form on the system are assigned this flag. ';
   $markup .= '<br>';
   $markup .= '</li>';
   $markup .= '<li class="list-item">';
   $markup .= '<strong class="bold">Facilities Use Form Errors</strong>: ';
   $markup .= '<br>';
-  $markup .= 'An logical, flow, and presentation problems detected while filling out a form on the system are assigned this flag. ';
+  $markup .= 'Any logical, flow, and presentation problems detected while filling out a form on the system are assigned this flag. ';
   $markup .= '<br>';
   $markup .= '</li>';
   $markup .= '</ul>';
@@ -5155,13 +5155,6 @@ function mfcs_help_topic_manage_section_logs($allowed_topics, $section_informati
   $markup .= 'There is also a statistics page on the site that is tweaked for processing the <dfn class="term">Request</dfn> logs. ';
   $markup .= 'The <dfn class="term">Request</dfn> statistics log breaks <dfn class="term">Requests</dfn> down by <dfn class="term">Classification</dfn>, <dfn class="term">Type</dfn>, <dfn class="term">Step</dfn>, and <dfn class="term">Status</dfn>. ';
   $markup .= 'The information is presented on a yearly basis, but monthly and daily information may be viewed. ';
-  $markup .= '<br>';
-  $markup .= '</div>';
-
-  $markup .= '<div class="note"> ';
-  $markup .= 'No links have been added for easily selecting the monthly or daily <dfn class="term">Request</dfn> statistics. ';
-  $markup .= 'To view these statistics, go to the url bar while viewing the <dfn class="term">Request</dfn> statistics page and add in <strong class="bold">/month_name</strong> or <strong class="bold">/month_name/day_number</strong>. ';
-  $markup .= 'An example for <em class="emphasis">October 1, 2016</em> would be: <strong class="bold text-link">' . $base_url . '/requests/statistics-0/2016/october/01</strong>. ';
   $markup .= '<br>';
   $markup .= '</div>';
 

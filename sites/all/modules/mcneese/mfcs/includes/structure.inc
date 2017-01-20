@@ -328,7 +328,7 @@ function mfcs_get_request_fields($form, &$form_state) {
 
     if (isset($form['form']['room_information']['#value']->room_id)) {
       $room_id = (int) $form['form']['room_information']['#value']->room_id;
-      $fields['dates']['markup']['#markup'] .= '<div class="dates-holiday_markup">You may want to <a href="' . $base_path . 'requests/holiday-0' . $url_arguments . '" target="_blank">view the holidays</a> or <a href="' . $base_path . 'requests/unavailable-0/' . $room_id . $url_arguments . '" target="_blank">view the room unavailability</a> when selecting your dates.</div>';
+      $fields['dates']['markup']['#markup'] .= '<div class="dates-holiday_markup">You may want to <a href="' . $base_path . 'holiday-0' . $url_arguments . '" target="_blank">view the holidays</a> or <a href="' . $base_path . 'unavailable-0/' . $room_id . $url_arguments . '" target="_blank">view the room unavailability</a> when selecting your dates.</div>';
       unset($room_id);
     }
 
@@ -1292,6 +1292,12 @@ function mfcs_get_request_field_dates_time_start($form, &$form_state, &$fields, 
     $values = $request_state['dates']['time_start'];
   }
 
+  // load the custom javascript associated with this field.
+  $module_path = drupal_get_path('module', 'mfcs');
+  libraries_load('jquery.timepicker');
+
+  drupal_add_js($module_path . '/js/request_field_dates_time.js', array('type' => 'file', 'group' => JS_DEFAULT, 'preprocess' => FALSE));
+
   $delta_id = NULL;
   if (is_numeric($delta)) {
     $values = array($delta => NULL);
@@ -1376,6 +1382,12 @@ function mfcs_get_request_field_dates_time_stop($form, &$form_state, &$fields, &
   if (!empty($request_state['dates']['time_stop'])) {
     $values = $request_state['dates']['time_stop'];
   }
+
+  // load the custom javascript associated with this field.
+  $module_path = drupal_get_path('module', 'mfcs');
+  libraries_load('jquery.timepicker');
+
+  drupal_add_js($module_path . '/js/request_field_dates_time.js', array('type' => 'file', 'group' => JS_DEFAULT, 'preprocess' => FALSE));
 
   $delta_id = NULL;
   if (is_numeric($delta)) {

@@ -371,6 +371,8 @@ define('MFCS_DATE_FORMAT_DATE_TIME_SQUEEZE', 'D, M j, Y h:ia');
 define('MFCS_DATE_FORMAT_DATE_TIME_SECONDS_SQUEEZE', 'D, M j, Y h:i:sa');
 define('MFCS_DATE_FORMAT_DATE_SQUEEZE_NO_YEAR', 'D, M j');
 define('MFCS_DATE_FORMAT_DATE_TIME_SQUEEZE_NO_YEAR', 'D, M j h:ia');
+define('MFCS_DATE_FORMAT_DATE_HUMAN', 'l, F jS, Y');
+define('MFCS_DATE_FORMAT_DATE_TIME_HUMAN', 'h:ia l, F jS, Y');
 
 /**
  * Insurance Settings
@@ -389,10 +391,17 @@ define('MFCS_USER_CALENDAR_NONE', 0);
 define('MFCS_USER_CALENDAR_ORIGINAL', 1);
 define('MFCS_USER_CALENDAR_FULL', 2);
 
+define('MFCS_TIMEZONE_DATABASE', 'UTC');
+define('MFCS_TIMEZONE_LOCAL', 'America/Chicago');
+define('MFCS_TIMEZONE_ICALENDAR', 'UTC');
+
 /**
  * Implements hook_init().
  */
 function mfcs_init() {
+  // enforce default timezone to ensure consistency.
+  date_default_timezone_set(MFCS_TIMEZONE_LOCAL);
+
   global $base_path;
   $module_path = drupal_get_path('module', 'mfcs');
 
@@ -1427,7 +1436,7 @@ function mfcs_holiday_request_access($operation, $year = NULL, $holiday_id = NUL
         return FALSE;
       }
 
-      if (!is_null($year)) {
+      if (!is_null($year) && !$is_power) {
         $check_year = TRUE;
       }
 
@@ -4777,15 +4786,12 @@ function mfcs_synchronize_user_settings($user_object_or_id = NULL, $roles = arra
     $problems_new = $problems_new | MFCS_USER_PROBLEM_ACCOUNT_BANNER_INVALID;
 
     // Do not report banner id as invalid if the account is locked.
-    if (!$changes_detected) {
-      if ($user_information['status'] == 0 && ($problems_new & MFCS_USER_PROBLEM_ACCOUNT_BANNER_INVALID) != 0) {
-        $problems_new -= MFCS_USER_PROBLEM_ACCOUNT_BANNER_INVALID;
-      }
-      else {
-        $changes_detected = TRUE;
-      }
+    if ($user_information['status'] == 0 && ($problems_new & MFCS_USER_PROBLEM_ACCOUNT_BANNER_INVALID) != 0) {
+      $problems_new -= MFCS_USER_PROBLEM_ACCOUNT_BANNER_INVALID;
     }
-
+    else {
+      $changes_detected = TRUE;
+    }
   }
   // if the banner id is invalid, the account is locked, then remove the banner id and unset the code.
   elseif ($user_information['status'] == 0 && ($problems_new & MFCS_USER_PROBLEM_ACCOUNT_BANNER_INVALID) != 0) {
@@ -6596,16 +6602,53 @@ function mfcs_convert_value_to_database_format($value, $method, $option = array(
     $date_stamp = strtotime($value);
     return (int) date('d', $date_stamp);
   }
-  elseif ($method == 'currency') {
+  elseif ($method == 'numeric') {
     if (is_null($value)) {
       return FALSE;
     }
 
-    // shift decimal over to digits.
-    return floor($value * 100);
+    // this used to be shifted by 100, but now is directly passed.
+    return (float) $value;
   }
 
   return FALSE;
+}
+
+/**
+ * Converts a timetamp from current time format to UTC for storage in the database.
+ *
+ * @param int $timestamp
+ *    The timestamp to prepare.
+ *
+ * @return int|FALSE
+ *   The timestamp in UTC format, or FALSE on error.
+ */
+function mfcs_prepare_timestamp_to_database($timestamp) {
+  if (!is_int($timestamp)) {
+    cf_error::invalid_integer('timestamp');
+    return FALSE;
+  }
+
+  $timezone = new DateTimeZone(date_default_timezone_get());
+  if (!is_object($timezone)) {
+    return FALSE;
+  }
+
+  if ($timezone->getName() == MFCS_TIMEZONE_DATABASE) {
+    return $timezone;
+  }
+
+  $date = new DateTime(date('Y/m/d H:i:s', $timestamp));
+  if (!is_object($date)) {
+    return FALSE;
+  }
+
+  $offset = $timezone->getOffset($date);
+  if (!is_int($offset)) {
+    return FALSE;
+  }
+
+  return ($timestamp + $offset);
 }
 
 /***
@@ -6648,13 +6691,51 @@ function mfcs_convert_value_from_database_format($value, $method, $option = arra
 
     return $value;
   }
-  elseif ($method == 'currency') {
+  elseif ($method == 'numeric') {
     if (is_null($value)) return NULL;
 
-    return $value / 100;
+    // this used to be shifted by 100, but now is directly passed
+    return (float) $value;
   }
 
   return FALSE;
+}
+
+/**
+ * Converts a timetamp from UTC storage in the database to current time format.
+ *
+ * @param int $timestamp
+ *    The timestamp to prepare.
+ *
+ * @return int|FALSE
+ *   The timestamp in current time format, or FALSE on error.
+ */
+function mfcs_prepare_timestamp_from_database($timestamp) {
+  if (!is_int($timestamp)) {
+    cf_error::invalid_integer('timestamp');
+    return FALSE;
+  }
+
+  $timezone = new DateTimeZone(date_default_timezone_get());
+  if (!is_object($timezone)) {
+    return FALSE;
+  }
+
+  if ($timezone->getName() == MFCS_TIMEZONE_LOCAL) {
+    return $timezone;
+  }
+
+  $date = new DateTime(date('Y/m/d H:i:s', $timestamp));
+  if (!is_object($date)) {
+    return FALSE;
+  }
+
+  $offset = $timezone->getOffset($date);
+  if (!is_int($offset)) {
+    return FALSE;
+  }
+
+  return ($timestamp - $offset);
 }
 
 /**
@@ -8215,7 +8296,7 @@ function mfcs_build_room_unavailable_message($availability_issues, $blank_target
       }
 
       $unavailable_message .= ' because of: ';
-      $unavailable_message .= '<strong><a href="' . $base_path . 'requests/unavailable-0/view/' . $year . '/' . $unavailable->room_id. '/' . $unavailable->id . $url_arguments . '" title="View details about room unavailability."' . $unavailable_target . '>';
+      $unavailable_message .= '<strong><a href="' . $base_path . 'unavailable-0/view/' . $year . '/' . $unavailable->room_id. '/' . $unavailable->id . $url_arguments . '" title="View details about room unavailability."' . $unavailable_target . '>';
       $unavailable_message .= check_plain(preg_replace('/\.\s*$/i', '', $unavailable->title)) . '</a></strong>.';
       $unavailable_message .= '</li>';
 
@@ -12854,6 +12935,7 @@ function mfcs_get_request_already_reviewed_as_classifications($request_id, $revi
  *
  * @param int $year
  *   The year the holiday belongs under.
+ *   The previous year is also loaded in case of stop dates that extend beyond the end of the previous year and into the specified year.
  * @param int|null $timestamp_start
  *   (optional) The timestamp start range.
  *   If the stop range is NULL and this is an integer, then only the specific specified timestamp is loaded.
@@ -12870,12 +12952,16 @@ function mfcs_get_request_already_reviewed_as_classifications($request_id, $revi
  *   When NULL, ignore this column.
  * @param bool $join
  *   (optional) When TRUE, will join the holiday type table.
+ * @param bool $explicit_year
+ *   (optional) When TRUE, $year-1 results will not be included.
+ * @param int $extra_years
+ *   (optional) When > -, $year + $extra_years results will be included.
  *
  * @return array|bool
  *   An array of holidays.
  *   FALSE is returned on error.
  */
-function mfcs_get_holidays($year, $timestamp_start = NULL, $timestamp_stop = NULL, $enabled = TRUE, $deleted = FALSE, $join = FALSE) {
+function mfcs_get_holidays($year, $timestamp_start = NULL, $timestamp_stop = NULL, $enabled = TRUE, $deleted = FALSE, $join = FALSE, $explicit_year = FALSE, $extra_years = 0) {
   if (!cf_is_integer($year)) {
     cf_error::invalid_integer('year');
     return FALSE;
@@ -12906,11 +12992,22 @@ function mfcs_get_holidays($year, $timestamp_start = NULL, $timestamp_stop = NUL
     return FALSE;
   }
 
+  if (!is_bool($explicit_year)) {
+    cf_error::invalid_bool('explicit_year');
+    return FALSE;
+  }
+
+  if (!is_int($extra_years) || $extra_years < 0) {
+    cf_error::invalid_integer('extra_years');
+    return FALSE;
+  }
+
   try {
     $query = db_select('mfcs_holiday', 'mh');
     $query->addField('mh', 'id', 'id');
     $query->addField('mh', 'year', 'year');
-    $query->addField('mh', 'date', 'date');
+    $query->addField('mh', 'date_start', 'date_start');
+    $query->addField('mh', 'date_stop', 'date_stop');
     $query->addField('mh', 'title', 'title');
     $query->addField('mh', 'type', 'type');
     $query->addField('mh', 'description', 'description');
@@ -12925,7 +13022,13 @@ function mfcs_get_holidays($year, $timestamp_start = NULL, $timestamp_stop = NUL
       $query->addField('mtht', 'human_name', 'type_human_name');
     }
 
-    $query->condition('mh.year', $year);
+    if ($explicit_year) {
+      $query->condition('mh.year', $year);
+    }
+    else {
+      $query->condition('mh.year', $year - 1, '>=');
+      $query->condition('mh.year', $year + $extra_years, '<=');
+    }
 
     if ($enabled === TRUE) {
       $query->condition('mh.enabled', 1);
@@ -12946,18 +13049,69 @@ function mfcs_get_holidays($year, $timestamp_start = NULL, $timestamp_stop = NUL
       $timestamp_start_midnight = strtotime('midnight today', $timestamp_start);
 
       if (is_null($timestamp_stop)) {
-        $query->condition('mh.date', $timestamp_start_midnight);
+        // because year - 1 is included, only load results that include the current year.
+        $year_fixed = mfcs_strtotime_year_fixup($year);
+        $year_stamp = strtotime('midnight january 1, ' . $year_fixed);
+        $year_next = strtotime('next year', $year_stamp);
+
+        $or = db_or();
+        $or->condition('mh.date_start', $year_next, '<');
+        $or->condition('mh.date_stop', $year_next, '<=');
+        $query->condition($or);
+
+        $and = db_and();
+        $and->condition('mh.date_start', $timestamp_start_midnight, '>=');
+        $and->condition('mh.date_stop', $timestamp_start_midnight, '<');
+        $query->condition($and);
       }
       else {
         // only process values on a per day-to-day basis by setting the timestamps to midnight for each day.
         $timestamp_stop_midnight = strtotime('midnight today', $timestamp_stop);
 
-        $query->condition('mh.date', $timestamp_start_midnight, '>=');
-        $query->condition('mh.date', $timestamp_stop_midnight, '<');
+        $or = db_or();
+
+        $and = db_and();
+        $and->condition('mh.date_start', $timestamp_start_midnight, '>=');
+        $and->condition('mh.date_start', $timestamp_stop_midnight, '<');
+        $or->condition($and);
+
+        $and = db_and();
+        $and->condition('mh.date_stop', $timestamp_start_midnight, '>');
+        $and->condition('mh.date_stop', $timestamp_stop_midnight, '<=');
+        $or->condition($and);
+
+        $and = db_and();
+        $and->condition('mh.date_start', $timestamp_start_midnight, '<');
+        $and->condition('mh.date_stop', $timestamp_start_midnight, '>');
+        $or->condition($and);
+
+        $query->condition($or);
       }
     }
+    elseif (!$explicit_year) {
+      // because year - 1 is included, only load results that include the current year.
+      $year_fixed = mfcs_strtotime_year_fixup($year);
+      $year_stamp = strtotime('midnight january 1, ' . $year_fixed);
+      $year_stamp_last = strtotime('midnight january 1, ' . ($year_fixed + $extra_years));
+      $year_last = strtotime('next year', $year_stamp_last);
 
-    $query->orderBy('mh.date');
+      $or = db_or();
+
+      $and = db_and();
+      $and->condition('mh.date_start', $year_stamp, '>=');
+      $and->condition('mh.date_start', $year_last, '<');
+      $or->condition($and);
+
+      $and = db_and();
+      $and->condition('mh.date_stop', $year_stamp, '>');
+      $and->condition('mh.date_stop', $year_last, '<=');
+      $or->condition($and);
+
+      $query->condition($or);
+    }
+
+    $query->orderBy('mh.date_start');
+    $query->orderBy('mh.date_stop');
 
     $results = $query->execute()->fetchAllAssoc('id');
   }
@@ -13020,7 +13174,8 @@ function mfcs_get_holiday($id, $enabled = TRUE, $deleted = FALSE, $join = FALSE)
     $query = db_select('mfcs_holiday', 'mh');
     $query->addField('mh', 'id', 'id');
     $query->addField('mh', 'year', 'year');
-    $query->addField('mh', 'date', 'date');
+    $query->addField('mh', 'date_start', 'date_start');
+    $query->addField('mh', 'date_stop', 'date_stop');
     $query->addField('mh', 'title', 'title');
     $query->addField('mh', 'type', 'type');
     $query->addField('mh', 'description', 'description');
@@ -13072,6 +13227,7 @@ function mfcs_get_holiday($id, $enabled = TRUE, $deleted = FALSE, $join = FALSE)
  *
  * @param int $year
  *   The year the unavailability belongs under.
+ *   The previous year is also loaded in case of stop dates that extend beyond the end of the previous year and into the specified year.
  * @param array|int|null $room_id
  *   (optional) The ID of the room to load.
  *   May be an array of room IDS to load by multiple rooms.
@@ -13096,12 +13252,16 @@ function mfcs_get_holiday($id, $enabled = TRUE, $deleted = FALSE, $join = FALSE)
  *   When NULL, ignore this column.
  * @param bool $inner_joinbs
  *   (optional) When TRUE, additional inner joins will be performed to load the banner room and building information.
+ * @param bool $explicit_year
+ *   (optional) When TRUE, $year-1 results will not be included.
+ * @param int $extra_years
+ *   (optional) When > -, $year + $extra_years results will be included.
  *
  * @return array|bool
  *   An array of unavailabilities.
  *   FALSE is returned on error.
  */
-function mfcs_get_unavailabilities($year, $room_id = NULL, $building_id = NULL, $timestamp_start = NULL, $timestamp_stop = NULL, $enabled = TRUE, $deleted = FALSE, $inner_joins = FALSE) {
+function mfcs_get_unavailabilities($year, $room_id = NULL, $building_id = NULL, $timestamp_start = NULL, $timestamp_stop = NULL, $enabled = TRUE, $deleted = FALSE, $inner_joins = FALSE, $explicit_year = FALSE, $extra_years = 0) {
   if (!cf_is_integer($year)) {
     cf_error::invalid_integer('year');
     return FALSE;
@@ -13142,6 +13302,16 @@ function mfcs_get_unavailabilities($year, $room_id = NULL, $building_id = NULL, 
     return FALSE;
   }
 
+  if (!is_bool($explicit_year)) {
+    cf_error::invalid_bool('explicit_year');
+    return FALSE;
+  }
+
+  if (!is_int($extra_years) || $extra_years < 0) {
+    cf_error::invalid_integer('explicit_year');
+    return FALSE;
+  }
+
   // start and stop integers must not be identical.
   if (!is_null($timestamp_start) && !is_null($timestamp_stop)) {
     if ($timestamp_start == $timestamp_stop) {
@@ -13159,6 +13329,7 @@ function mfcs_get_unavailabilities($year, $room_id = NULL, $building_id = NULL, 
     $query->addField('mu', 'class_id', 'class_id');
     $query->addField('mu', 'date_start', 'date_start');
     $query->addField('mu', 'date_stop', 'date_stop');
+    $query->addField('mu', 'year', 'year');
     $query->addField('mu', 'title', 'title');
     $query->addField('mu', 'description', 'description');
     $query->addField('mu', 'enabled', 'enabled');
@@ -13179,7 +13350,13 @@ function mfcs_get_unavailabilities($year, $room_id = NULL, $building_id = NULL, 
       $query->addField('mbb', 'human_name', 'building_name');
     }
 
-    $query->condition('mu.year', $year);
+    if ($explicit_year) {
+      $query->condition('mu.year', $year);
+    }
+    else {
+      $query->condition('mu.year', $year - 1, '>=');
+      $query->condition('mu.year', $year + $explicit_year, '<=');
+    }
 
     if (!is_null($room_id)) {
       if (is_array($room_id)) {
@@ -13214,30 +13391,69 @@ function mfcs_get_unavailabilities($year, $room_id = NULL, $building_id = NULL, 
     }
 
     if (!is_null($timestamp_start)) {
+      // only process values on a per day-to-day basis by setting the timestamps to midnight for each day.
+      $timestamp_start_midnight = strtotime('midnight today', $timestamp_start);
+
       if (is_null($timestamp_stop)) {
-        $query->condition('mu.date_start', $timestamp_start, '>=');
-        $query->condition('mu.date_stop', $timestamp_start, '<');
+        // because year - 1 is included, only load results that include the current year.
+        $year_fixed = mfcs_strtotime_year_fixup($year);
+        $year_stamp = strtotime('midnight january 1, ' . $year_fixed);
+        $year_next = strtotime('next year', $year_stamp);
+
+        $or = db_or();
+        $or->condition('mu.date_start', $year_next, '<');
+        $or->condition('mu.date_stop', $year_next, '<=');
+        $query->condition($or);
+
+        $and = db_and();
+        $and->condition('mu.date_start', $timestamp_start_midnight, '>=');
+        $and->condition('mu.date_stop', $timestamp_start_midnight, '<');
+        $query->condition($and);
       }
       else {
+        // only process values on a per day-to-day basis by setting the timestamps to midnight for each day.
+        $timestamp_stop_midnight = strtotime('midnight today', $timestamp_stop);
+
         $or = db_or();
 
         $and = db_and();
-        $and->condition('mu.date_start', $timestamp_stop, '<');
-        $and->condition('mu.date_stop', $timestamp_stop, '>=');
+        $and->condition('mu.date_start', $timestamp_start_midnight, '>=');
+        $and->condition('mu.date_start', $timestamp_stop_midnight, '<');
         $or->condition($and);
 
         $and = db_and();
-        $and->condition('mu.date_start', $timestamp_start, '>=');
-        $and->condition('mu.date_stop', $timestamp_stop, '<');
+        $and->condition('mu.date_stop', $timestamp_start_midnight, '>');
+        $and->condition('mu.date_stop', $timestamp_stop_midnight, '<=');
         $or->condition($and);
 
         $and = db_and();
-        $and->condition('mu.date_start', $timestamp_start, '<=');
-        $and->condition('mu.date_stop', $timestamp_start, '>');
+        $and->condition('mu.date_start', $timestamp_start_midnight, '<');
+        $and->condition('mu.date_stop', $timestamp_start_midnight, '>');
         $or->condition($and);
 
         $query->condition($or);
       }
+    }
+    elseif (!$explicit_year) {
+      // because year - 1 is included, only load results that include the current year.
+      $year_fixed = mfcs_strtotime_year_fixup($year);
+      $year_stamp = strtotime('midnight january 1, ' . $year_fixed);
+      $year_stamp_last = strtotime('midnight january 1, ' . ($year_fixed + $extra_years));
+      $year_last = strtotime('next year', $year_stamp_last);
+
+      $or = db_or();
+
+      $and = db_and();
+      $and->condition('mu.date_start', $year_stamp, '>=');
+      $and->condition('mu.date_start', $year_last, '<');
+      $or->condition($and);
+
+      $and = db_and();
+      $and->condition('mu.date_stop', $year_stamp, '>');
+      $and->condition('mu.date_stop', $year_last, '<=');
+      $or->condition($and);
+
+      $query->condition($or);
     }
 
     $query->orderBy('mu.date_start');
@@ -13658,7 +13874,7 @@ function mfcs_calculate_use_fees($fees) {
   $amount['description'] = NULL;
 
   if (!empty($fees->rate)) {
-    $amount['rate'] = (float) mfcs_convert_value_from_database_format($fees->rate, 'currency');
+    $amount['rate'] = mfcs_convert_value_from_database_format($fees->rate, 'numeric');
     $amount['total'] = $amount['rate'];
 
     if (!empty($fees->personnel)) {
@@ -13667,12 +13883,12 @@ function mfcs_calculate_use_fees($fees) {
     }
 
     if (!empty($fees->hours)) {
-      $amount['hours'] = (int) $fees->hours;
+      $amount['hours'] = mfcs_convert_value_from_database_format($fees->hours, 'numeric');
       $amount['total'] *= $amount['hours'];
     }
 
     if (!empty($fees->days)) {
-      $amount['days'] = (int) $fees->days;
+      $amount['days'] = mfcs_convert_value_from_database_format($fees->days, 'numeric');
       $amount['total'] *= $amount['days'];
     }
   }
@@ -13682,7 +13898,7 @@ function mfcs_calculate_use_fees($fees) {
       $amount['total'] = 1;
     }
 
-    $amount['supplies'] = (float) mfcs_convert_value_from_database_format($fees->supplies, 'currency');
+    $amount['supplies'] = mfcs_convert_value_from_database_format($fees->supplies, 'numeric');
     $amount['total'] *= $amount['supplies'];
   }
 
@@ -13691,7 +13907,7 @@ function mfcs_calculate_use_fees($fees) {
       $amount['total'] = 1;
     }
 
-    $amount['post'] = (float) mfcs_convert_value_from_database_format($fees->post, 'currency');
+    $amount['post'] = mfcs_convert_value_from_database_format($fees->post, 'numeric');
     $amount['total'] += $amount['post'];
 
     if (!empty($fees->description)) {
@@ -14290,6 +14506,45 @@ function mcneese_fcs_text_capitalization($text) {
   unset($parts);
 
   return implode(' ', $fixed);
+}
+
+/**
+ * Provides a non-critical fix for year to support year values less than 1000.
+ *
+ * When trying to define the year, years less than 1000 are no treated as years by strtotime().
+ * To fix this, such years need zeroes prefixed to it until the year is exactly 4-digits long.
+ *
+ * @return int|string|FALSE
+ *   A fixed year string, a year digit, or FALSE on error.
+ *
+ * @see: strtotime()
+ */
+function mfcs_strtotime_year_fixup($year) {
+  if (!is_numeric($year)) {
+    cf_error::invalid_string('year');
+    return FALSE;
+  }
+
+  if ($year < 1000) {
+    if ($year < 100) {
+      if ($year < 10) {
+        if ($year < 0) {
+          $year = '0000';
+        }
+        else {
+          $year = '000' . $year;
+        }
+      }
+      else {
+        $year = '00' . $year;
+      }
+    }
+    else {
+      $year = '0' . $year;
+    }
+  }
+
+  return $year;
 }
 
 /**
