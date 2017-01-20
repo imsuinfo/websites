@@ -364,6 +364,12 @@
             }
           }
         }
+        else {
+          return false;
+        }
+      }
+      else {
+        return false;
       }
 
       return Drupal.media.filter.syncAttributesToFields(file_info);
