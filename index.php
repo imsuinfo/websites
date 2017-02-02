@@ -713,6 +713,12 @@ else {
         }
         unset($css_body);
 
+        // forms on front page need to be re-built, such as the search form (including form build id).
+        $static_frontpage = preg_replace('@<form action="/" method="post" id="search-block-form"@i', '<form action="/search/site" method="post" id="search-block-form"', $static_frontpage);
+        #$static_frontpage = preg_replace('/<input type="hidden" name="form_build_id" value="form-[^"]+"/i', '<input type="hidden" name="form_build_id" value="form-' . drupal_random_key() . '"', $static_frontpage);
+        $static_frontpage = preg_replace('/<input type="hidden" name="form_build_id" value="form-[^"]+">/i', '', $static_frontpage);
+
+
         drupal_send_headers();
         print($static_frontpage);
         // drupal_exit() is not called because it is causing static error pages to be renderred following the normal output.
