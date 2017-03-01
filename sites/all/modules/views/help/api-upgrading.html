@@ -42,12 +42,12 @@ $this->query->add_where($this->options['group'], "$this->table_alias.$this->real
 </pre>
 If your field is a complex where condition:
 <pre>
-$this->query->add_where($this->options['group'], "$upper($field) NOT LIKE $upper('%%%s')", $this->value);
+$this->query->add_where($this->options['group'], "$upper($field) NOT ILIKE $upper('%%%s')", $this->value);
 </pre>
 has to be converted to
 <pre>
 $placeholder = $this->placeholder();
-$this->query->add_where_expression($this->options['group'], "$field LIKE $placeholder", array($placeholder => '%' . db_like($this->value)));
+$this->query->add_where_expression($this->options['group'], "$field ILIKE $placeholder", array($placeholder => '%' . db_like($this->value)));
 </pre>
 placeholder() generates a automatic unique placeholder for you.
 

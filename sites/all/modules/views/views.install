@@ -288,7 +288,7 @@ function views_update_6000() {
  * Remove '$' symbol in special blocks, as it is invalid for theming.
  */
 function views_update_6001() {
-  $result = db_query("SELECT * FROM {blocks} WHERE module = 'views' AND delta LIKE '\$exp%'");
+  $result = db_query("SELECT * FROM {blocks} WHERE module = 'views' AND delta ILIKE '\$exp%'");
   foreach ($result as $block) {
     $new = strtr($block->delta, '$', '-');
     update_sql("UPDATE {blocks} SET delta = '" . db_escape_string($new) . "' WHERE module = 'views' AND delta = '" . db_escape_string($block->delta) . "'");

@@ -849,7 +849,7 @@ class views_plugin_query_default extends views_plugin_query {
    *   dependent on the $operator.
    * @param $operator
    *   The comparison operator, such as =, <, or >=. It also accepts more complex
-   *   options such as IN, LIKE, or BETWEEN. Defaults to IN if $value is an array
+   *   options such as IN, ILIKE, or BETWEEN. Defaults to IN if $value is an array
    *   = otherwise. If $field is a string you have to use 'formula' here.
    *
    * The $field, $value and $operator arguments can also be passed in with a
@@ -942,7 +942,7 @@ class views_plugin_query_default extends views_plugin_query {
    *   dependent on the $operator.
    * @param $operator
    *   The comparison operator, such as =, <, or >=. It also accepts more complex
-   *   options such as IN, LIKE, or BETWEEN. Defaults to IN if $value is an array
+   *   options such as IN, ILIKE, or BETWEEN. Defaults to IN if $value is an array
    *   = otherwise.  If $field is a string you have to use 'formula' here.
    *
    * @see SelectQueryInterface::havingCondition()

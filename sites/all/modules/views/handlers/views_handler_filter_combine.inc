@@ -96,7 +96,7 @@ class views_handler_filter_combine extends views_handler_filter_string {
 
   function op_contains($field) {
     $placeholder = $this->placeholder();
-    $this->query->add_where_expression($this->options['group'], "$field LIKE $placeholder", array($placeholder => '%' . db_like($this->value) . '%'));
+    $this->query->add_where_expression($this->options['group'], "$field ILIKE $placeholder", array($placeholder => '%' . db_like($this->value) . '%'));
   }
 
   function op_word($field) {
