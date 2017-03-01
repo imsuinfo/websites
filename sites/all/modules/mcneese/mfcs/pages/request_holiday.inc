@@ -1478,14 +1478,11 @@ function mfcs_request_holiday_0_delete_form($form, &$form_state, $year, $holiday
     drupal_exit();
   }
 
-  if ($year != date('Y', $holiday->date)) {
-    cf_error::invalid_integer('year');
-
+  if ($year != $holiday->year) {
     drupal_not_found();
     drupal_exit();
   }
 
-  $year = date('Y', $holiday->date);
   mfcs_add_canonical_headers('holiday-0/delete/' . $year . '/' . $holiday_id);
 
   drupal_set_title('Delete ' . $year . ' Holiday: ' . $holiday->title);
@@ -1521,7 +1518,8 @@ function mfcs_request_holiday_0_delete_form($form, &$form_state, $year, $holiday
   $form['confirmation']['#markup'] .= '<strong>ID</strong>: ' . $holiday->id . '<br>';
   $form['confirmation']['#markup'] .= '<strong>Title</strong>: ' . $holiday->title . '<br>';
   $form['confirmation']['#markup'] .= '<strong>Year</strong>: ' . $holiday->year . '<br>';
-  $form['confirmation']['#markup'] .= '<strong>Date</strong>: ' . date(MFCS_DATE_FORMAT_DATE, $holiday->date) . '<br>';
+  $form['confirmation']['#markup'] .= '<strong>Date Start</strong>: ' . date(MFCS_DATE_FORMAT_DATE, $holiday->date_start) . '<br>';
+  $form['confirmation']['#markup'] .= '<strong>Date Stop</strong>: ' . date(MFCS_DATE_FORMAT_DATE, $holiday->date_stop) . '<br>';
   $form['confirmation']['#markup'] .= '<strong>Status</strong>: ' . ($holiday->enabled == 1 ? 'Enabled' : 'Disabled') . '<br>';
   $form['confirmation']['#markup'] .= '</div>';
   $form['confirmation']['#markup'] .= '<br>';
