@@ -80,6 +80,8 @@ body > .ui-dialog.media-wrapper .ui-widget-content {
   box-shadow: inset 0 0 15px rgba(0,0,0,.1), inset 0 0 0 1px rgba(0,0,0,.05);
   display: inline-block;
   padding: 5px;
+
+  min-height: 175px;
 }
 
 #media-format-form .media-item img,
@@ -88,6 +90,9 @@ body > .ui-dialog.media-wrapper .ui-widget-content {
   display: block;
 }
 
+#media-format-form .media-item > .media-thumbnail > img,
+#file-entity-admin-files .media-item > .media-thumbnail > img,
+#media-browser-page .media-item > .media-thumbnail > img,
 #media-format-form .media-item > .media-thumbnail,
 #file-entity-admin-files .media-item > .media-thumbnail,
 #media-browser-page .media-item > .media-thumbnail {
@@ -96,6 +101,10 @@ body > .ui-dialog.media-wrapper .ui-widget-content {
   width: 100px;
   min-width: 100px;
   max-width: 100px;
+
+  height: 100px;
+  min-height: 100px;
+  max-height: 100px;
 }
 
 #media-format-form .media-item > .media-thumbnail > a > .file > img,
@@ -125,7 +134,7 @@ body > .ui-dialog.media-wrapper .ui-widget-content {
 #file-entity-admin-files .media-item .label-wrapper label,
 #media-browser-page .media-item .label-wrapper label {
   font-size: 10px;
-  padding: 5px 10px;
+  padding: 2px 5px;
 }
 
 /* Media Item Url */
@@ -159,6 +168,8 @@ body > .ui-dialog.media-wrapper .ui-widget-content {
   list-style: none;
   margin: 0px 10px 25px 0px;
 
+  min-height: 175px;
+
   vertical-align: top;
 }
 
@@ -181,10 +192,6 @@ body > .ui-dialog.media-wrapper .ui-widget-content {
 
   word-wrap: break-word;
   word-break: break-word;
-
-  width: 100px;
-  min-width: 100px;
-  max-width: 100px;
 }
 
 #media-browser-library-list.media-list-thumbnails .media-item .label-wrapper label:hover {
