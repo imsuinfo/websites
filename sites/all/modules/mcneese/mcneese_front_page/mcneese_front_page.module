@@ -776,6 +776,7 @@ function mcneese_front_page_embed_spotlight() {
 
     $query->fields('wmnh', array('nid', 'vid'));
     $query->fields('nr', array('title'));
+    $query->fields('frfts', array('field_title_short_value'));
     $query->fields('frb', array('body_value', 'body_format', 'body_summary'));
     //$query->fields('frfed', array('field_event_datetime_value', 'field_event_datetime_value2', 'field_event_datetime_rrule'));
     $query->fields('frfod', array('field_order_date_value'));
