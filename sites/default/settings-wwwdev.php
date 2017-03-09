@@ -238,8 +238,8 @@ $databases = array (
     array (
       'database' => 'web_files',
       'username' => 'www_user',
-      'password' => $dbp['www_user_new'],
-      'host' => '192.251.101.223',
+      'password' => $dbp['www_user'],
+      'host' => '192.251.101.224',
       'port' => '5095',
       'driver' => 'pgsql',
       'prefix' => '',
