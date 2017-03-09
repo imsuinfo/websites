@@ -308,17 +308,17 @@ function mcneese_front_page_embed_highlight() {
       $result->nid = $node->nid;
       $result->vid = $node->vid;
       $result->title = $node->title;
-      $node->field_title_short = '';
-      $node->body_value = '';
-      $node->body_format = '';
-      $node->body_summary = '';
-      $node->field_event_datetime_value = NULL;
-      $node->field_event_datetime_value2 = NULL;
-      $node->field_event_datetime_value = NULL;
-      $node->field_order_date_value = NULL;
-      $node->field_hightlight_image_fid = NULL;
-      $node->field_hightlight_image_alt = NULL;
-      $node->field_hightlight_image_title = NULL;
+      $result->field_title_short = '';
+      $result->body_value = '';
+      $result->body_format = '';
+      $result->body_summary = '';
+      $result->field_event_datetime_value = NULL;
+      $result->field_event_datetime_value2 = NULL;
+      $result->field_event_datetime_value = NULL;
+      $result->field_order_date_value = NULL;
+      $result->field_hightlight_image_fid = NULL;
+      $result->field_hightlight_image_alt = NULL;
+      $result->field_hightlight_image_title = NULL;
 
       if (isset($node->field_title_short['und'][0]['value'])) {
         $result->field_title_short_value = $node->field_title_short['und'][0]['value'];
