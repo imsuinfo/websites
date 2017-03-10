@@ -90,6 +90,7 @@ function mcneese_front_page_embed_featured() {
 
     $query->fields('wmnh', array('nid', 'vid'));
     $query->fields('nr', array('title'));
+    $query->fields('frffth', array('field_frontpage_title_hide_value'));
     $query->fields('frfod', array('field_order_date_value'));
     $query->fields('frfh', array('field_headline_value', 'field_headline_format'));
     $query->fields('frffi', array('field_featured_image_fid', 'field_featured_image_alt'));
