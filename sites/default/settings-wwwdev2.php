@@ -268,7 +268,7 @@ $databases = array (
     'default' =>
     array (
       'database' => 'wwwdev2',
-      'username' => 'www_user',
+      'username' => 'wwwdev2_user',
       'password' => $dbp['wwwdev2_user'],
       'host' => '192.251.101.223',
       'port' => '5095',
