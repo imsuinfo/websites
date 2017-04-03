@@ -75,6 +75,1131 @@ function mcneese_third_party_do_facebook_connect_js($id) {
   drupal_add_js($init_js, array('type' => 'inline', 'preprocess' => FALSE));
 }
 
+
+/**
+ * Automatically load the acalog settings.
+ *
+ * @todo: As this gets larger, it may need its own folder and module.
+ *
+ * Information is provided here as ajax:
+ * - http://catalog.mcneese.edu/widget-api/catalogs/
+ *
+ * @param string $host_name
+ *   Name of the acalog server.
+ * @param string $what
+ *   (optional) What specific data to get.
+ *   When NULL, all data is loaded.
+ *   @todo: implement this.
+ * @param array $settings
+ *   (optional) additional arguments to pass based on the $what parameter.
+ *   @todo: implement this.
+ *
+ * @return string|bool
+ *   Processed HTML on success, FALSE otherwise.
+ */
+function mcneese_third_party_acalog_catalog_get($host_name = 'catalog.mcneese.edu', $what = NULL, $settings = array()) {
+  // @todo: process $what and $settings and pass as necessary to the url used for drupal_http_request().
+
+  // load the catalog list. @todo: cache all of this, with a 24 hour timeout.
+  $result = drupal_http_request('http://' . $host_name . '/widget-api/catalogs/');
+
+  if (!isset($result->code) && $result->code != 200) {
+    // @todo: ideally, load the cached result on http errors (therefore keep a more long term cache backup for http failures and replace it only on success).
+    // for now just return FALSE.
+    return FALSE;
+  }
+
+  $json_data = json_decode($result->data);
+  if (!is_object($json_data)) {
+    // @todo: ideally, load the cached result on http errors (therefore keep a more long term cache backup for http failures and replace it only on success).
+    // for now just return FALSE.
+    return FALSE;
+  }
+
+  // @todo: until $what and $settings are implemented, this will just assume all 'catalogs' content.
+  $current_catalog = NULL;
+  $markup = '<h3>Available Catalogs</h3>';
+  $markup .= '<ul>';
+  foreach ($json_data->{'catalog-list'} as $entry) {
+    $markup .= '<li>' . check_plain($entry->name) . '</li>';
+
+    // try to get the most recently active catalog and use that.
+    if (!isset($entry->archive) || $entry->archive != 1) {
+      if (isset($entry->published) && $entry->published) {
+        $current_catalog = $entry;
+      }
+    }
+  }
+  unset($entry);
+  $markup .= '</ul>';
+
+  if (is_null($current_catalog)) {
+    // @todo: handle this case.
+    return FALSE;
+  }
+
+  // observed catalog structure: (@todo: create cache database using all fields below, note: [catalog-type] as am object implies support for multiple types.)
+  /*
+  [0] => stdClass Object
+    (
+        [description] =>
+        [catalog-type] => stdClass Object
+            (
+                [name] => Academic
+                [created] => 2015-07-13 16:19:03
+                [modified] => 2016-11-22 15:05:58
+                [legacy-id] => 1
+                [organization-id] => 1
+                [id] => 2
+            )
+
+        [organization-id] => 1
+        [id] => 3
+        [archived] => 1
+        [locked] => 1
+        [name] => 2008-2009 Academic Catalog
+        [created] => 2008-03-03 09:37:58
+        [modified] => 2017-04-03 16:28:28
+        [legacy-id] => 1
+        [copying] =>
+        [published] => 1
+        [import-locked] =>
+    )
+  */
+
+  // lets provide more information here as an example, based on the latest entry.
+  // @todo: security, make sure catagory id is an integer.
+
+  // load the catalog list. @todo: cache all of this, with a 24 hour timeout.
+  $result = drupal_http_request('http://' . $host_name . '/widget-api/catalog/' . ((int) $current_catalog->id) . '/courses/?page-size=100&page=1');
+
+  if (!isset($result->code) && $result->code != 200) {
+    // @todo: ideally, load the cached result on http errors (therefore keep a more long term cache backup for http failures and replace it only on success).
+    // for now just return FALSE.
+    return FALSE;
+  }
+
+  $json_data = json_decode($result->data);
+  if (!is_object($json_data)) {
+    // @todo: ideally, load the cached result on http errors (therefore keep a more long term cache backup for http failures and replace it only on success).
+    // for now just return FALSE.
+    return FALSE;
+  }
+
+  $markup .= '<h3>Available Courses for Catalog: ' . check_plain($current_catalog->name) . '</h3>';
+  $markup .= '<ul>';
+  foreach ($json_data->{'course-list'} as $entry) {
+    // @todo: also check $entry->status->searchable for making links and such.
+    if (isset($entry->status->active) && $entry->status->active && isset($entry->status->visible) && $entry->status->visible) {
+      $cleaned_up = preg_replace('/<hr>/i', '', $entry->body);
+      $cleaned_up = preg_replace('/(<br>)+/i', '<br>', $cleaned_up);
+      $markup .= '<li>' . check_markup($cleaned_up, 'full_html') . '</li>';
+    }
+  }
+  unset($entry);
+  $markup .= '</ul>';
+
+  // example course structure:
+  /*
+  {
+    "status": {
+        "active": true,
+        "visible": true,
+        "catalog-id": 31,
+        "searchable": true
+    },
+    "body": "<hr><strong>LCCN:</strong> CACC 2113, Introduction to Financial Accounting<br><br><p>Basic accounting and financial reporting concepts and the significance of accounting information in financial analysis and business decision-making. </p><br><br><br><br><strong>Notes</strong><br> <p>No duplicate credit for ACCT 208 and ACCT 206.</p><br><br><p>Prerequisites: ENGL 101 (C or higher) and Sophomore standing. </p><br><br>Lec. 3 Cr. 3<br><br><br><br><br><br><br><br><hr><hr>",
+    "code": "208",
+    "name": "Accounting Principles (Lec. 3, Cr. 3)",
+    "created": "2017-01-02 17:17:33",
+    "url": "/api/mcneese/catalog/31/course/80141/",
+    "fields": [
+        {
+            "content": "",
+            "custom_field": {
+                "category": "course",
+                "name-history": [],
+                "name": "Field Experience",
+                "created": "2017-01-02 17:17:33",
+                "required": false,
+                "display-settings": {
+                    "name_after_data": 0,
+                    "data_bold": 0,
+                    "name_bold": 1,
+                    "name_linebreak": 0,
+                    "data_italic": 0,
+                    "name_always_show": 0,
+                    "name_show": 1,
+                    "name_italic": 0
+                },
+                "system": false,
+                "modified": "2017-01-02 17:17:33",
+                "legacy-id": 1152,
+                "sort_orders": [
+                    {
+                        "custom-field-id": 927,
+                        "created": "2017-01-02 22:18:39",
+                        "catalog-id": 31,
+                        "modified": "2017-01-02 22:18:39",
+                        "sort-order": 22
+                    }
+                ],
+                "display": true,
+                "active": true,
+                "catalog-id": 31,
+                "type": "large",
+                "id": 927
+            },
+            "modified": "2017-01-02 22:18:45",
+            "created": "2017-01-02 22:18:45"
+        },
+        {
+            "content": "",
+            "custom_field": {
+                "category": "course",
+                "name-history": [],
+                "name": "Writing Enriched Course",
+                "created": "2017-01-02 17:17:33",
+                "required": false,
+                "display-settings": {
+                    "name_after_data": 0,
+                    "data_bold": 0,
+                    "name_bold": 1,
+                    "name_linebreak": 0,
+                    "data_italic": 0,
+                    "name_always_show": 0,
+                    "name_show": 1,
+                    "name_italic": 0
+                },
+                "system": false,
+                "modified": "2017-01-02 17:17:33",
+                "legacy-id": 1154,
+                "sort_orders": [
+                    {
+                        "custom-field-id": 929,
+                        "created": "2017-01-02 22:18:39",
+                        "catalog-id": 31,
+                        "modified": "2017-01-02 22:18:39",
+                        "sort-order": 26
+                    }
+                ],
+                "display": true,
+                "active": true,
+                "catalog-id": 31,
+                "type": "large",
+                "id": 929
+            },
+            "modified": "2017-01-02 22:18:45",
+            "created": "2017-01-02 22:18:45"
+        },
+        {
+            "content": "",
+            "custom_field": {
+                "category": "course",
+                "name-history": [],
+                "name": "",
+                "created": "2017-01-02 17:17:33",
+                "required": false,
+                "display-settings": {
+                    "name_after_data": 0,
+                    "data_bold": 0,
+                    "name_bold": 0,
+                    "name_linebreak": 0,
+                    "data_italic": 0,
+                    "name_always_show": 0,
+                    "name_show": 0,
+                    "name_italic": 0
+                },
+                "system": true,
+                "modified": "2017-01-02 17:17:33",
+                "legacy-id": 1155,
+                "sort_orders": [
+                    {
+                        "custom-field-id": 930,
+                        "created": "2017-01-02 22:18:39",
+                        "catalog-id": 31,
+                        "modified": "2017-01-02 22:18:39",
+                        "sort-order": 27
+                    }
+                ],
+                "display": true,
+                "active": true,
+                "catalog-id": 31,
+                "type": "double-br",
+                "id": 930
+            },
+            "modified": "2017-01-02 22:18:45",
+            "created": "2017-01-02 22:18:45"
+        },
+        {
+            "content": "",
+            "custom_field": {
+                "category": "course",
+                "name-history": [],
+                "name": "Capstone Course",
+                "created": "2017-01-02 17:17:33",
+                "required": false,
+                "display-settings": {
+                    "name_after_data": 0,
+                    "data_bold": 0,
+                    "name_bold": 1,
+                    "name_linebreak": 0,
+                    "data_italic": 0,
+                    "name_always_show": 0,
+                    "name_show": 1,
+                    "name_italic": 0
+                },
+                "system": false,
+                "modified": "2017-01-02 17:17:33",
+                "legacy-id": 1156,
+                "sort_orders": [
+                    {
+                        "custom-field-id": 931,
+                        "created": "2017-01-02 22:18:39",
+                        "catalog-id": 31,
+                        "modified": "2017-01-02 22:18:39",
+                        "sort-order": 28
+                    }
+                ],
+                "display": true,
+                "active": true,
+                "catalog-id": 31,
+                "type": "large",
+                "id": 931
+            },
+            "modified": "2017-01-02 22:18:45",
+            "created": "2017-01-02 22:18:45"
+        },
+        {
+            "content": "ACCT",
+            "custom_field": {
+                "category": "course",
+                "name-history": [
+                    "prefix"
+                ],
+                "name": "Prefix",
+                "created": "2017-01-02 17:17:33",
+                "required": true,
+                "display-settings": {
+                    "name_after_data": 0,
+                    "data_bold": 0,
+                    "name_bold": 0,
+                    "name_linebreak": 0,
+                    "data_italic": 0,
+                    "name_always_show": 0,
+                    "name_show": 0,
+                    "name_italic": 0
+                },
+                "system": true,
+                "modified": "2017-01-02 17:17:33",
+                "legacy-id": 1157,
+                "sort_orders": [
+                    {
+                        "custom-field-id": 932,
+                        "created": "2017-01-02 22:18:39",
+                        "catalog-id": 31,
+                        "modified": "2017-01-02 22:18:39",
+                        "sort-order": 1
+                    }
+                ],
+                "display": true,
+                "active": true,
+                "catalog-id": 31,
+                "type": "small",
+                "id": 932
+            },
+            "modified": "2017-01-02 22:18:45",
+            "created": "2017-01-02 22:18:45"
+        },
+        {
+            "content": "208",
+            "custom_field": {
+                "category": "course",
+                "name-history": [
+                    "code"
+                ],
+                "name": "Code",
+                "created": "2017-01-02 17:17:33",
+                "required": true,
+                "display-settings": {
+                    "name_after_data": 0,
+                    "data_bold": 0,
+                    "name_bold": 0,
+                    "name_linebreak": 0,
+                    "data_italic": 0,
+                    "name_always_show": 0,
+                    "name_show": 0,
+                    "name_italic": 0
+                },
+                "system": true,
+                "modified": "2017-01-02 17:17:33",
+                "legacy-id": 1158,
+                "sort_orders": [
+                    {
+                        "custom-field-id": 933,
+                        "created": "2017-01-02 22:18:39",
+                        "catalog-id": 31,
+                        "modified": "2017-01-02 22:18:39",
+                        "sort-order": 3
+                    }
+                ],
+                "display": true,
+                "active": true,
+                "catalog-id": 31,
+                "type": "small",
+                "id": 933
+            },
+            "modified": "2017-01-02 22:18:45",
+            "created": "2017-01-02 22:18:45"
+        },
+        {
+            "content": "",
+            "custom_field": {
+                "category": "course",
+                "name-history": [
+                    "_-_"
+                ],
+                "name": "Â -Â ",
+                "created": "2017-01-02 17:17:33",
+                "required": false,
+                "display-settings": {
+                    "name_after_data": 0,
+                    "data_bold": 0,
+                    "name_bold": 0,
+                    "name_linebreak": 0,
+                    "data_italic": 0,
+                    "name_always_show": 0,
+                    "name_show": 0,
+                    "name_italic": 0
+                },
+                "system": false,
+                "modified": "2017-01-02 17:17:33",
+                "legacy-id": 1159,
+                "sort_orders": [
+                    {
+                        "custom-field-id": 934,
+                        "created": "2017-01-02 22:18:39",
+                        "catalog-id": 31,
+                        "modified": "2017-01-02 22:18:39",
+                        "sort-order": 4
+                    }
+                ],
+                "display": true,
+                "active": true,
+                "catalog-id": 31,
+                "type": "static",
+                "id": 934
+            },
+            "modified": "2017-01-02 22:18:45",
+            "created": "2017-01-02 22:18:45"
+        },
+        {
+            "content": "Accounting Principles (Lec. 3, Cr. 3)",
+            "custom_field": {
+                "category": "course",
+                "name-history": [
+                    "name"
+                ],
+                "name": "Name",
+                "created": "2017-01-02 17:17:33",
+                "required": true,
+                "display-settings": {
+                    "name_after_data": 0,
+                    "data_bold": 0,
+                    "name_bold": 0,
+                    "name_linebreak": 0,
+                    "data_italic": 0,
+                    "name_always_show": 0,
+                    "name_show": 0,
+                    "name_italic": 0
+                },
+                "system": true,
+                "modified": "2017-01-02 17:17:33",
+                "legacy-id": 1160,
+                "sort_orders": [
+                    {
+                        "custom-field-id": 935,
+                        "created": "2017-01-02 22:18:39",
+                        "catalog-id": 31,
+                        "modified": "2017-01-02 22:18:39",
+                        "sort-order": 5
+                    }
+                ],
+                "display": true,
+                "active": true,
+                "catalog-id": 31,
+                "type": "small",
+                "id": 935
+            },
+            "modified": "2017-01-02 22:18:45",
+            "created": "2017-01-02 22:18:45"
+        },
+        {
+            "content": "",
+            "custom_field": {
+                "category": "course",
+                "name-history": [],
+                "name": "ACALOG_SEPARATOR",
+                "created": "2017-01-02 17:17:33",
+                "required": false,
+                "display-settings": {
+                    "name_after_data": 0,
+                    "data_bold": 0,
+                    "name_bold": 0,
+                    "name_linebreak": 0,
+                    "data_italic": 0,
+                    "name_always_show": 0,
+                    "name_show": 0,
+                    "name_italic": 0
+                },
+                "system": true,
+                "modified": "2017-01-02 17:17:33",
+                "legacy-id": 1161,
+                "sort_orders": [
+                    {
+                        "custom-field-id": 936,
+                        "created": "2017-01-02 22:18:39",
+                        "catalog-id": 31,
+                        "modified": "2017-01-02 22:18:39",
+                        "sort-order": 6
+                    }
+                ],
+                "display": true,
+                "active": true,
+                "catalog-id": 31,
+                "type": "separator",
+                "id": 936
+            },
+            "modified": "2017-01-02 22:18:45",
+            "created": "2017-01-02 22:18:45"
+        },
+        {
+            "content": "CACC 2113, Introduction to Financial Accounting",
+            "custom_field": {
+                "category": "course",
+                "name-history": [
+                    "lccn:",
+                    "louisiana_common_course_number_(lccn)"
+                ],
+                "name": "LCCN:",
+                "created": "2017-01-02 17:17:33",
+                "required": false,
+                "display-settings": {
+                    "name_after_data": 0,
+                    "data_bold": 0,
+                    "name_bold": 1,
+                    "name_linebreak": 0,
+                    "data_italic": 0,
+                    "name_always_show": 0,
+                    "name_show": 1,
+                    "name_italic": 0
+                },
+                "system": false,
+                "modified": "2017-01-02 17:17:33",
+                "legacy-id": 1162,
+                "sort_orders": [
+                    {
+                        "custom-field-id": 937,
+                        "created": "2017-01-02 22:18:39",
+                        "catalog-id": 31,
+                        "modified": "2017-01-02 22:18:39",
+                        "sort-order": 8
+                    }
+                ],
+                "display": true,
+                "active": true,
+                "catalog-id": 31,
+                "type": "small",
+                "id": 937
+            },
+            "modified": "2017-01-02 22:18:45",
+            "created": "2017-01-02 22:18:45"
+        },
+        {
+            "content": "",
+            "custom_field": {
+                "category": "course",
+                "name-history": [],
+                "name": "",
+                "created": "2017-01-02 17:17:33",
+                "required": false,
+                "display-settings": {
+                    "name_after_data": 0,
+                    "data_bold": 0,
+                    "name_bold": 0,
+                    "name_linebreak": 0,
+                    "data_italic": 0,
+                    "name_always_show": 0,
+                    "name_show": 0,
+                    "name_italic": 0
+                },
+                "system": true,
+                "modified": "2017-01-02 17:17:33",
+                "legacy-id": 1164,
+                "sort_orders": [
+                    {
+                        "custom-field-id": 939,
+                        "created": "2017-01-02 22:18:39",
+                        "catalog-id": 31,
+                        "modified": "2017-01-02 22:18:39",
+                        "sort-order": 29
+                    }
+                ],
+                "display": true,
+                "active": true,
+                "catalog-id": 31,
+                "type": "hr",
+                "id": 939
+            },
+            "modified": "2017-01-02 22:18:45",
+            "created": "2017-01-02 22:18:45"
+        },
+        {
+            "content": "",
+            "custom_field": {
+                "category": "course",
+                "name-history": [],
+                "name": "General Education Core Curriculum",
+                "created": "2017-01-02 17:17:33",
+                "required": false,
+                "display-settings": {
+                    "name_after_data": 0,
+                    "data_bold": 0,
+                    "name_bold": 1,
+                    "name_linebreak": 1,
+                    "data_italic": 0,
+                    "name_always_show": 0,
+                    "name_show": 1,
+                    "name_italic": 0
+                },
+                "system": false,
+                "modified": "2017-01-02 17:17:33",
+                "legacy-id": 1167,
+                "sort_orders": [
+                    {
+                        "custom-field-id": 942,
+                        "created": "2017-01-02 22:18:39",
+                        "catalog-id": 31,
+                        "modified": "2017-01-02 22:18:39",
+                        "sort-order": 24
+                    }
+                ],
+                "display": true,
+                "active": true,
+                "catalog-id": 31,
+                "type": "large",
+                "id": 942
+            },
+            "modified": "2017-01-02 22:18:45",
+            "created": "2017-01-02 22:18:45"
+        },
+        {
+            "content": "",
+            "custom_field": {
+                "category": "course",
+                "name-history": [],
+                "name": "Service Learning Course",
+                "created": "2017-01-02 17:17:33",
+                "required": false,
+                "display-settings": {
+                    "name_after_data": 0,
+                    "data_bold": 0,
+                    "name_bold": 1,
+                    "name_linebreak": 0,
+                    "data_italic": 0,
+                    "name_always_show": 0,
+                    "name_show": 1,
+                    "name_italic": 0
+                },
+                "system": false,
+                "modified": "2017-01-02 17:17:33",
+                "legacy-id": 1170,
+                "sort_orders": [
+                    {
+                        "custom-field-id": 945,
+                        "created": "2017-01-02 22:18:39",
+                        "catalog-id": 31,
+                        "modified": "2017-01-02 22:18:39",
+                        "sort-order": 30
+                    }
+                ],
+                "display": true,
+                "active": true,
+                "catalog-id": 31,
+                "type": "large",
+                "id": 945
+            },
+            "modified": "2017-01-02 22:18:45",
+            "created": "2017-01-02 22:18:45"
+        },
+        {
+            "content": "",
+            "custom_field": {
+                "category": "course",
+                "name-history": [],
+                "name": "",
+                "created": "2017-01-02 17:17:33",
+                "required": false,
+                "display-settings": {
+                    "name_after_data": 0,
+                    "data_bold": 0,
+                    "name_bold": 0,
+                    "name_linebreak": 0,
+                    "data_italic": 0,
+                    "name_always_show": 0,
+                    "name_show": 0,
+                    "name_italic": 0
+                },
+                "system": true,
+                "modified": "2017-01-02 17:17:33",
+                "legacy-id": 1171,
+                "sort_orders": [
+                    {
+                        "custom-field-id": 946,
+                        "created": "2017-01-02 22:18:39",
+                        "catalog-id": 31,
+                        "modified": "2017-01-02 22:18:39",
+                        "sort-order": 31
+                    }
+                ],
+                "display": true,
+                "active": true,
+                "catalog-id": 31,
+                "type": "hr",
+                "id": 946
+            },
+            "modified": "2017-01-02 22:18:45",
+            "created": "2017-01-02 22:18:45"
+        },
+        {
+            "content": "<p>Basic accounting and financial reporting concepts and the significance of accounting information in financial analysis and business decision-making. </p>",
+            "custom_field": {
+                "category": "course",
+                "name-history": [],
+                "name": "Description",
+                "created": "2017-01-02 17:17:33",
+                "required": false,
+                "display-settings": {
+                    "name_after_data": 0,
+                    "data_bold": 0,
+                    "name_bold": 0,
+                    "name_linebreak": 0,
+                    "data_italic": 0,
+                    "name_always_show": 0,
+                    "name_show": 0,
+                    "name_italic": 0
+                },
+                "system": true,
+                "modified": "2017-01-02 17:17:33",
+                "legacy-id": 1141,
+                "sort_orders": [
+                    {
+                        "custom-field-id": 947,
+                        "created": "2017-01-02 22:18:39",
+                        "catalog-id": 31,
+                        "modified": "2017-01-02 22:18:39",
+                        "sort-order": 10
+                    }
+                ],
+                "display": true,
+                "active": true,
+                "catalog-id": 31,
+                "type": "rich",
+                "id": 947
+            },
+            "modified": "2017-01-02 22:18:45",
+            "created": "2017-01-02 22:18:45"
+        },
+        {
+            "content": "",
+            "custom_field": {
+                "category": "course",
+                "name-history": [],
+                "name": "When Offered",
+                "created": "2017-01-02 17:17:33",
+                "required": false,
+                "display-settings": {
+                    "name_after_data": 0,
+                    "data_bold": 0,
+                    "name_bold": 1,
+                    "name_linebreak": 1,
+                    "data_italic": 0,
+                    "name_always_show": 0,
+                    "name_show": 1,
+                    "name_italic": 0
+                },
+                "system": false,
+                "modified": "2017-01-02 17:17:33",
+                "legacy-id": 1143,
+                "sort_orders": [
+                    {
+                        "custom-field-id": 949,
+                        "created": "2017-01-02 22:18:39",
+                        "catalog-id": 31,
+                        "modified": "2017-01-02 22:18:39",
+                        "sort-order": 12
+                    }
+                ],
+                "display": true,
+                "active": true,
+                "catalog-id": 31,
+                "type": "large",
+                "id": 949
+            },
+            "modified": "2017-01-02 22:18:45",
+            "created": "2017-01-02 22:18:45"
+        },
+        {
+            "content": "<p>No duplicate credit for ACCT 208 and ACCT 206.</p>",
+            "custom_field": {
+                "category": "course",
+                "name-history": [],
+                "name": "Notes",
+                "created": "2017-01-02 17:17:33",
+                "required": false,
+                "display-settings": {
+                    "name_after_data": 0,
+                    "data_bold": 0,
+                    "name_bold": 1,
+                    "name_linebreak": 1,
+                    "data_italic": 0,
+                    "name_always_show": 0,
+                    "name_show": 1,
+                    "name_italic": 0
+                },
+                "system": false,
+                "modified": "2017-01-02 17:17:33",
+                "legacy-id": 1145,
+                "sort_orders": [
+                    {
+                        "custom-field-id": 951,
+                        "created": "2017-01-02 22:18:39",
+                        "catalog-id": 31,
+                        "modified": "2017-01-02 22:18:39",
+                        "sort-order": 14
+                    }
+                ],
+                "display": true,
+                "active": true,
+                "catalog-id": 31,
+                "type": "rich",
+                "id": 951
+            },
+            "modified": "2017-01-02 22:18:45",
+            "created": "2017-01-02 22:18:45"
+        },
+        {
+            "content": "<p>Prerequisites: ENGL 101 (C or higher) and Sophomore standing. </p>",
+            "custom_field": {
+                "category": "course",
+                "name-history": [],
+                "name": "Prerequisites / Corequisites",
+                "created": "2017-01-02 17:17:33",
+                "required": false,
+                "display-settings": {
+                    "name_after_data": 0,
+                    "data_bold": 0,
+                    "name_bold": 0,
+                    "name_linebreak": 0,
+                    "data_italic": 0,
+                    "name_always_show": 0,
+                    "name_show": 0,
+                    "name_italic": 0
+                },
+                "system": true,
+                "modified": "2017-01-02 17:17:33",
+                "legacy-id": 1147,
+                "sort_orders": [
+                    {
+                        "custom-field-id": 953,
+                        "created": "2017-01-02 22:18:39",
+                        "catalog-id": 31,
+                        "modified": "2017-01-02 22:18:39",
+                        "sort-order": 16
+                    }
+                ],
+                "display": true,
+                "active": true,
+                "catalog-id": 31,
+                "type": "rich",
+                "id": 953
+            },
+            "modified": "2017-01-02 22:18:45",
+            "created": "2017-01-02 22:18:45"
+        },
+        {
+            "content": "Lec. 3",
+            "custom_field": {
+                "category": "course",
+                "name-history": [],
+                "name": "Hours",
+                "created": "2017-01-02 17:17:33",
+                "required": false,
+                "display-settings": {
+                    "name_after_data": 0,
+                    "data_bold": 0,
+                    "name_bold": 0,
+                    "name_linebreak": 0,
+                    "data_italic": 0,
+                    "name_always_show": 0,
+                    "name_show": 0,
+                    "name_italic": 0
+                },
+                "system": false,
+                "modified": "2017-01-02 17:17:33",
+                "legacy-id": 1149,
+                "sort_orders": [
+                    {
+                        "custom-field-id": 955,
+                        "created": "2017-01-02 22:18:39",
+                        "catalog-id": 31,
+                        "modified": "2017-01-02 22:18:39",
+                        "sort-order": 18
+                    }
+                ],
+                "display": true,
+                "active": true,
+                "catalog-id": 31,
+                "type": "large",
+                "id": 955
+            },
+            "modified": "2017-01-02 22:18:45",
+            "created": "2017-01-02 22:18:45"
+        },
+        {
+            "content": "Cr. 3",
+            "custom_field": {
+                "category": "course",
+                "name-history": [
+                    "credits:"
+                ],
+                "name": "Credits:",
+                "created": "2017-01-02 17:17:33",
+                "required": false,
+                "display-settings": {
+                    "name_after_data": 0,
+                    "data_bold": 0,
+                    "name_bold": 0,
+                    "name_linebreak": 0,
+                    "data_italic": 0,
+                    "name_always_show": 0,
+                    "name_show": 0,
+                    "name_italic": 0
+                },
+                "system": true,
+                "modified": "2017-01-02 17:17:33",
+                "legacy-id": 1150,
+                "sort_orders": [
+                    {
+                        "custom-field-id": 956,
+                        "created": "2017-01-02 22:18:39",
+                        "catalog-id": 31,
+                        "modified": "2017-01-02 22:18:39",
+                        "sort-order": 20
+                    }
+                ],
+                "display": true,
+                "active": true,
+                "catalog-id": 31,
+                "type": "small",
+                "id": 956
+            },
+            "modified": "2017-01-02 22:18:45",
+            "created": "2017-01-02 22:18:45"
+        }
+    ],
+    "title": "ACCT 208Â -Â Accounting Principles (Lec. 3, Cr. 3)",
+    "modified": "2017-01-02 17:17:33",
+    "legacy-id": 126299,
+    "course_types": [
+        {
+            "status": {
+                "active": true,
+                "visible": true,
+                "catalog-id": 31,
+                "searchable": true
+            },
+            "category": "course",
+            "description": "",
+            "created": "2017-01-02 17:17:33",
+            "modified": "2017-01-02 17:17:33",
+            "display": true,
+            "legacy-id": 3398,
+            "catalog-id": 31,
+            "order": 1,
+            "id": 4320,
+            "name": "Accounting"
+        }
+    ],
+    "prefix": "ACCT",
+    "catalog-id": 31,
+    "id": 80141
+}
+  */
+
+
+  // the following are arguments used by acalog, these are mostly notes based on structure.
+  /*
+  $arguments = array();
+  $arguments['catalogs'] = array(
+    'link' => 'catalog-link',
+    'list' => 'catalog-list',
+    'content' => 'catalog-content',
+  );
+
+  $arguments['courses'] = array(
+    'link' => 'course-link',
+    'list' => 'course-list',
+    'content' => 'course-content',
+  );
+
+  $arguments['programs'] = array(
+    'link' => 'program-link',
+    'list' => 'program-list',
+    'content' => 'program-content',
+  );
+
+  $arguments['entities'] = array(
+    'link' => 'entity-link',
+    'list' => 'entity-list',
+    'content' => 'entity-content',
+  );
+
+  $arguments['filters'] = array(
+    'link' => 'filter-link',
+    'list' => 'filter-list',
+    'content' => 'filter-content',
+  );
+
+  $arguments['pages'] = array(
+    'link' => 'page-link',
+    'list' => 'page-list',
+    'content' => 'page-content',
+  );
+
+  $arguments['degree_planner'] = array(
+    'link' => 'degree-planner-link',
+    'list' => 'degree-planner-list',
+    'content' => 'degree-planner-content',
+  );
+
+  $arguments[NULL] = array(
+    'link' => 'unknown-link',
+    'list' => 'unknown-list',
+    'content' => 'unknown-content',
+  );
+
+
+  $paths = array();
+
+  $paths['catalogs'] = array(
+    'base' => '/catalogs/?page-size=100&page=1';
+    'arguments' => array(
+      'type',
+      'name',
+    ),
+  );
+
+  $paths['course'] = array(
+    'base' => '/catalog/' . $catalog_id . '/course/' . $course_id . '/';
+    'arguments' => array(
+      'type',
+      'name',
+    ),
+  );
+
+  $paths['courses'] = array(
+    'base' => '/catalog/' . $catalog_id . '/courses/?page-size=100&page=1';
+    'arguments' => array(
+      'legacy-id',
+      'type',
+      'prefix',
+      'code',
+      'name',
+    ),
+  );
+
+  $paths['program'] = array(
+    'base' => '/catalog/' . $catalog_id . '/program/' . $program_id . '/';
+    'arguments' => array(
+    ),
+  );
+
+  $paths['programs'] = array(
+    'base' => '/catalog/' . $catalog_id . '/programs/?page-size=100&page=1';
+    'arguments' => array(
+      'legacy-id',
+      'type',
+      'degree-type',
+      'code',
+      'name',
+    ),
+  );
+
+  $paths['entity'] = array(
+    'base' => '/catalog/' . $catalog_id . '/hierarchy/' . $entity_id . '/';
+    'arguments' => array(
+    ),
+  );
+
+  $paths['entities'] = array(
+    'base' => '/catalog/' . $catalog_id . '/hierarchies/?page-size=100&page=1';
+    'arguments' => array(
+      'legacy-id',
+      'type',
+      'name',
+    ),
+  );
+
+  $paths['filter'] = array(
+    'base' => '/catalog/' . $catalog_id . '/filter/' . $filter_id . '/';
+    'arguments' => array(
+    ),
+  );
+
+  $paths['filters'] = array(
+    'base' => '/catalog/' . $catalog_id . '/filters/?page-size=100&page=1';
+    'arguments' => array(
+      'legacy-id',
+      'name',
+    ),
+  );
+
+  $paths['page'] = array(
+    'base' => '/catalog/' . $catalog_id . '/page/' . $page_id . '/';
+    'arguments' => array(
+    ),
+  );
+
+  $paths['pages'] = array(
+    'base' => '/catalog/' . $catalog_id . '/pages/?page-size=100&page=1';
+    'arguments' => array(
+      'legacy-id',
+      'name',
+    ),
+  );
+
+  $paths['degree_planner'] = array(
+    'base' => '/catalog/' . $catalog_id . '/program/' . $program_id . '/';
+    'arguments' => array(
+    ),
+  );
+
+  $paths['degree_planners'] = array(
+    'base' => '/catalog/' . $catalog_id . '/programs/?degree_planner-size=100&degree_planner=1';
+    'arguments' => array(
+      'legacy-id',
+      'type',
+      'degree-type',
+      'code',
+      'name',
+    ),
+  );
+  */
+
+  return $markup;
+}
+
 /**
  * @} End of '@defgroup mcneese_third_party McNeese Third-Party'.
  */
