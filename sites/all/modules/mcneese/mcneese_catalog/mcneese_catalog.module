@@ -1,0 +1,131 @@
+<?php
+
+/**
+ * @file
+ * McNeese State University Catalog module.
+ *
+ * json stored in the database are not validated.
+ * text fields must have their appropriate check_markup() and check_plain() called on output.
+ */
+
+/**
+ * @defgroup mcneese_catalog McNeese Catalog
+ * @{
+ * Provides functionality for loading, processing, and rendering mcneeese catalog content.
+ */
+
+// @todo:
+
+/**
+ * Loads and returns the current catalog string markup.
+ *
+ * @return string|bool
+ *   The catalog current string setup markup on success.
+ *   FALSE otherwise.
+ */
+function mcneese_catalog_get_catalog() {
+  try {
+    $catalog = new mcneese_catalog_class_catalogs();
+    if ($catalog->load()) {
+      return '<h3>' . $catalog->get_markup(FALSE) . '</h3>';
+    }
+  }
+  catch (Exception $e) {
+    // @todo: add watchdog report
+  }
+  catch (Exception $e) {
+    // @todo: add watchdog report
+  }
+
+  return FALSE;
+}
+
+/**
+ * Loads and returns the current catalog string markup.
+ *
+ * @return string|bool
+ *   The catalog current string setup markup on success.
+ *   FALSE otherwise.
+ */
+function mcneese_catalog_get_catalog_as_title() {
+  try {
+    $catalog = new mcneese_catalog_class_catalogs();
+    if ($catalog->load()) {
+      drupal_set_title($catalog->get_name());
+      return $catalog;
+    }
+  }
+  catch (Exception $e) {
+    // @todo: add watchdog report
+  }
+  catch (Exception $e) {
+    // @todo: add watchdog report
+  }
+
+  return FALSE;
+}
+
+/**
+ * Load a markup for the specified number of courses.
+ *
+ * @param mcneese_catalog_class_catalogs|null $catalog
+ *   (optional) An already loaded catalog object or NULL to auto load.
+ * @param int $per_page
+ *   (optional) Number of items per page.
+ *
+ * @return string|bool
+ *   The catalog current string setup markup on success.
+ *   FALSE otherwise.
+ */
+function mcneese_catalog_get_courses($catalog = NULL, $per_page = 100, $use_query = TRUE) {
+  // provide a failsafe for per page settings.
+  if (!is_int($per_page) || $per_page < 1) {
+    $per_page = 100;
+  }
+
+  if (!is_bool($use_query)) {
+    $use_query = TRUE;
+  }
+
+  $page = 1;
+  if ($use_query) {
+    $query = drupal_get_query_parameters();
+
+    if (isset($query['page']) && is_numeric($query['page'])) {
+      $page = (int) $query['page'];
+
+      if ($page < 1) {
+        $page = 1;
+      }
+    }
+  }
+
+  try {
+    if (!($catalog instanceof mcneese_catalog_class_catalogs)) {
+      $catalog = new mcneese_catalog_class_catalogs();
+    }
+
+    if ($catalog->is_loaded() || $catalog->load()) {
+      $catalog_id = $catalog->get_catalog_id();
+      $legacy_id = $catalog->get_legacy_id();
+
+      $courses = new mcneese_catalog_class_courses($catalog_id, $legacy_id);
+      if ($courses->load(TRUE, FALSE, FALSE, $per_page, $page)) {
+        return $courses->get_markup();
+      }
+    }
+  }
+  catch (Exception $e) {
+    // @todo: add watchdog report
+  }
+  catch (Exception $e) {
+    // @todo: add watchdog report
+  }
+
+  return FALSE;
+}
+
+
+/**
+ * @} End of '@defgroup mcneese_catalog McNeese Catalog'.
+ */
