@@ -14,19 +14,23 @@
  * Provides functionality for loading, processing, and rendering mcneeese catalog content.
  */
 
-// @todo:
-
 /**
  * Loads and returns the current catalog string markup.
+ *
+ * @param mcneese_catalog_class_catalogs|null &$catalog
+ *   The catalog object, may be a NULL variable for auto-load.
  *
  * @return string|bool
  *   The catalog current string setup markup on success.
  *   FALSE otherwise.
  */
-function mcneese_catalog_get_catalog() {
+function mcneese_catalog_get_catalog(&$catalog) {
   try {
-    $catalog = new mcneese_catalog_class_catalogs();
-    if ($catalog->load()) {
+    if (!($catalog instanceof mcneese_catalog_class_catalogs)) {
+      $catalog = new mcneese_catalog_class_catalogs();
+    }
+
+    if ($catalog->is_loaded() || $catalog->load()) {
       return '<h3>' . $catalog->get_markup(FALSE) . '</h3>';
     }
   }
@@ -43,16 +47,21 @@ function mcneese_catalog_get_catalog() {
 /**
  * Loads and returns the current catalog string markup.
  *
- * @return string|bool
- *   The catalog current string setup markup on success.
- *   FALSE otherwise.
+ * @param mcneese_catalog_class_catalogs|null &$catalog
+ *   The catalog object, may be a NULL variable for auto-load.
+ *
+ * @return bool
+ *   TRUE on success, FALSE otherwise.
  */
-function mcneese_catalog_get_catalog_as_title() {
+function mcneese_catalog_get_catalog_as_title(&$catalog) {
   try {
-    $catalog = new mcneese_catalog_class_catalogs();
-    if ($catalog->load()) {
+    if (!($catalog instanceof mcneese_catalog_class_catalogs)) {
+      $catalog = new mcneese_catalog_class_catalogs();
+    }
+
+    if ($catalog->is_loaded() || $catalog->load()) {
       drupal_set_title($catalog->get_name());
-      return $catalog;
+      return TRUE;
     }
   }
   catch (Exception $e) {
@@ -68,8 +77,10 @@ function mcneese_catalog_get_catalog_as_title() {
 /**
  * Load a markup for the specified number of courses.
  *
- * @param mcneese_catalog_class_catalogs|null $catalog
- *   (optional) An already loaded catalog object or NULL to auto load.
+ * @param mcneese_catalog_class_catalogs|null &$catalog
+ *   The catalog object, may be a NULL variable for auto-load.
+ * @param mcneese_catalog_class_courses|null &$courses
+ *   The courses object, may be a NULL variable for auto-load.
  * @param int $per_page
  *   (optional) Number of items per page.
  *
@@ -77,7 +88,7 @@ function mcneese_catalog_get_catalog_as_title() {
  *   The catalog current string setup markup on success.
  *   FALSE otherwise.
  */
-function mcneese_catalog_get_courses($catalog = NULL, $per_page = 100, $use_query = TRUE) {
+function mcneese_catalog_get_courses(&$catalog, &$courses, $per_page = 100, $use_query = TRUE) {
   // provide a failsafe for per page settings.
   if (!is_int($per_page) || $per_page < 1) {
     $per_page = 100;
@@ -106,11 +117,14 @@ function mcneese_catalog_get_courses($catalog = NULL, $per_page = 100, $use_quer
     }
 
     if ($catalog->is_loaded() || $catalog->load()) {
-      $catalog_id = $catalog->get_catalog_id();
-      $legacy_id = $catalog->get_legacy_id();
+      if (!($courses instanceof mcneese_catalog_class_courses)) {
+        $catalog_id = $catalog->get_catalog_id();
+        $legacy_id = $catalog->get_legacy_id();
 
-      $courses = new mcneese_catalog_class_courses($catalog_id, $legacy_id);
-      if ($courses->load(TRUE, FALSE, FALSE, $per_page, $page)) {
+        $courses = new mcneese_catalog_class_courses($catalog_id, $legacy_id);
+      }
+
+      if ($courses->is_loaded() || $courses->load(TRUE, FALSE, FALSE, $per_page, $page)) {
         return $courses->get_markup();
       }
     }
@@ -125,6 +139,77 @@ function mcneese_catalog_get_courses($catalog = NULL, $per_page = 100, $use_quer
   return FALSE;
 }
 
+/**
+ * A simple way to initialize the courses class from the specified catalog.
+ *
+ * @param mcneese_catalog_class_catalogs|null &$catalog
+ *   The catalog object, may be a NULL variable for auto-load.
+ * @param mcneese_catalog_class_courses|null &$courses
+ *   The courses object, may be a NULL variable for auto-load.
+ *
+ * @return mcneese_catalog_class_courses|bool
+ *   Courses class on success, FALSE otherwise.
+ */
+function mcneese_catalog_initialize_courses(&$catalog) {
+  try {
+    if (!($catalog instanceof mcneese_catalog_class_catalogs)) {
+      $catalog = new mcneese_catalog_class_catalogs();
+    }
+
+    if ($catalog->is_loaded() || $catalog->load()) {
+      $catalog_id = $catalog->get_catalog_id();
+      $legacy_id = $catalog->get_legacy_id();
+
+      $courses = new mcneese_catalog_class_courses($catalog_id, $legacy_id);
+
+      return $courses;
+    }
+  }
+  catch (Exception $e) {
+    // @todo: add watchdog report
+  }
+  catch (Exception $e) {
+    // @todo: add watchdog report
+  }
+
+  return FALSE;
+}
+
+/**
+ * A simple way to auto-generate and print a course listing.
+ *
+ * @param bool $use_description
+ *   (optional) Enabled/Disable displaying the course description.
+ */
+function mcneese_catalog_render_courses($use_descrition = FALSE) {
+  $success = FALSE;
+  $catalog = NULL;
+  $courses = NULL;
+  $markup = '';
+
+  if (mcneese_catalog_get_catalog_as_title($catalog)) {
+    $success = TRUE;
+  }
+
+  if ($success) {
+    $courses = mcneese_catalog_initialize_courses($catalog);
+    if (is_object($courses)) {
+      $courses->set_use_description($use_descrition);
+      $markup = mcneese_catalog_get_courses($catalog, $courses);
+    }
+
+    if (is_string($markup)) {
+      $success = TRUE;
+    }
+  }
+
+  if ($success) {
+    print($markup);
+  }
+  else {
+    print('<div class="catalog_load_error">An error occurred while loading the data.</div>');
+  }
+}
 
 /**
  * @} End of '@defgroup mcneese_catalog McNeese Catalog'.

@@ -158,15 +158,59 @@ class mcneese_catalog_class_courses extends mcneese_catalog_class_base {
     }
 
     $markup = '';
+    if ($this->list_as == self::AS_LIST) {
+      $this->markup .= '<ul class="' . $this->get_class_base_name() . '-list list-as_list">';
+      foreach ($this->processed as $item) {
+        $this->markup .= '<li class="' . $this->get_class_base_name() . '-list_item">';
+        $this->markup .= '<a href="//' . self::BASE_URL . self::BASE_URL_COURSE . '?catoid=' . ((int) $this->legacy_id) . '&coid=' . ((int) $item->legacy_id) . '" class="' . $this->get_class_base_name() . '-link">' . check_plain($item->prefix) . ' ' . check_plain($item->code) . ' - ' . check_plain($item->name) . '</a>';
 
-    $this->markup .= '<ul class="' . $this->get_class_base_name() . '-list">';
-    foreach ($this->processed as $item) {
-      $this->markup .= '<li class="' . $this->get_class_base_name() . '-list_item">';
-      $this->markup .= '<a href="//' . self::BASE_URL . self::BASE_URL_COURSE . '?catoid=' . ((int) $this->legacy_id) . '&coid=' . ((int) $item->legacy_id) . '" class="' . $this->get_class_base_name() . '-link">' . check_plain($item->prefix) . ' ' . check_plain($item->code) . ' - ' . check_plain($item->name) . '</a>';
-      $this->markup .= '<div class="' . $this->get_class_base_name() . '-description">' . check_markup($item->description, 'full_html') . '</a>';
-      $this->markup .= '</li>';
+        if ($this->use_description) {
+          $this->markup .= '<div class="' . $this->get_class_base_name() . '-description">' . check_markup($item->description, 'full_html') . '</div>';
+        }
+        $this->markup .= '</li>';
+      }
+      $this->markup .= '</ul>';
     }
-    $this->markup .= '</ul>';
+    elseif ($this->list_as == self::AS_DIVIDER) {
+      $this->markup .= '<div class="' . $this->get_class_base_name() . '-list list-as_divider">';
+      foreach ($this->processed as $item) {
+        $this->markup .= '<div class="' . $this->get_class_base_name() . '-list_item">';
+        $this->markup .= '<a href="//' . self::BASE_URL . self::BASE_URL_COURSE . '?catoid=' . ((int) $this->legacy_id) . '&coid=' . ((int) $item->legacy_id) . '" class="' . $this->get_class_base_name() . '-link">' . check_plain($item->prefix) . ' ' . check_plain($item->code) . ' - ' . check_plain($item->name) . '</a>';
+
+        if ($this->use_description) {
+          $this->markup .= '<div class="' . $this->get_class_base_name() . '-description">' . check_markup($item->description, 'full_html') . '</div>';
+        }
+        $this->markup .= '</div>';
+      }
+      $this->markup .= '</div>';
+    }
+    elseif ($this->list_as == self::AS_DIVIDER) {
+      $this->markup .= '<div class="' . $this->get_class_base_name() . '-list list-as_span">';
+      foreach ($this->processed as $item) {
+        $this->markup .= '<span class="' . $this->get_class_base_name() . '-list_item">';
+        $this->markup .= '<a href="//' . self::BASE_URL . self::BASE_URL_COURSE . '?catoid=' . ((int) $this->legacy_id) . '&coid=' . ((int) $item->legacy_id) . '" class="' . $this->get_class_base_name() . '-link">' . check_plain($item->prefix) . ' ' . check_plain($item->code) . ' - ' . check_plain($item->name) . '</a>';
+
+        if ($this->use_description) {
+          $this->markup .= '<div class="' . $this->get_class_base_name() . '-description">' . check_markup($item->description, 'full_html') . '</div>';
+        }
+        $this->markup .= '</span>';
+      }
+      $this->markup .= '</div>';
+    }
+    elseif ($this->list_as == self::AS_ACCORDIAN) {
+      $this->markup .= '<div class="' . $this->get_class_base_name() . '-list list-as_accordian">';
+      foreach ($this->processed as $item) {
+        $this->markup .= '<div class="' . $this->get_class_base_name() . '-list_item">';
+        $this->markup .= '<a href="//' . self::BASE_URL . self::BASE_URL_COURSE . '?catoid=' . ((int) $this->legacy_id) . '&coid=' . ((int) $item->legacy_id) . '" class="' . $this->get_class_base_name() . '-link">' . check_plain($item->prefix) . ' ' . check_plain($item->code) . ' - ' . check_plain($item->name) . '</a>';
+
+        if ($this->use_description) {
+          $this->markup .= '<div class="' . $this->get_class_base_name() . '-description">' . check_markup($item->description, 'full_html') . '</div>';
+        }
+
+        $this->markup .= '</div>';
+      }
+      $this->markup .= '</div>';
+    }
 
     return TRUE;
   }

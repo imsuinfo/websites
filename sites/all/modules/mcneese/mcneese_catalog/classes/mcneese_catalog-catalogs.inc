@@ -26,6 +26,8 @@ class mcneese_catalog_class_catalogs extends mcneese_catalog_class_base {
     $this->on_conflict_fields = array('id');
 
     $this->list_name = 'catalog-list';
+
+    $this->as_link = self::AS_DIVIDER;
   }
 
   /**
@@ -208,7 +210,55 @@ class mcneese_catalog_class_catalogs extends mcneese_catalog_class_base {
       return FALSE;
     }
 
-    $this->markup = '<div class="' . $this->get_class_base_name() . '-title">' . $this->processed[0]->name . '</div>';
+    if ($this->list_as == self::AS_LINK) {
+      $this->markup = '<a href="" class="' . $this->get_class_base_name() . '-title list-as_link">' . check_plain($this->processed[0]->name);
+
+      if ($this->use_description) {
+        $this->markup .= '<div class="' . $this->get_class_base_name() . '-description">' . check_markup($item->processed[0]->description, 'full_html') . '</div>';
+        $this->markup .= '</div>';
+      }
+
+      $this->markup .= '</a>';
+    }
+    elseif ($this->list_as == self::AS_HEADER) {
+      $this->markup = '<h3 class="' . $this->get_class_base_name() . '-title" list-as_header>' . check_plain($this->processed[0]->name);
+
+      if ($this->use_description) {
+        $this->markup .= '<div class="' . $this->get_class_base_name() . '-description">' . check_markup($item->processed[0]->description, 'full_html') . '</div>';
+        $this->markup .= '</div>';
+      }
+
+      $this->markup .= '</h3>';
+    }
+    elseif ($this->list_as == self::AS_DIVIDER) {
+      $this->markup = '<div class="' . $this->get_class_base_name() . '-title" list-as_divider>' . check_plain($this->processed[0]->name);
+
+      if ($this->use_description) {
+        $this->markup .= '<div class="' . $this->get_class_base_name() . '-description">' . check_markup($item->processed[0]->description, 'full_html') . '</div>';
+        $this->markup .= '</div>';
+      }
+
+      $this->markup .= '</div>';
+    }
+    elseif ($this->list_as == self::AS_SPAN) {
+      $this->markup = '<span class="' . $this->get_class_base_name() . '-title list-as_span">' . check_plain($this->processed[0]->name);
+
+      if ($this->use_description) {
+        $this->markup .= '<div class="' . $this->get_class_base_name() . '-description">' . check_markup($item->processed[0]->description, 'full_html') . '</div>';
+        $this->markup .= '</div>';
+      }
+
+      $this->markup .= '</div>';
+    }
+    elseif ($this->list_as == self::AS_LIST) {
+      $this->markup = '<li class="' . $this->get_class_base_name() . '-title list-as_list">' . check_plain($this->processed[0]->name);
+
+      if ($this->use_description) {
+        $this->markup .= '<div class="' . $this->get_class_base_name() . '-description">' . check_markup($item->processed[0]->description, 'full_html') . '</div>';
+      }
+
+      $this->markup .= '</li>';
+    }
 
     return TRUE;
   }

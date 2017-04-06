@@ -10,12 +10,20 @@
  * @{
  */
 
-class mcneese_catalog_class_base {
+abstract class mcneese_catalog_class_base {
   const BASE_URL     = 'catalog.mcneese.edu';
   const CACHE_TABLE  = 'mcneese_catalog_cache';
   const API_PATH     = '/widget-api/';
   const CATALOG_PATH = '/widget-api/catalog/';
   const BASE_CLASS   = 'mcneese_catalog-content';
+
+  const AS_RAW       = 0;
+  const AS_LIST      = 1;
+  const AS_SPAN      = 2;
+  const AS_DIVIDER   = 3;
+  const AS_ACCORDIAN = 4;
+  const AS_LINK      = 5;
+  const AS_HEADER    = 6;
 
   protected $table          = NULL;
   protected $path_name      = NULL;
@@ -35,6 +43,12 @@ class mcneese_catalog_class_base {
   protected $loaded    = NULL;
   protected $processed = NULL;
   protected $markup    = NULL;
+
+  protected $use_description = NULL;
+  protected $use_pager       = NULL;
+  protected $use_search      = NULL;
+
+  protected $list_as = NULL;
 
   /**
    * Class constuctor.
@@ -68,6 +82,12 @@ class mcneese_catalog_class_base {
     $this->loaded    = NULL;
     $this->processed = NULL;
     $this->markup    = NULL;
+
+    $this->use_description = TRUE;
+    $this->use_pager       = TRUE;
+    $this->use_search      = FALSE;
+
+    $this->list_as = self::AS_LIST;
   }
 
   /**
@@ -92,6 +112,12 @@ class mcneese_catalog_class_base {
     unset($this->loaded);
     unset($this->processed);
     unset($this->markup);
+
+    unset($this->use_description);
+    unset($this->use_pager);
+    unset($this->use_search);
+
+    unset($this->list_as);
   }
 
   /**
@@ -322,6 +348,131 @@ class mcneese_catalog_class_base {
     }
 
     return FALSE;
+  }
+
+  /**
+   * Assign the use description boolean.
+   *
+   * @param bool $use_description
+   *   Whether or not descriptions should be used when rendering the markup.
+   */
+  public function set_use_description($use_description) {
+    if (!is_bool($use_description)) {
+      return;
+    }
+
+    $this->use_description = $use_description;
+  }
+
+  /**
+   * Gets the use description boolean.
+   *
+   * @return bool $use_description
+   *   Whether or not descriptions should be used when rendering the markup.
+   */
+  public function get_use_description() {
+    if (!is_bool($this->use_description)) {
+      $this->use_description = TRUE;
+    }
+
+    return $this->use_description;
+  }
+
+  /**
+   * Assign the use pager boolean.
+   *
+   * @param bool $use_pager
+   *   Whether or not a pager should be proved when rendering the markup.
+   */
+  public function set_use_pager($use_pager) {
+    if (!is_bool($use_pager)) {
+      return;
+    }
+
+    $this->use_pager = $use_pager;
+  }
+
+  /**
+   * Gets the use pager boolean.
+   *
+   * @return bool $use_pager
+   *   Whether or not a pager should be proved when rendering the markup.
+   */
+  public function get_use_pager() {
+    if (!is_bool($this->use_pager)) {
+      $this->use_pager = TRUE;
+    }
+
+    return $this->use_pager;
+  }
+
+  /**
+   * Assign the use search boolean.
+   *
+   * @param bool $use_search
+   *   Whether or not a search should be provided when rendering the markup.
+   */
+  public function set_use_search($use_search) {
+    if (!is_bool($use_search)) {
+      return;
+    }
+
+    $this->use_search = $use_search;
+  }
+
+  /**
+   * Gets the use search boolean.
+   *
+   * @return bool
+   *   Whether or not a search should be provided when rendering the markup.
+   */
+  public function get_use_search() {
+    if (!is_bool($this->use_search)) {
+      $this->use_search = TRUE;
+    }
+
+    return $this->use_search;
+  }
+
+  /**
+   * Assign the list as integer.
+   *
+   * Not all "as" types apply to all sub-classes.
+   * See each sub-class's render_markup() implementation.
+   *
+   * @param int $list_as
+   *   The format in which list items are displayed as when rendering the markup.
+   */
+  public function set_list_as($list_as) {
+    if (!is_int($list_as)) {
+      return;
+    }
+
+    switch ($list_as) {
+      case self::AS_RAW:
+      case self::AS_LIST:
+      case self::AS_SPAN:
+      case self::AS_DIVIDER:
+      case self::AS_ACCORDIAN:
+      case self::AS_LINK:
+      case self::AS_HEADER:
+        $this->list_as = $list_as;
+        break;
+    }
+  }
+
+  /**
+   * Gets the list as integer.
+   *
+   * @return bool
+   *   The format in which list items are displayed as when rendering the markup.
+   */
+  public function get_list_as() {
+    if (!is_int($this->list_as)) {
+      $this->list_as = self::AS_SPAN;
+    }
+
+    return $this->list_as;
   }
 
   /**
