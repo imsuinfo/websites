@@ -98,15 +98,15 @@ function mcneese_catalog_get_courses(&$catalog, &$courses, $per_page = 100, $use
     $use_query = TRUE;
   }
 
-  $page = 1;
+  $page = 0;
   if ($use_query) {
     $query = drupal_get_query_parameters();
 
     if (isset($query['page']) && is_numeric($query['page'])) {
       $page = (int) $query['page'];
 
-      if ($page < 1) {
-        $page = 1;
+      if ($page < 0) {
+        $page = 0;
       }
     }
   }
@@ -124,8 +124,8 @@ function mcneese_catalog_get_courses(&$catalog, &$courses, $per_page = 100, $use
         $courses = new mcneese_catalog_class_courses($catalog_id, $legacy_id);
       }
 
-      if ($courses->is_loaded() || $courses->load(TRUE, FALSE, FALSE, $per_page, $page)) {
-        return $courses->get_markup();
+      if ($courses->is_loaded() || $courses->load(TRUE, FALSE, FALSE, $page, $per_page)) {
+        return $courses->get_markup($page, $per_page);
       }
     }
   }

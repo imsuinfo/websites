@@ -197,10 +197,16 @@ class mcneese_catalog_class_catalogs extends mcneese_catalog_class_base {
   /**
    * Renders the markup.
    *
+   * @param int|null $page
+   *   (optional) If NULL, then no pager is used.
+   *   If an integer, then this represents the particular page in use for generating a pager.
+   * @param int|null $per_page
+   *   (optional) $page is defined and is an integer, then this represents the number of items per page.
+   *
    * @return bool
    *   TRUE on success, FALSE otherwise.
    */
-  protected function render_markup() {
+  protected function render_markup($page = NULL, $per_page = NULL) {
     if (is_null($this->processed)) {
       return FALSE;
     }
@@ -221,7 +227,7 @@ class mcneese_catalog_class_catalogs extends mcneese_catalog_class_base {
       $this->markup .= '</a>';
     }
     elseif ($this->list_as == self::AS_HEADER) {
-      $this->markup = '<h3 class="' . $this->get_class_base_name() . '-title" list-as_header>' . check_plain($this->processed[0]->name);
+      $this->markup = '<h3 class="' . $this->get_class_base_name() . '-title list-as_header">' . check_plain($this->processed[0]->name);
 
       if ($this->use_description) {
         $this->markup .= '<div class="' . $this->get_class_base_name() . '-description">' . check_markup($item->processed[0]->description, 'full_html') . '</div>';
@@ -231,7 +237,7 @@ class mcneese_catalog_class_catalogs extends mcneese_catalog_class_base {
       $this->markup .= '</h3>';
     }
     elseif ($this->list_as == self::AS_DIVIDER) {
-      $this->markup = '<div class="' . $this->get_class_base_name() . '-title" list-as_divider>' . check_plain($this->processed[0]->name);
+      $this->markup = '<div class="' . $this->get_class_base_name() . '-title list-as_divider"' . check_plain($this->processed[0]->name);
 
       if ($this->use_description) {
         $this->markup .= '<div class="' . $this->get_class_base_name() . '-description">' . check_markup($item->processed[0]->description, 'full_html') . '</div>';
@@ -259,6 +265,9 @@ class mcneese_catalog_class_catalogs extends mcneese_catalog_class_base {
 
       $this->markup .= '</li>';
     }
+
+    // only shows a single entry, so a pager is not needed here.
+    #$this->markup .= $this->build_pager($page, $per_page);
 
     return TRUE;
   }

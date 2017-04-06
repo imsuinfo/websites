@@ -43,9 +43,9 @@ abstract class mcneese_catalog_class_base {
   protected $loaded    = NULL;
   protected $processed = NULL;
   protected $markup    = NULL;
+  protected $total     = NULL;
 
   protected $use_description = NULL;
-  protected $use_pager       = NULL;
   protected $use_search      = NULL;
 
   protected $list_as = NULL;
@@ -82,9 +82,9 @@ abstract class mcneese_catalog_class_base {
     $this->loaded    = NULL;
     $this->processed = NULL;
     $this->markup    = NULL;
+    $this->total     = NULL;
 
     $this->use_description = TRUE;
-    $this->use_pager       = TRUE;
     $this->use_search      = FALSE;
 
     $this->list_as = self::AS_LIST;
@@ -112,9 +112,9 @@ abstract class mcneese_catalog_class_base {
     unset($this->loaded);
     unset($this->processed);
     unset($this->markup);
+    unset($this->total);
 
     unset($this->use_description);
-    unset($this->use_pager);
     unset($this->use_search);
 
     unset($this->list_as);
@@ -144,19 +144,19 @@ abstract class mcneese_catalog_class_base {
    * @param bool $all
    *   (optional) When TRUE, will attempt to load all data.
    *   When FALSE, only the requested number of rows will be loaded.
-   * @param int|null $rows
-   *   (optional) When an integer, defines the number of rows to load.
-   *   When NULL, all data will be loaded via a single http request.
    * @param int|null $page
    *   (optional) The page number to load (example: 1->100 = page 1 and 101 -> 200 = page 2, etc..).
-   *   Must not be NULL when $rows is an integer and $all is FALSE.
+   *   Must not be NULL when $per_page is an integer and $all is FALSE.
+   * @param int|null $per_page
+   *   (optional) When an integer, defines the number of rows per page to load.
+   *   When NULL, all data will be loaded via a single http request.
    *
-   * @return bool|NULL
+   * @return bool|int|NULL
    *   TRUE on success.
    *   NULL is returned on error, but cached data exists and is being used.
    *   FALSE is returned on error, but no data is available to use.
    */
-  public function load($check_expire = TRUE, $force = FALSE, $all = TRUE, $rows = NULL, $page = NULL) {
+  public function load($check_expire = TRUE, $force = FALSE, $all = TRUE, $page = NULL, $per_page = NULL) {
     if (!is_bool($check_expire)) {
       $check_expire = FALSE;
     }
@@ -170,10 +170,10 @@ abstract class mcneese_catalog_class_base {
     }
 
     // TRUE = success, NULL = expired, FALSE = failed, -1 = overflow.
-    $cache_loaded = $this->get_cache($check_expire, $rows, $page);
+    $cache_loaded = $this->get_cache($check_expire, $page, $per_page);
 
     // do not attempt to load beyond what is possible.
-    if (is_int($cache_loaded) && $cache_loaded < 0) {
+    if (is_int($cache_loaded) || $cache_loaded < 0) {
       return FALSE;
     }
 
@@ -187,7 +187,7 @@ abstract class mcneese_catalog_class_base {
 
 
     // request new data from the remote server.
-    if (!$this->request_data($rows)) {
+    if (!$this->request_data($per_page)) {
       if (is_array($this->cached)) {
         // provide cache as failsafe.
         $this->processed = $this->cached;
@@ -220,11 +220,14 @@ abstract class mcneese_catalog_class_base {
       // this is not a critical error because the cache is not required.
     }
 
+    // get the total amount in the table.
+    $this->total = (int) db_query('select count(id) from {' . $this->table . '}')->fetchField();
+
     // use the cached information to load the subset of data.
     if (!$all) {
       unset($this->processed);
 
-      $cache_loaded = $this->get_cache(FALSE, $rows, $page);
+      $cache_loaded = $this->get_cache(FALSE, $page, $per_page);
       if (is_array($this->cached)) {
         $this->processed = $this->cached;
         $this->cached = NULL;
@@ -276,6 +279,11 @@ abstract class mcneese_catalog_class_base {
    *
    * The cache must be loaded or the content must already be processed.
    *
+   * @param int|null $page
+   *   (optional) If NULL, then no pager is used.
+   *   If an integer, then this represents the particular page in use for generating a pager.
+   * @param int|null $per_page
+   *   (optional) $page is defined and is an integer, then this represents the number of items per page.
    * @param bool $wrapped
    *   (optional) When TRUE, content will be wrapped in a div tag with appropriate class names.
    *   When FALSE, the no wrapping div tag will be used.
@@ -284,9 +292,9 @@ abstract class mcneese_catalog_class_base {
    *   The processed HTML.
    *   An empty string is returned on error.
    */
-  public function get_markup($wrapped = TRUE) {
+  public function get_markup($page = NULL, $per_page = NULL, $wrapped = TRUE) {
     if (is_null($this->markup)) {
-      $this->render_markup();
+      $this->render_markup($page, $per_page);
     }
 
     if (!is_string($this->markup)) {
@@ -380,34 +388,6 @@ abstract class mcneese_catalog_class_base {
     }
 
     return $this->use_description;
-  }
-
-  /**
-   * Assign the use pager boolean.
-   *
-   * @param bool $use_pager
-   *   Whether or not a pager should be proved when rendering the markup.
-   */
-  public function set_use_pager($use_pager) {
-    if (!is_bool($use_pager)) {
-      return;
-    }
-
-    $this->use_pager = $use_pager;
-  }
-
-  /**
-   * Gets the use pager boolean.
-   *
-   * @return bool $use_pager
-   *   Whether or not a pager should be proved when rendering the markup.
-   */
-  public function get_use_pager() {
-    if (!is_bool($this->use_pager)) {
-      $this->use_pager = TRUE;
-    }
-
-    return $this->use_pager;
   }
 
   /**
@@ -556,19 +536,19 @@ abstract class mcneese_catalog_class_base {
    *
    * @param bool $check_expire
    *  (optional) When TRUE, will check to see if cache needs to be re-built.
-   * @param int|null $rows
-   *   (optional) When an integer, defines the number of rows to load.
-   *   When NULL, all data will be loaded via a single http request.
    * @param int|null $page
    *   (optional) The page number to load (example: 1->100 = page 1 and 101 -> 200 = page 2, etc..).
-   *   Must not be NULL when $rows is an integer.
+   *   Must not be NULL when $per_page is an integer.
+   * @param int|null $per_page
+   *   (optional) When an integer, defines the number of rows per page to load.
+   *   When NULL, all data will be loaded via a single http request.
    *
    * @return bool|null
    *   TRUE is returned on successful cache load.
    *   NULL is returned when cache is expired.
    *   FALSE is returned on error.
    */
-  protected function get_cache($check_expire = FALSE, $rows = NULL, $page = NULL) {
+  protected function get_cache($check_expire = FALSE, $page = NULL, $per_page = NULL) {
     $expired = FALSE;
     if ($check_expire) {
       try {
@@ -612,12 +592,12 @@ abstract class mcneese_catalog_class_base {
       return NULL;
     }
 
-    if (!is_int($rows) || $rows < 1) {
-      $rows = NULL;
+    if (!is_int($per_page) || $per_page < 1) {
+      $per_page = NULL;
     }
 
-    if (!is_int($page) || $page < 1) {
-      $rows = NULL;
+    if (!is_int($page) || $page < 0) {
+      $per_page = NULL;
     }
 
     $arguments = array();
@@ -627,15 +607,17 @@ abstract class mcneese_catalog_class_base {
     }
 
     try {
-      if (is_int($rows) && is_int($page)) {
+      if (is_int($per_page) && is_int($page)) {
         $query_string .= ' limit :limit offset :offset';
-        $arguments[':limit'] = $rows;
-        $arguments[':offset'] = $rows * ($page - 1);
+        $arguments[':limit'] = $per_page;
+        $arguments[':offset'] = $per_page * $page;
 
-        $total = db_query('select count(id) from {' . $this->table . '}')->fetchField();
+        if (is_null($this->total)) {
+          $this->total = (int) db_query('select count(id) from {' . $this->table . '}')->fetchField();
+        }
 
         // do not attempt to select more than is available.
-        if ($arguments[':offset'] + $rows > $total) {
+        if ($page * $per_page > $this->total) {
           return -1;
         }
       }
@@ -664,10 +646,10 @@ abstract class mcneese_catalog_class_base {
    *
    * This loads all data so that it may be cached locally.
    *
-   * @param int $rows
-   *   (optional) The number of rows loaded per request until all data is loaded.
+   * @param int $per_page
+   *   (optional) The number of rows per page loaded per request until all data is loaded.
    */
-  protected function request_data($rows = 100) {
+  protected function request_data($per_page = 100) {
     if ($this->use_catalog_id) {
       if (!is_int($this->catalog_id)) {
         $this->get_catalog_ids_from_cache();
@@ -682,11 +664,11 @@ abstract class mcneese_catalog_class_base {
       $path = 'http://' . self::BASE_URL . self::API_PATH . $this->path_name;
     }
 
-    if (!is_int($rows) || $rows < 1) {
-      $rows = 100;
+    if (!is_int($per_page) || $per_page < 0) {
+      $per_page = 100;
     }
 
-    $result = drupal_http_request($path . '?page-size=' . $rows . '&page=1');
+    $result = drupal_http_request($path . '?page-size=' . $per_page . '&page=1');
 
     if (!isset($result->code) && $result->code != 200) {
       // @todo: report problem to watchdog().
@@ -712,7 +694,7 @@ abstract class mcneese_catalog_class_base {
     $page = 2;
 
     while ($current < $total) {
-      $result = drupal_http_request($path . '?page-size=' . $rows . '&page=' . $page);
+      $result = drupal_http_request($path . '?page-size=' . $per_page . '&page=' . $page);
 
       if (!is_object($json_data) || empty($json_data->{$this->list_name})) {
         // @todo: provide watchdog error.
@@ -880,6 +862,33 @@ abstract class mcneese_catalog_class_base {
   }
 
   /**
+   * Render a custom pager via the pagerer module.
+   *
+   * @param int $page
+   *   The particular page in use for generating a pager.
+   * @param int $per_page
+   *   This represents the number of items per page.
+   *
+   * @return string
+   *   The renderred markup.
+   *
+   * @see: pager_default_initialize()
+   */
+  protected function build_pager($page, $per_page) {
+    if (!is_int($page) || !is_int($per_page)) {
+      return '';
+    }
+
+    if ($page < 0 || $per_page < 0 || $this->total < 1) {
+      return '';
+    }
+
+    $page = pager_default_initialize($this->total, $per_page); // @fixme: $page parameters probably should be $pager_id or something.
+
+    return theme('pager');
+  }
+
+  /**
    * Process the loaded data.
    *
    * @return bool
@@ -892,10 +901,16 @@ abstract class mcneese_catalog_class_base {
   /**
    * Renders the markup.
    *
+   * @param int|null $page
+   *   (optional) If NULL, then no pager is used.
+   *   If an integer, then this represents the particular page in use for generating a pager.
+   * @param int|null $per_page
+   *   (optional) $page is defined and is an integer, then this represents the number of items per page.
+   *
    * @return bool
    *   TRUE on success, FALSE otherwise.
    */
-  protected function render_markup() {
+  protected function render_markup($page = NULL, $per_page = NULL) {
     return FALSE;
   }
 }

@@ -74,10 +74,16 @@ class mcneese_catalog_class_hierarchies extends mcneese_catalog_class_base {
   /**
    * Renders the markup.
    *
+   * @param int|null $page
+   *   (optional) If NULL, then no pager is used.
+   *   If an integer, then this represents the particular page in use for generating a pager.
+   * @param int|null $per_page
+   *   (optional) $page is defined and is an integer, then this represents the number of items per page.
+   *
    * @return bool
    *   TRUE on success, FALSE otherwise.
    */
-  protected function render_markup() {
+  protected function render_markup($page = NULL, $per_page = NULL) {
     if (is_null($this->processed)) {
       return FALSE;
     }
