@@ -127,6 +127,10 @@ abstract class mcneese_catalog_class_base {
    *   TRUE if loaded, FALSE otherwise.
    */
   public function is_loaded() {
+    if (!isset($this->loaded)) {
+      $this->loaded = FALSE;
+    }
+
     return ($this->loaded === TRUE);
   }
 

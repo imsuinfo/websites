@@ -124,8 +124,8 @@ class mcneese_catalog_class_catalogs extends mcneese_catalog_class_base {
         $catalog->description =  $this->sanitize_markup($item->description);
 
         // remove all line endings.
-        $entry->description = preg_replace("/\r/i", '', $entry->description);
-        $entry->description = preg_replace("/\n/i", '', $entry->description);
+        $catalog->description = preg_replace("/\r/i", '', $catalog->description);
+        $catalog->description = preg_replace("/\n/i", '', $catalog->description);
       }
 
       if (!empty($item->created) && is_string($item->created)) {
