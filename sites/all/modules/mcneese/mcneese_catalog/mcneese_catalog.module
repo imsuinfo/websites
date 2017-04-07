@@ -668,7 +668,7 @@ function mcneese_catalog_render_programs($use_descrition = FALSE) {
 
   $title = mcneese_catalog_get_catalog_as_title($catalog);
   if (is_string($title)) {
-    drupal_set_title($title . ' - Filters');
+    drupal_set_title($title . ' - Programs');
     $success = TRUE;
   }
 
