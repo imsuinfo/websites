@@ -18,6 +18,5 @@ files[] = classes/mcneese_catalog-courses.inc
 files[] = classes/mcneese_catalog-programs.inc
 files[] = classes/mcneese_catalog-hierarchies.inc
 files[] = classes/mcneese_catalog-filters.inc
-files[] = classes/mcneese_catalog-degree_types.inc
-files[] = classes/mcneese_catalog-program_types.inc
+files[] = classes/mcneese_catalog-pages.inc
 files[] = mcneese_catalog.module

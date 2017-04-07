@@ -48,8 +48,14 @@ class mcneese_catalog_class_courses extends mcneese_catalog_class_base {
       if (!property_exists($item, 'id') || !is_numeric($item->id)) {
         continue;
       }
+
       // require the catalog id.
       if (!property_exists($item, 'catalog-id') || !is_numeric($item->{'catalog-id'})) {
+        continue;
+      }
+
+      // require the legacy id.
+      if (!property_exists($item, 'legacy-id') || !is_numeric($item->{'legacy-id'}))  {
         continue;
       }
 
@@ -58,17 +64,17 @@ class mcneese_catalog_class_courses extends mcneese_catalog_class_base {
         continue;
       }
 
-      // require the name prefix to exist and be non-empty.
+      // require the prefix to exist and be non-empty.
       if (empty($item->prefix) || !is_string($item->prefix)) {
         continue;
       }
 
-      // require the name prefix to exist and be non-empty.
+      // require the code to exist and be non-empty.
       if (empty($item->code) || !is_string($item->code)) {
         continue;
       }
 
-      // require the name prefix to exist and be non-empty.
+      // require the url to exist and be non-empty.
       if (empty($item->url) || !is_string($item->url)) {
         continue;
       }
@@ -79,7 +85,7 @@ class mcneese_catalog_class_courses extends mcneese_catalog_class_base {
       }
 
       // ignore invisible items.
-      if (property_exists($item->status, 'display') && $item->status->display) {
+      if (property_exists($item->status, 'visible') && !$item->status->visible) {
         continue;
       }
 
@@ -91,6 +97,7 @@ class mcneese_catalog_class_courses extends mcneese_catalog_class_base {
       $entry = new stdClass();
       $entry->id = (int) $item->id;
       $entry->catalog_id = $item->{'catalog-id'};
+      $entry->legacy_id = (int) $item->{'legacy-id'};
 
       $entry->name = $item->name;
       $entry->prefix = substr($item->prefix, 0, 32);
@@ -99,15 +106,8 @@ class mcneese_catalog_class_courses extends mcneese_catalog_class_base {
 
       $entry->description = '';
       if (property_exists($item, 'body') && is_string($item->body)) {
-        $entry->description =  $this->sanitize_markup($item->body, array('hr'));
-
-        // remove all line endings.
-        $entry->description = preg_replace("/\r/i", '', $entry->description);
-        $entry->description = preg_replace("/\n/i", '', $entry->description);
-
-        // the provided descriptions seems to provide large numbers of redundant breaks.
-        $entry->description = preg_replace('/(<br><br>)+/i', '<br><br>', $entry->description);
-        $entry->description = preg_replace('/(<br><br><br>)+/i', '<br><br>', $entry->description);
+        $entry->description = $this->sanitize_markup($item->body, array('hr'));
+        $entry->description = $this->cleanup_description($entry->description);
       }
 
       if (!empty($item->created) && is_string($item->created)) {
@@ -126,16 +126,12 @@ class mcneese_catalog_class_courses extends mcneese_catalog_class_base {
       $entry->visible = TRUE;
 
       $entry->searchable = TRUE;
-      if (property_exists($item, 'searchable') && !$item->searchable) {
+      if (property_exists($item->status, 'searchable') && !$item->status->searchable) {
         $entry->searchable = FALSE;
       }
 
       if (property_exists($item, 'fields') && is_array($item->fields)) {
         $entry->fields = json_encode($item->fields);
-      }
-
-      if (property_exists($item, 'legacy-id') && is_numeric($item->{'legacy-id'}))  {
-        $entry->legacy_id = (int) $item->{'legacy-id'};
       }
 
       $this->processed[] = $entry;
@@ -168,7 +164,7 @@ class mcneese_catalog_class_courses extends mcneese_catalog_class_base {
       $this->markup .= '<ul class="' . $this->get_class_base_name() . '-list list-as_list">';
       foreach ($this->processed as $item) {
         $this->markup .= '<li class="' . $this->get_class_base_name() . '-list_item">';
-        $this->markup .= '<a href="//' . self::BASE_URL . self::BASE_URL_COURSE . '?catoid=' . ((int) $this->legacy_id) . '&coid=' . ((int) $item->legacy_id) . '" class="' . $this->get_class_base_name() . '-link">' . check_plain($item->prefix) . ' ' . check_plain($item->code) . ' - ' . check_plain($item->name) . '</a>';
+        $this->markup .= '<a href="//' . self::BASE_URL . self::BASE_URL_COURSE . '?catoid=' . ((int) $this->legacy_id) . '&coid=' . ((int) $item->legacy_id) . '" class="' . $this->get_class_base_name() . '-name">' . check_plain($item->prefix) . ' ' . check_plain($item->code) . ' - ' . check_plain($item->name) . '</a>';
 
         if ($this->use_description) {
           $this->markup .= '<div class="' . $this->get_class_base_name() . '-description">' . check_markup($item->description, 'full_html') . '</div>';
@@ -181,7 +177,7 @@ class mcneese_catalog_class_courses extends mcneese_catalog_class_base {
       $this->markup .= '<div class="' . $this->get_class_base_name() . '-list list-as_divider">';
       foreach ($this->processed as $item) {
         $this->markup .= '<div class="' . $this->get_class_base_name() . '-list_item">';
-        $this->markup .= '<a href="//' . self::BASE_URL . self::BASE_URL_COURSE . '?catoid=' . ((int) $this->legacy_id) . '&coid=' . ((int) $item->legacy_id) . '" class="' . $this->get_class_base_name() . '-link">' . check_plain($item->prefix) . ' ' . check_plain($item->code) . ' - ' . check_plain($item->name) . '</a>';
+        $this->markup .= '<a href="//' . self::BASE_URL . self::BASE_URL_COURSE . '?catoid=' . ((int) $this->legacy_id) . '&coid=' . ((int) $item->legacy_id) . '" class="' . $this->get_class_base_name() . '-name">' . check_plain($item->prefix) . ' ' . check_plain($item->code) . ' - ' . check_plain($item->name) . '</a>';
 
         if ($this->use_description) {
           $this->markup .= '<div class="' . $this->get_class_base_name() . '-description">' . check_markup($item->description, 'full_html') . '</div>';
@@ -194,7 +190,7 @@ class mcneese_catalog_class_courses extends mcneese_catalog_class_base {
       $this->markup .= '<div class="' . $this->get_class_base_name() . '-list list-as_span">';
       foreach ($this->processed as $item) {
         $this->markup .= '<span class="' . $this->get_class_base_name() . '-list_item">';
-        $this->markup .= '<a href="//' . self::BASE_URL . self::BASE_URL_COURSE . '?catoid=' . ((int) $this->legacy_id) . '&coid=' . ((int) $item->legacy_id) . '" class="' . $this->get_class_base_name() . '-link">' . check_plain($item->prefix) . ' ' . check_plain($item->code) . ' - ' . check_plain($item->name) . '</a>';
+        $this->markup .= '<a href="//' . self::BASE_URL . self::BASE_URL_COURSE . '?catoid=' . ((int) $this->legacy_id) . '&coid=' . ((int) $item->legacy_id) . '" class="' . $this->get_class_base_name() . '-name">' . check_plain($item->prefix) . ' ' . check_plain($item->code) . ' - ' . check_plain($item->name) . '</a>';
 
         if ($this->use_description) {
           $this->markup .= '<div class="' . $this->get_class_base_name() . '-description">' . check_markup($item->description, 'full_html') . '</div>';
@@ -207,7 +203,7 @@ class mcneese_catalog_class_courses extends mcneese_catalog_class_base {
       $this->markup .= '<div class="' . $this->get_class_base_name() . '-list list-as_accordian">';
       foreach ($this->processed as $item) {
         $this->markup .= '<div class="' . $this->get_class_base_name() . '-list_item">';
-        $this->markup .= '<a href="//' . self::BASE_URL . self::BASE_URL_COURSE . '?catoid=' . ((int) $this->legacy_id) . '&coid=' . ((int) $item->legacy_id) . '" class="' . $this->get_class_base_name() . '-link">' . check_plain($item->prefix) . ' ' . check_plain($item->code) . ' - ' . check_plain($item->name) . '</a>';
+        $this->markup .= '<a href="//' . self::BASE_URL . self::BASE_URL_COURSE . '?catoid=' . ((int) $this->legacy_id) . '&coid=' . ((int) $item->legacy_id) . '" class="' . $this->get_class_base_name() . '-name">' . check_plain($item->prefix) . ' ' . check_plain($item->code) . ' - ' . check_plain($item->name) . '</a>';
 
         if ($this->use_description) {
           $this->markup .= '<div class="' . $this->get_class_base_name() . '-description">' . check_markup($item->description, 'full_html') . '</div>';

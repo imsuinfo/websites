@@ -2,7 +2,7 @@
 
 /**
  * @file
- * Defines McNeese Catalog hierarchies class.
+ * Defines McNeese Catalog pages class.
  */
 
 /**
@@ -10,21 +10,21 @@
  * @{
  */
 
-class mcneese_catalog_class_hierarchies extends mcneese_catalog_class_base {
+class mcneese_catalog_class_pages extends mcneese_catalog_class_base {
   /**
    * Class constuctor.
    */
   public function __construct($catalog_id, $legacy_id) {
     parent::__construct($catalog_id, $legacy_id);
 
-    $this->table          = 'mcneese_catalog_hierarchies';
-    $this->path_name      = 'hierarchies';
-    $this->cache_name     = 'hierarchies';
+    $this->table          = 'mcneese_catalog_pages';
+    $this->path_name      = 'pages';
+    $this->cache_name     = 'pages';
     $this->cache_lifetime = '+24 hours';
 
     $this->select_condition = ' where visible and active';
 
-    $this->list_name = 'hierarchy-list';
+    $this->list_name = 'page-list';
   }
 
   /**
@@ -91,8 +91,8 @@ class mcneese_catalog_class_hierarchies extends mcneese_catalog_class_base {
       $entry->url = substr($item->url, 0, 256);
 
       $entry->description = '';
-      if (property_exists($item, 'description') && is_string($item->description)) {
-        $entry->description = $this->sanitize_markup($item->description, array('hr'));
+      if (property_exists($item, 'content') && is_string($item->content)) {
+        $entry->description = $this->sanitize_markup($item->content, array('hr'));
         $entry->description = $this->cleanup_description($entry->description);
       }
 
@@ -116,9 +116,9 @@ class mcneese_catalog_class_hierarchies extends mcneese_catalog_class_base {
         $entry->searchable = FALSE;
       }
 
-      $entry->college_types = array();
-      if (property_exists($item, 'college-types') && is_array($item->{'college-types'})) {
-        $entry->college_types = $item->{'college-types'};
+      $entry->content_type = '';
+      if (property_exists($item, 'content-type') && is_string($item->{'content-type'})) {
+        $entry->content_type = substr($item->{'content-type'}, 0, 128);
       }
 
       // @fixme: this is not json. this format needs to be determined and used instead of a string.
@@ -127,14 +127,15 @@ class mcneese_catalog_class_hierarchies extends mcneese_catalog_class_base {
         $entry->options = $item->{'options'};
       }
 
-      $entry->department_types = array();
-      if (property_exists($item, 'department-types') && is_array($item->{'department-types'})) {
-        $entry->department_types = $item->{'department-types'};
+      // this appears to be identical to name and is likely intended to be plain text.
+      $entry->header = '';
+      if (property_exists($item, 'header') && is_string($item->{'header'})) {
+        $entry->header = $item->{'header'};
       }
 
-      $entry->hierarchy_type = '';
-      if (property_exists($item, 'hierarchy-type') && is_string($item->{'hierarchy-type'})) {
-        $entry->hierarchy_type = substr($item->{'hierarchy-type'}, 0, 128);
+      $entry->link = '';
+      if (property_exists($item, 'link') && is_string($item->{'link'})) {
+        $entry->link = substr($item->{'link'}, 0, 256);
       }
 
       $this->processed[] = $entry;

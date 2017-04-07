@@ -83,13 +83,14 @@ class mcneese_catalog_class_catalogs extends mcneese_catalog_class_base {
       return TRUE;
     }
 
-    $catalog = NULL;
+    $entry = NULL;
 
     foreach ($this->loaded->{$this->list_name} as $item) {
       // require the id.
       if (!property_exists($item, 'id') || !is_numeric($item->id)) {
         continue;
       }
+
       // require the legacy id.
       if (!property_exists($item, 'legacy-id') || !is_numeric($item->{'legacy-id'})) {
         continue;
@@ -111,86 +112,83 @@ class mcneese_catalog_class_catalogs extends mcneese_catalog_class_base {
       }
 
       // The current should be the only entry without archived set, but just in case loop until done and use last entry found.
-      $catalog = new stdClass();
-      $catalog->id = (int) $item->id;
-      $catalog->legacy_id = (int) $item->{'legacy-id'};
-      $this->catalog_id = $catalog->id;
-      $this->legacy_id = $catalog->legacy_id;
+      $entry = new stdClass();
+      $entry->id = (int) $item->id;
+      $entry->legacy_id = (int) $item->{'legacy-id'};
+      $this->catalog_id = $entry->id;
+      $this->legacy_id = $entry->legacy_id;
 
-      $catalog->name = $item->name;
+      $entry->name = $item->name;
 
-      $catalog->description = '';
+      $entry->description = '';
       if (property_exists($item, 'description') && is_string($item->description)) {
-        $catalog->description =  $this->sanitize_markup($item->description);
-
-        // remove all line endings.
-        $catalog->description = preg_replace("/\r/i", '', $catalog->description);
-        $catalog->description = preg_replace("/\n/i", '', $catalog->description);
+        $entry->description = $this->sanitize_markup($item->description, array('hr'));
+        $entry->description = $this->cleanup_description($entry->description);
       }
 
       if (!empty($item->created) && is_string($item->created)) {
         $sanitized_date = strtotime($item->created);
-        $catalog->created = date('r', $sanitized_date);
+        $entry->created = date('r', $sanitized_date);
         unset($sanitized_date);
       }
 
       if (!empty($item->modified) && is_string($item->modified)) {
         $sanitized_date = strtotime($item->modified);
-        $catalog->modified = date('r', $sanitized_date);
+        $entry->modified = date('r', $sanitized_date);
         unset($sanitized_date);
       }
 
-      $catalog->archived = FALSE;
+      $entry->archived = FALSE;
 
-      $catalog->locked = TRUE;
+      $entry->locked = TRUE;
       if (property_exists($item, 'locked') && !$item->locked) {
-        $catalog->locked = FALSE;
+        $entry->locked = FALSE;
       }
 
-      $catalog->copying = FALSE;
+      $entry->copying = FALSE;
       if (property_exists($item, 'copying') && $item->copying) {
-        $catalog->copying = TRUE;
+        $entry->copying = TRUE;
       }
 
-      $catalog->published = TRUE;
+      $entry->published = TRUE;
 
-      $catalog->import_locked = FALSE;
+      $entry->import_locked = FALSE;
       if (property_exists($item, 'import_locked') && $item->import_locked) {
-        $catalog->import_locked = TRUE;
+        $entry->import_locked = TRUE;
       }
 
       if (property_exists($item->{'catalog-type'}, 'id') && is_numeric($item->{'catalog-type'}->id) && !empty($item->{'catalog-type'}->name) && is_string($item->{'catalog-type'}->name)) {
-        $catalog->catalog_type_id = (int) $item->{'catalog-type'}->id;
-        $catalog->catalog_type_name = $item->{'catalog-type'}->name;
+        $entry->catalog_type_id = (int) $item->{'catalog-type'}->id;
+        $entry->catalog_type_name = $item->{'catalog-type'}->name;
 
         if (property_exists($item->{'catalog-type'}, 'organization-id') && is_numeric($item->{'catalog-type'}->{'organization-id'})) {
-          $catalog->catalog_type_organization_id = (int) $item->{'catalog-type'}->{'organization-id'};
+          $entry->catalog_type_organization_id = (int) $item->{'catalog-type'}->{'organization-id'};
         }
 
         if (!empty($item->{'catalog-type'}->created) && is_string($item->{'catalog-type'}->created)) {
           $sanitized_date = strtotime($item->{'catalog-type'}->created);
-          $catalog->catalog_type_created = date('r', $sanitized_date);
+          $entry->catalog_type_created = date('r', $sanitized_date);
           unset($sanitized_date);
         }
 
         if (!empty($item->{'catalog-type'}->modified) && is_string($item->{'catalog-type'}->modified)) {
           $sanitized_date = strtotime($item->{'catalog-type'}->modified);
-          $catalog->catalog_type_modified = date('r', $sanitized_date);
+          $entry->catalog_type_modified = date('r', $sanitized_date);
           unset($sanitized_date);
         }
 
         if (property_exists($item->{'catalog-type'}, 'legacy-id') && is_numeric($item->{'catalog-type'}->{'legacy-id'})) {
-          $catalog->catalog_type_legacy_id = (int) $item->{'catalog-type'}->{'legacy-id'};
+          $entry->catalog_type_legacy_id = (int) $item->{'catalog-type'}->{'legacy-id'};
         }
 
         if (property_exists($item, 'legacy-id') && is_numeric($item->{'legacy-id'}))  {
-          $catalog->legacy_id = (int) $item->{'legacy-id'};
+          $entry->legacy_id = (int) $item->{'legacy-id'};
         }
       }
     }
 
     $this->loaded = NULL;
-    $this->processed = array($catalog);
+    $this->processed = array($entry);
     return TRUE;
   }
 

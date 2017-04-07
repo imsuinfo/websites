@@ -475,7 +475,7 @@ abstract class mcneese_catalog_class_base {
    *   (optional) An array of tags to explicitly remove in addition to the normal.
    *
    * @return string
-   *   Sanitized string.
+   *   Sanitized markup.
    *   An empty string is returned on error.
    */
   protected function sanitize_markup($markup, $disallow_tags = array()) {
@@ -527,6 +527,37 @@ abstract class mcneese_catalog_class_base {
 
     $markup_format = 'full_html';
     mcneese_content_formats_alter_dom($sanitized, $operations, $markup_format);
+
+    return $sanitized;
+  }
+
+  /**
+   * Remove problematic tags and characters with the description field.
+   *
+   * This should be run after calling sanitize_markup() on the description field.
+   *
+   * @param string $markup
+   *   The HTML markup to sanitize.
+   *
+   * @return string
+   *   Sanitized markup.
+   *   An empty string is returned on error.
+   *
+   * @see: sanitize_markup()
+   */
+  protected function cleanup_description($markup, $disallow_tags = array()) {
+    if (!is_string($markup)) {
+      cf_error::invalid_string('markup');
+      return '';
+    }
+
+    // remove all line endings.
+    $sanitized = preg_replace("/\r/i", '', $markup);
+    $sanitized = preg_replace("/\n/i", '', $sanitized);
+
+    // Do not allow large numbers of redundant breaks.
+    $sanitized = preg_replace('/(<br><br>)+/i', '<br><br>', $sanitized);
+    $sanitized = preg_replace('/(<br><br><br>)+/i', '<br><br>', $sanitized);
 
     return $sanitized;
   }
@@ -752,6 +783,32 @@ abstract class mcneese_catalog_class_base {
         $placeholder_string = ':id';
 
         foreach (array_keys($item_array) as $key_name) {
+          if (is_null($item->{$key_name})) {
+            continue;
+          }
+
+          if (is_bool($item->{$key_name})) {
+            $name_string .= ', ' . $key_name;
+
+            if ($item->{$key_name}) {
+              $placeholder_string .= ', true';
+            }
+            else {
+              $placeholder_string .= ', false';
+            }
+
+            continue;
+          }
+
+          if (is_array($item->{$key_name})) {
+            $arguments[':' . $key_name] = json_encode($item->{$key_name});
+
+            $name_string .= ', ' . $key_name;
+            $placeholder_string .= ', :' . $key_name;
+
+            continue;
+          }
+
           $arguments[':' . $key_name] = $item->{$key_name};
 
           $name_string .= ', ' . $key_name;
@@ -790,12 +847,16 @@ abstract class mcneese_catalog_class_base {
       $transaction->rollback();
       cf_error::on_exception($e);
       throw $e;
+      return FALSE;
     }
     catch (Error $e) {
       $transaction->rollback();
       cf_error::on_exception($e);
       throw $e;
+      return FALSE;
     }
+
+    return TRUE;
   }
 
   /**
@@ -911,7 +972,71 @@ abstract class mcneese_catalog_class_base {
    *   TRUE on success, FALSE otherwise.
    */
   protected function render_markup($page = NULL, $per_page = NULL) {
-    return FALSE;
+    if (is_null($this->processed)) {
+      return FALSE;
+    }
+
+    $markup = '';
+    if ($this->list_as == self::AS_LIST) {
+      $this->markup .= '<ul class="' . $this->get_class_base_name() . '-list list-as_list">';
+      foreach ($this->processed as $item) {
+        $this->markup .= '<li class="' . $this->get_class_base_name() . '-list_item">';
+        $this->markup .= '<div class="' . $this->get_class_base_name() . '-name">' . check_plain($item->name) . '</div>';
+
+        if ($this->use_description) {
+          $this->markup .= '<div class="' . $this->get_class_base_name() . '-description">' . check_markup($item->description, 'full_html') . '</div>';
+        }
+
+        $this->markup .= '</li>';
+      }
+      $this->markup .= '</ul>';
+    }
+    elseif ($this->list_as == self::AS_DIVIDER) {
+      $this->markup .= '<div class="' . $this->get_class_base_name() . '-list list-as_divider">';
+      foreach ($this->processed as $item) {
+        $this->markup .= '<div class="' . $this->get_class_base_name() . '-list_item">';
+        $this->markup .= '<div class="' . $this->get_class_base_name() . '-name">' . check_plain($item->name) . '</div>';
+
+        if ($this->use_description) {
+          $this->markup .= '<div class="' . $this->get_class_base_name() . '-description">' . check_markup($item->description, 'full_html') . '</div>';
+        }
+
+        $this->markup .= '</div>';
+      }
+      $this->markup .= '</div>';
+    }
+    elseif ($this->list_as == self::AS_DIVIDER) {
+      $this->markup .= '<div class="' . $this->get_class_base_name() . '-list list-as_span">';
+      foreach ($this->processed as $item) {
+        $this->markup .= '<span class="' . $this->get_class_base_name() . '-list_item">';
+        $this->markup .= '<div class="' . $this->get_class_base_name() . '-name">' . check_plain($item->name) . '</div>';
+
+        if ($this->use_description) {
+          $this->markup .= '<div class="' . $this->get_class_base_name() . '-description">' . check_markup($item->description, 'full_html') . '</div>';
+        }
+
+        $this->markup .= '</span>';
+      }
+      $this->markup .= '</div>';
+    }
+    elseif ($this->list_as == self::AS_ACCORDIAN) {
+      $this->markup .= '<div class="' . $this->get_class_base_name() . '-list list-as_accordian">';
+      foreach ($this->processed as $item) {
+        $this->markup .= '<div class="' . $this->get_class_base_name() . '-list_item">';
+        $this->markup .= '<div class="' . $this->get_class_base_name() . '-name">' . check_plain($item->name) . '</div>';
+
+        if ($this->use_description) {
+          $this->markup .= '<div class="' . $this->get_class_base_name() . '-description">' . check_markup($item->description, 'full_html') . '</div>';
+        }
+
+        $this->markup .= '</div>';
+      }
+      $this->markup .= '</div>';
+    }
+
+    $this->markup .= $this->build_pager($page, $per_page);
+
+    return TRUE;
   }
 }
 
