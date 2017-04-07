@@ -166,14 +166,14 @@ class mcneese_catalog_class_programs extends mcneese_catalog_class_base {
 
       // the degree types are not a distinct group, but are stored within programs.
       // filter out these for separate storage in a more efficient manner.
-      if (property_exists($item, 'degree-types') && is_array($item->{'degree-types'})) {
-        $entry->degree_types = process_data_degree_types($item->{'degree-types'});
+      if (property_exists($item, 'degree_types') && is_array($item->{'degree_types'})) {
+        $entry->degree_types = $this->process_data_degree_types($item->{'degree_types'});
       }
 
       // the program types are not a distinct group, but are stored within programs.
       // filter out these for separate storage in a more efficient manner.
-      if (property_exists($item, 'program-types') && is_array($item->{'program-types'})) {
-        $entry->program_types = process_data_program_types($item->{'program-types'});
+      if (property_exists($item, 'program_types') && is_array($item->{'program_types'})) {
+        $entry->program_types = $this->process_data_program_types($item->{'program_types'});
       }
 
       $this->processed[] = $entry;
@@ -301,103 +301,107 @@ class mcneese_catalog_class_programs extends mcneese_catalog_class_base {
 
 
       // cache the degree types.
-      foreach ($this->processed_degree_types as $item) {
-        $arguments = array();
-        $arguments[':id'] = $item->id;
+      if (is_array($this->processed_degree_types)) {
+        foreach ($this->processed_degree_types as $item) {
+          $arguments = array();
+          $arguments[':id'] = $item->id;
 
-        $name_string = NULL;
-        $placeholder_string = NULL;
-        $update_string = NULL;
+          $name_string = NULL;
+          $placeholder_string = NULL;
+          $update_string = NULL;
 
-        $item_array = (array) $item;
-        unset($item_array['id']);
+          $item_array = (array) $item;
+          unset($item_array['id']);
 
-        $name_string = 'id';
-        $placeholder_string = ':id';
+          $name_string = 'id';
+          $placeholder_string = ':id';
 
-        foreach (array_keys($item_array) as $key_name) {
-          $arguments[':' . $key_name] = $item->{$key_name};
+          foreach (array_keys($item_array) as $key_name) {
+            $arguments[':' . $key_name] = $item->{$key_name};
 
-          $name_string .= ', ' . $key_name;
-          $placeholder_string .= ', :' . $key_name;
-        }
-        unset($item_array);
+            $name_string .= ', ' . $key_name;
+            $placeholder_string .= ', :' . $key_name;
+          }
+          unset($item_array);
 
-        $on_conflict_field_names = implode(', ', $this->on_conflict_fields_degree_types);
+          $on_conflict_field_names = implode(', ', $this->on_conflict_fields_degree_types);
 
-        $on_conflict_fields_conditions = NULL;
-        foreach ($this->on_conflict_fields_degree_types as $field) {
-          if (!is_null($on_conflict_fields_conditions)) {
-            $on_conflict_fields_conditions .= ' and ';
+          $on_conflict_fields_conditions = NULL;
+          foreach ($this->on_conflict_fields_degree_types as $field) {
+            if (!is_null($on_conflict_fields_conditions)) {
+              $on_conflict_fields_conditions .= ' and ';
+            }
+
+            $on_conflict_fields_conditions .= '{' . $this->table_degree_types . '}.' . $field . ' = :' . $field;
           }
 
-          $on_conflict_fields_conditions .= '{' . $this->table_degree_types . '}.' . $field . ' = :' . $field;
-        }
+          $query_string = 'insert into {' . $this->table_degree_types . '} (';
+          $query_string .= $name_string;
+          $query_string .= ') values (';
+          $query_string .= $placeholder_string;
+          $query_string .= ') on conflict (' . $on_conflict_field_names . ') do update set (' . $name_string . ') = (' . $placeholder_string . ') ' . ' where ' . $on_conflict_fields_conditions;
 
-        $query_string = 'insert into {' . $this->table_degree_types . '} (';
-        $query_string .= $name_string;
-        $query_string .= ') values (';
-        $query_string .= $placeholder_string;
-        $query_string .= ') on conflict (' . $on_conflict_field_names . ') do update set (' . $name_string . ') = (' . $placeholder_string . ') ' . ' where ' . $on_conflict_fields_conditions;
+          db_query($query_string, $arguments);
 
-        db_query($query_string, $arguments);
-
-        if (is_int($item->catalog_id) && is_int($item->legacy_id)) {
-          db_query('update {' . self::CACHE_TABLE . '} set updated = :updated, catalog_id = :catalog_id, legacy_id = :legacy_id where name = :cache_name', array(':updated' => REQUEST_TIME, ':cache_name' => $this->cache_name_degree_type, ':catalog_id' => $this->catalog_id, ':legacy_id' => $this->legacy_id));
-        }
-        else {
-          db_query('update {' . self::CACHE_TABLE . '} set updated = :updated where name = :cache_name', array(':updated' => REQUEST_TIME, ':cache_name' => $this->cache_name_degree_type));
+          if (is_int($item->catalog_id) && is_int($item->legacy_id)) {
+            db_query('update {' . self::CACHE_TABLE . '} set updated = :updated, catalog_id = :catalog_id, legacy_id = :legacy_id where name = :cache_name', array(':updated' => REQUEST_TIME, ':cache_name' => $this->cache_name_degree_type, ':catalog_id' => $this->catalog_id, ':legacy_id' => $this->legacy_id));
+          }
+          else {
+            db_query('update {' . self::CACHE_TABLE . '} set updated = :updated where name = :cache_name', array(':updated' => REQUEST_TIME, ':cache_name' => $this->cache_name_degree_type));
+          }
         }
       }
 
 
       // cache the program types.
-      foreach ($this->processed_program_types as $item) {
-        $arguments = array();
-        $arguments[':id'] = $item->id;
+      if (is_array($this->processed_program_types)) {
+        foreach ($this->processed_program_types as $item) {
+          $arguments = array();
+          $arguments[':id'] = $item->id;
 
-        $name_string = NULL;
-        $placeholder_string = NULL;
-        $update_string = NULL;
+          $name_string = NULL;
+          $placeholder_string = NULL;
+          $update_string = NULL;
 
-        $item_array = (array) $item;
-        unset($item_array['id']);
+          $item_array = (array) $item;
+          unset($item_array['id']);
 
-        $name_string = 'id';
-        $placeholder_string = ':id';
+          $name_string = 'id';
+          $placeholder_string = ':id';
 
-        foreach (array_keys($item_array) as $key_name) {
-          $arguments[':' . $key_name] = $item->{$key_name};
+          foreach (array_keys($item_array) as $key_name) {
+            $arguments[':' . $key_name] = $item->{$key_name};
 
-          $name_string .= ', ' . $key_name;
-          $placeholder_string .= ', :' . $key_name;
-        }
-        unset($item_array);
+            $name_string .= ', ' . $key_name;
+            $placeholder_string .= ', :' . $key_name;
+          }
+          unset($item_array);
 
-        $on_conflict_field_names = implode(', ', $this->on_conflict_fields_program_types);
+          $on_conflict_field_names = implode(', ', $this->on_conflict_fields_program_types);
 
-        $on_conflict_fields_conditions = NULL;
-        foreach ($this->on_conflict_fields_program_types as $field) {
-          if (!is_null($on_conflict_fields_conditions)) {
-            $on_conflict_fields_conditions .= ' and ';
+          $on_conflict_fields_conditions = NULL;
+          foreach ($this->on_conflict_fields_program_types as $field) {
+            if (!is_null($on_conflict_fields_conditions)) {
+              $on_conflict_fields_conditions .= ' and ';
+            }
+
+            $on_conflict_fields_conditions .= '{' . $this->table_program_types . '}.' . $field . ' = :' . $field;
           }
 
-          $on_conflict_fields_conditions .= '{' . $this->table_program_types . '}.' . $field . ' = :' . $field;
-        }
+          $query_string = 'insert into {' . $this->table_program_types . '} (';
+          $query_string .= $name_string;
+          $query_string .= ') values (';
+          $query_string .= $placeholder_string;
+          $query_string .= ') on conflict (' . $on_conflict_field_names . ') do update set (' . $name_string . ') = (' . $placeholder_string . ') ' . ' where ' . $on_conflict_fields_conditions;
 
-        $query_string = 'insert into {' . $this->table_program_types . '} (';
-        $query_string .= $name_string;
-        $query_string .= ') values (';
-        $query_string .= $placeholder_string;
-        $query_string .= ') on conflict (' . $on_conflict_field_names . ') do update set (' . $name_string . ') = (' . $placeholder_string . ') ' . ' where ' . $on_conflict_fields_conditions;
+          db_query($query_string, $arguments);
 
-        db_query($query_string, $arguments);
-
-        if (is_int($item->catalog_id) && is_int($item->legacy_id)) {
-          db_query('update {' . self::CACHE_TABLE . '} set updated = :updated, catalog_id = :catalog_id, legacy_id = :legacy_id where name = :cache_name', array(':updated' => REQUEST_TIME, ':cache_name' => $this->cache_name_program_type, ':catalog_id' => $this->catalog_id, ':legacy_id' => $this->legacy_id));
-        }
-        else {
-          db_query('update {' . self::CACHE_TABLE . '} set updated = :updated where name = :cache_name', array(':updated' => REQUEST_TIME, ':cache_name' => $this->cache_name_program_type));
+          if (is_int($item->catalog_id) && is_int($item->legacy_id)) {
+            db_query('update {' . self::CACHE_TABLE . '} set updated = :updated, catalog_id = :catalog_id, legacy_id = :legacy_id where name = :cache_name', array(':updated' => REQUEST_TIME, ':cache_name' => $this->cache_name_program_type, ':catalog_id' => $this->catalog_id, ':legacy_id' => $this->legacy_id));
+          }
+          else {
+            db_query('update {' . self::CACHE_TABLE . '} set updated = :updated where name = :cache_name', array(':updated' => REQUEST_TIME, ':cache_name' => $this->cache_name_program_type));
+          }
         }
       }
     }
@@ -578,7 +582,7 @@ class mcneese_catalog_class_programs extends mcneese_catalog_class_base {
       }
 
       // require the order id.
-      if (!property_exists($item, 'order-id') || !is_numeric($item->{'order-id'}))  {
+      if (!property_exists($item, 'order') || !is_numeric($item->{'order'}))  {
         continue;
       }
 
@@ -587,18 +591,18 @@ class mcneese_catalog_class_programs extends mcneese_catalog_class_base {
         continue;
       }
 
-      // require the url to exist and be non-empty.
-      if (empty($item->url) || !is_string($item->url)) {
+      // the status object must exists
+      if (!property_exists($item, 'status') || !is_object($item->status)) {
         continue;
       }
 
       // ignore invisible items.
-      if (property_exists($item, 'visible') && !$item->visible) {
+      if (property_exists($item->status, 'visible') && !$item->status->visible) {
         continue;
       }
 
       // ignore inactive items.
-      if (property_exists($item, 'active') && !$item->active) {
+      if (property_exists($item->status, 'active') && !$item->status->active) {
         continue;
       }
 
@@ -606,10 +610,9 @@ class mcneese_catalog_class_programs extends mcneese_catalog_class_base {
       $entry->id = (int) $item->id;
       $entry->catalog_id = $item->{'catalog-id'};
       $entry->legacy_id = (int) $item->{'legacy-id'};
-      $entry->order_id = (int) $item->{'order-id'};
+      $entry->order_id = (int) $item->{'order'};
 
       $entry->name = $item->name;
-      $entry->url = substr($item->url, 0, 256);
 
       $entry->description = '';
       if (property_exists($item, 'description') && is_string($item->description)) {
@@ -692,7 +695,7 @@ class mcneese_catalog_class_programs extends mcneese_catalog_class_base {
       }
 
       // require the order id.
-      if (!property_exists($item, 'order-id') || !is_numeric($item->{'order-id'}))  {
+      if (!property_exists($item, 'order') || !is_numeric($item->{'order'}))  {
         continue;
       }
 
@@ -701,18 +704,18 @@ class mcneese_catalog_class_programs extends mcneese_catalog_class_base {
         continue;
       }
 
-      // require the url to exist and be non-empty.
-      if (empty($item->url) || !is_string($item->url)) {
+      // the status object must exists
+      if (!property_exists($item, 'status') || !is_object($item->status)) {
         continue;
       }
 
       // ignore invisible items.
-      if (property_exists($item, 'visible') && !$item->visible) {
+      if (property_exists($item->status, 'visible') && !$item->status->visible) {
         continue;
       }
 
       // ignore inactive items.
-      if (property_exists($item, 'active') && !$item->active) {
+      if (property_exists($item->status, 'active') && !$item->status->active) {
         continue;
       }
 
@@ -720,10 +723,9 @@ class mcneese_catalog_class_programs extends mcneese_catalog_class_base {
       $entry->id = (int) $item->id;
       $entry->catalog_id = $item->{'catalog-id'};
       $entry->legacy_id = (int) $item->{'legacy-id'};
-      $entry->order_id = (int) $item->{'order-id'};
+      $entry->order_id = (int) $item->{'order'};
 
       $entry->name = $item->name;
-      $entry->url = substr($item->url, 0, 256);
 
       $entry->description = '';
       if (property_exists($item, 'description') && is_string($item->description)) {
