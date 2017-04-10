@@ -344,10 +344,10 @@ class mcneese_catalog_class_programs extends mcneese_catalog_class_base {
           db_query($query_string, $arguments);
 
           if (is_int($item->catalog_id) && is_int($item->legacy_id)) {
-            db_query('update {' . self::CACHE_TABLE . '} set updated = :updated, catalog_id = :catalog_id, legacy_id = :legacy_id where name = :cache_name', array(':updated' => REQUEST_TIME, ':cache_name' => $this->cache_name_degree_type, ':catalog_id' => $this->catalog_id, ':legacy_id' => $this->legacy_id));
+            db_query('update {' . self::CACHE_TABLE . '} set updated = :updated, catalog_id = :catalog_id, legacy_id = :legacy_id where name = :cache_name', array(':updated' => REQUEST_TIME, ':cache_name' => $this->cache_name_degree_types, ':catalog_id' => $this->catalog_id, ':legacy_id' => $this->legacy_id));
           }
           else {
-            db_query('update {' . self::CACHE_TABLE . '} set updated = :updated where name = :cache_name', array(':updated' => REQUEST_TIME, ':cache_name' => $this->cache_name_degree_type));
+            db_query('update {' . self::CACHE_TABLE . '} set updated = :updated where name = :cache_name', array(':updated' => REQUEST_TIME, ':cache_name' => $this->cache_name_degree_types));
           }
         }
       }
@@ -397,10 +397,10 @@ class mcneese_catalog_class_programs extends mcneese_catalog_class_base {
           db_query($query_string, $arguments);
 
           if (is_int($item->catalog_id) && is_int($item->legacy_id)) {
-            db_query('update {' . self::CACHE_TABLE . '} set updated = :updated, catalog_id = :catalog_id, legacy_id = :legacy_id where name = :cache_name', array(':updated' => REQUEST_TIME, ':cache_name' => $this->cache_name_program_type, ':catalog_id' => $this->catalog_id, ':legacy_id' => $this->legacy_id));
+            db_query('update {' . self::CACHE_TABLE . '} set updated = :updated, catalog_id = :catalog_id, legacy_id = :legacy_id where name = :cache_name', array(':updated' => REQUEST_TIME, ':cache_name' => $this->cache_name_program_types, ':catalog_id' => $this->catalog_id, ':legacy_id' => $this->legacy_id));
           }
           else {
-            db_query('update {' . self::CACHE_TABLE . '} set updated = :updated where name = :cache_name', array(':updated' => REQUEST_TIME, ':cache_name' => $this->cache_name_program_type));
+            db_query('update {' . self::CACHE_TABLE . '} set updated = :updated where name = :cache_name', array(':updated' => REQUEST_TIME, ':cache_name' => $this->cache_name_program_types));
           }
         }
       }
