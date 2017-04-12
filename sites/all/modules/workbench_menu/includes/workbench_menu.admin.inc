@@ -1098,14 +1098,14 @@ function theme_workbench_menu_admin_settings_form($element) {
 
     if ($disabled) {
       $depth = 0;
-      $name = $item['item']->human_name;
+      $name = check_plain($item['item']->human_name);
     }
     else  {
       $depth = &$nested_item['#depth'];
       $row['class'][] = 'draggable';
 
       if (property_exists($item['item'], 'human_name')) {
-        $name = theme('indentation', array('size' => $depth)) . $item['item']->human_name;
+        $name = theme('indentation', array('size' => $depth)) . check_plain($item['item']->human_name);
       }
     }
 
@@ -1115,7 +1115,7 @@ function theme_workbench_menu_admin_settings_form($element) {
 
     if (!empty($item['item']->item_type)) {
       $value = array_pop($item['item']->item_type);
-      $type = $value->human_name;
+      $type = check_plain($value->human_name);
 
       if (!$disabled) {
         if ($value->machine_name == 'item_menu' || $value->machine_name == 'item_menu_item') {
