@@ -662,16 +662,28 @@ function mcneese_catalog_initialize_pages(&$catalog) {
  *
  * @param bool $use_description
  *   (optional) Enabled/Disable displaying the course description.
+ * @param bool $custom_title
+ *   (optional) When TRUE, a custom page title is specified.
+ *   When FALSE, the page title is left alone
  */
-function mcneese_catalog_render_courses($use_descrition = FALSE) {
+function mcneese_catalog_render_courses($use_descrition = FALSE, $custom_title = FALSE) {
   $success = FALSE;
   $catalog = NULL;
   $courses = NULL;
   $markup = '';
 
+  if (!is_bool($custom_title)) {
+    $custom_title = FALSE;
+  }
+
   $title = mcneese_catalog_get_catalog_as_title($catalog);
-  if (is_string($title)) {
-    drupal_set_title($title . ' - Courses');
+  if ($custom_title) {
+    if (is_string($title)) {
+      drupal_set_title($title . ' - Courses');
+      $success = TRUE;
+    }
+  }
+  else {
     $success = TRUE;
   }
 
@@ -700,16 +712,28 @@ function mcneese_catalog_render_courses($use_descrition = FALSE) {
  *
  * @param bool $use_description
  *   (optional) Enabled/Disable displaying the course description.
+ * @param bool $custom_title
+ *   (optional) When TRUE, a custom page title is specified.
+ *   When FALSE, the page title is left alone
  */
-function mcneese_catalog_render_filters($use_descrition = FALSE) {
+function mcneese_catalog_render_filters($use_descrition = FALSE, $custom_title = FALSE) {
   $success = FALSE;
   $catalog = NULL;
   $filters = NULL;
   $markup = '';
 
+  if (!is_bool($custom_title)) {
+    $custom_title = FALSE;
+  }
+
   $title = mcneese_catalog_get_catalog_as_title($catalog);
-  if (is_string($title)) {
-    drupal_set_title($title . ' - Filters');
+  if ($custom_title) {
+    if (is_string($title)) {
+      drupal_set_title($title . ' - Filters');
+      $success = TRUE;
+    }
+  }
+  else {
     $success = TRUE;
   }
 
@@ -738,16 +762,28 @@ function mcneese_catalog_render_filters($use_descrition = FALSE) {
  *
  * @param bool $use_description
  *   (optional) Enabled/Disable displaying the course description.
+ * @param bool $custom_title
+ *   (optional) When TRUE, a custom page title is specified.
+ *   When FALSE, the page title is left alone
  */
-function mcneese_catalog_render_programs($use_descrition = FALSE) {
+function mcneese_catalog_render_programs($use_descrition = FALSE, $custom_title = FALSE) {
   $success = FALSE;
   $catalog = NULL;
   $programs = NULL;
   $markup = '';
 
+  if (!is_bool($custom_title)) {
+    $custom_title = FALSE;
+  }
+
   $title = mcneese_catalog_get_catalog_as_title($catalog);
-  if (is_string($title)) {
-    drupal_set_title($title . ' - Programs');
+  if ($custom_title) {
+    if (is_string($title)) {
+      drupal_set_title($title . ' - Programs');
+      $success = TRUE;
+    }
+  }
+  else {
     $success = TRUE;
   }
 
@@ -776,16 +812,28 @@ function mcneese_catalog_render_programs($use_descrition = FALSE) {
  *
  * @param bool $use_description
  *   (optional) Enabled/Disable displaying the course description.
+ * @param bool $custom_title
+ *   (optional) When TRUE, a custom page title is specified.
+ *   When FALSE, the page title is left alone
  */
-function mcneese_catalog_render_hierachies($use_descrition = FALSE) {
+function mcneese_catalog_render_hierachies($use_descrition = FALSE, $custom_title = FALSE) {
   $success = FALSE;
   $catalog = NULL;
   $hierachies = NULL;
   $markup = '';
 
+  if (!is_bool($custom_title)) {
+    $custom_title = FALSE;
+  }
+
   $title = mcneese_catalog_get_catalog_as_title($catalog);
-  if (is_string($title)) {
-    drupal_set_title($title . ' - Hierarchies');
+  if ($custom_title) {
+    if (is_string($title)) {
+      drupal_set_title($title . ' - Hierarchies');
+      $success = TRUE;
+    }
+  }
+  else {
     $success = TRUE;
   }
 
@@ -814,16 +862,28 @@ function mcneese_catalog_render_hierachies($use_descrition = FALSE) {
  *
  * @param bool $use_description
  *   (optional) Enabled/Disable displaying the course description.
+ * @param bool $custom_title
+ *   (optional) When TRUE, a custom page title is specified.
+ *   When FALSE, the page title is left alone
  */
-function mcneese_catalog_render_pages($use_descrition = FALSE) {
+function mcneese_catalog_render_pages($use_descrition = FALSE, $custom_title = FALSE) {
   $success = FALSE;
   $catalog = NULL;
   $pages = NULL;
   $markup = '';
 
+  if (!is_bool($custom_title)) {
+    $custom_title = FALSE;
+  }
+
   $title = mcneese_catalog_get_catalog_as_title($catalog);
-  if (is_string($title)) {
-    drupal_set_title($title . ' - Pages');
+  if ($custom_title) {
+    if (is_string($title)) {
+      drupal_set_title($title . ' - Pages');
+      $success = TRUE;
+    }
+  }
+  else {
     $success = TRUE;
   }
 
