@@ -900,6 +900,19 @@ function mcneese_catalog_workbench_menu_admin_item_settings_form_settings_alter(
     $parameters['form']['catalog_show_invisible']['#default_value'] = $parameters['defaults']['properties']['catalog_show_invisible'];
   }
 
+  $parameters['form']['catalog_as_link'] = array(
+    '#type' => 'select',
+    '#title' => 'Catalog Display as Link',
+    '#options' => array(FALSE => 'No', TRUE => 'Yes'),
+    '#default_value' => FALSE,
+    '#description' => 'Specify whether or not to show catalog wrapping entry as a link.',
+    '#dependency' => array('edit-settings-item-type' => array('item_mcneese_catalog')),
+  );
+
+  if (isset($parameters['defaults']['properties']['catalog_as_link'])) {
+    $parameters['form']['catalog_as_link']['#default_value'] = $parameters['defaults']['properties']['catalog_as_link'];
+  }
+
   /*
   $parameters['form']['catalog_range_start'] = array(
     '#type' => 'numberfield',
@@ -974,7 +987,7 @@ function mcneese_catalog_workbench_menu_admin_item_settings_edit_form_submit_alt
     return;
   }
 
-  foreach (array('catalog_categories', 'catalog_range_start', 'catalog_range_stop', 'catalog_show_invisible') as $property) {
+  foreach (array('catalog_categories', 'catalog_range_start', 'catalog_range_stop', 'catalog_show_invisible', 'catalog_as_link') as $property) {
     if (isset($parameters['form_state']['values']['settings'][$property])) {
       $parameters['properties'][$property] = &$parameters['form_state']['values']['settings'][$property];
     }
@@ -999,6 +1012,11 @@ function mcneese_catalog_workbench_menu_build_menu_item_alter($parameters) {
   if (!isset($item->properties['catalog_categories'])) {
     // @todo: provide a watchdog warning here.
     $item->properties['catalog_categories'] = 'catalogs';
+  }
+
+  $wrapper_as_link = FALSE;
+  if (isset($item->properties['catalog_as_link']) && $item->properties['catalog_as_link'] == 1) {
+    $wrapper_as_link = TRUE;
   }
 
   try {
@@ -1039,7 +1057,7 @@ function mcneese_catalog_workbench_menu_build_menu_item_alter($parameters) {
         $parameters['settings']['clickable'] = TRUE;
       }
     }
-    else {
+    elseif ($wrapper_as_link) {
       $parameters['settings']['prefix'] .= '<div class="' . 'menu_item-icon ' . 'menu_item-icon_external"></div>';
       $parameters['settings']['attributes']['title'] = array(t("This links to the external website: !remote_url.", array('!remote_url' => mcneese_catalog_class_base::BASE_URL)));
 
