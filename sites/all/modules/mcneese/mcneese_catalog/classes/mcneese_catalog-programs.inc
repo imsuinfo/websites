@@ -284,7 +284,7 @@ class mcneese_catalog_class_programs extends mcneese_catalog_class_base {
     $expired = FALSE;
     if ($check_expire) {
       try {
-        $last_updated = db_query('select updated from {' . self::CACHE_TABLE_DEGREE_TYPES . '} where name = :cache_name', array(':cache_name' => $this->cache_name_degree_types))->fetchField();
+        $last_updated = db_query('select updated from {' . self::CACHE_TABLE . '} where name = :cache_name', array(':cache_name' => $this->cache_name_degree_types))->fetchField();
 
         if (is_null($last_updated)) {
           $expired = TRUE;
@@ -394,7 +394,7 @@ class mcneese_catalog_class_programs extends mcneese_catalog_class_base {
     $expired = FALSE;
     if ($check_expire) {
       try {
-        $last_updated = db_query('select updated from {' . self::CACHE_TABLE_PROGRAM_TYPES . '} where name = :cache_name', array(':cache_name' => $this->cache_name_program_types))->fetchField();
+        $last_updated = db_query('select updated from {' . self::CACHE_TABLE . '} where name = :cache_name', array(':cache_name' => $this->cache_name_program_types))->fetchField();
 
         if (is_null($last_updated)) {
           $expired = TRUE;
