@@ -11,6 +11,7 @@
  */
 
 class mcneese_catalog_class_programs extends mcneese_catalog_class_base {
+  const BASE_URL_PROGRAM = '/preview_program.php';
   const CACHE_TABLE_DEGREE_TYPES  = 'mcneese_catalog_degree_types';
   const CACHE_TABLE_PROGRAM_TYPES  = 'mcneese_catalog_program_types';
 
@@ -863,12 +864,11 @@ class mcneese_catalog_class_programs extends mcneese_catalog_class_base {
         }
 
         $this->markup .= '<li class="' . $this->get_class_base_name() . '-list_item">';
-        $this->markup .= '<div class="' . $this->get_class_base_name() . '-name">' . check_plain($item->name) . $code . '</div>';
+        $this->markup .= '<a href="//' . self::BASE_URL . self::BASE_URL_PROGRAM . '?catoid=' . ((int) $this->legacy_id) . '&poid=' . ((int) $item->legacy_id) . '" class="' . $this->get_class_base_name() . '-name">' . check_plain($item->name) . $code . '</a>';
 
         if ($this->use_description) {
           $this->markup .= '<div class="' . $this->get_class_base_name() . '-description">' . check_markup($item->description, 'full_html') . '</div>';
         }
-
         $this->markup .= '</li>';
       }
       $this->markup .= '</ul>';
@@ -882,12 +882,11 @@ class mcneese_catalog_class_programs extends mcneese_catalog_class_base {
         }
 
         $this->markup .= '<div class="' . $this->get_class_base_name() . '-list_item">';
-        $this->markup .= '<div class="' . $this->get_class_base_name() . '-name">' . check_plain($item->name) . $code . '</div>';
+        $this->markup .= '<a href="//' . self::BASE_URL . self::BASE_URL_PROGRAM . '?catoid=' . ((int) $this->legacy_id) . '&poid=' . ((int) $item->legacy_id) . '" class="' . $this->get_class_base_name() . '-name">' . check_plain($item->name) . $code . '</a>';
 
         if ($this->use_description) {
           $this->markup .= '<div class="' . $this->get_class_base_name() . '-description">' . check_markup($item->description, 'full_html') . '</div>';
         }
-
         $this->markup .= '</div>';
       }
       $this->markup .= '</div>';
@@ -901,12 +900,11 @@ class mcneese_catalog_class_programs extends mcneese_catalog_class_base {
         }
 
         $this->markup .= '<span class="' . $this->get_class_base_name() . '-list_item">';
-        $this->markup .= '<div class="' . $this->get_class_base_name() . '-name">' . check_plain($item->name) . $code . '</div>';
+        $this->markup .= '<a href="//' . self::BASE_URL . self::BASE_URL_PROGRAM . '?catoid=' . ((int) $this->legacy_id) . '&poid=' . ((int) $item->legacy_id) . '" class="' . $this->get_class_base_name() . '-name">' . check_plain($item->name) . $code . '</a>';
 
         if ($this->use_description) {
           $this->markup .= '<div class="' . $this->get_class_base_name() . '-description">' . check_markup($item->description, 'full_html') . '</div>';
         }
-
         $this->markup .= '</span>';
       }
       $this->markup .= '</div>';
@@ -920,7 +918,7 @@ class mcneese_catalog_class_programs extends mcneese_catalog_class_base {
         }
 
         $this->markup .= '<div class="' . $this->get_class_base_name() . '-list_item">';
-        $this->markup .= '<div class="' . $this->get_class_base_name() . '-name">' . check_plain($item->name) . $code . '</div>';
+        $this->markup .= '<a href="//' . self::BASE_URL . self::BASE_URL_PROGRAM . '?catoid=' . ((int) $this->legacy_id) . '&poid=' . ((int) $item->legacy_id) . '" class="' . $this->get_class_base_name() . '-name">' . check_plain($item->name) . $code . '</a>';
 
         if ($this->use_description) {
           $this->markup .= '<div class="' . $this->get_class_base_name() . '-description">' . check_markup($item->description, 'full_html') . '</div>';
