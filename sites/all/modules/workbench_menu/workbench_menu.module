@@ -1216,7 +1216,8 @@ function workbench_menu_build_menu_item($menu, $item, &$variables) {
       else {
         $link_path = $item['item']->properties['url'];
 
-        if (valid_url($link_path, TRUE)) {
+
+        if (valid_url($link_path, TRUE) || (preg_match('@^//[^/]@', $link_path) > 0 && valid_url('http:' . $link_path, TRUE))) {
           $parsed_url = parse_url($link_path);
           $remote_url = check_plain($parsed_url['host']);
 
@@ -1343,7 +1344,7 @@ function workbench_menu_build_menu_item($menu, $item, &$variables) {
       $link_path = $item['item']->properties['file'];
       $filename = check_plain(rawurldecode(basename($link_path)));
 
-      if (valid_url($link_path, TRUE)) {
+      if (valid_url($link_path, TRUE) || (preg_match('@^//[^/]@', $link_path) > 0 && valid_url('http:' . $link_path, TRUE))) {
         $parsed_url = parse_url($link_path);
         $remote_url = check_plain($parsed_url['host']);
 
