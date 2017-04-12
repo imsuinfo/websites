@@ -15,6 +15,85 @@
  */
 
 /**
+ * Loads a catalog page by its legacy id from the latest catalog.
+ *
+ * @param int $id
+ *   The catalog id.
+ *
+ * @return array
+ *   An array containing the page information.
+ *   An empty array is returned on error.
+ */
+function mcneese_catalog_load_page($id) {
+  if (!is_int($id)) {
+    return array();
+  }
+
+  $catalogs = new mcneese_catalog_class_catalogs();
+  $catalogs->load();
+  $catalog_id = $catalogs->get_catalog_id();
+  $legacy_id = $catalogs->get_legacy_id();
+  unset($catalogs);
+
+  $pages = new mcneese_catalog_class_pages($catalog_id, $legacy_id);
+  $pages->load();
+
+  $item = $pages->get_item($id, TRUE);
+  if (is_object($item)) {
+    return $item;
+  }
+
+  return array();
+}
+
+/**
+ * Renders a catalog page by its legacy id from the latest catalog.
+ *
+ * @param int $id
+ *   The catalog id.
+ * @param bool $update_title
+ *   (optional) When TRUE, the page title is updated.
+ *   When FALSE, no changes are made to the page title.
+ * @param string $markup
+ *   (optional) The markup processing format as used by check_markup().
+ *
+ * @return bool
+ *   TRUE on succes, FALSE otherwise
+ *
+ * @see: check_markup()
+ */
+function mcneese_catalog_render_page($id, $update_title = TRUE, $markup = 'full_html') {
+  if (!is_bool($update_title)) {
+    $update_title = TRUE;
+  }
+
+  if (!is_string($markup)) {
+    $markup = 'full_html';
+  }
+
+  // General Information is currently using the legacy id 1751.
+  $page = mcneese_catalog_load_page($id);
+
+  if (!is_object($page)) {
+    return FALSE;
+  }
+
+  if ($update_title && isset($page->name) && is_string($page->name)) {
+    // drupal_set_title() perform sanitization by default.
+    drupal_set_title($page->name);
+  }
+
+  if (isset($page->description) && is_string($page->description)) {
+    print(check_markup($page->description, $markup));
+  }
+  else {
+    return FALSE;
+  }
+
+  return TRUE;
+}
+
+/**
  * Loads and returns the current catalog string markup.
  *
  * @param mcneese_catalog_class_catalogs|null &$catalog
@@ -1157,22 +1236,25 @@ function mcneese_catalog_load_all($check_expire = TRUE, $force = FALSE) {
   $transaction = db_transaction();
   try {
     $results['catalog'] = new mcneese_catalog_class_catalogs();
-    $results['catalog']->load_all($check_expire, $force);
+    $results['catalog']->load($check_expire, $force);
 
-    $results['courses'] = new mcneese_catalog_class_courses(FALSE, FALSE);
-    $results['courses']->load_all($check_expire, $force);
+    $catalog_id = $results['catalog']->get_catalog_id();
+    $legacy_id = $results['catalog']->get_legacy_id();
 
-    $results['programs'] = new mcneese_catalog_class_programs(FALSE, FALSE);
-    $results['programs']->load_all($check_expire, $force);
+    $results['courses'] = new mcneese_catalog_class_courses($catalog_id, $legacy_id);
+    $results['courses']->load($check_expire, $force);
 
-    $results['hierarchies'] = new mcneese_catalog_class_hierarchies(FALSE, FALSE);
-    $results['hierarchies']->load_all($check_expire, $force);
+    $results['programs'] = new mcneese_catalog_class_programs($catalog_id, $legacy_id);
+    $results['programs']->load($check_expire, $force);
 
-    $results['filters'] = new mcneese_catalog_class_filters(FALSE, FALSE);
-    $results['filters']->load_all($check_expire, $force);
+    $results['hierarchies'] = new mcneese_catalog_class_hierarchies($catalog_id, $legacy_id);
+    $results['hierarchies']->load($check_expire, $force);
 
-    $results['pages'] = new mcneese_catalog_class_pages(FALSE, FALSE);
-    $results['pages']->load_all($check_expire, $force);
+    $results['filters'] = new mcneese_catalog_class_filters($catalog_id, $legacy_id);
+    $results['filters']->load($check_expire, $force);
+
+    $results['pages'] = new mcneese_catalog_class_pages($catalog_id, $legacy_id);
+    $results['pages']->load($check_expire, $force);
   }
   catch (Exception $e) {
     $transaction->rollback();

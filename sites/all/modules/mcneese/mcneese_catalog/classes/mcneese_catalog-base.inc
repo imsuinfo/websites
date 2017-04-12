@@ -528,6 +528,60 @@ abstract class mcneese_catalog_class_base {
   }
 
   /**
+   * Loads the an entire item from the currently cached catalog.
+   *
+   * This does not check cache and will load nothing database cache is not populated.
+   *
+   * @param int $id
+   *   The item id.
+   * @param int $as_legacy_id
+   *   (optional) When TRUE, the provided id is the legacy id.
+   *   When FALSE, it is the normal id.
+   *
+   * @return array|bool
+   *   A description string on success.
+   *   FALSE is returned on error.
+   */
+  public function get_item($id, $as_legacy_id = FALSE) {
+    if (!is_int($this->catalog_id) || empty($this->table)) {
+      return FALSE;
+    }
+
+    if (!is_int($id) || !is_bool($as_legacy_id)) {
+      return FALSE;
+    }
+
+    try {
+      $query = db_select($this->table, 'mct');
+      $query->fields('mct');
+
+      if ($as_legacy_id) {
+        $query->condition('mct.legacy_id', $id);
+      }
+      else {
+        $query->condition('mct.id', $id);
+      }
+
+      $result = $query->execute()->fetchAll();
+      if (is_array($result)) {
+        if (empty($result)) {
+          return array();
+        }
+
+        return array_pop($result);
+      }
+    }
+    catch (Exception $e) {
+      // @todo
+    }
+    catch (Error $e) {
+      // @todo
+    }
+
+    return FALSE;
+  }
+
+  /**
    * Ensure that the markup is corrected and made more accessible.
    *
    * The caller should still call the appropraite check_markup() on output of markup fields.
