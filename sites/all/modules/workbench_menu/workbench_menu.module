@@ -856,14 +856,6 @@ function workbench_menu_build_menu_item($menu, $item, &$variables) {
   }
 
 
-  $alter_settings = array();
-  $alter_settings['menu'] = clone($menu);
-  $alter_settings['item'] = $item;
-  $alter_settings['settings'] = &$item_settings;
-  $alter_settings['active_path']= &$active_path;
-  $alter_settings['variables'] = &$variables;
-
-
   // menu item menus are other menus embedded inside the current menu.
   if ($item_settings['type'] == 'item_menu') {
     $field = & $item['item']->properties['menu'];
@@ -1415,6 +1407,19 @@ function workbench_menu_build_menu_item($menu, $item, &$variables) {
   $active_path['alias'] = drupal_get_path_alias($active_path['original']);
 
 
+  // allow external modules to make changes before processing any child elements and breadcrumbs.
+  $alter_settings = array();
+  $alter_settings['menu'] = clone($menu);
+  $alter_settings['item'] = &$item;
+  $alter_settings['structure'] = &$structure;
+  $alter_settings['settings'] = &$item_settings;
+  $alter_settings['active_path']= &$active_path;
+  $alter_settings['variables'] = &$variables;
+  $alter_settings['process_children'] = &$process_children;
+  $alter_settings['no_breadcrumb'] = &$no_breadcrumb;
+
+  drupal_alter(__FUNCTION__, $alter_settings);
+
 
   // @todo: include extra paths following active trail when building breadcrumb.
   // process breadcrumbs.
@@ -1521,9 +1526,6 @@ function workbench_menu_build_menu_item($menu, $item, &$variables) {
       }
     }
   }
-
-  // @todo: write the api for this alter function
-  drupal_alter(__FUNCTION__, $alter_settings);
 
   $built_menu['structure'] = $structure;
   $built_menu['settings'] = $settings;

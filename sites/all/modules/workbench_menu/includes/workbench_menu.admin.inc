@@ -1501,6 +1501,19 @@ function workbench_menu_admin_item_settings_form_settings($item, $menu) {
     $form['active_path']['#type'] = 'value';
   }
 
+
+  // provide a way for modules to edit custom item types.
+  $alter_settings = array(
+    'form' => &$form,
+    'item' => $item,
+    'item_id' => $item_id,
+    'menu' => $menu,
+    'defaults' => $defaults,
+    'available' => $available,
+  );
+
+  drupal_alter(__FUNCTION__, $alter_settings);
+
   return $form;
 }
 
@@ -2176,6 +2189,15 @@ function workbench_menu_admin_item_settings_edit_form_validate($form, &$form_sta
       }
       break;
   }
+
+
+  // provide a way for modules to validate custom item types.
+  $alter_settings = array(
+    'form' => $form,
+    'form_state' => &$form_state,
+  );
+
+  drupal_alter(__FUNCTION__, $alter_settings);
 }
 
 /**
@@ -2224,6 +2246,16 @@ function workbench_menu_admin_item_settings_edit_form_submit($form, &$form_state
       $settings['properties'][$property] = &$form_state['values']['settings'][$property];
     }
   }
+
+  // provide a way for modules to save custom item type properties.
+  $alter_settings = array(
+    'menu' => clone($menu),
+    'form' => $form,
+    'form_state' => &$form_state,
+    'properties' => &$settings['properties'],
+  );
+
+  drupal_alter(__FUNCTION__, $alter_settings);
 
   if (isset($form_state['values']['settings']['active_link_behavior'])) {
     $settings['properties']['never_suppress'] = FALSE;
