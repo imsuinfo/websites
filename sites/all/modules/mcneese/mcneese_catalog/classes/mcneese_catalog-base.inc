@@ -48,6 +48,8 @@ abstract class mcneese_catalog_class_base {
   protected $use_description = NULL;
   protected $use_search      = NULL;
 
+  protected $show_invisible = NULL;
+
   protected $list_as = NULL;
 
   /**
@@ -87,6 +89,8 @@ abstract class mcneese_catalog_class_base {
     $this->use_description = TRUE;
     $this->use_search      = FALSE;
 
+    $this->show_invisible = FALSE;
+
     $this->list_as = self::AS_LIST;
   }
 
@@ -116,6 +120,8 @@ abstract class mcneese_catalog_class_base {
 
     unset($this->use_description);
     unset($this->use_search);
+
+    unset($this->show_invisible);
 
     unset($this->list_as);
   }
@@ -260,7 +266,7 @@ abstract class mcneese_catalog_class_base {
    * @see: $this->load()
    */
   public function load_all($check_expire = TRUE, $force = FALSE) {
-    return $this->load($check_expire, $force, TRUE, 100);
+    return $this->load($check_expire, $force, TRUE, NULL, 100);
   }
 
   /**
@@ -363,6 +369,17 @@ abstract class mcneese_catalog_class_base {
   }
 
   /**
+   * Get the catalog path name.
+   *
+   * @return string|null
+   *   The path name string assigned to this class.
+   *   NULL is returned if no path name string is assigned.
+   */
+  public function get_path_name() {
+    return $this->path_name;
+  }
+
+  /**
    * Assign the use description boolean.
    *
    * @param bool $use_description
@@ -457,6 +474,57 @@ abstract class mcneese_catalog_class_base {
     }
 
     return $this->list_as;
+  }
+
+  /**
+   * Removes all data from the cache.
+   *
+   * Be sure to run this inside of a transaction.
+   *
+   * @return bool|null
+   *   TRUE on success, FALSE otherwise.
+   */
+  public function clear_cache_data() {
+    if (!is_string($this->table) || empty($this->table)) {
+      return FALSE;
+    }
+
+    if (!is_string($this->cache_name) || empty($this->cache_name)) {
+      return FALSE;
+    }
+
+    db_query('delete from {' . $this->table . '}');
+    db_query('update {' . self::CACHE_TABLE . '} set updated = NULL, catalog_id = NULL, legacy_id = NULL where name = :cache_name', array(':cache_name' => $this->cache_name));
+
+    return TRUE;
+  }
+
+  /**
+   * Assign show visibility setting.
+   *
+   * @param bool $show_invisible
+   *   Toggle loading of content with visible flag set to TRUE or FALSE.
+   */
+  public function set_show_invisible($show_invisible) {
+    if (!is_bool($show_invisible)) {
+      return;
+    }
+
+    $this->show_invisible = $show_invisible;
+  }
+
+  /**
+   * Get show visibility setting.
+   *
+   * @return bool
+   *   TRUE/FALSE of current show_invisible setting.
+   */
+  public function get_show_invisible($show_invisible) {
+    if (!is_bool($this->show_invisible)) {
+      $this->show_invisible = FALSE;
+    }
+
+    return $this->show_invisible;
   }
 
   /**
@@ -855,29 +923,6 @@ abstract class mcneese_catalog_class_base {
       throw $e;
       return FALSE;
     }
-
-    return TRUE;
-  }
-
-  /**
-   * Removes all data from the cache.
-   *
-   * Be sure to run this inside of a transaction.
-   *
-   * @return bool|null
-   *   TRUE on success, FALSE otherwise.
-   */
-  protected function clear_cache_data() {
-    if (!is_string($this->table) || empty($this->table)) {
-      return FALSE;
-    }
-
-    if (!is_string($this->cache_name) || empty($this->cache_name)) {
-      return FALSE;
-    }
-
-    db_query('delete from {' . $this->table . '}');
-    db_query('update {' . self::CACHE_TABLE . '} set updated = NULL, catalog_id = NULL where name = :cache_name', array(':cache_name' => $this->cache_name));
 
     return TRUE;
   }
