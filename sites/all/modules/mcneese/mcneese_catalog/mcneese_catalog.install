@@ -423,8 +423,8 @@ function mcneese_catalog_install() {
     if (module_exists('workbench_menu')) {
       $item_type[] = array(
         'machine_name' => 'item_mcneese_catalog',
-        'human_name' => $t("McNeese Catalog"),
-        'description' => $t("Represents content pulled from the McNeese Catalog."),
+        'human_name' => "McNeese Catalog",
+        'description' => "Represents content pulled from the McNeese Catalog.",
       );
 
       cf_db_options_add_options('workbench_menu', 'item_type', $item_type);
