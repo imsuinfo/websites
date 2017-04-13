@@ -2091,9 +2091,8 @@ function mcneese_catalog_auto_tags_process($text, $filter, $format, $langcode, $
       unset($$href);
     }
     elseif ($display_as == 'list') {
-      if (!$class->is_loaded()) {
-        $class->load($page, $per_page);
-      }
+      // always load list to apply current per-page setting.
+      $class->load(TRUE, FALSE, FALSE, $page, $per_page);
 
       // Note: The get_markup() function already sanitizes the markup, so do not call check_markup() here.
       $new_markup = $class->get_markup($page, $per_page, FALSE, $markup_type);

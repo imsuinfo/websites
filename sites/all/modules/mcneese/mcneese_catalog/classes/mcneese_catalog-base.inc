@@ -800,6 +800,10 @@ abstract class mcneese_catalog_class_base {
       $per_page = NULL;
     }
 
+    if (is_null($page)) {
+      $page = 0;
+    }
+
     if (!is_int($page) || $page < 0) {
       $per_page = NULL;
     }
