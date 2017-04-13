@@ -265,6 +265,114 @@ class mcneese_catalog_class_programs extends mcneese_catalog_class_base {
   }
 
   /**
+   * Loads the an entire degree type item from the currently cached catalog.
+   *
+   * This does not check cache and will load nothing database cache is not populated.
+   *
+   * @param int $id
+   *   The item id.
+   * @param int $as_legacy_id
+   *   (optional) When TRUE, the provided id is the legacy id.
+   *   When FALSE, it is the normal id.
+   *
+   * @return array|bool
+   *   A description string on success.
+   *   FALSE is returned on error.
+   */
+  public function get_item_degree_type($id, $as_legacy_id = FALSE) {
+    if (!is_int($this->catalog_id) || empty($this->table)) {
+      return FALSE;
+    }
+
+    if (!is_int($id) || !is_bool($as_legacy_id)) {
+      return FALSE;
+    }
+
+    try {
+      $query = db_select(self::CACHE_TABLE_DEGREE_TYPES, 'mct');
+      $query->fields('mct');
+
+      if ($as_legacy_id) {
+        $query->condition('mct.legacy_id', $id);
+      }
+      else {
+        $query->condition('mct.id', $id);
+      }
+
+      $result = $query->execute()->fetchAll();
+      if (is_array($result)) {
+        if (empty($result)) {
+          return array();
+        }
+
+        return array_pop($result);
+      }
+    }
+    catch (Exception $e) {
+      // @todo
+    }
+    catch (Error $e) {
+      // @todo
+    }
+
+    return FALSE;
+  }
+
+  /**
+   * Loads the an entire program type item from the currently cached catalog.
+   *
+   * This does not check cache and will load nothing database cache is not populated.
+   *
+   * @param int $id
+   *   The item id.
+   * @param int $as_legacy_id
+   *   (optional) When TRUE, the provided id is the legacy id.
+   *   When FALSE, it is the normal id.
+   *
+   * @return array|bool
+   *   A description string on success.
+   *   FALSE is returned on error.
+   */
+  public function get_item_program_type($id, $as_legacy_id = FALSE) {
+    if (!is_int($this->catalog_id) || empty($this->table)) {
+      return FALSE;
+    }
+
+    if (!is_int($id) || !is_bool($as_legacy_id)) {
+      return FALSE;
+    }
+
+    try {
+      $query = db_select(self::CACHE_TABLE_PROGRAM_TYPES, 'mct');
+      $query->fields('mct');
+
+      if ($as_legacy_id) {
+        $query->condition('mct.legacy_id', $id);
+      }
+      else {
+        $query->condition('mct.id', $id);
+      }
+
+      $result = $query->execute()->fetchAll();
+      if (is_array($result)) {
+        if (empty($result)) {
+          return array();
+        }
+
+        return array_pop($result);
+      }
+    }
+    catch (Exception $e) {
+      // @todo
+    }
+    catch (Error $e) {
+      // @todo
+    }
+
+    return FALSE;
+  }
+
+  /**
    * Returns the cached table, specific to degree types.
    *
    * @param bool $check_expire
@@ -845,13 +953,19 @@ class mcneese_catalog_class_programs extends mcneese_catalog_class_base {
    *   If an integer, then this represents the particular page in use for generating a pager.
    * @param int|null $per_page
    *   (optional) $page is defined and is an integer, then this represents the number of items per page.
+   * @param string $markup_type
+   *   (optional) The markup type filter to use.
    *
    * @return bool
    *   TRUE on success, FALSE otherwise.
    */
-  protected function render_markup($page = NULL, $per_page = NULL) {
+  protected function render_markup($page = NULL, $per_page = NULL, $markup_type = 'full_html') {
     if (is_null($this->processed)) {
       return FALSE;
+    }
+
+    if (!is_string($markup_type)) {
+      $markup_type = 'full_html';
     }
 
     $markup = '';
@@ -867,7 +981,7 @@ class mcneese_catalog_class_programs extends mcneese_catalog_class_base {
         $this->markup .= '<a href="//' . self::BASE_URL . self::BASE_URL_PROGRAM . '?catoid=' . ((int) $this->legacy_id) . '&poid=' . ((int) $item->legacy_id) . '" class="' . $this->get_class_base_name() . '-name">' . check_plain($item->name) . $code . '</a>';
 
         if ($this->use_description) {
-          $this->markup .= '<div class="' . $this->get_class_base_name() . '-description">' . check_markup($item->description, 'full_html') . '</div>';
+          $this->markup .= '<div class="' . $this->get_class_base_name() . '-description">' . check_markup($item->description, $markup_type) . '</div>';
         }
         $this->markup .= '</li>';
       }
@@ -885,7 +999,7 @@ class mcneese_catalog_class_programs extends mcneese_catalog_class_base {
         $this->markup .= '<a href="//' . self::BASE_URL . self::BASE_URL_PROGRAM . '?catoid=' . ((int) $this->legacy_id) . '&poid=' . ((int) $item->legacy_id) . '" class="' . $this->get_class_base_name() . '-name">' . check_plain($item->name) . $code . '</a>';
 
         if ($this->use_description) {
-          $this->markup .= '<div class="' . $this->get_class_base_name() . '-description">' . check_markup($item->description, 'full_html') . '</div>';
+          $this->markup .= '<div class="' . $this->get_class_base_name() . '-description">' . check_markup($item->description, $markup_type) . '</div>';
         }
         $this->markup .= '</div>';
       }
@@ -903,7 +1017,7 @@ class mcneese_catalog_class_programs extends mcneese_catalog_class_base {
         $this->markup .= '<a href="//' . self::BASE_URL . self::BASE_URL_PROGRAM . '?catoid=' . ((int) $this->legacy_id) . '&poid=' . ((int) $item->legacy_id) . '" class="' . $this->get_class_base_name() . '-name">' . check_plain($item->name) . $code . '</a>';
 
         if ($this->use_description) {
-          $this->markup .= '<div class="' . $this->get_class_base_name() . '-description">' . check_markup($item->description, 'full_html') . '</div>';
+          $this->markup .= '<div class="' . $this->get_class_base_name() . '-description">' . check_markup($item->description, $markup_type) . '</div>';
         }
         $this->markup .= '</span>';
       }
@@ -921,7 +1035,7 @@ class mcneese_catalog_class_programs extends mcneese_catalog_class_base {
         $this->markup .= '<a href="//' . self::BASE_URL . self::BASE_URL_PROGRAM . '?catoid=' . ((int) $this->legacy_id) . '&poid=' . ((int) $item->legacy_id) . '" class="' . $this->get_class_base_name() . '-name">' . check_plain($item->name) . $code . '</a>';
 
         if ($this->use_description) {
-          $this->markup .= '<div class="' . $this->get_class_base_name() . '-description">' . check_markup($item->description, 'full_html') . '</div>';
+          $this->markup .= '<div class="' . $this->get_class_base_name() . '-description">' . check_markup($item->description, $markup_type) . '</div>';
         }
 
         $this->markup .= '</div>';

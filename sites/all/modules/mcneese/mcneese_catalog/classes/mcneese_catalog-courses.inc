@@ -171,13 +171,19 @@ class mcneese_catalog_class_courses extends mcneese_catalog_class_base {
    *   If an integer, then this represents the particular page in use for generating a pager.
    * @param int|null $per_page
    *   (optional) $page is defined and is an integer, then this represents the number of items per page.
+   * @param string $markup_type
+   *   (optional) The markup type filter to use.
    *
    * @return bool
    *   TRUE on success, FALSE otherwise.
    */
-  protected function render_markup($page = NULL, $per_page = NULL) {
+  protected function render_markup($page = NULL, $per_page = NULL, $markup_type = 'full_html') {
     if (is_null($this->processed)) {
       return FALSE;
+    }
+
+    if (!is_string($markup_type)) {
+      $markup_type = 'full_html';
     }
 
     $markup = '';
@@ -193,6 +199,17 @@ class mcneese_catalog_class_courses extends mcneese_catalog_class_base {
         $this->markup .= '</li>';
       }
       $this->markup .= '</ul>';
+    }
+    elseif ($this->list_as == self::AS_LIST_ITEM) {
+      foreach ($this->processed as $item) {
+        $this->markup .= '<li class="' . $this->get_class_base_name() . '-list_item">';
+        $this->markup .= '<a href="//' . self::BASE_URL . self::BASE_URL_COURSE . '?catoid=' . ((int) $this->legacy_id) . '&coid=' . ((int) $item->legacy_id) . '" class="' . $this->get_class_base_name() . '-name">' . check_plain($item->prefix) . ' ' . check_plain($item->code) . ' - ' . check_plain($item->name) . '</a>';
+
+        if ($this->use_description) {
+          $this->markup .= '<div class="' . $this->get_class_base_name() . '-description">' . check_markup($item->description, 'full_html') . '</div>';
+        }
+        $this->markup .= '</li>';
+      }
     }
     elseif ($this->list_as == self::AS_DIVIDER) {
       $this->markup .= '<div class="' . $this->get_class_base_name() . '-list list-as_divider">';

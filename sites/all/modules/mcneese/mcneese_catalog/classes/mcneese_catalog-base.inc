@@ -19,11 +19,12 @@ abstract class mcneese_catalog_class_base {
 
   const AS_RAW       = 0;
   const AS_LIST      = 1;
-  const AS_SPAN      = 2;
-  const AS_DIVIDER   = 3;
-  const AS_ACCORDIAN = 4;
-  const AS_LINK      = 5;
-  const AS_HEADER    = 6;
+  const AS_LIST_ITEM = 2;
+  const AS_SPAN      = 3;
+  const AS_DIVIDER   = 4;
+  const AS_ACCORDIAN = 5;
+  const AS_LINK      = 6;
+  const AS_HEADER    = 7;
 
   protected $table          = NULL;
   protected $path_name      = NULL;
@@ -138,6 +139,54 @@ abstract class mcneese_catalog_class_base {
     }
 
     return ($this->loaded === TRUE);
+  }
+
+  /**
+   * Check to see if cache is loaded.
+   *
+   * This will also load the catalog_id and legacy_id, if possible.
+   *
+   * @param bool $autoload
+   *   (optional) When TRUE, if cache is not available, attempt to load the cache.
+   *   When FALSE, if the cache is not available, do nothing.
+   *
+   * @return bool
+   *   TRUE if cache is available and up to date, FALSE otherwise.
+   */
+  public function check_cache($autoload = TRUE) {
+    if (!is_bool($autoload)) {
+      $autoload = TRUE;
+    }
+
+    $up_to_date = TRUE;
+    try {
+      $last_updated = db_query('select updated from {' . self::CACHE_TABLE . '} where name = :cache_name', array(':cache_name' => $this->cache_name))->fetchField();
+
+      if (is_null($last_updated)) {
+        $up_to_date = FALSE;
+      }
+      elseif (REQUEST_TIME >= strtotime($this->cache_lifetime, $last_updated)) {
+        $up_to_date = FALSE;
+      }
+      unset($last_updated);
+    }
+    catch (Exception $e) {
+      // @todo
+      $up_to_date = FALSE;
+    }
+    catch (Error $e) {
+      // @todo
+      $up_to_date = FALSE;
+    }
+
+    if (!$up_to_date && $autoload) {
+      if ($this->load(FALSE, TRUE) === FALSE) {
+        return FALSE;
+      }
+    }
+
+    $this->get_catalog_ids_from_cache();
+    return $up_to_date;
   }
 
   /**
@@ -293,14 +342,16 @@ abstract class mcneese_catalog_class_base {
    * @param bool $wrapped
    *   (optional) When TRUE, content will be wrapped in a div tag with appropriate class names.
    *   When FALSE, the no wrapping div tag will be used.
+   * @param string $markup_type
+   *   (optional) The markup type filter to use.
    *
    * @return string
    *   The processed HTML.
    *   An empty string is returned on error.
    */
-  public function get_markup($page = NULL, $per_page = NULL, $wrapped = TRUE) {
+  public function get_markup($page = NULL, $per_page = NULL, $wrapped = TRUE, $markup_type = 'full_html') {
     if (is_null($this->markup)) {
-      $this->render_markup($page, $per_page);
+      $this->render_markup($page, $per_page, $markup_type);
     }
 
     if (!is_string($this->markup)) {
@@ -828,6 +879,11 @@ abstract class mcneese_catalog_class_base {
       return FALSE;
     }
 
+    if (!isset($result->data)) {
+      // @todo: report problem to watchdog().
+      return FALSE;
+    }
+
     $json_data = json_decode($result->data);
     if (!is_object($json_data) || empty($json_data->{$this->list_name})) {
       // @todo: ideally, load the cached result on http errors (therefore keep a more long term cache backup for http failures and replace it only on success).
@@ -989,6 +1045,9 @@ abstract class mcneese_catalog_class_base {
    */
   protected function get_catalog_ids_from_cache() {
     try {
+      $old_catalog_id = $this->catalog_id;
+      $old_legacy_id = $this->legacy_id;
+
       $this->catalog_id = NULL;
       $this->legacy_id = NULL;
 
@@ -1000,10 +1059,16 @@ abstract class mcneese_catalog_class_base {
       }
     }
     catch (Exception $e) {
+      $this->catalog_id = $old_catalog_id;
+      $this->legacy_id = $old_legacy_id;
+
       // @todo
       return FALSE;
     }
     catch (Error $e) {
+      $this->catalog_id = $old_catalog_id;
+      $this->legacy_id = $old_legacy_id;
+
       // @todo
       return FALSE;
     }
@@ -1066,13 +1131,19 @@ abstract class mcneese_catalog_class_base {
    *   If an integer, then this represents the particular page in use for generating a pager.
    * @param int|null $per_page
    *   (optional) $page is defined and is an integer, then this represents the number of items per page.
+   * @param string $markup_type
+   *   (optional) The markup type filter to use.
    *
    * @return bool
    *   TRUE on success, FALSE otherwise.
    */
-  protected function render_markup($page = NULL, $per_page = NULL) {
+  protected function render_markup($page = NULL, $per_page = NULL, $markup_type = 'full_html') {
     if (is_null($this->processed)) {
       return FALSE;
+    }
+
+    if (!is_string($markup_type)) {
+      $markup_type = 'full_html';
     }
 
     $markup = '';
@@ -1089,6 +1160,18 @@ abstract class mcneese_catalog_class_base {
         $this->markup .= '</li>';
       }
       $this->markup .= '</ul>';
+    }
+    elseif ($this->list_as == self::AS_LIST_ITEM) {
+      foreach ($this->processed as $item) {
+        $this->markup .= '<li class="' . $this->get_class_base_name() . '-list_item">';
+        $this->markup .= '<div class="' . $this->get_class_base_name() . '-name">' . check_plain($item->name) . '</div>';
+
+        if ($this->use_description) {
+          $this->markup .= '<div class="' . $this->get_class_base_name() . '-description">' . check_markup($item->description, 'full_html') . '</div>';
+        }
+
+        $this->markup .= '</li>';
+      }
     }
     elseif ($this->list_as == self::AS_DIVIDER) {
       $this->markup .= '<div class="' . $this->get_class_base_name() . '-list list-as_divider">';

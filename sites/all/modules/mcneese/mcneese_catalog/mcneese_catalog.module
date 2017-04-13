@@ -15,30 +15,342 @@
  */
 
 /**
+ * Loads a catalog course by its legacy id from the latest catalog.
+ *
+ * @param int $id
+ *   The catalog id.
+ * @param bool $as_legacy_id
+ *   (optional) Set to TRUE if $id is a legacy id.
+ *   FALSE if it is a normal id.
+ *
+ * @return array
+ *   An array containing the course information.
+ *   An empty array is returned on error.
+ */
+function mcneese_catalog_load_course($id, $as_legacy_id = TRUE) {
+  if (!is_int($id)) {
+    return array();
+  }
+
+  if (!is_bool($as_legacy_id)) {
+    $as_legacy_id = TRUE;
+  }
+
+  $catalogs = new mcneese_catalog_class_catalogs();
+  $cached = $catalogs->check_cache();
+  if (!$cached) {
+    $catalogs->load();
+  }
+
+  $catalog_id = $catalogs->get_catalog_id();
+  $legacy_id = $catalogs->get_legacy_id();
+  unset($catalogs);
+
+  $courses = new mcneese_catalog_class_courses($catalog_id, $legacy_id);
+  $courses->check_cache();
+
+  $item = $courses->get_item($id, $as_legacy_id);
+  if (is_object($item)) {
+    return $item;
+  }
+
+  return array();
+}
+
+/**
+ * Loads a catalog filter by its legacy id from the latest catalog.
+ *
+ * @param int $id
+ *   The catalog id.
+ * @param bool $as_legacy_id
+ *   (optional) Set to TRUE if $id is a legacy id.
+ *   FALSE if it is a normal id.
+ *
+ * @return array
+ *   An array containing the filter information.
+ *   An empty array is returned on error.
+ */
+function mcneese_catalog_load_filter($id, $as_legacy_id = TRUE) {
+  if (!is_int($id)) {
+    return array();
+  }
+
+  if (!is_bool($as_legacy_id)) {
+    $as_legacy_id = TRUE;
+  }
+
+  $catalogs = new mcneese_catalog_class_catalogs();
+  $cached = $catalogs->check_cache();
+  if (!$cached) {
+    $catalogs->load();
+  }
+
+  $catalog_id = $catalogs->get_catalog_id();
+  $legacy_id = $catalogs->get_legacy_id();
+  unset($catalogs);
+
+  $filters = new mcneese_catalog_class_filters($catalog_id, $legacy_id);
+  $filters->check_cache();
+
+  $item = $filters->get_item($id, $as_legacy_id);
+  if (is_object($item)) {
+    return $item;
+  }
+
+  return array();
+}
+
+/**
+ * Loads a catalog hierarchy by its legacy id from the latest catalog.
+ *
+ * @param int $id
+ *   The catalog id.
+ * @param bool $as_legacy_id
+ *   (optional) Set to TRUE if $id is a legacy id.
+ *   FALSE if it is a normal id.
+ *
+ * @return array
+ *   An array containing the hierarchy information.
+ *   An empty array is returned on error.
+ */
+function mcneese_catalog_load_hierarchy($id, $as_legacy_id = TRUE) {
+  if (!is_int($id)) {
+    return array();
+  }
+
+  if (!is_bool($as_legacy_id)) {
+    $as_legacy_id = TRUE;
+  }
+
+  $catalogs = new mcneese_catalog_class_catalogs();
+  $cached = $catalogs->check_cache();
+  if (!$cached) {
+    $catalogs->load();
+  }
+
+  $catalog_id = $catalogs->get_catalog_id();
+  $legacy_id = $catalogs->get_legacy_id();
+  unset($catalogs);
+
+  $hierarchys = new mcneese_catalog_class_hierarchys($catalog_id, $legacy_id);
+  $hierarchys->check_cache();
+
+  $item = $hierarchys->get_item($id, $as_legacy_id);
+  if (is_object($item)) {
+    return $item;
+  }
+
+  return array();
+}
+
+/**
+ * Loads a catalog entity by its legacy id from the latest catalog.
+ *
+ * @param int $id
+ *   The catalog id.
+ * @param bool $as_legacy_id
+ *   (optional) Set to TRUE if $id is a legacy id.
+ *   FALSE if it is a normal id.
+ *
+ * @return array
+ *   An array containing the entity information.
+ *   An empty array is returned on error.
+ */
+function mcneese_catalog_load_entity($id, $as_legacy_id = TRUE) {
+  if (!is_int($id)) {
+    return array();
+  }
+
+  if (!is_bool($as_legacy_id)) {
+    $as_legacy_id = TRUE;
+  }
+
+  $catalogs = new mcneese_catalog_class_catalogs();
+  $cached = $catalogs->check_cache();
+  if (!$cached) {
+    $catalogs->load();
+  }
+
+  $catalog_id = $catalogs->get_catalog_id();
+  $legacy_id = $catalogs->get_legacy_id();
+  unset($catalogs);
+
+  $entitys = new mcneese_catalog_class_entitys($catalog_id, $legacy_id);
+  $entitys->check_cache();
+
+  $item = $entitys->get_item($id, $as_legacy_id);
+  if (is_object($item)) {
+    return $item;
+  }
+
+  return array();
+}
+
+/**
  * Loads a catalog page by its legacy id from the latest catalog.
  *
  * @param int $id
  *   The catalog id.
+ * @param bool $as_legacy_id
+ *   (optional) Set to TRUE if $id is a legacy id.
+ *   FALSE if it is a normal id.
  *
  * @return array
  *   An array containing the page information.
  *   An empty array is returned on error.
  */
-function mcneese_catalog_load_page($id) {
+function mcneese_catalog_load_page($id, $as_legacy_id = TRUE) {
   if (!is_int($id)) {
     return array();
   }
 
+  if (!is_bool($as_legacy_id)) {
+    $as_legacy_id = TRUE;
+  }
+
   $catalogs = new mcneese_catalog_class_catalogs();
-  $catalogs->load();
+  $cached = $catalogs->check_cache();
+  if (!$cached) {
+    $catalogs->load();
+  }
+
   $catalog_id = $catalogs->get_catalog_id();
   $legacy_id = $catalogs->get_legacy_id();
   unset($catalogs);
 
   $pages = new mcneese_catalog_class_pages($catalog_id, $legacy_id);
-  $pages->load();
+  $pages->check_cache();
 
-  $item = $pages->get_item($id, TRUE);
+  $item = $pages->get_item($id, $as_legacy_id);
+  if (is_object($item)) {
+    return $item;
+  }
+
+  return array();
+}
+
+/**
+ * Loads a catalog program by its legacy id from the latest catalog.
+ *
+ * @param int $id
+ *   The catalog id.
+ * @param bool $as_legacy_id
+ *   (optional) Set to TRUE if $id is a legacy id.
+ *   FALSE if it is a normal id.
+ *
+ * @return array
+ *   An array containing the program information.
+ *   An empty array is returned on error.
+ */
+function mcneese_catalog_load_program($id, $as_legacy_id = TRUE) {
+  if (!is_int($id)) {
+    return array();
+  }
+
+  if (!is_bool($as_legacy_id)) {
+    $as_legacy_id = TRUE;
+  }
+
+  $catalogs = new mcneese_catalog_class_catalogs();
+  $cached = $catalogs->check_cache();
+  if (!$cached) {
+    $catalogs->load();
+  }
+
+  $catalog_id = $catalogs->get_catalog_id();
+  $legacy_id = $catalogs->get_legacy_id();
+  unset($catalogs);
+
+  $programs = new mcneese_catalog_class_programs($catalog_id, $legacy_id);
+  $programs->check_cache();
+
+  $item = $programs->get_item($id, $as_legacy_id);
+  if (is_object($item)) {
+    return $item;
+  }
+
+  return array();
+}
+
+/**
+ * Loads a catalog degree type by its legacy id from the latest catalog.
+ *
+ * @param int $id
+ *   The catalog id.
+ * @param bool $as_legacy_id
+ *   (optional) Set to TRUE if $id is a legacy id.
+ *   FALSE if it is a normal id.
+ *
+ * @return array
+ *   An array containing the program information.
+ *   An empty array is returned on error.
+ */
+function mcneese_catalog_load_degree_type($id, $as_legacy_id = TRUE) {
+  if (!is_int($id)) {
+    return array();
+  }
+
+  if (!is_bool($as_legacy_id)) {
+    $as_legacy_id = TRUE;
+  }
+
+  $catalogs = new mcneese_catalog_class_catalogs();
+  $cached = $catalogs->check_cache();
+  if (!$cached) {
+    $catalogs->load();
+  }
+
+  $catalog_id = $catalogs->get_catalog_id();
+  $legacy_id = $catalogs->get_legacy_id();
+  unset($catalogs);
+
+  $programs = new mcneese_catalog_class_programs($catalog_id, $legacy_id);
+  $programs->check_cache();
+
+  $item = $programs->get_item_degree_type($id, $as_legacy_id);
+  if (is_object($item)) {
+    return $item;
+  }
+
+  return array();
+}
+
+/**
+ * Loads a catalog program type by its legacy id from the latest catalog.
+ *
+ * @param int $id
+ *   The catalog id.
+ * @param bool $as_legacy_id
+ *   (optional) Set to TRUE if $id is a legacy id.
+ *   FALSE if it is a normal id.
+ *
+ * @return array
+ *   An array containing the program information.
+ *   An empty array is returned on error.
+ */
+function mcneese_catalog_load_program_type($id, $as_legacy_id = TRUE) {
+  if (!is_int($id)) {
+    return array();
+  }
+
+  if (!is_bool($as_legacy_id)) {
+    $as_legacy_id = TRUE;
+  }
+
+  $catalogs = new mcneese_catalog_class_catalogs();
+  $cached = $catalogs->check_cache();
+  if (!$cached) {
+    $catalogs->load();
+  }
+
+  $catalog_id = $catalogs->get_catalog_id();
+  $legacy_id = $catalogs->get_legacy_id();
+  unset($catalogs);
+
+  $programs = new mcneese_catalog_class_programs($catalog_id, $legacy_id);
+  $programs->check_cache();
+
+  $item = $programs->get_item_program_type($id, $as_legacy_id);
   if (is_object($item)) {
     return $item;
   }
@@ -494,7 +806,7 @@ function mcneese_catalog_initialize_courses(&$catalog) {
       $catalog = new mcneese_catalog_class_catalogs();
     }
 
-    if ($catalog->is_loaded() || $catalog->load()) {
+    if ($catalog->check_cache()) {
       $catalog_id = $catalog->get_catalog_id();
       $legacy_id = $catalog->get_legacy_id();
 
@@ -530,7 +842,7 @@ function mcneese_catalog_initialize_filters(&$catalog) {
       $catalog = new mcneese_catalog_class_catalogs();
     }
 
-    if ($catalog->is_loaded() || $catalog->load()) {
+    if ($catalog->check_cache()) {
       $catalog_id = $catalog->get_catalog_id();
       $legacy_id = $catalog->get_legacy_id();
 
@@ -566,7 +878,7 @@ function mcneese_catalog_initialize_programs(&$catalog) {
       $catalog = new mcneese_catalog_class_catalogs();
     }
 
-    if ($catalog->is_loaded() || $catalog->load()) {
+    if ($catalog->check_cache()) {
       $catalog_id = $catalog->get_catalog_id();
       $legacy_id = $catalog->get_legacy_id();
 
@@ -602,7 +914,7 @@ function mcneese_catalog_initialize_hierarchies(&$catalog) {
       $catalog = new mcneese_catalog_class_catalogs();
     }
 
-    if ($catalog->is_loaded() || $catalog->load()) {
+    if ($catalog->check_cache()) {
       $catalog_id = $catalog->get_catalog_id();
       $legacy_id = $catalog->get_legacy_id();
 
@@ -638,7 +950,7 @@ function mcneese_catalog_initialize_pages(&$catalog) {
       $catalog = new mcneese_catalog_class_catalogs();
     }
 
-    if ($catalog->is_loaded() || $catalog->load()) {
+    if ($catalog->check_cache()) {
       $catalog_id = $catalog->get_catalog_id();
       $legacy_id = $catalog->get_legacy_id();
 
@@ -1298,6 +1610,43 @@ function mcneese_catalog_clear_caches() {
 }
 
 /**
+ * Manually check all content.
+ *
+ * @param bool $autoload
+ *   (optional) When TRUE, if cache is not available, attempt to load the cache.
+ *   When FALSE, if the cache is not available, do nothing.
+ *
+ * @return array
+ *   An array containing all check cache results..
+ */
+function mcneese_catalog_check_all($autoload = TRUE) {
+  $results = array();
+
+  $catalog = new mcneese_catalog_class_catalogs();
+  $results['catalogs'] = $catalog->check_cache($autoload);
+
+  $catalog_id = $catalog->get_catalog_id();
+  $legacy_id = $catalog->get_legacy_id();
+
+  $courses = new mcneese_catalog_class_courses($catalog_id, $legacy_id);
+  $results['courses'] = $courses->check_cache($autoload);
+
+  $programs = new mcneese_catalog_class_programs($catalog_id, $legacy_id);
+  $results['programs'] = $programs->check_cache($autoload);
+
+  $hierarchies = new mcneese_catalog_class_hierarchies($catalog_id, $legacy_id);
+  $results['hierarchies'] = $hierarchies->check_cache($autoload);
+
+  $filters = new mcneese_catalog_class_filters($catalog_id, $legacy_id);
+  $results['filters'] = $filters->check_cache($autoload);
+
+  $pages = new mcneese_catalog_class_pages($catalog_id, $legacy_id);
+  $results['pages'] = $pages->check_cache($autoload);
+
+  return $results;
+}
+
+/**
  * Manually load all content.
  *
  * @param bool $check_expire
@@ -1344,6 +1693,434 @@ function mcneese_catalog_load_all($check_expire = TRUE, $force = FALSE) {
   }
 
   return $results;
+}
+
+/**
+ * Implements hook_filter_info().
+ */
+function mcneese_catalog_filter_info() {
+  $data = array();
+
+  $data['mcneese_catalog_auto_tags'] = array();
+
+  $data['mcneese_catalog_auto_tags'] = array();
+  $data['mcneese_catalog_auto_tags']['title'] = t("McNeese Catalog - Auto Tags");
+  $data['mcneese_catalog_auto_tags']['description'] = t("Provides processing of McNeese Acalog tags (catalog-course-id, catalog-filter-id, catalog-hierarchy-id, catalog-entity-id, catalog-page-id, catalog-program-id, catalog-degree_type-id, catalog-program_type-id) into content.");
+  $data['mcneese_catalog_auto_tags']['process callback'] = 'mcneese_catalog_auto_tags_process';
+  $data['mcneese_catalog_auto_tags']['weight'] = -30;
+  $data['mcneese_catalog_auto_tags']['cache'] = FALSE;
+
+  return $data;
+}
+
+/**
+ * Process callback, used by mcneese_catalog_filter_info().
+ *
+ * HTML Attributes:
+ * - catalog-display-as:
+ *   - content: display an items description.
+ *   - link: display a link to the remote page using the name text.
+ *   - list: display a series of links wrapped in a list.
+ *   - name: display only the name text (no link).
+ *   - When specified without any other catalog type, then the main catalog is used.
+ * - catalog-course-id: Id is a course legacy id.
+ * - catalog-filter-id: Id is a filter legacy id.
+ * - catalog-hierarchy-id: Id is a hierachy legacy id.
+ * - catalog-entity-id: Id is a hierachy legacy id (hierachy and entity appear to be synonyms).
+ * - catalog-page-id: Id is a page legacy id.
+ * - catalog-program-id: Id is a program legacy id.
+ * - catalog-degree_type-id: Id is a degree_type legacy id.
+ * - catalog-program_type-id: Id is a program_type legacy id.
+ * - catalog-list-page: The catalog list page number.
+ * - catalog-list-per_page: The catalog list per_page number.
+ *
+ * @param string $text
+ *    Text to purify
+ * @param object $filter
+ *   The filter object containing settings for the given format.
+ * @param object $format
+ *    The format object of the text to be filtered.
+ * @param string $langcode
+ *    The language code of the text to be filtered.
+ * @param boolean $cache
+ *    Whether or not to check the cache.
+ */
+function mcneese_catalog_auto_tags_process($text, $filter, $format, $langcode, $cache) {
+  if (empty($text)) return $text;
+
+  // do not call if format is $markup_type to prevent recursion.
+  $markup_type = 'full_html';
+  if (isset($filter->format) && $filter->format == $markup_type) {
+    return $text;
+  }
+
+  $dom = new cf_dom(TRUE, TRUE, TRUE, $text);
+  $body = $dom->get_body();
+  if (is_null($body)) {
+    return $text;
+  }
+
+  $all_tags = $body->getElementsByTagName('*');
+  if (empty($all_tags)) {
+    return $text;
+  }
+
+  $catalogs = new mcneese_catalog_class_catalogs();
+  $cached = $catalogs->check_cache();
+  if (!$cached) {
+    $catalogs->load();
+  }
+
+  $catalog_id = $catalogs->get_catalog_id();
+  $legacy_id = $catalogs->get_legacy_id();
+
+  $courses = NULL;
+  $filters = NULL;
+  $hierarchies = NULL;
+  $pages = NULL;
+  $programs = NULL;
+
+  $as_legacy_id = TRUE;
+
+  $altered = FALSE;
+
+  $local_cache = array();
+  $replacements = array();
+
+  foreach ($all_tags as $tag) {
+    if ($tag->tagName != 'div' && $tag->tagName != 'span' && $tag->tagName != 'a' && $tag->tagName != 'ul' && $tag->tagName != 'ol' && $tag->tagName != 'dl') {
+      continue;
+    }
+
+    unset($local_cache_id);
+
+    $altered = TRUE;
+
+    $display_as = NULL;
+    if ($tag->hasAttribute('catalog-display_as')) {
+      $as = $tag->getAttribute('catalog-display_as');
+
+      if ($as == 'link') {
+        $display_as = 'link';
+      }
+      elseif ($as == 'content') {
+        $display_as = 'content';
+      }
+      elseif ($as == 'list') {
+        $display_as = 'list';
+      }
+      elseif ($as == 'name') {
+        $display_as = 'name';
+      }
+
+      unset($as);
+    }
+
+    $page = NULL;
+    if ($tag->hasAttribute('catalog-list-page')) {
+      $value = $tag->getAttribute('catalog-list-page');
+      if (is_numeric($value)) {
+        $page = (int) $value;
+      }
+      unset($value);
+    }
+
+    $per_page = 100;
+    if ($tag->hasAttribute('catalog-list-per_page')) {
+      $value = $tag->getAttribute('catalog-list-per_page');
+      if (is_numeric($value)) {
+        $per_page = (int) $value;
+      }
+      unset($value);
+    }
+
+    $id = NULL;
+    $class = NULL;
+    if ($tag->hasAttribute('catalog-course-id')) {
+      $id = $tag->getAttribute('catalog-course-id');
+      if (!is_numeric($id)) {
+        continue;
+      }
+
+      $id = (int) $id;
+      if (!($courses instanceof mcneese_catalog_class_courses)) {
+        $courses = new mcneese_catalog_class_courses($catalog_id, $legacy_id);
+        $courses->check_cache();
+      }
+
+      $class = &$courses;
+    }
+    elseif ($tag->hasAttribute('catalog-filter-id')) {
+      $id = $tag->getAttribute('catalog-filter-id');
+      if (!is_numeric($id)) {
+        continue;
+      }
+
+      $id = (int) $id;
+      if (!($filters instanceof mcneese_catalog_class_filters)) {
+        $filters = new mcneese_catalog_class_filters($catalog_id, $legacy_id);
+        $filters->check_cache();
+      }
+
+      $class = &$filters;
+    }
+    elseif ($tag->hasAttribute('catalog-hierarchy-id')) {
+      $id = $tag->getAttribute('catalog-hierarchy-id');
+      if (!is_numeric($id)) {
+        continue;
+      }
+
+      $id = (int) $id;
+      if (!($hierarchys instanceof mcneese_catalog_class_hierarchys)) {
+        $hierarchys = new mcneese_catalog_class_hierarchys($catalog_id, $legacy_id);
+        $hierarchys->check_cache();
+      }
+
+      $class = &$hierarchys;
+    }
+    elseif ($tag->hasAttribute('catalog-entity-id')) {
+      $id = $tag->getAttribute('catalog-entity-id');
+      if (!is_numeric($id)) {
+        continue;
+      }
+
+      $id = (int) $id;
+      if (!($entitys instanceof mcneese_catalog_class_hierarchies)) {
+        $hierarchies = new mcneese_catalog_class_hierarchies($catalog_id, $legacy_id);
+        $hierarchies->check_cache();
+      }
+
+      $class = &$hierarchies;
+    }
+    elseif ($tag->hasAttribute('catalog-page-id')) {
+      $id = $tag->getAttribute('catalog-page-id');
+      if (!is_numeric($id)) {
+        continue;
+      }
+
+      $id = (int) $id;
+      if (!($filters instanceof mcneese_catalog_class_pages)) {
+        $pages = new mcneese_catalog_class_pages($catalog_id, $legacy_id);
+        $pages->check_cache();
+      }
+
+      $class = &$pages;
+    }
+    elseif ($tag->hasAttribute('catalog-program-id')) {
+      $id = $tag->getAttribute('catalog-program-id');
+      if (!is_numeric($id)) {
+        continue;
+      }
+
+      $id = (int) $id;
+      if (!($programs instanceof mcneese_catalog_class_programs)) {
+        $programs = new mcneese_catalog_class_programs($catalog_id, $legacy_id);
+        $programs->check_cache();
+      }
+
+      $class = &$programs;
+    }
+    elseif ($tag->hasAttribute('catalog-degree_type-id')) {
+      $id = $tag->getAttribute('catalog-degree_type-id');
+      if (!is_numeric($id)) {
+        continue;
+      }
+
+      $id = (int) $id;
+      if (!($programs instanceof mcneese_catalog_class_programs)) {
+        $programs = new mcneese_catalog_class_programs($catalog_id, $legacy_id);
+        $programs->check_cache();
+      }
+
+      $class = &$programs;
+
+      if (is_null($display_as) || $display_as == 'content') {
+        $display_as = 'content-degree_type';
+      }
+    }
+    elseif ($tag->hasAttribute('catalog-program_type-id')) {
+      $id = $tag->getAttribute('catalog-program_type-id');
+      if (!is_numeric($id)) {
+        continue;
+      }
+
+      $id = (int) $id;
+      if (!($programs instanceof mcneese_catalog_class_programs)) {
+        $programs = new mcneese_catalog_class_programs($catalog_id, $legacy_id);
+        $programs->check_cache();
+      }
+
+      $class = &$programs;
+
+      if (is_null($display_as) || $display_as == 'content') {
+        $display_as = 'content-program_type';
+      }
+    }
+    elseif (!is_null($display_as)) {
+      $class = &$catalogs;
+
+      $id = $legacy_id;
+    }
+    else {
+      continue;
+    }
+
+    if (is_null($display_as)) {
+      $display_as = 'content';
+    }
+
+    // remove all child elements from the tag.
+    if ($tag->hasChildNodes()) {
+      while ($tag->childNodes->length > 0) {
+        $child = $tag->firstChild;
+
+        $tag->removeChild($child);
+      }
+      unset($child);
+    }
+
+
+    // use a local cache for duplicate entries to be processed only once.
+    $local_cache_id = $legacy_id . '-' . $id . '-' . $display_as . '-' . $page . '-' . $per_page;
+    if (array_key_exists($local_cache_id, $local_cache)) {
+      if (is_string($local_cache[$local_cache_id])) {
+        $tag->textContent = $local_cache[$local_cache_id];
+      }
+      elseif (is_object($local_cache[$local_cache_id])) {
+        $tag->appendChild($local_cache[$local_cache_id]);
+      }
+      elseif (is_array($local_cache[$local_cache_id])) {
+        $tag->textContent = '';
+        if (array_key_exists(NULL, $local_cache[$local_cache_id])) {
+          $tag->textContent = $local_cache[$local_cache_id][NULL];
+        }
+
+        $tag->setAttribute('href', '');
+        if (array_key_exists('href', $local_cache[$local_cache_id])) {
+          $tag->setAttribute('href', $local_cache[$local_cache_id]['href']);
+        }
+      }
+
+      continue;
+    }
+
+    // create a new child element with the specified text/markup.
+    if ($display_as == 'content') {
+      $item = $class->get_item($id, $as_legacy_id);
+      if (!is_object($item)) {
+        continue;
+      }
+
+      $replacements[$local_cache_id] = check_markup($item->description, $markup_type);
+
+      $tag->textContent = '--mcneese_catalog-replacement-' . $local_cache_id . '--';
+      $local_cache[$local_cache_id] = $tag->textContent;
+      $replacements[$local_cache_id] = check_markup($item->description, $markup_type);
+    }
+    elseif ($display_as == 'content-degree_type') {
+      $item = $class->get_item_degree_type($id, $as_legacy_id);
+      if (!is_object($item)) {
+        continue;
+      }
+
+      $replacements[$local_cache_id] = check_markup($item->description, $markup_type);
+
+      $tag->textContent = '--mcneese_catalog-replacement-' . $local_cache_id . '--';
+      $local_cache[$local_cache_id] = $tag->textContent;
+      $replacements[$local_cache_id] = check_markup($item->description, $markup_type);
+    }
+    elseif ($display_as == 'content-program_type') {
+      $item = $class->get_item_program_type($id, $as_legacy_id);
+      if (!is_object($item)) {
+        continue;
+      }
+
+      $tag->textContent = '--mcneese_catalog-replacement-' . $local_cache_id . '--';
+      $local_cache[$local_cache_id] = $tag->textContent;
+      $replacements[$local_cache_id] = check_markup($item->description, $markup_type);
+    }
+    elseif ($display_as == 'text') {
+      $item = $class->get_item($id, $as_legacy_id);
+      if (!is_object($item)) {
+        continue;
+      }
+
+      $tag->textContent = check_plain($item->name);
+      $local_cache[$local_cache_id] = $tag->textContent;
+      unset($item);
+    }
+    elseif ($display_as == 'link') {
+      // link is only applied to 'a' html tags.
+      if ($tag->tagName != 'a') {
+        continue;
+      }
+
+      $item = $class->get_item($id, $as_legacy_id);
+      if (!is_object($item)) {
+        continue;
+      }
+
+      $tag->textContent = check_plain($item->name);
+
+      $href = '';
+      if ($class instanceof mcneese_catalog_class_catalogs) {
+        $href = '//' . mcneese_catalog_class_base::BASE_URL . '/index.php?catoid=' . $legacy_id;
+      }
+      elseif ($class instanceof mcneese_catalog_class_courses) {
+        $href = '//' . mcneese_catalog_class_base::BASE_URL . '/preview_course_nopop.php?catoid=' . $legacy_id . '&coid=' . $id;
+      }
+      elseif ($class instanceof mcneese_catalog_class_filters) {
+        $href = '//' . mcneese_catalog_class_base::BASE_URL . '/content.php?catoid=' . $legacy_id . '&navoid=' . $id;
+      }
+      elseif ($class instanceof mcneese_catalog_class_hierachies) {
+        $href = '//' . mcneese_catalog_class_base::BASE_URL . '/preview_entity.php?catoid=' . $legacy_id . '&ent_oid=' . $id;
+      }
+      elseif ($class instanceof mcneese_catalog_class_pages) {
+        $href = '//' . mcneese_catalog_class_base::BASE_URL . '/content.php?catoid=' . $legacy_id . '&navoid=' . $id;
+      }
+      elseif ($class instanceof mcneese_catalog_class_programs) {
+        $href = '//' . mcneese_catalog_class_base::BASE_URL . '/preview_program.php?catoid=' . $legacy_id . '&poid=' . $id;
+      }
+
+      $tag->setAttribute('href', $href);
+
+      $local_cache[$local_cache_id] = array(
+        NULL => $tag->textContent,
+        'href' => $href,
+      );
+      unset($$href);
+    }
+    elseif ($display_as == 'list') {
+      if (!$class->is_loaded()) {
+        $class->load($page, $per_page);
+      }
+
+      // Note: The get_markup() function already sanitizes the markup, so do not call check_markup() here.
+      $new_markup = $class->get_markup($page, $per_page, FALSE, $markup_type);
+      if (!is_string($new_markup)) {
+        continue;
+      }
+
+      $tag->textContent = '--mcneese_catalog-replacement-' . $local_cache_id . '--';
+      $local_cache[$local_cache_id] = $tag->textContent;
+      $replacements[$local_cache_id] = $new_markup;
+      unset($new_markup);
+    }
+
+    unset($id);
+  }
+
+  if (!$altered) {
+    return $text;
+  }
+
+  $markup = $dom->get_markup();
+
+  foreach ($replacements as $placeholder => $replacement) {
+    $markup = str_replace('--mcneese_catalog-replacement-' . $placeholder . '--', $replacement, $markup);
+  }
+
+  return $markup;
 }
 
 /**
