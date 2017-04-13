@@ -691,7 +691,7 @@ $conf['file_temporary_path'] = '/var/www/webfiles/temporary/wwwdev2';
  */
 $conf['role_php_ini'] = array();
 $conf['role_php_ini']['memory_limit'] = array('1' => '192M', '2' => '256M', '3' => '512M');
-$conf['role_php_ini']['max_execution_time'] = array('1' => '60', '2' => '75', '3' => '105');
+$conf['role_php_ini']['max_execution_time'] = array('1' => '120', '2' => '150', '3' => '210');
 $conf['role_php_ini']['max_input_time'] = array('1' => '60', '2' => '75', '3' => '105');
 $conf['role_php_ini']['include_path'] = array('1' => '/var/www/drupal/wwwdev2:/usr/local/lib/php', '2' => '/var/www/drupal/wwwdev2:/usr/local/lib/php');
 
