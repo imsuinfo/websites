@@ -60,7 +60,7 @@ abstract class mcneese_catalog_class_base {
     $this->table          = NULL;
     $this->path_name      = NULL;
     $this->cache_name     = NULL;
-    $this->cache_lifetime = '+24 hours';
+    $this->cache_lifetime = '+5 minutes';
 
     $this->select_condition   = NULL;
     $this->on_conflict_fields = array('id', 'catalog_id');
