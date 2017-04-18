@@ -11,11 +11,12 @@
  */
 
 abstract class mcneese_catalog_class_base {
-  const BASE_URL     = 'catalog.mcneese.edu';
-  const CACHE_TABLE  = 'mcneese_catalog_cache';
-  const API_PATH     = '/widget-api/';
-  const CATALOG_PATH = '/widget-api/catalog/';
-  const BASE_CLASS   = 'mcneese_catalog-content';
+  const BASE_URL       = 'catalog.mcneese.edu';
+  const CACHE_TABLE    = 'mcneese_catalog_cache';
+  const API_PATH       = '/widget-api/';
+  const CATALOG_PATH   = '/widget-api/catalog/';
+  const BASE_CLASS     = 'mcneese_catalog-content';
+  const CACHE_LIFETIME = '+2 hours';
 
   const AS_RAW       = 0;
   const AS_LIST      = 1;
@@ -60,7 +61,7 @@ abstract class mcneese_catalog_class_base {
     $this->table          = NULL;
     $this->path_name      = NULL;
     $this->cache_name     = NULL;
-    $this->cache_lifetime = '+5 minutes';
+    $this->cache_lifetime = self::CACHE_LIFETIME;
 
     $this->select_condition   = NULL;
     $this->on_conflict_fields = array('id', 'catalog_id');
@@ -630,6 +631,43 @@ abstract class mcneese_catalog_class_base {
     }
 
     return FALSE;
+  }
+
+  /**
+   * Assign a cache lifetime.
+   *
+   * @param string lifetime
+   *   The lifetime string using the string format provided by PHP date().
+   *
+   * @return bool
+   *   TRUE on success, FALSE otherwise.
+   *
+   * @see: date()
+   */
+  public function set_cache_lifetime($lifetime) {
+    if (is_string($lifetime)) {
+      $this->cache_lifetime = $lifetime;
+    }
+    elseif (is_null($lifetime)) {
+      $this->cache_lifetime = self::CACHE_LIFETIME;
+    }
+    else {
+      return FALSE;
+    }
+
+    return TRUE;
+  }
+
+  /**
+   * Get the assigned cache lifetime.
+   *
+   * @return string
+   *   The lifetime string using the string format provided by PHP date().
+   *
+   * @see: date()
+   */
+  public function get_cache_lifetime() {
+    return $this->cache_lifetime;
   }
 
   /**

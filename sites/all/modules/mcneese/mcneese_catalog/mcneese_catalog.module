@@ -1598,6 +1598,8 @@ function mcneese_catalog_clear_caches() {
 
     $pages = new mcneese_catalog_class_pages(FALSE, FALSE);
     $pages->clear_cache_data();
+
+    mcneese_catalog_clear_caches_workbench_menu();
   }
   catch (Exception $e) {
     $transaction->rollback();
@@ -1610,37 +1612,83 @@ function mcneese_catalog_clear_caches() {
 }
 
 /**
+ * Manually clear all caches used by the workbench menu module.
+ */
+function mcneese_catalog_clear_caches_workbench_menu() {
+    if (function_exists('workbench_menu_clear_cache_at_path')) {
+      $menus_to_clear = variable_get('mcneese_catalog-workbench_menu', array('path' => array(), 'access_id' => array()));
+      if (!is_array($menus_to_clear)) {
+        $menus_to_clear = array('path' => array(), 'access_id' => array());
+      }
+
+      if (!isset($menus_to_clear['path']) || !is_array($menus_to_clear['path'])) {
+        $menus_to_clear['path'] = array();
+      }
+
+      if (!isset($menus_to_clear['access_id']) || !is_array($menus_to_clear['access_id'])) {
+        $menus_to_clear['access_id'] = array();
+      }
+
+      if (!empty($menus_to_clear['path'])) {
+        foreach ($menus_to_clear['path'] as $path) {
+          workbench_menu_clear_cache_at_path($path);
+        }
+      }
+
+      if (!empty($menus_to_clear['access_id'])) {
+        $processed = array();
+        foreach ($menus_to_clear['access_id'] as $access_id) {
+          workbench_menu_clear_cache_by_access_id($access_id, $processed);
+        }
+      }
+    }
+}
+
+/**
  * Manually check all content.
  *
  * @param bool $autoload
  *   (optional) When TRUE, if cache is not available, attempt to load the cache.
  *   When FALSE, if the cache is not available, do nothing.
+ * @param string|null $cache_lifetime
+ *   (optional) When an integer, specify a custom cache lifetime.
+ *   When NULL, use the class default cache lifetime.
  *
  * @return array
- *   An array containing all check cache results..
+ *   An array containing all the check cache results.
  */
-function mcneese_catalog_check_all($autoload = TRUE) {
+function mcneese_catalog_check_all($autoload = TRUE, $cache_lifetime = NULL) {
   $results = array();
 
+  if (!is_null($cache_lifetime) && !is_string($cache_lifetime)) {
+    $cache_lifetime = NULL;
+  }
+
   $catalog = new mcneese_catalog_class_catalogs();
+  $catalog->set_cache_lifetime($cache_lifetime);
   $results['catalogs'] = $catalog->check_cache($autoload);
 
   $catalog_id = $catalog->get_catalog_id();
   $legacy_id = $catalog->get_legacy_id();
 
   $courses = new mcneese_catalog_class_courses($catalog_id, $legacy_id);
+  $courses->set_cache_lifetime($cache_lifetime);
   $results['courses'] = $courses->check_cache($autoload);
 
   $programs = new mcneese_catalog_class_programs($catalog_id, $legacy_id);
+  $programs->set_cache_lifetime($cache_lifetime);
   $results['programs'] = $programs->check_cache($autoload);
 
   $hierarchies = new mcneese_catalog_class_hierarchies($catalog_id, $legacy_id);
+  $hierarchies->set_cache_lifetime($cache_lifetime);
   $results['hierarchies'] = $hierarchies->check_cache($autoload);
 
   $filters = new mcneese_catalog_class_filters($catalog_id, $legacy_id);
+  $filters->set_cache_lifetime($cache_lifetime);
   $results['filters'] = $filters->check_cache($autoload);
 
   $pages = new mcneese_catalog_class_pages($catalog_id, $legacy_id);
+  $pages->set_cache_lifetime($cache_lifetime);
   $results['pages'] = $pages->check_cache($autoload);
 
   return $results;
@@ -1711,6 +1759,27 @@ function mcneese_catalog_filter_info() {
   $data['mcneese_catalog_auto_tags']['cache'] = FALSE;
 
   return $data;
+}
+
+/**
+ * Internal function for hook_cronapi.
+ */
+function mcneese_catalog_hook_cronapi() {
+  $items = array();
+
+  $items['mcneese_catalog_resync'] = array(
+    'title' => t('Forcefully Re-Sync catalog.mcneese.edu Cache'),
+    'callback' => 'mcneese_catalog_resync_cron',
+    'callback arguments' => array(),
+    'enabled' => FALSE,
+  );
+
+  $items['mcneese_catalog_expire'] = array(
+    'title' => t('Conditionally Re-Sync catalog.mcneese.edu Cache'),
+    'callback' => 'mcneese_catalog_expire_cron',
+    'callback arguments' => array(),
+    'enabled' => FALSE,
+  );
 }
 
 /**
@@ -2120,6 +2189,40 @@ function mcneese_catalog_auto_tags_process($text, $filter, $format, $langcode, $
   }
 
   return $markup;
+}
+
+/**
+ * Executes the cron queue to forcefully re-create the mcneese catalog cache.
+ *
+ * @see: mcneese_catalog_cronapi()
+ */
+function mcneese_catalog_resync_cron() {
+  mcneese_catalog_clear_caches();
+}
+
+/**
+ * Executes the cron queue to conditionally re-create the mcneese catalog cache.
+ *
+ * @see: mcneese_catalog_cronapi()
+ */
+function mcneese_catalog_expire_cron() {
+  $cache_lifetime = variable_get('mcneese_catalog-cache_lifetime', NULL);
+  if (!is_string($cache_lifetime)) {
+    $cache_lifetime = NULL;
+  }
+
+  $expired = FALSE;
+  $results = mcneese_catalog_check_all(TRUE, $cache_lifetime);
+  foreach ($results as $result) {
+    if ($result === FALSE) {
+      $expired = TRUE;
+    }
+  }
+
+  // clear workbench cache if any of the caches were out of date.
+  if ($expired) {
+    mcneese_catalog_clear_caches_workbench_menu();
+  }
 }
 
 /**

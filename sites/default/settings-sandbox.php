@@ -731,6 +731,16 @@ $conf['workbench_menu_item_use_normal_path'] = TRUE;
 
 
 /**
+ * McNeese Catalog settings
+ */
+$conf['mcneese_catalog-cache_lifetime'] = '+10 minutes';
+$conf['mcneese_catalog-workbench_menu'] = array(
+  'path' => array('catalog'),
+  'access_id' => array(),
+);
+
+
+/**
  * McNeese Content Management Setings
  */
 $conf['mcneese_management_group_leader_unassigned'] = 197; # 197 = nobody
