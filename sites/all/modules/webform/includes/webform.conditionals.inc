@@ -1423,11 +1423,6 @@ function webform_conditional_prepare_javascript($node, $submission_data, $page_n
   foreach ($topological_order[$page_num] as $conditional_spec) {
     $conditional = $conditionals[$conditional_spec['rgid']];
 
-    // skip eid: conditionals as they do not apply here.
-    if (preg_match('/^eid:/', $conditional['target']) > 0) {
-      continue;
-    }
-
     $rgid_key = 'rgid_' . $conditional['rgid'];
     // Assemble the main conditional group settings.
 
