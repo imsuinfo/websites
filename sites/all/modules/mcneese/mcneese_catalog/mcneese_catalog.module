@@ -1813,8 +1813,10 @@ function mcneese_catalog_hook_cronapi() {
  *    The language code of the text to be filtered.
  * @param boolean $cache
  *    Whether or not to check the cache.
+ * @param int $cache_id
+ *    The ID of the filtered text in {cache_filter}, if $cache is TRUE.
  */
-function mcneese_catalog_auto_tags_process($text, $filter, $format, $langcode, $cache) {
+function mcneese_catalog_auto_tags_process($text, $filter, $format, $langcode, $cache, $cache_id) {
   if (empty($text)) return $text;
 
   // do not call if format is $markup_type to prevent recursion.
