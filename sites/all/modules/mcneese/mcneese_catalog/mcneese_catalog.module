@@ -1756,7 +1756,7 @@ function mcneese_catalog_filter_info() {
   $data['mcneese_catalog_auto_tags']['description'] = t("Provides processing of McNeese Acalog tags (catalog-course-id, catalog-filter-id, catalog-hierarchy-id, catalog-entity-id, catalog-page-id, catalog-program-id, catalog-degree_type-id, catalog-program_type-id) into content.");
   $data['mcneese_catalog_auto_tags']['process callback'] = 'mcneese_catalog_auto_tags_process';
   $data['mcneese_catalog_auto_tags']['weight'] = -30;
-  $data['mcneese_catalog_auto_tags']['cache'] = FALSE;
+  $data['mcneese_catalog_auto_tags']['cache'] = TRUE;
 
   return $data;
 }
