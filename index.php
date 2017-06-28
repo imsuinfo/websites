@@ -355,6 +355,8 @@ function _drupal_root_build_static_front_page($file_name) {
     $fixed_css = preg_replace('/ date-day-\d+\b/i', '', $fixed_css);
     $fixed_css = preg_replace('/ date-hour-\d+\b/i', '', $fixed_css);
     $fixed_css = preg_replace('/ date-minute-\d+\b/i', '', $fixed_css);
+    $fixed_css = preg_replace('/ is-unsupported\b/i', '', $fixed_css);
+    $fixed_css = preg_replace('/ is-legacy\b/i', '', $fixed_css);
 
     $renderred = preg_replace('/<body id="mcneese-body" class="([^"]*)"/i', '<body id="mcneese-body" class="' . $fixed_css . '"', $renderred);
   }
@@ -712,12 +714,6 @@ else {
           $static_frontpage = preg_replace('/<body id="mcneese-body" class="([^"]*)"/i', '<body id="mcneese-body" class="' . $matches[1] . $css_body . '"', $static_frontpage);
         }
         unset($css_body);
-
-        // forms on front page need to be re-built, such as the search form (including form build id).
-        $static_frontpage = preg_replace('@<form action="/" method="post" id="search-block-form"@i', '<form action="/search/site" method="post" id="search-block-form"', $static_frontpage);
-        #$static_frontpage = preg_replace('/<input type="hidden" name="form_build_id" value="form-[^"]+"/i', '<input type="hidden" name="form_build_id" value="form-' . drupal_random_key() . '"', $static_frontpage);
-        $static_frontpage = preg_replace('/<input type="hidden" name="form_build_id" value="form-[^"]+">/i', '', $static_frontpage);
-
 
         drupal_send_headers();
         print($static_frontpage);
