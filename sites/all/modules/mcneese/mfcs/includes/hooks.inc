@@ -551,7 +551,33 @@ function mfcs_hook_menu_requests_reviewing(&$items, $module_path) {
   $items['requests/review-0/ajax'] = array(
     'title' => '',
     'page callback' => 'mfcs_ajax_review_0',
+    'page arguments' => array(3),
+    'file' => 'ajax.inc',
+    'file path' => $module_path . '/includes',
+    'access callback' => 'mfcs_page_request_access',
+    'access arguments' => array('review'),
+    'type' => MENU_CALLBACK,
+    'tab_parent' => 'requests/review-0',
+    'tab_root' => 'requests/review-0',
+  );
+
+  $items['requests/review-0/ajax/%'] = array(
+    'title' => '',
+    'page callback' => 'mfcs_ajax_review_0',
     'page arguments' => array(),
+    'file' => 'ajax.inc',
+    'file path' => $module_path . '/includes',
+    'access callback' => 'mfcs_page_request_access',
+    'access arguments' => array('review'),
+    'type' => MENU_CALLBACK,
+    'tab_parent' => 'requests/review-0',
+    'tab_root' => 'requests/review-0',
+  );
+
+  $items['requests/review-0/ajax/%/%'] = array(
+    'title' => '',
+    'page callback' => 'mfcs_ajax_review_0',
+    'page arguments' => array(3, 4),
     'file' => 'ajax.inc',
     'file path' => $module_path . '/includes',
     'access callback' => 'mfcs_page_request_access',
@@ -653,6 +679,19 @@ function mfcs_hook_menu_requests_listing(&$items, $module_path) {
     'title' => '',
     'page callback' => 'mfcs_ajax_list_0',
     'page arguments' => array(3),
+    'file' => 'ajax.inc',
+    'file path' => $module_path . '/includes',
+    'access callback' => 'mfcs_page_request_access',
+    'access arguments' => array('list'),
+    'type' => MENU_CALLBACK,
+    'tab_parent' => 'requests/list-0',
+    'tab_root' => 'requests/list-0',
+  );
+
+  $items['requests/list-0/ajax/%/%'] = array(
+    'title' => '',
+    'page callback' => 'mfcs_ajax_list_0',
+    'page arguments' => array(3, 4),
     'file' => 'ajax.inc',
     'file path' => $module_path . '/includes',
     'access callback' => 'mfcs_page_request_access',
@@ -1440,7 +1479,7 @@ function mfcs_hook_menu_management(&$items, $module_path) {
     'title' => 'User Problems - Re-sync Account',
     'description' => 'Attempt to re-synchronize user account to banner database.',
     'page callback' => 'mfcs_request_problems_0_users_resynchronize',
-    'page arguments' => array(4),
+    'page arguments' => array(3),
     'file' => 'request_problems.inc',
     'file path' => $module_path . '/pages',
     'access callback' => 'mfcs_page_generic_access',
@@ -1526,7 +1565,7 @@ function mfcs_hook_menu_management(&$items, $module_path) {
     'tab_root' => 'problems-0',
   );
 
-  $items['problems-0/requests/request/%'] = array(
+  $items['problems-0/requests/problem/%'] = array(
     'title' => 'Request Problems',
     'description' => 'Manage problems detected by the system that are specific to a single request.',
     'page callback' => 'drupal_get_form',
@@ -1539,7 +1578,7 @@ function mfcs_hook_menu_management(&$items, $module_path) {
     'tab_root' => 'problems-0/requests',
   );
 
-  $items['problems-0/requests/request/%/recheck'] = array(
+  $items['problems-0/requests/problem/%/recheck'] = array(
     'title' => 'Request Problems',
     'description' => 'Re-check a single problem for a single request.',
     'page callback' => 'mfcs_request_problems_0_request_recheck',
@@ -1555,8 +1594,7 @@ function mfcs_hook_menu_management(&$items, $module_path) {
   $items['requests/synchronize-0'] = array(
     'title' => 'Synchronize Requests',
     'description' => 'The synchronize ',
-    'page callback' => 'drupal_get_form',
-    'page arguments' => array('mfcs_request_synchronize_0_form'),
+    'page callback' => 'mfcs_request_synchronize_0_page',
     'file' => 'request_synchronize.inc',
     'file path' => $module_path . '/pages',
     'access callback' => 'mfcs_synchronize_request_access',
@@ -1578,11 +1616,67 @@ function mfcs_hook_menu_management(&$items, $module_path) {
     'tab_root' => 'requests',
   );
 
-  $items['requests/synchronize-0/%'] = array(
+  $items['requests/synchronize-0/create'] = array(
     'title' => 'Synchronize Requests',
     'description' => 'The synchronize ',
     'page callback' => 'drupal_get_form',
-    'page arguments' => array('mfcs_request_synchronize_0_form', 2),
+    'page arguments' => array('mfcs_request_synchronize_0_create_form'),
+    'file' => 'request_synchronize.inc',
+    'file path' => $module_path . '/pages',
+    'access callback' => 'mfcs_synchronize_request_access',
+    'access arguments' => array(),
+    'tab_parent' => 'requests',
+    'tab_root' => 'requests',
+    'type' => MENU_CALLBACK,
+  );
+
+  $items['requests/synchronize-0/create/%'] = array(
+    'title' => 'Synchronize Requests',
+    'description' => 'The synchronize ',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('mfcs_request_synchronize_0_create_form', 3),
+    'file' => 'request_synchronize.inc',
+    'file path' => $module_path . '/pages',
+    'access callback' => 'mfcs_synchronize_request_access',
+    'access arguments' => array(),
+    'tab_parent' => 'requests',
+    'tab_root' => 'requests',
+    'type' => MENU_CALLBACK,
+  );
+
+  $items['requests/synchronize-0/edit/%'] = array(
+    'title' => 'Synchronize Requests',
+    'description' => 'The synchronize ',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('mfcs_request_synchronize_0_create_form', 3, FALSE),
+    'file' => 'request_synchronize.inc',
+    'file path' => $module_path . '/pages',
+    'access callback' => 'mfcs_synchronize_request_access',
+    'access arguments' => array(),
+    'tab_parent' => 'requests',
+    'tab_root' => 'requests',
+    'type' => MENU_CALLBACK,
+  );
+
+  $items['requests/synchronize-0/delete/%'] = array(
+    'title' => 'Synchronize Requests',
+    'description' => 'The synchronize ',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('mfcs_request_synchronize_0_delete_form', 3),
+    'file' => 'request_synchronize.inc',
+    'file path' => $module_path . '/pages',
+    'access callback' => 'mfcs_synchronize_request_access',
+    'access arguments' => array(),
+    'tab_parent' => 'requests',
+    'tab_root' => 'requests',
+    'type' => MENU_CALLBACK,
+  );
+
+  $items['requests/synchronize-0/%'] = array(
+    'title' => 'Synchronize Requests',
+    'description' => 'The synchronize ',
+    'page callback' => 'mfcs_request_synchronize_0_page',
+    'page arguments' => array(2),
     'file' => 'request_synchronize.inc',
     'file path' => $module_path . '/pages',
     'access callback' => 'mfcs_synchronize_request_access',
@@ -2365,7 +2459,7 @@ function mfcs_hook_user_login(&$edit, $user, $category) {
     return;
   }
 
-  mfcs_synchronize_user_settings($user);
+  mfcs_synchronize_user_settings($user, array(), TRUE, TRUE, TRUE);
 
 
   // trigger a save update if the users roles should be changed according to mfcs_hook_process_user_banner_roles().
@@ -2988,7 +3082,13 @@ function mfcs_hook_process_user_banner_roles($user, &$problems, $changes = array
     }
   }
 
-  $primary_account_id = (int) $user->uid;
+
+  $primary_account_id = NULL;
+  if (isset($user->uid)) {
+    // uid is not present for new accounts, only assign if it exists.
+    $primary_account_id = (int) $user->uid;
+  }
+
   if (!is_null($mfcs_user_settings['banner_id']) && $mfcs_user_settings['primary_account'] === FALSE) {
     $associated_users = mfcs_users_load_banner_id_to_user_id($mfcs_user_settings['banner_id']);
     if (isset($associated_users['banner'][$mfcs_user_settings['banner_id']]['primary']['user_id'])) {
@@ -3084,7 +3184,7 @@ function mfcs_hook_process_user_banner_roles($user, &$problems, $changes = array
 
   // validate banner id, if invalid, then strip all user roles.
   $banner_information = mfcs_load_request_user_by_banner_id($mfcs_user_settings['banner_id']);
-  if (is_bool($banner_information)) {
+  if (is_bool($banner_information) || empty($banner_information['role'])) {
     $user_status = NULL;
     if (isset($user->status)) {
       $user_status = (int) $user->status;
@@ -3099,9 +3199,26 @@ function mfcs_hook_process_user_banner_roles($user, &$problems, $changes = array
       if (($problems & MFCS_USER_PROBLEM_ACCOUNT_BANNER_INVALID) != 0) {
         $problems = $problems - MFCS_USER_PROBLEM_ACCOUNT_BANNER_INVALID;
       }
+
+      if (($problems & MFCS_USER_PROBLEM_ACCOUNT_BANNER_NOT_IN_LDAP) != 0) {
+        $problems = $problems - MFCS_USER_PROBLEM_ACCOUNT_BANNER_NOT_IN_LDAP;
+      }
+
+      if (($problems & MFCS_USER_PROBLEM_ACCOUNT_NO_BANNER_ROLES) != 0) {
+        $problems = $problems - MFCS_USER_PROBLEM_ACCOUNT_NO_BANNER_ROLES;
+      }
     }
-    elseif (($problems & MFCS_USER_PROBLEM_ACCOUNT_BANNER_INVALID) == 0) {
-      $problems = $problems | MFCS_USER_PROBLEM_ACCOUNT_BANNER_INVALID;
+    else {
+      if (is_bool($banner_information)) {
+        if (($problems & MFCS_USER_PROBLEM_ACCOUNT_BANNER_INVALID) == 0) {
+          $problems = $problems | MFCS_USER_PROBLEM_ACCOUNT_BANNER_INVALID;
+        }
+      }
+      elseif (empty($banner_information['roles'])) {
+        if (($problems & MFCS_USER_PROBLEM_ACCOUNT_NO_BANNER_ROLES) == 0) {
+          $problems = $problems | MFCS_USER_PROBLEM_ACCOUNT_NO_BANNER_ROLES;
+        }
+      }
     }
 
     if (!$is_manager) {
@@ -3121,8 +3238,18 @@ function mfcs_hook_process_user_banner_roles($user, &$problems, $changes = array
       return $results;
     }
   }
-  elseif (($problems & MFCS_USER_PROBLEM_ACCOUNT_BANNER_INVALID) != 0) {
-    $problems = $problems - MFCS_USER_PROBLEM_ACCOUNT_BANNER_INVALID;
+  else {
+    if (($problems & MFCS_USER_PROBLEM_ACCOUNT_BANNER_INVALID) != 0) {
+      $problems = $problems - MFCS_USER_PROBLEM_ACCOUNT_BANNER_INVALID;
+    }
+
+    if (($problems & MFCS_USER_PROBLEM_ACCOUNT_BANNER_NOT_IN_LDAP) != 0) {
+      $problems = $problems - MFCS_USER_PROBLEM_ACCOUNT_BANNER_NOT_IN_LDAP;
+    }
+
+    if (($problems & MFCS_USER_PROBLEM_ACCOUNT_NO_BANNER_ROLES) != 0) {
+      $problems = $problems - MFCS_USER_PROBLEM_ACCOUNT_NO_BANNER_ROLES;
+    }
   }
   unset($banner_information);
 
@@ -3196,7 +3323,7 @@ function mfcs_hook_process_user_banner_roles($user, &$problems, $changes = array
       $can_review = TRUE;
     }
 
-    $all_coordinators = mfcs_load_room_coordinators(NULL, TRUE);
+    $all_coordinators = mfcs_load_venue_and_room_coordinators(NULL, TRUE);
     if (array_key_exists($primary_account_id, $all_coordinators)) {
       if (array_key_exists($reviewer_role->rid, $processed_roles)) {
         $can_review = TRUE;
@@ -3230,23 +3357,33 @@ function mfcs_hook_process_user_banner_roles($user, &$problems, $changes = array
 
   $results = array();
 
-  // auto-lock or auto-unlock accounts without any banner roles, but only when banner can be refreshed.
-  if (($problems & MFCS_USER_PROBLEM_ACCOUNT_CREATE_BANNER_UNAVAILABLE) == 0 && ($problems & MFCS_USER_PROBLEM_ACCOUNT_SYNC_BANNER_UNAVAILABLE) == 0 && ($problems & MFCS_USER_PROBLEM_ACCOUNT_BANNER_INVALID) == 0) {
-    // If the user has banner roles, then make sure MFCS_USER_PROBLEM_ACCOUNT_NO_ACCESS is no longer set.
-    if (!empty($banner_roles) && ($problems & MFCS_USER_PROBLEM_ACCOUNT_NO_ACCESS) != 0) {
-      $problems -= MFCS_USER_PROBLEM_ACCOUNT_NO_ACCESS;
-    }
+  // auto-lock or auto-unlock accounts without any banner roles (or other banner id related problems), but only when banner can be refreshed.
+  if (($problems & MFCS_USER_PROBLEM_ACCOUNT_CREATE_BANNER_UNAVAILABLE) == 0 && ($problems & MFCS_USER_PROBLEM_ACCOUNT_SYNC_BANNER_UNAVAILABLE) == 0) {
+    if (($problems & MFCS_USER_PROBLEM_ACCOUNT_BANNER_INVALID) == 0 && ($problems & MFCS_USER_PROBLEM_ACCOUNT_BANNER_NOT_IN_LDAP) == 0 && ($problems & MFCS_USER_PROBLEM_ACCOUNT_NO_BANNER_ROLES) == 0) {
+      // If the user has banner roles, then make sure MFCS_USER_PROBLEM_ACCOUNT_NO_ACCESS is no longer set.
+      if (!empty($banner_roles) && ($problems & MFCS_USER_PROBLEM_ACCOUNT_NO_ACCESS) != 0) {
+        $problems -= MFCS_USER_PROBLEM_ACCOUNT_NO_ACCESS;
+      }
 
-    if ($user->status == 0) {
-      if (!empty($banner_roles)) {
-        // auto-unlock account.
-        $results['status'] = 1;
+      if ($user->status == 0) {
+        if (!empty($banner_roles)) {
+          // auto-unlock account.
+          $results['status'] = 1;
 
-        watchdog(MFCS_WATCHDOG_ID, 'The user \'%user_name\' (%user_id, %primary_id) has had the account enabled/unlocked due to regaining sufficient banner roles.', array('%user_name' => $user->name, '%user_id' => isset($user->uid) ? $user->uid : 'undefined', '%primary_id' => $primary_account_id), WATCHDOG_NOTICE);
+          watchdog(MFCS_WATCHDOG_ID, 'The user \'%user_name\' (%user_id, %primary_id) has had the account enabled/unlocked due to regaining sufficient banner roles.', array('%user_name' => $user->name, '%user_id' => isset($user->uid) ? $user->uid : 'undefined', '%primary_id' => $primary_account_id), WATCHDOG_NOTICE);
+        }
+      }
+      else {
+        if (empty($banner_roles)) {
+          // auto-lock account (currently disabled).
+          #$results['status'] = 0;
+
+          #watchdog(MFCS_WATCHDOG_ID, 'The user \'%user_name\' (%user_id, %primary_id) has had the account disabled/locked due to insufficient banner roles.', array('%user_name' => $user->name, '%user_id' => isset($user->uid) ? $user->uid : 'undefined', '%primary_id' => $primary_account_id), WATCHDOG_NOTICE);
+        }
       }
     }
     else {
-      if (empty($banner_roles)) {
+      if ($user->status == 1 && empty($banner_roles)) {
         // auto-lock account (currently disabled).
         #$results['status'] = 0;
 

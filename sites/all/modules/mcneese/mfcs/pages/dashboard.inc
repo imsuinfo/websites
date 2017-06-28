@@ -28,11 +28,26 @@ function mfcs_dashboard_page() {
 
   mfcs_add_canonical_headers('requests');
 
+  $instance = mfcs_instance();
+
   // access check is performed here instead of via the hook_menu() so that different responses may be provided based on access control situations.
   $user_account_new_banner_access_problem = FALSE;
   if (mfcs_dashboard_page_access() === FALSE) {
-    if (!empty($user->mfcs) && is_array($user->mfcs) && array_key_exists('problems', $user->mfcs) && ($user->mfcs['problems'] & MFCS_USER_PROBLEM_ACCOUNT_CREATE_BANNER_UNAVAILABLE) != 0) {
-      $user_account_new_banner_access_problem = TRUE;
+    if (!empty($user->mfcs) && is_array($user->mfcs) && array_key_exists('problems', $user->mfcs)) {
+      // continue to check access so long as the user has insufficient access.
+      if (($user->mfcs['problems'] & MFCS_USER_PROBLEM_ACCOUNT_NO_ACCESS) != 0) {
+        // only due this when banner is expected to be available.
+        $backup_begin = strtotime('12:00am', $instance);
+        $backup_end = strtotime('4:00am', $instance);
+
+        if ($instance < $backup_begin || $instance > $backup_end) {
+          mfcs_synchronize_user_settings($user, array(), TRUE, TRUE, TRUE);
+        }
+      }
+
+      if (($user->mfcs['problems'] & MFCS_USER_PROBLEM_ACCOUNT_CREATE_BANNER_UNAVAILABLE) != 0) {
+        $user_account_new_banner_access_problem = TRUE;
+      }
     }
   }
 
@@ -170,9 +185,11 @@ function mfcs_dashboard_page() {
       if (!empty($user->mfcs) && is_array($user->mfcs) && array_key_exists('problems', $user->mfcs)) {
 
         // only assign no access problem flag when the user account has not been flagged as unable to sync with banner.
-        if (($user->mfcs['problems'] & MFCS_USER_PROBLEM_ACCOUNT_CREATE_BANNER_UNAVAILABLE) == 0 && ($user->mfcs['problems'] & MFCS_USER_PROBLEM_ACCOUNT_SYNC_BANNER_UNAVAILABLE) == 0 && ($user->mfcs['problems'] & MFCS_USER_PROBLEM_ACCOUNT_BANNER_INVALID) == 0) {
-          $user->mfcs['problems'] = $user->mfcs['problems'] | MFCS_USER_PROBLEM_ACCOUNT_NO_ACCESS;
-          mfcs_save_user($user->uid, array('problems' => $user->mfcs['problems']));
+        if (($user->mfcs['problems'] & MFCS_USER_PROBLEM_ACCOUNT_CREATE_BANNER_UNAVAILABLE) == 0 && ($user->mfcs['problems'] & MFCS_USER_PROBLEM_ACCOUNT_SYNC_BANNER_UNAVAILABLE) == 0) {
+          if (($user->mfcs['problems'] & MFCS_USER_PROBLEM_ACCOUNT_BANNER_INVALID) == 0 || ($user->mfcs['problems'] & MFCS_USER_PROBLEM_ACCOUNT_BANNER_NOT_IN_LDAP) == 0 || ($user->mfcs['problems'] & MFCS_USER_PROBLEM_ACCOUNT_NO_BANNER_ROLES) == 0) {
+            $user->mfcs['problems'] = $user->mfcs['problems'] | MFCS_USER_PROBLEM_ACCOUNT_NO_ACCESS;
+            mfcs_save_user($user->uid, array('problems' => $user->mfcs['problems']));
+          }
         }
       }
       else {
@@ -182,6 +199,7 @@ function mfcs_dashboard_page() {
     }
   }
   else {
+    $markup .= mfcs_dashboard_page_updated_1_2_message();
     $markup .= '<h3 class="mfcs-dashboard_page-choices-header">Facilities Use and Special Event Request System</h3>';
   }
 
@@ -203,8 +221,6 @@ function mfcs_dashboard_page() {
   if ($can_list) {
     mfcs_include(MFCS_INCLUDE_LIST_OPTIONS);
     mfcs_include(MFCS_INCLUDE_MISCELLANEOUS);
-
-    $instance = mfcs_instance();
 
     $year = date('Y', $instance);
 
@@ -269,11 +285,23 @@ function mfcs_dashboard_page() {
     }
 
 
+    // load the default calendar
+    $default_calendar = (int) variable_get('mfcs_user_calendar_default', MFCS_USER_CALENDAR_FULL);
+
     // dashboard assigns a separate theme for the original theme, however the full calander can and should display all unavailabilities.
     // a separate structure is used for holidays for both original and full calendar.
-    $calendar = MFCS_USER_CALENDAR_ORIGINAL;
+    $calendar = $default_calendar;
     if (isset($user->mfcs['calendar']) && is_numeric($user->mfcs['calendar'])) {
       $calendar = (int) $user->mfcs['calendar'];
+    }
+
+    if ($calendar === MFCS_USER_CALENDAR_NONE) {
+      if ($default_calendar === MFCS_USER_CALENDAR_FULL) {
+        $calendar = $default_calendar;
+      }
+      else {
+        $calendar = $default_calendar;
+      }
     }
 
 
@@ -367,7 +395,7 @@ function mfcs_dashboard_page() {
 
     $rows = array();
     foreach ($holidays as $holiday) {
-      if ($calendar == MFCS_USER_CALENDAR_ORIGINAL || $calendar == MFCS_USER_CALENDAR_NONE) {
+      if ($calendar == MFCS_USER_CALENDAR_ORIGINAL || ($calendar == MFCS_USER_CALENDAR_NONE && $default_calendar === MFCS_USER_CALENDAR_ORIGINAL)) {
         $date_current = $holiday->date_start;
         while ($date_current < $holiday->date_stop) {
           $day = date('j', $date_current);
@@ -428,7 +456,7 @@ function mfcs_dashboard_page() {
     unset($holiday);
     unset($holidays);
 
-    if ($calendar == MFCS_USER_CALENDAR_ORIGINAL || $calendar == MFCS_USER_CALENDAR_NONE) {
+    if ($calendar == MFCS_USER_CALENDAR_ORIGINAL || ($calendar == MFCS_USER_CALENDAR_NONE && $default_calendar === MFCS_USER_CALENDAR_NONE)) {
       foreach ($unavailabilities as $unavailability) {
         $date_current = $unavailability->date_start;
         while ($date_current < $unavailability->date_stop) {
@@ -633,7 +661,7 @@ function mfcs_dashboard_page() {
     mfcs_include(MFCS_INCLUDE_OUTPUT);
 
     $title = '<h3><a href="' . $base_path . 'requests/calendar-0/month' . $url_arguments . '">Requests for ' . date('F, Y', $month_start) . '</a></h3>';
-    $result = mfcs_build_calendar_month_markup($rows, $month_start, $month_stop, $absolute_start, $absolute_stop, $title, 'mfcs-calendar-0-month', 3);
+    $result = mfcs_build_calendar_month_markup($calendar, $rows, $month_start, $month_stop, $absolute_start, $absolute_stop, $title, 'mfcs-calendar-0-month', 3);
     if ($result !== FALSE) {
       $markup .= $result;
     }
@@ -641,6 +669,129 @@ function mfcs_dashboard_page() {
   }
 
   return $markup;
+}
+
+/**
+ * Add a temporary update message.
+ *
+ * This will be displayed one time per user and then only if it is before July 1, 2017.
+ *
+ * This sort of abuses colorbox (which is generally intended for images) to quickly and easily display a full-page popup.
+ *
+ * @return string
+ *   The generated HTML markup string.
+ */
+function mfcs_dashboard_page_updated_1_2_message() {
+  $instance = mfcs_instance();
+
+  if ($instance >= strtotime('July 1, 2017')) {
+    return '';
+  }
+
+  $colorbox_path = drupal_get_path('module', 'colorbox');
+  drupal_add_js($colorbox_path . '/js/colorbox.js', array('group' => JS_LIBRARY));
+
+  $markup = '<div id="mfcs_dashboard_page_updated_1_2_message_popup" class="system_updated_notice_1_2 colorbox-inline">';
+  $markup .= '<h4>The Facilities Use System has now been updated to version 1.2!</h4>';
+  $markup .= '<br>';
+
+  $markup .= '<div>This fixes a number of issues observed, improves the calendar interaction, looks even cleaner on phones and other small devices, improves the terminology, and more...</div>';
+  $markup .= '<br>';
+
+  $markup .= '<h5>Highlights</h5>';
+  $markup .= '<br>';
+
+  $markup .= '<strong>Small-device friendly improvements to the theme.</strong>';
+  $markup .= '<ul>';
+  $markup .= '<li>Requests, Calendars, Listings, all adjust automatically to better fit smaller screen sizes.</li>';
+  $markup .= '<li> No need to install an app on your phone, it just works!</li>';
+  $markup .= '</ul>';
+  $markup .= '<br>';
+
+  $markup .= '<strong>Requests may now have their dates and times cancelled or uncancelled after a Request has already had a final decision made.</strong>';
+  $markup .= '<ul>';
+  $markup .= '<li>This means no more cancelling the entire request and creating a new one because a single date is incorrect.</li>';
+  $markup .= '</ul>';
+  $markup .= '<br>';
+
+  $markup .= '<strong>Requests may now be changed during any part of the process (depending on your access privileges):</strong>';
+  $markup .= '<ul>';
+  $markup .= '<li>This means no more restarting the entire review process to make minor corrections.</li>';
+  $markup .= '<li>More complicated changes may now be performed by Managers.</li>';
+  $markup .= '</ul>';
+  $markup .= '<br>';
+
+  $markup .= '<strong>Holidays and Room Unavailabilities feature provides a way to see and catch conflicts.</strong>';
+  $markup .= '<ul>';
+  $markup .= '<li>Holidays display warning messages to inform the user that there may be a conflict, but they do not prevent request submission.</li>';
+  $markup .= '<li>Room Unavailabilities display error messages and prevent request submission.</li>';
+  $markup .= '<li>These messages are even displayed in the review section so that reviewers may more easily notice the conflicts.</li>';
+  $markup .= '<li>Holidays and Room Unavailabilities (including scheduled class conflicts) are now displayed on the calendar.</li>';
+  $markup .= '</ul>';
+  $markup .= '<br>';
+
+  $markup .= '<strong>If you are a reviewer, then you will notice that the words "Approve" and "Deny" have been replaced with "Issues" and "No Issues" when reviewing a request.</strong>';
+  $markup .= '<ul>';
+  $markup .= '<li>Reviewers may now specify "Issues" or "No Issues" during the Final Approval step.</li>';
+  $markup .= '<li>Reviewers may not specify "Issues" or "No Issues" as many times as they like until the Final Decision is made.</li>';
+  $markup .= '<li>Either "Issues" or "No Issues" may be specified at least one time to designate that you have "Reviewed" the request.</li>';
+  $markup .= '</ul>';
+  $markup .= '<br>';
+
+  $markup .= '<div><strong>If reviewers have forgotten to review a request, reminder e-mails are now periodically sent out prior to the first requested date.</strong></div>';
+  $markup .= '<br>';
+
+  $markup .= '<strong>New and improved user management pages.</strong>';
+  $markup .= '<ul>';
+  $markup .= '<li>It is now easier than ever to view and customize your user settings.</li>';
+  $markup .= '<li>You may switch back to/from the old calendar (called Original Calendar) and the new calendar (called Full Calendar) themes.</li>';
+  $markup .= '<li>You may now setup default filter options so that every time you re-login, your filters are pre-assigned.</li>';
+  $markup .= '</ul>';
+  $markup .= '<br>';
+
+  $markup .= '<strong>Managers may now forcibly change the status of any request.</strong>';
+  $markup .= '<ul>';
+  $markup .= '<li>This means no more re-creating requests to make corrections or handle exceptional cases.</li>';
+  $markup .= '<li>If special case situations comes up, just add a comment asking for a manager to perform some task.</li>';
+  $markup .= '</ul>';
+  $markup .= '<br>';
+
+  $markup .= '<div><strong>Managers may now add custom Room Unavailabilities.</strong></div>';
+  $markup .= '<br>';
+
+  $markup .= '<strong>New Help and Documentation pages have been added to the site (and can be downloaded as a PDF or printed very easily).</strong>';
+  $markup .= '<ul>';
+  $markup .= '<li>Quick Guides provide a short and simple step-by-step instructions to quickly perform a signle task.</li>';
+  $markup .= '<li>Documentation provides details explanations on the functionality and terminology provided by the system.</li>';
+  $markup .= '</ul>';
+  $markup .= '<br>';
+
+  $markup .= '<div><strong>Enjoy! - Kevin Day, Site Administrator</strong></div>';
+  $markup .= '<br>';
+  $markup .= '</div>';
+
+
+
+  $javascript = '(function ($) {' . "\n";
+  $javascript .= 'Drupal.behaviors.mfcs_dashboard_page_updated_1_2_message = {' . "\n";
+  $javascript .= '  attach:function(context) {' . "\n";
+
+  #$javascript .= '$.colorbox({html:"' . preg_replace('/"/', '\"', $markup) . '", loop: false});';
+  $javascript .= '$("#mfcs_dashboard_page_updated_1_2_message_popup_open").colorbox({inline: true, href: "#mfcs_dashboard_page_updated_1_2_message_popup", loop: false});';
+
+  $javascript .= '    }' . "\n";
+  $javascript .= '  }' . "\n";
+  $javascript .= '})(jQuery);' . "\n";
+
+  drupal_add_js($javascript, array('type' => 'inline', 'group' => JS_THEME, 'preprocess' => TRUE, 'cache' => FALSE));
+
+
+  $markup_wrapper = '<center><h3 class="inline-block border-1 border-style-solid margin-3 padding-3 align_center" style="width: 80%; background-color: #eeffb5;"><a id="mfcs_dashboard_page_updated_1_2_message_popup_open">The Facilities Use System has now been updated to version 1.2!</a></h3><br>';
+  $markup_wrapper .= '<div class="mfcs_dashboard_page_updated_1_2_message_popup_overlay" style="display: none">';
+  $markup_wrapper .= $markup;
+  $markup_wrapper .= '</div></center>';
+
+  return $markup_wrapper;
 }
 
 /**

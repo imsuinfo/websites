@@ -252,7 +252,7 @@ function mfcs_request_email_log_0_form($form, &$form_state, $page_number = NULL)
     );
 
     $row['date'] = array(
-      'data' => '<div class="column-item item-date item-date-0">' . check_plain(date(MFCS_DATE_FORMAT_DATE_TIME_SECONDS, $email_log->date)) . '</div>',
+      'data' => '<div class="column-item item-date item-date-0">' . check_plain(date(MFCS_DATE_FORMAT_DATE_TIME_SECONDS_SQUEEZE, $email_log->date)) . '</div>',
       'class' => $class_date,
     );
 
@@ -369,10 +369,13 @@ function mfcs_request_email_log_0_form($form, &$form_state, $page_number = NULL)
     ),
     'displayStart' => $options['start'],
     'pageLength' => $rows_per_page,
-    'dom' => 'lfCrtip',
+    'dom' => 'lfBrtip',
     'KeyTable' => FALSE,
-    'oColVis' => array(
-      'buttonText' => '"Show / Hide"',
+    'buttons' => array(
+      'colvis' => array(
+        'extend' => '"colvis"',
+        'text' => '"Show / Hide"',
+      ),
     ),
     'oLanguage' => array(
       'sSearch' => '"Filter"',
@@ -1147,15 +1150,15 @@ function mfcs_request_email_log_0_resend_form_submit($form, &$form_state) {
 
     foreach ($destinations as $to) {
       if (!in_array($to, $email_whitelist) && !in_array($to, $debug_accounts)) {
-        drupal_set_message(t('Warning: not sending mail to @to while testing the system.', array('@to' => $to)), 'warning');
-        #watchdog('debug', "Warning: not sending mail to @to while testing the system.", array('@to' => $to), WATCHDOG_WARNING);
+        drupal_set_message(t('<span class="strong uppercase">Warning</span>: not sending mail to @to while testing the system.', array('@to' => $to)), 'warning');
+        #watchdog('debug', "<span class="strong uppercase">Warning</span>: not sending mail to @to while testing the system.", array('@to' => $to), WATCHDOG_WARNING);
         unset($destinations[$to]);
       }
     }
   }
 
   if (empty($destinations)) {
-    drupal_set_message('There is no e-mail to re-send to. Perhaps e-mail debugging is enabled and no accounts are setup to receive e-mails.', 'warning');
+    drupal_set_message('<span class="strong uppercase">Warning</span>: There is no e-mail to re-send to. Perhaps e-mail debugging is enabled and no accounts are setup to receive e-mails.', 'warning');
 
     $form_state['rebuild'] = TRUE;
     $form_state['redirect'] = FALSE;

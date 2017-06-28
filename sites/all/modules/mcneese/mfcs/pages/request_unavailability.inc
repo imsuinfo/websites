@@ -286,10 +286,13 @@ function mfcs_request_unavailability_0_rooms_page() {
     ),
     'displayStart' => 0,
     'pageLength' => 40,
-    'dom' => 'lfCrtip',
+    'dom' => 'lfBrtip',
     'KeyTable' => FALSE,
-    'oColVis' => array(
-      'buttonText' => '"Show / Hide"',
+    'buttons' => array(
+      'colvis' => array(
+        'extend' => '"colvis"',
+        'text' => '"Show / Hide"',
+      ),
     ),
     'oLanguage' => array(
       'sSearch' => '"Filter"',
@@ -714,10 +717,13 @@ function mfcs_request_unavailability_0_room_page($room_id, $year = NULL) {
     'columns' => $columns,
     'displayStart' => 0,
     'pageLength' => 40,
-    'dom' => 'lfCrtip',
+    'dom' => 'lfBrtip',
     'KeyTable' => FALSE,
-    'oColVis' => array(
-      'buttonText' => '"Show / Hide"',
+    'buttons' => array(
+      'colvis' => array(
+        'extend' => '"colvis"',
+        'text' => '"Show / Hide"',
+      ),
     ),
     'oLanguage' => array(
       'sSearch' => '"Filter"',
@@ -937,14 +943,15 @@ function mfcs_request_unavailability_0_page($year, $room_id, $unavailability_id)
   }
 
   // report any detected unavailability to request conflicts.
+  $conflict_message = NULL;
   $conflicts = mfcs_unavailability_rooms_conflicts($unavailability_id);
   if (!empty($conflicts)) {
-    $conflict_message = 'Warning: the following requests are scheduled on unavailable dates:<ul>';
+    $conflict_message = '<span class="strong uppercase">Warning</span>: the following requests are scheduled on unavailable dates:';
+    $conflict_message .= '<ul class="unavailable-room_conflicts">';
     foreach ($conflicts as $conflict) {
-      $conflict_message .= '<li><a href="' . $base_path . 'requests/view-0/' . $conflict['id'] . $url_arguments . '">' . check_plain($conflict['title']) . '</a></li>';
+      $conflict_message .= '<li class="unavailable-room_conflicts-conflict"><a href="' . $base_path . 'requests/view-0/' . $conflict['id'] . $url_arguments . '">' . check_plain($conflict['title']) . '</a> <span class="request_id">(Request ID: ' . (int) $conflict['id'] . ')</span></li>';
     }
     $conflict_message .= '</ul>';
-    drupal_set_message($conflict_message, 'warning');
   }
 
   mfcs_include(MFCS_INCLUDE_LIST_OPTIONS);
@@ -952,22 +959,22 @@ function mfcs_request_unavailability_0_page($year, $room_id, $unavailability_id)
 
   if ($unavailable->date_start == strtotime('midnight today', $unavailable->date_start) && $unavailable->date_stop == strtotime('midnight tomorrow', $unavailable->date_start)) {
     $date_label = 'Unavailable On:';
-    $date_value = date(MFCS_DATE_FORMAT_DATE_HUMAN, $unavailable->date_start);
+    $date_value = '<a href="' . $base_path . 'requests/calendar-0/day/' . strtolower(date('Y/F/d', $unavailable->date_start)) . $url_arguments . '" class="">' . date(MFCS_DATE_FORMAT_DATE_HUMAN, $unavailable->date_start) . '</a>';
   }
   else {
     if (strtotime('midnight today', $unavailable->date_start) == strtotime('midnight today', $unavailable->date_stop)) {
       $date_label = 'Unavailable From:';
-      $date_value = date(MFCS_DATE_FORMAT_TIME, $unavailable->date_start) . ' to ' . date(MFCS_DATE_FORMAT_TIME, $unavailable->date_stop) . ' on ' . date(MFCS_DATE_FORMAT_DATE_HUMAN, $unavailable->date_start);
+      $date_value = date(MFCS_DATE_FORMAT_TIME, $unavailable->date_start) . ' to ' . date(MFCS_DATE_FORMAT_TIME, $unavailable->date_stop) . ' on <a href="' . $base_path . 'requests/calendar-0/day/' . strtolower(date('Y/F/d', $unavailable->date_start)) . $url_arguments . '" class="">' . date(MFCS_DATE_FORMAT_DATE_HUMAN, $unavailable->date_start) . '</a>';
     }
     elseif ($unavailable->date_start != strtotime('midnight today', $unavailable->date_start) || $unavailable->date_stop != strtotime('midnight today', $unavailable->date_stop)) {
       $date_label = 'Unavailable From:';
-      $date_value = date(MFCS_DATE_FORMAT_DATE_TIME_HUMAN, $unavailable->date_start) . ' to ' . date(MFCS_DATE_FORMAT_DATE_TIME_HUMAN, $unavailable->date_stop);
+      $date_value = date(MFCS_DATE_FORMAT_TIME, $unavailable->date_start) .  ' <a href="' . $base_path . 'requests/calendar-0/day/' . strtolower(date('Y/F/d', $unavailable->date_start)) . $url_arguments . '" class="">'. date(MFCS_DATE_FORMAT_DATE_HUMAN, $unavailable->date_start) . '</a> to ' . date(MFCS_DATE_FORMAT_TIME, $unavailable->date_stop)  . ' <a href="' . $base_path . 'requests/calendar-0/day/' . strtolower(date('Y/F/d', $unavailable->date_stop)) . $url_arguments . '" class="">'. date(MFCS_DATE_FORMAT_DATE_HUMAN, $unavailable->date_stop) . '</a>';
     }
     else {
       // For whatever reason, the culture treats the stop date inclusively when it has no time (but then treats it inclusively when there is a time!).
       // Make sure the stop date that is printed to the screen is an inclusive date (this therefore cannot be used for any calculations)
       $date_label = 'Unavailable From:';
-      $date_value = '' . date(MFCS_DATE_FORMAT_DATE_HUMAN, $unavailable->date_start) . ' to ' . date(MFCS_DATE_FORMAT_DATE_HUMAN, strtotime('midnight yesterday', $unavailable->date_stop));
+      $date_value = '<a href="' . $base_path . 'requests/calendar-0/day/' . strtolower(date('Y/F/d', $unavailable->date_start)) . $url_arguments . '" class="">'. date(MFCS_DATE_FORMAT_DATE_HUMAN, $unavailable->date_start) . '</a> to <a href="' . $base_path . 'requests/calendar-0/day/' . strtolower(date('Y/F/d', strtotime('midnight yesterday', $unavailable->date_stop))) . $url_arguments . '" class="">'. date(MFCS_DATE_FORMAT_DATE_HUMAN, strtotime('midnight yesterday', $unavailable->date_stop)) . '</a>';
     }
   }
 
@@ -1049,6 +1056,12 @@ function mfcs_request_unavailability_0_page($year, $room_id, $unavailability_id)
 
       $markup .= '<br class="clear">';
     }
+  }
+
+  if (!is_null($conflict_message)) {
+    $markup .= '<div class="conflict_messages">';
+    $markup .= $conflict_message;
+    $markup .= '</div>';
   }
 
   $markup .= '</div>';

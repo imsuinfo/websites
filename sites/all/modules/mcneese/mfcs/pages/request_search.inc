@@ -116,7 +116,7 @@ function mfcs_request_search_0_form($form, &$form_state) {
     'join' => TRUE,
     'limit' => $form['form']['per_page']['#value'],
     'count' => TRUE,
-    'dom' => 'lfCrtip',
+    'dom' => 'lfBrtip',
     'columns' => $columns,
     'columns_default' => $columns_default,
   );
@@ -1751,13 +1751,12 @@ function mfcs_request_search_0_simple_search_preprocess(&$conditions, &$options)
     );
   }
 
-  // Commented out because this is confusing because the date format will not match.
-  #$conditions['or_1']['value_date'] = array(
-  #  'field' => 'text(to_timestamp(mer.created))',
-  #  'operator' => MFCS_OPERATOR_LIKE,
-  #  'search' => $options['search'],
-  #  'expression' => TRUE,
-  #);
+  $conditions['or_1']['value_date'] = array(
+    'field' => 'to_char(to_timestamp(mer.created), \'' . MFCS_DATE_FORMAT_DATE_TIME_SQUEEZE_DATABASE_SEARCH . '\')',
+    'operator' => MFCS_OPERATOR_LIKE,
+    'search' => $options['search'],
+    'expression' => TRUE,
+  );
 
   if (!empty($limit_status)) {
     $conditions['or_1']['value_status'] = array(

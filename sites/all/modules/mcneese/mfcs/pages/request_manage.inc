@@ -65,14 +65,14 @@ function mfcs_request_manage_0_page($request_id) {
   $id_requester = (int) $request['mer']['user_id'][0]->value;
   $id_venue_coordinator = (int) $request['venue_coordinator']['user_id'][0]->value;
 
-  $locks_auto_cancel = 'Default';
+  $locks_auto_cancel = 'First Time';
   $request_locks = mfcs_load_request_locks($request_id);
   if (is_object($request_locks) && isset($request_locks->auto_cancel)) {
     if ($request_locks->auto_cancel === TRUE) {
-      $locks_auto_cancel = 'Locked';
+      $locks_auto_cancel = 'Prohibit';
     }
     else {
-      $locks_auto_cancel = 'Unlocked';
+      $locks_auto_cancel = 'Always';
     }
   }
 
@@ -254,7 +254,7 @@ function mfcs_request_manage_0_page($request_id) {
     $markup .= '<div class="content content-' . $class_name . '">';
 
     foreach ($request_problems_by_id['results'] as $problem_id => $problem_data) {
-      $markup .= mfcs_request_manage_0_page_create_item_message('<a href="' . $base_path . '/problems-0/requests/request/' . ((int)$problem_id) . $url_arguments . '" class="link link-request_problem">' . check_plain($problem_data->reason) . '</a>.', $class_name);
+      $markup .= mfcs_request_manage_0_page_create_item_message('<a href="' . $base_path . '/problems-0/requests/problem/' . ((int)$problem_id) . $url_arguments . '" class="link link-request_problem">' . check_plain($problem_data->reason) . '</a>.', $class_name);
     }
     unset($problem_id);
     unset($problem_data);

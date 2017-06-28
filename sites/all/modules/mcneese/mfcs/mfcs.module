@@ -170,6 +170,7 @@ define('MFCS_REQUEST_STATUS_CLOSED_ACCEPTED_CANCELLED', 9);
  * Defines e-mail reminder intervals.
  */
  define('MFCS_REMINDER_INTERVAL_NONE', 0);
+ define('MFCS_REMINDER_INTERVAL_DAY_0', 0);
  define('MFCS_REMINDER_INTERVAL_DAY_1', 1);
  define('MFCS_REMINDER_INTERVAL_DAY_2', 2);
  define('MFCS_REMINDER_INTERVAL_DAY_3', 3);
@@ -183,6 +184,7 @@ define('MFCS_REQUEST_STATUS_CLOSED_ACCEPTED_CANCELLED', 9);
  define('MFCS_REMINDER_INTERVAL_DAY_11', 11);
  define('MFCS_REMINDER_INTERVAL_DAY_12', 12);
  define('MFCS_REMINDER_INTERVAL_DAY_30', 30);
+ define('MFCS_REMINDER_INTERVAL_WEEK_0', 1000);
  define('MFCS_REMINDER_INTERVAL_WEEK_1', 1001);
  define('MFCS_REMINDER_INTERVAL_WEEK_2', 1002);
  define('MFCS_REMINDER_INTERVAL_WEEK_3', 1003);
@@ -287,6 +289,8 @@ define('MFCS_USER_PROBLEM_ACCOUNT_DUPLICATES', 256);
 define('MFCS_USER_PROBLEM_ACCOUNT_DISABLED_IN_USE', 512);
 define('MFCS_USER_PROBLEM_ACCOUNT_BANNER_INVALID', 1024);
 define('MFCS_USER_PROBLEM_ACCOUNT_NO_ACCESS', 2048);
+define('MFCS_USER_PROBLEM_ACCOUNT_BANNER_NOT_IN_LDAP', 4096);
+define('MFCS_USER_PROBLEM_ACCOUNT_NO_BANNER_ROLES', 8192);
 
 /**
  * Defines a series of request problems.
@@ -363,7 +367,7 @@ define('MFCS_REVIEW_RESTRICTIONS_COORDINATOR', 6);
 define('MFCS_DATE_FORMAT_DATE', 'l, F j, Y');
 define('MFCS_DATE_FORMAT_DATE_TIME', 'l, F j, Y h:ia');
 define('MFCS_DATE_FORMAT_DATE_TIME_SECONDS', 'l, F j, Y h:i:sa');
-define('MFCS_DATE_FORMAT_DATE_TIME_SECONDS_TIMEZONE', 'T, l, F j, Y h:i:sa');
+define('MFCS_DATE_FORMAT_DATE_TIME_SECONDS_TIMEZONE', 'l, F j, Y h:i:sa T');
 define('MFCS_DATE_FORMAT_TIME', 'h:ia');
 define('MFCS_DATE_FORMAT_TIME_SECONDS', 'h:i:sa');
 define('MFCS_DATE_FORMAT_DATE_SQUEEZE', 'D, M j, Y');
@@ -375,6 +379,9 @@ define('MFCS_DATE_FORMAT_DATE_HUMAN', 'l, F jS, Y');
 define('MFCS_DATE_FORMAT_DATE_TIME_HUMAN', 'h:ia l, F jS, Y');
 define('MFCS_DATE_FORMAT_DATE_JS_WEEKDAY', 'dddd'); // @see: https://momentjs.com/docs/#/displaying/format/
 define('MFCS_DATE_FORMAT_DATE_JS_SIMPLE', 'MMMM DD, YYYY'); // @see: https://momentjs.com/docs/#/displaying/format/
+define('MFCS_DATE_FORMAT_DATE_SQUEEZE_DATABASE_SEARCH', 'dy, mon FMDD, YYYY FMmonth FMday');
+define('MFCS_DATE_FORMAT_DATE_TIME_SQUEEZE_DATABASE_SEARCH', 'dy, mon FMDD, YYYY HH:MIam FMmonth FMday');
+define('MFCS_DATE_FORMAT_DATE_TIME_SECONDS_SQUEEZE_DATABASE_SEARCH', 'dy, mon FMDD, YYYY HH:MI:SSam FMmonth FMday');
 
 /**
  * Insurance Settings
@@ -1609,10 +1616,10 @@ function mfcs_unavailability_request_access($operation, $year = NULL, $room_id =
     }
     $proxy_as[$user->uid] = (int) $user->uid;
 
-    $room_coordinators = mfcs_load_room_coordinators($room_id, TRUE);
-    if (is_array($room_coordinators)) {
-      foreach ($room_coordinators as $room_coordinator) {
-        if (array_key_exists($room_coordinator, $proxy_as)) {
+    $all_coordinators = mfcs_load_venue_and_room_coordinators($room_id, TRUE);
+    if (is_array($all_coordinators)) {
+      foreach ($all_coordinators as $all_coordinator) {
+        if (array_key_exists($all_coordinator, $proxy_as)) {
           $is_coordinator_or_proxy_or_power = TRUE;
           break;
         }
@@ -4117,7 +4124,7 @@ function mfcs_load_request_user_by_user_id($user_id) {
  * @param int $banner_id
  *   The numeric banner id string uniquely representing some user.
  *
- * @return array|bool
+ * @return array|bool|int
  *   An array containing the user information.
  *   TRUE is returned if no banner information exists and no error has been detected.
  *   FALSE is returned on error.
@@ -4150,7 +4157,26 @@ function mfcs_load_request_user_by_banner_id($banner_id) {
 
     $rows = $query->execute()->fetchAll();
 
-    if (!empty($rows)) {
+    if (empty($rows)) {
+      // if banner roles were not found, just load the user information without any banner roles.
+      $query = db_select('mfcs_users', 'mu');
+
+      $query->addField('mu', 'user_id', 'user_id');
+
+      $query->condition('mu.banner_id', $banner_id);
+
+      $rows = $query->execute()->fetchAll();
+      if (!empty($rows)) {
+        $row = reset($rows);
+
+        $user[$banner_id] = array(
+          'id' => $banner_id,
+          'user_id' => $row->user_id,
+          'role' => array(),
+        );
+      }
+    }
+    else {
       $user[$banner_id] = array(
         'id' => $banner_id,
         'user_id' => array(),
@@ -4198,11 +4224,14 @@ function mfcs_load_request_user_by_banner_id($banner_id) {
  * @param bool $append_roles
  *   (optional) If TRUE, then the $roles are appended to the existing account.
  *   If FALSE, then the $roles replace the existing roles.
+ * @param bool $login
+ *   (optional) Set to TRUE to designate that actions performed only during login are performed.
+ *   If FALSE, then no login-specific actions are performed.
  *
  * @return bool
  *   TRUE on success, FALSE otherwise.
  */
-function mfcs_synchronize_user_settings($user_object_or_id = NULL, $roles = array(), $append_roles = TRUE, $refresh_banner = TRUE) {
+function mfcs_synchronize_user_settings($user_object_or_id = NULL, $roles = array(), $append_roles = TRUE, $refresh_banner = TRUE, $login = FALSE) {
   if (is_null($user_object_or_id)) {
     $user_object_or_id = cf_current_user();
   }
@@ -4224,6 +4253,11 @@ function mfcs_synchronize_user_settings($user_object_or_id = NULL, $roles = arra
 
   if (!is_bool($refresh_banner)) {
     cf_error::invalid_bool('refresh_banner');
+    return FALSE;
+  }
+
+  if (!is_bool($login)) {
+    cf_error::invalid_bool('login');
     return FALSE;
   }
 
@@ -4605,8 +4639,18 @@ function mfcs_synchronize_user_settings($user_object_or_id = NULL, $roles = arra
     }
 
     // Remove any invalid banner errors when the bannerless exception is set and the banner id is undefined.
-    if ($bannerless_exception && ($problems_new & MFCS_USER_PROBLEM_ACCOUNT_BANNER_INVALID) != 0) {
-      $problems_new -= MFCS_USER_PROBLEM_ACCOUNT_BANNER_INVALID;
+    if ($bannerless_exception) {
+      if (($problems_new & MFCS_USER_PROBLEM_ACCOUNT_BANNER_INVALID) != 0) {
+        $problems_new -= MFCS_USER_PROBLEM_ACCOUNT_BANNER_INVALID;
+      }
+
+      if (($problems_new & MFCS_USER_PROBLEM_ACCOUNT_BANNER_NOT_IN_LDAP) != 0) {
+        $problems_new -= MFCS_USER_PROBLEM_ACCOUNT_BANNER_NOT_IN_LDAP;
+      }
+
+      if (($problems_new & MFCS_USER_PROBLEM_ACCOUNT_NO_BANNER_ROLES) != 0) {
+        $problems_new -= MFCS_USER_PROBLEM_ACCOUNT_NO_BANNER_ROLES;
+      }
     }
 
     // save any changes to to the problems flags.
@@ -4654,9 +4698,10 @@ function mfcs_synchronize_user_settings($user_object_or_id = NULL, $roles = arra
     $total_primary = 1;
   }
 
-
   // Determine how many accounts (with same banner id) are assigned as primary.
   $banner_invalid = FALSE;
+  $banner_invalid_no_roles = FALSE;
+
   if (is_int($banner_id)) {
     $banner_information = mfcs_load_request_user_by_banner_id($banner_id);
     if (is_bool($banner_information)) {
@@ -4665,6 +4710,21 @@ function mfcs_synchronize_user_settings($user_object_or_id = NULL, $roles = arra
       $banner_invalid = TRUE;
     }
     else {
+      // banner id is valid, so remove any banner invalid settings.
+      if (($problems_new & MFCS_USER_PROBLEM_ACCOUNT_BANNER_INVALID) != 0) {
+        $problems_new -= MFCS_USER_PROBLEM_ACCOUNT_BANNER_INVALID;
+      }
+
+      if (empty($banner_information['role'])) {
+        $banner_invalid_no_roles = TRUE;
+      }
+      else {
+        // banner id is valid and has roles, so remove any banner invalid settings for when no roles are defined.
+        if (($problems_new & MFCS_USER_PROBLEM_ACCOUNT_NO_BANNER_ROLES) != 0) {
+          $problems_new -= MFCS_USER_PROBLEM_ACCOUNT_NO_BANNER_ROLES;
+        }
+      }
+
       $associated_users = mfcs_users_load_banner_id_to_user_id($banner_id);
       $total_primary = 0;
       $total_primary_enabled = 0;
@@ -4707,6 +4767,21 @@ function mfcs_synchronize_user_settings($user_object_or_id = NULL, $roles = arra
       elseif ($total_accounts > 1) {
         $local_duplicate = TRUE;
       }
+    }
+  }
+  else {
+    // if there is no banner id, then it cannot be invalid.
+    // remove all assocaited invalid banner problems.
+    if (($problems_new & MFCS_USER_PROBLEM_ACCOUNT_BANNER_INVALID) != 0) {
+      $problems_new -= MFCS_USER_PROBLEM_ACCOUNT_BANNER_INVALID;
+    }
+
+    if (($problems_new & MFCS_USER_PROBLEM_ACCOUNT_BANNER_NOT_IN_LDAP) != 0) {
+      $problems_new -= MFCS_USER_PROBLEM_ACCOUNT_BANNER_NOT_IN_LDAP;
+    }
+
+    if (($problems_new & MFCS_USER_PROBLEM_ACCOUNT_NO_BANNER_ROLES) != 0) {
+      $problems_new -= MFCS_USER_PROBLEM_ACCOUNT_NO_BANNER_ROLES;
     }
   }
 
@@ -4809,28 +4884,80 @@ function mfcs_synchronize_user_settings($user_object_or_id = NULL, $roles = arra
     $roles_changed = TRUE;
   }
 
-  if ($banner_invalid && ($problems_new & MFCS_USER_PROBLEM_ACCOUNT_BANNER_INVALID) == 0) {
-    $problems_new = $problems_new | MFCS_USER_PROBLEM_ACCOUNT_BANNER_INVALID;
+  if ($banner_invalid) {
+    if (($problems_new & MFCS_USER_PROBLEM_ACCOUNT_BANNER_INVALID) == 0) {
+      $problems_new = $problems_new | MFCS_USER_PROBLEM_ACCOUNT_BANNER_INVALID;
 
-    // Do not report banner id as invalid if the account is locked.
-    if ($user_information['status'] == 0 && ($problems_new & MFCS_USER_PROBLEM_ACCOUNT_BANNER_INVALID) != 0) {
-      $problems_new -= MFCS_USER_PROBLEM_ACCOUNT_BANNER_INVALID;
+      // Do not report banner id as invalid if the account is locked.
+      if ($user_information['status'] == 0 && ($problems_new & MFCS_USER_PROBLEM_ACCOUNT_BANNER_INVALID) != 0) {
+        $problems_new -= MFCS_USER_PROBLEM_ACCOUNT_BANNER_INVALID;
+      }
+      elseif ($bannerless_exception) {
+        $problems_new -= MFCS_USER_PROBLEM_ACCOUNT_BANNER_INVALID;
+      }
+      else {
+        $changes_detected = TRUE;
+      }
     }
-    elseif ($bannerless_exception) {
-      $problems_new -= MFCS_USER_PROBLEM_ACCOUNT_BANNER_INVALID;
+  }
+  elseif ($banner_invalid_no_roles) {
+    // invalid banner (no roles) error is only reported during the login process.
+    if ($login) {
+      if (($problems_new & MFCS_USER_PROBLEM_ACCOUNT_NO_BANNER_ROLES) == 0) {
+        $problems_new = $problems_new | MFCS_USER_PROBLEM_ACCOUNT_NO_BANNER_ROLES;
+
+        // Do not report banner id as invalid if the account is locked.
+        if ($user_information['status'] == 0 && ($problems_new & MFCS_USER_PROBLEM_ACCOUNT_NO_BANNER_ROLES) != 0) {
+          $problems_new -= MFCS_USER_PROBLEM_ACCOUNT_NO_BANNER_ROLES;
+        }
+        elseif ($bannerless_exception) {
+          $problems_new -= MFCS_USER_PROBLEM_ACCOUNT_NO_BANNER_ROLES;
+        }
+        else {
+          $changes_detected = TRUE;
+        }
+      }
     }
     else {
+      // otherwise, remove the warning when refreshing banner.
+      if ($refresh_banner && ($problems_new & MFCS_USER_PROBLEM_ACCOUNT_NO_BANNER_ROLES) != 0) {
+        $problems_new -= MFCS_USER_PROBLEM_ACCOUNT_NO_BANNER_ROLES;
+      }
+    }
+  }
+
+  // if the banner id is invalid, the account is locked, then remove the banner id and unset the code.
+  if ($user_information['status'] == 0) {
+    if (($problems_new & MFCS_USER_PROBLEM_ACCOUNT_BANNER_INVALID) != 0) {
+      $user_information['mfcs']['banner_id'] = NULL;
+      $problems_new -= MFCS_USER_PROBLEM_ACCOUNT_BANNER_INVALID;
+      $changes_detected = TRUE;
+    }
+
+    if (($problems_new & MFCS_USER_PROBLEM_ACCOUNT_BANNER_NOT_IN_LDAP) != 0) {
+      $user_information['mfcs']['banner_id'] = NULL;
+      $problems_new -= MFCS_USER_PROBLEM_ACCOUNT_BANNER_NOT_IN_LDAP;
+      $changes_detected = TRUE;
+    }
+
+    if (($problems_new & MFCS_USER_PROBLEM_ACCOUNT_NO_BANNER_ROLES) != 0) {
+      $user_information['mfcs']['banner_id'] = NULL;
+      $problems_new -= MFCS_USER_PROBLEM_ACCOUNT_NO_BANNER_ROLES;
       $changes_detected = TRUE;
     }
   }
-  // if the banner id is invalid, the account is locked, then remove the banner id and unset the code.
-  elseif ($user_information['status'] == 0 && ($problems_new & MFCS_USER_PROBLEM_ACCOUNT_BANNER_INVALID) != 0) {
-    $user_information['mfcs']['banner_id'] = NULL;
-    $problems_new -= MFCS_USER_PROBLEM_ACCOUNT_BANNER_INVALID;
-    $changes_detected = TRUE;
-  }
-  elseif ($bannerless_exception && ($problems_new & MFCS_USER_PROBLEM_ACCOUNT_BANNER_INVALID) != 0) {
-    $problems_new -= MFCS_USER_PROBLEM_ACCOUNT_BANNER_INVALID;
+  elseif ($bannerless_exception) {
+    if (($problems_new & MFCS_USER_PROBLEM_ACCOUNT_BANNER_INVALID) != 0) {
+      $problems_new -= MFCS_USER_PROBLEM_ACCOUNT_BANNER_INVALID;
+    }
+
+    if (($problems_new & MFCS_USER_PROBLEM_ACCOUNT_BANNER_NOT_IN_LDAP) != 0) {
+      $problems_new -= MFCS_USER_PROBLEM_ACCOUNT_BANNER_NOT_IN_LDAP;
+    }
+
+    if (($problems_new & MFCS_USER_PROBLEM_ACCOUNT_NO_BANNER_ROLES) != 0) {
+      $problems_new -= MFCS_USER_PROBLEM_ACCOUNT_NO_BANNER_ROLES;
+    }
   }
 
   $update_ldap_duplicate = FALSE;
@@ -6197,8 +6324,8 @@ function mfcs_insurance_not_provided_alert_cron() {
 
         $reminders = mfcs_get_request_reminders($dates, MFCS_REMINDER_TYPE_INSURANCE_NOT_PROVIDED, $interval, $result->id);
 
-        // if the reminder has already been sent, do not resend.
-        if (isset($reminders[$interval][$result->id])) {
+        // if the reminder has already been sent or an error has occured, do not resend.
+        if ($reminders === FALSE || isset($reminders[$interval][$result->id])) {
           continue;
         }
 
@@ -6245,6 +6372,7 @@ function mfcs_unreviewed_request_alert_alert_cron() {
   $parameters['reminder_reason'] = 'unreviewed_request';
 
   $intervals = array(
+    MFCS_REMINDER_INTERVAL_DAY_0,
     MFCS_REMINDER_INTERVAL_DAY_1,
     MFCS_REMINDER_INTERVAL_DAY_3,
     MFCS_REMINDER_INTERVAL_DAY_7,
@@ -6257,29 +6385,40 @@ function mfcs_unreviewed_request_alert_alert_cron() {
   $all_sent = array();
   $reminder_logged = array();
   foreach ($intervals as $interval) {
-    if ($interval == MFCS_REMINDER_INTERVAL_DAY_1) {
+    $results = NULL;
+    if ($interval == MFCS_REMINDER_INTERVAL_DAY_0) {
+      $from = strtotime('midnight today', $dates['today']);
+      $to = strtotime('tomorrow', $from);
+
+      $parameters['message_priority'] = MFCS_MAIL_PRIORITY_HIGHEST;
+      $results = mfcs_get_requests_unreviewed($from, $to, $today);
+    }
+    elseif ($interval == MFCS_REMINDER_INTERVAL_DAY_1) {
       $from = strtotime('+1 days', $dates['today']);
       $min_create_date = strtotime('-3 days', $dates['today']);
 
       $parameters['message_priority'] = MFCS_MAIL_PRIORITY_HIGH;
+      $results = mfcs_get_requests_unreviewed($from, NULL, $min_create_date);
     }
     elseif ($interval == MFCS_REMINDER_INTERVAL_DAY_3) {
       $from = strtotime('+3 days', $dates['today']);
       $min_create_date = strtotime('-4 days', $dates['today']);
 
       $parameters['message_priority'] = MFCS_MAIL_PRIORITY_HIGH;
+      $results = mfcs_get_requests_unreviewed($from, NULL, $min_create_date);
     }
     elseif ($interval == MFCS_REMINDER_INTERVAL_DAY_7) {
       $from = strtotime('+7 days', $dates['today']);
       $min_create_date = strtotime('-7 days', $dates['today']);
 
       $parameters['message_priority'] = MFCS_MAIL_PRIORITY_HIGH;
+      $results = mfcs_get_requests_unreviewed($from, NULL, $min_create_date);
     }
     else {
       continue;
     }
 
-    $results = mfcs_get_requests_unreviewed($from, NULL, $min_create_date);
+
     if (!empty($results)) {
       $sent = array();
 
@@ -6294,7 +6433,9 @@ function mfcs_unreviewed_request_alert_alert_cron() {
         }
 
         $reminders = mfcs_get_request_reminders($dates, MFCS_REMINDER_TYPE_UNREVIEWED_REQUEST, $interval, $result->id);
-        if (isset($reminders[$interval][$result->id])) {
+
+        // if the reminder has already been sent or an error has occured, do not resend.
+        if ($reminders === FALSE || isset($reminders[$interval][$result->id])) {
           continue;
         }
 
@@ -8008,6 +8149,9 @@ function mfcs_get_reviewer_settings_by_user_id($user_id, $disabled = FALSE) {
  *   (optional) When not NULL, this represents the request_id to ignore.
  *   Use this so that when editing an existing request, it does not report
  *   itself as the request using the room.
+ * @param bool $ignore_past
+ *   (optional) When TRUE, any availabilities involving dates in the past are ignored and therefore not checked.
+ *   When FALSE, dates are checked regardless of relationship to past, present, or future.
  *
  * @return array|false
  *   An array with the following keys;
@@ -8015,7 +8159,7 @@ function mfcs_get_reviewer_settings_by_user_id($user_id, $disabled = FALSE) {
  *   - unavailable: an array containing any room unavailability.
  *   FALSE on error.
  */
-function mfcs_check_room_availability($room, $dates, $time_start, $time_stop, $request_id = NULL) {
+function mfcs_check_room_availability($room, $dates, $time_start, $time_stop, $request_id = NULL, $ignore_past = FALSE) {
   if (!is_int($room)) {
     cf_error::invalid_integer('room');
     return FALSE;
@@ -8041,10 +8185,21 @@ function mfcs_check_room_availability($room, $dates, $time_start, $time_stop, $r
     return FALSE;
   }
 
+  if (!is_bool($ignore_past)) {
+    cf_error::invalid_bool('ignore_past');
+    return FALSE;
+  }
+
   $matched_requests = array(
     'conflicts' => array(),
     'unavailable' => array(),
   );
+
+  $midnight_today = NULL;
+  if ($ignore_past) {
+    $midnight_today = strtotime('midnight today', mfcs_instance());
+  }
+
 
   try {
     $query = db_select('mfcs_requests', 'mer');
@@ -8063,22 +8218,30 @@ function mfcs_check_room_availability($room, $dates, $time_start, $time_stop, $r
 
     $query->distinct();
 
-    $statuses = array(
-      MFCS_REQUEST_STATUS_LOCKED,
-      MFCS_REQUEST_STATUS_CLOSED_ACCEPTED,
+    $not_these_status = array(
+      MFCS_REQUEST_STATUS_DELETED,
+      MFCS_REQUEST_STATUS_CLOSED_DENIED,
+      MFCS_REQUEST_STATUS_CLOSED_UNAVAILABLE,
+      MFCS_REQUEST_STATUS_CLOSED_DUE_TO_LOCK,
+      MFCS_REQUEST_STATUS_CANCELLED,
+      MFCS_REQUEST_STATUS_CLOSED_ACCEPTED_CANCELLED,
     );
 
-    $query->condition('mer.status', $statuses, 'IN');
+    $query->condition('mer.status', $not_these_status, 'NOT IN');
     $query->condition('mer.room', $room);
     $query->condition('mfdd.value', $dates, 'IN');
     $query->condition('mfdd.cancelled', 1, '<>'); // using <> for backwards compatibility where mfdd.cancelled may be NULL.
 
     if (!is_null($request_id)) {
+      // don't include itself when searching for a request that conflicts to avoid conflicting with itself!
       $query->condition('mer.id', $request_id, '<>');
     }
 
-    $results = $query->execute()->fetchAll();
+    if ($ignore_past) {
+      $query->condition('mfdd.value', $midnight_today, '>=');
+    }
 
+    $results = $query->execute()->fetchAll();
 
     // when rooms are in use, check the individual times.
     if (!empty($results)) {
@@ -8108,7 +8271,12 @@ function mfcs_check_room_availability($room, $dates, $time_start, $time_stop, $r
         $query->condition('mfdtsp.revision', $result->time_stop_revision);
 
         if (!is_null($request_id)) {
+          // don't include itself when searching for a request that conflicts to avoid conflicting with itself!
           $query->condition('mfdd.request_id', $request_id, '<>');
+        }
+
+        if ($ignore_past) {
+          $query->condition('mfdd.value', $midnight_today, '>=');
         }
 
         $or = db_or();
@@ -8189,6 +8357,12 @@ function mfcs_check_room_availability($room, $dates, $time_start, $time_stop, $r
 
   // process explicit/non-conflict unavailabilities.
   foreach ($dates as $key => $date) {
+    if ($ignore_past) {
+      if (strtotime('midnight today', $date) < $midnight_today) {
+        continue;
+      }
+    }
+
     $year = date('Y', $date);
 
     if (is_null($time_start[$key])) {
@@ -8324,7 +8498,7 @@ function mfcs_build_room_unavailable_message($availability_issues, $blank_target
         }
         else {
           // all day, over more than one days.
-          $unavailable_message .= '<strong>' . check_plain(date(MFCS_DATE_FORMAT_DATE, $unavailable->date_start)) . '</strong> to <strong>' . check_plain(date(MFCS_DATE_FORMAT_DATE, $unavailable->date_stop)) . '</strong>';
+          $unavailable_message .= '<strong>' . check_plain(date(MFCS_DATE_FORMAT_DATE, $unavailable->date_start)) . '</strong> to <strong>' . check_plain(date(MFCS_DATE_FORMAT_DATE, strtotime('yesterday', $unavailable->date_stop))) . '</strong>';
         }
       }
       elseif ($start_day == $stop_day || $unavailable->date_stop == strtotime('midnight tomorrow', $start_day)) {
@@ -8399,6 +8573,9 @@ function mfcs_build_room_unavailable_message($availability_issues, $blank_target
  *     'only_requester': When defined as a boolean, represents that only requests whose requester is the current user xor the user specified by 'user_id' are loaded.
  *     'only_reviewer': When defined as a boolean, represents that only requests whose reviewer is the current user are loaded (venue coordinators are also reviewers).
  *                      This only applies when review restrictions are set to MFCS_REVIEW_RESTRICTION_REVIEW.
+ *     'only_reviewer-under_review': When defined as a boolean, represents that all requests that are under review are loaded.
+ *                                   Otherwise, only requests reviewable by the current reviewer are loaded.
+ *                                   This only applies when 'only_reviewer' is TRUE.
  *
  * @return array|false
  *   An array of containing the following:
@@ -8511,9 +8688,14 @@ function mfcs_request_load_listing($conditions = array(), $options = array()) {
   }
 
   $only_reviewer = NULL;
+  $only_reviewer_under_review = NULL;
   if ($review_restrictions === MFCS_REVIEW_RESTRICTION_REVIEW) {
     if (isset($options['only_reviewer']) && is_bool($options['only_reviewer'])) {
       $only_reviewer = $options['only_reviewer'];
+    }
+
+    if (isset($options['only_reviewer-under_review']) && is_bool($options['only_reviewer-under_review'])) {
+      $only_reviewer_under_review = $options['only_reviewer-under_review'];
     }
   }
 
@@ -8789,33 +8971,52 @@ function mfcs_request_load_listing($conditions = array(), $options = array()) {
           }
 
           // process venue coordinator access.
-          $already_venue_coordinated_query = db_select('mfcs_reviewed', 'mrd_vc');
-          $already_venue_coordinated_query->addField('mrd_vc', 'request_id', 'request_id');
-          $already_venue_coordinated_query->where('mrd_vc.request_id = mer.id');
-          $already_venue_coordinated_query->condition('mrd_vc.classification', MFCS_REVIEWER_CLASSIFICATION_VENUE_COORDINATOR);
+          if (!empty($venue_coordinator_ids)) {
+            $and = db_and();
+            $and->condition('mer.status', $show_status_venue_coordinator, 'IN');
+            $and->condition('mer.step', $show_step_venue_coordinator, 'IN');
+            $and->condition('mer.venue_coordinator', $venue_coordinator_ids, 'IN');
 
-          $and = db_and();
-          $and->condition('mer.status', $show_status_venue_coordinator, 'IN');
-          $and->condition('mer.step', $show_step_venue_coordinator, 'IN');
-          $and->condition('mer.id', $already_venue_coordinated_query, 'NOT IN');
-          $and->condition('mer.venue_coordinator', $venue_coordinator_ids, 'IN');
+            if (!is_bool($only_reviewer_under_review) || !$only_reviewer_under_review) {
+              $already_venue_coordinated_query = db_select('mfcs_reviewed', 'mrd_vc');
+              $already_venue_coordinated_query->addField('mrd_vc', 'request_id', 'request_id');
+              $already_venue_coordinated_query->where('mrd_vc.request_id = mer.id');
+              $already_venue_coordinated_query->condition('mrd_vc.classification', MFCS_REVIEWER_CLASSIFICATION_VENUE_COORDINATOR);
 
-          $or->condition($and);
+              $and->condition('mer.id', $already_venue_coordinated_query, 'NOT IN');
+            }
+
+            $or->condition($and);
+          }
 
           // process review access.
-          if (!empty($reviewer_settings['classifications'])) {
-            $already_reviewed_query = db_select('mfcs_reviewers', 'mr_r');
-            $already_reviewed_query->innerJoin('mfcs_reviewed', 'mrd_r', 'mr_r.reviewer_classification = mrd_r.classification');
-            $already_reviewed_query->addField('mrd_r', 'request_id', 'request_id');
-            $already_reviewed_query->where('mr_r.request_classification = mer.classification AND mr_r.review_step = mer.step');
-            $already_reviewed_query->condition('mr_r.user_id', $user->uid);
-            $already_reviewed_query->condition('mr_r.disabled', 0);
+          if (empty($reviewer_settings['steps'])) {
+            // if the user is a venue coordinator, but has no reviewer roles, they should still be able to view requests under review.
+            if (is_bool($only_reviewer_under_review) && $only_reviewer_under_review && !empty($venue_coordinator_ids)) {
+              $and = db_and();
+              $and->condition('mer.status', $show_status_reviewer, 'IN');
+              $and->condition('mer.step', $show_step_reviewer, 'IN');
+              $and->condition('mer.venue_coordinator', $venue_coordinator_ids, 'IN');
 
+              $or->condition($and);
+            }
+          }
+          else {
             $and = db_and();
             $and->condition('mer.status', $show_status_reviewer, 'IN');
             $and->condition('mer.step', $show_step_reviewer, 'IN');
             $and->condition('mer.step', $reviewer_settings['steps'], 'IN');
-            $and->condition('mer.id', $already_reviewed_query, 'NOT IN');
+
+            if (!is_bool($only_reviewer_under_review) || !$only_reviewer_under_review) {
+              $already_reviewed_query = db_select('mfcs_reviewers', 'mr_r');
+              $already_reviewed_query->innerJoin('mfcs_reviewed', 'mrd_r', 'mr_r.reviewer_classification = mrd_r.classification');
+              $already_reviewed_query->addField('mrd_r', 'request_id', 'request_id');
+              $already_reviewed_query->where('mr_r.request_classification = mer.classification AND mr_r.review_step = mer.step');
+              $already_reviewed_query->condition('mr_r.user_id', $user->uid);
+              $already_reviewed_query->condition('mr_r.disabled', 0);
+
+              $and->condition('mer.id', $already_reviewed_query, 'NOT IN');
+            }
 
             $or->condition($and);
           }
@@ -8890,6 +9091,26 @@ function mfcs_request_load_listing($conditions = array(), $options = array()) {
           $and->condition('mer.step', MFCS_REVIEW_STEP_COMPLETED);
           $or->condition($and);
           unset($and);
+
+          // check to see if the user is a reviewer and include reviewable requests in the listing, regardless of review state, but only for request classifications the user belongs to.
+          if ($reviewer) {
+            $reviewer_settings = mfcs_get_reviewer_settings_by_user_id($user->uid);
+
+            // if the classifications array was empty, this would produce an sql error and if it is empty, there should be no reason to run this additional condition.
+            if (!empty($reviewer_settings['request_classifications'])) {
+
+              if (is_null($or)) {
+                $or = db_or();
+              }
+
+              $and = db_and();
+              $and->condition('mer.status', $show_status_reviewer, 'IN');
+              $and->condition('mer.step', $show_step_reviewer, 'IN');
+              $and->condition('mer.classification', $reviewer_settings['request_classifications'], 'IN');
+
+              $or->condition($and);
+            }
+          }
         }
       }
 
@@ -10406,11 +10627,14 @@ function mfcs_build_request_ajax_table($items_returned, $conditions, $options, $
     'deferRender' => TRUE,
     'displayStart' => isset($options['start']) ? $options['start'] : 0,
     'pageLength' => isset($options['limit']) ? $options['limit'] : 20,
-    'dom' => 'lfCrtip',
+    'dom' => 'lfBrtip',
     'KeyTable' => FALSE,
     'rowId' => '0',
-    'oColVis' => array(
-      'buttonText' => '"Show / Hide"',
+    'buttons' => array(
+      'colvis' => array(
+        'extend' => '"colvis"',
+        'text' => '"Show / Hide"',
+      ),
     ),
     'oLanguage' => array(
       'sSearch' => '"Filter"',
@@ -10523,8 +10747,14 @@ function mfcs_build_request_ajax_table($items_returned, $conditions, $options, $
       $showing_my_requests .= '  dt.ajax.reload();' . "\n";
       $showing_my_requests .= '}' . "\n";
 
-      $table['datatable_settings']['dom'] = 'lfCBrtip';
+      $table['datatable_settings']['dom'] = 'lfBrtip';
       $table['datatable_settings']['buttons'] = array();
+
+      $table['datatable_settings']['buttons']['colvis'] = array(
+        'extend' => '"colvis"',
+        'text' => '"Show / Hide"',
+      );
+
       $table['datatable_settings']['buttons']['Show Requests'] = array(
         'text' => '\'Show All Requests\'',
         'action' => $showing_my_requests,
@@ -10536,7 +10766,11 @@ function mfcs_build_request_ajax_table($items_returned, $conditions, $options, $
         $table['datatable_settings']['buttons']['Show Requests']['text'] = '\'Show My Requests\'';
       }
     }
-    elseif (isset($options['only_reviewer']) && is_bool($options['only_reviewer'])) {
+    elseif ((isset($options['only_reviewer']) && is_bool($options['only_reviewer'])) || (isset($options['only_reviewer-under_review']) && is_bool($options['only_reviewer-under_review']))) {
+      if (!isset($options['only_reviewer-under_review']) || !is_bool($options['only_reviewer-under_review'])) {
+        $options['only_reviewer-under_review'] = FALSE;
+      }
+
       $url_options = array();
       $ajax_path = preg_replace("/'/", '', $options['ajax_path']);
       preg_match('/\?[^?]*$/', $ajax_path, $url_options);
@@ -10549,47 +10783,181 @@ function mfcs_build_request_ajax_table($items_returned, $conditions, $options, $
         $url_options = '';
       }
 
-      $showing_my_requests = 'function (e, dt, node, config) {' . "\n";
-      $showing_my_requests .= '  var data = dt.ajax.params();' . "\n";
-      $showing_my_requests .= '  var url = dt.ajax.url();' . "\n";
-
-      $showing_my_requests .= '  if (url == \'' . $ajax_path . '/as_reviewer\' || url == \'' . $ajax_path . '/as_reviewer' . $url_options . '\') {' . "\n";
-      $showing_my_requests .= '    dt.ajax.url(\'' . $ajax_path . '/as_manager' . $url_options . '\');' . "\n";
-      $showing_my_requests .= '    dt.buttons(\'.datatable-showing_requests\').text(\'Show As Reviewer\');' . "\n";
-      $showing_my_requests .= '    $($($(dt).context[0].nTable).children(\'caption\')[0]).text(\'Requests (As Manager)\');' . "\n";
-      $showing_my_requests .= '  }' . "\n";
-      $showing_my_requests .= '  else if (url == \'' . $ajax_path . '/as_manager\' || url == \'' . $ajax_path . '/as_manager' . $url_options . '\') {' . "\n";
-      $showing_my_requests .= '    dt.ajax.url(\'' . $ajax_path . '/as_reviewer' . $url_options . '\');' . "\n";
-      $showing_my_requests .= '    dt.buttons(\'.datatable-showing_requests\').text(\'Show As Manager\');' . "\n";
-      $showing_my_requests .= '    $($($(dt).context[0].nTable).children(\'caption\')[0]).text(\'Requests (As Reviewer)\');' . "\n";
-      $showing_my_requests .= '  }' . "\n";
-      $showing_my_requests .= '  else {' . "\n";
-
-      if ($options['only_reviewer']) {
-        $showing_my_requests .= '    dt.ajax.url(\'' . $ajax_path . '/as_manager' . $url_options . '\');' . "\n";
-        $showing_my_requests .= '    dt.buttons(\'.datatable-showing_requests\').text(\'Show As Reviewer\');' . "\n";
-        $showing_my_requests .= '    $($($(dt).context[0].nTable).children(\'caption\')[0]).text(\'Requests (As Manager)\');' . "\n";
-      }
-      else {
-        $showing_my_requests .= '    dt.ajax.url(\'' . $ajax_path . '/as_reviewer' . $url_options . '\');' . "\n";
-        $showing_my_requests .= '    $($($(dt).context[0].nTable).children(\'caption\')[0]).text(\'Requests (As Reviewer)\');' . "\n";
-      }
-
-      $showing_my_requests .= '  }' . "\n";
-      $showing_my_requests .= '  dt.ajax.reload();' . "\n";
-      $showing_my_requests .= '}' . "\n";
-
-      $table['datatable_settings']['dom'] = 'lfCBrtip';
+      $table['datatable_settings']['dom'] = 'lfBrtip';
       $table['datatable_settings']['buttons'] = array();
-      $table['datatable_settings']['buttons']['Show Requests'] = array(
-        'text' => '\'Show As Manager\'',
-        'action' => $showing_my_requests,
-        'className' => '\'datatable-showing_requests\'',
-      );
-      unset($showing_my_requests);
 
-      if ($options['only_reviewer'] === FALSE) {
-        $table['datatable_settings']['buttons']['Show Requests']['text'] = '\'Show As Reviewer\'';
+      $table['datatable_settings']['buttons']['colvis'] = array(
+        'extend' => '"colvis"',
+        'text' => '"Show / Hide"',
+      );
+
+      $as_reviewer_text = '';
+      $as_manager_text = '';
+      $under_review_text = '';
+      $only_reviewable_text = '';
+      if (isset($options['only_reviewer-under_review']) && is_bool($options['only_reviewer-under_review'])) {
+        $under_review_text = ' (Under Review)';
+        $only_reviewable_text = ' (Only Reviewable)';
+      }
+
+
+      if (isset($options['only_reviewer']) && is_bool($options['only_reviewer'])) {
+        $as_reviewer_text = ' (As Reviewer)';
+        $as_manager_text = ' (As Manager)';
+
+        $showing_my_requests = 'function (e, dt, node, config) {' . "\n";
+        $showing_my_requests .= '  var data = dt.ajax.params();' . "\n";
+        $showing_my_requests .= '  var url = dt.ajax.url();' . "\n";
+
+        $showing_my_requests .= '  if (url == \'' . $ajax_path . '/as_reviewer\' || url == \'' . $ajax_path . '/as_reviewer' . $url_options . '\' || url == \'' . $ajax_path . '/as_reviewer/under_review\' || url == \'' . $ajax_path . '/as_reviewer/under_review' . $url_options . '\' || url == \'' . $ajax_path . '/as_reviewer/only_reviewable\' || url == \'' . $ajax_path . '/as_reviewer/only_reviewable' . $url_options . '\') {' . "\n";
+        $showing_my_requests .= '    if (url == \'' . $ajax_path . '/as_reviewer/under_review\' || url == \'' . $ajax_path . '/as_reviewer/under_review' . $url_options . '\') {' . "\n";
+        $showing_my_requests .= '      dt.ajax.url(\'' . $ajax_path . '/as_manager/under_review' . $url_options . '\');' . "\n";
+        $showing_my_requests .= '      $($($(dt).context[0].nTable).children(\'caption\')[0]).text(\'Requests' . $as_manager_text . $under_review_text . '\');' . "\n";
+        $showing_my_requests .= '    }' . "\n";
+        $showing_my_requests .= '    else {' . "\n";
+        $showing_my_requests .= '      dt.ajax.url(\'' . $ajax_path . '/as_manager/only_reviewable' . $url_options . '\');' . "\n";
+        $showing_my_requests .= '      $($($(dt).context[0].nTable).children(\'caption\')[0]).text(\'Requests' . $as_manager_text . $only_reviewable_text . '\');' . "\n";
+        $showing_my_requests .= '    }' . "\n";
+        $showing_my_requests .= '    dt.buttons(\'.datatable-showing_requests\').text(\'Show As Reviewer\');' . "\n";
+        $showing_my_requests .= '  }' . "\n";
+        $showing_my_requests .= '  else if (url == \'' . $ajax_path . '/as_manager\' || url == \'' . $ajax_path . '/as_manager' . $url_options . '\' || url == \'' . $ajax_path . '/as_manager/under_review\' || url == \'' . $ajax_path . '/as_manager/under_review' . $url_options . '\' || url == \'' . $ajax_path . '/as_manager/only_reviewable\' || url == \'' . $ajax_path . '/as_manager/only_reviewable' . $url_options . '\') {' . "\n";
+        $showing_my_requests .= '    if (url == \'' . $ajax_path . '/as_manager/under_review\' || url == \'' . $ajax_path . '/as_manager/under_review' . $url_options . '\') {' . "\n";
+        $showing_my_requests .= '      dt.ajax.url(\'' . $ajax_path . '/as_reviewer/under_review' . $url_options . '\');' . "\n";
+        $showing_my_requests .= '      $($($(dt).context[0].nTable).children(\'caption\')[0]).text(\'Requests' . $as_reviewer_text . $under_review_text . '\');' . "\n";
+        $showing_my_requests .= '    }' . "\n";
+        $showing_my_requests .= '    else {' . "\n";
+        $showing_my_requests .= '      dt.ajax.url(\'' . $ajax_path . '/as_reviewer/only_reviewable' . $url_options . '\');' . "\n";
+        $showing_my_requests .= '      $($($(dt).context[0].nTable).children(\'caption\')[0]).text(\'Requests' . $as_reviewer_text . $only_reviewable_text . '\');' . "\n";
+        $showing_my_requests .= '    }' . "\n";
+        $showing_my_requests .= '    dt.buttons(\'.datatable-showing_requests\').text(\'Show As Manager\');' . "\n";
+        $showing_my_requests .= '  }' . "\n";
+        $showing_my_requests .= '  else {' . "\n";
+
+        if ($options['only_reviewer']) {
+          if ($options['only_reviewer-under_review']) {
+            $showing_my_requests .= '    dt.ajax.url(\'' . $ajax_path . '/as_manager/under_review' . $url_options . '\');' . "\n";
+            $showing_my_requests .= '    $($($(dt).context[0].nTable).children(\'caption\')[0]).text(\'Requests' . $as_manager_text . $under_review_text . '\');' . "\n";
+          }
+          else {
+            $showing_my_requests .= '    dt.ajax.url(\'' . $ajax_path . '/as_manager/only_reviewable' . $url_options . '\');' . "\n";
+            $showing_my_requests .= '    $($($(dt).context[0].nTable).children(\'caption\')[0]).text(\'Requests' . $as_manager_text . $only_reviewable_text . '\');' . "\n";
+          }
+
+          $showing_my_requests .= '    dt.buttons(\'.datatable-showing_requests\').text(\'Show As Reviewer\');' . "\n";
+        }
+        else {
+          if ($options['only_reviewer-under_review']) {
+            $showing_my_requests .= '    dt.ajax.url(\'' . $ajax_path . '/as_reviewer/under_review' . $url_options . '\');' . "\n";
+            $showing_my_requests .= '    $($($(dt).context[0].nTable).children(\'caption\')[0]).text(\'Requests' . $as_reviewer_text . $under_review_text . '\');' . "\n";
+          }
+          else {
+            $showing_my_requests .= '    dt.ajax.url(\'' . $ajax_path . '/as_reviewer/only_reviewable' . $url_options . '\');' . "\n";
+            $showing_my_requests .= '    $($($(dt).context[0].nTable).children(\'caption\')[0]).text(\'Requests' . $as_reviewer_text . $only_reviewable_text . '\');' . "\n";
+          }
+
+          $showing_my_requests .= '    dt.buttons(\'.datatable-showing_requests\').text(\'Show As Manager\');' . "\n";
+        }
+
+        $showing_my_requests .= '  }' . "\n";
+        $showing_my_requests .= '  dt.ajax.reload();' . "\n";
+        $showing_my_requests .= '}' . "\n";
+
+        $table['datatable_settings']['buttons']['Show Requests'] = array(
+          'text' => '\'Show As Manager\'',
+          'action' => $showing_my_requests,
+          'className' => '\'datatable-showing_requests\'',
+        );
+        unset($showing_my_requests);
+
+        if ($options['only_reviewer'] === FALSE) {
+          $table['datatable_settings']['buttons']['Show Requests']['text'] = '\'Show As Reviewer\'';
+        }
+      }
+
+      if (isset($options['only_reviewer-under_review']) && is_bool($options['only_reviewer-under_review'])) {
+        $showing_only_reviewable = 'function (e, dt, node, config) {' . "\n";
+        $showing_only_reviewable .= '  var data = dt.ajax.params();' . "\n";
+        $showing_only_reviewable .= '  var url = dt.ajax.url();' . "\n";
+
+        $showing_only_reviewable .= '  if (url == \'' . $ajax_path . '/as_reviewer\' || url == \'' . $ajax_path . '/as_reviewer' . $url_options . '\' || url == \'' . $ajax_path . '/as_reviewer/under_review\' || url == \'' . $ajax_path . '/as_reviewer/under_review' . $url_options . '\' || url == \'' . $ajax_path . '/as_reviewer/only_reviewable\' || url == \'' . $ajax_path . '/as_reviewer/only_reviewable' . $url_options . '\') {' . "\n";
+        $showing_only_reviewable .= '    if (url == \'' . $ajax_path . '/as_reviewer/under_review\' || url == \'' . $ajax_path . '/as_reviewer/under_review' . $url_options . '\') {' . "\n";
+        $showing_only_reviewable .= '      dt.ajax.url(\'' . $ajax_path . '/as_reviewer/only_reviewable' . $url_options . '\');' . "\n";
+        $showing_only_reviewable .= '      $($($(dt).context[0].nTable).children(\'caption\')[0]).text(\'Requests' . $as_reviewer_text . $only_reviewable_text . '\');' . "\n";
+        $showing_only_reviewable .= '      dt.buttons(\'.datatable-showing_requests-reviewable\').text(\'Show Under Review\');' . "\n";
+        $showing_only_reviewable .= '    }' . "\n";
+        $showing_only_reviewable .= '    else {' . "\n";
+        $showing_only_reviewable .= '      dt.ajax.url(\'' . $ajax_path . '/as_reviewer/under_review' . $url_options . '\');' . "\n";
+        $showing_only_reviewable .= '      $($($(dt).context[0].nTable).children(\'caption\')[0]).text(\'Requests' . $as_reviewer_text . $under_review_text . '\');' . "\n";
+        $showing_only_reviewable .= '      dt.buttons(\'.datatable-showing_requests-reviewable\').text(\'Show Only Reviewable\');' . "\n";
+        $showing_only_reviewable .= '    }' . "\n";
+        $showing_only_reviewable .= '  }' . "\n";
+        $showing_only_reviewable .= '  else if (url == \'' . $ajax_path . '/as_manager\' || url == \'' . $ajax_path . '/as_manager' . $url_options . '\' || url == \'' . $ajax_path . '/as_manager/under_review\' || url == \'' . $ajax_path . '/as_manager/under_review' . $url_options . '\' || url == \'' . $ajax_path . '/as_manager/only_reviewable\' || url == \'' . $ajax_path . '/as_manager/only_reviewable' . $url_options . '\') {' . "\n";
+        $showing_only_reviewable .= '    if (url == \'' . $ajax_path . '/as_manager/under_review\' || url == \'' . $ajax_path . '/as_manager/under_review' . $url_options . '\') {' . "\n";
+        $showing_only_reviewable .= '      dt.ajax.url(\'' . $ajax_path . '/as_manager/only_reviewable' . $url_options . '\');' . "\n";
+        $showing_only_reviewable .= '      $($($(dt).context[0].nTable).children(\'caption\')[0]).text(\'Requests' . $as_manager_text . $under_review_text . '\');' . "\n";
+        $showing_only_reviewable .= '      dt.buttons(\'.datatable-showing_requests-reviewable\').text(\'Show Under Review\');' . "\n";
+        $showing_only_reviewable .= '    }' . "\n";
+        $showing_only_reviewable .= '    else {' . "\n";
+        $showing_only_reviewable .= '      dt.ajax.url(\'' . $ajax_path . '/as_manager/under_review' . $url_options . '\');' . "\n";
+        $showing_only_reviewable .= '      $($($(dt).context[0].nTable).children(\'caption\')[0]).text(\'Requests' . $as_manager_text . $only_reviewable_text . '\');' . "\n";
+        $showing_only_reviewable .= '      dt.buttons(\'.datatable-showing_requests-reviewable\').text(\'Show Only Reviewable\');' . "\n";
+        $showing_only_reviewable .= '    }' . "\n";
+        $showing_only_reviewable .= '  }' . "\n";
+        $showing_only_reviewable .= '  else {' . "\n";
+
+        if (isset($options['only_reviewer']) && is_bool($options['only_reviewer'])) {
+          if ($options['only_reviewer']) {
+            if ($options['only_reviewer-under_review']) {
+              $showing_only_reviewable .= '    dt.ajax.url(\'' . $ajax_path . '/as_reviewer/only_reviewable' . $url_options . '\');' . "\n";
+              $showing_only_reviewable .= '    $($($(dt).context[0].nTable).children(\'caption\')[0]).text(\'Requests' . $as_reviewer_text . $only_reviewable_text . '\');' . "\n";
+              $showing_only_reviewable .= '    dt.buttons(\'.datatable-showing_requests-reviewable\').text(\'Show Under Review\');' . "\n";
+            }
+            else {
+              $showing_only_reviewable .= '    dt.ajax.url(\'' . $ajax_path . '/as_reviewer/under_review' . $url_options . '\');' . "\n";
+              $showing_only_reviewable .= '    $($($(dt).context[0].nTable).children(\'caption\')[0]).text(\'Requests' . $as_reviewer_text . $under_review_text . '\');' . "\n";
+              $showing_only_reviewable .= '    dt.buttons(\'.datatable-showing_requests-reviewable\').text(\'Show Only Reviewable\');' . "\n";
+            }
+          }
+          else {
+            if ($options['only_reviewer-under_review']) {
+              $showing_only_reviewable .= '    dt.ajax.url(\'' . $ajax_path . '/as_manager/only_reviewable' . $url_options . '\');' . "\n";
+              $showing_only_reviewable .= '    $($($(dt).context[0].nTable).children(\'caption\')[0]).text(\'Requests' . $as_manager_text . $only_reviewable_text . '\');' . "\n";
+              $showing_only_reviewable .= '    dt.buttons(\'.datatable-showing_requests-reviewable\').text(\'Show Under Review\');' . "\n";
+            }
+            else {
+              $showing_only_reviewable .= '    dt.ajax.url(\'' . $ajax_path . '/as_manager/under_review' . $url_options . '\');' . "\n";
+              $showing_only_reviewable .= '    $($($(dt).context[0].nTable).children(\'caption\')[0]).text(\'Requests' . $as_manager_text . $under_review_text . '\');' . "\n";
+              $showing_only_reviewable .= '    dt.buttons(\'.datatable-showing_requests-reviewable\').text(\'Show Only Reviewable\');' . "\n";
+            }
+          }
+        }
+        else {
+          if ($options['only_reviewer-under_review']) {
+            $showing_only_reviewable .= '    dt.ajax.url(\'' . $ajax_path . '/as_reviewer/only_reviewable' . $url_options . '\');' . "\n";
+            $showing_only_reviewable .= '    $($($(dt).context[0].nTable).children(\'caption\')[0]).text(\'Requests' . $only_reviewable_text . '\');' . "\n";
+            $showing_only_reviewable .= '    dt.buttons(\'.datatable-showing_requests-reviewable\').text(\'Show Under Review\');' . "\n";
+          }
+          else {
+            $showing_only_reviewable .= '    dt.ajax.url(\'' . $ajax_path . '/as_reviewer/under_review' . $url_options . '\');' . "\n";
+            $showing_only_reviewable .= '    $($($(dt).context[0].nTable).children(\'caption\')[0]).text(\'Requests' . $under_review_text . '\');' . "\n";
+            $showing_only_reviewable .= '    dt.buttons(\'.datatable-showing_requests-reviewable\').text(\'Show As Reviewer\');' . "\n";
+          }
+        }
+
+        $showing_only_reviewable .= '  }' . "\n";
+        $showing_only_reviewable .= '  dt.ajax.reload();' . "\n";
+        $showing_only_reviewable .= '}' . "\n";
+
+        $table['datatable_settings']['buttons']['Show Reviewable'] = array(
+          'text' => '\'Show Under Review\'',
+          'action' => $showing_only_reviewable,
+          'className' => '\'datatable-showing_requests-reviewable\'',
+        );
+        unset($showing_only_reviewable);
+
+        if ($options['only_reviewer-under_review']) {
+          $table['datatable_settings']['buttons']['Show Requests']['text'] = '\'Show Only Reviewable\'';
+        }
       }
     }
   }
@@ -11172,6 +11540,10 @@ function mfcs_get_requests_current_review_decisions($request_ids, $classificatio
     $review_decisions = array(
       MFCS_REVIEW_DECISION_ISSUES,
       MFCS_REVIEW_DECISION_ISSUES_NONE,
+
+      // temporary, for transition purposes.
+      MFCS_REVIEW_DECISION_APPROVE,
+      MFCS_REVIEW_DECISION_DENY,
     );
   }
   elseif ($step === MFCS_REVIEW_STEP_FINAL_DECISION) {
@@ -11371,7 +11743,7 @@ function mfcs_get_requests_not_providing_insurance($date_from = NULL, $date_to =
  *   A < is performed on this value.
  * @param int|null $min_create_date
  *   (optional) When not NULL, an date timestamp integer that is considered the minimum create date.
- *   For exmaple, requests that are created within a certain number of days should avoid something like sending a 3-day alert for a request what was created 2 days before the event takes place.
+ *   For example, requests that are created within a certain number of days should avoid something like sending a 3-day alert for a request what was created 2 days before the event takes place.
  *
  * @return array|bool
  *   An array of requests. FALSE is returned on error.
@@ -11616,31 +11988,33 @@ function mfcs_get_request_reminders($dates, $type, $interval = NULL, $request_id
   }
 
   $intervals = array(
-    MFCS_REMINDER_INTERVAL_DAY_1,
-    MFCS_REMINDER_INTERVAL_DAY_2,
-    MFCS_REMINDER_INTERVAL_DAY_3,
-    MFCS_REMINDER_INTERVAL_DAY_4,
-    MFCS_REMINDER_INTERVAL_DAY_5,
-    MFCS_REMINDER_INTERVAL_DAY_6,
-    MFCS_REMINDER_INTERVAL_DAY_7,
-    MFCS_REMINDER_INTERVAL_DAY_8,
-    MFCS_REMINDER_INTERVAL_DAY_9,
-    MFCS_REMINDER_INTERVAL_DAY_10,
-    MFCS_REMINDER_INTERVAL_DAY_11,
-    MFCS_REMINDER_INTERVAL_DAY_12,
-    MFCS_REMINDER_INTERVAL_DAY_30,
-    MFCS_REMINDER_INTERVAL_WEEK_1,
-    MFCS_REMINDER_INTERVAL_WEEK_2,
-    MFCS_REMINDER_INTERVAL_WEEK_3,
-    MFCS_REMINDER_INTERVAL_WEEK_4,
-    MFCS_REMINDER_INTERVAL_WEEK_5,
-    MFCS_REMINDER_INTERVAL_WEEK_6,
-    MFCS_REMINDER_INTERVAL_WEEK_7,
-    MFCS_REMINDER_INTERVAL_WEEK_8,
-    MFCS_REMINDER_INTERVAL_WEEK_9,
-    MFCS_REMINDER_INTERVAL_WEEK_10,
-    MFCS_REMINDER_INTERVAL_WEEK_11,
-    MFCS_REMINDER_INTERVAL_WEEK_12,
+    MFCS_REMINDER_INTERVAL_DAY_0 => MFCS_REMINDER_INTERVAL_DAY_0,
+    MFCS_REMINDER_INTERVAL_DAY_1 => MFCS_REMINDER_INTERVAL_DAY_1,
+    MFCS_REMINDER_INTERVAL_DAY_2 => MFCS_REMINDER_INTERVAL_DAY_2,
+    MFCS_REMINDER_INTERVAL_DAY_3 => MFCS_REMINDER_INTERVAL_DAY_3,
+    MFCS_REMINDER_INTERVAL_DAY_4 => MFCS_REMINDER_INTERVAL_DAY_4,
+    MFCS_REMINDER_INTERVAL_DAY_5 => MFCS_REMINDER_INTERVAL_DAY_5,
+    MFCS_REMINDER_INTERVAL_DAY_6 => MFCS_REMINDER_INTERVAL_DAY_6,
+    MFCS_REMINDER_INTERVAL_DAY_7 => MFCS_REMINDER_INTERVAL_DAY_7,
+    MFCS_REMINDER_INTERVAL_DAY_8 => MFCS_REMINDER_INTERVAL_DAY_8,
+    MFCS_REMINDER_INTERVAL_DAY_9 => MFCS_REMINDER_INTERVAL_DAY_9,
+    MFCS_REMINDER_INTERVAL_DAY_10 => MFCS_REMINDER_INTERVAL_DAY_10,
+    MFCS_REMINDER_INTERVAL_DAY_11 => MFCS_REMINDER_INTERVAL_DAY_11,
+    MFCS_REMINDER_INTERVAL_DAY_12 => MFCS_REMINDER_INTERVAL_DAY_12,
+    MFCS_REMINDER_INTERVAL_DAY_30 => MFCS_REMINDER_INTERVAL_DAY_30,
+    MFCS_REMINDER_INTERVAL_WEEK_0 => MFCS_REMINDER_INTERVAL_WEEK_0,
+    MFCS_REMINDER_INTERVAL_WEEK_1 => MFCS_REMINDER_INTERVAL_WEEK_1,
+    MFCS_REMINDER_INTERVAL_WEEK_2 => MFCS_REMINDER_INTERVAL_WEEK_2,
+    MFCS_REMINDER_INTERVAL_WEEK_3 => MFCS_REMINDER_INTERVAL_WEEK_3,
+    MFCS_REMINDER_INTERVAL_WEEK_4 => MFCS_REMINDER_INTERVAL_WEEK_4,
+    MFCS_REMINDER_INTERVAL_WEEK_5 => MFCS_REMINDER_INTERVAL_WEEK_5,
+    MFCS_REMINDER_INTERVAL_WEEK_6 => MFCS_REMINDER_INTERVAL_WEEK_6,
+    MFCS_REMINDER_INTERVAL_WEEK_7 => MFCS_REMINDER_INTERVAL_WEEK_7,
+    MFCS_REMINDER_INTERVAL_WEEK_8 => MFCS_REMINDER_INTERVAL_WEEK_8,
+    MFCS_REMINDER_INTERVAL_WEEK_9 => MFCS_REMINDER_INTERVAL_WEEK_9,
+    MFCS_REMINDER_INTERVAL_WEEK_10 => MFCS_REMINDER_INTERVAL_WEEK_10,
+    MFCS_REMINDER_INTERVAL_WEEK_11 => MFCS_REMINDER_INTERVAL_WEEK_11,
+    MFCS_REMINDER_INTERVAL_WEEK_12 => MFCS_REMINDER_INTERVAL_WEEK_12,
   );
 
   if (!array_key_exists($interval, $intervals)) {
@@ -12323,12 +12697,12 @@ function mfcs_gpg_sign($message) {
 }
 
 /**
- * Returns a list of venue coordinators associated with a given room.
+ * Returns a list of room coordinators associated with a given room.
  *
  * @param integer|null $room_id
  *   (optional) A room ID to limit the listing to.
  * @param bool $coordinators_only
- *   (optional) Do not return room ids, only coordinators.
+ *   (optional) Do not return room ids, only coordinator ids.
  *
  * @return array|bool
  *   When $coordinators_only is FALSE, an array containing the venue
@@ -12366,9 +12740,148 @@ function mfcs_load_room_coordinators($room_id = NULL, $coordinators_only = FALSE
     }
     else {
       $query->addField('mbr', 'id', 'id');
+      $query->addField('mbr', 'room_coordinator_id', 'room_coordinator_id');
+
+      $rows = $query->execute()->fetchAllKeyed();
+    }
+  }
+  catch (Error $e) {
+    cf_error::on_exception($e);
+
+    return FALSE;
+  }
+  catch (Exception $e) {
+    cf_error::on_exception($e);
+
+    return FALSE;
+  }
+
+  return $rows;
+}
+
+/**
+ * Returns a list of venue coordinators associated with a given room.
+ *
+ * @param integer|null $room_id
+ *   (optional) A room ID to limit the listing to.
+ * @param bool $coordinators_only
+ *   (optional) Do not return room ids, only coordinator ids.
+ *
+ * @return array|bool
+ *   When $coordinators_only is FALSE, an array containing the venue
+ *   coordinator ids with the room ids as the array keys.
+ *   When $coordinators_only is TRUE, an array containing a distinct set of
+ *   venue coordinator ids with the keys being the coordinator id as well.
+ *   FALSE is returned on error.
+ */
+function mfcs_load_venue_coordinators($room_id = NULL, $coordinators_only = FALSE) {
+  if (!is_null($room_id) && !cf_is_integer($room_id)) {
+    cf_error::invalid_integer('room_id');
+
+    return FALSE;
+  }
+
+  if (!is_bool($coordinators_only)) {
+    cf_error::invalid_bool('coordinators_only');
+
+    return FALSE;
+  }
+
+  $rows = array();
+  try {
+    $query = db_select('mfcs_banner_rooms', 'mbr');
+
+    if (!is_null($room_id)) {
+      $query->condition('mbr.id', $room_id);
+    }
+
+    if ($coordinators_only) {
+      $query->addField('mbr', 'venue_coordinator_id', 'venue_coordinator_id');
+      $query->distinct();
+
+      $rows = $query->execute()->fetchAllKeyed(0, 0);
+    }
+    else {
+      $query->addField('mbr', 'id', 'id');
       $query->addField('mbr', 'venue_coordinator_id', 'venue_coordinator_id');
 
       $rows = $query->execute()->fetchAllKeyed();
+    }
+  }
+  catch (Error $e) {
+    cf_error::on_exception($e);
+
+    return FALSE;
+  }
+  catch (Exception $e) {
+    cf_error::on_exception($e);
+
+    return FALSE;
+  }
+
+  return $rows;
+}
+
+/**
+ * Returns a list of venue coordinators and room coordinators associated with a given room.
+ *
+ * @param integer|null $room_id
+ *   (optional) A room ID to limit the listing to.
+ * @param bool $coordinators_only
+ *   (optional) Do not return room ids, only coordinator ids.
+ *
+ * @return array|bool
+ *   When $coordinators_only is FALSE, an array containing the venue
+ *   coordinator ids with the room ids as the array keys.
+ *   When $coordinators_only is TRUE, an array containing a distinct set of
+ *   venue coordinator ids with the keys being the coordinator id as well.
+ *   FALSE is returned on error.
+ */
+function mfcs_load_venue_and_room_coordinators($room_id = NULL, $coordinators_only = FALSE) {
+  if (!is_null($room_id) && !cf_is_integer($room_id)) {
+    cf_error::invalid_integer('room_id');
+
+    return FALSE;
+  }
+
+  if (!is_bool($coordinators_only)) {
+    cf_error::invalid_bool('coordinators_only');
+
+    return FALSE;
+  }
+
+  $rows = array();
+  try {
+    $query = db_select('mfcs_banner_rooms', 'mbr');
+
+    if (!is_null($room_id)) {
+      $query->condition('mbr.id', $room_id);
+    }
+
+    if ($coordinators_only) {
+      $query->addField('mbr', 'room_coordinator_id', 'room_coordinator_id');
+      $query->addField('mbr', 'venue_coordinator_id', 'venue_coordinator_id');
+      $query->distinct();
+
+      $temporary_rows = $query->execute()->fetchAll();
+    }
+    else {
+      $query->addField('mbr', 'id', 'id');
+      $query->addField('mbr', 'room_coordinator_id', 'room_coordinator_id');
+      $query->addField('mbr', 'venue_coordinator_id', 'venue_coordinator_id');
+
+      $temporary_rows = $query->execute()->fetchAll();
+    }
+
+    // merge the two different columns into a single distinct set of user ids.
+    foreach ($temporary_rows as $temporary_row) {
+      if (is_numeric($temporary_row->room_coordinator_id)) {
+        $rows[$temporary_row->room_coordinator_id] = $temporary_row->room_coordinator_id;
+      }
+
+      if (is_numeric($temporary_row->venue_coordinator_id)) {
+        $rows[$temporary_row->venue_coordinator_id] = $temporary_row->venue_coordinator_id;
+      }
     }
   }
   catch (Error $e) {
@@ -12392,6 +12905,9 @@ function mfcs_load_room_coordinators($room_id = NULL, $coordinators_only = FALSE
  *
  * @param int $user_id
  *   This is the user id of the user.
+ * @param bool $disabled
+ *   (optional) When TRUE include disabled rooms.
+ *   When FALSE, rooms that are disabled are not processed.
  *
  * @param array|bool
  *   An array of rooms the user is a coordinator of.
@@ -12399,9 +12915,14 @@ function mfcs_load_room_coordinators($room_id = NULL, $coordinators_only = FALSE
  *
  * @see: mfcs_load_coordinator_rooms_from_banner()
  */
-function mfcs_load_coordinator_rooms($user_id) {
+function mfcs_load_coordinator_rooms($user_id, $disabled = FALSE) {
   if (!cf_is_integer($user_id)) {
     cf_error::invalid_integer('user_id');
+    return FALSE;
+  }
+
+  if (!is_bool($disabled)) {
+    cf_error::invalid_integer('disabled');
     return FALSE;
   }
 
@@ -12413,6 +12934,10 @@ function mfcs_load_coordinator_rooms($user_id) {
     $or->condition('mbr.room_coordinator_id', $user_id);
     $or->condition('mbr.venue_coordinator_id', $user_id);
     $query->condition($or);
+
+    if (!$disabled) {
+      $query->condition('mbr.disabled', 0);
+    }
 
     $query->addField('mbr', 'id', 'room_id');
     $query->addField('mbb', 'id', 'building_id');
@@ -13096,13 +13621,13 @@ function mfcs_get_holidays($year, $timestamp_start = NULL, $timestamp_stop = NUL
         $year_next = strtotime('next year', $year_stamp);
 
         $or = db_or();
-        $or->condition('mh.date_start', $year_next, '<');
-        $or->condition('mh.date_stop', $year_next, '<=');
+        $or->condition('mh.date_start', $year_next, '>=');
+        $or->condition('mh.date_stop', $year_next, '<');
         $query->condition($or);
 
         $and = db_and();
-        $and->condition('mh.date_start', $timestamp_start_midnight, '>=');
-        $and->condition('mh.date_stop', $timestamp_start_midnight, '<');
+        $and->condition('mh.date_start', $timestamp_start_midnight, '<=');
+        $and->condition('mh.date_stop', $timestamp_start_midnight, '>');
         $query->condition($and);
       }
       else {
@@ -13432,9 +13957,6 @@ function mfcs_get_unavailabilities($year, $room_id = NULL, $building_id = NULL, 
     }
 
     if (!is_null($timestamp_start)) {
-      // only process values on a per day-to-day basis by setting the timestamps to midnight for each day.
-      $timestamp_start_midnight = strtotime('midnight today', $timestamp_start);
-
       if (is_null($timestamp_stop)) {
         // because year - 1 is included, only load results that include the current year.
         $year_fixed = mfcs_strtotime_year_fixup($year);
@@ -13447,29 +13969,26 @@ function mfcs_get_unavailabilities($year, $room_id = NULL, $building_id = NULL, 
         $query->condition($or);
 
         $and = db_and();
-        $and->condition('mu.date_start', $timestamp_start_midnight, '>=');
-        $and->condition('mu.date_stop', $timestamp_start_midnight, '<');
+        $and->condition('mu.date_start', $timestamp_start, '>=');
+        $and->condition('mu.date_stop', $timestamp_start, '<');
         $query->condition($and);
       }
       else {
-        // only process values on a per day-to-day basis by setting the timestamps to midnight for each day.
-        $timestamp_stop_midnight = strtotime('midnight today', $timestamp_stop);
-
         $or = db_or();
 
         $and = db_and();
-        $and->condition('mu.date_start', $timestamp_start_midnight, '>=');
-        $and->condition('mu.date_start', $timestamp_stop_midnight, '<');
+        $and->condition('mu.date_start', $timestamp_start, '>=');
+        $and->condition('mu.date_start', $timestamp_stop, '<');
         $or->condition($and);
 
         $and = db_and();
-        $and->condition('mu.date_stop', $timestamp_start_midnight, '>');
-        $and->condition('mu.date_stop', $timestamp_stop_midnight, '<=');
+        $and->condition('mu.date_stop', $timestamp_start, '>');
+        $and->condition('mu.date_stop', $timestamp_stop, '<=');
         $or->condition($and);
 
         $and = db_and();
-        $and->condition('mu.date_start', $timestamp_start_midnight, '<');
-        $and->condition('mu.date_stop', $timestamp_start_midnight, '>');
+        $and->condition('mu.date_start', $timestamp_start, '<');
+        $and->condition('mu.date_stop', $timestamp_start, '>');
         $or->condition($and);
 
         $query->condition($or);

@@ -124,7 +124,7 @@ function mfcs_request_view_0_form($form, &$form_state, $request_id, $mode = MFCS
     mfcs_add_canonical_headers('requests/view-0/' . $request_id . '/' . $mode . '/' . $use_revision);
   }
 
-    if (!is_string($mode) || !($mode == MFCS_VIEW_MODE_DISPLAY || $mode == MFCS_VIEW_MODE_LOG || $mode == MFCS_VIEW_MODE_OPERATIONS)) {
+  if (!is_string($mode) || !($mode == MFCS_VIEW_MODE_DISPLAY || $mode == MFCS_VIEW_MODE_LOG || $mode == MFCS_VIEW_MODE_OPERATIONS)) {
     $mode = MFCS_VIEW_MODE_NORMAL;
   }
 
@@ -231,6 +231,8 @@ function mfcs_request_view_0_form($form, &$form_state, $request_id, $mode = MFCS
     }
   }
 
+  $errors = array();
+  $warnings = array();
   if ($can_reassign_request && is_null($use_revision)) {
     if ($show_display) {
       $coordinator_problems = mfcs_get_request_venue_coordinator_inconsistencies($request);
@@ -241,10 +243,10 @@ function mfcs_request_view_0_form($form, &$form_state, $request_id, $mode = MFCS
           if (!empty($coordinator_problems['disabled']['current']['processed_name'])) {
             $user_venue_coordinator_name = '<a href="' . $base_path . 'users-0/view/' . $coordinator_problems['disabled']['current']['user_id'] . '" title="User ID: ' . $coordinator_problems['disabled']['current']['user_id'] .'">' . $coordinator_problems['disabled']['current']['processed_name'] . '</a> <sup>[id: ' . $coordinator_problems['disabled']['current']['id'] . ']</sup>';
 
-            drupal_set_message('Warning: The Venue Coordinator (' . $user_venue_coordinator_name . ') assigned to this request no longer has access to this system.', 'warning', FALSE);
+            $warnings[] = '<span class="strong uppercase">Warning</span>: The Venue Coordinator (' . $user_venue_coordinator_name . ') assigned to this request no longer has access to this system.';
           }
           else {
-            drupal_set_message('Warning: The Venue Coordinator assigned to this request no longer has access to this system.', 'warning', FALSE);
+            $warnings[] = '<span class="strong uppercase">Warning</span>: The Venue Coordinator assigned to this request no longer has access to this system.';
           }
         }
 
@@ -253,10 +255,10 @@ function mfcs_request_view_0_form($form, &$form_state, $request_id, $mode = MFCS
             $user_venue_coordinator_name = '<a href="' . $base_path . 'users-0/view/' . $coordinator_problems['out_of_sync']['current']['user_id'] . '">' . $coordinator_problems['out_of_sync']['current']['processed_name'] . '</a> <sup>[id: ' . $coordinator_problems['out_of_sync']['current']['user_id'] . ']</sup>';
             $user_banner_coordinator_name = '<a href="' . $base_path . 'users-0/view/' . $coordinator_problems['out_of_sync']['banner']['banner_id'] . '" title="User ID: ' . $coordinator_problems['out_of_sync']['banner']['banner_id'] .'">' . $coordinator_problems['out_of_sync']['banner']['processed_name'] . '</a> <sup>[id: ' . $coordinator_problems['out_of_sync']['banner']['banner_id'] . ']</sup>';
 
-            drupal_set_message('Warning: The Venue Coordinator (' . $user_venue_coordinator_name . ') assigned to this request no longer the same as the Venue Coordinator (' . $user_banner_coordinator_name . ') assigned via Banner.', 'warning', FALSE);
+            $warnings[] = '<span class="strong uppercase">Warning</span>: The Venue Coordinator (' . $user_venue_coordinator_name . ') assigned to this request no longer the same as the Venue Coordinator (' . $user_banner_coordinator_name . ') assigned via Banner.';
           }
           else {
-            drupal_set_message('Warning: The Venue Coordinator assigned to this request is no longer  the same as the Venue Coordinator assigned via Banner.', 'warning', FALSE);
+            $warnings[] = '<span class="strong uppercase">Warning</span>: The Venue Coordinator assigned to this request is no longer  the same as the Venue Coordinator assigned via Banner.';
           }
         }
       }
@@ -445,6 +447,81 @@ function mfcs_request_view_0_form($form, &$form_state, $request_id, $mode = MFCS
     $request_type = (int) $request_type;
   }
 
+
+  $form['warnings'] = array(
+    '#type' => 'markup',
+    '#markup' => '',
+  );
+
+  $form['errors'] = array(
+    '#type' => 'markup',
+    '#markup' => '',
+  );
+
+  $holiday_warnings = NULL;
+  $room_unavailabilities = NULL;
+  $date_extras = array();
+  $all_holidays = array();
+
+  $all_dates = array();
+  $all_time_start = array();
+  $all_time_stop = array();
+  $all_holidays = array();
+  foreach ($request['dates']['date'] as $date_delta => $date_value) {
+    $all_dates[$date_delta] = $request['dates']['date'][$date_delta]->value;
+    $all_time_start[$date_delta] = $request['dates']['time_start'][$date_delta]->value;
+    $all_time_stop[$date_delta] = $request['dates']['time_stop'][$date_delta]->value;
+
+    $holidays = mfcs_get_holidays((int) date('Y', $request['dates']['date'][$date_delta]->value), $request['dates']['date'][$date_delta]->value);
+    if (is_array($holidays) && !empty($holidays)) {
+      foreach ($holidays as $holiday) {
+        $all_holidays[$holiday->id] = $holiday;
+        $date_extras[$date_delta]['holidays'][$holiday->id] = $holiday;
+
+        $holiday_warnings .= '<li class="warning-holidays-list-item">' . t('<strong>@holiday</strong> on: <em>@date</em>.', array('@date' => date(MFCS_DATE_FORMAT_DATE, $request['dates']['date'][$date_delta]->value), '@holiday' => $holiday->title)) . '</li>';
+      }
+    }
+    unset($holidays);
+
+    $room_unavailability = mfcs_check_room_availability((int) $request['top']['room'][0]->value, array($all_dates[$date_delta]), array($all_time_start[$date_delta]), array($all_time_stop[$date_delta]), $request_id);
+    if (is_array($room_unavailability)) {
+      if (!is_array($room_unavailabilities)) {
+        $room_unavailabilities = array(
+          'conflicts' => array(),
+          'unavailable' => array(),
+        );
+      }
+
+      if (isset($room_unavailability['conflicts']) && is_array($room_unavailability['conflicts'])) {
+        foreach ($room_unavailability['conflicts'] as $conflict) {
+          $room_unavailabilities['conflicts'][$conflict->id] = $conflict;
+          $date_extras[$date_delta]['conflicts'][$conflict->id] = $conflict;
+        }
+        unset($conflict);
+      }
+
+      if (isset($room_unavailability['unavailable']) && is_array($room_unavailability['unavailable'])) {
+        foreach ($room_unavailability['unavailable'] as $unavailable) {
+          $room_unavailabilities['unavailable'][$unavailable->id] = $unavailable;
+          $date_extras[$date_delta]['unavailable'][$unavailable->id] = $unavailable;
+        }
+        unset($unavailable);
+      }
+    }
+    unset($room_unavailability);
+  }
+
+  $conflict_warnings = NULL;
+  $conflict_errors = NULL;
+  if (is_string($holiday_warnings)) {
+    $conflict_warnings .= '<div class="warning-holidays">';
+    $conflict_warnings .= '<div class="warning-holidays-title"><span class="strong uppercase">Warning</span>: This request is scheduled on the same dates as the following holidays:</div>';
+    $conflict_warnings .= '<ul class="warning-holidays-list">';
+    $conflict_warnings .= $holiday_warnings;
+    $conflict_warnings .= '</ul>';
+    $conflict_warnings .= '</div>';
+  }
+  unset($holiday_warnings);
 
   if ($show_display) {
     mfcs_include(MFCS_INCLUDE_VIEW);
@@ -752,7 +829,7 @@ function mfcs_request_view_0_form($form, &$form_state, $request_id, $mode = MFCS
             $group_path[$group][$weight] = array();
           }
 
-          $group_path[$group][$weight][$field_presentation_name] = mfcs_view_build_request_item_structure($request_id, $group, $field_presentation_name, $values, $field_presentation, $request);
+          $group_path[$group][$weight][$field_presentation_name] = mfcs_view_build_request_item_structure($request_id, $group, $field_presentation_name, $values, $field_presentation, $request, $date_extras);
 
           // This can be FALSE on error or NULL when the ROW should not be displayed, so remove the field entirely.
           if ($group_path[$group][$weight][$field_presentation_name] === FALSE || is_null($group_path[$group][$weight][$field_presentation_name])) {
@@ -1521,45 +1598,15 @@ function mfcs_request_view_0_form($form, &$form_state, $request_id, $mode = MFCS
       if (($can_review_request && !empty($reviewer_classifications) && ($step === MFCS_REVIEW_STEP_VENUE_AVAILABLE || $step === MFCS_REVIEW_STEP_REVIEW || $step === MFCS_REVIEW_STEP_FINAL_DECISION)) || (($status === MFCS_REQUEST_STATUS_CLOSED_ACCEPTED || $status === MFCS_REQUEST_STATUS_CLOSED_ACCEPTED_CANCELLED) && $step == MFCS_REVIEW_STEP_COMPLETED)) {
         $room = (int) $request['top']['room'][0]->value;
 
-        $all_dates = array();
-        $all_time_start = array();
-        $all_time_stop = array();
-        $all_holidays = array();
-        foreach ($request['dates']['date'] as $date_delta => $date_value) {
-          $all_dates[$date_delta] = $request['dates']['date'][$date_delta]->value;
-          $all_time_start[$date_delta] = $request['dates']['time_start'][$date_delta]->value;
-          $all_time_stop[$date_delta] = $request['dates']['time_stop'][$date_delta]->value;
-
-          $holidays = mfcs_get_holidays((int) date('Y', $request['dates']['date'][$date_delta]->value), $request['dates']['date'][$date_delta]->value);
-          if (is_array($holidays)) {
-            $all_holidays = array_merge($all_holidays, $holidays);
-          }
-          unset($holidays);
-        }
-
-        $conflict_message = '';
-        if (!empty($all_holidays)) {
-          $conflict_message .= '<div class="warning-holidays">';
-          $conflict_message .= '<div class="warning-holidays-title">This request is scheduled on the same dates as the following:</div>';
-          $conflict_message .= '<ul class="warning-holidays-list">';
-          foreach ($all_holidays as $holiday) {
-            $conflict_message .= '<li class="warning-holidays-list-item">' . t('<strong>@holiday</strong> on: <em>@date</em>.', array('@date' => date(MFCS_DATE_FORMAT_DATE, $holiday->date), '@holiday' => $holiday->title)) . '</li>';
-          }
-          $conflict_message .= '</ul>';
-          $conflict_message .= '</div>';
-        }
-
-        $room_unavailability = mfcs_check_room_availability($room, $all_dates, $all_time_start, $all_time_stop, $request_id);
-        if ($room_unavailability === FALSE) {
+        if ($room_unavailabilities === FALSE) {
           // @todo: should any errors be reported?
         }
-        elseif (!empty($room_unavailability['conflicts']) || !empty($room_unavailability['unavailable'])) {
-          $conflict_message .= '<div class="error-unavailabilities">';
-          $conflict_message .= '<div class="error-unavailabilities-title">The following dates are unavailable:</div>';
-          $conflict_message .= mfcs_build_room_unavailable_message($room_unavailability);
-          $conflict_message .= '</div>';
+        elseif (!empty($room_unavailabilities['conflicts']) || !empty($room_unavailabilities['unavailable'])) {
+          $conflict_errors .= '<div class="error-unavailabilities">';
+          $conflict_errors .= '<div class="error-unavailabilities-title">The following dates are unavailable:</div>';
+          $conflict_errors .= mfcs_build_room_unavailable_message($room_unavailabilities);
+          $conflict_errors .= '</div>';
         }
-        unset($room_unavailability);
 
         // if there are more than one pending requests that have overlapping rooms, dates, and times, then display a warning for venue coordinators and managers.
         if ($is_venue_coordinator || $is_manager) {
@@ -1575,19 +1622,19 @@ function mfcs_request_view_0_form($form, &$form_state, $request_id, $mode = MFCS
                   if (isset($request_using_room->time_start)) {
                     $problematic_date_key =  '' . $request_using_room->date . '-' . $request_using_room->time_start . '-' . $request_using_room->time_stop;
                     $problematic_date = '<strong>' . date(MFCS_DATE_FORMAT_DATE, $request_using_room->date) . '</strong> from <strong>' . date(MFCS_DATE_FORMAT_TIME, $request_using_room->time_start) . '</strong> to <strong>' . date(MFCS_DATE_FORMAT_TIME, $request_using_room->time_stop) . '</strong>  ';
-                    $problematic_date .= '<strong><a href="' . $base_path . 'requests/view-0/' . $request_using_room->request_id . $url_arguments . '">' . $request_using_room->title . '</a></strong>.';
+                    $problematic_date .= '<strong><a href="' . $base_path . 'requests/view-0/' . $request_using_room->request_id . $url_arguments . '">' . $request_using_room->title . '</a></strong> <span class="request_id">(' . $request_using_room->id . ')</span>.';
                     $problematic_dates[$problematic_date_key] = $problematic_date;
                   }
                   else {
                     $problematic_date_key =  '' . $request_using_room->date;
                     $problematic_date = '<strong>' . date(MFCS_DATE_FORMAT_DATE, $request_using_room->date) . '</strong> (all day) ';
-                    $problematic_date .= '<strong><a href="' . $base_path . 'requests/view-0/' . $request_using_room->request_id . $url_arguments . '">' . $request_using_room->title . '</a></strong>.';
+                    $problematic_date .= '<strong><a href="' . $base_path . 'requests/view-0/' . $request_using_room->request_id . $url_arguments . '">' . $request_using_room->title . '</a></strong> <span class="request_id">(' . $request_using_room->id . ')</span>.';
                     $problematic_dates[$problematic_date_key] = $problematic_date;
                   }
                 }
                 elseif (isset($request_using_room->reserved_day)) {
                   $problematic_date_key =  '' . $request_using_room->reserved_day . '-' . $request_using_room->reserved_time_start . '-' . $request_using_room->reserved_time_stop;
-                  $problematic_date = '<strong>' . date(MFCS_DATE_FORMAT_DATE, $request_using_room->reserved_day) . '</strong> from <strong>' . date(MFCS_DATE_FORMAT_TIME, $request_using_room->reserved_time_start) . '</strong> to <strong>' . date(MFCS_DATE_FORMAT_TIME, $request_using_room->reserved_time_stop) . '</strong> ' . $request_using_room->title . '.';
+                  $problematic_date = '<strong>' . date(MFCS_DATE_FORMAT_DATE, $request_using_room->reserved_day) . '</strong> from <strong>' . date(MFCS_DATE_FORMAT_TIME, $request_using_room->reserved_time_start) . '</strong> to <strong>' . date(MFCS_DATE_FORMAT_TIME, $request_using_room->reserved_time_stop) . '</strong> <strong><a href="' . $base_path . 'requests/view-0/' . $request_using_room->request_id . $url_arguments . '">' . $request_using_room->title . '</a></strong> <span class="request_id">(' . $request_using_room->id . ')</span>.';
                   $problematic_dates[$problematic_date_key] = $problematic_date;
                 }
               }
@@ -1596,30 +1643,40 @@ function mfcs_request_view_0_form($form, &$form_state, $request_id, $mode = MFCS
 
               ksort($problematic_dates);
               foreach ($problematic_dates as $date) {
-                $conflicting_message .= '<li>' . $date . '</li>';
+                $conflicting_message .= '<li class="problematic_dates-date">' . $date . '</li>';
               }
               unset($date);
             }
             unset($problematic_dates);
 
-            $conflict_message .= '<div class="warning-unavailabilities">';
-            $conflict_message .= '<div class="warning-unavailabilities-title">The following (unlocked) requests are in conflict:</div>';
-            $conflict_message .= '<ul class="warning-unavailabilities-list">' . $conflicting_message . '</ul>';
-            $conflict_message .= '</div>';
+            $conflict_errors .= '<div class="warning-unavailabilities">';
+            $conflict_errors .= '<div class="warning-unavailabilities-title">The following (unlocked) requests are in conflict:</div>';
+            $conflict_errors .= '<ul class="warning-unavailabilities-list">' . $conflicting_message . '</ul>';
+            $conflict_errors .= '</div>';
             unset($conflicting_message);
           }
         }
 
-        if (($status === MFCS_REQUEST_STATUS_CLOSED_ACCEPTED || $status === MFCS_REQUEST_STATUS_CLOSED_ACCEPTED_CANCELLED) && $step == MFCS_REVIEW_STEP_COMPLETED) {
-          drupal_set_message($conflict_message, 'warning');
+        if (is_string($conflict_warnings)) {
+          if ($show_display) {
+            $warnings[] = $conflict_warnings;
+          }
+
+          if (!(($status === MFCS_REQUEST_STATUS_CLOSED_ACCEPTED || $status === MFCS_REQUEST_STATUS_CLOSED_ACCEPTED_CANCELLED) && $step == MFCS_REVIEW_STEP_COMPLETED)) {
+            $form['review']['operations']['warnings']['#markup']  .= $conflict_warnings;
+          }
         }
-        else {
-          $form['review']['operations']['warnings']['#markup']  .= $conflict_message;
+
+        if (is_string($conflict_errors)) {
+          if ($show_display) {
+            $errors[] = $conflict_errors;
+          }
+
+          if (!(($status === MFCS_REQUEST_STATUS_CLOSED_ACCEPTED || $status === MFCS_REQUEST_STATUS_CLOSED_ACCEPTED_CANCELLED) && $step == MFCS_REVIEW_STEP_COMPLETED)) {
+            $form['review']['operations']['warnings']['#markup']  .= $conflict_errors;
+          }
         }
-        unset($conflict_message);
-        unset($all_dates);
-        unset($all_time_start);
-        unset($all_time_stop);
+
         unset($room);
       }
 
@@ -2098,6 +2155,26 @@ function mfcs_request_view_0_form($form, &$form_state, $request_id, $mode = MFCS
     }
   }
 
+  if (is_array($warnings) && !empty($warnings)) {
+    $form['warnings']['#markup'] = '<div class="request-warnings no-print">';
+
+    foreach ($warnings as $warning) {
+      $form['warnings']['#markup'] .= '<div class="request-warning">' . $warning . '</div>';
+    }
+
+    $form['warnings']['#markup'] .= '</div>';
+  }
+
+  if (is_array($errors) && !empty($errors)) {
+    $form['errors']['#markup'] = '<div class="request-errors no-print">';
+
+    foreach ($errors as $error) {
+      $form['errors']['#markup'] .= '<div class="request-error">' . $error . '</div>';
+    }
+
+    $form['errors']['#markup'] .= '</div>';
+  }
+
   return $form;
 }
 
@@ -2227,7 +2304,7 @@ function mfcs_request_view_0_form_validate($form, &$form_state) {
     }
 
     if ($step_latest !== $step_previous) {
-      drupal_set_message('Warning: the request has changed since you last loaded this page. This page is out of date and has been reloaded. No changes have been made.', 'warning');
+      drupal_set_message('<span class="strong uppercase">Warning</span>: the request has changed since you last loaded this page. This page is out of date and has been reloaded. No changes have been made.', 'warning');
       watchdog(MFCS_WATCHDOG_ID, 'The user \'%user_name\' (%user_id) attempted to review a request using a stale page', array('%user_name' => $user->name, '%user_id' => $user->uid), WATCHDOG_WARNING);
       return;
     }
@@ -2389,34 +2466,48 @@ function mfcs_request_view_0_form_validate($form, &$form_state) {
 
         $holidays = mfcs_get_holidays((int) date('Y', $request['dates']['date'][$date_delta]->value), $request['dates']['date'][$date_delta]->value);
         if (is_array($holidays)) {
-          $all_holidays = array_merge($all_holidays, $holidays);
+          if (!isset($all_holidays[$all_dates[$date_delta]])) {
+            $all_holidays[$all_dates[$date_delta]] = array();
+          }
+
+          $all_holidays[$all_dates[$date_delta]]= array_merge($all_holidays[$all_dates[$date_delta]], $holidays);
         }
         unset($holidays);
       }
 
-      $room_unavailability = mfcs_check_room_availability($room, $all_dates, $all_time_start, $all_time_stop, $request_id);
-      if ($room_unavailability === FALSE) {
+      $room_unavailabilities = mfcs_check_room_availability($room, $all_dates, $all_time_start, $all_time_stop, $request_id);
+      if ($room_unavailabilities === FALSE) {
         form_set_error('', 'An internal error occurred while checking the room for availability. Please contact the support staff.');
       }
-      elseif (!empty($room_unavailability['conflicts']) || !empty($room_unavailability['unavailable'])) {
-        $unavailable_message = '<span class="uppercase">Conflict</span>: The specified room is currently unavailable for the following dates: ';
-        $unavailable_message .= mfcs_build_room_unavailable_message($room_unavailability);
+      elseif (!empty($room_unavailabilities['conflicts']) || !empty($room_unavailabilities['unavailable'])) {
+        $unavailable_message = '<span class="strong uppercase">Conflict</span>: The specified room is currently unavailable for the following dates: ';
+        $unavailable_message .= mfcs_build_room_unavailable_message($room_unavailabilities);
         form_set_error('review][operations][decision', $unavailable_message);
         unset($unavailable_message);
       }
       unset($all_dates);
       unset($all_time_start);
       unset($all_time_stop);
-      unset($room_unavailability);
+      unset($room_unavailabilities);
 
       // check for holidays.
       if (!empty($all_holidays)) {
-        // there currently can only be a single holiday per day, so only process a single holiday.
-        $holiday = reset($all_holidays);
-        if (is_object($holiday)) {
-          drupal_set_message(t('Warning: <strong>@date</strong> may not available because of: <strong><a href="' . $base_path . 'holiday-0/view/@year/' . $holiday->year. '/' . $holiday->id . $url_arguments . '" title="View details about holiday.">@holiday</a></strong>.', array('@year' => $holiday->year, '@date' => date(MFCS_DATE_FORMAT_DATE, $holiday->date), '@holiday' => $holiday->title)), 'warning');
+        global $mfcs_determined;
+
+        $url_arguments = '';
+        if (!empty($mfcs_determined['complete'])) {
+          $url_arguments .= '?' . $mfcs_determined['complete'];
         }
-        unset($holiday);
+
+        // there currently can only be a single holiday per day, so only process a single holiday.
+        foreach ($all_holidays as $conflicting_date => $holidays) {
+          $holiday = reset($holidays);
+          if (is_object($holiday)) {
+            drupal_set_message(t('<span class="strong uppercase">Warning</span>: <strong>@date</strong> may not available because of: <strong><a href="' . $base_path . 'holiday-0/view/@year/' . $holiday->year. '/' . $holiday->id . $url_arguments . '" title="View details about holiday.">@holiday</a></strong>.', array('@year' => $holiday->year, '@date' => date(MFCS_DATE_FORMAT_DATE, $conflicting_date), '@holiday' => $holiday->title)), 'warning');
+          }
+          unset($holiday);
+        }
+        unset($holidays);
       }
       unset($all_holidays);
     }

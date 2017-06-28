@@ -114,8 +114,10 @@ function mfcs_ajax_setup_request_settings($post_method = TRUE) {
  *
  * @param string|int $argument_1
  *   Some string or number to send as the first argument.
+ * @param string|int $argument_2
+ *   Some string or number to send as the second argument.
  */
-function mfcs_ajax_list_0($argument_1 = NULL) {
+function mfcs_ajax_list_0($argument_1 = NULL, $argument_2 = NULL) {
   $user = cf_current_user();
 
   $manager = FALSE;
@@ -320,8 +322,39 @@ function mfcs_ajax_listing_0($custom_conditions = array(), $override_options = a
   $conditions = $custom_conditions;
 
   if ($search) {
+    $options['extra_fields'] = array();
+    $options['extra_fields']['mfcs_field_dates_date'] = array(
+      'alias' => 'mfdd',
+      'join' => 'left',
+      'on' => 'mc.request_id = mfdd.request_id AND mc.dates_date = mfdd.revision',
+      'columns' => array(
+        'dates_date' => 'value',
+      ),
+    );
+
+    // @fixme: currently performs too slowly.
+    /*
+    $options['extra_fields']['mfcs_field_dates_time_start'] = array(
+      'alias' => 'mfdts',
+      'join' => 'left',
+      'on' => 'mc.request_id = mfdts.request_id AND mc.dates_time_start = mfdts.revision',
+      'columns' => array(
+        'dates_time_start' => 'value',
+      ),
+    );
+    $options['extra_fields']['mfcs_field_dates_time_stop'] = array(
+      'alias' => 'mfdtsp',
+      'join' => 'left',
+      'on' => 'mc.request_id = mfdtsp.request_id AND mc.dates_time_stop = mfdtsp.revision',
+      'columns' => array(
+        'dates_time_stop' => 'value',
+      ),
+    );
+    */
+
     $count_conditions = $conditions;
     $count_options = $options;
+
 
     $conditions['or_1'] = array();
 
@@ -362,13 +395,43 @@ function mfcs_ajax_listing_0($custom_conditions = array(), $override_options = a
       );
     }
 
-    // Commented out because this is confusing because the date format will not match.
-    #$conditions['or_1']['value_date'] = array(
-    #  'field' => 'text(to_timestamp(mer.created))',
-    #  'operator' => MFCS_OPERATOR_LIKE,
-    #  'search' => $get_post['search']['value'],
-    #  'expression' => TRUE,
-    #);
+    $conditions['or_1']['value_created'] = array(
+      'field' => 'to_char(to_timestamp(mer.created), \'' . MFCS_DATE_FORMAT_DATE_TIME_SQUEEZE_DATABASE_SEARCH . '\')',
+      'operator' => MFCS_OPERATOR_LIKE,
+      'search' => $get_post['search']['value'],
+      'expression' => TRUE,
+    );
+
+    $conditions['or_1']['value_updated'] = array(
+      'field' => 'to_char(to_timestamp(mer.updated), \'' . MFCS_DATE_FORMAT_DATE_TIME_SQUEEZE_DATABASE_SEARCH . '\')',
+      'operator' => MFCS_OPERATOR_LIKE,
+      'search' => $get_post['search']['value'],
+      'expression' => TRUE,
+    );
+
+    $conditions['or_1']['value_dates_date'] = array(
+      'field' => 'to_char(to_timestamp(mfdd.value), \'' . MFCS_DATE_FORMAT_DATE_SQUEEZE_DATABASE_SEARCH . '\')',
+      'operator' => MFCS_OPERATOR_LIKE,
+      'search' => $get_post['search']['value'],
+      'expression' => TRUE,
+    );
+
+    // @fixme: currently performs too slowly.
+    /*
+    $conditions['or_1']['value_dates_time_start'] = array(
+      'field' => 'to_char(to_timestamp(mfdts.value), \'' . MFCS_DATE_FORMAT_DATE_TIME_SQUEEZE_DATABASE_SEARCH . '\')',
+      'operator' => MFCS_OPERATOR_LIKE,
+      'search' => $get_post['search']['value'],
+      'expression' => TRUE,
+    );
+
+    $conditions['or_1']['value_dates_time_stop'] = array(
+      'field' => 'to_char(to_timestamp(mfdtsp.value), \'' . MFCS_DATE_FORMAT_DATE_TIME_SQUEEZE_DATABASE_SEARCH . '\')',
+      'operator' => MFCS_OPERATOR_LIKE,
+      'search' => $get_post['search']['value'],
+      'expression' => TRUE,
+    );
+    */
 
     if (!empty($limit_status)) {
       $conditions['or_1']['value_status'] = array(
@@ -462,8 +525,10 @@ function mfcs_ajax_listing_0($custom_conditions = array(), $override_options = a
  *
  * @param string|int $argument_1
  *   Some string or number to send as the first argument.
+ * @param string|int $argument_2
+ *   Some string or number to send as the second argument.
  */
-function mfcs_ajax_review_0($argument_1 = NULL) {
+function mfcs_ajax_review_0($argument_1 = NULL, $argument_2 = NULL) {
   $user = cf_current_user();
 
   $manager = FALSE;
@@ -479,16 +544,41 @@ function mfcs_ajax_review_0($argument_1 = NULL) {
   );
 
   if ($manager) {
+    $options['only_reviewer-under_review'] = TRUE;
+    $under_review_caption = ' (Under Review)';
+
+    if ($argument_2 == 'under_review') {
+      $options['only_reviewer-under_review'] = TRUE;
+      $under_review_caption = ' (Under Review)';
+    }
+    elseif ($argument_2 == 'only_reviewable') {
+      $options['only_reviewer-under_review'] = FALSE;
+      $under_review_caption = ' (Only Reviewable)';
+    }
+
     $options['only_reviewer'] = TRUE;
-    $options['table_caption'] = 'Requests (As Reviewer)';
+    $options['table_caption'] = 'Requests (As Reviewer)' . $under_review_caption;
 
     if ($argument_1 == 'as_reviewer') {
       $options['only_reviewer'] = TRUE;
-      $options['table_caption'] = 'Requests (As Reviewer)';
+      $options['table_caption'] = 'Requests (As Reviewer)' . $under_review_caption;
     }
     elseif ($argument_1 == 'as_manager') {
       $options['only_reviewer'] = FALSE;
-      $options['table_caption'] = 'Requests (As Manager)';
+      $options['table_caption'] = 'Requests (As Manager)' . $under_review_caption;
+    }
+  }
+  else {
+    $options['only_reviewer-under_review'] = FALSE;
+    $under_review_caption = ' (Only Reviewable)';
+
+    if ($argument_2 == 'under_review') {
+      $options['only_reviewer-under_review'] = TRUE;
+      $under_review_caption = ' (Under Review)';
+    }
+    elseif ($argument_2 == 'only_reviewable') {
+      $options['only_reviewer-under_review'] = FALSE;
+      $under_review_caption = ' (Only Reviewable)';
     }
   }
 

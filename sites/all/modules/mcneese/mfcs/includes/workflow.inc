@@ -937,6 +937,29 @@ function mfcs_workflow_step_review($request_id, $user, $decision, $restriction =
     $reviewer_classifications['all'][MFCS_REVIEWER_CLASSIFICATION_REQUESTER] = MFCS_REVIEWER_CLASSIFICATION_REQUESTER;
   }
 
+  // in the case of comments, attempt to find any roles to comment as, for reviewers.
+  if ($decision === MFCS_REVIEW_DECISION_COMMENT && empty($reviewer_classifications['step'])) {
+    $reviewer_classifications_review = mfcs_get_reviewer_classifications($user->uid, $classification, MFCS_REVIEW_STEP_REVIEW);
+    $reviewer_classifications_final_decision = mfcs_get_reviewer_classifications($user->uid, $classification, MFCS_REVIEW_STEP_FINAL_DECISION);
+
+    if (!empty($reviewer_classifications_review)) {
+      foreach ($reviewer_classifications_review['step'] as $reviewer_classification) {
+        $reviewer_classifications['step'][$reviewer_classification] = $reviewer_classification;
+      }
+      unset($reviewer_classification);
+    }
+
+    if (!empty($reviewer_classifications_final_decision)) {
+      foreach ($reviewer_classifications_final_decision['step'] as $reviewer_classification) {
+        $reviewer_classifications['step'][$reviewer_classification] = $reviewer_classification;
+      }
+      unset($reviewer_classification);
+    }
+
+    unset($reviewer_classifications_review);
+    unset($reviewer_classifications_final_decision);
+  }
+
   // check to see if the user handles financial information or insurance information.
   if ($decision === MFCS_REVIEW_DECISION_REQUIREMENT) {
     // Some requirements options are not relevant for 'financer', so disclude them during the check.
@@ -1423,7 +1446,7 @@ function mfcs_workflow_step_review($request_id, $user, $decision, $restriction =
     // Of the ones required, if all are set to provided, then mark the insurance provided as provided.
     // Of the ones required, if any are set to not provided, then mark the insurance provided as not provided.
     if ($contractor_insurance === MFCS_INSURANCE_REQUIRED_NOT && $unaffiliated_insurance === MFCS_INSURANCE_REQUIRED_NOT && $affiliated_insurance === MFCS_INSURANCE_REQUIRED_NOT) {
-      $provided_insurance = MFCS_INSURANCE_PROVIDED_NOT;
+      $provided_insurance = MFCS_INSURANCE_REQUIRED_NOT;
     }
     else {
       $provided_insurance = MFCS_INSURANCE_REQUIRED;
@@ -1888,7 +1911,9 @@ function mfcs_workflow_step_review($request_id, $user, $decision, $restriction =
       $parameters['requester_included'] = FALSE;
     }
 
-    if ($send_email) {
+    // Do not send 'no-issues' emails if messages is empty, even if asked to send an e-mail.
+    // this is done to prevent flooding the reviewers with e-mails (ticket: fcs-98).
+    if ($send_email && strlen($message) > 0) {
       mfcs_send_workflow_emails($request_id, $parameters);
     }
   }
@@ -3369,6 +3394,9 @@ function mfcs_send_workflow_emails($request_id, $parameters) {
         elseif ($parameters['reminder_data']->interval == MFCS_REMINDER_INTERVAL_DAY_1) {
           $remaining_days = '1';
         }
+        elseif ($parameters['reminder_data']->interval == MFCS_REMINDER_INTERVAL_DAY_0) {
+          $remaining_days = '0';
+        }
       }
 
       $remaining_content = "\n" . 'This is the ' . $remaining_days . '-day reminder e-mail submitted on: ' . $current_date . ".\n";
@@ -3376,12 +3404,26 @@ function mfcs_send_workflow_emails($request_id, $parameters) {
 
       $email_params['title_suffix'] = 'Unreviewed Request';
       $email_params['content'] = '';
-      $email_params['content'] .= 'This is a reminder that the review process has not been completed and the first event/meeting date begins in approximately ' . $remaining_days . ' days for the request: ' . check_plain($request_title) . ".\n";
+
+      if ($remaining_days == '0') {
+        $email_params['content'] .= 'This is a reminder that the review process has not been completed and the first event/meeting date begins today for the request: ' . check_plain($request_title) . ".\n";
+      }
+      else {
+        $email_params['content'] .= 'This is a reminder that the review process has not been completed and the first event/meeting date begins in approximately ' . $remaining_days . ' days for the request: ' . check_plain($request_title) . ".\n";
+      }
+
       $email_params['content'] .= $remaining_content;
       $email_params['content'] .= "\n";
       $email_params['content'] .= $standard_content;
       $email_params['markup'] = '';
-      $email_params['markup'] .= 'This is a reminder that the review process has not been completed and the first event/meeting date begins in approximately ' . $remaining_days . ' days for the request: <em>' . check_plain($request_title) . '</em>.<br>';
+
+      if ($remaining_days == '0') {
+        $email_params['markup'] .= 'This is a reminder that the review process has not been completed and the first event/meeting date begins today for the request: <em>' . check_plain($request_title) . '</em>.<br>';
+      }
+      else {
+        $email_params['markup'] .= 'This is a reminder that the review process has not been completed and the first event/meeting date begins in approximately ' . $remaining_days . ' days for the request: <em>' . check_plain($request_title) . '</em>.<br>';
+      }
+
       $email_params['markup'] .= $remaining_markup;
       $email_params['markup'] .= '<br>';
       $email_params['markup'] .= $standard_markup;
@@ -4095,7 +4137,7 @@ function mfcs_send_workflow_emails($request_id, $parameters) {
 
     foreach ($email_to as $to) {
       if (!in_array($to, $email_whitelist) && !in_array($to, $debug_accounts)) {
-        drupal_set_message(t('Warning: not sending mail to @to while testing the system.', array('@to' => $to)), 'warning');
+        drupal_set_message(t('<span class="strong uppercase">Warning</span>: not sending mail to @to while testing the system.', array('@to' => $to)), 'warning');
         #watchdog('debug', 'Warning: not sending mail to @to while testing the system.', array('@to' => $to), WATCHDOG_WARNING);
         continue;
       }

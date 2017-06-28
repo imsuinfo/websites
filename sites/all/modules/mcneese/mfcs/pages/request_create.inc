@@ -95,6 +95,11 @@ function mfcs_request_create_0_form($form, &$form_state, $copy_request = NULL) {
     '#tree' => TRUE,
   );
 
+  $form['warnings'] = array(
+    '#type' => 'markup',
+    '#markup' => '',
+  );
+
   $form['request'] = array(
     '#tree' => TRUE,
   );
@@ -150,6 +155,29 @@ function mfcs_request_create_0_form($form, &$form_state, $copy_request = NULL) {
       'path' => 'request[',
     ),
   );
+
+  $form['form']['ignore_past'] = array(
+    '#id' => 'field-form-ignore_past',
+    '#type' => 'value',
+    '#value' => FALSE,
+  );
+
+  if (isset($form_state['warnings']) && !empty($form_state['warnings'])) {
+    $warnings_markup = NULL;
+    foreach ($form_state['warnings'] as $warning_group => $warning) {
+      if (empty($warning)) {
+        continue;
+      }
+
+      $warnings_markup .= $warning;
+    }
+    unset($warning);
+
+    if (!is_null($warnings_markup)) {
+      $form['warnings'] .= $warnings_markup;
+    }
+    unset($warnings_markup);
+  }
 
   if (is_array($request)) {
     $form['form']['existing']['#value'] = mfcs_get_request_existing_values($request);
@@ -488,7 +516,7 @@ function mfcs_request_create_0_form_validate($form, &$form_state) {
               form_set_error('', 'An internal error occurred while checking the room for availability. Please contact the support staff.');
             }
             elseif (!empty($room_unavailability['conflicts']) || !empty($room_unavailability['unavailable'])) {
-              $unavailable_message = '<span class="uppercase">Warning</span>: The specified room is currently unavailable for the following dates: ';
+              $unavailable_message = '<span class="strong uppercase">Warning</span>: The specified room is currently unavailable for the following dates: ';
               $unavailable_message .= mfcs_build_room_unavailable_message($room_unavailability, TRUE);
               $unavailable_message .= 'You may still submit this request and your request attempt will still be logged (but your request will be auto-closed). ';
               drupal_set_message($unavailable_message, 'warning');

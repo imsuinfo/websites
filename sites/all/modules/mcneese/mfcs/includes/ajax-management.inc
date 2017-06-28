@@ -739,13 +739,12 @@ function mfcs_ajax_management_listing_0($custom_conditions = array(), $override_
       );
     }
 
-    // Commented out because this is confusing because the date format will not match.
-    #$conditions['or_1']['value_date'] = array(
-    #  'field' => 'text(to_timestamp(mer.created))',
-    #  'operator' => MFCS_OPERATOR_LIKE,
-    #  'search' => $get_post['search']['value'],
-    #  'expression' => TRUE,
-    #);
+    $conditions['or_1']['value_date'] = array(
+      'field' => 'to_char(to_timestamp(mer.created), \'' . MFCS_DATE_FORMAT_DATE_TIME_SQUEEZE_DATABASE_SEARCH . '\')',
+      'operator' => MFCS_OPERATOR_LIKE,
+      'search' => $get_post['search']['value'],
+      'expression' => TRUE,
+    );
 
     if (!empty($limit_status)) {
       $conditions['or_1']['value_status'] = array(
@@ -974,13 +973,12 @@ function mfcs_ajax_problems_0_users_list() {
       );
     }
 
-    // Commented out because this is confusing because the date format will not match.
-    #$conditions['or_1']['value_date'] = array(
-    #  'field' => 'text(to_timestamp(mu.updated_problems))',
-    #  'operator' => MFCS_OPERATOR_LIKE,
-    #  'search' => $get_post['search']['value'],
-    #  'expression' => TRUE,
-    #);
+    $conditions['or_1']['value_date'] = array(
+      'field' => 'to_char(to_timestamp(mu.updated_problems), \'' . MFCS_DATE_FORMAT_DATE_TIME_SQUEEZE_DATABASE_SEARCH . '\')',
+      'operator' => MFCS_OPERATOR_LIKE,
+      'search' => $get_post['search']['value'],
+      'expression' => TRUE,
+    );
 
     $count_options['results'] = FALSE;
     $problems_returned = mfcs_management_search_users($count_conditions, $count_options);
@@ -1036,13 +1034,13 @@ function mfcs_ajax_problems_0_users_list() {
       $row[3] = check_plain($problem->last_name);
 
       $row[4] = NULL;
-      foreach (array(MFCS_USER_PROBLEM_ACCOUNT_CREATE_BANNER_UNAVAILABLE, MFCS_USER_PROBLEM_ACCOUNT_SYNC_BANNER_UNAVAILABLE, MFCS_USER_PROBLEM_ACCOUNT_LOGIN_PROBLEMS_MULTIPLE, MFCS_USER_PROBLEM_ACCOUNT_REVIEWER_NOT_ALLOWED, MFCS_USER_PROBLEM_ACCOUNT_DUPLICATES, MFCS_USER_PROBLEM_ACCOUNT_DISABLED_IN_USE, MFCS_USER_PROBLEM_ACCOUNT_BANNER_INVALID, MFCS_USER_PROBLEM_ACCOUNT_NO_ACCESS) as $taxonomy_id) {
-        if (($problem->problems & $taxonomy_id) > 0) {
-          if ($taxonomy_id == MFCS_USER_PROBLEM_ACCOUNT_CREATE_BANNER_UNAVAILABLE || $taxonomy_id == MFCS_USER_PROBLEM_ACCOUNT_SYNC_BANNER_UNAVAILABLE || $taxonomy_id == MFCS_USER_PROBLEM_ACCOUNT_NO_ACCESS) {
+      foreach (array(MFCS_USER_PROBLEM_ACCOUNT_CREATE_BANNER_UNAVAILABLE, MFCS_USER_PROBLEM_ACCOUNT_SYNC_BANNER_UNAVAILABLE, MFCS_USER_PROBLEM_ACCOUNT_LOGIN_PROBLEMS_MULTIPLE, MFCS_USER_PROBLEM_ACCOUNT_REVIEWER_NOT_ALLOWED, MFCS_USER_PROBLEM_ACCOUNT_DUPLICATES, MFCS_USER_PROBLEM_ACCOUNT_DISABLED_IN_USE, MFCS_USER_PROBLEM_ACCOUNT_BANNER_INVALID, MFCS_USER_PROBLEM_ACCOUNT_BANNER_NOT_IN_LDAP, MFCS_USER_PROBLEM_ACCOUNT_NO_BANNER_ROLES, MFCS_USER_PROBLEM_ACCOUNT_NO_ACCESS) as $error_mask) {
+        if (($problem->problems & $error_mask) > 0) {
+          if ($error_mask == MFCS_USER_PROBLEM_ACCOUNT_CREATE_BANNER_UNAVAILABLE || $error_mask == MFCS_USER_PROBLEM_ACCOUNT_SYNC_BANNER_UNAVAILABLE || $error_mask == MFCS_USER_PROBLEM_ACCOUNT_NO_ACCESS) {
             $additional_operations .= ' <a href="' . $base_path . 'problems-0/users/resynchronize/' . $problem->user_id . $url_arguments . '" class="operation-link operation-link-resynchronize" title="Re-Synchronize the user\'s settings.">Re-Sync</a>';
           }
 
-          if ($taxonomy_id == MFCS_USER_PROBLEM_ACCOUNT_DISABLED_IN_USE) {
+          if ($error_mask == MFCS_USER_PROBLEM_ACCOUNT_DISABLED_IN_USE) {
             $additional_operations .= ' <a href="' . $base_path . 'problems-0/users/disabled_in_use/' . $problem->user_id . '">Requests</a>';
           }
 
@@ -1053,13 +1051,13 @@ function mfcs_ajax_problems_0_users_list() {
             $row[4] .= ', ';
           }
 
-          $row[4] .= $taxonomy_problems[$taxonomy_id];
+          $row[4] .= $taxonomy_problems[$error_mask];
         }
       }
 
       $row[5] = NULL;
-      foreach (array(MFCS_USER_PROBLEM_FORM_ERROR_USER, MFCS_USER_PROBLEM_FORM_ERROR_USER) as $taxonomy_id) {
-        if (($problem->problems & $taxonomy_id) > 0) {
+      foreach (array(MFCS_USER_PROBLEM_FORM_ERROR_USER, MFCS_USER_PROBLEM_FORM_ERROR_USER) as $error_mask) {
+        if (($problem->problems & $error_mask) > 0) {
           if (is_null($row[5])) {
             $row[5] = '';
           }
@@ -1067,13 +1065,13 @@ function mfcs_ajax_problems_0_users_list() {
             $row[5] .= ', ';
           }
 
-          $row[5] .= $taxonomy_problems[$taxonomy_id];
+          $row[5] .= $taxonomy_problems[$error_mask];
         }
       }
 
       $row[6] = NULL;
-      foreach (array(MFCS_USER_PROBLEM_SYSTEM, MFCS_USER_PROBLEM_MFCS) as $taxonomy_id) {
-        if (($problem->problems & $taxonomy_id) > 0) {
+      foreach (array(MFCS_USER_PROBLEM_SYSTEM, MFCS_USER_PROBLEM_MFCS) as $error_mask) {
+        if (($problem->problems & $error_mask) > 0) {
           if (is_null($row[6])) {
             $row[6] = '';
           }
@@ -1081,11 +1079,11 @@ function mfcs_ajax_problems_0_users_list() {
             $row[6] .= ', ';
           }
 
-          $row[6] .= $taxonomy_problems[$taxonomy_id];
+          $row[6] .= $taxonomy_problems[$error_mask];
         }
       }
 
-      unset($taxonomy_id);
+      unset($error_mask);
 
       $row[7] = check_plain(date(MFCS_DATE_FORMAT_DATE_TIME_SQUEEZE, $problem->updated_problems));
       $row[8] = '<a href="' . $base_path . 'problems-0/users/user/' . $problem->user_id . $url_arguments . '" class="operation-link operation-link-view">View</a>' . $additional_operations;
@@ -1263,13 +1261,12 @@ function mfcs_ajax_problems_0_requests_list($argument_1 = NULL) {
       'expression' => TRUE,
     );
 
-    // Commented out because this is confusing because the date format will not match.
-    #$conditions['or_1']['value_date'] = array(
-    #  'field' => 'text(to_timestamp(mu.updated))',
-    #  'operator' => MFCS_OPERATOR_LIKE,
-    #  'search' => $get_post['search']['value'],
-    #  'expression' => TRUE,
-    #);
+    $conditions['or_1']['value_date'] = array(
+      'field' => 'to_char(to_timestamp(mpr.date), \'' . MFCS_DATE_FORMAT_DATE_TIME_SQUEEZE_DATABASE_SEARCH . '\')',
+      'operator' => MFCS_OPERATOR_LIKE,
+      'search' => $get_post['search']['value'],
+      'expression' => TRUE,
+    );
 
     $count_options['results'] = FALSE;
     $problems_returned = mfcs_miscellaneous_problems_request_search($count_conditions, $count_options);
@@ -1330,11 +1327,11 @@ function mfcs_ajax_problems_0_requests_list($argument_1 = NULL) {
       $row[1] = $problem_id;
       $row[2] = '' . $problem->request_id;
       $row[3] = check_plain(date(MFCS_DATE_FORMAT_DATE_TIME_SQUEEZE, $problem->date));
-      $row[4] = (isset($problem->reason) ? check_plain($problem->reason) : '');
-      $row[5] = (isset($problem->ignore) && $problem->ignore == 1 ? 'Yes' : 'No');
-      $row[6] = '<a href="' . $base_path . 'problems-0/requests/request/' . $problem->id . $url_arguments . '" class="operation-link operation-link-details">Details</a>';
+      $row[4] = isset($problem->reason) ? check_plain($problem->reason) : '';
+      $row[5] = (isset($problem->ignore) && $problem->ignore == 1) ? 'Yes' : 'No';
+      $row[6] = '<a href="' . $base_path . 'problems-0/requests/problem/' . $problem->id . $url_arguments . '" class="operation-link operation-link-details">Details</a>';
       $row[6] .= ' <a href="' . $base_path . 'requests/view-0/' . $problem->request_id . $url_arguments . '" class="operation-link operation-link-request">Request</a>';
-      $row[6] .= ' <a href="' . $base_path . 'problems-0/requests/request/' . $problem->id . '/recheck' . $url_arguments . '" class="operation-link operation-link-recheck white-space-nowrap">Re-Check</a>';
+      $row[6] .= ' <a href="' . $base_path . 'problems-0/requests/problem/' . $problem->id . '/recheck' . $url_arguments . '" class="operation-link operation-link-recheck white-space-nowrap">Re-Check</a>';
 
       $response['data'][] = $row;
     }
@@ -1505,13 +1502,12 @@ function mfcs_ajax_email_log_0_list() {
       'expression' => TRUE,
     );
 
-    // Commented out because this is confusing because the date format will not match.
-    #$conditions['or_1']['value_date'] = array(
-    #  'field' => 'text(to_timestamp(' . $table_alias . '.date))',
-    #  'operator' => MFCS_OPERATOR_LIKE,
-    #  'search' => $get_post['search']['value'],
-    #  'expression' => TRUE,
-    #);
+    $conditions['or_1']['value_date'] = array(
+      'field' => 'to_char(to_timestamp(' . $table_alias . '.date), \'' . MFCS_DATE_FORMAT_DATE_TIME_SQUEEZE_DATABASE_SEARCH . '\')',
+      'operator' => MFCS_OPERATOR_LIKE,
+      'search' => $get_post['search']['value'],
+      'expression' => TRUE,
+    );
 
     $conditions['or_1']['value_destination'] = array(
       'field' => $table_alias . '.destination',
@@ -1609,7 +1605,7 @@ function mfcs_ajax_email_log_0_list() {
       $row[0] = '' . $email_log->id;
       $row[1] = '' . $email_log->user_id;
       $row[2] = '<a href="' . $base_path . 'users-0/view/' . $email_log->user_id . $url_arguments . '" class="user-link">' . check_plain($email_log->name) . '</a>';
-      $row[3] = check_plain(date(MFCS_DATE_FORMAT_DATE_TIME_SQUEEZE, $email_log->date));
+      $row[3] = check_plain(date(MFCS_DATE_FORMAT_DATE_TIME_SECONDS_SQUEEZE, $email_log->date));
 
       if (empty($email_log->destination_user_id)) {
         $row[4] = check_plain($email_log->destination);
@@ -1766,6 +1762,9 @@ function mfcs_ajax_synchronize_0_form() {
     elseif ($order_column == 7) {
       $sorting['address'] = $order_direction;
     }
+    elseif ($order_column == 8) {
+      $sorting['disabled'] = $order_direction;
+    }
   }
 
   // always provide the unique id in the ordering to guarantee consistency in range results.
@@ -1788,6 +1787,7 @@ function mfcs_ajax_synchronize_0_form() {
     'password' => 'password',
     'type' => 'type',
     'address' => 'address',
+    'disabled' => 'disabled',
   );
 
   $options['extra_fields']['users'] = array(
@@ -1827,13 +1827,25 @@ function mfcs_ajax_synchronize_0_form() {
       'expression' => TRUE,
     );
 
-    // Commented out because this is confusing because the date format will not match.
-    #$conditions['or_1']['value_date'] = array(
-    #  'field' => 'text(to_timestamp(' . $table_alias . '.date))',
-    #  'operator' => MFCS_OPERATOR_LIKE,
-    #  'search' => $get_post['search']['value'],
-    #  'expression' => TRUE,
-    #);
+    $conditions['or_1']['value_account'] = array(
+      'field' => 'u.name',
+      'operator' => MFCS_OPERATOR_LIKE,
+      'search' => $get_post['search']['value'],
+    );
+
+    $conditions['or_1']['value_created'] = array(
+      'field' => 'to_char(to_timestamp(' . $table_alias . '.created), \'' . MFCS_DATE_FORMAT_DATE_TIME_SQUEEZE_DATABASE_SEARCH . '\')',
+      'operator' => MFCS_OPERATOR_LIKE,
+      'search' => $get_post['search']['value'],
+      'expression' => TRUE,
+    );
+
+    $conditions['or_1']['value_updated'] = array(
+      'field' => 'to_char(to_timestamp(' . $table_alias . '.updated), \'' . MFCS_DATE_FORMAT_DATE_TIME_SQUEEZE_DATABASE_SEARCH . '\')',
+      'operator' => MFCS_OPERATOR_LIKE,
+      'search' => $get_post['search']['value'],
+      'expression' => TRUE,
+    );
 
     $conditions['or_1']['value_password'] = array(
       'field' => $table_alias . '.password',
@@ -1921,11 +1933,12 @@ function mfcs_ajax_synchronize_0_form() {
       $row[5] = check_plain($item->password);
       $row[6] = 'Unknown';
       $row[7] = check_plain($item->address);
-      $row[8] = '';
+      $row[8] = $item->disabled == 1 ? 'Disabled' : 'Enabled';
+      $row[9] = '';
 
       if ($item->type == MFCS_SYNCHRONIZE_TYPE_ICAL) {
         $row[6] = 'iCalendar';
-        $row[8] .= ' <a href="' . $base_path . 'requests/synchronize-0/ical/' . rawurlencode($item->password) . $url_arguments . '" class="operation-link operation-link-view" title="Synchronization URL">Link</a>';
+        $row[9] .= ' <a href="' . $base_path . 'requests/synchronize-0/ical/' . rawurlencode($item->password) . $url_arguments . '" class="operation-link operation-link-view" title="Synchronization URL">Link</a>';
       }
 
       $response['data'][] = $row;
@@ -2043,6 +2056,12 @@ function mfcs_ajax_users_0_list($argument_1 = NULL) {
     }
     elseif ($order_column == 9) {
       $sorting['roles'] = array('direction' => $order_direction);
+    }
+    elseif ($order_column == 10) {
+      $sorting['logged_in'] = array('direction' => $order_direction);
+    }
+    elseif ($order_column == 11) {
+      $sorting['updated'] = array('direction' => $order_direction);
     }
   }
 
@@ -2195,18 +2214,21 @@ function mfcs_ajax_users_0_list($argument_1 = NULL) {
         }
       }
 
-      $row[10] = '<a href="' . $base_path . 'users-0/view/' . $item->id . $url_arguments . '" class="operation-link operation-link-view" title="View User">View</a>';
+      $row[10] = ($item->logged_in != 0) ? date(MFCS_DATE_FORMAT_DATE_TIME_SECONDS_SQUEEZE, $item->logged_in) : 'Never';
+      $row[11] = ($item->updated != 0) ? date(MFCS_DATE_FORMAT_DATE_TIME_SECONDS_SQUEEZE, $item->updated) : 'Never';
+
+      $row[12] = '<a href="' . $base_path . 'users-0/view/' . $item->id . $url_arguments . '" class="operation-link operation-link-view" title="View User">View</a>';
 
       if ($is_manager || $is_administer) {
-        $row[10] .= ' <a href="' . $base_path . 'users-0/edit/' . $item->id . $url_arguments . '" class="operation-link operation-link-view" title="Edit User">Edit</a>';
-        $row[10] .= ' <a href="' . $base_path . 'users-0/customize/' . $item->id . $url_arguments . '" class="operation-link operation-link-view" title="Customize User">Customize</a>' ;
+        $row[12] .= ' <a href="' . $base_path . 'users-0/edit/' . $item->id . $url_arguments . '" class="operation-link operation-link-view" title="Edit User">Edit</a>';
+        $row[12] .= ' <a href="' . $base_path . 'users-0/customize/' . $item->id . $url_arguments . '" class="operation-link operation-link-view" title="Customize User">Customize</a>' ;
 
         if ($item->problems != MFCS_USER_PROBLEM_NONE) {
-          $row[10] .= ' <a href="' . $base_path . 'problems-0/users/user/' . $item->id . $url_arguments . '" class="operation-link operation-link-problems" title="View User Problems">Problems</a>' ;
+          $row[12] .= ' <a href="' . $base_path . 'problems-0/users/user/' . $item->id . $url_arguments . '" class="operation-link operation-link-problems" title="View User Problems">Problems</a>' ;
         }
       }
       elseif ($item->id == $user->uid && ($is_requester || $is_reviewer)) {
-        $row[10] .= ' <a href="' . $base_path . 'users-0/customize/' . $item->id . $url_arguments . '" class="operation-link operation-link-view" title="Customize User">Customize</a>' ;
+        $row[12] .= ' <a href="' . $base_path . 'users-0/customize/' . $item->id . $url_arguments . '" class="operation-link operation-link-view" title="Customize User">Customize</a>' ;
       }
 
       $response['data'][] = $row;
