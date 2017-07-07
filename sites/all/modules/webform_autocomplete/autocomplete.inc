@@ -16,6 +16,7 @@ function _webform_defaults_autocomplete() {
   $defaults['extra'] += array(
     'autocomplete_items' => '',
     'autocomplete_existing' => 0,
+    'autocomplete_taxonomy' => 0,
     'autocomplete_match_rule' => WEBFORM_AUTOCOMPLETE_MATCH_CONTAINS,
     'autocomplete_restrict' => 0,
     'autocomplete_result_count' => 20,
@@ -107,6 +108,22 @@ function _webform_edit_autocomplete($component) {
     '#default_value' => $component['extra']['autocomplete_existing'],
     '#parents' => array('extra', 'autocomplete_existing'),
   );
+  if (module_exists('taxonomy')) {
+    foreach (taxonomy_vocabulary_get_names() as $voc) {
+      $options[$voc->machine_name] = $voc->name;
+    }
+    natcasesort($options);
+
+    $form['options']['autocomplete_taxonomy'] = array(
+      '#type' => 'select',
+      '#title' => t('Autocomplete from existing taxonomy terms'),
+      '#options' => array(0 => t('Disabled')) + $options,
+      '#description' => t('Autocomplete from term names entered in this taxonomy vocabulary. If options are entered above, autocomplete will select from both.'),
+      '#weight' => 1,
+      '#default_value' => $component['extra']['autocomplete_taxonomy'],
+      '#parents' => array('extra', 'autocomplete_taxonomy'),
+    );
+  }
   $form['options']['autocomplete_match_rule'] = array(
     '#type' => 'select',
     '#title' => t('Match Rule'),
@@ -150,6 +167,9 @@ function _webform_autocomplete_admin_validate($form, &$form_state) {
   }
   if ($extra['autocomplete_restrict'] && $extra['autocomplete_existing']) {
     form_error($form['validation']['autocomplete_restrict'], t('You cannot choose both "Restrict to listed values" and "Autocomplete from existing submissions."'));
+  }
+  if ($extra['autocomplete_restrict'] && $extra['autocomplete_taxonomy']) {
+    form_error($form['validation']['autocomplete_restrict'], t('You cannot choose both "Restrict to listed values" and "Autocomplete from existing taxonomy terms."'));
   }
   if (!is_numeric($extra['autocomplete_result_count']) || $extra['autocomplete_result_count'] < 1) {
     form_error($form['display']['autocomplete_result_count'], t('You must choose to display at least one result'));
@@ -302,7 +322,38 @@ function webform_autocomplete_js($node, $cid, $str = '') {
         $results[$row->data] = $row->data;
       }
     }
-    // Sort php and sql results together
+
+    // Search in taxonomy term names.
+    if (!empty($component['extra']['autocomplete_taxonomy']) && $count < $result_count && module_exists('taxonomy')) {
+
+      $query = new EntityFieldQuery();
+      $query->entityCondition('entity_type', 'taxonomy_term')
+        ->entityCondition('bundle', $component['extra']['autocomplete_taxonomy'])
+        ->propertyOrderBy('name', 'ASC')
+        ->range(0, ($result_count - $count));
+
+      switch ($component['extra']['autocomplete_match_rule']) {
+        case WEBFORM_AUTOCOMPLETE_MATCH_BEGIN:
+          $query->propertyCondition('name', db_like($str) . '%', 'like');
+          break;
+
+        case WEBFORM_AUTOCOMPLETE_MATCH_END:
+          $query->propertyCondition('name', '%' . db_like($str), 'like');
+          break;
+
+        default:
+          $query->propertyCondition('name', '%' . db_like($str) . '%', 'like');
+      }
+
+      $result = $query->execute();
+      if (isset($result['taxonomy_term'])) {
+        foreach (taxonomy_term_load_multiple(array_keys($result['taxonomy_term'])) as $term) {
+          $results[$term->name] = $term->name;
+        }
+      }
+    }
+
+    // Sort all results together
     natcasesort($results);
     drupal_alter('webform_autocomplete_options', $results, $node, $cid, $str);
     drupal_json_output($results);
@@ -339,6 +390,10 @@ function _webform_form_builder_map_autocomplete() {
       'autocomplete_existing' => array(
         'form_parents' => array('options', 'autocomplete_existing'),
         'storage_parents' => array('extra', 'autocomplete_existing'),
+      ),
+      'autocomplete_taxonomy' => array(
+        'form_parents' => array('options', 'autocomplete_taxonomy'),
+        'storage_parents' => array('extra', 'autocomplete_taxonomy'),
       ),
       'autocomplete_match_rule' => array(
         'form_parents' => array('options', 'autocomplete_match_rule'),

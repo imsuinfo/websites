@@ -109,6 +109,7 @@ function webform_autocomplete_form_builder_element_types($form_type, $form_id) {
           'disabled',
           'autocomplete_items',
           'autocomplete_existing',
+          'autocomplete_taxonomy',
           'autocomplete_match_rule',
           'autocomplete_restrict',
           'unique',
@@ -116,9 +117,8 @@ function webform_autocomplete_form_builder_element_types($form_type, $form_id) {
       ),
     );
     if (function_exists('_form_builder_webform_default')) {
-      $fields['autocomplete']['default'] = _form_builder_webform_default('autocomplete');
+      $fields['autocomplete']['default'] = _form_builder_webform_default('autocomplete', array(), array('name' => t('New autocomplete')));
     }
-    $fields['autocomplete']['default']['#title'] = t('New autocomplete');
 
     return $fields;
   }
