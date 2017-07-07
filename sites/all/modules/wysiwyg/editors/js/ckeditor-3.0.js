@@ -12,7 +12,7 @@ var instanceMap;
  * Initialize the editor library.
  *
  * This method is called once the first time a library is needed. If new
- * WYSIWYG fieldsare added later, update() will be called instead.
+ * WYSIWYG fields are added later, update() will be called instead.
  *
  * @param settings
  *   An object containing editor settings for each input format.
@@ -205,7 +205,7 @@ Drupal.wysiwyg.editor.detach.ckeditor = function (context, params, trigger) {
 Drupal.wysiwyg.editor.instance.ckeditor = {
   addPlugin: function (pluginName, pluginSettings) {
     CKEDITOR.plugins.add(pluginName, {
-      // Wrap Drupal plugin in a proxy pluygin.
+      // Wrap Drupal plugin in a proxy plugin.
       init: function(editor) {
         if (pluginSettings.css) {
           editor.on('mode', function(ev) {
@@ -267,7 +267,7 @@ Drupal.wysiwyg.editor.instance.ckeditor = {
 
   insert: function(content) {
     content = this.prepareContent(content);
-    if (CKEDITOR.env.webkit || CKEDITOR.env.chrome || CKEDITOR.env.opera || CKEDITOR.env.safari) {
+    if (CKEDITOR.version.split('.')[0] === '3' && (CKEDITOR.env.webkit || CKEDITOR.env.chrome || CKEDITOR.env.opera || CKEDITOR.env.safari)) {
       // Works around a WebKit bug which removes wrapper elements.
       // @see https://drupal.org/node/1927968
       var tmp = new CKEDITOR.dom.element('div'), children, skip = 0, item;

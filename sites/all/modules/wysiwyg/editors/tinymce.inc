@@ -27,7 +27,7 @@ function wysiwyg_tinymce_editor() {
       ),
     ),
     'version callback' => 'wysiwyg_tinymce_version',
-    'verified version range' => array('3.3.9.2', '4.5.3'),
+    'verified version range' => array('3.3.9.2', '4.5.7'),
     'themes callback' => 'wysiwyg_tinymce_themes',
     'settings form callback' => 'wysiwyg_tinymce_settings_form',
     'init callback' => 'wysiwyg_tinymce_init',
@@ -887,7 +887,7 @@ function wysiwyg_tinymce_settings($editor, $config, $theme) {
         $settings['toolbar'][] = $settings['buttons'][$i];
       }
     }
-    // TinyMCE 3 allowed the callback to be the name of a funciton. Convert it
+    // TinyMCE 3 allowed the callback to be the name of a function. Convert it
     // to a reference to keep compatibility with IMCE Wysiwyg bridge module.
     // Both isset() and is_string() needed, generates a notice if undefined.
     if (isset($settings['file_browser_callback']) && is_string($settings['file_browser_callback'])) {
