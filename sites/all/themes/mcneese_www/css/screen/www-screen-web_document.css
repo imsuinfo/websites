@@ -1,0 +1,84 @@
+.mcneese.node-type-document #mcneese-page {
+  border-bottom-left-radius: 10px;
+  border-bottom-right-radius: 10px;
+}
+
+
+
+/*** Page Document Outline Region ***/
+.mcneese.node-type-document #mcneese-page-document-outline > .html_tag-header > .html_tag-hgroup > .html_tag-heading {
+  font-size: 18px;
+  line-height: 32px;
+
+  min-height: 32px;
+
+  text-align: left;
+  text-justify: left;
+  text-transform: none;
+
+  margin: 0px 0px 0px 32px;
+}
+
+
+
+/*** Page Document Outline Region - Fixed ***/
+.mcneese.node-type-document #mcneese-page-document-outline.fixed {
+  background-image: url(../../images/outline.png);
+  background-repeat: no-repeat;
+}
+
+.mcneese.node-type-document #mcneese-page-document-outline.fixed.collapsed {
+  background-color: #dadada;
+}
+
+.mcneese.node-type-document #mcneese-page-document-outline.fixed.expanded,
+.mcneese.node-type-document #mcneese-page-document-outline.fixed.collapsed:hover,
+.mcneese.node-type-document #mcneese-page-document-outline.fixed.collapsed:active,
+.mcneese.node-type-document #mcneese-page-document-outline.fixed.collapsed:focus {
+  background-color: #e4f2ff;
+
+  padding: 5px 10px;
+  border: 1px ridge #504b2f;
+
+  height: auto;
+  min-height: 100px;
+  max-height: 50%;
+
+  width: 200px;
+  min-width: 200px;
+  max-width: 200px;
+
+  overflow: auto;
+}
+
+.mcneese.node-type-document #mcneese-page-document-outline.fixed.expanded {
+  left: 40px;
+}
+
+
+
+/*** Document Outline - Relative ***/
+.mcneese.node-type-document #mcneese-page-document-outline.relative {
+  position: relative;
+}
+
+.mcneese.node-type-document #mcneese-page-document-outline.relative > .html_tag-header {
+  display: block;
+  visibility: hidden;
+  overflow: hidden;
+
+  font-size: 0px;
+  line-height: 0px;
+
+  width: 0px;
+  min-width: 0px;
+  max-width: 0px;
+
+  height: 0px;
+  min-height: 0px;
+  max-height: 0px;
+
+  margin: 0px;
+  padding: 0px;
+  border: none;
+}

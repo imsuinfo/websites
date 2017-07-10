@@ -1,0 +1,111 @@
+<?php
+// $Id$
+
+/**
+ * Implements hook_help().
+ */
+function view_unpublished_help($path, $arg = NULL) {
+  if (cf_is_empty_or_non_string('path', $path, WATCHDOG_ERROR)){
+    return;
+  }
+
+  switch ($path) {
+    case 'admin/help#view_unpublished':
+      $help = "Adds node-type specific permissions that allow users who do not own a particular node to view that node if it is unpublished.";
+
+      return "<p>" . t($help) . "</p>";
+  }
+}
+
+/**
+ * Implementation of hook_permission().
+ *
+ * Adds a global 'view all unpublished content' permission and also
+ * a new permission for each content type.
+ */
+function view_unpublished_permission() {
+  $perms = array(
+    'view all unpublished content' => array(
+      'title' => t("View all unpublished content"),
+      'description' => t("Grant view access to all unpublished content."),
+    ),
+    'view unpublished content' => array(
+      'title' => t("View unpublished content"),
+      'description' => t("Grant view access to unpublished content in which you have view access for the published content of the same type."),
+    ),
+  );
+
+  if (module_exists('node')){
+    foreach (node_permissions_get_configured_types() as $type) {
+      $info = node_type_get_type($type);
+      $type = check_plain($info->type);
+
+      // Build standard list of node permissions for this type.
+      $perms['view unpublished ' . $type . ' content'] = array(
+        'title' => t('%type_name: View unpublished content', array('%type_name' => $info->name)),
+        'description' => t("Grant view access to unpublished content that is of the specific type %type_name.", array('%type_name' => $info->name)),
+      );
+    }
+  }
+
+  return $perms;
+}
+
+/**
+ * Impliments hook_node_access().
+ */
+function view_unpublished_node_access($node, $op, $account){
+  if (cf_is_empty_or_non_string('op', $op, WATCHDOG_ERROR)){
+    return NODE_ACCESS_IGNORE;
+  }
+
+  if (!is_object($account)){
+    if (class_exists('cf_error')) {
+      cf_error::invalid_object('account');
+    }
+
+    return NODE_ACCESS_IGNORE;
+  }
+
+  if (is_string($node)){
+    // when node is a string, then it does not exist and therefore cannot have a published status
+    return NODE_ACCESS_IGNORE;
+  }
+  else if (!is_object($node)) {
+    if (class_exists('cf_error')) {
+      cf_error::invalid_variable('node', 'Not a valid object or a valid string', array(), WATCHDOG_WARNING);
+    }
+
+    return NODE_ACCESS_IGNORE;
+  }
+
+  // only operate on view access permissions
+  if ($op != 'view'){
+    return NODE_ACCESS_IGNORE;
+  }
+
+  if ($node->status == 0) {
+    if (user_access('view all unpublished content', $account)) {
+      return NODE_ACCESS_ALLOW;
+    }
+
+    if (user_access('view unpublished content', $account)) {
+      // basic view access to unpublished content is provided only if the user has view access to the published version of this node
+      $node_copy = clone($node);
+      $node_copy->status = 1;
+
+      if (node_access('view', $node_copy) == NODE_ACCESS_ALLOW){
+        return NODE_ACCESS_ALLOW;
+      }
+    }
+
+    if (module_exists('node')){
+      $info = node_type_get_type($node->type);
+      $type = check_plain($node->type);
+
+      if (user_access('view unpublished ' . $type . ' content', $account)){
+        return NODE_ACCESS_ALLOW;
+      }
+    }
+  }
+}

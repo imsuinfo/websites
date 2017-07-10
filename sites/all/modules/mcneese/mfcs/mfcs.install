@@ -1,0 +1,2666 @@
+<?php
+
+/**
+ * @file
+ * Install file for mfcs module.
+ */
+
+/**
+ * Returns a list of secondary tables and their structure.
+ *
+ * @return array
+ *  A list of secondary tables and their structure.
+ */
+function mfcs_table_install_structure() {
+  $structure = array();
+  $structure['top'] = array(
+    'status' => 'unsigned_small',
+    'step' => 'unsigned',
+    'location' => 'unsigned_big',
+    'building' => 'unsigned_big',
+    'room' => 'unsigned_big',
+    'additional' => 'text',
+  );
+
+  $structure['review'] = array(
+    'review' => array('id' => 'serial_pkey', 'user_id' => 'unsigned', 'step' => 'unsigned', 'decision' => 'unsigned', 'message' => 'text', 'restriction' => 'unsigned_small'),
+  );
+
+  $structure['requirements'] = array(
+    'facilities_fees' => array('personnel' => 'requirement', 'hours' => 'requirement', 'days' => 'requirement', 'rate' => 'requirement', 'supplies' => 'requirement', 'post' => 'requirement', 'description' => 'text'),
+    'equipment_fees' => array('personnel' => 'requirement', 'hours' => 'requirement', 'days' => 'requirement', 'rate' => 'requirement', 'supplies' => 'requirement', 'post' => 'requirement', 'description' => 'text'),
+    'security_fees' => array('personnel' => 'requirement', 'hours' => 'requirement', 'days' => 'requirement', 'rate' => 'requirement', 'supplies' => 'requirement', 'post' => 'requirement', 'description' => 'text'),
+    'custodial_fees' => array('personnel' => 'requirement', 'hours' => 'requirement', 'days' => 'requirement', 'rate' => 'requirement', 'supplies' => 'requirement', 'post' => 'requirement', 'description' => 'text'),
+    'maintenance_fees' => array('personnel' => 'requirement', 'hours' => 'requirement', 'days' => 'requirement', 'rate' => 'requirement', 'supplies' => 'requirement', 'post' => 'requirement', 'description' => 'text'),
+    'grounds_fees' => array('personnel' => 'requirement', 'hours' => 'requirement', 'days' => 'requirement', 'rate' => 'requirement', 'supplies' => 'requirement', 'post' => 'requirement', 'description' => 'text'),
+    'other' => 'unsigned_tiny',
+    'waived' => 'unsigned_tiny',
+    'university' => 'unsigned_tiny',
+  );
+
+  $structure['insurance'] = array(
+    'contractor' => 'unsigned',
+    'unaffiliated' => 'unsigned',
+    'affiliated' => 'unsigned',
+    'provided' => 'unsigned',
+  );
+
+  $structure['dates'] = array(
+    'date' => 'date_cancellable',
+    'time_start' => 'time',
+    'time_stop' => 'time',
+    'category' => 'unsigned',
+  );
+
+  $structure['request_coordinator'] = array(
+    'user_id' => 'unsigned',
+    'name' => 'varchar',
+    'phone' => 'varchar',
+    'email' => 'varchar',
+    'classification' => 'unsigned',
+  );
+
+  $structure['venue_coordinator'] = array(
+    'user_id' => 'unsigned',
+  );
+
+  $structure['information'] = array(
+    'title' => 'varchar',
+    'attendance' => 'unsigned',
+    'type' => 'unsigned',
+    'organization' => 'varchar',
+    'adviser_approval' => 'unsigned_tiny',
+  );
+
+  $structure['plans'] = array(
+    'audience' => 'unsigned',
+    'description' => 'text',
+    'activities' => 'text',
+  );
+
+  $structure['registration'] = array(
+    'require' => 'unsigned_tiny',
+    'website' => 'varchar',
+    'phone' => 'varchar',
+    'ticket_price' => 'varchar',
+    'ticket_dates' => 'varchar',
+    'ticket_website' => 'varchar',
+    'ticket_phone' => 'varchar',
+    'generate_revenue' => 'unsigned_tiny',
+    'revenue_generated' => array('ticket' => 'unsigned', 'merchandise' => 'unsigned', 'concession' => 'unsigned'),
+  );
+
+  $structure['setup'] = array(
+    'rectangular_tables_8ft' => 'unsigned',
+    'round_tables_8ft' => 'unsigned',
+    'other_tables' => 'text',
+    'standard_blue_chairs' => 'unsigned',
+    'podium' => 'unsigned_tiny',
+    'portable_stage' => 'unsigned_tiny',
+    'portable_stage_configuration' => 'text',
+    'security' => 'unsigned_tiny',
+    'parking_assistance' => 'unsigned_tiny',
+    'parking_assistance_area' => 'text',
+    'road_closures' => 'unsigned_tiny',
+    'road_closures_details' => 'text',
+    'special_requests' => 'unsigned_tiny',
+    'special_requests_details' => 'text',
+  );
+
+  $structure['presentation'] = array(
+    'technical_equipment' => 'unsigned_tiny',
+    'technical_equipment_details' => array('microphone' => 'unsigned', 'screen' => 'unsigned', 'computer' => 'unsigned', 'sound' => 'unsigned'),
+    'technical_equipment_microphone' => 'unsigned',
+    'external_audio_person' => 'unsigned_tiny',
+    'external_audio_person_name' => 'varchar',
+    'external_audio_person_email' => 'varchar',
+    'external_audio_person_phone' => 'varchar',
+    'publicity' => 'unsigned_tiny',
+    'publicity_details' => array('campus_digest' => 'unsigned', 'student_digest' => 'unsigned', 'website' => 'unsigned', 'social_media' => 'unsigned', 'axis_tv' => 'unsigned', 'press_release' => 'unsigned'),
+    'production' => 'unsigned_tiny',
+    'production_name' => 'varchar',
+    'production_email' => 'varchar',
+    'production_phone' => 'varchar',
+    'printed_material' => 'unsigned_tiny',
+    'university_logo' => 'unsigned_tiny',
+    'designing_material' => array('public_relations' => 'unsigned', 'marketing' => 'unsigned', 'other' => 'unsigned'),
+    'designing_material_name' => 'varchar',
+    'designing_material_email' => 'varchar',
+    'designing_material_phone' => 'varchar',
+  );
+
+  $structure['services'] = array(
+    'food_served' => 'unsigned_tiny',
+    'food_caterer' => 'varchar',
+    'alcohol' => 'unsigned_tiny',
+    'open_flames' => 'unsigned_tiny',
+  );
+
+  return $structure;
+}
+
+/**
+ * Implementation of hook_schema().
+ */
+function mfcs_schema() {
+  $schema = array();
+  $t = get_t();
+
+
+  // create the primary tables.
+  $schema['mfcs_requests'] = array(
+    'description' => $t("McNeese Facilities Use Requests table. This represents individual requests and is the primary table for request information."),
+    'fields' => array(
+      'id' => array(
+        'description' => $t("The primary key used to represent an request."),
+        'type' => 'serial',
+        'size' => 'big',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+      ),
+      'creator' => array(
+        'description' => $t("This is the system id. Represents the user who created the request. This is not a foreign key and instead loosely refers to the user id. This is not meant to be updated and is provided for informative purposes only."),
+        'type' => 'int',
+        'size' => 'big',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+      ),
+      'user_id' => array(
+        'description' => $t("This is the system id. Represents the user who created the request. This is not a foreign key and instead loosely refers to the user id. This is meant to be updated."),
+        'type' => 'int',
+        'size' => 'big',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+      ),
+      'created' => array(
+        'description' => $t("Represents the date the request was created."),
+        'type' => 'int',
+        'size' => 'big',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+      ),
+      'updated' => array(
+        'description' => $t("Represents the date the request was last updated."),
+        'type' => 'int',
+        'size' => 'big',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+      ),
+      'status' => array(
+        'description' => $t("Represents the current status of the request."),
+        'type' => 'int',
+        'size' => 'big',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+      ),
+      'step' => array(
+        'description' => $t("Represents the current step of the request."),
+        'type' => 'int',
+        'size' => 'big',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+      ),
+      'type' => array(
+        'description' => $t("Represents the current type of the request."),
+        'type' => 'int',
+        'size' => 'big',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+      ),
+      'classification' => array(
+        'description' => $t("Represents the current classification of the request."),
+        'type' => 'int',
+        'size' => 'big',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+      ),
+      'location' => array(
+        'description' => $t("Represents the current step of the request."),
+        'type' => 'int',
+        'size' => 'big',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+      ),
+      'building' => array(
+        'description' => $t("Represents the current step of the request."),
+        'type' => 'int',
+        'size' => 'big',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+      ),
+      'room' => array(
+        'description' => $t("Represents the current step of the request."),
+        'type' => 'int',
+        'size' => 'big',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+      ),
+      'venue_coordinator' => array(
+        'description' => $t("Represents the current user id of the venue coordinator of the request."),
+        'type' => 'int',
+        'size' => 'big',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+      ),
+      'title' => array(
+        'description' => $t("Represents the current title of the request."),
+        'type' => 'varchar',
+        'length' => '255',
+        'not null' => FALSE,
+        'default' => '',
+      ),
+    ),
+    'primary key' => array('id'),
+    'foreign keys' => array(
+      'user_id' => array(
+        'table' => 'users',
+        'columns' => array('user_id' => 'uid'),
+      ),
+      'creator' => array(
+        'table' => 'users',
+        'columns' => array('creator' => 'uid'),
+      ),
+    ),
+  );
+
+  $schema['mfcs_request_revisions'] = array(
+    'description' => $t("McNeese Facilities Use Requests field table representing the revision history."),
+    'fields' => array(
+      'request_id' => array(
+        'description' => $t("Foreign key to the primary key in the {mfcs_requests} table."),
+        'type' => 'int',
+        'size' => 'big',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+      ),
+      'revision' => array(
+        'description' => $t("Part of the primary key for this table and represents the revision number for change tracking."),
+        'type' => 'int',
+        'size' => 'big',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+      ),
+      'user_id' => array(
+        'description' => $t("This is the system id. Represents the user responsible for the revision."),
+        'type' => 'int',
+        'size' => 'big',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+      ),
+      'date' => array(
+        'description' => $t("Represents the date the request associated with this revision."),
+        'type' => 'int',
+        'size' => 'big',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+      ),
+      'message' => array(
+        'description' => $t("Represents a conditionally optional message associated with the revision."),
+        'type' => 'text',
+        'size' => 'big',
+        'serialize' => FALSE,
+        'not null' => FALSE,
+      ),
+      'signature' => array(
+        'description' => $t("Represents a PGP (or similar) signature for the message."),
+        'type' => 'text',
+        'size' => 'big',
+        'serialize' => FALSE,
+        'not null' => FALSE,
+      ),
+    ),
+    'primary key' => array('request_id', 'revision'),
+    'unique keys' => array(
+      'revision' => array('request_id', 'revision', 'user_id', 'date'),
+    ),
+    'foreign keys' => array(
+      'request_id' => array(
+        'table' => 'mfcs_requests',
+        'columns' => array('request_id' => 'id'),
+      ),
+      'user_id' => array(
+        'table' => 'users',
+        'columns' => array('user_id' => 'uid'),
+      ),
+    ),
+  );
+
+/*
+  $schema['mfcs_request_locks'] = array(
+    'description' => $t("McNeese Facilities Use Requests field table representing specific locks associated with requests."),
+    'fields' => array(
+      'request_id' => array(
+        'description' => $t("Foreign key to the primary key in the {mfcs_requests} table."),
+        'type' => 'int',
+        'size' => 'big',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+      ),
+      'auto_cancel' => array(
+        'description' => $t("Defines that the auto-cancel process should be prevented in some manner."),
+        'type' => 'boolean',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'default' => FALSE,
+      ),
+    ),
+    'primary key' => array('request_id'),
+    'foreign keys' => array(
+      'request_id' => array(
+        'table' => 'mfcs_requests',
+        'columns' => array('request_id' => 'id'),
+      ),
+    ),
+  );
+*/
+
+  $schema['mfcs_reviewers'] = array(
+    'description' => $t("McNeese Facilities Use mapping users to an request classification and a review classification."),
+    'fields' => array(
+      'id' => array(
+        'description' => $t("The primary key used to represent an reviewer."),
+        'type' => 'serial',
+        'size' => 'big',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+      ),
+      'request_classification' => array(
+        'description' => $t("The request classification this is associated with."),
+        'type' => 'int',
+        'size' => 'medium',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+      ),
+      'review_step' => array(
+        'description' => $t("The review step for the specified request classification."),
+        'type' => 'int',
+        'size' => 'medium',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+      ),
+      'reviewer_classification' => array(
+        'description' => $t("The reviewer classification."),
+        'type' => 'int',
+        'size' => 'medium',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+      ),
+      'user_id' => array(
+        'description' => $t("This is the system id. Represents the user who created the request."),
+        'type' => 'int',
+        'size' => 'big',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+      ),
+      'disabled' => array(
+        'description' => $t("Boolean designating that the account is disabled. This is used as a soft-delete to prevent loss of records."),
+        'type' => 'int',
+        'size' => 'tiny',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'default' => 0,
+      ),
+    ),
+    'primary key' => array('id'),
+    'unique keys' => array(
+      'reviewer' => array('request_classification', 'review_step', 'reviewer_classification', 'user_id'),
+    ),
+    'foreign keys' => array(
+      'user_id' => array(
+        'table' => 'users',
+        'columns' => array('user_id' => 'uid'),
+      ),
+    ),
+  );
+
+  $schema['mfcs_proxy_venue_coordinator'] = array(
+    'description' => $t("McNeese Facilities Use allowing one user to proxy as another for the purposes of venue coordinator."),
+    'fields' => array(
+      'id' => array(
+        'description' => $t("The primary key used to represent an reviewer."),
+        'type' => 'serial',
+        'size' => 'big',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+      ),
+      'user_id' => array(
+        'description' => $t("This is the system id. Represents the user who created the request."),
+        'type' => 'int',
+        'size' => 'big',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+      ),
+      'proxy_id' => array(
+        'description' => $t("This is the system id. Represents the user who created the request."),
+        'type' => 'int',
+        'size' => 'big',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+      ),
+      'disabled' => array(
+        'description' => $t("Boolean designating that the account is disabled. This is used as a soft-delete to prevent loss of records."),
+        'type' => 'int',
+        'size' => 'tiny',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'default' => 0,
+      ),
+    ),
+    'primary key' => array('id'),
+    'unique keys' => array(
+      'reviewer' => array('user_id', 'proxy_id'),
+    ),
+    'foreign keys' => array(
+      'user_id' => array(
+        'table' => 'users',
+        'columns' => array('user_id' => 'uid'),
+      ),
+      'proxy_id' => array(
+        'table' => 'users',
+        'columns' => array('user_id' => 'uid'),
+      ),
+    ),
+  );
+
+  $schema['mfcs_reviewed'] = array(
+    'description' => $t("McNeese Facilities Use maintains a log of currently review requests that are open for review for the currently active review step."),
+    'fields' => array(
+      'request_id' => array(
+        'description' => $t("Foreign key to the primary key in the {mfcs_requests} table."),
+        'type' => 'int',
+        'size' => 'big',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+      ),
+      'classification' => array(
+        'description' => $t("The reviewer classification."),
+        'type' => 'int',
+        'size' => 'medium',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+      ),
+    ),
+    'primary key' => array('request_id', 'classification'),
+    'foreign keys' => array(
+      'request_id' => array(
+        'table' => 'mfcs_requests',
+        'columns' => array('request_id' => 'id'),
+      ),
+    ),
+  );
+
+  $schema['mfcs_review_classifications'] = array(
+    'description' => $t("McNeese Facilities Use Requests field table representing a users classifications associated with a given review."),
+    'fields' => array(
+      'review_id' => array(
+        'description' => $t("Foreign key to the primary key in the {mfcs_field_review_review} table."),
+        'type' => 'int',
+        'size' => 'big',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+      ),
+      'classification' => array(
+        'description' => $t("Specific classification for a given reviewer."),
+        'type' => 'int',
+        'size' => 'big',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+      ),
+    ),
+    'unique keys' => array(
+      'review_classification' => array('review_id', 'classification'),
+    ),
+    'foreign keys' => array(
+      'review_id' => array(
+        'table' => 'mfcs_field_review_review',
+        'columns' => array('review_id' => 'id'),
+      ),
+    ),
+  );
+
+  $schema['mfcs_location_images'] = array(
+    'description' => $t("McNeese Facilities Use Location Images table. For displaying an image of a given location/building/room."),
+    'fields' => array(
+      'id' => array(
+        'description' => $t("The primary key used to represent the associated between an image and the location/building/room."),
+        'type' => 'serial',
+        'size' => 'big',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+      ),
+      'revision' => array(
+        'description' => $t("Part of the primary key for this table and represents the revision number for change tracking."),
+        'type' => 'serial',
+        'size' => 'big',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+      ),
+      'user_id' => array(
+        'description' => $t("This is the system id. Represents the user who associated the image with the location/building/room. This is not a foreign key and instead loosely refers to the user id."),
+        'type' => 'int',
+        'size' => 'big',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+      ),
+      'file_id' => array(
+        'description' => $t("This is the system id. Represents the file. This is not a foreign key and instead loosely refers to the file id."),
+        'type' => 'int',
+        'size' => 'big',
+        'unsigned' => TRUE,
+        'not null' => FALSE,
+      ),
+      'date' => array(
+        'description' => $t("Represents the date the image was uploaded."),
+        'type' => 'int',
+        'size' => 'big',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+      ),
+      'location' => array(
+        'type' => 'varchar',
+        'length' => '255',
+        'not null' => FALSE,
+        'default' => '',
+      ),
+      'building' => array(
+        'type' => 'varchar',
+        'length' => '255',
+        'not null' => FALSE,
+        'default' => '',
+      ),
+      'room' => array(
+        'type' => 'varchar',
+        'length' => '255',
+        'not null' => FALSE,
+        'default' => '',
+      ),
+    ),
+    'primary key' => array('id', 'revision'),
+    'foreign keys' => array(
+      'user_id' => array(
+        'table' => 'users',
+        'columns' => array('user_id' => 'uid'),
+      ),
+      'file_id' => array(
+        'table' => 'file_managed',
+        'columns' => array('file_id' => 'fid'),
+      ),
+    ),
+  );
+
+  $schema['mfcs_search_settings'] = array(
+    'description' => $t("McNeese Facilities Use Event Search Settings table. This represents search saved target structures for individual users."),
+    'fields' => array(
+      'id' => array(
+        'description' => $t("The primary key used to represent the search setting."),
+        'type' => 'serial',
+        'size' => 'big',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+      ),
+      'user_id' => array(
+        'description' => $t("This is the system id. Represents the user who created the request."),
+        'type' => 'int',
+        'size' => 'big',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+      ),
+      'human_name' => array(
+        'description' => $t("A user friendly name for the search setting."),
+        'type' => 'varchar',
+        'length' => '63',
+        'not null' => FALSE,
+        'default' => '',
+      ),
+      'data' => array(
+        'description' => $t("The search targets array."),
+        'type' => 'text',
+        'size' => 'big',
+        'serialize' => TRUE,
+        'not null' => TRUE,
+        'default' => '',
+      ),
+    ),
+    'primary key' => array('id'),
+    'foreign keys' => array(
+      'user_id' => array(
+        'table' => 'users',
+        'columns' => array('user_id' => 'uid'),
+      ),
+    ),
+  );
+
+  $schema['mfcs_banner_locations'] = array(
+    'description' => $t("McNeese Facilities Use Event Banner table. This is for providing local storage of a given banner category."),
+    'fields' => array(
+      'id' => array(
+        'description' => $t("The primary key used to represent an request."),
+        'type' => 'serial',
+        'size' => 'big',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+      ),
+      'machine_name' => array(
+        'description' => $t("A machine friendly name for the location category."),
+        'type' => 'varchar',
+        'length' => '15',
+        'not null' => FALSE,
+        'default' => '',
+      ),
+      'human_name' => array(
+        'description' => $t("A user friendly name for the category."),
+        'type' => 'varchar',
+        'length' => '63',
+        'not null' => FALSE,
+        'default' => '',
+      ),
+      'date' => array(
+        'description' => $t("Represents the date the field was last changed."),
+        'type' => 'int',
+        'size' => 'big',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+      ),
+      'disabled' => array(
+        'description' => $t("Boolean designating that the room is disabled. This happens when it is not found in the banner database."),
+        'type' => 'int',
+        'size' => 'tiny',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'default' => 0,
+      ),
+    ),
+    'primary key' => array('id'),
+    'unique keys' => array(
+      'machine_name' => array('machine_name'),
+    ),
+  );
+
+  $schema['mfcs_banner_buildings'] = array(
+    'description' => $t("McNeese Facilities Use Event Banner table. This is for providing local storage of a given banner category."),
+    'fields' => array(
+      'id' => array(
+        'description' => $t("The primary key used to represent a building."),
+        'type' => 'serial',
+        'size' => 'big',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+      ),
+      'machine_name' => array(
+        'description' => $t("A machine friendly name for the location category."),
+        'type' => 'varchar',
+        'length' => '15',
+        'not null' => FALSE,
+        'default' => '',
+      ),
+      'human_name' => array(
+        'description' => $t("A user friendly name for the category."),
+        'type' => 'varchar',
+        'length' => '63',
+        'not null' => FALSE,
+        'default' => '',
+      ),
+      'date' => array(
+        'description' => $t("Represents the date the field was last changed."),
+        'type' => 'int',
+        'size' => 'big',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+      ),
+      'disabled' => array(
+        'description' => $t("Boolean designating that the room is disabled. This happens when it is not found in the banner database."),
+        'type' => 'int',
+        'size' => 'tiny',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'default' => 0,
+      ),
+    ),
+    'primary key' => array('id'),
+    'foreign keys' => array(
+      'location' => array(
+        'table' => 'mfcs_banner_locations',
+        'columns' => array('location' => 'id'),
+      ),
+    ),
+    'unique keys' => array(
+      'machine_name' => array('machine_name'),
+    ),
+  );
+
+  $schema['mfcs_banner_building_to_location'] = array(
+    'description' => $t("McNeese Facilities Use Event Banner table. This provides associations between buildings and locations."),
+    'fields' => array(
+      'building' => array(
+        'description' => $t("Foreign key to the {mfcs_banner_buildings} table."),
+        'type' => 'int',
+        'size' => 'big',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+      ),
+      'location' => array(
+        'description' => $t("Foreign key to the {mfcs_banner_locations} table."),
+        'type' => 'int',
+        'size' => 'big',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+      ),
+      'date' => array(
+        'description' => $t("Represents the date the field was last changed."),
+        'type' => 'int',
+        'size' => 'big',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+      ),
+      'disabled' => array(
+        'description' => $t("Boolean designating that the association is disabled. This happens when it is not found in the banner database."),
+        'type' => 'int',
+        'size' => 'tiny',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'default' => 0,
+      ),
+    ),
+    'primary key' => array('building', 'location'),
+  );
+
+  $schema['mfcs_banner_rooms'] = array(
+    'description' => $t("McNeese Facilities Use Event Banner table. This is for providing local storage of a given banner category."),
+    'fields' => array(
+      'id' => array(
+        'description' => $t("The primary key used to represent a room."),
+        'type' => 'serial',
+        'size' => 'big',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+      ),
+      'machine_name' => array(
+        'description' => $t("A machine friendly name for the room."),
+        'type' => 'varchar',
+        'length' => '15',
+        'not null' => FALSE,
+        'default' => '',
+      ),
+      'human_name' => array(
+        'description' => $t("A user friendly name for the category."),
+        'type' => 'varchar',
+        'length' => '63',
+        'not null' => FALSE,
+        'default' => '',
+      ),
+      'building' => array(
+        'description' => $t("Foreign key to the {mfcs_banner_buildings} table."),
+        'type' => 'int',
+        'size' => 'big',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+      ),
+      'room_coordinator_id' => array(
+        'description' => $t("Represents the user id of the room coordinator. This is a foreign key to the {users} table."),
+        'type' => 'int',
+        'size' => 'big',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+      ),
+      'venue_coordinator_id' => array(
+        'description' => $t("Represents the user id of the venue coordinator. This is a foreign key to the {users} table."),
+        'type' => 'int',
+        'size' => 'big',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+      ),
+      'capacity_normal' => array(
+        'description' => $t("Represents the date the image was uploaded."),
+        'type' => 'int',
+        'size' => 'normal',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+      ),
+      'capacity_max' => array(
+        'description' => $t("Represents the date the image was uploaded."),
+        'type' => 'int',
+        'size' => 'normal',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+      ),
+      'date' => array(
+        'description' => $t("Represents the date the field was last changed."),
+        'type' => 'int',
+        'size' => 'big',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+      ),
+      'disabled' => array(
+        'description' => $t("Boolean designating that the room is disabled. This happens when it is not found in the banner database."),
+        'type' => 'int',
+        'size' => 'tiny',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'default' => 0,
+      ),
+    ),
+    'primary key' => array('id'),
+    'foreign keys' => array(
+      'building' => array(
+        'table' => 'mfcs_banner_buildings',
+        'columns' => array('building' => 'id'),
+      ),
+      'room_coordinator_id' => array(
+        'table' => 'users',
+        'columns' => array('room_coordinator_id' => 'uid'),
+      ),
+      'venue_coordinator_id' => array(
+        'table' => 'users',
+        'columns' => array('venue_coordinator_id' => 'uid'),
+      ),
+    ),
+    'unique keys' => array(
+      'machine_name' => array('machine_name', 'building'),
+    ),
+  );
+
+  // as of fcs-79, mfcs_banner_classes is now manually populated below because it uses postgresql's 'boolean' data type that is not known to be directly supported by drupal.
+
+  $schema['mfcs_banner_event_roles'] = array(
+    'description' => $t("McNeese Facilities Use Event Roles Banner table. This is for providing local storage of a given banner event role table."),
+    'fields' => array(
+      'id' => array(
+        'description' => $t("The primary key used to represent a role."),
+        'type' => 'serial',
+        'size' => 'big',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+      ),
+      'machine_name' => array(
+        'description' => $t("A machine friendly name for the role."),
+        'type' => 'varchar',
+        'length' => '15',
+        'not null' => FALSE,
+        'default' => '',
+      ),
+      'date' => array(
+        'description' => $t("Represents the date the field was last changed."),
+        'type' => 'int',
+        'size' => 'big',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+      ),
+      'disabled' => array(
+        'description' => $t("Boolean designating that the room is disabled. This happens when it is not found in the banner database."),
+        'type' => 'int',
+        'size' => 'tiny',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'default' => 0,
+      ),
+    ),
+    'primary key' => array('id'),
+    'unique keys' => array(
+      'machine_name' => array('machine_name'),
+    ),
+  );
+
+  $schema['mfcs_banner_event_roles_to_users'] = array(
+    'description' => $t("McNeese Facilities Use Event Roles Banner table. This is for providing local storage of a given banner event role table for individual users."),
+    'fields' => array(
+      'user_id' => array(
+        'description' => $t("Represents the user the role is associated with."),
+        'type' => 'int',
+        'size' => 'big',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+      ),
+      'event_role_id' => array(
+        'description' => $t("Represents the id of the event role associated with the user."),
+        'type' => 'int',
+        'size' => 'big',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+      ),
+      'date' => array(
+        'description' => $t("Represents the date the field was last changed."),
+        'type' => 'int',
+        'size' => 'big',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+      ),
+      'disabled' => array(
+        'description' => $t("Boolean designating that the room is disabled. This happens when it is not found in the banner database."),
+        'type' => 'int',
+        'size' => 'tiny',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'default' => 0,
+      ),
+    ),
+    'unique keys' => array(
+      'banner_id_to_role' => array('user_id', 'event_role_id'),
+    ),
+    'foreign keys' => array(
+      'event_role_id' => array(
+        'table' => 'mfcs_banner_event_roles',
+        'columns' => array('event_role_id' => 'id'),
+      ),
+    ),
+  );
+
+  $schema['mfcs_banner_event_roles_to_banner_ids'] = array(
+    'description' => $t("McNeese Facilities Use Event Roles Banner table. This is for providing local storage of a given banner event role table for banner ids."),
+    'fields' => array(
+      'banner_id' => array(
+        'description' => $t("Represents the banner id the role is associated with."),
+        'type' => 'int',
+        'size' => 'big',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+      ),
+      'event_role_id' => array(
+        'description' => $t("Represents the id of the event role associated with the user."),
+        'type' => 'int',
+        'size' => 'big',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+      ),
+      'date' => array(
+        'description' => $t("Represents the date the field was last changed."),
+        'type' => 'int',
+        'size' => 'big',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+      ),
+      'disabled' => array(
+        'description' => $t("Boolean designating that the room is disabled. This happens when it is not found in the banner database."),
+        'type' => 'int',
+        'size' => 'tiny',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'default' => 0,
+      ),
+    ),
+    'unique keys' => array(
+      'banner_id_to_role' => array('banner_id', 'event_role_id'),
+    ),
+    'foreign keys' => array(
+      'event_role_id' => array(
+        'table' => 'mfcs_banner_event_roles',
+        'columns' => array('event_role_id' => 'id'),
+      ),
+    ),
+  );
+
+  $schema['mfcs_request_reminders'] = array(
+    'description' => $t("McNeese Facilities Use Reminders table. This represents requests that have had their reminders e-mailed out."),
+    'fields' => array(
+      'request_id' => array(
+        'description' => $t("Foreign key to the primary key in the {mfcs_requests} table."),
+        'type' => 'int',
+        'size' => 'big',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+      ),
+      'date' => array(
+        'description' => $t("Represents the date the reminder was last sent out."),
+        'type' => 'int',
+        'size' => 'big',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+      ),
+      'type' => array(
+        'description' => $t("Represents the reminder type."),
+        'type' => 'int',
+        'size' => 'small',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+      ),
+      'interval' => array(
+        'description' => $t("Represents the interval associated with the date."),
+        'type' => 'int',
+        'size' => 'small',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+      ),
+      'expires' => array(
+        'description' => $t("Represents the date the reminder expires and should be removed from this table."),
+        'type' => 'int',
+        'size' => 'big',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+      ),
+    ),
+    'primary key' => array('request_id', 'date', 'type', 'interval'),
+    'foreign keys' => array(
+      'request_id' => array(
+        'table' => 'mfcs_requests',
+        'columns' => array('request_id' => 'id'),
+      ),
+    ),
+  );
+
+  $schema['mfcs_log_emails'] = array(
+    'description' => $t("McNeese Facilities Use e-mail log table. Contains a record of all e-mails sent from this system through this interface."),
+    'fields' => array(
+      'id' => array(
+        'description' => $t("The primary key used to represent the log entry."),
+        'type' => 'serial',
+        'size' => 'big',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+      ),
+      'destination' => array(
+        'description' => $t("The 'to' destination address. 'to' would be used instead of 'destination' if it was not a reserved SQL word."),
+        'type' => 'varchar',
+        'length' => '255',
+        'serialize' => FALSE,
+        'not null' => TRUE,
+        'default' => '',
+      ),
+      'title' => array(
+        'description' => $t("The title or subject used by the e-mail."),
+        'type' => 'varchar',
+        'length' => '384',
+        'serialize' => FALSE,
+        'not null' => TRUE,
+        'default' => '',
+      ),
+      'headers' => array(
+        'description' => $t("The array of e-mail headers."),
+        'type' => 'text',
+        'size' => 'big',
+        'serialize' => TRUE,
+        'not null' => TRUE,
+        'default' => '',
+      ),
+      'body' => array(
+        'description' => $t("The serialized string of the e-mail body."),
+        'type' => 'text',
+        'size' => 'big',
+        'serialize' => TRUE,
+        'not null' => TRUE,
+        'default' => '',
+      ),
+      'code' => array(
+        'description' => $t("Represents codes associated with the e-mail action, such as resending an e-mail."),
+        'type' => 'int',
+        'size' => 'tiny',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'default' => 0,
+      ),
+      'user_id' => array(
+        'description' => $t("This is the system user id. Represents the user associated with the log entry."),
+        'type' => 'int',
+        'size' => 'big',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+      ),
+      'date' => array(
+        'description' => $t("Represents the date the e-mail was sent."),
+        'type' => 'int',
+        'size' => 'big',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+      ),
+    ),
+    'primary key' => array('id'),
+    'foreign keys' => array(
+      'user_id' => array(
+        'table' => 'users',
+        'columns' => array('user_id' => 'uid'),
+      ),
+    ),
+  );
+
+  $schema['mfcs_log_troubleshoot'] = array(
+    'description' => $t("McNeese Facilities Use troubleshoot log table. Contains a record of all troubleshoot actions performed."),
+    'fields' => array(
+      'id' => array(
+        'description' => $t("The primary key used to represent the log entry."),
+        'type' => 'serial',
+        'size' => 'big',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+      ),
+      'code' => array(
+        'description' => $t("This is the troubleshoot code id."),
+        'type' => 'int',
+        'size' => 'big',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+      ),
+      'user_id' => array(
+        'description' => $t("This is the system user id. Represents the user associated with the log entry."),
+        'type' => 'int',
+        'size' => 'big',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+      ),
+      'date' => array(
+        'description' => $t("Represents the date the action was performed."),
+        'type' => 'int',
+        'size' => 'big',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+      ),
+    ),
+    'primary key' => array('id'),
+    'foreign keys' => array(
+      'user_id' => array(
+        'table' => 'users',
+        'columns' => array('user_id' => 'uid'),
+      ),
+    ),
+  );
+
+  $schema['mfcs_log_holiday'] = array(
+    'description' => $t("McNeese Facilities Use holiday log table. Contains a record of all holiday actions performed."),
+    'fields' => array(
+      'id' => array(
+        'description' => $t("The primary key used to represent the log entry."),
+        'type' => 'serial',
+        'size' => 'big',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+      ),
+      'holiday_id' => array(
+        'description' => $t("This is the holiday id."),
+        'type' => 'int',
+        'size' => 'big',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+      ),
+      'user_id' => array(
+        'description' => $t("This is the system user id. Represents the user associated with the log entry."),
+        'type' => 'int',
+        'size' => 'big',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+      ),
+      'date' => array(
+        'description' => $t("Represents the date the action was performed."),
+        'type' => 'int',
+        'size' => 'big',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+      ),
+      'change' => array(
+        'description' => $t("A description of the changes made."),
+        'type' => 'text',
+        'size' => 'big',
+        'serialize' => TRUE,
+        'not null' => TRUE,
+        'default' => '',
+      ),
+    ),
+    'primary key' => array('id'),
+    'foreign keys' => array(
+      'user_id' => array(
+        'table' => 'users',
+        'columns' => array('user_id' => 'uid'),
+      ),
+      'holiday_id' => array(
+        'table' => 'mfcs_holiday',
+        'columns' => array('holiday_id' => 'id'),
+      ),
+    ),
+  );
+
+  $schema['mfcs_log_unavailability'] = array(
+    'description' => $t("McNeese Facilities Use availability log table. Contains a record of all availability actions performed."),
+    'fields' => array(
+      'id' => array(
+        'description' => $t("The primary key used to represent the log entry."),
+        'type' => 'serial',
+        'size' => 'big',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+      ),
+      'unavailability_id' => array(
+        'description' => $t("This is the availability id."),
+        'type' => 'int',
+        'size' => 'big',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+      ),
+      'user_id' => array(
+        'description' => $t("This is the system user id. Represents the user associated with the log entry."),
+        'type' => 'int',
+        'size' => 'big',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+      ),
+      'date' => array(
+        'description' => $t("Represents the date the action was performed."),
+        'type' => 'int',
+        'size' => 'big',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+      ),
+      'change' => array(
+        'description' => $t("A description of the changes made."),
+        'type' => 'text',
+        'size' => 'big',
+        'serialize' => TRUE,
+        'not null' => TRUE,
+        'default' => '',
+      ),
+    ),
+    'primary key' => array('id'),
+    'foreign keys' => array(
+      'user_id' => array(
+        'table' => 'users',
+        'columns' => array('user_id' => 'uid'),
+      ),
+      'unavailability_id' => array(
+        'table' => 'mfcs_unavailability',
+        'columns' => array('unavailability_id' => 'id'),
+      ),
+    ),
+  );
+
+  $schema['mfcs_log_problems_requests'] = array(
+    'description' => $t("McNeese Facilities Use problems requests log table. Contains a record of all request problem actions performed."),
+    'fields' => array(
+      'id' => array(
+        'description' => $t("The primary key used to represent the log entry."),
+        'type' => 'serial',
+        'size' => 'big',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+      ),
+      'code' => array(
+        'description' => $t("This is the log problems requests code id."),
+        'type' => 'int',
+        'size' => 'big',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+      ),
+      'user_id' => array(
+        'description' => $t("This is the system user id. Represents the user associated with the log entry."),
+        'type' => 'int',
+        'size' => 'big',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+      ),
+      'date' => array(
+        'description' => $t("Represents the date the action was performed."),
+        'type' => 'int',
+        'size' => 'big',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+      ),
+    ),
+    'primary key' => array('id'),
+    'foreign keys' => array(
+      'user_id' => array(
+        'table' => 'users',
+        'columns' => array('user_id' => 'uid'),
+      ),
+    ),
+  );
+
+  $schema['mfcs_problems_requests'] = array(
+    'description' => $t("McNeese Facilities Use request problems table. This represents exceptional cases involved with requests."),
+    'fields' => array(
+      'id' => array(
+        'description' => $t("This is the request problem id"),
+        'type' => 'int',
+        'size' => 'big',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+      ),
+      'problem' => array(
+        'description' => $t("Represents a problem code."),
+        'type' => 'int',
+        'size' => 'big',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+      ),
+      'request_id' => array(
+        'description' => $t("This is the request id"),
+        'type' => 'int',
+        'size' => 'big',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+      ),
+      'date' => array(
+        'description' => $t("Represents the row was last updated."),
+        'type' => 'int',
+        'size' => 'big',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+      ),
+      'reason' => array(
+        'description' => $t("Represents a string describing a short summary of why this flag was assigned."),
+        'type' => 'varchar',
+        'length' => '255',
+        'not null' => FALSE,
+        'default' => '',
+      ),
+      'details' => array(
+        'description' => $t("Represents an array of additional information."),
+        'type' => 'text',
+        'serialize' => TRUE,
+        'not null' => FALSE,
+        'default' => '',
+      ),
+      'ignore' => array(
+        'description' => $t("This is a boolean where 0 = not ignored and 1 = ignored."),
+        'type' => 'int',
+        'size' => 'tiny',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'default' => 0,
+      ),
+    ),
+    'primary key' => array('id'),
+    'unique keys' => array(
+      'request_id_problem' => array('request_id', 'problem'),
+    ),
+    'foreign keys' => array(
+      'request_id' => array(
+        'table' => 'mfcs_requests',
+        'columns' => array('request_id' => 'id'),
+      ),
+    ),
+  );
+
+  $schema['mfcs_synchronize'] = array(
+    'description' => $t("McNeese Facilities Use synchronize table."),
+    'fields' => array(
+      'id' => array(
+        'description' => $t("The primary key used to represent the synchronize entry."),
+        'type' => 'serial',
+        'size' => 'big',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+      ),
+      'type' => array(
+        'description' => $t("Represents the current type of the request."),
+        'type' => 'int',
+        'size' => 'big',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+      ),
+      'user_id' => array(
+        'description' => $t("This is the id of the user who created this entry."),
+        'type' => 'int',
+        'size' => 'big',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+      ),
+      'password' => array(
+        'description' => $t("Represents the code associated with the user account."),
+        'type' => 'varchar',
+        'length' => '64',
+        'not null' => FALSE,
+        'default' => '',
+      ),
+      'created' => array(
+        'description' => $t("Represents the row was created."),
+        'type' => 'int',
+        'size' => 'big',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+      ),
+      'updated' => array(
+        'description' => $t("Represents the row was last updated."),
+        'type' => 'int',
+        'size' => 'big',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+      ),
+      'disabled' => array(
+        'description' => $t("Boolean designating that the synchronization code is disabled. This is used as a soft-delete to prevent loss of records."),
+        'type' => 'int',
+        'size' => 'tiny',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'default' => 0,
+      ),
+    ),
+    'primary key' => array('id'),
+    'foreign keys' => array(
+      'user_id' => array(
+        'table' => 'users',
+        'columns' => array('user_id' => 'uid'),
+      ),
+    ),
+  );
+
+  $schema['mfcs_holiday'] = array(
+    'description' => $t("McNeese Facilities Use holiday dates table."),
+    'fields' => array(
+      'id' => array(
+        'description' => $t("The primary key used to represent the holiday item."),
+        'type' => 'serial',
+        'size' => 'big',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+      ),
+      'year' => array(
+        'description' => $t("Represents the year associated with the entry."),
+        'type' => 'int',
+        'size' => 'small',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+      ),
+      'date_start' => array(
+        'description' => $t("Represents the start date and time associated with the entry."),
+        'type' => 'int',
+        'size' => 'big',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+      ),
+      'date_stop' => array(
+        'description' => $t("Represents the stop date and time associated with the entry."),
+        'type' => 'int',
+        'size' => 'big',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+      ),
+      'title' => array(
+        'description' => $t("Represents the title of the entry."),
+        'type' => 'varchar',
+        'size' => '255',
+        'serialize' => TRUE,
+        'not null' => TRUE,
+      ),
+      'type' => array(
+        'description' => $t("Represents the holiday type."),
+        'type' => 'int',
+        'size' => 'big',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'default' => 1,
+      ),
+      'description' => array(
+        'description' => $t("Represents the description of the entry."),
+        'type' => 'varchar',
+        'size' => '255',
+        'serialize' => TRUE,
+        'not null' => TRUE,
+      ),
+      'enabled' => array(
+        'description' => $t("Boolean designating that the entry is enable. This is used to enable/disable entries from appear on calendard and restricting requests."),
+        'type' => 'int',
+        'size' => 'tiny',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'default' => 0,
+      ),
+      'deleted' => array(
+        'description' => $t("Boolean designating that the entry is deleted. This is used as a soft-delete to prevent loss of records."),
+        'type' => 'int',
+        'size' => 'tiny',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'default' => 0,
+      ),
+      'created' => array(
+        'description' => $t("Represents the row was created."),
+        'type' => 'int',
+        'size' => 'big',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+      ),
+      'updated' => array(
+        'description' => $t("Represents the row was last updated."),
+        'type' => 'int',
+        'size' => 'big',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+      ),
+    ),
+    'primary key' => array('id'),
+  );
+
+  $schema['mfcs_unavailability'] = array(
+    'description' => $t("McNeese Facilities Use room availability table. Contains a record of all rooms marked as unavailable."),
+    'fields' => array(
+      'id' => array(
+        'description' => $t("The primary key used to represent the availability item."),
+        'type' => 'serial',
+        'size' => 'big',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+      ),
+      'type' => array(
+        'description' => $t("A number representing the type of the entry."),
+        'type' => 'int',
+        'size' => 'normal',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+      ),
+      'year' => array(
+        'description' => $t("Represents the year associated with the entry."),
+        'type' => 'int',
+        'size' => 'small',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+      ),
+      'room_id' => array(
+        'description' => $t("The ID of the room that is marked as unavailable."),
+        'type' => 'int',
+        'size' => 'big',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+      ),
+      'building_id' => array(
+        'description' => $t("The ID of the building whose room is marked as unavailable."),
+        'type' => 'int',
+        'size' => 'big',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+      ),
+      'date_start' => array(
+        'description' => $t("Represents the start date associated with the entry."),
+        'type' => 'int',
+        'size' => 'big',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+      ),
+      'date_stop' => array(
+        'description' => $t("Represents the stop date associated with the entry."),
+        'type' => 'int',
+        'size' => 'big',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+      ),
+      'title' => array(
+        'description' => $t("Represents the title of the entry."),
+        'type' => 'varchar',
+        'size' => '255',
+        'serialize' => TRUE,
+        'not null' => TRUE,
+      ),
+      'description' => array(
+        'description' => $t("Represents the description of the entry."),
+        'type' => 'varchar',
+        'size' => '255',
+        'serialize' => TRUE,
+        'not null' => TRUE,
+      ),
+      'enabled' => array(
+        'description' => $t("Boolean designating that the entry is enable. This is used to enable/disable entries from appear on calendard and restricting requests."),
+        'type' => 'int',
+        'size' => 'tiny',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'default' => 0,
+      ),
+      'deleted' => array(
+        'description' => $t("Boolean designating that the entry is disabled. This is used as a soft-delete to prevent loss of records."),
+        'type' => 'int',
+        'size' => 'tiny',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'default' => 0,
+      ),
+      'created' => array(
+        'description' => $t("Represents the row was created."),
+        'type' => 'int',
+        'size' => 'big',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+      ),
+      'updated' => array(
+        'description' => $t("Represents the row was last updated."),
+        'type' => 'int',
+        'size' => 'big',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+      ),
+      'class_id' => array(
+        'description' => $t("The ID of the room, if it is a classroom type, in regards to mfcs_banner_classes."),
+        'type' => 'int',
+        'size' => 'big',
+        'unsigned' => TRUE,
+        'not null' => FALSE,
+      ),
+    ),
+    'primary key' => array('id'),
+    'foreign keys' => array(
+      'class_id' => array(
+        'table' => 'mfcs_banner_classes',
+        'columns' => array('class_id' => 'id'),
+      ),
+    ),
+  );
+
+  $schema['mfcs_drupal_to_banner_role_mapping'] = array(
+    'description' => $t("McNeese Facilities Use mappings between drupal roles and banner roles."),
+    'fields' => array(
+      'role_id' => array(
+        'description' => 'Numeric ID for the drupal role.',
+        'type' => 'int',
+        'size' => 'big',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+      ),
+      'banner_id' => array(
+        'description' => 'Numeric ID for the banner role.',
+        'type' => 'int',
+        'size' => 'big',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+      ),
+      'role_name' => array(
+        'description' => 'Name for the drupal role.',
+        'type' => 'varchar',
+        'size' => 64,
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+      ),
+      'banner_name' => array(
+        'description' => 'Name for the banner role.',
+        'type' => 'varchar',
+        'size' => 15,
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+      ),
+    ),
+    'primary key' => array('role_id', 'banner_id'),
+    'foreign keys' => array(
+      'role_id' => array(
+        'table' => 'role',
+        'columns' => array('role_id' => 'rid'),
+      ),
+      'banner_id' => array(
+        'table' => 'mfcs_banner_event_roles',
+        'columns' => array('banner_id' => 'id'),
+      ),
+      'role_name' => array(
+        'table' => 'role',
+        'columns' => array('role_name' => 'name'),
+      ),
+      'banner_name' => array(
+        'table' => 'mfcs_banner_event_roles',
+        'columns' => array('banner_name' => 'machine_name'),
+      ),
+    ),
+  );
+
+
+  // these tables are provided for database integrity and mapping/joining of values.
+  // normally the list_options functions (which avoid database calls) should be used.
+  // the tables here are provided on an as needed basis and does not necesserily represent all of the possible list option tables.
+  $taxonomy_tables = array(
+    'mfcs_taxonomy_request_classification',
+    'mfcs_taxonomy_review_step',
+    'mfcs_taxonomy_reviewer_classification',
+    'mfcs_taxonomy_request_status',
+    'mfcs_taxonomy_request_date_category',
+    'mfcs_taxonomy_request_type',
+    'mfcs_taxonomy_request_audience',
+    'mfcs_taxonomy_request_designing_materials',
+    'mfcs_taxonomy_request_publicity',
+    'mfcs_taxonomy_request_revenue_generated',
+    'mfcs_taxonomy_request_technical_equipment',
+    'mfcs_taxonomy_review_decisions',
+  );
+  foreach ($taxonomy_tables as $taxonomy_table) {
+    $schema[$taxonomy_table] = array(
+      'description' => 'McNeese Facilities Use list option table.',
+      'fields' => array(
+        'id' => array(
+          'description' => 'Unique ID to represent the list option.',
+          'type' => 'int',
+          'size' => 'big',
+          'unsigned' => TRUE,
+          'not null' => TRUE,
+        ),
+        'machine_name' => array(
+          'description' => 'Machine Name for the list option',
+          'type' => 'varchar',
+          'size' => 64,
+          'not null' => TRUE,
+        ),
+        'human_name' => array(
+          'description' => 'Human Name for the list option',
+          'type' => 'varchar',
+          'size' => 128,
+          'not null' => TRUE,
+        ),
+        'hidden' => array(
+          'description' => 'Designates that the list option is hidden or not.',
+          'type' => 'int',
+          'size' => 'small',
+          'unsigned' => FALSE,
+          'not null' => TRUE,
+          'default' => 0,
+        ),
+        'enabled' => array(
+          'description' => 'Designates that the list option is enabled or not.',
+          'type' => 'int',
+          'size' => 'small',
+          'unsigned' => FALSE,
+          'not null' => TRUE,
+          'default' => 1,
+        ),
+        'deleted' => array(
+          'description' => 'Designates that the list option is deleted or not.',
+          'type' => 'int',
+          'size' => 'small',
+          'unsigned' => FALSE,
+          'not null' => TRUE,
+          'default' => 0,
+        ),
+      ),
+      'primary key' => array('id'),
+    );
+  }
+  unset($taxonomy_tables);
+  unset($taxonomy_table);
+
+
+  // create the mapping table that maps the latest request.
+  // to greatly reduce the number of joins, all current field revisions are merged into a single table.
+  $current_table_name = 'mfcs_current';
+  $schema[$current_table_name] = array(
+    'description' => $t("McNeese Facilities Use Requests field table representing the current (active) revisions for fields."),
+    'fields' => array(
+      'request_id' => array(
+        'description' => $t("Foreign key to the primary key in the {mfcs_requests} table."),
+        'type' => 'int',
+        'size' => 'big',
+        'unsigned' => TRUE,
+        'not null' => FALSE,
+      ),
+    ),
+    'primary key' => array('request_id'),
+    'foreign keys' => array(
+      'request_id' => array(
+        'table' => 'mfcs_requests',
+        'columns' => array('request_id' => 'id'),
+      ),
+      'room_id' => array(
+        'table' => 'mfcs_banner_rooms',
+        'columns' => array('room_id' => 'id'),
+      ),
+      'building_id' => array(
+        'table' => 'mfcs_banner_buildings',
+        'columns' => array('building_id' => 'id'),
+      ),
+    ),
+  );
+
+
+  // create the secondary tables associated with the table mfcs_requests.
+  $structure = mfcs_table_install_structure();
+
+  foreach ($structure as $structure_name => &$structure_array) {
+    foreach ($structure_array as $field_name => &$field_type) {
+      $table_name = 'mfcs_field_' . $structure_name . '_' . $field_name;
+
+      $schema[$table_name] = array(
+        'description' => $t("McNeese Facilities Use Requests field table for the field: " . $field_name . " associated with the group: " . $structure_name . "."),
+        'fields' => array(
+          'request_id' => array(
+            'description' => $t("Foreign key to the primary key in the {mfcs_requests} table."),
+            'type' => 'int',
+            'size' => 'big',
+            'unsigned' => TRUE,
+            'not null' => TRUE,
+          ),
+          'revision' => array(
+            'description' => $t("Part of the primary key for this table and represents the revision number for change tracking."),
+            'type' => 'int',
+            'size' => 'big',
+            'unsigned' => TRUE,
+            'not null' => TRUE,
+          ),
+          'delta' => array(
+            'description' => $t("Represents the row number for fields with multiple values (multiple input fields that are associated with a single logical field.)"),
+            'type' => 'int',
+            'size' => 'big',
+            'unsigned' => TRUE,
+            'not null' => TRUE,
+            'default' => 0,
+          ),
+          'user_id' => array(
+            'description' => $t("This is the system id. Represents the user who created the request. This is not a foreign key and instead loosely refers to the user id."),
+            'type' => 'int',
+            'size' => 'big',
+            'unsigned' => TRUE,
+            'not null' => TRUE,
+          ),
+          'date' => array(
+            'description' => $t("This is the banner id. Represents the date the request was created."),
+            'type' => 'int',
+            'size' => 'big',
+            'unsigned' => TRUE,
+            'not null' => TRUE,
+          ),
+        ),
+        'primary key' => array('request_id', 'revision', 'delta'),
+        'foreign keys' => array(
+          'request_id' => array(
+            'table' => 'mfcs_requests',
+            'columns' => array('request_id' => 'id'),
+          ),
+        ),
+      );
+
+      if (is_array($field_type)) {
+        $fields = $field_type;
+      }
+      else {
+        $fields = array('value' => $field_type);
+      }
+
+      $altering_primary_key = FALSE;
+      foreach ($fields as $name => &$type) {
+        if ($type == 'varchar') {
+          $schema[$table_name]['fields'][$name] = array(
+            'type' => 'varchar',
+            'length' => '255',
+            'not null' => FALSE,
+            'default' => '',
+          );
+        }
+        elseif ($type == 'varchar_63') {
+          $schema[$table_name]['fields'][$name] = array(
+            'type' => 'varchar',
+            'length' => '63',
+            'not null' => FALSE,
+            'default' => '',
+          );
+        }
+        elseif ($type == 'varchar_511') {
+          $schema[$table_name]['fields'][$name] = array(
+            'type' => 'varchar',
+            'length' => '511',
+            'not null' => FALSE,
+            'default' => '',
+          );
+        }
+        elseif ($type == 'text') {
+          $schema[$table_name]['fields'][$name] = array(
+            'type' => 'text',
+            'size' => 'normal',
+            'not null' => FALSE,
+            'default' => '',
+          );
+        }
+        elseif ($type == 'signed') {
+          $schema[$table_name]['fields'][$name] = array(
+            'type' => 'int',
+            'size' => 'normal',
+            'not null' => FALSE,
+            'default' => 0,
+            'unsigned' => FALSE,
+          );
+        }
+        elseif ($type == 'unsigned') {
+          $schema[$table_name]['fields'][$name] = array(
+            'type' => 'int',
+            'size' => 'normal',
+            'not null' => FALSE,
+            'default' => 0,
+            'unsigned' => TRUE,
+          );
+        }
+        elseif ($type == 'signed_tiny') {
+          $schema[$table_name]['fields'][$name] = array(
+            'type' => 'int',
+            'size' => 'tiny',
+            'not null' => FALSE,
+            'default' => 0,
+            'unsigned' => FALSE,
+          );
+        }
+        elseif ($type == 'unsigned_tiny') {
+          $schema[$table_name]['fields'][$name] = array(
+            'type' => 'int',
+            'size' => 'tiny',
+            'not null' => FALSE,
+            'default' => 0,
+            'unsigned' => TRUE,
+          );
+        }
+        elseif ($type == 'signed_small') {
+          $schema[$table_name]['fields'][$name] = array(
+            'type' => 'int',
+            'size' => 'small',
+            'not null' => FALSE,
+            'default' => 0,
+            'unsigned' => FALSE,
+          );
+        }
+        elseif ($type == 'unsigned_small') {
+          $schema[$table_name]['fields'][$name] = array(
+            'type' => 'int',
+            'size' => 'small',
+            'not null' => FALSE,
+            'default' => 0,
+            'unsigned' => TRUE,
+          );
+        }
+        elseif ($type == 'signed_medium') {
+          $schema[$table_name]['fields'][$name] = array(
+            'type' => 'int',
+            'size' => 'medium',
+            'not null' => FALSE,
+            'default' => 0,
+            'unsigned' => FALSE,
+          );
+        }
+        elseif ($type == 'unsigned_medium') {
+          $schema[$table_name]['fields'][$name] = array(
+            'type' => 'int',
+            'size' => 'medium',
+            'not null' => FALSE,
+            'default' => 0,
+            'unsigned' => TRUE,
+          );
+        }
+        elseif ($type == 'signed_big') {
+          $schema[$table_name]['fields'][$name] = array(
+            'type' => 'int',
+            'size' => 'big',
+            'not null' => FALSE,
+            'default' => 0,
+            'unsigned' => FALSE,
+          );
+        }
+        elseif ($type == 'unsigned_big') {
+          $schema[$table_name]['fields'][$name] = array(
+            'type' => 'int',
+            'size' => 'big',
+            'not null' => FALSE,
+            'default' => 0,
+            'unsigned' => FALSE,
+          );
+        }
+        elseif ($type == 'timestamp') {
+          $schema[$table_name]['fields'][$name] = array(
+            'type' => 'int',
+            'size' => 'big',
+            'not null' => FALSE,
+            'unsigned' => FALSE,
+          );
+        }
+        elseif ($type == 'date') {
+          $schema[$table_name]['fields'][$name] = array(
+            'type' => 'int',
+            'size' => 'big',
+            'not null' => FALSE,
+            'unsigned' => FALSE,
+          );
+
+          // Lose some storage space to gain simplified querying based on generalized times.
+          $schema[$table_name]['fields'][$name . '_month'] = array(
+            'type' => 'int',
+            'size' => 'small',
+            'not null' => FALSE,
+            'unsigned' => FALSE,
+          );
+
+          // Lose some storage space to gain simplified querying based on generalized times.
+          $schema[$table_name]['fields'][$name . '_day'] = array(
+            'type' => 'int',
+            'size' => 'small',
+            'not null' => FALSE,
+            'unsigned' => FALSE,
+          );
+        }
+        elseif ($type == 'date_cancellable') {
+          $schema[$table_name]['fields'][$name] = array(
+            'type' => 'int',
+            'size' => 'big',
+            'not null' => FALSE,
+            'unsigned' => FALSE,
+          );
+
+          // Lose some storage space to gain simplified querying based on generalized times.
+          $schema[$table_name]['fields'][$name . '_month'] = array(
+            'type' => 'int',
+            'size' => 'small',
+            'not null' => FALSE,
+            'unsigned' => FALSE,
+          );
+
+          // Lose some storage space to gain simplified querying based on generalized times.
+          $schema[$table_name]['fields'][$name . '_day'] = array(
+            'type' => 'int',
+            'size' => 'small',
+            'not null' => FALSE,
+            'unsigned' => FALSE,
+          );
+
+          // designate that the given date was cancelled.
+          $schema[$table_name]['fields']['cancelled'] = array(
+            'type' => 'int',
+            'size' => 'tiny',
+            'default' => 0,
+            'not null' => FALSE,
+            'unsigned' => TRUE,
+          );
+        }
+        elseif ($type == 'time') {
+          $schema[$table_name]['fields'][$name] = array(
+            'type' => 'int',
+            'size' => 'big',
+            'not null' => FALSE,
+            'unsigned' => FALSE,
+          );
+
+          // Lose some storage space to gain simplified querying based on generalized times.
+          $schema[$table_name]['fields'][$name . '_relative'] = array(
+            'type' => 'int',
+            'size' => 'big',
+            'not null' => FALSE,
+            'unsigned' => FALSE,
+          );
+        }
+        elseif ($type == 'serial') {
+          $schema[$table_name]['fields'][$name] = array(
+            'type' => 'serial',
+            'size' => 'big',
+            'unsigned' => TRUE,
+            'not null' => TRUE,
+          );
+        }
+        elseif ($type == 'serial_ukey') {
+          $schema[$table_name]['fields'][$name] = array(
+            'type' => 'serial',
+            'size' => 'big',
+            'unsigned' => TRUE,
+            'not null' => TRUE,
+          );
+
+          if (isset($schema[$table_name]['unique keys'])) {
+            $schema[$table_name]['unique keys'] = array();
+          }
+
+          $schema[$table_name]['unique keys'][$name . '_ukey'] = array($name);
+        }
+        elseif ($type == 'serial_pkey') {
+          $schema[$table_name]['fields'][$name] = array(
+            'type' => 'serial',
+            'size' => 'big',
+            'unsigned' => TRUE,
+            'not null' => TRUE,
+          );
+
+          if (!$altering_primary_key) {
+            $schema[$table_name]['primary key'] = array($name);
+            $altering_primary_key = TRUE;
+          }
+          else {
+            $schema[$table_name]['primary key'][] = $name;
+          }
+        }
+        elseif ($type == 'requirement') {
+          $schema[$table_name]['fields'][$name] = array(
+            'type' => 'int',
+            'size' => 'normal',
+            'not null' => FALSE,
+            'unsigned' => TRUE,
+          );
+        }
+      }
+    }
+
+    // populate the mapping table fields.
+    foreach ($structure_array as $field_name => &$field_type) {
+      $field_table_name = 'mfcs_field_' . $structure_name . '_' . $field_name;
+
+      $schema[$current_table_name]['fields'][$structure_name . '_' . $field_name] = array(
+        'description' => $t("Foreign key to the current revision in the " . $field_table_name . " table."),
+        'type' => 'int',
+        'size' => 'big',
+        'unsigned' => TRUE,
+        'not null' => FALSE,
+      );
+    }
+  }
+
+  return $schema;
+}
+
+/**
+ * Implementation of hook_install().
+ *
+ * All tables should have have ownership changed from the drupal user account
+ * to the database admin (usually postgres).
+ *
+ * This will significantly enhance security.
+ */
+function mfcs_install() {
+  // drupal does not support automatically assigning foreign key relations, so this must be manually performed.
+  $key1_name = 'request_id';
+  $key1_foreign = 'request_id_fkey';
+  $table1_foreign = 'mfcs_requests';
+  $table1_foreign_key = 'id';
+
+  $key2_name = 'user_id';
+  $key2_foreign = 'user_id_fkey';
+  $key2_name_2 = 'proxy_id';
+  $key2_foreign_2 = 'proxy_id_fkey';
+  $table2_foreign = 'users';
+  $table2_foreign_key = 'uid';
+
+  $key3_name = 'location';
+  $key3_foreign = 'location_fkey';
+  $table3_foreign = 'mfcs_banner_locations';
+  $table3_foreign_key = 'id';
+
+  $key4_name = 'building';
+  $key4_foreign = 'building_fkey';
+  $table4_foreign = 'mfcs_banner_buildings';
+  $table4_foreign_key = 'id';
+
+  $key5_name = 'room';
+  $key5_foreign = 'room_fkey';
+  $table5_foreign = 'mfcs_banner_rooms';
+  $table5_foreign_key = 'id';
+
+  $key6_name = 'event_role_id';
+  $key6_foreign = 'event_role_id_fkey';
+  $table6_foreign = 'mfcs_banner_event_roles';
+  $table6_foreign_key = 'id';
+
+  $key7_name = 'holiday_id';
+  $key7_foreign = 'holiday_id_fkey';
+  $table7_foreign = 'mfcs_holiday';
+  $table7_foreign_key = 'id';
+
+  $key8_name = 'unavailability_id';
+  $key8_foreign = 'unavailability_id_fkey';
+  $table8_foreign = 'mfcs_unavailability';
+  $table8_foreign_key = 'id';
+
+  $key9_name = 'room_id';
+  $key9_foreign = 'room_id_fkey';
+  $table9_foreign = 'mfcs_banner_rooms';
+  $table9_foreign_key = 'id';
+
+  $key10_name = 'building_id';
+  $key10_foreign = 'building_id_fkey';
+  $table10_foreign = 'mfcs_banner_buildings';
+  $table10_foreign_key = 'id';
+
+  $key11_name = 'class_id';
+  $key11_foreign = 'class_id_fkey';
+  $table11_foreign = 'mfcs_banner_classes';
+  $table11_foreign_key = 'id';
+
+  $structure = mfcs_table_install_structure();
+
+  // create the tables that use the 'boolean' data type not currently supported by drupal but is supported by postgresql:
+  db_query('create table mfcs_request_locks (request_id bigint not null, auto_cancel boolean default FALSE, primary key(request_id), constraint mfcs_request_locks_request_id_check check (request_id >= 0))');
+  db_query('alter table mfcs_request_locks add constraint request_id_fkey foreign key (request_id) references mfcs_requests (id) on delete cascade');
+
+  db_query('create table mfcs_banner_classes (id bigint not null, is_class boolean not null default \'y\', subject_code varchar(32), course_number varchar(32), updated bigint not null, deleted smallint not null default 0, primary key (id), constraint mfcs_banner_classes_ukey unique (is_class, subject_code, course_number), constraint mfcs_banner_classes_id_check check (id >= 0), constraint mfcs_banner_classes_deleted_check check (deleted >= 0), constraint mfcs_banner_classes_updated_check check (updated >= 0))');
+
+  db_query('create sequence mfcs_banner_classes_id_seq;');
+  db_query('alter table mfcs_banner_classes alter id set default nextval(\'mfcs_banner_classes_id_seq\'::regclass);');
+
+
+  // make sure tables that use the 'numeric' data type which is not currently supported by drupal but is supported by postgresql
+  db_query('alter table {mfcs_field_requirements_security_fees} alter column hours type numeric(998, 2)');
+  db_query('alter table {mfcs_field_requirements_security_fees} alter column days type numeric(998, 2)');
+  db_query('alter table {mfcs_field_requirements_security_fees} alter column rate type numeric(998, 2)');
+  db_query('alter table {mfcs_field_requirements_security_fees} alter column supplies type numeric(998, 2)');
+  db_query('alter table {mfcs_field_requirements_security_fees} alter column post type numeric(998, 2)');
+  db_query('alter table {mfcs_field_requirements_custodial_fees} alter column hours type numeric(998, 2)');
+  db_query('alter table {mfcs_field_requirements_custodial_fees} alter column days type numeric(998, 2)');
+  db_query('alter table {mfcs_field_requirements_custodial_fees} alter column rate type numeric(998, 2)');
+  db_query('alter table {mfcs_field_requirements_custodial_fees} alter column supplies type numeric(998, 2)');
+  db_query('alter table {mfcs_field_requirements_custodial_fees} alter column post type numeric(998, 2)');
+  db_query('alter table {mfcs_field_requirements_facilities_fees} alter column hours type numeric(998, 2)');
+  db_query('alter table {mfcs_field_requirements_facilities_fees} alter column days type numeric(998, 2)');
+  db_query('alter table {mfcs_field_requirements_facilities_fees} alter column rate type numeric(998, 2)');
+  db_query('alter table {mfcs_field_requirements_facilities_fees} alter column supplies type numeric(998, 2)');
+  db_query('alter table {mfcs_field_requirements_facilities_fees} alter column post type numeric(998, 2)');
+  db_query('alter table {mfcs_field_requirements_grounds_fees} alter column hours type numeric(998, 2)');
+  db_query('alter table {mfcs_field_requirements_grounds_fees} alter column days type numeric(998, 2)');
+  db_query('alter table {mfcs_field_requirements_grounds_fees} alter column rate type numeric(998, 2)');
+  db_query('alter table {mfcs_field_requirements_grounds_fees} alter column supplies type numeric(998, 2)');
+  db_query('alter table {mfcs_field_requirements_grounds_fees} alter column post type numeric(998, 2)');
+  db_query('alter table {mfcs_field_requirements_maintenance_fees} alter column hours type numeric(998, 2)');
+  db_query('alter table {mfcs_field_requirements_maintenance_fees} alter column days type numeric(998, 2)');
+  db_query('alter table {mfcs_field_requirements_maintenance_fees} alter column rate type numeric(998, 2)');
+  db_query('alter table {mfcs_field_requirements_maintenance_fees} alter column supplies type numeric(998, 2)');
+  db_query('alter table {mfcs_field_requirements_maintenance_fees} alter column post type numeric(998, 2)');
+  db_query('alter table {mfcs_field_requirements_equipment_fees} alter column hours type numeric(998, 2)');
+  db_query('alter table {mfcs_field_requirements_equipment_fees} alter column days type numeric(998, 2)');
+  db_query('alter table {mfcs_field_requirements_equipment_fees} alter column rate type numeric(998, 2)');
+  db_query('alter table {mfcs_field_requirements_equipment_fees} alter column supplies type numeric(998, 2)');
+  db_query('alter table {mfcs_field_requirements_equipment_fees} alter column post type numeric(998, 2)');
+
+
+  // create the custom mfcs_users table.
+  db_query('create table mfcs_users (
+    user_id bigint not null,
+    banner_id bigint,
+    first_name varchar(127),
+    last_name varchar(127),
+    phone_number varchar(31),
+    ldap_duplicate bool default false,
+    primary_account bool default true,
+    calendar smallint not null default 0,
+    calendar_holidays bool default true not null,
+    calendar_unavailabilities bool default true not null,
+    filter_by_classification int[],
+    filter_by_type int[],
+    filter_by_building int[],
+    problems bigint not null default 0,
+    updated bigint not null,
+    updated_problems bigint not null,
+
+    primary key (user_id),
+    constraint mfcs_users_user_id_check check (user_id >= 0),
+    constraint mfcs_users_updated_check check (updated >= 0),
+    constraint mfcs_users_updated_problems_check check (updated_problems >= 0),
+
+    constraint user_id_fkey foreign key (user_id) references users(uid) on update cascade on delete restrict
+  );');
+
+
+  // create user defragment log table using special postgresql data types.
+  db_query('create table mfcs_log_user_defragment(id bigint not null, from_ids integer[] not null, to_ids integer[] not null, user_id bigint not null, updated bigint not null, primary key (id), constraint mfcs_log_user_defragment_user_id_check check (user_id >= 0), constraint mfcs_log_user_defragment_updated_check check (updated >= 0), constraint user_id_fkey foreign key (user_id) references users(uid) on update cascade on delete restrict)');
+  db_query('create sequence mfcs_log_user_defragment_id_seq');
+  db_query('alter table mfcs_log_user_defragment alter id set default nextval(\'mfcs_log_user_defragment_id_seq\'::regclass)');
+  db_query('grant select, insert, update on mfcs_log_user_defragment to fcs_user');
+  db_query('grant select, usage on mfcs_log_user_defragment_id_seq to fcs_user');
+
+
+  db_query('ALTER TABLE {mfcs_requests} ADD CONSTRAINT ' . $key2_foreign . ' FOREIGN KEY (' . $key2_name . ') REFERENCES {' . $table2_foreign . '} (' . $table2_foreign_key . ') ON UPDATE CASCADE ON DELETE RESTRICT');
+  db_query('ALTER TABLE {mfcs_requests} ADD CONSTRAINT creator_fkey FOREIGN KEY (creator) REFERENCES {users} (uid) ON UPDATE CASCADE ON DELETE RESTRICT');
+  db_query('ALTER TABLE {mfcs_requests} ADD CONSTRAINT venue_coordinator_fkey FOREIGN KEY (venue_coordinator) REFERENCES {' . $table2_foreign . '} (' . $table2_foreign_key . ') ON UPDATE CASCADE ON DELETE RESTRICT');
+  db_query('ALTER TABLE {mfcs_requests} ADD CONSTRAINT location_fkey FOREIGN KEY (location) REFERENCES {mfcs_banner_locations} (id) ON UPDATE CASCADE ON DELETE RESTRICT');
+  db_query('ALTER TABLE {mfcs_requests} ADD CONSTRAINT building_fkey FOREIGN KEY (building) REFERENCES {mfcs_banner_buildings} (id) ON UPDATE CASCADE ON DELETE RESTRICT');
+  db_query('ALTER TABLE {mfcs_requests} ADD CONSTRAINT room_fkey FOREIGN KEY (room) REFERENCES {mfcs_banner_rooms} (id) ON UPDATE CASCADE ON DELETE RESTRICT');
+
+  db_query('ALTER TABLE {mfcs_field_top_location} ADD CONSTRAINT value_fkey FOREIGN KEY (value) REFERENCES {mfcs_banner_locations} (id) ON UPDATE CASCADE ON DELETE RESTRICT');
+  db_query('ALTER TABLE {mfcs_field_top_building} ADD CONSTRAINT value_fkey FOREIGN KEY (value) REFERENCES {mfcs_banner_buildings} (id) ON UPDATE CASCADE ON DELETE RESTRICT');
+  db_query('ALTER TABLE {mfcs_field_top_room} ADD CONSTRAINT value_fkey FOREIGN KEY (value) REFERENCES {mfcs_banner_rooms} (id) ON UPDATE CASCADE ON DELETE RESTRICT');
+
+  db_query('ALTER TABLE {mfcs_current} ADD CONSTRAINT ' . $key1_foreign . ' FOREIGN KEY (' . $key1_name . ') REFERENCES {' . $table1_foreign . '} (' . $table1_foreign_key . ') ON UPDATE CASCADE ON DELETE CASCADE');
+  db_query('ALTER TABLE {mfcs_request_revisions} ADD CONSTRAINT ' . $key1_foreign . ' FOREIGN KEY (' . $key1_name . ') REFERENCES {' . $table1_foreign . '} (' . $table1_foreign_key . ') ON UPDATE CASCADE ON DELETE CASCADE');
+  db_query('ALTER TABLE {mfcs_request_revisions} ADD CONSTRAINT ' . $key2_foreign . ' FOREIGN KEY (' . $key2_name . ') REFERENCES {' . $table2_foreign . '} (' . $table2_foreign_key . ') ON UPDATE CASCADE ON DELETE RESTRICT');
+  db_query('ALTER TABLE {mfcs_reviewers} ADD CONSTRAINT ' . $key2_foreign . ' FOREIGN KEY (' . $key2_name . ') REFERENCES {' . $table2_foreign . '} (' . $table2_foreign_key . ') ON UPDATE CASCADE ON DELETE RESTRICT');
+  db_query('ALTER TABLE {mfcs_search_settings} ADD CONSTRAINT ' . $key2_foreign . ' FOREIGN KEY (' . $key2_name . ') REFERENCES {' . $table2_foreign . '} (' . $table2_foreign_key . ') ON UPDATE CASCADE ON DELETE CASCADE');
+  db_query('ALTER TABLE {mfcs_reviewed} ADD CONSTRAINT ' . $key1_foreign . ' FOREIGN KEY (' . $key1_name . ') REFERENCES {' . $table1_foreign . '} (' . $table1_foreign_key . ') ON UPDATE CASCADE ON DELETE CASCADE');
+  db_query('ALTER TABLE {mfcs_proxy_venue_coordinator} ADD CONSTRAINT ' . $key2_foreign . ' FOREIGN KEY (' . $key2_name . ') REFERENCES {' . $table2_foreign . '} (' . $table2_foreign_key . ') ON UPDATE CASCADE ON DELETE RESTRICT');
+  db_query('ALTER TABLE {mfcs_proxy_venue_coordinator} ADD CONSTRAINT ' . $key2_foreign_2 . ' FOREIGN KEY (' . $key2_name_2 . ') REFERENCES {' . $table2_foreign . '} (' . $table2_foreign_key . ') ON UPDATE CASCADE ON DELETE RESTRICT');
+
+  db_query('ALTER TABLE {mfcs_banner_building_to_location} ADD CONSTRAINT ' . $key3_foreign . ' FOREIGN KEY (' . $key3_name . ') REFERENCES {' . $table3_foreign . '} (' . $table3_foreign_key . ') ON UPDATE CASCADE ON DELETE CASCADE');
+  db_query('ALTER TABLE {mfcs_banner_building_to_location} ADD CONSTRAINT ' . $key4_foreign . ' FOREIGN KEY (' . $key4_name . ') REFERENCES {' . $table4_foreign . '} (' . $table4_foreign_key . ') ON UPDATE CASCADE ON DELETE CASCADE');
+  db_query('ALTER TABLE {mfcs_banner_rooms} ADD CONSTRAINT ' . $key4_foreign . ' FOREIGN KEY (' . $key4_name . ') REFERENCES {' . $table4_foreign . '} (' . $table4_foreign_key . ') ON UPDATE CASCADE ON DELETE CASCADE');
+  db_query('ALTER TABLE {mfcs_banner_rooms} ADD CONSTRAINT room_coordinator_id_fkey FOREIGN KEY (room_coordinator_id) REFERENCES {users} (uid) ON UPDATE CASCADE ON DELETE RESTRICT');
+  db_query('ALTER TABLE {mfcs_banner_rooms} ADD CONSTRAINT venue_coordinator_id_fkey FOREIGN KEY (venue_coordinator_id) REFERENCES {users} (uid) ON UPDATE CASCADE ON DELETE RESTRICT');
+  db_query('ALTER TABLE {mfcs_banner_event_roles_to_users} ADD CONSTRAINT ' . $key6_foreign . ' FOREIGN KEY (' . $key6_name . ') REFERENCES {' . $table6_foreign . '} (' . $table6_foreign_key . ') ON UPDATE CASCADE ON DELETE CASCADE');
+  db_query('ALTER TABLE {mfcs_banner_event_roles_to_users} ADD CONSTRAINT user_id_fkey FOREIGN KEY (user_id) REFERENCES {users} (uid) ON UPDATE CASCADE ON DELETE RESTRICT');
+
+  db_query('ALTER TABLE {mfcs_banner_event_roles_to_banner_ids} ADD CONSTRAINT ' . $key6_foreign . ' FOREIGN KEY (' . $key6_name . ') REFERENCES {' . $table6_foreign . '} (' . $table6_foreign_key . ') ON UPDATE CASCADE ON DELETE CASCADE');
+
+  db_query('ALTER TABLE {mfcs_request_reminders} ADD CONSTRAINT ' . $key1_foreign . ' FOREIGN KEY (' . $key1_name . ') REFERENCES {' . $table1_foreign . '} (' . $table1_foreign_key . ') ON UPDATE CASCADE ON DELETE CASCADE');
+
+  db_query('ALTER TABLE {mfcs_review_classifications} ADD CONSTRAINT review_id_fkey FOREIGN KEY (review_id) REFERENCES {mfcs_field_review_review} (id) ON UPDATE CASCADE ON DELETE CASCADE');
+
+  db_query('ALTER TABLE {mfcs_unavailability} ADD CONSTRAINT ' . $key11_foreign . ' FOREIGN KEY (' . $key11_name . ') REFERENCES {' . $table11_foreign . '} (' . $table11_foreign_key . ') ON UPDATE CASCADE ON DELETE CASCADE');
+  db_query('ALTER TABLE {mfcs_unavailability} ADD CONSTRAINT mfcs_unavailability_date_stop_check check (date_stop > date_start)');
+
+  db_query('ALTER TABLE {mfcs_log_troubleshoot} ADD CONSTRAINT ' . $key2_foreign . ' FOREIGN KEY (' . $key2_name . ') REFERENCES {' . $table2_foreign . '} (' . $table2_foreign_key . ') ON UPDATE CASCADE ON DELETE RESTRICT');
+  db_query('ALTER TABLE {mfcs_log_emails} ADD CONSTRAINT ' . $key2_foreign . ' FOREIGN KEY (' . $key2_name . ') REFERENCES {' . $table2_foreign . '} (' . $table2_foreign_key . ') ON UPDATE CASCADE ON DELETE RESTRICT');
+  db_query('ALTER TABLE {mfcs_log_problems_requests} ADD CONSTRAINT ' . $key2_foreign . ' FOREIGN KEY (' . $key2_name . ') REFERENCES {' . $table2_foreign . '} (' . $table2_foreign_key . ') ON UPDATE CASCADE ON DELETE RESTRICT');
+  db_query('ALTER TABLE {mfcs_log_holiday} ADD CONSTRAINT ' . $key2_foreign . ' FOREIGN KEY (' . $key2_name . ') REFERENCES {' . $table2_foreign . '} (' . $table2_foreign_key . ') ON UPDATE CASCADE ON DELETE RESTRICT');
+  db_query('ALTER TABLE {mfcs_log_unavailability} ADD CONSTRAINT ' . $key2_foreign . ' FOREIGN KEY (' . $key2_name . ') REFERENCES {' . $table2_foreign . '} (' . $table2_foreign_key . ') ON UPDATE CASCADE ON DELETE RESTRICT');
+
+  db_query('ALTER TABLE {mfcs_synchronize} ADD CONSTRAINT ' . $key1_foreign . ' FOREIGN KEY (' . $key1_name . ') REFERENCES {' . $table1_foreign . '} (' . $table1_foreign_key . ') ON UPDATE CASCADE ON DELETE CASCADE');
+  db_query('ALTER TABLE {mfcs_log_troubleshoot} ADD CONSTRAINT ' . $key1_foreign . ' FOREIGN KEY (' . $key1_name . ') REFERENCES {' . $table1_foreign . '} (' . $table1_foreign_key . ') ON UPDATE CASCADE ON DELETE CASCADE');
+  db_query('ALTER TABLE {mfcs_log_problems_requests} ADD CONSTRAINT ' . $key1_foreign . ' FOREIGN KEY (' . $key1_name . ') REFERENCES {' . $table1_foreign . '} (' . $table1_foreign_key . ') ON UPDATE CASCADE ON DELETE CASCADE');
+
+  db_query('ALTER TABLE {mfcs_holiday} ADD CONSTRAINT mfcs_holiday_date_stop_check check (date_stop >= (date_start + 86400))');
+
+  db_query('ALTER TABLE {mfcs_log_holiday} ADD CONSTRAINT ' . $key7_foreign . ' FOREIGN KEY (' . $key7_name . ') REFERENCES {' . $table7_foreign . '} (' . $table7_foreign_key . ') ON UPDATE CASCADE ON DELETE RESTRICT');
+  db_query('ALTER TABLE {mfcs_log_unavailability} ADD CONSTRAINT ' . $key8_foreign . ' FOREIGN KEY (' . $key8_name . ') REFERENCES {' . $table8_foreign . '} (' . $table8_foreign_key . ') ON UPDATE CASCADE ON DELETE RESTRICT');
+  db_query('ALTER TABLE {mfcs_log_unavailability} ADD CONSTRAINT ' . $key9_foreign . ' FOREIGN KEY (' . $key9_name . ') REFERENCES {' . $table9_foreign . '} (' . $table9_foreign_key . ') ON UPDATE CASCADE ON DELETE RESTRICT');
+  db_query('ALTER TABLE {mfcs_log_unavailability} ADD CONSTRAINT ' . $key10_foreign . ' FOREIGN KEY (' . $key10_name . ') REFERENCES {' . $table10_foreign . '} (' . $table10_foreign_key . ') ON UPDATE CASCADE ON DELETE RESTRICT');
+
+  db_query('ALTER TABLE {mfcs_drupal_to_banner_role_mapping} ADD CONSTRAINT role_id_fkey FOREIGN KEY (role_id) REFERENCES {role} (rid) ON UPDATE CASCADE ON DELETE RESTRICT');
+  db_query('ALTER TABLE {mfcs_drupal_to_banner_role_mapping} ADD CONSTRAINT banner_id_fkey FOREIGN KEY (banner_id) REFERENCES {mfcs_banner_event_roles} (id) ON UPDATE CASCADE ON DELETE RESTRICT');
+  db_query('ALTER TABLE {mfcs_drupal_to_banner_role_mapping} ADD CONSTRAINT role_name_fkey FOREIGN KEY (role_name) REFERENCES {role} (name) ON UPDATE CASCADE ON DELETE RESTRICT');
+  db_query('ALTER TABLE {mfcs_drupal_to_banner_role_mapping} ADD CONSTRAINT banner_name_fkey FOREIGN KEY (banner_name) REFERENCES {mfcs_banner_event_roles} (machine_name) ON UPDATE CASCADE ON DELETE RESTRICT');
+
+  foreach ($structure as $structure_name => &$structure_array) {
+    foreach ($structure_array as $field_name => &$field_type) {
+      $field_table_name = 'mfcs_field_' . $structure_name . '_' . $field_name;
+
+      // add request id foreign key.
+      db_query('ALTER TABLE {' . $field_table_name . '} ADD CONSTRAINT ' . $key1_foreign . ' FOREIGN KEY (' . $key1_name . ') REFERENCES {' . $table1_foreign . '} (' . $table1_foreign_key . ') ON UPDATE CASCADE ON DELETE CASCADE');
+
+      // add user id foreign key.
+      db_query('ALTER TABLE {' . $field_table_name . '} ADD CONSTRAINT ' . $key2_foreign . ' FOREIGN KEY (' . $key2_name . ') REFERENCES {' . $table2_foreign . '} (' . $table2_foreign_key . ') ON UPDATE CASCADE ON DELETE RESTRICT');
+    }
+  }
+
+  $taxonomy_tables = array(
+    'mfcs_taxonomy_request_classification',
+    'mfcs_taxonomy_review_step',
+    'mfcs_taxonomy_reviewer_classification',
+    'mfcs_taxonomy_request_status',
+    'mfcs_taxonomy_request_date_category',
+    'mfcs_taxonomy_request_type',
+    'mfcs_taxonomy_request_audience',
+    'mfcs_taxonomy_request_designing_materials',
+    'mfcs_taxonomy_request_publicity',
+    'mfcs_taxonomy_request_revenue_generated',
+    'mfcs_taxonomy_request_technical_equipment',
+    'mfcs_taxonomy_review_decisions',
+  );
+  foreach ($taxonomy_tables as $taxonomy_table) {
+    db_query('ALTER TABLE {' . $taxonomy_table . '} ADD CONSTRAINT ' . $taxonomy_table . '_machine_name_ukey UNIQUE (machine_name)');
+    db_query('ALTER TABLE {' . $taxonomy_table . '} ADD CONSTRAINT ' . $taxonomy_table . '_hidden_check CHECK (hidden = 0 or hidden = 1)');
+    db_query('ALTER TABLE {' . $taxonomy_table . '} ADD CONSTRAINT ' . $taxonomy_table . '_enabled_check CHECK (enabled = 0 or enabled = 1)');
+    db_query('ALTER TABLE {' . $taxonomy_table . '} ADD CONSTRAINT ' . $taxonomy_table . '_deleted_check CHECK (deleted = 0 or deleted = 1)');
+  }
+
+
+  db_query('INSERT INTO {mfcs_taxonomy_request_classification} (id, machine_name, human_name, hidden) VALUES (' . (int) MFCS_REQUEST_CLASSIFICATION_NONE . ', \'none\', \'None\', 1)');
+  db_query('INSERT INTO {mfcs_taxonomy_request_classification} (id, machine_name, human_name) VALUES (' . (int) MFCS_REQUEST_CLASSIFICATION_STUDENT . ', \'student\', \'Student Organization\')');
+  db_query('INSERT INTO {mfcs_taxonomy_request_classification} (id, machine_name, human_name) VALUES (' . (int) MFCS_REQUEST_CLASSIFICATION_CAMPS . ', \'camps\', \'Camps\')');
+  db_query('INSERT INTO {mfcs_taxonomy_request_classification} (id, machine_name, human_name) VALUES (' . (int) MFCS_REQUEST_CLASSIFICATION_FACULTY . ', \'faculty\', \'Faculty, Staff, Atheletics\')');
+  db_query('INSERT INTO {mfcs_taxonomy_request_classification} (id, machine_name, human_name) VALUES (' . (int) MFCS_REQUEST_CLASSIFICATION_EXTERNAL . ', \'external\', \'External\')');
+
+  db_query('INSERT INTO {mfcs_taxonomy_review_step} (id, machine_name, human_name, hidden) VALUES (' . (int) MFCS_REVIEW_STEP_NONE . ', \'none\', \'None\', 1)');
+  db_query('INSERT INTO {mfcs_taxonomy_review_step} (id, machine_name, human_name) VALUES (' . (int) MFCS_REVIEW_STEP_CHANGES_REQUIRED . ', \'changes_required\', \'Changes Required\')');
+  db_query('INSERT INTO {mfcs_taxonomy_review_step} (id, machine_name, human_name) VALUES (' . (int) MFCS_REVIEW_STEP_COMPLETED . ', \'completed\', \'Completed\')');
+  db_query('INSERT INTO {mfcs_taxonomy_review_step} (id, machine_name, human_name) VALUES (' . (int) MFCS_REVIEW_STEP_FINAL_DECISION . ', \'final_decision\', \'Final Decision\')');
+  db_query('INSERT INTO {mfcs_taxonomy_review_step} (id, machine_name, human_name) VALUES (' . (int) MFCS_REVIEW_STEP_RELEASE_HOLD . ', \'release_hold\', \'Release Hold\')');
+  db_query('INSERT INTO {mfcs_taxonomy_review_step} (id, machine_name, human_name) VALUES (' . (int) MFCS_REVIEW_STEP_REVIEW . ', \'review\', \'Review\')');
+  db_query('INSERT INTO {mfcs_taxonomy_review_step} (id, machine_name, human_name) VALUES (' . (int) MFCS_REVIEW_STEP_REQUIREMENTS . ', \'requirements\', \'Requirements\')');
+  db_query('INSERT INTO {mfcs_taxonomy_review_step} (id, machine_name, human_name) VALUES (' . (int) MFCS_REVIEW_STEP_VENUE_AVAILABLE . ', \'venue_available\', \'Venue Available\')');
+
+  db_query('INSERT INTO {mfcs_taxonomy_reviewer_classification} (id, machine_name, human_name) VALUES (' . (int) MFCS_REVIEWER_CLASSIFICATION_NONE . ', \'none\', \'None');
+  db_query('INSERT INTO {mfcs_taxonomy_reviewer_classification} (id, machine_name, human_name, hidden) VALUES (' . (int) MFCS_REVIEWER_CLASSIFICATION_SYSTEM_ADMINISTRATOR . ', \'system_administrator\', \'System Administrator\', 1)');
+  db_query('INSERT INTO {mfcs_taxonomy_reviewer_classification} (id, machine_name, human_name, hidden) VALUES (' . (int) MFCS_REVIEWER_CLASSIFICATION_MANAGER . ', \'manager\', \'Manager\', 1)');
+  db_query('INSERT INTO {mfcs_taxonomy_reviewer_classification} (id, machine_name, human_name, hidden) VALUES (' . (int) MFCS_REVIEWER_CLASSIFICATION_REQUESTER . ', \'requester\', \'Requester\', 1)');
+  db_query('INSERT INTO {mfcs_taxonomy_reviewer_classification} (id, machine_name, human_name, hidden) VALUES (' . (int) MFCS_REVIEWER_CLASSIFICATION_SYSTEM . ', \'system\', \'System\', 1)');
+  db_query('INSERT INTO {mfcs_taxonomy_reviewer_classification} (id, machine_name, human_name, hidden) VALUES (' . (int) MFCS_REVIEWER_CLASSIFICATION_VENUE_COORDINATOR . ', \'venue_cordinator\', \'Venue Coordinator\', 1)');
+  db_query('INSERT INTO {mfcs_taxonomy_reviewer_classification} (id, machine_name, human_name, hidden) VALUES (' . (int) MFCS_REVIEWER_CLASSIFICATION_VENUE_COORDINATOR_PROXY . ', \'venue_cordinator_proxy\', \'Venue Coordinator (Proxy)\', 1)');
+  db_query('INSERT INTO {mfcs_taxonomy_reviewer_classification} (id, machine_name, human_name) VALUES (' . (int) MFCS_REVIEWER_CLASSIFICATION_ADMINISTRATIVE_ACCOUNTING . ', \'administrative_accounting\', \'Administrative Accounting\')');
+  db_query('INSERT INTO {mfcs_taxonomy_reviewer_classification} (id, machine_name, human_name) VALUES (' . (int) MFCS_REVIEWER_CLASSIFICATION_CUSTODIAL . ', \'custodial\', \'Custodial\')');
+  db_query('INSERT INTO {mfcs_taxonomy_reviewer_classification} (id, machine_name, human_name) VALUES (' . (int) MFCS_REVIEWER_CLASSIFICATION_UNIVERSITY_EVENTS . ', \'university_events\', \'University Events\')');
+  db_query('INSERT INTO {mfcs_taxonomy_reviewer_classification} (id, machine_name, human_name, enabled) VALUES (' . (int) MFCS_REVIEWER_CLASSIFICATION_FACILITIES_CUSTODIAL . ', \'facilities_custodial\', \'Facilities / Custodial Services\', 0)');
+  db_query('INSERT INTO {mfcs_taxonomy_reviewer_classification} (id, machine_name, human_name) VALUES (' . (int) MFCS_REVIEWER_CLASSIFICATION_FACILITIES . ', \'facilities\', \'Facilities\')');
+  db_query('INSERT INTO {mfcs_taxonomy_reviewer_classification} (id, machine_name, human_name) VALUES (' . (int) MFCS_REVIEWER_CLASSIFICATION_FACULTY_ADVISER . ', \'faculty_adviser\', \'Faculty Adviser\')');
+  db_query('INSERT INTO {mfcs_taxonomy_reviewer_classification} (id, machine_name, human_name) VALUES (' . (int) MFCS_REVIEWER_CLASSIFICATION_FOOD_SERVICES . ', \'food_services\', \'Food Services\')');
+  db_query('INSERT INTO {mfcs_taxonomy_reviewer_classification} (id, machine_name, human_name) VALUES (' . (int) MFCS_REVIEWER_CLASSIFICATION_HOUSING . ', \'housing\', \'Housing\')');
+  db_query('INSERT INTO {mfcs_taxonomy_reviewer_classification} (id, machine_name, human_name) VALUES (' . (int) MFCS_REVIEWER_CLASSIFICATION_MAINTENANCE . ', \'maintenance\', \'Maintenance\')');
+  db_query('INSERT INTO {mfcs_taxonomy_reviewer_classification} (id, machine_name, human_name) VALUES (' . (int) MFCS_REVIEWER_CLASSIFICATION_PURCHASING . ', \'purchasing\', \'Purchasing\')');
+  db_query('INSERT INTO {mfcs_taxonomy_reviewer_classification} (id, machine_name, human_name) VALUES (' . (int) MFCS_REVIEWER_CLASSIFICATION_SECURITY . ', \'security\', \'Security\')');
+  db_query('INSERT INTO {mfcs_taxonomy_reviewer_classification} (id, machine_name, human_name) VALUES (' . (int) MFCS_REVIEWER_CLASSIFICATION_STUDENT_ACTIVITIES_ADMINISTRATION . ', \'student_activities_administration\', \'Student Activities Administration\')');
+  db_query('INSERT INTO {mfcs_taxonomy_reviewer_classification} (id, machine_name, human_name) VALUES (' . (int) MFCS_REVIEWER_CLASSIFICATION_UNIVERSITY_SERVICES . ', \'university_services\', \'University Services\')');
+  db_query('INSERT INTO {mfcs_taxonomy_reviewer_classification} (id, machine_name, human_name) VALUES (' . (int) MFCS_REVIEWER_CLASSIFICATION_GROUNDS . ', \'grounds\', \'Grounds\')');
+  db_query('INSERT INTO {mfcs_taxonomy_reviewer_classification} (id, machine_name, human_name) VALUES (' . (int) MFCS_REVIEWER_CLASSIFICATION_FINANCIAL . ', \'financial\', \'Financial\')');
+  db_query('INSERT INTO {mfcs_taxonomy_reviewer_classification} (id, machine_name, human_name) VALUES (' . (int) MFCS_REVIEWER_CLASSIFICATION_INSURANCE . ', \'insurance\', \'Insurance\')');
+
+  db_query('INSERT INTO {mfcs_taxonomy_request_status} (id, machine_name, human_name, hidden) VALUES (' . (int) MFCS_REQUEST_STATUS_NONE . ', \'none\', \'None\', 1)');
+  db_query('INSERT INTO {mfcs_taxonomy_request_status} (id, machine_name, human_name) VALUES (' . (int) MFCS_REQUEST_STATUS_DELETED . ', \'deleted\', \'Deleted\')');
+  db_query('INSERT INTO {mfcs_taxonomy_request_status} (id, machine_name, human_name) VALUES (' . (int) MFCS_REQUEST_STATUS_UNLOCKED . ', \'locked\', \'Queued (Locked)\')');
+  db_query('INSERT INTO {mfcs_taxonomy_request_status} (id, machine_name, human_name) VALUES (' . (int) MFCS_REQUEST_STATUS_LOCKED . ', \'unlocked\', \'Queued (Unlocked)\')');
+  db_query('INSERT INTO {mfcs_taxonomy_request_status} (id, machine_name, human_name) VALUES (' . (int) MFCS_REQUEST_STATUS_CLOSED_ACCEPTED . ', \'closed_accepted\', \'Accepted\')');
+  db_query('INSERT INTO {mfcs_taxonomy_request_status} (id, machine_name, human_name) VALUES (' . (int) MFCS_REQUEST_STATUS_CLOSED_DENIED . ', \'closed_denied\', \'Denied\')');
+  db_query('INSERT INTO {mfcs_taxonomy_request_status} (id, machine_name, human_name) VALUES (' . (int) MFCS_REQUEST_STATUS_CLOSED_UNAVAILABLE . ', \'closed_unavailable\', \'Room Unavailable\')');
+  db_query('INSERT INTO {mfcs_taxonomy_request_status} (id, machine_name, human_name) VALUES (' . (int) MFCS_REQUEST_STATUS_CLOSED_DUE_TO_LOCK . ', \'closed_due_to_lock\', \'Room Unavailable (due to lock)\')');
+  db_query('INSERT INTO {mfcs_taxonomy_request_status} (id, machine_name, human_name) VALUES (' . (int) MFCS_REQUEST_STATUS_CANCELLED . ', \'cancelled\', \'Cancelled\')');
+  db_query('INSERT INTO {mfcs_taxonomy_request_status} (id, machine_name, human_name) VALUES (' . (int) MFCS_REQUEST_STATUS_CLOSED_ACCEPTED_CANCELLED . ', \'cancelled_accepted\', \'Accepted (Cancelled)\')');
+
+  db_query('INSERT INTO {mfcs_taxonomy_request_date_category} (id, machine_name, human_name, hidden) VALUES (' . (int) MFCS_REQUEST_DATES_CATEGORY_NONE . ', \'none\', \'None\', 1)');
+  db_query('INSERT INTO {mfcs_taxonomy_request_date_category} (id, machine_name, human_name) VALUES (' . (int) MFCS_REQUEST_DATES_CATEGORY_ACTUAL . ', \'actual\', \'Event / Meeting\')');
+  db_query('INSERT INTO {mfcs_taxonomy_request_date_category} (id, machine_name, human_name) VALUES (' . (int) MFCS_REQUEST_DATES_CATEGORY_SETUP . ', \'setup\', \'Rehearsal / Setup\')');
+  db_query('INSERT INTO {mfcs_taxonomy_request_date_category} (id, machine_name, human_name) VALUES (' . (int) MFCS_REQUEST_DATES_CATEGORY_CLEANUP . ', \'cleanup\', \'Cleanup / Breakdown\')');
+
+  db_query('INSERT INTO {mfcs_taxonomy_request_type} (id, machine_name, human_name, hidden) VALUES (' . (int) MFCS_REQUEST_TYPE_NONE . ', \'none\', \'None\', 1)');
+  db_query('INSERT INTO {mfcs_taxonomy_request_type} (id, machine_name, human_name) VALUES (' . (int) MFCS_REQUEST_TYPE_ATHLETIC . ', \'athletic\', \'Athletic\')');
+  db_query('INSERT INTO {mfcs_taxonomy_request_type} (id, machine_name, human_name) VALUES (' . (int) MFCS_REQUEST_TYPE_BANQUET . ', \'banquet\', \'Banquet\')');
+  db_query('INSERT INTO {mfcs_taxonomy_request_type} (id, machine_name, human_name) VALUES (' . (int) MFCS_REQUEST_TYPE_CEREMONY . ', \'ceremony\', \'Ceremony / Presentation\')');
+  db_query('INSERT INTO {mfcs_taxonomy_request_type} (id, machine_name, human_name) VALUES (' . (int) MFCS_REQUEST_TYPE_FAIR . ', \'fair\', \'Fair / Expo\')');
+  db_query('INSERT INTO {mfcs_taxonomy_request_type} (id, machine_name, human_name) VALUES (' . (int) MFCS_REQUEST_TYPE_LECTURE . ', \'lecture\', \'Lecture\')');
+  db_query('INSERT INTO {mfcs_taxonomy_request_type} (id, machine_name, human_name) VALUES (' . (int) MFCS_REQUEST_TYPE_MEETING . ', \'meeting\', \'Meeting\')');
+  db_query('INSERT INTO {mfcs_taxonomy_request_type} (id, machine_name, human_name) VALUES (' . (int) MFCS_REQUEST_TYPE_OTHER . ', \'other\', \'Other\')');
+  db_query('INSERT INTO {mfcs_taxonomy_request_type} (id, machine_name, human_name) VALUES (' . (int) MFCS_REQUEST_TYPE_PERFORMANCE . ', \'performance\', \'Performance\')');
+  db_query('INSERT INTO {mfcs_taxonomy_request_type} (id, machine_name, human_name) VALUES (' . (int) MFCS_REQUEST_TYPE_QUICK_MEETING . ', \'quick_meeting\', \'Quick Meeting\')');
+  db_query('INSERT INTO {mfcs_taxonomy_request_type} (id, machine_name, human_name) VALUES (' . (int) MFCS_REQUEST_TYPE_RECEPTION . ', \'reception\', \'Reception\')');
+  db_query('INSERT INTO {mfcs_taxonomy_request_type} (id, machine_name, human_name) VALUES (' . (int) MFCS_REQUEST_TYPE_TALENT . ', \'talent\', \'Talent / Variety Show\')');
+  db_query('INSERT INTO {mfcs_taxonomy_request_type} (id, machine_name, human_name) VALUES (' . (int) MFCS_REQUEST_TYPE_WORKSHOP . ', \'workshop\', \'Workshop\')');
+  db_query('INSERT INTO {mfcs_taxonomy_request_type} (id, machine_name, human_name) VALUES (' . (int) MFCS_REQUEST_TYPE_CLUB_MEETING . ', \'club_meeting\', \'Club Meeting\')');
+
+  db_query('INSERT INTO {mfcs_taxonomy_request_audience} (id, machine_name, human_name, hidden) VALUES (' . (int) MFCS_REQUEST_AUDIENCE_NONE . ', \'none\', \'None\', 1)');
+  db_query('INSERT INTO {mfcs_taxonomy_request_audience} (id, machine_name, human_name) VALUES (' . (int) MFCS_REQUEST_AUDIENCE_FACULTY_AND_STAFF . ', \'employees\', \'Faculty and Staff Only\')');
+  db_query('INSERT INTO {mfcs_taxonomy_request_audience} (id, machine_name, human_name) VALUES (' . (int) MFCS_REQUEST_AUDIENCE_GUESTS_ONLY . ', \'guests\', \'Invited Guests Only\')');
+  db_query('INSERT INTO {mfcs_taxonomy_request_audience} (id, machine_name, human_name) VALUES (' . (int) MFCS_REQUEST_AUDIENCE_STUDENTS_AND_EMPLOYEES . ', \'students_employees\', \'Open to all Students and Employees\')');
+  db_query('INSERT INTO {mfcs_taxonomy_request_audience} (id, machine_name, human_name) VALUES (' . (int) MFCS_REQUEST_AUDIENCE_PUBLIC . ', \'public\', \'Open to the Public\')');
+  db_query('INSERT INTO {mfcs_taxonomy_request_audience} (id, machine_name, human_name) VALUES (' . (int) MFCS_REQUEST_AUDIENCE_STUDENTS_ONLY . ', \'students\', \'Students Only\')');
+
+  db_query('INSERT INTO {mfcs_taxonomy_request_designing_materials} (id, machine_name, human_name, hidden) VALUES (' . (int) MFCS_REQUEST_DESIGNING_MATERIALS_NONE . ', \'none\', \'None\', 1)');
+  db_query('INSERT INTO {mfcs_taxonomy_request_designing_materials} (id, machine_name, human_name) VALUES (' . (int) MFCS_REQUEST_DESIGNING_MATERIALS_PUBLIC_RELATIONS . ', \'public_relations\', \'McNeese Public Relations\')');
+  db_query('INSERT INTO {mfcs_taxonomy_request_designing_materials} (id, machine_name, human_name) VALUES (' . (int) MFCS_REQUEST_DESIGNING_MATERIALS_MARKETING . ', \'marketing\', \'McNeese Marketing\')');
+  db_query('INSERT INTO {mfcs_taxonomy_request_designing_materials} (id, machine_name, human_name) VALUES (' . (int) MFCS_REQUEST_DESIGNING_MATERIALS_OTHER . ', \'other\', \'Other\')');
+
+  db_query('INSERT INTO {mfcs_taxonomy_request_publicity} (id, machine_name, human_name, hidden) VALUES (' . (int) MFCS_REQUEST_PUBLICITY_NONE . ', \'none\', \'None\', 1)');
+  db_query('INSERT INTO {mfcs_taxonomy_request_publicity} (id, machine_name, human_name) VALUES (' . (int) MFCS_REQUEST_PUBLICITY_CAMPUS_DIGEST . ', \'campus_digest\', \'Campus Digest\')');
+  db_query('INSERT INTO {mfcs_taxonomy_request_publicity} (id, machine_name, human_name) VALUES (' . (int) MFCS_REQUEST_PUBLICITY_STUDENT_DIGEST . ', \'student_digest\', \'Student Digest\')');
+  db_query('INSERT INTO {mfcs_taxonomy_request_publicity} (id, machine_name, human_name) VALUES (' . (int) MFCS_REQUEST_PUBLICITY_WEBSITE . ', \'website\', \'Website\')');
+  db_query('INSERT INTO {mfcs_taxonomy_request_publicity} (id, machine_name, human_name) VALUES (' . (int) MFCS_REQUEST_PUBLICITY_SOCIAL_MEDIA . ', \'social_media\', \'Social Media\')');
+  db_query('INSERT INTO {mfcs_taxonomy_request_publicity} (id, machine_name, human_name) VALUES (' . (int) MFCS_REQUEST_PUBLICITY_AXIS_TVS . ', \'axis_tv\', \'Axis TV\'s\')');
+  db_query('INSERT INTO {mfcs_taxonomy_request_publicity} (id, machine_name, human_name) VALUES (' . (int) MFCS_REQUEST_PUBLICITY_PRESS_RELEASE . ', \'press_release\', \'Press Release\')');
+
+  db_query('INSERT INTO {mfcs_taxonomy_request_revenue_generated} (id, machine_name, human_name, hidden) VALUES (' . (int) MFCS_REQUEST_REVENUE_NONE . ', \'none\', \'None\', 1)');
+  db_query('INSERT INTO {mfcs_taxonomy_request_revenue_generated} (id, machine_name, human_name) VALUES (' . (int) MFCS_REQUEST_REVENUE_TICKET_SALES . ', \'ticket\', \'Ticket Sales\')');
+  db_query('INSERT INTO {mfcs_taxonomy_request_revenue_generated} (id, machine_name, human_name) VALUES (' . (int) MFCS_REQUEST_REVENUE_MERCHANDISE_SALES . ', \'merchandise\', \'Merchandise Sales\')');
+  db_query('INSERT INTO {mfcs_taxonomy_request_revenue_generated} (id, machine_name, human_name) VALUES (' . (int) MFCS_REQUEST_REVENUE_CONCESSION_SALES . ', \'concession\', \'Concession Sales\')');
+
+  db_query('INSERT INTO {mfcs_taxonomy_request_technical_equipment} (id, machine_name, human_name, hidden) VALUES (' . (int) MFCS_REQUEST_TECHNICAL_EQUIPMENT_NONE . ', \'none\', \'None\', 1)');
+  db_query('INSERT INTO {mfcs_taxonomy_request_technical_equipment} (id, machine_name, human_name) VALUES (' . (int) MFCS_REQUEST_TECHNICAL_EQUIPMENT_SCREEN . ', \'screen\', \'Projector / Screen\')');
+  db_query('INSERT INTO {mfcs_taxonomy_request_technical_equipment} (id, machine_name, human_name) VALUES (' . (int) MFCS_REQUEST_TECHNICAL_EQUIPMENT_COMPUTER . ', \'computer\', \'Computer\')');
+  db_query('INSERT INTO {mfcs_taxonomy_request_technical_equipment} (id, machine_name, human_name) VALUES (' . (int) MFCS_REQUEST_TECHNICAL_EQUIPMENT_SOUND . ', \'sound\', \'Sound for Presentation / Music / Etc\')');
+  db_query('INSERT INTO {mfcs_taxonomy_request_technical_equipment} (id, machine_name, human_name) VALUES (' . (int) MFCS_REQUEST_TECHNICAL_EQUIPMENT_MICROPHONE . ', \'microphone\', \'Microphone\')');
+
+  db_query('INSERT INTO {mfcs_taxonomy_review_decisions} (id, machine_name, human_name, hidden) VALUES (' . (int) MFCS_REVIEW_DECISION_NONE . ', \'none\', \'None\', 1)');
+  db_query('INSERT INTO {mfcs_taxonomy_review_decisions} (id, machine_name, human_name) VALUES (' . (int) MFCS_REVIEW_DECISION_CLOSE . ', \'close\', \'Close\')');
+  db_query('INSERT INTO {mfcs_taxonomy_review_decisions} (id, machine_name, human_name) VALUES (' . (int) MFCS_REVIEW_DECISION_CANCEL . ', \'cancel\', \'Cancel\')');
+  db_query('INSERT INTO {mfcs_taxonomy_review_decisions} (id, machine_name, human_name) VALUES (' . (int) MFCS_REVIEW_DECISION_UNCANCEL . ', \'uncancel\', \'Uncancel\')');
+  db_query('INSERT INTO {mfcs_taxonomy_review_decisions} (id, machine_name, human_name) VALUES (' . (int) MFCS_REVIEW_DECISION_REASSIGN_COORDINATOR . ', \'reassign_coordinator\', \'Re-assign Venue Coordinator\')');
+  db_query('INSERT INTO {mfcs_taxonomy_review_decisions} (id, machine_name, human_name) VALUES (' . (int) MFCS_REVIEW_DECISION_OVERRIDE . ', \'override\', \'Override\')');
+  db_query('INSERT INTO {mfcs_taxonomy_review_decisions} (id, machine_name, human_name) VALUES (' . (int) MFCS_REVIEW_DECISION_MOVE . ', \'move\', \'Move\')');
+  db_query('INSERT INTO {mfcs_taxonomy_review_decisions} (id, machine_name, human_name) VALUES (' . (int) MFCS_REVIEW_DECISION_REASSIGN_REQUESTER . ', \'reassign_requester\', \'Re-assign Requester\')');
+  db_query('INSERT INTO {mfcs_taxonomy_review_decisions} (id, machine_name, human_name) VALUES (' . (int) MFCS_REVIEW_DECISION_MANAGER_RECHECK . ', \'manager_recheck\', \'Manager Re-Check\')');
+  db_query('INSERT INTO {mfcs_taxonomy_review_decisions} (id, machine_name, human_name) VALUES (' . (int) MFCS_REVIEW_DECISION_AMENDMENT . ', \'amendment\', \'Amendment\')');
+  db_query('INSERT INTO {mfcs_taxonomy_review_decisions} (id, machine_name, human_name) VALUES (' . (int) MFCS_REVIEW_DECISION_APPROVE . ', \'approve\', \'Approve\')');
+  db_query('INSERT INTO {mfcs_taxonomy_review_decisions} (id, machine_name, human_name) VALUES (' . (int) MFCS_REVIEW_DECISION_COMMENT . ', \'comment\', \'Comment\')');
+  db_query('INSERT INTO {mfcs_taxonomy_review_decisions} (id, machine_name, human_name) VALUES (' . (int) MFCS_REVIEW_DECISION_COMMENT_ALL . ', \'comment_all\', \'Comment\')');
+  db_query('INSERT INTO {mfcs_taxonomy_review_decisions} (id, machine_name, human_name) VALUES (' . (int) MFCS_REVIEW_DECISION_DENY . ', \'deny\', \'Deny\')');
+  db_query('INSERT INTO {mfcs_taxonomy_review_decisions} (id, machine_name, human_name) VALUES (' . (int) MFCS_REVIEW_DECISION_WAIVE . ', \'waive\', \'Waive\')');
+  db_query('INSERT INTO {mfcs_taxonomy_review_decisions} (id, machine_name, human_name) VALUES (' . (int) MFCS_REVIEW_DECISION_REQUIREMENT . ', \'requirement\', \'Requirement\')');
+  db_query('INSERT INTO {mfcs_taxonomy_review_decisions} (id, machine_name, human_name) VALUES (' . (int) MFCS_REVIEW_DECISION_AVAILABLE . ', \'available\', \'Available\')');
+  db_query('INSERT INTO {mfcs_taxonomy_review_decisions} (id, machine_name, human_name) VALUES (' . (int) MFCS_REVIEW_DECISION_UNAVAILABLE . ', \'unavailable\', \'Unavailable\')');
+  db_query('INSERT INTO {mfcs_taxonomy_review_decisions} (id, machine_name, human_name) VALUES (' . (int) MFCS_REVIEW_DECISION_ISSUES . ', \'issues\', \'Issues\')');
+  db_query('INSERT INTO {mfcs_taxonomy_review_decisions} (id, machine_name, human_name) VALUES (' . (int) MFCS_REVIEW_DECISION_ISSUES_NONE . ', \'issues_none\', \'No Issues\')');
+
+  db_query('INSERT INTO {mfcs_taxonomy_holiday_type} (id, machine_name, human_name, hidden) VALUES (' . (int) MFCS_HOLIDAY_TYPE_NONE . ', \'none\', \'None\', 1)');
+  db_query('INSERT INTO {mfcs_taxonomy_holiday_type} (id, machine_name, human_name) VALUES (' . (int) MFCS_HOLIDAY_TYPE_HOLIDAY . ', \'holiday\', \'Holiday\')');
+  db_query('INSERT INTO {mfcs_taxonomy_holiday_type} (id, machine_name, human_name) VALUES (' . (int) MFCS_HOLIDAY_TYPE_FORCED_CLOSURE . ', \'forced_closure\', \'Forced Closure\')');
+  db_query('INSERT INTO {mfcs_taxonomy_holiday_type} (id, machine_name, human_name) VALUES (' . (int) MFCS_HOLIDAY_TYPE_BREAK . ', \'break\', \'Break\')');
+
+
+  db_query('ALTER TABLE {mfcs_requests} ADD CONSTRAINT classification_fkey FOREIGN KEY (classification) REFERENCES {mfcs_taxonomy_request_classification} (id) ON UPDATE CASCADE ON DELETE RESTRICT');
+  db_query('ALTER TABLE {mfcs_requests} ADD CONSTRAINT step_fkey FOREIGN KEY (step) REFERENCES {mfcs_taxonomy_review_step} (id) ON UPDATE CASCADE ON DELETE RESTRICT');
+  db_query('ALTER TABLE {mfcs_field_request_coordinator_classification} ADD CONSTRAINT value_fkey FOREIGN KEY (value) REFERENCES {mfcs_taxonomy_request_classification} (id) ON UPDATE CASCADE ON DELETE RESTRICT');
+  db_query('ALTER TABLE {mfcs_field_request_coordinator_user_id} ADD CONSTRAINT value_fkey FOREIGN KEY (value) REFERENCES {users} (uid) ON UPDATE CASCADE ON DELETE RESTRICT');
+  db_query('ALTER TABLE {mfcs_field_request_coordinator_user_id} ADD CONSTRAINT user_id_fkey FOREIGN KEY (user_id) REFERENCES {users} (uid) ON UPDATE CASCADE ON DELETE RESTRICT');
+
+  db_query('ALTER TABLE {mfcs_reviewers} ADD CONSTRAINT request_classification_fkey FOREIGN KEY (request_classification) REFERENCES {mfcs_taxonomy_request_classification} (id) ON UPDATE CASCADE ON DELETE RESTRICT');
+  db_query('ALTER TABLE {mfcs_reviewers} ADD CONSTRAINT review_step_fkey FOREIGN KEY (review_step) REFERENCES {mfcs_taxonomy_review_step} (id) ON UPDATE CASCADE ON DELETE RESTRICT');
+  db_query('ALTER TABLE {mfcs_field_top_step} ADD CONSTRAINT value_fkey FOREIGN KEY (value) REFERENCES {mfcs_taxonomy_review_step} (id) ON UPDATE CASCADE ON DELETE RESTRICT');
+  db_query('ALTER TABLE {mfcs_field_review_review} ADD CONSTRAINT step_fkey FOREIGN KEY (step) REFERENCES {mfcs_taxonomy_review_step} (id) ON UPDATE CASCADE ON DELETE RESTRICT');
+
+  db_query('ALTER TABLE {mfcs_field_dates_category} ADD CONSTRAINT value_fkey FOREIGN KEY (value) REFERENCES {mfcs_taxonomy_request_date_category} (id) ON UPDATE CASCADE ON DELETE RESTRICT');
+
+  db_query('ALTER TABLE {mfcs_requests} ADD CONSTRAINT type_fkey FOREIGN KEY (type) REFERENCES {mfcs_taxonomy_request_type} (id) ON UPDATE CASCADE ON DELETE RESTRICT');
+  db_query('ALTER TABLE {mfcs_field_information_type} ADD CONSTRAINT value_fkey FOREIGN KEY (value) REFERENCES {mfcs_taxonomy_request_type} (id) ON UPDATE CASCADE ON DELETE RESTRICT');
+
+  db_query('ALTER TABLE {mfcs_field_plans_audience} ADD CONSTRAINT value_fkey FOREIGN KEY (value) REFERENCES {mfcs_taxonomy_request_audience} (id) ON UPDATE CASCADE ON DELETE RESTRICT');
+
+  db_query('ALTER TABLE {mfcs_field_presentation_designing_material} ADD CONSTRAINT public_relations_fkey FOREIGN KEY (public_relations) REFERENCES {mfcs_taxonomy_request_designing_materials} (id) ON UPDATE CASCADE ON DELETE RESTRICT');
+  db_query('ALTER TABLE {mfcs_field_presentation_designing_material} ADD CONSTRAINT marketing_fkey FOREIGN KEY (marketing) REFERENCES {mfcs_taxonomy_request_designing_materials} (id) ON UPDATE CASCADE ON DELETE RESTRICT');
+  db_query('ALTER TABLE {mfcs_field_presentation_designing_material} ADD CONSTRAINT other_relations_fkey FOREIGN KEY (other) REFERENCES {mfcs_taxonomy_request_designing_materials} (id) ON UPDATE CASCADE ON DELETE RESTRICT');
+
+  db_query('ALTER TABLE {mfcs_field_presentation_publicity_details} ADD CONSTRAINT campus_digest_fkey FOREIGN KEY (campus_digest) REFERENCES {mfcs_taxonomy_request_publicity} (id) ON UPDATE CASCADE ON DELETE RESTRICT');
+  db_query('ALTER TABLE {mfcs_field_presentation_publicity_details} ADD CONSTRAINT student_digest_fkey FOREIGN KEY (student_digest) REFERENCES {mfcs_taxonomy_request_publicity} (id) ON UPDATE CASCADE ON DELETE RESTRICT');
+  db_query('ALTER TABLE {mfcs_field_presentation_publicity_details} ADD CONSTRAINT website_fkey FOREIGN KEY (website) REFERENCES {mfcs_taxonomy_request_publicity} (id) ON UPDATE CASCADE ON DELETE RESTRICT');
+  db_query('ALTER TABLE {mfcs_field_presentation_publicity_details} ADD CONSTRAINT social_media_fkey FOREIGN KEY (social_media) REFERENCES {mfcs_taxonomy_request_publicity} (id) ON UPDATE CASCADE ON DELETE RESTRICT');
+  db_query('ALTER TABLE {mfcs_field_presentation_publicity_details} ADD CONSTRAINT axis_tv_fkey FOREIGN KEY (axis_tv) REFERENCES {mfcs_taxonomy_request_publicity} (id) ON UPDATE CASCADE ON DELETE RESTRICT');
+  db_query('ALTER TABLE {mfcs_field_presentation_publicity_details} ADD CONSTRAINT press_release_fkey FOREIGN KEY (press_release) REFERENCES {mfcs_taxonomy_request_publicity} (id) ON UPDATE CASCADE ON DELETE RESTRICT');
+
+  db_query('ALTER TABLE {mfcs_field_registration_revenue_generated} ADD CONSTRAINT ticket_fkey FOREIGN KEY (ticket) REFERENCES {mfcs_taxonomy_request_revenue_generated} (id) ON UPDATE CASCADE ON DELETE RESTRICT');
+  db_query('ALTER TABLE {mfcs_field_registration_revenue_generated} ADD CONSTRAINT merchandise_fkey FOREIGN KEY (merchandise) REFERENCES {mfcs_taxonomy_request_revenue_generated} (id) ON UPDATE CASCADE ON DELETE RESTRICT');
+  db_query('ALTER TABLE {mfcs_field_registration_revenue_generated} ADD CONSTRAINT concession_fkey FOREIGN KEY (concession) REFERENCES {mfcs_taxonomy_request_revenue_generated} (id) ON UPDATE CASCADE ON DELETE RESTRICT');
+
+  db_query('ALTER TABLE {mfcs_field_presentation_technical_equipment_details} ADD CONSTRAINT screen_fkey FOREIGN KEY (screen) REFERENCES {mfcs_taxonomy_request_technical_equipment} (id) ON UPDATE CASCADE ON DELETE RESTRICT');
+  db_query('ALTER TABLE {mfcs_field_presentation_technical_equipment_details} ADD CONSTRAINT computer_fkey FOREIGN KEY (computer) REFERENCES {mfcs_taxonomy_request_technical_equipment} (id) ON UPDATE CASCADE ON DELETE RESTRICT');
+  db_query('ALTER TABLE {mfcs_field_presentation_technical_equipment_details} ADD CONSTRAINT sound_fkey FOREIGN KEY (sound) REFERENCES {mfcs_taxonomy_request_technical_equipment} (id) ON UPDATE CASCADE ON DELETE RESTRICT');
+  db_query('ALTER TABLE {mfcs_field_presentation_technical_equipment_details} ADD CONSTRAINT microphone_fkey FOREIGN KEY (microphone) REFERENCES {mfcs_taxonomy_request_technical_equipment} (id) ON UPDATE CASCADE ON DELETE RESTRICT');
+
+
+  db_query('ALTER TABLE {mfcs_reviewers} ADD CONSTRAINT reviewer_classification_fkey FOREIGN KEY (reviewer_classification) REFERENCES {mfcs_taxonomy_reviewer_classification} (id) ON UPDATE CASCADE ON DELETE RESTRICT');
+  db_query('ALTER TABLE {mfcs_reviewed} ADD CONSTRAINT classification_fkey FOREIGN KEY (classification) REFERENCES {mfcs_taxonomy_reviewer_classification} (id) ON UPDATE CASCADE ON DELETE RESTRICT');
+  db_query('ALTER TABLE {mfcs_review_classifications} ADD CONSTRAINT classification_fkey FOREIGN KEY (classification) REFERENCES {mfcs_taxonomy_reviewer_classification} (id) ON UPDATE CASCADE ON DELETE RESTRICT');
+
+  db_query('ALTER TABLE {mfcs_reviewed} ADD CONSTRAINT decision_fkey FOREIGN KEY (decision) REFERENCES {mfcs_taxonomy_review_decisions} (id) ON UPDATE CASCADE ON DELETE RESTRICT');
+
+
+  // enable postgresql-specific TOAST support (aka: compression).
+  db_query('ALTER TABLE {mfcs_log_emails} ALTER COLUMN headers SET STORAGE EXTENDED');
+  db_query('ALTER TABLE {mfcs_log_emails} ALTER COLUMN body SET STORAGE EXTENDED');
+
+
+  // create a views to simplify time based sorting.
+  $view_query = ' SELECT mc.request_id AS request_id, mfdd.delta AS delta, mfdd.value AS date, mfdd.value_month AS value_month, mfdd.value_day AS value_day, mfdts.value AS time_start, mfdtsp.value AS time_stop, mfdc.value AS category';
+  $view_query .= ' FROM {mfcs_current} mc';
+  $view_query .= ' INNER JOIN {mfcs_field_dates_date} mfdd ON mc.request_id = mfdd.request_id AND mc.dates_date = mfdd.revision';
+  $view_query .= ' INNER JOIN {mfcs_field_dates_time_start} mfdts ON mc.request_id = mfdts.request_id AND mc.dates_time_start = mfdts.revision AND mfdd.delta = mfdts.delta';
+  $view_query .= ' INNER JOIN {mfcs_field_dates_time_stop} mfdtsp ON mc.request_id = mfdtsp.request_id AND mc.dates_time_stop = mfdtsp.revision AND mfdd.delta = mfdtsp.delta';
+  $view_query .= ' INNER JOIN {mfcs_field_dates_category} mfdc ON mc.request_id = mfdc.request_id AND mc.dates_category = mfdc.revision AND mfdd.delta = mfdc.delta';
+
+  db_query('CREATE VIEW {mfcs_view_dates_asc} AS' . $view_query . ' ORDER BY mfdd.value ASC, mfdts.value ASC');
+  db_query('CREATE VIEW {mfcs_view_dates_desc} AS' . $view_query . ' ORDER BY mfdd.value DESC, mfdts.value DESC');
+
+  db_query('CREATE VIEW {mfcs_view_dates_asc_distinct} AS SELECT DISTINCT ON (request_id) * FROM {mfcs_view_dates_asc}');
+  db_query('CREATE VIEW {mfcs_view_dates_desc_distinct} AS SELECT DISTINCT ON (request_id) * FROM {mfcs_view_dates_desc}');
+
+
+  // assign the new mail system as default.
+  $mail_system = variable_get('mail_system' , array('default-system' => 'DefaultMailSystem'));
+  $mail_system['default-system'] = 'McNeeseFacilitiesUseMail';
+  variable_set('mail_system', $mail_system);
+
+
+  // improve (some of) drupal core's tables data integrity.
+  db_query('ALTER TABLE {users_roles} add constraint uid_fkey FOREIGN KEY (uid) REFERENCES {users} (uid) ON UPDATE CASCADE ON DELETE CASCADE');
+  db_query('ALTER TABLE {users_roles} add constraint role_id_fkey FOREIGN KEY (rid) REFERENCES {role} (rid) ON UPDATE CASCADE ON DELETE CASCADE');
+  db_query('ALTER TABLE {authmap} add constraint uid_fkey FOREIGN KEY (uid) REFERENCES {users} (uid) ON UPDATE CASCADE ON DELETE CASCADE');
+  db_query('ALTER TABLE {history} add constraint uid_fkey FOREIGN KEY (uid) REFERENCES {users} (uid) ON UPDATE CASCADE ON DELETE CASCADE');
+  db_query('ALTER TABLE {node} add constraint uid_fkey FOREIGN KEY (uid) REFERENCES {users} (uid) ON UPDATE CASCADE ON DELETE RESTRICT'); // intentionally restrict.
+  db_query('ALTER TABLE {node_revision} add constraint uid_fkey FOREIGN KEY (uid) REFERENCES {users} (uid) ON UPDATE CASCADE ON DELETE RESTRICT'); // intentionally restrict.
+  db_query('ALTER TABLE {watchdog} add constraint uid_fkey FOREIGN KEY (uid) REFERENCES {users} (uid) ON UPDATE CASCADE ON DELETE RESTRICT'); // intentionally restrict.
+  db_query('ALTER TABLE {sessions} add constraint uid_fkey FOREIGN KEY (uid) REFERENCES {users} (uid) ON UPDATE CASCADE ON DELETE CASCADE');
+  db_query('ALTER TABLE {file_managed} add constraint uid_fkey FOREIGN KEY (uid) REFERENCES {users} (uid) ON UPDATE CASCADE ON DELETE RESTRICT'); // intentionally restrict.
+  db_query('ALTER TABLE {shortcut_set_users} add constraint uid_fkey FOREIGN KEY (uid) REFERENCES {users} (uid) ON UPDATE CASCADE ON DELETE CASCADE');
+}
+
+/**
+ * Implementation of hook_uninstall().
+ *
+ * All tables will have to have ownership changed back to the drupal database
+ * user account prior to uninstallation or access denied errors will occur.
+ */
+function mfcs_uninstall() {
+  // restore the mail system default.
+  $mail_system = variable_get('mail_system' , array('default-system' => 'DefaultMailSystem'));
+  $mail_system['default-system'] = 'DefaultMailSystem';
+  variable_set('mail_system', $mail_system);
+
+  $registered = cf_settings_get_registered(array('module_name' => 'mfcs'), 'id');
+
+  foreach ($registered as &$r) {
+    cf_settings_unregister($r->variable_name, $r->variable_type, $r->module);
+  }
+
+  // drupal does not pay attention to foreign key relations when dropping the database, so manually remove all manually added foreign keys.
+  $key1_foreign = 'request_id_fkey';
+  $key2_foreign = 'user_id_fkey';
+  $key2_foreign_2 = 'proxy_id_fkey';
+  $key3_foreign = 'location_fkey';
+  $key4_foreign = 'building_fkey';
+  $key5_foreign = 'room_fkey';
+  $key6_foreign = 'event_role_id_fkey';
+  $key7_foreign = 'holiday_id_fkey';
+  $key8_foreign = 'unavailability_id_fkey';
+  $key9_foreign = 'room_id_fkey';
+  $key10_foreign = 'building_id_fkey';
+  $keyR_foreign = 'review_fkey';
+
+  $structure = mfcs_table_install_structure();
+
+  db_query('DROP VIEW {mfcs_view_dates_asc_distinct}');
+  db_query('DROP VIEW {mfcs_view_dates_desc_distinct}');
+
+  db_query('DROP VIEW {mfcs_view_dates_asc}');
+  db_query('DROP VIEW {mfcs_view_dates_desc}');
+
+  db_query('alter table {mfcs_request_locks} drop constraint if exists request_id_fkey');
+  db_query('drop table {mfcs_request_locks}');
+
+  db_query('ALTER TABLE {mfcs_requests} DROP CONSTRAINT IF EXISTS ' . $key2_foreign);
+  db_query('ALTER TABLE {mfcs_requests} DROP CONSTRAINT IF EXISTS creator_fkey');
+  db_query('ALTER TABLE {mfcs_requests} DROP CONSTRAINT IF EXISTS location_fkey');
+  db_query('ALTER TABLE {mfcs_requests} DROP CONSTRAINT IF EXISTS building_fkey');
+  db_query('ALTER TABLE {mfcs_requests} DROP CONSTRAINT IF EXISTS room_fkey');
+  db_query('ALTER TABLE {mfcs_current} DROP CONSTRAINT IF EXISTS ' . $key1_foreign);
+  db_query('ALTER TABLE {mfcs_request_revisions} DROP CONSTRAINT IF EXISTS ' . $key1_foreign);
+  db_query('ALTER TABLE {mfcs_request_revisions} DROP CONSTRAINT IF EXISTS ' . $key2_foreign);
+  db_query('ALTER TABLE {mfcs_reviewers} DROP CONSTRAINT IF EXISTS ' . $key2_foreign);
+  db_query('ALTER TABLE {mfcs_search_settings} DROP CONSTRAINT IF EXISTS ' . $key2_foreign);
+  db_query('ALTER TABLE {mfcs_reviewed} DROP CONSTRAINT IF EXISTS ' . $key1_foreign);
+  db_query('ALTER TABLE {mfcs_proxy_venue_coordinator} DROP CONSTRAINT IF EXISTS ' . $key2_foreign);
+  db_query('ALTER TABLE {mfcs_proxy_venue_coordinator} DROP CONSTRAINT IF EXISTS ' . $key2_foreign_2);
+  db_query('ALTER TABLE {mfcs_banner_building_to_location} DROP CONSTRAINT IF EXISTS ' . $key3_foreign);
+  db_query('ALTER TABLE {mfcs_banner_building_to_location} DROP CONSTRAINT IF EXISTS ' . $key4_foreign);
+  db_query('ALTER TABLE {mfcs_banner_rooms} DROP CONSTRAINT IF EXISTS ' . $key4_foreign);
+  db_query('ALTER TABLE {mfcs_banner_rooms} DROP CONSTRAINT IF EXISTS room_coordinator_id');
+  db_query('ALTER TABLE {mfcs_banner_rooms} DROP CONSTRAINT IF EXISTS venue_coordinator_id');
+  db_query('ALTER TABLE {mfcs_banner_classes} DROP CONSTRAINT IF EXISTS ' . $key5_foreign);
+  db_query('ALTER TABLE {mfcs_banner_event_roles_to_users} DROP CONSTRAINT IF EXISTS ' . $key6_foreign);
+  db_query('ALTER TABLE {mfcs_banner_event_roles_to_banner_ids} DROP CONSTRAINT IF EXISTS ' . $key6_foreign);
+  db_query('ALTER TABLE {mfcs_request_reminders} DROP CONSTRAINT IF EXISTS ' . $key1_foreign);
+  db_query('ALTER TABLE {mfcs_review_classifications} DROP CONSTRAINT IF EXISTS ' . $keyR_foreign);
+  db_query('ALTER TABLE {mfcs_field_review_review} DROP CONSTRAINT IF EXISTS ' . $key1_foreign);
+  db_query('ALTER TABLE {mfcs_log_troubleshoot} DROP CONSTRAINT IF EXISTS ' . $key2_foreign);
+  db_query('ALTER TABLE {mfcs_log_troubleshoot} DROP CONSTRAINT IF EXISTS ' . $key1_foreign);
+  db_query('ALTER TABLE {mfcs_log_emails} DROP CONSTRAINT IF EXISTS ' . $key2_foreign);
+  db_query('ALTER TABLE {mfcs_log_holiday} DROP CONSTRAINT IF EXISTS ' . $key2_foreign);
+  db_query('ALTER TABLE {mfcs_log_holiday} DROP CONSTRAINT IF EXISTS ' . $key7_foreign);
+  db_query('ALTER TABLE {mfcs_log_unavailability} DROP CONSTRAINT IF EXISTS ' . $key2_foreign);
+  db_query('ALTER TABLE {mfcs_log_unavailability} DROP CONSTRAINT IF EXISTS ' . $key7_foreign);
+  db_query('ALTER TABLE {mfcs_log_unavailability} DROP CONSTRAINT IF EXISTS ' . $key8_foreign);
+  db_query('ALTER TABLE {mfcs_log_unavailability} DROP CONSTRAINT IF EXISTS ' . $key9_foreign);
+  db_query('ALTER TABLE {mfcs_log_unavailability} DROP CONSTRAINT IF EXISTS ' . $key10_foreign);
+  db_query('ALTER TABLE {mfcs_users} DROP CONSTRAINT IF EXISTS ' . $key2_foreign);
+  db_query('ALTER TABLE {mfcs_synchronize} DROP CONSTRAINT IF EXISTS ' . $key2_foreign);
+  db_query('ALTER TABLE {mfcs_log_problems_requests} DROP CONSTRAINT IF EXISTS ' . $key2_foreign);
+  db_query('ALTER TABLE {mfcs_log_problems_requests} DROP CONSTRAINT IF EXISTS ' . $key1_foreign);
+
+  foreach ($structure as $structure_name => &$structure_array) {
+    foreach ($structure_array as $field_name => &$field_type) {
+      $field_table_name = 'mfcs_field_' . $structure_name . '_' . $field_name;
+
+      db_query('ALTER TABLE {' . $field_table_name . '} DROP CONSTRAINT IF EXISTS ' . $key1_foreign);
+      db_query('ALTER TABLE {' . $field_table_name . '} DROP CONSTRAINT IF EXISTS ' . $key2_foreign);
+    }
+  }
+}

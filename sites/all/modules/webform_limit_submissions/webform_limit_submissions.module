@@ -1,0 +1,151 @@
+<?php
+/*
+ * @file
+ * This module provides a way to automatically close a webform when a specified date/time
+ * has been reached.
+ */
+
+/*
+ * Implements hook_form_alter().
+ * Add date part to webform settings
+ */
+function webform_limit_submissions_form_alter(&$form, &$form_state, $form_id) {
+  if ($form_id == 'webform_configure_form') {
+
+    $timezone = variable_get('date_default_timezone', 'UTC');
+
+    $close_date = _webform_limit_submissions_close_on_date_value($form['#node']->nid);
+
+    if ($close_date === FALSE) {
+      $default = NULL;
+    }
+    else {
+      $default = format_date($close_date, 'custom', 'Y-m-d H:i:s', $timezone, NULL);
+    }
+    
+    $form['submission']['close_date'] = array(
+      '#type' => 'date_popup',
+      '#title' => 'Close form on the following date',
+      '#default_value' => $default,
+      '#date_format' => 'm/d/Y H:i',
+      '#date_label_position' => 'within',
+      '#date_timezone' => $timezone,
+      '#date_year_range' => '0:+8',      
+    );
+
+    // Add extra submit function for the date part
+    $form['#submit'][] = 'webform_limit_submissions_form_submit';
+  }
+}
+
+/*
+ * Submit function for the close on date option
+ */
+function webform_limit_submissions_form_submit($form, &$form_state) {
+  $nid = $form_state['values']['nid'];
+
+  if (!empty($form_state['values']['close_date'])) {
+
+    $submission_limit = strtotime($form_state['values']['close_date']);
+
+    // Delete old record for this node
+    db_delete('webform_limit_submissions')
+      ->condition('nid', (int) $nid)
+      ->execute();
+    // Add the new settings
+    db_insert('webform_limit_submissions')
+      ->fields(array(
+        'nid' => (int) $nid,
+        'sid' => 0,
+        'value' => $submission_limit,
+      ))
+      ->execute();
+    
+    if ($form['submission']['status']['#value'] == 0) {
+      drupal_set_message(t('The close date has been set, but the form is still closed.'), 'warning');
+    }
+  }
+  else {
+    // Delete old record for this node
+    db_delete('webform_limit_submissions')
+      ->condition('nid', (int) $nid)
+      ->execute();
+  }
+}
+
+/**
+ * Implements hook_node_load().
+ */
+function webform_limit_submissions_node_load($nodes, $types) {
+  $types = webform_variable_get('webform_node_types');
+  foreach ($nodes as $node) {
+    if (in_array($node->type, $types)) {
+      // Set form status.
+      _webform_limit_submissions_limits_exceeded($node->nid);
+    }  
+  }
+}
+
+/**
+ * Implements hook_node_delete().
+ */
+function webform_limit_submissions_node_delete($node) {
+  $types = webform_variable_get('webform_node_types');
+  if (in_array($node->type, $types)) {
+    // If the node is being deleted, remove the record from the limit submissions table.
+    db_delete('webform_limit_submissions')
+      ->condition('nid', $node->nid)
+      ->execute();
+  }
+}
+
+/**
+ * Determines whether this Webform should be closed (true) or open (false).
+ *
+ * @param $nid
+ *   The current node id.
+ *
+ */
+function _webform_limit_submissions_limits_exceeded($nid) {
+  $max_date = _webform_limit_submissions_close_on_date_value($nid, 'close_on_date');
+
+  if (!empty($max_date)) {
+
+    if ($max_date <= time()) {
+      db_update('webform')
+        ->fields(array(
+          'status' => 0,
+      ))
+        ->condition('nid', (int) $nid)
+        ->execute();
+      return FALSE;
+    }
+    else {
+      return TRUE;
+    }
+  }
+}
+
+/*
+ * Function to get submission limit value for node
+ * @param Node ID of the form
+ * @param Field value sought
+ * @return Limit submissions value
+ */
+function _webform_limit_submissions_close_on_date_value($nid, $field = 'close_on_date') {
+  // Retrieve required value.
+  switch ($field) {
+    case 'close_on_date':
+      $result = db_query("SELECT value FROM {webform_limit_submissions} WHERE nid = :nid", array(':nid' => (int) $nid))->fetchField();
+
+      if ($result === FALSE) {
+        $value = FALSE;
+      }
+      else {
+        $value = $result;
+      }
+    break;
+  }
+
+  return $value;
+}

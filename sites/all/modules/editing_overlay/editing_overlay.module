@@ -1,0 +1,109 @@
+<?php
+
+/**
+ * Implements hook_help().
+ */
+function editing_overlay_help($path, $arg = NULL) {
+  if (cf_is_empty_or_non_string('path', $path, WATCHDOG_ERROR)) {
+    return;
+  }
+
+  switch ($path) {
+    case 'admin/help#editing_overlay':
+      $help = "Provides an editing overlay for users who do not have access to the administrative overlay.";
+      $help .= " This allows for two separate themese to be in use: a node view theme and a node delete theme in such a user-friendly way.";
+
+      return "<p>" . t($help) . "</p>";
+  }
+}
+
+/**
+ * Implements hook_permission().
+ */
+function editing_overlay_permission() {
+  return array(
+    'access editing overlay' => array(
+      'title' => t("Access the editing overlay"),
+      'description' => t("View edit pages in the overlay."),
+    ),
+  );
+}
+
+/**
+ * Implements hook_init().
+ */
+function editing_overlay_init() {
+  $mode = overlay_get_mode();
+  $user = cf_current_user();
+
+  $use_overlay = !isset($user->data['editing_overlay']) || $user->data['editing_overlay'];
+
+  if (empty($mode) && user_access('access editing overlay', $user) && isset($_GET['q']) && $use_overlay) {
+    $current_path = current_path();
+
+    // After overlay is enabled on the page, redirect to <front>#overlay=some_path to actually enable the overlay.
+    if (isset($_SESSION['overlay_enable_redirect']) && $_SESSION['overlay_enable_redirect']) {
+      unset($_SESSION['overlay_enable_redirect']);
+      drupal_goto('<front>', array('fragment' => 'overlay=' . $current_path));
+    }
+
+    if (preg_match('@^node/\d*$@', $_GET['q']) > 0){
+      overlay_set_mode('parent');
+    }
+
+    if (preg_match('@^node/\d*/\w*@', $_GET['q']) > 0){
+      if (isset($_GET['render']) && $_GET['render'] == 'overlay') {
+        // If this page shouldn't be rendered here, redirect to the parent.
+        if (!path_is_admin($current_path)) {
+          overlay_close_dialog($current_path);
+        }
+
+        overlay_set_mode('child');
+
+        // Unset the render parameter to avoid it being included in URLs on the page.
+        unset($_GET['render']);
+      }
+    }
+  }
+}
+
+/**
+ * Implements hook_exit().
+ */
+function editing_overlay_exit() {
+  overlay_exit();
+}
+
+/**
+ * Implements hook_form_FORM_ID_alter() for user_profile_form.
+ */
+function editing_overlay_form_user_profile_form_alter(&$form, &$form_state) {
+  if ($form['#user_category'] == 'account') {
+    $account = $form['#user'];
+
+    if (user_access('access editing overlay', $account)) {
+      $form['editing_overlay_control'] = array(
+        '#type' => 'fieldset',
+        '#title' => t("Editing overlay"),
+        '#weight' => 4,
+        '#collapsible' => TRUE,
+      );
+
+      $form['editing_overlay_control']['editing_overlay'] = array(
+        '#type' => 'checkbox',
+        '#title' => t("Use the overlay for node editing."),
+        '#description' => t("Show node edit pages on top of the page you started from."),
+        '#default_value' => isset($account->data['editing_overlay']) ? $account->data['editing_overlay'] : TRUE,
+      );
+    }
+  }
+}
+
+/**
+ * Implements hook_user_presave().
+ */
+function editing_overlay_user_presave(&$edit, $account, $category) {
+  if (isset($edit['editing_overlay'])) {
+    $edit['data']['editing_overlay'] = $edit['editing_overlay'];
+  }
+}

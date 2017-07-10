@@ -1,0 +1,114 @@
+name = McNeese - www
+description = "This is a sub-theme of the mcneese theme, adjusted for www.mcneese.edu."
+version = "7.x-1.0"
+core = 7.x
+engine = phptemplate
+base theme = mcneese
+screenshot = images/screenshot.png
+
+# project is not hosted on drupal.org, so manual versioning is needed.
+version = "7.x-1.0"
+
+stylesheets[all][] = css/all/www-all-common.css
+stylesheets[all][] = css/all/www-all-front.css
+stylesheets[all][] = css/all/www-all-alias.css
+stylesheets[all][] = css/all/www-all-node.css
+stylesheets[all][] = css/all/www-all-web_document.css
+stylesheets[all][] = css/all/www-all-web_document-637.css
+stylesheets[all][] = css/all/www-all-web_document-638.css
+stylesheets[all][] = css/all/www-all-web_document-639.css
+stylesheets[all][] = css/all/www-all-web_document-640.css
+stylesheets[all][] = css/all/www-all-web_document-669.css
+stylesheets[all][] = css/all/www-all-web_document-671.css
+stylesheets[all][] = css/all/www-all-web_form-common.css
+stylesheets[all][] = css/all/www-all-web_form-592.css
+stylesheets[all][] = css/all/www-all-web_form-593.css
+stylesheets[all][] = css/all/www-all-web_form-594.css
+stylesheets[all][] = css/all/www-all-web_form-617.css
+stylesheets[all][] = css/all/www-all-web_form-677.css
+stylesheets[all][] = css/all/www-all-page-718.css
+stylesheets[all][] = css/all/www-all-page-731.css
+stylesheets[all][] = css/all/www-all-page-751.css
+
+stylesheets[speech][] = css/braille/www-braille-common.css
+stylesheets[speech][] = css/braille/www-braille-front.css
+stylesheets[speech][] = css/braille/www-braille-web_document.css
+stylesheets[speech][] = css/braille/www-braille-web_document-637.css
+stylesheets[speech][] = css/braille/www-braille-web_document-638.css
+stylesheets[speech][] = css/braille/www-braille-web_document-639.css
+stylesheets[speech][] = css/braille/www-braille-web_document-640.css
+stylesheets[speech][] = css/braille/www-braille-web_document-669.css
+stylesheets[speech][] = css/braille/www-braille-web_document-671.css
+stylesheets[speech][] = css/braille/www-braille-web_form-common.css
+stylesheets[speech][] = css/braille/www-braille-web_form-592.css
+stylesheets[speech][] = css/braille/www-braille-web_form-593.css
+stylesheets[speech][] = css/braille/www-braille-web_form-594.css
+stylesheets[speech][] = css/braille/www-braille-web_form-617.css
+stylesheets[speech][] = css/braille/www-braille-web_form-677.css
+stylesheets[speech][] = css/braille/www-braille-page-718.css
+stylesheets[speech][] = css/braille/www-braille-page-731.css
+stylesheets[speech][] = css/braille/www-braille-page-751.css
+
+stylesheets[print][] = css/print/www-print-common.css
+stylesheets[print][] = css/print/www-print-front.css
+stylesheets[print][] = css/print/www-print-web_document.css
+stylesheets[print][] = css/print/www-print-web_document-637.css
+stylesheets[print][] = css/print/www-print-web_document-638.css
+stylesheets[print][] = css/print/www-print-web_document-639.css
+stylesheets[print][] = css/print/www-print-web_document-640.css
+stylesheets[print][] = css/print/www-print-web_document-669.css
+stylesheets[print][] = css/print/www-print-web_document-671.css
+stylesheets[print][] = css/print/www-print-web_form-common.css
+stylesheets[print][] = css/print/www-print-web_form-592.css
+stylesheets[print][] = css/print/www-print-web_form-593.css
+stylesheets[print][] = css/print/www-print-web_form-594.css
+stylesheets[print][] = css/print/www-print-web_form-617.css
+stylesheets[print][] = css/print/www-print-web_form-677.css
+stylesheets[print][] = css/print/www-print-page-718.css
+stylesheets[print][] = css/print/www-print-page-731.css
+stylesheets[print][] = css/print/www-print-page-751.css
+
+stylesheets[screen][] = css/screen/www-screen-common.css
+stylesheets[screen][] = css/screen/www-screen-front.css
+stylesheets[screen][] = css/screen/www-screen-web_document.css
+stylesheets[screen][] = css/screen/www-screen-web_document-637.css
+stylesheets[screen][] = css/screen/www-screen-web_document-638.css
+stylesheets[screen][] = css/screen/www-screen-web_document-639.css
+stylesheets[screen][] = css/screen/www-screen-web_document-640.css
+stylesheets[screen][] = css/screen/www-screen-web_document-669.css
+stylesheets[screen][] = css/screen/www-screen-web_document-671.css
+stylesheets[screen][] = css/screen/www-screen-web_form-592.css
+stylesheets[screen][] = css/screen/www-screen-web_form-593.css
+stylesheets[screen][] = css/screen/www-screen-web_form-594.css
+stylesheets[screen][] = css/screen/www-screen-web_form-617.css
+stylesheets[screen][] = css/screen/www-screen-web_form-677.css
+stylesheets[screen][] = css/screen/www-screen-page-718.css
+stylesheets[screen][] = css/screen/www-screen-page-731.css
+stylesheets[screen][] = css/screen/www-screen-page-751.css
+
+scripts[] = js/document-outline.js
+# scripts[] = js/75th.js
+
+regions[top]           = Top
+regions[header]        = Header
+regions[header_menu_1] = Header Menu 1
+regions[header_menu_2] = Header Menu 2
+
+regions[messages]    = Messages
+regions[bulletin]    = Bulletin
+regions[help]        = Help
+regions[information] = Information
+
+regions[menus]   = Menus
+regions[asides]  = Asides
+regions[content] = Content
+regions[footer]  = Footer
+regions[bottom]  = Bottom
+regions[hidden]  = Hidden
+
+
+features[] = name
+features[] = search
+features[] = favicon
+
+
