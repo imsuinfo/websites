@@ -6,7 +6,7 @@ engine = phptemplate
 base theme = mcneese
 screenshot = images/screenshot.png
 
-# project is not hosted on drupal.org, so manual versioning is needed.
+; project is not hosted on drupal.org, so manual versioning is needed.
 version = "7.x-1.0"
 
 stylesheets[all][] = css/all/www-all-common.css
@@ -87,7 +87,7 @@ stylesheets[screen][] = css/screen/www-screen-page-731.css
 stylesheets[screen][] = css/screen/www-screen-page-751.css
 
 scripts[] = js/document-outline.js
-# scripts[] = js/75th.js
+; scripts[] = js/75th.js
 
 regions[top]           = Top
 regions[header]        = Header
